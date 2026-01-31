@@ -473,8 +473,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 300;
+    const width = 700;
+    const height = 400;
     const output = calculateReflection();
 
     // Signal animation
@@ -485,97 +485,433 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
           width="100%"
-          height={height}
+          height={isMobile ? 300 : height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
           <defs>
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.signal} />
-              <stop offset="100%" stopColor={output.isMatched ? colors.terminated : colors.reflection} />
+            {/* Premium lab background gradient */}
+            <linearGradient id="txlnLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
+
+            {/* Transmission line conductor gradient - copper/gold metallic */}
+            <linearGradient id="txlnConductorTop" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="20%" stopColor="#d97706" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            <linearGradient id="txlnConductorBottom" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#92400e" />
+              <stop offset="20%" stopColor="#b45309" />
+              <stop offset="40%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#b45309" />
+              <stop offset="80%" stopColor="#92400e" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
+
+            {/* Dielectric substrate gradient */}
+            <linearGradient id="txlnDielectric" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#166534" />
+              <stop offset="30%" stopColor="#15803d" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="70%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
+
+            {/* Source equipment gradient - brushed metal */}
+            <linearGradient id="txlnSourceMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Load equipment gradient */}
+            <linearGradient id="txlnLoadMatched" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#065f46" />
+              <stop offset="30%" stopColor="#047857" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="70%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#064e3b" />
+            </linearGradient>
+
+            <linearGradient id="txlnLoadMismatched" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="30%" stopColor="#991b1b" />
+              <stop offset="50%" stopColor="#b91c1c" />
+              <stop offset="70%" stopColor="#991b1b" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            {/* Signal wave radial glow */}
+            <radialGradient id="txlnSignalGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Reflection wave radial glow */}
+            <radialGradient id="txlnReflectionGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Impedance match indicator glow */}
+            <radialGradient id="txlnMatchGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="txlnMismatchGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Oscilloscope screen gradient */}
+            <linearGradient id="txlnOscScreen" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#022c22" />
+              <stop offset="20%" stopColor="#064e3b" />
+              <stop offset="50%" stopColor="#065f46" />
+              <stop offset="80%" stopColor="#064e3b" />
+              <stop offset="100%" stopColor="#022c22" />
+            </linearGradient>
+
+            {/* Power indicator glow */}
+            <radialGradient id="txlnPowerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filters */}
+            <filter id="txlnSignalBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="txlnReflectionBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="txlnMatchIndicatorGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="txlnWaveformGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Grid pattern for oscilloscope */}
+            <pattern id="txlnOscGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#0d9488" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Lab equipment grid pattern */}
+            <pattern id="txlnLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Transmission Line ({characteristicImpedance}Ohm)
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#txlnLabBg)" />
+          <rect width={width} height={height} fill="url(#txlnLabGrid)" />
+
+          {/* Title banner */}
+          <text x={width/2} y={28} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" letterSpacing="1">
+            TRANSMISSION LINE ANALYSIS
+          </text>
+          <text x={width/2} y={48} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Characteristic Impedance: Z0 = {characteristicImpedance} Ohm
           </text>
 
-          {/* Source */}
-          <rect x={20} y={100} width={40} height={60} fill="#374151" rx={4} />
-          <text x={40} y={125} fill={colors.signal} fontSize={10} textAnchor="middle">Source</text>
-          <text x={40} y={145} fill={colors.textMuted} fontSize={9} textAnchor="middle">{characteristicImpedance}Ohm</text>
+          {/* === SOURCE EQUIPMENT === */}
+          <g transform="translate(30, 85)">
+            {/* Main housing */}
+            <rect x="0" y="0" width="100" height="90" rx="8" fill="url(#txlnSourceMetal)" stroke="#475569" strokeWidth="1.5" />
+            <rect x="5" y="5" width="90" height="80" rx="6" fill="#1e293b" opacity="0.4" />
 
-          {/* Transmission line */}
-          <rect x={60} y={125} width={220} height={10} fill="url(#lineGradient)" rx={2} />
-          <line x1={60} y1={140} x2={280} y2={140} stroke={colors.textMuted} strokeWidth={1} strokeDasharray="4,4" />
+            {/* Display panel */}
+            <rect x="10" y="10" width="80" height="35" rx="4" fill="#030712" stroke="#334155" />
+            <text x="50" y="25" fill="#06b6d4" fontSize="8" textAnchor="middle" fontWeight="bold">SIGNAL GEN</text>
+            <text x="50" y="38" fill="#22d3ee" fontSize="10" textAnchor="middle" fontFamily="monospace">{signalFrequency} MHz</text>
 
-          {/* Forward wave */}
-          <g>
-            {[...Array(8)].map((_, i) => {
-              const x = 70 + i * 25;
-              const y = 130 + Math.sin(signalPhase - i * 0.8) * 15;
-              const opacity = 0.9 - i * 0.08;
-              return (
-                <circle key={`fwd-${i}`} cx={x} cy={y} r={4} fill={colors.signal} opacity={opacity} />
-              );
-            })}
+            {/* Power indicator */}
+            <circle cx="25" cy="65" r="6" fill="url(#txlnPowerGlow)">
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <text x="25" y="80" fill={colors.textMuted} fontSize="6" textAnchor="middle">POWER</text>
+
+            {/* Output connector */}
+            <rect x="75" y="52" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
+            <circle cx="85" cy="64" r="5" fill="#fbbf24" stroke="#f59e0b" strokeWidth="1" />
+
+            {/* Label */}
+            <text x="50" y="-8" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
+              RF SOURCE ({characteristicImpedance} Ohm)
+            </text>
           </g>
 
-          {/* Reflected wave (if mismatched) */}
-          {!output.isMatched && (
-            <g>
-              {[...Array(6)].map((_, i) => {
-                const x = 260 - i * 25;
-                const y = 130 + Math.sin(reflectionPhase + i * 0.8) * 15 * output.absGamma;
-                const opacity = (0.7 - i * 0.1) * output.absGamma;
+          {/* === TRANSMISSION LINE STRUCTURE === */}
+          <g transform="translate(145, 100)">
+            {/* Dielectric substrate base */}
+            <rect x="0" y="25" width="360" height="30" rx="3" fill="url(#txlnDielectric)" opacity="0.8" />
+
+            {/* Ground plane (bottom conductor) */}
+            <rect x="0" y="52" width="360" height="8" rx="1" fill="url(#txlnConductorBottom)" />
+            <rect x="0" y="52" width="360" height="2" fill="#fbbf24" opacity="0.3" />
+
+            {/* Top conductor (signal trace) */}
+            <rect x="0" y="20" width="360" height="8" rx="1" fill="url(#txlnConductorTop)" />
+            <rect x="0" y="20" width="360" height="2" fill="#fef3c7" opacity="0.4" />
+
+            {/* Conductor spacing indicators */}
+            <line x1="-5" y1="24" x2="-5" y2="56" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
+            <text x="-15" y="42" fill={colors.textMuted} fontSize="7" textAnchor="middle" transform="rotate(-90, -15, 42)">Z0</text>
+
+            {/* Distance markers */}
+            {[0, 90, 180, 270, 360].map((pos, i) => (
+              <g key={`marker-${i}`}>
+                <line x1={pos} y1="65" x2={pos} y2="70" stroke={colors.textMuted} strokeWidth="1" />
+                <text x={pos} y="80" fill={colors.textMuted} fontSize="7" textAnchor="middle">
+                  {(lineLength * (i / 4)).toFixed(2)}m
+                </text>
+              </g>
+            ))}
+
+            {/* Forward signal wave visualization */}
+            <g filter="url(#txlnSignalBlur)">
+              {[...Array(12)].map((_, i) => {
+                const x = 15 + i * 28;
+                const waveY = Math.sin(signalPhase - i * 0.6) * 12;
+                const opacity = 0.95 - i * 0.05;
                 return (
-                  <circle key={`ref-${i}`} cx={x} cy={y} r={3} fill={colors.reflection} opacity={Math.max(0, opacity)} />
+                  <g key={`fwd-${i}`}>
+                    <circle cx={x} cy={24 + waveY} r={6} fill="url(#txlnSignalGlow)" opacity={opacity} />
+                    <circle cx={x} cy={24 + waveY} r={3} fill="#60a5fa" opacity={opacity} />
+                  </g>
                 );
               })}
             </g>
-          )}
 
-          {/* Load */}
-          <rect x={280} y={100} width={40} height={60} fill={output.isMatched ? '#065f46' : '#7f1d1d'} rx={4} />
-          <text x={300} y={125} fill={colors.textPrimary} fontSize={10} textAnchor="middle">Load</text>
-          <text x={300} y={145} fill={colors.textMuted} fontSize={9} textAnchor="middle">
-            {loadImpedance > 1000 ? 'Open' : loadImpedance < 1 ? 'Short' : `${loadImpedance}Ohm`}
-          </text>
+            {/* Reflected signal wave (if mismatched) */}
+            {!output.isMatched && output.absGamma > 0.05 && (
+              <g filter="url(#txlnReflectionBlur)">
+                {[...Array(10)].map((_, i) => {
+                  const x = 345 - i * 30;
+                  const waveY = Math.sin(reflectionPhase + i * 0.6) * 10 * output.absGamma;
+                  const opacity = Math.max(0, (0.85 - i * 0.08) * output.absGamma);
+                  if (x < 20) return null;
+                  return (
+                    <g key={`ref-${i}`}>
+                      <circle cx={x} cy={24 + waveY} r={5} fill="url(#txlnReflectionGlow)" opacity={opacity} />
+                      <circle cx={x} cy={24 + waveY} r={2.5} fill="#f87171" opacity={opacity} />
+                    </g>
+                  );
+                })}
+              </g>
+            )}
 
-          {/* Match indicator */}
-          <circle cx={340} cy={130} r={12} fill={output.isMatched ? colors.success : colors.error} />
-          <text x={340} y={134} fill="white" fontSize={10} textAnchor="middle" fontWeight="bold">
-            {output.isMatched ? 'OK' : '!'}
-          </text>
+            {/* Standing wave envelope (when mismatched) */}
+            {!output.isMatched && output.absGamma > 0.1 && (
+              <g opacity="0.3">
+                <path
+                  d={[...Array(37)].map((_, i) => {
+                    const x = i * 10;
+                    const envelope = 1 + output.absGamma * Math.cos((x / 360) * output.electricalLength * Math.PI / 180 * 4);
+                    const y = 24 - envelope * 8;
+                    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="1.5"
+                  strokeDasharray="4,4"
+                />
+              </g>
+            )}
 
-          {/* Waveform display */}
-          <rect x={20} y={180} width={360} height={100} fill="rgba(0,0,0,0.4)" rx={8} />
-          <text x={30} y={200} fill={colors.textSecondary} fontSize={10}>Voltage at Load</text>
+            {/* Transmission line label */}
+            <text x="180" y="-5" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
+              COAXIAL TRANSMISSION LINE
+            </text>
+          </g>
 
-          {/* Waveform */}
-          <path
-            d={[...Array(180)].map((_, i) => {
-              const x = 30 + i * 2;
-              const incident = Math.sin(signalPhase - i * 0.1);
-              const reflected = Math.sin(reflectionPhase + i * 0.1) * output.gamma;
-              const combined = incident + reflected;
-              const y = 240 - combined * 25;
-              return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-            }).join(' ')}
-            fill="none"
-            stroke={colors.signal}
-            strokeWidth={2}
-          />
+          {/* === LOAD EQUIPMENT === */}
+          <g transform="translate(520, 85)">
+            {/* Main housing */}
+            <rect x="0" y="0" width="100" height="90" rx="8"
+              fill={output.isMatched ? "url(#txlnLoadMatched)" : "url(#txlnLoadMismatched)"}
+              stroke={output.isMatched ? "#059669" : "#dc2626"} strokeWidth="1.5" />
+            <rect x="5" y="5" width="90" height="80" rx="6" fill="#1e293b" opacity="0.3" />
 
-          {/* Reference line */}
-          <line x1={30} y1={240} x2={370} y2={240} stroke={colors.textMuted} strokeWidth={1} strokeDasharray="2,2" />
+            {/* Display panel */}
+            <rect x="10" y="10" width="80" height="35" rx="4" fill="#030712" stroke="#334155" />
+            <text x="50" y="25" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="8" textAnchor="middle" fontWeight="bold">
+              LOAD
+            </text>
+            <text x="50" y="38" fill={output.isMatched ? "#34d399" : "#fca5a5"} fontSize="10" textAnchor="middle" fontFamily="monospace">
+              {loadImpedance > 1000 ? 'OPEN' : loadImpedance < 1 ? 'SHORT' : `${loadImpedance} Ohm`}
+            </text>
 
-          {/* Metrics */}
-          <text x={30} y={290} fill={colors.textMuted} fontSize={10}>
-            Gamma: {output.gamma.toFixed(3)} | VSWR: {output.vswr.toFixed(1)}:1 | Return Loss: {output.returnLoss.toFixed(1)} dB
-          </text>
+            {/* Input connector */}
+            <rect x="5" y="52" width="20" height="24" rx="2" fill="#374151" stroke="#4b5563" />
+            <circle cx="15" cy="64" r="5" fill={output.isMatched ? "#22c55e" : "#ef4444"} stroke={output.isMatched ? "#16a34a" : "#dc2626"} strokeWidth="1" />
+
+            {/* Impedance match indicator with glow */}
+            <g filter="url(#txlnMatchIndicatorGlow)">
+              <circle cx="75" cy="65" r="12" fill={output.isMatched ? "url(#txlnMatchGlow)" : "url(#txlnMismatchGlow)"}>
+                <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="75" cy="65" r="8" fill={output.isMatched ? "#22c55e" : "#ef4444"} />
+              <text x="75" y="69" fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">
+                {output.isMatched ? 'OK' : '!'}
+              </text>
+            </g>
+
+            {/* Label */}
+            <text x="50" y="-8" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
+              {output.isMatched ? 'MATCHED LOAD' : 'MISMATCHED LOAD'}
+            </text>
+          </g>
+
+          {/* === OSCILLOSCOPE DISPLAY === */}
+          <g transform="translate(30, 210)">
+            {/* Oscilloscope housing */}
+            <rect x="0" y="0" width="640" height="170" rx="10" fill="#111827" stroke="#1f2937" strokeWidth="2" />
+
+            {/* Screen bezel */}
+            <rect x="10" y="10" width="540" height="130" rx="6" fill="#030712" stroke="#334155" />
+
+            {/* Screen display area */}
+            <rect x="15" y="15" width="530" height="120" rx="4" fill="url(#txlnOscScreen)" />
+            <rect x="15" y="15" width="530" height="120" rx="4" fill="url(#txlnOscGrid)" />
+
+            {/* Screen labels */}
+            <text x="25" y="30" fill="#0d9488" fontSize="9" fontWeight="bold">VOLTAGE AT LOAD</text>
+            <text x="520" y="30" fill="#0d9488" fontSize="8" textAnchor="end">
+              {output.isMatched ? 'NO REFLECTIONS' : `VSWR: ${output.vswr.toFixed(1)}:1`}
+            </text>
+
+            {/* Center reference line */}
+            <line x1="20" y1="75" x2="540" y2="75" stroke="#0d9488" strokeWidth="1" strokeOpacity="0.5" strokeDasharray="4,4" />
+
+            {/* Waveform with glow effect */}
+            <g filter="url(#txlnWaveformGlow)">
+              <path
+                d={[...Array(260)].map((_, i) => {
+                  const x = 20 + i * 2;
+                  const incident = Math.sin(signalPhase - i * 0.08);
+                  const reflected = Math.sin(reflectionPhase + i * 0.08) * output.gamma;
+                  const combined = incident + reflected;
+                  const y = 75 - combined * 35;
+                  return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                }).join(' ')}
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="2.5"
+              />
+            </g>
+
+            {/* Incident wave overlay (dashed) */}
+            <path
+              d={[...Array(260)].map((_, i) => {
+                const x = 20 + i * 2;
+                const incident = Math.sin(signalPhase - i * 0.08);
+                const y = 75 - incident * 25;
+                return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+              }).join(' ')}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="1"
+              strokeOpacity="0.4"
+              strokeDasharray="6,3"
+            />
+
+            {/* Control panel */}
+            <rect x="560" y="10" width="70" height="130" rx="4" fill="#1e293b" stroke="#334155" />
+
+            {/* Metrics display */}
+            <text x="595" y="30" fill={colors.textSecondary} fontSize="7" textAnchor="middle" fontWeight="bold">METRICS</text>
+
+            <text x="565" y="50" fill={colors.textMuted} fontSize="7">Gamma:</text>
+            <text x="625" y="50" fill="#22d3ee" fontSize="8" textAnchor="end" fontFamily="monospace">
+              {output.gamma >= 0 ? '+' : ''}{output.gamma.toFixed(3)}
+            </text>
+
+            <text x="565" y="68" fill={colors.textMuted} fontSize="7">VSWR:</text>
+            <text x="625" y="68" fill="#22d3ee" fontSize="8" textAnchor="end" fontFamily="monospace">
+              {output.vswr.toFixed(1)}:1
+            </text>
+
+            <text x="565" y="86" fill={colors.textMuted} fontSize="7">Ret.Loss:</text>
+            <text x="625" y="86" fill="#22d3ee" fontSize="8" textAnchor="end" fontFamily="monospace">
+              {output.returnLoss.toFixed(1)}dB
+            </text>
+
+            <text x="565" y="104" fill={colors.textMuted} fontSize="7">Pwr Ref:</text>
+            <text x="625" y="104" fill={output.powerReflected > 10 ? "#f87171" : "#22d3ee"} fontSize="8" textAnchor="end" fontFamily="monospace">
+              {output.powerReflected.toFixed(1)}%
+            </text>
+
+            {/* Status indicator */}
+            <rect x="565" y="115" width="60" height="20" rx="3"
+              fill={output.isMatched ? "rgba(16, 185, 129, 0.2)" : "rgba(239, 68, 68, 0.2)"}
+              stroke={output.isMatched ? "#10b981" : "#ef4444"} />
+            <text x="595" y="129" fill={output.isMatched ? "#10b981" : "#ef4444"} fontSize="8" textAnchor="middle" fontWeight="bold">
+              {output.isMatched ? 'MATCHED' : 'MISMATCH'}
+            </text>
+
+            {/* Legend */}
+            <g transform="translate(20, 145)">
+              <line x1="0" y1="0" x2="20" y2="0" stroke="#22d3ee" strokeWidth="2" />
+              <text x="25" y="4" fill={colors.textMuted} fontSize="8">Combined Signal</text>
+
+              <line x1="120" y1="0" x2="140" y2="0" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,2" />
+              <text x="145" y="4" fill={colors.textMuted} fontSize="8">Incident Only</text>
+
+              <circle cx="270" cy="0" r="4" fill="url(#txlnSignalGlow)" />
+              <text x="280" y="4" fill={colors.textMuted} fontSize="8">Forward Wave</text>
+
+              {!output.isMatched && (
+                <>
+                  <circle cx="380" cy="0" r="4" fill="url(#txlnReflectionGlow)" />
+                  <text x="390" y="4" fill={colors.textMuted} fontSize="8">Reflected Wave</text>
+                </>
+              )}
+            </g>
+          </g>
         </svg>
 
         {interactive && (
@@ -586,11 +922,14 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '13px',
+                boxShadow: isAnimating ? '0 4px 15px rgba(239, 68, 68, 0.3)' : '0 4px 15px rgba(16, 185, 129, 0.3)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -601,8 +940,8 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
               style={{
                 padding: '10px 20px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.success}`,
-                background: 'transparent',
+                border: `2px solid ${colors.success}`,
+                background: 'rgba(16, 185, 129, 0.1)',
                 color: colors.success,
                 fontWeight: 'bold',
                 cursor: 'pointer',

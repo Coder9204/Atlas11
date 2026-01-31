@@ -319,18 +319,19 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
   };
 
   const renderVisualization = (interactive: boolean, showAdvanced: boolean = false) => {
-    const width = 500;
-    const height = 480;
+    const width = 700;
+    const height = 520;
     const calc = calculateYieldAndCost();
 
     // Generate wafer visualizations
     const monoWafer = generateWaferData(calc.monolithic.area, calc.monolithic.yield);
     const chipletWafer = generateWaferData(calc.chiplet.areaEach, calc.chiplet.yieldEach);
 
-    const waferRadius = 70;
-    const monoWaferX = 130;
-    const chipletWaferX = 370;
-    const waferY = 140;
+    const waferRadius = 85;
+    const monoWaferX = 140;
+    const chipletWaferX = 380;
+    const waferY = 150;
+    const packageY = 320;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -339,165 +340,526 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
-          {/* Title */}
-          <text x={250} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            Chiplets vs Monolithic: {totalDieArea}mm² Total
+          {/* Premium Defs Section */}
+          <defs>
+            {/* Background gradient - clean room environment */}
+            <linearGradient id="cvmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1a1f2e" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0f1a" />
+            </linearGradient>
+
+            {/* Silicon wafer gradient - realistic gray silicon with subtle blue tint */}
+            <radialGradient id="cvmWaferSilicon" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="60%" stopColor="#374151" />
+              <stop offset="85%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </radialGradient>
+
+            {/* Wafer edge bevel highlight */}
+            <linearGradient id="cvmWaferEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="20%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+
+            {/* Good die gradient - silicon with green tint */}
+            <linearGradient id="cvmGoodDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="25%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="75%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
+
+            {/* Defective die gradient - red warning */}
+            <linearGradient id="cvmDefectDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Chiplet silicon - blue for distinction */}
+            <linearGradient id="cvmChipletSilicon" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Package substrate gradient - organic/ceramic look */}
+            <linearGradient id="cvmPackageSubstrate" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#44403c" />
+              <stop offset="20%" stopColor="#292524" />
+              <stop offset="40%" stopColor="#1c1917" />
+              <stop offset="60%" stopColor="#292524" />
+              <stop offset="80%" stopColor="#44403c" />
+              <stop offset="100%" stopColor="#292524" />
+            </linearGradient>
+
+            {/* Interposer gradient - silicon interposer for 2.5D */}
+            <linearGradient id="cvmInterposer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="75%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#5b21b6" />
+            </linearGradient>
+
+            {/* Interconnect metal traces - copper/gold appearance */}
+            <linearGradient id="cvmMetalTrace" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="20%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="80%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* High bandwidth interconnect */}
+            <linearGradient id="cvmHBMTrace" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#d8b4fe" stopOpacity="1" />
+              <stop offset="70%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Cost panel gradient */}
+            <linearGradient id="cvmCostPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#451a03" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#78350f" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#451a03" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Performance panel gradient */}
+            <linearGradient id="cvmPerfPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#334155" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Radial glow for active elements */}
+            <radialGradient id="cvmActiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#10b981" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Radial glow for chiplet */}
+            <radialGradient id="cvmChipletGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Circuit pattern for die surface */}
+            <pattern id="cvmCircuitPattern" patternUnits="userSpaceOnUse" width="8" height="8">
+              <rect width="8" height="8" fill="transparent" />
+              <path d="M0,4 L3,4 L3,0 M5,4 L8,4 M4,5 L4,8" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" fill="none" />
+              <circle cx="4" cy="4" r="0.8" fill="rgba(255,255,255,0.2)" />
+            </pattern>
+
+            {/* Fine circuit pattern for chiplets */}
+            <pattern id="cvmFineCircuit" patternUnits="userSpaceOnUse" width="4" height="4">
+              <rect width="4" height="4" fill="transparent" />
+              <path d="M0,2 L2,2 L2,0 M2,2 L4,2 M2,2 L2,4" stroke="rgba(255,255,255,0.12)" strokeWidth="0.3" fill="none" />
+              <circle cx="2" cy="2" r="0.4" fill="rgba(255,255,255,0.15)" />
+            </pattern>
+
+            {/* Glow filter for good dice */}
+            <filter id="cvmGoodGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Defect glow filter */}
+            <filter id="cvmDefectGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Package shadow filter */}
+            <filter id="cvmPackageShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="shadow" />
+              <feOffset dx="2" dy="3" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Interconnect glow */}
+            <filter id="cvmInterconnectGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner glow for panels */}
+            <filter id="cvmInnerGlow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Text shadow for labels */}
+            <filter id="cvmTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="shadow" />
+              <feOffset dx="1" dy="1" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Premium lab background */}
+          <rect width="700" height="520" fill="url(#cvmLabBg)" />
+
+          {/* Subtle grid pattern overlay */}
+          <g opacity="0.03">
+            {Array.from({ length: 35 }).map((_, i) => (
+              <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="520" stroke="#fff" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 26 }).map((_, i) => (
+              <line key={`hg-${i}`} x1="0" y1={i * 20} x2="700" y2={i * 20} stroke="#fff" strokeWidth="0.5" />
+            ))}
+          </g>
+
+          {/* Title with premium styling */}
+          <text x={350} y={28} fill={colors.textPrimary} fontSize={16} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)">
+            Chiplets vs Monolithic: {totalDieArea}mm Total Area
           </text>
-          <text x={250} y={42} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-            Defect Density: {defectDensity} /mm² | {showLatencyMode ? 'Latency Mode' : 'Cost Mode'}
+          <text x={350} y={48} fill={colors.textSecondary} fontSize={12} textAnchor="middle">
+            Defect Density: {defectDensity.toFixed(2)} /mm | {showLatencyMode ? 'Performance Analysis' : 'Cost Analysis'}
           </text>
 
-          {/* Wafer labels */}
-          <text x={monoWaferX} y={60} fill={colors.monolithic} fontSize={12} textAnchor="middle" fontWeight="bold">
-            Monolithic ({calc.monolithic.area}mm²)
+          {/* Section labels */}
+          <text x={monoWaferX} y={60} fill={colors.monolithic} fontSize={13} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)">
+            Monolithic Die ({calc.monolithic.area}mm)
           </text>
-          <text x={chipletWaferX} y={60} fill={colors.chiplet} fontSize={12} textAnchor="middle" fontWeight="bold">
-            Chiplets ({numChiplets}×{calc.chiplet.areaEach.toFixed(0)}mm²)
-          </text>
-
-          {/* Monolithic wafer */}
-          <circle cx={monoWaferX} cy={waferY} r={waferRadius} fill="rgba(100,100,100,0.3)" stroke={colors.textMuted} strokeWidth={2} />
-          {/* Die grid on wafer */}
-          {Array.from({ length: Math.min(monoWafer.dicePerRow, 6) }).map((_, row) =>
-            Array.from({ length: Math.min(monoWafer.dicePerRow, 6) }).map((_, col) => {
-              const dieSize = (waferRadius * 1.6) / Math.min(monoWafer.dicePerRow, 6);
-              const x = monoWaferX - (Math.min(monoWafer.dicePerRow, 6) * dieSize) / 2 + col * dieSize;
-              const y = waferY - (Math.min(monoWafer.dicePerRow, 6) * dieSize) / 2 + row * dieSize;
-              const idx = row * monoWafer.dicePerRow + col;
-              const isGood = monoWafer.dice[idx] ?? false;
-              // Check if die is within wafer circle
-              const dx = x + dieSize/2 - monoWaferX;
-              const dy = y + dieSize/2 - waferY;
-              if (Math.sqrt(dx*dx + dy*dy) > waferRadius - 5) return null;
-              return (
-                <rect
-                  key={`mono-${row}-${col}`}
-                  x={x}
-                  y={y}
-                  width={dieSize - 2}
-                  height={dieSize - 2}
-                  fill={isGood ? colors.good : colors.defect}
-                  opacity={0.8}
-                  rx={1}
-                />
-              );
-            })
-          )}
-
-          {/* Chiplet wafer */}
-          <circle cx={chipletWaferX} cy={waferY} r={waferRadius} fill="rgba(100,100,100,0.3)" stroke={colors.textMuted} strokeWidth={2} />
-          {/* Die grid on wafer */}
-          {Array.from({ length: Math.min(chipletWafer.dicePerRow, 10) }).map((_, row) =>
-            Array.from({ length: Math.min(chipletWafer.dicePerRow, 10) }).map((_, col) => {
-              const dieSize = (waferRadius * 1.6) / Math.min(chipletWafer.dicePerRow, 10);
-              const x = chipletWaferX - (Math.min(chipletWafer.dicePerRow, 10) * dieSize) / 2 + col * dieSize;
-              const y = waferY - (Math.min(chipletWafer.dicePerRow, 10) * dieSize) / 2 + row * dieSize;
-              const idx = row * chipletWafer.dicePerRow + col;
-              const isGood = chipletWafer.dice[idx] ?? false;
-              const dx = x + dieSize/2 - chipletWaferX;
-              const dy = y + dieSize/2 - waferY;
-              if (Math.sqrt(dx*dx + dy*dy) > waferRadius - 5) return null;
-              return (
-                <rect
-                  key={`chip-${row}-${col}`}
-                  x={x}
-                  y={y}
-                  width={dieSize - 1}
-                  height={dieSize - 1}
-                  fill={isGood ? colors.good : colors.defect}
-                  opacity={0.8}
-                  rx={1}
-                />
-              );
-            })
-          )}
-
-          {/* Yield stats under wafers */}
-          <text x={monoWaferX} y={waferY + waferRadius + 20} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Yield: {calc.monolithic.yield.toFixed(1)}%
-          </text>
-          <text x={monoWaferX} y={waferY + waferRadius + 35} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Good/wafer: {calc.monolithic.goodPerWafer.toFixed(0)}
+          <text x={chipletWaferX + 80} y={60} fill={colors.chiplet} fontSize={13} textAnchor="middle" fontWeight="bold" filter="url(#cvmTextShadow)">
+            Chiplet Array ({numChiplets} x {calc.chiplet.areaEach.toFixed(0)}mm)
           </text>
 
-          <text x={chipletWaferX} y={waferY + waferRadius + 20} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Per-chiplet: {calc.chiplet.yieldEach.toFixed(1)}%
-          </text>
-          <text x={chipletWaferX} y={waferY + waferRadius + 35} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            System: {calc.chiplet.systemYield.toFixed(1)}%
-          </text>
+          {/* Monolithic wafer with premium styling */}
+          <g transform={`translate(${monoWaferX}, ${waferY})`}>
+            {/* Wafer base with shadow */}
+            <circle cx={0} cy={0} r={waferRadius + 3} fill="#000" opacity="0.4" />
+            {/* Main wafer surface */}
+            <circle cx={0} cy={0} r={waferRadius} fill="url(#cvmWaferSilicon)" />
+            {/* Wafer edge highlight */}
+            <circle cx={0} cy={0} r={waferRadius} fill="none" stroke="url(#cvmWaferEdge)" strokeWidth="3" />
+            {/* Wafer notch */}
+            <path d={`M${waferRadius - 5},8 L${waferRadius},0 L${waferRadius - 5},-8`} fill="#1f2937" />
 
-          {/* Package illustration - middle */}
-          <rect x={220} y={250} width={60} height={50} fill={colors.bgCard} stroke={colors.interconnect} strokeWidth={2} rx={4} />
-          <text x={250} y={268} fill={colors.textSecondary} fontSize={8} textAnchor="middle">Package</text>
-          {/* Chiplet arrangement inside package */}
-          {Array.from({ length: Math.min(numChiplets, 4) }).map((_, i) => {
-            const px = 228 + (i % 2) * 22;
-            const py = 272 + Math.floor(i / 2) * 14;
-            return (
-              <rect key={`pkg-${i}`} x={px} y={py} width={18} height={12} fill={colors.chiplet} rx={1} />
-            );
-          })}
-          {/* Interconnect lines */}
-          {advancedPackaging && showAdvanced && (
-            <g opacity={0.6}>
-              <line x1={237} y1={280} x2={259} y2={280} stroke={colors.interconnect} strokeWidth={2} />
-              <line x1={248} y1={278} x2={248} y2={292} stroke={colors.interconnect} strokeWidth={2} />
-            </g>
-          )}
+            {/* Die grid on wafer */}
+            {Array.from({ length: Math.min(monoWafer.dicePerRow, 6) }).map((_, row) =>
+              Array.from({ length: Math.min(monoWafer.dicePerRow, 6) }).map((_, col) => {
+                const dieSize = (waferRadius * 1.6) / Math.min(monoWafer.dicePerRow, 6);
+                const x = -(Math.min(monoWafer.dicePerRow, 6) * dieSize) / 2 + col * dieSize;
+                const y = -(Math.min(monoWafer.dicePerRow, 6) * dieSize) / 2 + row * dieSize;
+                const idx = row * monoWafer.dicePerRow + col;
+                const isGood = monoWafer.dice[idx] ?? false;
+                const dx = x + dieSize/2;
+                const dy = y + dieSize/2;
+                if (Math.sqrt(dx*dx + dy*dy) > waferRadius - 8) return null;
+                return (
+                  <g key={`mono-${row}-${col}`}>
+                    <rect
+                      x={x}
+                      y={y}
+                      width={dieSize - 2}
+                      height={dieSize - 2}
+                      fill={isGood ? 'url(#cvmGoodDie)' : 'url(#cvmDefectDie)'}
+                      rx={2}
+                      filter={isGood ? 'url(#cvmGoodGlow)' : 'url(#cvmDefectGlow)'}
+                    />
+                    {/* Circuit pattern overlay */}
+                    <rect
+                      x={x}
+                      y={y}
+                      width={dieSize - 2}
+                      height={dieSize - 2}
+                      fill="url(#cvmCircuitPattern)"
+                      rx={2}
+                    />
+                    {/* Die edge highlight */}
+                    <rect
+                      x={x}
+                      y={y}
+                      width={dieSize - 2}
+                      height={dieSize - 2}
+                      fill="none"
+                      stroke="rgba(255,255,255,0.2)"
+                      strokeWidth="0.5"
+                      rx={2}
+                    />
+                  </g>
+                );
+              })
+            )}
+          </g>
 
-          {/* Cost comparison panel */}
-          <rect x={10} y={320} width={230} height={150} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.cost} strokeWidth={1} />
-          <text x={20} y={340} fill={colors.cost} fontSize={12} fontWeight="bold">Cost Analysis</text>
+          {/* Chiplet wafer with premium styling */}
+          <g transform={`translate(${chipletWaferX}, ${waferY})`}>
+            {/* Wafer base with shadow */}
+            <circle cx={0} cy={0} r={waferRadius + 3} fill="#000" opacity="0.4" />
+            {/* Main wafer surface */}
+            <circle cx={0} cy={0} r={waferRadius} fill="url(#cvmWaferSilicon)" />
+            {/* Wafer edge highlight */}
+            <circle cx={0} cy={0} r={waferRadius} fill="none" stroke="url(#cvmWaferEdge)" strokeWidth="3" />
+            {/* Wafer notch */}
+            <path d={`M${waferRadius - 5},8 L${waferRadius},0 L${waferRadius - 5},-8`} fill="#1f2937" />
 
-          <text x={20} y={360} fill={colors.monolithic} fontSize={10}>
-            Monolithic: ${calc.monolithic.costPerGood.toFixed(0)}/good die
-          </text>
-          <text x={20} y={378} fill={colors.chiplet} fontSize={10}>
-            Chiplets: ${calc.chiplet.totalCost.toFixed(0)}/good system
-          </text>
-          <text x={30} y={393} fill={colors.textMuted} fontSize={9}>
-            (${calc.chiplet.costPerGood.toFixed(0)} × {numChiplets} + ${calc.chiplet.packagingCost.toFixed(0)} pkg)
-          </text>
+            {/* Die grid on wafer */}
+            {Array.from({ length: Math.min(chipletWafer.dicePerRow, 10) }).map((_, row) =>
+              Array.from({ length: Math.min(chipletWafer.dicePerRow, 10) }).map((_, col) => {
+                const dieSize = (waferRadius * 1.6) / Math.min(chipletWafer.dicePerRow, 10);
+                const x = -(Math.min(chipletWafer.dicePerRow, 10) * dieSize) / 2 + col * dieSize;
+                const y = -(Math.min(chipletWafer.dicePerRow, 10) * dieSize) / 2 + row * dieSize;
+                const idx = row * chipletWafer.dicePerRow + col;
+                const isGood = chipletWafer.dice[idx] ?? false;
+                const dx = x + dieSize/2;
+                const dy = y + dieSize/2;
+                if (Math.sqrt(dx*dx + dy*dy) > waferRadius - 8) return null;
+                return (
+                  <g key={`chip-${row}-${col}`}>
+                    <rect
+                      x={x}
+                      y={y}
+                      width={dieSize - 1}
+                      height={dieSize - 1}
+                      fill={isGood ? 'url(#cvmGoodDie)' : 'url(#cvmDefectDie)'}
+                      rx={1}
+                      filter={isGood ? 'url(#cvmGoodGlow)' : 'url(#cvmDefectGlow)'}
+                    />
+                    {/* Fine circuit pattern */}
+                    <rect
+                      x={x}
+                      y={y}
+                      width={dieSize - 1}
+                      height={dieSize - 1}
+                      fill="url(#cvmFineCircuit)"
+                      rx={1}
+                    />
+                  </g>
+                );
+              })
+            )}
+          </g>
 
-          <text x={20} y={415} fill={calc.comparison.chipletsWin ? colors.success : colors.error} fontSize={11} fontWeight="bold">
-            Winner: {calc.comparison.chipletsWin ? 'Chiplets' : 'Monolithic'}
-          </text>
-          <text x={20} y={432} fill={colors.textSecondary} fontSize={10}>
-            Ratio: {calc.comparison.costRatio.toFixed(2)}x
-          </text>
-
-          {showAdvanced && (
-            <text x={20} y={450} fill={advancedPackaging ? colors.interconnect : colors.textMuted} fontSize={9}>
-              Adv Pkg: {advancedPackaging ? 'Enabled' : 'Disabled'} ({advPackagingCostMult}x cost)
+          {/* Yield statistics with premium styling */}
+          <g transform={`translate(${monoWaferX}, ${waferY + waferRadius + 20})`}>
+            <rect x={-55} y={-5} width={110} height={40} rx={6} fill="rgba(0,0,0,0.5)" />
+            <text x={0} y={10} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+              Yield: {calc.monolithic.yield.toFixed(1)}%
             </text>
-          )}
+            <text x={0} y={28} fill={colors.textMuted} fontSize={10} textAnchor="middle">
+              {calc.monolithic.goodPerWafer.toFixed(0)} good/wafer
+            </text>
+          </g>
 
-          {/* Performance panel */}
-          <rect x={260} y={320} width={230} height={150} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.textSecondary} strokeWidth={1} />
-          <text x={270} y={340} fill={colors.textSecondary} fontSize={12} fontWeight="bold">Performance Trade-offs</text>
+          <g transform={`translate(${chipletWaferX}, ${waferY + waferRadius + 20})`}>
+            <rect x={-55} y={-5} width={110} height={40} rx={6} fill="rgba(0,0,0,0.5)" />
+            <text x={0} y={10} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+              Per-die: {calc.chiplet.yieldEach.toFixed(1)}%
+            </text>
+            <text x={0} y={28} fill={colors.textMuted} fontSize={10} textAnchor="middle">
+              System: {calc.chiplet.systemYield.toFixed(1)}%
+            </text>
+          </g>
 
-          <text x={270} y={360} fill={colors.monolithic} fontSize={10}>
-            Mono Latency: {calc.monolithic.latency} ns
-          </text>
-          <text x={270} y={378} fill={colors.chiplet} fontSize={10}>
-            Chiplet Latency: {calc.chiplet.latency.toFixed(1)} ns (worst case)
-          </text>
-          <text x={270} y={396} fill={colors.textSecondary} fontSize={10}>
-            Penalty: +{calc.comparison.latencyPenalty.toFixed(1)} ns
-          </text>
+          {/* Package Assembly Visualization */}
+          <g transform={`translate(${chipletWaferX + 70}, ${packageY})`} filter="url(#cvmPackageShadow)">
+            {/* Package substrate */}
+            <rect x={0} y={0} width={100} height={70} rx={6} fill="url(#cvmPackageSubstrate)" />
+            <rect x={0} y={0} width={100} height={70} rx={6} fill="none" stroke="#78716c" strokeWidth="2" />
 
-          <text x={270} y={420} fill={colors.monolithic} fontSize={10}>
-            Mono Power: {calc.monolithic.power} pJ/bit
-          </text>
-          <text x={270} y={438} fill={colors.chiplet} fontSize={10}>
-            Chiplet Power: {calc.chiplet.power} pJ/bit (inter-chip)
-          </text>
-          <text x={270} y={456} fill={colors.textMuted} fontSize={9}>
-            {advancedPackaging ? 'Advanced packaging reduces penalty' : 'Standard packaging'}
-          </text>
+            {/* Interposer layer (if advanced packaging) */}
+            {advancedPackaging && showAdvanced && (
+              <rect x={5} y={5} width={90} height={60} rx={4} fill="url(#cvmInterposer)" opacity="0.8" />
+            )}
+
+            {/* Chiplet arrangement inside package */}
+            {Array.from({ length: Math.min(numChiplets, 4) }).map((_, i) => {
+              const cols = Math.min(numChiplets, 2);
+              const rows = Math.ceil(Math.min(numChiplets, 4) / cols);
+              const chipW = 35;
+              const chipH = 22;
+              const gapX = (90 - cols * chipW) / (cols + 1);
+              const gapY = (60 - rows * chipH) / (rows + 1);
+              const px = 5 + gapX + (i % cols) * (chipW + gapX);
+              const py = 5 + gapY + Math.floor(i / cols) * (chipH + gapY);
+              return (
+                <g key={`pkg-${i}`}>
+                  {/* Chiplet glow effect */}
+                  <rect x={px - 2} y={py - 2} width={chipW + 4} height={chipH + 4} rx={3} fill="url(#cvmChipletGlow)" />
+                  {/* Chiplet die */}
+                  <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="url(#cvmChipletSilicon)" />
+                  {/* Circuit pattern */}
+                  <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="url(#cvmFineCircuit)" />
+                  {/* Chiplet border */}
+                  <rect x={px} y={py} width={chipW} height={chipH} rx={2} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+                </g>
+              );
+            })}
+
+            {/* Interconnect traces between chiplets */}
+            {advancedPackaging && showAdvanced && numChiplets >= 2 && (
+              <g filter="url(#cvmInterconnectGlow)">
+                {/* Horizontal traces */}
+                <line x1={42} y1={25} x2={58} y2={25} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                <line x1={42} y1={30} x2={58} y2={30} stroke="url(#cvmHBMTrace)" strokeWidth="2" />
+                {numChiplets >= 3 && (
+                  <>
+                    <line x1={42} y1={48} x2={58} y2={48} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                    <line x1={42} y1={53} x2={58} y2={53} stroke="url(#cvmHBMTrace)" strokeWidth="2" />
+                  </>
+                )}
+                {/* Vertical traces */}
+                {numChiplets >= 3 && (
+                  <>
+                    <line x1={25} y1={33} x2={25} y2={42} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                    <line x1={75} y1={33} x2={75} y2={42} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                  </>
+                )}
+              </g>
+            )}
+
+            {/* Standard interconnect (when not advanced) */}
+            {!advancedPackaging && numChiplets >= 2 && (
+              <g opacity="0.5">
+                <line x1={42} y1={27} x2={58} y2={27} stroke="url(#cvmMetalTrace)" strokeWidth="1.5" />
+                {numChiplets >= 3 && (
+                  <line x1={25} y1={33} x2={25} y2={42} stroke="url(#cvmMetalTrace)" strokeWidth="1.5" />
+                )}
+              </g>
+            )}
+
+            {/* Package label */}
+            <text x={50} y={-8} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="bold">
+              {advancedPackaging && showAdvanced ? '2.5D/3D Package' : 'Standard Package'}
+            </text>
+
+            {/* Ball grid array (BGA) indicators at bottom */}
+            <g transform="translate(0, 72)">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <circle key={`bga-${i}`} cx={12 + i * 11} cy={5} r={3} fill="#c9b037" stroke="#a08c2e" strokeWidth="0.5" />
+              ))}
+            </g>
+          </g>
+
+          {/* Arrow from wafer to package */}
+          <g opacity="0.6">
+            <path d={`M${chipletWaferX + 50},${waferY + waferRadius + 50} Q${chipletWaferX + 80},${packageY - 20} ${chipletWaferX + 90},${packageY - 5}`}
+              fill="none" stroke={colors.chiplet} strokeWidth="2" strokeDasharray="5,3" markerEnd="url(#cvmArrow)" />
+          </g>
+          <defs>
+            <marker id="cvmArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill={colors.chiplet} />
+            </marker>
+          </defs>
+
+          {/* Cost comparison panel with premium styling */}
+          <g transform="translate(10, 400)">
+            <rect width={220} height={110} rx={10} fill="url(#cvmCostPanel)" filter="url(#cvmInnerGlow)" />
+            <rect width={220} height={110} rx={10} fill="none" stroke={colors.cost} strokeWidth="1.5" opacity="0.8" />
+
+            <text x={15} y={22} fill={colors.cost} fontSize={13} fontWeight="bold">Cost Analysis</text>
+            <line x1={15} y1={30} x2={205} y2={30} stroke={colors.cost} strokeWidth="0.5" opacity="0.5" />
+
+            <text x={15} y={48} fill={colors.monolithic} fontSize={11} fontWeight="bold">
+              Monolithic: ${calc.monolithic.costPerGood.toFixed(0)}/die
+            </text>
+            <text x={15} y={66} fill={colors.chiplet} fontSize={11} fontWeight="bold">
+              Chiplets: ${calc.chiplet.totalCost.toFixed(0)}/system
+            </text>
+            <text x={25} y={80} fill={colors.textMuted} fontSize={9}>
+              (${calc.chiplet.costPerGood.toFixed(0)} x {numChiplets} + ${calc.chiplet.packagingCost.toFixed(0)} pkg)
+            </text>
+
+            <rect x={15} y={88} width={190} height={18} rx={4} fill={calc.comparison.chipletsWin ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'} />
+            <text x={110} y={101} fill={calc.comparison.chipletsWin ? colors.success : colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
+              Winner: {calc.comparison.chipletsWin ? 'Chiplets' : 'Monolithic'} ({calc.comparison.costRatio.toFixed(2)}x)
+            </text>
+          </g>
+
+          {/* Performance panel with premium styling */}
+          <g transform="translate(250, 400)">
+            <rect width={230} height={110} rx={10} fill="url(#cvmPerfPanel)" filter="url(#cvmInnerGlow)" />
+            <rect width={230} height={110} rx={10} fill="none" stroke={colors.textSecondary} strokeWidth="1.5" opacity="0.6" />
+
+            <text x={15} y={22} fill={colors.textSecondary} fontSize={13} fontWeight="bold">Performance Trade-offs</text>
+            <line x1={15} y1={30} x2={215} y2={30} stroke={colors.textSecondary} strokeWidth="0.5" opacity="0.5" />
+
+            <text x={15} y={48} fill={colors.monolithic} fontSize={11}>
+              Monolithic Latency: {calc.monolithic.latency} ns
+            </text>
+            <text x={15} y={66} fill={colors.chiplet} fontSize={11}>
+              Chiplet Latency: {calc.chiplet.latency.toFixed(1)} ns (worst)
+            </text>
+            <text x={15} y={84} fill={colors.textMuted} fontSize={10}>
+              Penalty: +{calc.comparison.latencyPenalty.toFixed(1)} ns | Power: {calc.chiplet.power} pJ/bit
+            </text>
+
+            {showAdvanced && (
+              <text x={15} y={100} fill={advancedPackaging ? colors.interconnect : colors.textMuted} fontSize={10} fontWeight={advancedPackaging ? 'bold' : 'normal'}>
+                {advancedPackaging ? 'Adv Pkg: ON - Reduced penalty' : 'Standard packaging'}
+              </text>
+            )}
+          </g>
+
+          {/* Legend */}
+          <g transform="translate(500, 400)">
+            <rect width={190} height={110} rx={10} fill="rgba(0,0,0,0.4)" />
+            <text x={15} y={22} fill={colors.textSecondary} fontSize={12} fontWeight="bold">Legend</text>
+            <line x1={15} y1={30} x2={175} y2={30} stroke={colors.textSecondary} strokeWidth="0.5" opacity="0.5" />
+
+            <rect x={15} y={40} width={16} height={12} rx={2} fill="url(#cvmGoodDie)" />
+            <text x={38} y={50} fill={colors.textSecondary} fontSize={10}>Good Die</text>
+
+            <rect x={100} y={40} width={16} height={12} rx={2} fill="url(#cvmDefectDie)" />
+            <text x={123} y={50} fill={colors.textSecondary} fontSize={10}>Defective</text>
+
+            <rect x={15} y={60} width={16} height={12} rx={2} fill="url(#cvmChipletSilicon)" />
+            <text x={38} y={70} fill={colors.textSecondary} fontSize={10}>Chiplet</text>
+
+            {showAdvanced && (
+              <>
+                <rect x={100} y={60} width={16} height={12} rx={2} fill="url(#cvmInterposer)" />
+                <text x={123} y={70} fill={colors.textSecondary} fontSize={10}>Interposer</text>
+              </>
+            )}
+
+            <line x1={15} y1={86} x2={30} y2={86} stroke="url(#cvmMetalTrace)" strokeWidth="2" />
+            <text x={38} y={90} fill={colors.textSecondary} fontSize={10}>Interconnect</text>
+
+            {showAdvanced && advancedPackaging && (
+              <>
+                <line x1={100} y1={86} x2={115} y2={86} stroke="url(#cvmHBMTrace)" strokeWidth="3" />
+                <text x={123} y={90} fill={colors.textSecondary} fontSize={10}>HBM Link</text>
+              </>
+            )}
+          </g>
         </svg>
 
         {interactive && (

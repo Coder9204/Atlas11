@@ -167,67 +167,426 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
 
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
+        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: 'linear-gradient(135deg, #0a0f1a 0%, #030712 50%, #0a0f1a 100%)', borderRadius: '12px' }}>
+          {/* ========== PREMIUM DEFS SECTION ========== */}
+          <defs>
+            {/* Premium metallic gun gradient with depth */}
+            <linearGradient id="bpenGunMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="80%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Bullet brass gradient - golden metallic finish */}
+            <linearGradient id="bpenBulletBrass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Bullet 3D radial for sphere/tip effect */}
+            <radialGradient id="bpenBulletGlow" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Wooden block gradient - oak/mahogany look */}
+            <linearGradient id="bpenWoodBlock" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#92400e" />
+              <stop offset="15%" stopColor="#78350f" />
+              <stop offset="35%" stopColor="#a16207" />
+              <stop offset="55%" stopColor="#78350f" />
+              <stop offset="75%" stopColor="#92400e" />
+              <stop offset="100%" stopColor="#713f12" />
+            </linearGradient>
+
+            {/* Wood grain pattern overlay */}
+            <pattern id="bpenWoodGrain" patternUnits="userSpaceOnUse" width="50" height="40">
+              <rect width="50" height="40" fill="none" />
+              <line x1="0" y1="5" x2="50" y2="7" stroke="#5c3d0e" strokeWidth="0.5" strokeOpacity="0.4" />
+              <line x1="0" y1="12" x2="50" y2="10" stroke="#713f12" strokeWidth="0.3" strokeOpacity="0.3" />
+              <line x1="0" y1="20" x2="50" y2="22" stroke="#5c3d0e" strokeWidth="0.4" strokeOpacity="0.35" />
+              <line x1="0" y1="28" x2="50" y2="26" stroke="#713f12" strokeWidth="0.3" strokeOpacity="0.3" />
+              <line x1="0" y1="35" x2="50" y2="37" stroke="#5c3d0e" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Metallic pendulum bob gradient */}
+            <linearGradient id="bpenMetalBob" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* 3D sphere effect for metallic bob highlight */}
+            <radialGradient id="bpenBobHighlight" cx="30%" cy="25%" r="60%">
+              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#94a3b8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Rope/string texture gradient */}
+            <linearGradient id="bpenRopeTexture" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d4a574" />
+              <stop offset="20%" stopColor="#c9a066" />
+              <stop offset="40%" stopColor="#b8956b" />
+              <stop offset="60%" stopColor="#c9a066" />
+              <stop offset="80%" stopColor="#d4a574" />
+              <stop offset="100%" stopColor="#a8845a" />
+            </linearGradient>
+
+            {/* Support structure brushed metal */}
+            <linearGradient id="bpenBrushedSteel" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="15%" stopColor="#9ca3af" />
+              <stop offset="30%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="70%" stopColor="#6b7280" />
+              <stop offset="85%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+
+            {/* Energy glow gradient (green) */}
+            <radialGradient id="bpenEnergyGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Momentum indicator gradient (red) */}
+            <linearGradient id="bpenMomentumArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="bpenInfoPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Lab background gradient */}
+            <linearGradient id="bpenLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* ========== FILTER EFFECTS ========== */}
+
+            {/* Bullet motion blur effect */}
+            <filter id="bpenMotionBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8,0" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Bullet glow effect */}
+            <filter id="bpenBulletGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Embedded bullet glow */}
+            <filter id="bpenEmbeddedGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Height indicator glow */}
+            <filter id="bpenHeightGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Metal shine effect */}
+            <filter id="bpenMetalShine" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Shadow for depth */}
+            <filter id="bpenDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Muzzle flash glow */}
+            <filter id="bpenMuzzleFlash" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern for lab floor */}
+            <pattern id="bpenLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* ========== PREMIUM BACKGROUND ========== */}
+          <rect width="400" height="320" fill="url(#bpenLabBg)" />
+          <rect width="400" height="320" fill="url(#bpenLabGrid)" />
+
+          {/* Title with subtle glow */}
+          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold"
+            style={{ textShadow: '0 0 10px rgba(148, 163, 184, 0.3)' }}>
             Ballistic Pendulum
           </text>
 
-          {/* Pivot point and support */}
-          <rect x="270" y="40" width="20" height="8" fill={colors.pendulumHighlight} />
-          <line x1="280" y1="48" x2="280" y2={pivotY} stroke={colors.pendulumHighlight} strokeWidth="3" />
+          {/* ========== PREMIUM SUPPORT STRUCTURE ========== */}
+          {/* Main support beam */}
+          <rect x="268" y="35" width="24" height="12" rx="2" fill="url(#bpenBrushedSteel)" filter="url(#bpenDropShadow)" />
+          {/* Beam highlight */}
+          <rect x="268" y="35" width="24" height="3" rx="1" fill="#d1d5db" fillOpacity="0.3" />
+          {/* Vertical support post */}
+          <rect x="277" y="42" width="6" height="18" fill="url(#bpenBrushedSteel)" />
+          <rect x="277" y="42" width="2" height="18" fill="#9ca3af" fillOpacity="0.2" />
+          {/* Pivot mount */}
+          <circle cx={pivotX} cy={pivotY} r="5" fill="url(#bpenMetalBob)" stroke="#475569" strokeWidth="1" />
+          <circle cx={pivotX} cy={pivotY} r="2" fill="#1e293b" />
 
-          {/* String */}
+          {/* ========== PREMIUM ROPE/STRING ========== */}
+          {/* Rope shadow */}
+          <line x1={pivotX + 1} y1={pivotY + 2} x2={pendulumX + 1} y2={pendulumY + 2}
+            stroke="#000000" strokeWidth="4" strokeOpacity="0.3" strokeLinecap="round" />
+          {/* Main rope with texture gradient */}
           <line x1={pivotX} y1={pivotY} x2={pendulumX} y2={pendulumY}
-            stroke={colors.string} strokeWidth="2" />
+            stroke="url(#bpenRopeTexture)" strokeWidth="3" strokeLinecap="round" />
+          {/* Rope highlight strand */}
+          <line x1={pivotX - 0.5} y1={pivotY} x2={pendulumX - 0.5} y2={pendulumY}
+            stroke="#e5d4b8" strokeWidth="0.8" strokeOpacity="0.6" strokeLinecap="round" />
+          {/* Rope texture details */}
+          {Array.from({ length: 8 }, (_, i) => {
+            const t = (i + 1) / 9;
+            const x = pivotX + (pendulumX - pivotX) * t;
+            const y = pivotY + (pendulumY - pivotY) * t;
+            return (
+              <circle key={`rope-knot-${i}`} cx={x} cy={y} r="0.8" fill="#8b6914" fillOpacity="0.5" />
+            );
+          })}
 
-          {/* Pendulum block */}
+          {/* ========== PREMIUM WOODEN BLOCK ========== */}
+          {/* Block shadow */}
+          <rect
+            x={pendulumX - 23}
+            y={pendulumY - 18}
+            width="50" height="40"
+            rx="3"
+            fill="#000000"
+            fillOpacity="0.4"
+            transform={`translate(3, 4) rotate(${pendulumAngle}, ${pendulumX}, ${pendulumY})`}
+          />
+          {/* Main block with wood gradient */}
           <rect
             x={pendulumX - 25}
             y={pendulumY - 20}
             width="50" height="40"
-            fill={colors.pendulum}
-            stroke={colors.pendulumHighlight}
-            strokeWidth="2"
+            fill="url(#bpenWoodBlock)"
+            stroke="#5c3d0e"
+            strokeWidth="1.5"
             rx="4"
+            filter="url(#bpenMetalShine)"
           />
+          {/* Wood grain overlay */}
+          <rect
+            x={pendulumX - 25}
+            y={pendulumY - 20}
+            width="50" height="40"
+            fill="url(#bpenWoodGrain)"
+            rx="4"
+            opacity="0.6"
+          />
+          {/* Block edge highlights */}
+          <line x1={pendulumX - 25} y1={pendulumY - 18} x2={pendulumX + 23} y2={pendulumY - 18}
+            stroke="#c9a066" strokeWidth="1" strokeOpacity="0.5" />
+          <line x1={pendulumX - 23} y1={pendulumY - 20} x2={pendulumX - 23} y2={pendulumY + 18}
+            stroke="#c9a066" strokeWidth="0.8" strokeOpacity="0.4" />
+          {/* Block label */}
+          <text x={pendulumX} y={pendulumY + 5} textAnchor="middle" fill="#e2e8f0" fontSize="8" fontWeight="bold"
+            fillOpacity="0.7">{(pendulumMass / 1000).toFixed(1)}kg</text>
+
+          {/* Embedded bullet in block */}
           {bulletEmbedded && (
-            <circle cx={pendulumX - 15} cy={pendulumY} r="5" fill={colors.bullet} />
+            <g filter="url(#bpenEmbeddedGlow)">
+              {/* Bullet hole shadow */}
+              <ellipse cx={pendulumX - 15} cy={pendulumY} rx="4" ry="4" fill="#1c1917" />
+              {/* Embedded bullet with 3D effect */}
+              <ellipse cx={pendulumX - 14} cy={pendulumY} rx="5" ry="5" fill="url(#bpenBulletGlow)" />
+              <ellipse cx={pendulumX - 15} cy={pendulumY - 1} rx="2" ry="2" fill="#fef3c7" fillOpacity="0.6" />
+            </g>
           )}
 
-          {/* Bullet (before embedding) */}
-          {bulletFired && !bulletEmbedded && (
-            <ellipse cx={50 + bulletPos} cy="210" rx="8" ry="4" fill={colors.bullet} />
-          )}
+          {/* ========== PREMIUM GUN ========== */}
+          {/* Gun shadow */}
+          <rect x="22" y="203" width="42" height="22" rx="3" fill="#000000" fillOpacity="0.4" />
+          {/* Gun body with metallic gradient */}
+          <rect x="20" y="200" width="42" height="22" rx="4" fill="url(#bpenGunMetal)" filter="url(#bpenMetalShine)" />
+          {/* Gun barrel */}
+          <rect x="55" y="206" width="15" height="10" rx="2" fill="url(#bpenBrushedSteel)" />
+          <rect x="55" y="206" width="15" height="2" rx="1" fill="#d1d5db" fillOpacity="0.3" />
+          {/* Gun grip */}
+          <rect x="22" y="218" width="15" height="12" rx="2" fill="#1f2937" />
+          <rect x="24" y="220" width="2" height="8" rx="1" fill="#374151" />
+          <rect x="28" y="220" width="2" height="8" rx="1" fill="#374151" />
+          <rect x="32" y="220" width="2" height="8" rx="1" fill="#374151" />
+          {/* Gun sights */}
+          <rect x="64" y="203" width="3" height="4" fill="#475569" />
+          <rect x="30" y="198" width="4" height="3" fill="#475569" />
+          {/* Gun label */}
+          <text x="41" y="214" textAnchor="middle" fill="#94a3b8" fontSize="6" fontWeight="bold">GUN</text>
 
-          {/* Gun */}
-          <rect x="20" y="200" width="40" height="20" fill={colors.pendulumHighlight} rx="3" />
+          {/* Bullet in gun (before firing) */}
           {!bulletFired && (
-            <ellipse cx="55" cy="210" rx="6" ry="3" fill={colors.bullet} />
+            <g>
+              <ellipse cx="68" cy="211" rx="7" ry="4" fill="url(#bpenBulletBrass)" />
+              <ellipse cx="72" cy="211" rx="3" ry="3" fill="url(#bpenBulletGlow)" />
+              <ellipse cx="67" cy="210" rx="2" ry="1.5" fill="#fef3c7" fillOpacity="0.5" />
+            </g>
           )}
 
-          {/* Height indicator */}
+          {/* ========== BULLET IN FLIGHT WITH MOTION BLUR ========== */}
+          {bulletFired && !bulletEmbedded && (
+            <g filter="url(#bpenMotionBlur)">
+              {/* Motion trail */}
+              <ellipse cx={50 + bulletPos - 15} cy="210" rx="12" ry="3"
+                fill="url(#bpenMomentumArrow)" fillOpacity="0.6" />
+              <ellipse cx={50 + bulletPos - 25} cy="210" rx="8" ry="2"
+                fill="#fbbf24" fillOpacity="0.3" />
+              {/* Main bullet body */}
+              <ellipse cx={50 + bulletPos} cy="210" rx="10" ry="5" fill="url(#bpenBulletBrass)"
+                filter="url(#bpenBulletGlowFilter)" />
+              {/* Bullet tip (pointed) */}
+              <ellipse cx={50 + bulletPos + 6} cy="210" rx="4" ry="4" fill="url(#bpenBulletGlow)" />
+              {/* Bullet highlight */}
+              <ellipse cx={50 + bulletPos + 3} cy="208" rx="3" ry="1.5" fill="#fef3c7" fillOpacity="0.7" />
+              {/* Velocity indicator */}
+              <text x={50 + bulletPos} y="225" textAnchor="middle" fill="#fbbf24" fontSize="7" fontWeight="bold">
+                {bulletVelocity} m/s
+              </text>
+            </g>
+          )}
+
+          {/* Muzzle flash effect when just fired */}
+          {bulletFired && !bulletEmbedded && bulletPos < 30 && (
+            <g filter="url(#bpenMuzzleFlash)">
+              <ellipse cx="75" cy="211" rx="8" ry="6" fill="#fbbf24" fillOpacity="0.8" />
+              <ellipse cx="75" cy="211" rx="5" ry="4" fill="#fef3c7" fillOpacity="0.9" />
+            </g>
+          )}
+
+          {/* ========== HEIGHT INDICATOR WITH GLOW ========== */}
           {bulletEmbedded && pendulumAngle > 5 && (
-            <g>
-              <line x1="350" y1={pivotY + stringLength} x2="350" y2={pendulumY}
-                stroke={colors.energy} strokeWidth="2" strokeDasharray="4,4" />
-              <text x="360" y={(pivotY + stringLength + pendulumY) / 2} fill={colors.energy} fontSize="10">
+            <g filter="url(#bpenHeightGlow)">
+              {/* Reference line (rest position) */}
+              <line x1="340" y1={pivotY + stringLength} x2="365" y2={pivotY + stringLength}
+                stroke={colors.energy} strokeWidth="1" strokeOpacity="0.5" />
+              {/* Current height line */}
+              <line x1="340" y1={pendulumY} x2="365" y2={pendulumY}
+                stroke={colors.energy} strokeWidth="1" strokeOpacity="0.5" />
+              {/* Height measurement line */}
+              <line x1="352" y1={pivotY + stringLength} x2="352" y2={pendulumY}
+                stroke="url(#bpenEnergyGlow)" strokeWidth="3" strokeOpacity="0.8" />
+              {/* Arrow heads */}
+              <polygon points={`347,${pivotY + stringLength - 5} 352,${pivotY + stringLength} 357,${pivotY + stringLength - 5}`}
+                fill={colors.energy} />
+              <polygon points={`347,${pendulumY + 5} 352,${pendulumY} 357,${pendulumY + 5}`}
+                fill={colors.energy} />
+              {/* Height label with background */}
+              <rect x="360" y={(pivotY + stringLength + pendulumY) / 2 - 8} width="38" height="16" rx="3"
+                fill="#022c22" fillOpacity="0.8" />
+              <text x="379" y={(pivotY + stringLength + pendulumY) / 2 + 4} textAnchor="middle"
+                fill={colors.energy} fontSize="10" fontWeight="bold">
                 h={h.toFixed(3)}m
               </text>
             </g>
           )}
 
-          {/* Info panel */}
-          <g transform="translate(20, 250)">
-            <rect x="0" y="0" width="360" height="55" fill={colors.bgCard} rx="6" />
-            <text x="10" y="18" fill={colors.textMuted} fontSize="10">Bullet: {bulletMass}g @ {bulletVelocity}m/s</text>
-            <text x="10" y="35" fill={colors.textMuted} fontSize="10">Block: {pendulumMass}g</text>
-            <text x="200" y="18" fill={colors.energy} fontSize="10">Combined velocity: {V.toFixed(2)} m/s</text>
-            <text x="200" y="35" fill={colors.energy} fontSize="10">Max height: {(h * 100).toFixed(2)} cm</text>
-            <text x="10" y="50" fill={colors.momentum} fontSize="10">
-              Momentum conserved: {(bulletMass * bulletVelocity / 1000).toFixed(2)} = {((bulletMass + pendulumMass) * V / 1000).toFixed(2)} kg·m/s
+          {/* ========== PREMIUM INFO PANEL ========== */}
+          <g transform="translate(10, 248)">
+            {/* Panel background with gradient */}
+            <rect x="0" y="0" width="380" height="65" fill="url(#bpenInfoPanel)" rx="8"
+              stroke="#334155" strokeWidth="1" />
+            {/* Panel inner glow */}
+            <rect x="2" y="2" width="376" height="61" rx="6" fill="none"
+              stroke="#475569" strokeWidth="0.5" strokeOpacity="0.3" />
+
+            {/* Left column - Input parameters */}
+            <g>
+              <text x="12" y="16" fill="#94a3b8" fontSize="8" fontWeight="bold">INPUT</text>
+              <circle cx="18" cy="28" r="4" fill="url(#bpenBulletGlow)" />
+              <text x="26" y="31" fill={colors.textSecondary} fontSize="9">
+                Bullet: {bulletMass}g @ {bulletVelocity}m/s
+              </text>
+              <rect x="14" y="38" width="8" height="6" rx="1" fill="url(#bpenWoodBlock)" />
+              <text x="26" y="46" fill={colors.textSecondary} fontSize="9">
+                Block: {pendulumMass}g ({(pendulumMass/1000).toFixed(1)}kg)
+              </text>
+            </g>
+
+            {/* Divider */}
+            <line x1="140" y1="8" x2="140" y2="57" stroke="#334155" strokeWidth="1" />
+
+            {/* Middle column - Results */}
+            <g>
+              <text x="150" y="16" fill="#94a3b8" fontSize="8" fontWeight="bold">RESULT</text>
+              <circle cx="156" cy="28" r="3" fill="url(#bpenEnergyGlow)" />
+              <text x="164" y="31" fill={colors.energy} fontSize="9" fontWeight="bold">
+                V = {V.toFixed(2)} m/s
+              </text>
+              <text x="150" y="46" fill={colors.energy} fontSize="9">
+                h = {(h * 100).toFixed(2)} cm
+              </text>
+            </g>
+
+            {/* Divider */}
+            <line x1="255" y1="8" x2="255" y2="57" stroke="#334155" strokeWidth="1" />
+
+            {/* Right column - Conservation */}
+            <g>
+              <text x="265" y="16" fill="#94a3b8" fontSize="8" fontWeight="bold">MOMENTUM</text>
+              <text x="265" y="31" fill={colors.momentum} fontSize="9">
+                p = {(bulletMass * bulletVelocity / 1000).toFixed(2)} kg·m/s
+              </text>
+              <text x="265" y="46" fill="#22c55e" fontSize="8">
+                Conserved
+              </text>
+            </g>
+
+            {/* Bottom equation */}
+            <text x="190" y="60" textAnchor="middle" fill="#64748b" fontSize="7">
+              mv = (m+M)V → KE → PE = (m+M)gh
             </text>
           </g>
+
+          {/* ========== FLOOR/TABLE ========== */}
+          <rect x="0" y="312" width="400" height="8" fill="#1e293b" />
+          <rect x="0" y="312" width="400" height="2" fill="#334155" />
         </svg>
       </div>
     );

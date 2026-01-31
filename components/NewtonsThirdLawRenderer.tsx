@@ -527,6 +527,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
 
   const renderPlay = () => {
     const displaySize = 20 + (airRemaining / 100) * (balloonSize / 100) * 20;
+    const forceMagnitude = Math.round((balloonSize / 50) * (airRemaining / 100) * 10);
 
     return (
       <div className="flex flex-col items-center p-6">
@@ -534,47 +535,184 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
         <p className="text-slate-400 mb-6">Inflate the balloon and watch it fly!</p>
 
         <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 w-full max-w-2xl">
-          <svg width="100%" height="200" viewBox="0 0 700 200">
-            <line x1="50" y1="100" x2="680" y2="100" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeDasharray="5" />
+          <svg width="100%" height="280" viewBox="0 0 700 280">
+            <defs>
+              {/* Premium balloon gradient with 3D depth */}
+              <radialGradient id="n3lBalloonGrad" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="25%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="75%" stopColor="#dc2626" />
+                <stop offset="100%" stopColor="#b91c1c" />
+              </radialGradient>
 
+              {/* Balloon highlight for 3D effect */}
+              <radialGradient id="n3lBalloonHighlight" cx="30%" cy="25%" r="40%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#ffffff" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Balloon nozzle gradient */}
+              <linearGradient id="n3lNozzleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="30%" stopColor="#dc2626" />
+                <stop offset="70%" stopColor="#991b1b" />
+                <stop offset="100%" stopColor="#7f1d1d" />
+              </linearGradient>
+
+              {/* Air particle gradient */}
+              <radialGradient id="n3lAirGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.7" />
+                <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Action arrow gradient (blue - air escaping) */}
+              <linearGradient id="n3lActionArrow" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#67e8f9" />
+                <stop offset="30%" stopColor="#22d3ee" />
+                <stop offset="60%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#0891b2" />
+              </linearGradient>
+
+              {/* Reaction arrow gradient (orange - balloon moving) */}
+              <linearGradient id="n3lReactionArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="30%" stopColor="#fb923c" />
+                <stop offset="60%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ea580c" />
+              </linearGradient>
+
+              {/* Track/rail gradient */}
+              <linearGradient id="n3lTrackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#374151" />
+                <stop offset="30%" stopColor="#4b5563" />
+                <stop offset="50%" stopColor="#6b7280" />
+                <stop offset="70%" stopColor="#4b5563" />
+                <stop offset="100%" stopColor="#374151" />
+              </linearGradient>
+
+              {/* Background lab gradient */}
+              <linearGradient id="n3lLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#030712" />
+                <stop offset="50%" stopColor="#0a1628" />
+                <stop offset="100%" stopColor="#030712" />
+              </linearGradient>
+
+              {/* Glow filter for balloon */}
+              <filter id="n3lBalloonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Glow filter for air particles */}
+              <filter id="n3lAirParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Arrow glow filter */}
+              <filter id="n3lArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Arrow markers with gradients */}
+              <marker id="n3lArrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                <path d="M0,0 L0,12 L12,6 z" fill="url(#n3lActionArrow)" />
+              </marker>
+              <marker id="n3lArrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                <path d="M0,0 L0,12 L12,6 z" fill="url(#n3lReactionArrow)" />
+              </marker>
+            </defs>
+
+            {/* Premium dark lab background */}
+            <rect width="700" height="280" fill="url(#n3lLabBg)" />
+
+            {/* Subtle grid pattern */}
+            <pattern id="n3lLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+            <rect width="700" height="280" fill="url(#n3lLabGrid)" />
+
+            {/* Premium track/rail */}
+            <rect x="40" y="125" width="640" height="8" rx="4" fill="url(#n3lTrackGrad)" />
+            <rect x="40" y="125" width="640" height="2" fill="#9ca3af" opacity="0.3" />
+
+            {/* Distance markers with premium styling */}
             {[0, 100, 200, 300, 400, 500, 600].map(d => (
               <g key={d}>
-                <line x1={50 + d} y1="95" x2={50 + d} y2="105" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-                <text x={50 + d} y="125" textAnchor="middle" fill="#64748b" fontSize="10">{d}cm</text>
+                <line x1={50 + d} y1="140" x2={50 + d} y2="155" stroke="#4b5563" strokeWidth="2" />
+                <rect x={40 + d} y="160" width="20" height="16" rx="3" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+                <text x={50 + d} y="172" textAnchor="middle" fill="#9ca3af" fontSize="9" fontWeight="bold">{d}</text>
+              </g>
+            ))}
+            <text x="350" y="195" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">DISTANCE (cm)</text>
+
+            {/* Air particles with premium glow */}
+            {airParticles.map(p => (
+              <g key={p.id} filter="url(#n3lAirParticleGlow)">
+                <circle cx={p.x} cy={p.y} r={2 + (p.life / 30) * 4} fill="url(#n3lAirGlow)" opacity={p.life / 30} />
               </g>
             ))}
 
-            {airParticles.map(p => (
-              <circle key={p.id} cx={p.x} cy={p.y} r={3 + (p.life / 30) * 3} fill="#93c5fd" opacity={p.life / 30} />
-            ))}
+            {/* Balloon assembly */}
+            <g transform={`translate(${balloonX}, 100)`} filter={isLaunched && airRemaining > 0 ? "url(#n3lBalloonGlow)" : ""}>
+              {/* Main balloon body with 3D gradient */}
+              <ellipse cx={displaySize / 2} cy="0" rx={displaySize} ry={displaySize * 0.8} fill="url(#n3lBalloonGrad)" />
+              {/* Highlight for 3D effect */}
+              <ellipse cx={displaySize / 2} cy="0" rx={displaySize} ry={displaySize * 0.8} fill="url(#n3lBalloonHighlight)" />
+              {/* Balloon nozzle/tie */}
+              <path d={`M0,${displaySize * 0.15} Q-8,${displaySize * 0.3} -12,${displaySize * 0.5} L-12,${-displaySize * 0.5} Q-8,${-displaySize * 0.3} 0,${-displaySize * 0.15}`} fill="url(#n3lNozzleGrad)" />
+              {/* Nozzle opening */}
+              <ellipse cx="-12" cy="0" rx="3" ry={displaySize * 0.25} fill="#7f1d1d" />
 
-            <g transform={`translate(${balloonX}, 100)`}>
-              <ellipse cx={displaySize / 2} cy="0" rx={displaySize} ry={displaySize * 0.8} fill="#ef4444" opacity="0.9" />
-              <ellipse cx={displaySize / 2 + 5} cy="-5" rx={displaySize * 0.3} ry={displaySize * 0.2} fill="white" opacity="0.3" />
-              <polygon points="0,5 -15,15 -15,-15 0,-5" fill="#dc2626" />
-
+              {/* Force arrows when launched */}
               {isLaunched && airRemaining > 0 && (
                 <>
-                  <g transform="translate(-30, 0)">
-                    <line x1="0" y1="0" x2="-40" y2="0" stroke="#93c5fd" strokeWidth="3" markerEnd="url(#arrowBlue)" />
-                    <text x="-20" y="-15" textAnchor="middle" fill="#93c5fd" fontSize="10" fontWeight="bold">AIR (Action)</text>
+                  {/* Action force arrow (air escaping left) */}
+                  <g transform="translate(-20, 0)" filter="url(#n3lArrowGlow)">
+                    <line x1="0" y1="0" x2={-35 - forceMagnitude} y2="0" stroke="url(#n3lActionArrow)" strokeWidth="5" strokeLinecap="round" markerEnd="url(#n3lArrowBlue)" />
                   </g>
-                  <g transform={`translate(${displaySize + 10}, 0)`}>
-                    <line x1="0" y1="0" x2="40" y2="0" stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowRed)" />
-                    <text x="20" y="-15" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">BALLOON (Reaction)</text>
+                  {/* Action force label */}
+                  <g transform="translate(-45, -35)">
+                    <rect x="-35" y="-12" width="70" height="22" rx="4" fill="#0c4a6e" stroke="#22d3ee" strokeWidth="1" />
+                    <text x="0" y="4" textAnchor="middle" fill="#67e8f9" fontSize="10" fontWeight="bold">ACTION</text>
                   </g>
+                  <text x="-45" y="25" textAnchor="middle" fill="#22d3ee" fontSize="9" fontWeight="bold">F = {forceMagnitude}N</text>
+
+                  {/* Reaction force arrow (balloon moving right) */}
+                  <g transform={`translate(${displaySize + 15}, 0)`} filter="url(#n3lArrowGlow)">
+                    <line x1="0" y1="0" x2={35 + forceMagnitude} y2="0" stroke="url(#n3lReactionArrow)" strokeWidth="5" strokeLinecap="round" markerEnd="url(#n3lArrowOrange)" />
+                  </g>
+                  {/* Reaction force label */}
+                  <g transform={`translate(${displaySize + 60}, -35)`}>
+                    <rect x="-40" y="-12" width="80" height="22" rx="4" fill="#7c2d12" stroke="#fb923c" strokeWidth="1" />
+                    <text x="0" y="4" textAnchor="middle" fill="#fdba74" fontSize="10" fontWeight="bold">REACTION</text>
+                  </g>
+                  <text x={displaySize + 60} y="25" textAnchor="middle" fill="#fb923c" fontSize="9" fontWeight="bold">F = {forceMagnitude}N</text>
                 </>
               )}
             </g>
 
-            <defs>
-              <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L9,3 z" fill="#93c5fd" />
-              </marker>
-              <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" />
-              </marker>
-            </defs>
+            {/* Newton's Third Law equation display */}
+            <g transform="translate(350, 245)">
+              <rect x="-120" y="-18" width="240" height="36" rx="8" fill="#1e293b" stroke="#374151" strokeWidth="1" />
+              <text x="0" y="6" textAnchor="middle" fill="#e2e8f0" fontSize="13" fontWeight="bold" fontFamily="monospace">
+                F_action = -F_reaction
+              </text>
+            </g>
           </svg>
         </div>
 
@@ -752,44 +890,210 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
     );
   };
 
-  const renderTwistPlay = () => (
+  const renderTwistPlay = () => {
+    const smallForce = Math.round(smallAir / 10);
+    const largeForce = Math.round(largeAir / 8);
+
+    return (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-2">Balloon Race!</h2>
       <p className="text-slate-400 mb-6">Small balloon vs Large balloon - which wins?</p>
 
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 w-full max-w-2xl">
-        <svg width="100%" height="200" viewBox="0 0 700 200">
-          <line x1="50" y1="60" x2="680" y2="60" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="5" />
-          <line x1="50" y1="140" x2="680" y2="140" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="5" />
+        <svg width="100%" height="280" viewBox="0 0 700 280">
+          <defs>
+            {/* Small balloon gradient (blue) with 3D depth */}
+            <radialGradient id="n3lSmallBalloonGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
 
-          <text x="30" y="65" fill="#64748b" fontSize="12" textAnchor="end">Small</text>
-          <text x="30" y="145" fill="#64748b" fontSize="12" textAnchor="end">Large</text>
+            {/* Small balloon highlight */}
+            <radialGradient id="n3lSmallHighlight" cx="30%" cy="25%" r="40%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
 
+            {/* Small balloon nozzle */}
+            <linearGradient id="n3lSmallNozzle" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Large balloon gradient (red) with 3D depth */}
+            <radialGradient id="n3lLargeBalloonGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+
+            {/* Large balloon highlight */}
+            <radialGradient id="n3lLargeHighlight" cx="30%" cy="25%" r="40%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Large balloon nozzle */}
+            <linearGradient id="n3lLargeNozzle" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Track gradient */}
+            <linearGradient id="n3lRaceTrack" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="70%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Race background */}
+            <linearGradient id="n3lRaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Winner glow effect */}
+            <linearGradient id="n3lWinnerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Force arrow gradients */}
+            <linearGradient id="n3lSmallForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            <linearGradient id="n3lLargeForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="n3lRaceBalloonGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="n3lWinnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers */}
+            <marker id="n3lSmallArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+              <path d="M0,0 L0,10 L10,5 z" fill="url(#n3lSmallForceArrow)" />
+            </marker>
+            <marker id="n3lLargeArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+              <path d="M0,0 L0,10 L10,5 z" fill="url(#n3lLargeForceArrow)" />
+            </marker>
+          </defs>
+
+          {/* Premium dark background */}
+          <rect width="700" height="280" fill="url(#n3lRaceBg)" />
+
+          {/* Grid pattern */}
+          <pattern id="n3lRaceGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+            <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="700" height="280" fill="url(#n3lRaceGrid)" />
+
+          {/* Lane labels with premium styling */}
+          <g transform="translate(25, 70)">
+            <rect x="-15" y="-12" width="50" height="24" rx="4" fill="#1e3a8a" stroke="#3b82f6" strokeWidth="1" />
+            <text x="10" y="5" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">SMALL</text>
+          </g>
+          <g transform="translate(25, 170)">
+            <rect x="-15" y="-12" width="50" height="24" rx="4" fill="#7f1d1d" stroke="#ef4444" strokeWidth="1" />
+            <text x="10" y="5" textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="bold">LARGE</text>
+          </g>
+
+          {/* Race tracks */}
+          <rect x="50" y="65" width="630" height="10" rx="5" fill="url(#n3lRaceTrack)" />
+          <rect x="50" y="65" width="630" height="2" fill="#9ca3af" opacity="0.2" />
+          <rect x="50" y="165" width="630" height="10" rx="5" fill="url(#n3lRaceTrack)" />
+          <rect x="50" y="165" width="630" height="2" fill="#9ca3af" opacity="0.2" />
+
+          {/* Distance markers */}
           {[0, 100, 200, 300, 400, 500, 600].map(d => (
             <g key={d}>
-              <line x1={50 + d} y1="170" x2={50 + d} y2="180" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-              <text x={50 + d} y="195" textAnchor="middle" fill="#64748b" fontSize="10">{d}</text>
+              <line x1={50 + d} y1="200" x2={50 + d} y2="215" stroke="#4b5563" strokeWidth="2" />
+              <rect x={40 + d} y="220" width="20" height="16" rx="3" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+              <text x={50 + d} y="232" textAnchor="middle" fill="#9ca3af" fontSize="9" fontWeight="bold">{d}</text>
             </g>
           ))}
+          <text x="350" y="258" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold">DISTANCE (cm)</text>
 
-          <g transform={`translate(${smallBalloonX}, 60)`}>
-            <ellipse cx="10" cy="0" rx={15} ry={12} fill="#3b82f6" />
-            <polygon points="0,4 -8,10 -8,-10 0,-4" fill="#2563eb" />
+          {/* Small balloon with premium styling */}
+          <g transform={`translate(${smallBalloonX}, 70)`} filter={twistLaunched && smallAir > 0 ? "url(#n3lRaceBalloonGlow)" : ""}>
+            <ellipse cx="10" cy="0" rx={15} ry={12} fill="url(#n3lSmallBalloonGrad)" />
+            <ellipse cx="10" cy="0" rx={15} ry={12} fill="url(#n3lSmallHighlight)" />
+            <path d="M0,4 Q-4,7 -8,10 L-8,-10 Q-4,-7 0,-4" fill="url(#n3lSmallNozzle)" />
+            <ellipse cx="-8" cy="0" rx="2" ry="4" fill="#1e40af" />
+            {/* Force arrow for small balloon */}
+            {twistLaunched && smallAir > 0 && (
+              <g transform="translate(30, 0)">
+                <line x1="0" y1="0" x2={15 + smallForce} y2="0" stroke="url(#n3lSmallForceArrow)" strokeWidth="3" strokeLinecap="round" markerEnd="url(#n3lSmallArrow)" />
+                <text x={20 + smallForce/2} y="-8" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="bold">{smallForce}N</text>
+              </g>
+            )}
           </g>
 
-          <g transform={`translate(${largeBalloonX}, 140)`}>
-            <ellipse cx="15" cy="0" rx={25} ry={20} fill="#ef4444" />
-            <polygon points="0,6 -12,16 -12,-16 0,-6" fill="#dc2626" />
+          {/* Large balloon with premium styling */}
+          <g transform={`translate(${largeBalloonX}, 170)`} filter={twistLaunched && largeAir > 0 ? "url(#n3lRaceBalloonGlow)" : ""}>
+            <ellipse cx="15" cy="0" rx={25} ry={20} fill="url(#n3lLargeBalloonGrad)" />
+            <ellipse cx="15" cy="0" rx={25} ry={20} fill="url(#n3lLargeHighlight)" />
+            <path d="M0,6 Q-6,10 -12,16 L-12,-16 Q-6,-10 0,-6" fill="url(#n3lLargeNozzle)" />
+            <ellipse cx="-12" cy="0" rx="3" ry="6" fill="#991b1b" />
+            {/* Force arrow for large balloon */}
+            {twistLaunched && largeAir > 0 && (
+              <g transform="translate(45, 0)">
+                <line x1="0" y1="0" x2={20 + largeForce} y2="0" stroke="url(#n3lLargeForceArrow)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#n3lLargeArrow)" />
+                <text x={25 + largeForce/2} y="-10" textAnchor="middle" fill="#f87171" fontSize="9" fontWeight="bold">{largeForce}N</text>
+              </g>
+            )}
           </g>
 
+          {/* Winner announcement with premium styling */}
           {(smallAir <= 0 && largeAir <= 0) && (
-            <g>
-              <line x1={Math.max(smallBalloonX, largeBalloonX) + 50} y1="30" x2={Math.max(smallBalloonX, largeBalloonX) + 50} y2="170" stroke="#22c55e" strokeWidth="3" strokeDasharray="10" />
-              <text x={Math.max(smallBalloonX, largeBalloonX) + 60} y="100" fill="#22c55e" fontSize="14" fontWeight="bold">
-                🏆 {largeBalloonX > smallBalloonX ? 'Large Wins!' : 'Small Wins!'}
-              </text>
+            <g filter="url(#n3lWinnerGlow)">
+              <line x1={Math.max(smallBalloonX, largeBalloonX) + 60} y1="40" x2={Math.max(smallBalloonX, largeBalloonX) + 60} y2="195" stroke="url(#n3lWinnerGrad)" strokeWidth="4" strokeDasharray="12 6" />
+              <g transform={`translate(${Math.max(smallBalloonX, largeBalloonX) + 60}, 25)`}>
+                <rect x="-50" y="-15" width="100" height="30" rx="8" fill="#14532d" stroke="#22c55e" strokeWidth="2" />
+                <text x="0" y="6" textAnchor="middle" fill="#4ade80" fontSize="13" fontWeight="bold">
+                  {largeBalloonX > smallBalloonX ? 'LARGE WINS!' : 'SMALL WINS!'}
+                </text>
+              </g>
             </g>
           )}
+
+          {/* Physics insight box */}
+          <g transform="translate(580, 120)">
+            <rect x="-60" y="-35" width="120" height="70" rx="8" fill="#1e293b" stroke="#374151" strokeWidth="1" opacity="0.9" />
+            <text x="0" y="-18" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">MORE AIR =</text>
+            <text x="0" y="-4" textAnchor="middle" fill="#e2e8f0" fontSize="8">Longer Thrust</text>
+            <text x="0" y="10" textAnchor="middle" fill="#e2e8f0" fontSize="8">More Impulse</text>
+            <text x="0" y="24" textAnchor="middle" fill="#e2e8f0" fontSize="8">Greater Distance</text>
+          </g>
         </svg>
       </div>
 
@@ -839,6 +1143,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
       </button>
     </div>
   );
+  };
 
   const renderTwistReview = () => {
     const wasCorrect = twistPrediction === 'large_wins';

@@ -258,14 +258,14 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 400;
-    const filmLeft = 100;
-    const filmRight = 300;
-    const filmTop = 80;
+    const width = 500;
+    const height = 480;
+    const filmLeft = 120;
+    const filmRight = 340;
+    const filmTop = 100;
     const filmHeight = 200;
 
-    // Generate thickness gradient colors
+    // Generate thickness gradient colors for interference pattern
     const gradientStops = [];
     for (let i = 0; i <= 10; i++) {
       const t = thickness - (i * 50);
@@ -280,158 +280,478 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)', borderRadius: '16px', maxWidth: '550px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
         >
           <defs>
-            {/* Film gradient based on thickness */}
-            <linearGradient id="filmGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            {/* === COMPREHENSIVE GRADIENTS & FILTERS === */}
+
+            {/* Premium lab background gradient */}
+            <linearGradient id="tfiLabBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="25%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Light source radial glow */}
+            <radialGradient id="tfiLightSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Light beam gradient with depth */}
+            <linearGradient id="tfiLightBeam" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Soap film layer gradient - top surface sheen */}
+            <linearGradient id="tfiFilmTopSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#7dd3fc" stopOpacity="0.5" />
+              <stop offset="40%" stopColor="#bae6fd" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#38bdf8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Soap film iridescent layer */}
+            <linearGradient id="tfiFilmIridescent" x1="0%" y1="0%" x2="0%" y2="100%">
               {gradientStops.map((stop, i) => (
-                <stop key={i} offset={`${stop.offset}%`} stopColor={stop.color} />
+                <stop key={i} offset={`${stop.offset}%`} stopColor={stop.color} stopOpacity="0.85" />
               ))}
             </linearGradient>
 
-            {/* Glow effect for light rays */}
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            {/* Bottom surface depth gradient */}
+            <linearGradient id="tfiFilmBottomSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0369a1" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#0c4a6e" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#082f49" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Reflected ray 1 gradient (top surface reflection) */}
+            <linearGradient id="tfiReflectedRay1" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#93c5fd" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Reflected ray 2 gradient (bottom surface reflection) */}
+            <linearGradient id="tfiReflectedRay2" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Path difference accent gradient */}
+            <linearGradient id="tfiPathDiffGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#c084fc" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#c084fc" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Interference result glow */}
+            <radialGradient id="tfiResultGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor={calculateInterferenceColor(thickness, viewAngle)} stopOpacity="1" />
+              <stop offset="40%" stopColor={calculateInterferenceColor(thickness, viewAngle)} stopOpacity="0.7" />
+              <stop offset="70%" stopColor={calculateInterferenceColor(thickness, viewAngle)} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={calculateInterferenceColor(thickness, viewAngle)} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Observer eye gradient */}
+            <radialGradient id="tfiEyeGradient" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#f8fafc" stopOpacity="1" />
+              <stop offset="30%" stopColor="#e2e8f0" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#cbd5e1" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.7" />
+            </radialGradient>
+
+            {/* Eye iris gradient */}
+            <radialGradient id="tfiIrisGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="1" />
+              <stop offset="40%" stopColor="#1e3a5f" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#0c4a6e" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
+            </radialGradient>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+
+            {/* Light source intense glow */}
+            <filter id="tfiLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
               <feMerge>
-                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            {/* Ray glow effect */}
+            <filter id="tfiRayGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for film */}
+            <filter id="tfiFilmGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Interference result glow */}
+            <filter id="tfiResultGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="2" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner shadow for depth */}
+            <filter id="tfiInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Text shadow for labels */}
+            <filter id="tfiTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="tfiGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {/* Background label */}
-          <text x={width / 2} y={25} fill={colors.textSecondary} fontSize={14} textAnchor="middle">
+          {/* Background with subtle grid */}
+          <rect width={width} height={height} fill="url(#tfiLabBackground)" />
+          <rect width={width} height={height} fill="url(#tfiGridPattern)" />
+
+          {/* Title label */}
+          <text x={width / 2} y={30} fill={colors.textPrimary} fontSize={16} fontWeight="600" textAnchor="middle" filter="url(#tfiTextShadow)">
+            Thin-Film Interference
+          </text>
+          <text x={width / 2} y={50} fill={colors.textSecondary} fontSize={12} textAnchor="middle">
             Soap Film Cross-Section
           </text>
 
-          {/* Light source */}
-          <circle cx={50} cy={50} r={15} fill={colors.lightRay} filter="url(#glow)" />
-          <text x={50} y={80} fill={colors.textMuted} fontSize={10} textAnchor="middle">Light</text>
+          {/* === PREMIUM LIGHT SOURCE === */}
+          <g transform="translate(55, 55)">
+            {/* Outer glow rings */}
+            <circle cx="0" cy="0" r="35" fill="url(#tfiLightSourceGlow)" opacity="0.3" />
+            <circle cx="0" cy="0" r="25" fill="url(#tfiLightSourceGlow)" opacity="0.5" />
+            {/* Main light source */}
+            <circle cx="0" cy="0" r="18" fill="url(#tfiLightSourceGlow)" filter="url(#tfiLightGlow)" />
+            {/* Bright center */}
+            <circle cx="-3" cy="-3" r="8" fill="#fef3c7" opacity="0.9" />
+            <circle cx="-2" cy="-2" r="4" fill="#ffffff" opacity="0.8" />
+          </g>
+          <text x={55} y={100} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="500">
+            White Light
+          </text>
 
-          {/* Incident light ray */}
+          {/* === INCIDENT LIGHT BEAM === */}
           <line
-            x1={60}
-            y1={55}
+            x1={75}
+            y1={65}
             x2={filmLeft + 50}
-            y2={filmTop + 20}
-            stroke={colors.lightRay}
-            strokeWidth={3}
-            filter="url(#glow)"
+            y2={filmTop + 25}
+            stroke="url(#tfiLightBeam)"
+            strokeWidth={5}
+            filter="url(#tfiRayGlow)"
+            strokeLinecap="round"
           />
+          {/* Beam arrow */}
           <polygon
-            points={`${filmLeft + 50},${filmTop + 20} ${filmLeft + 45},${filmTop + 10} ${filmLeft + 55},${filmTop + 10}`}
-            fill={colors.lightRay}
+            points={`${filmLeft + 50},${filmTop + 25} ${filmLeft + 38},${filmTop + 12} ${filmLeft + 52},${filmTop + 8}`}
+            fill="#fbbf24"
+            filter="url(#tfiRayGlow)"
           />
 
-          {/* The soap film */}
+          {/* === PREMIUM SOAP FILM === */}
+          {/* Film shadow */}
+          <rect
+            x={filmLeft + 4}
+            y={filmTop + 4}
+            width={filmRight - filmLeft}
+            height={filmHeight}
+            rx={8}
+            fill="#000000"
+            opacity="0.3"
+          />
+
+          {/* Main film body with interference colors */}
           <rect
             x={filmLeft}
             y={filmTop}
             width={filmRight - filmLeft}
             height={filmHeight}
-            fill="url(#filmGradient)"
-            stroke={colors.filmTop}
-            strokeWidth={2}
-            rx={4}
+            fill="url(#tfiFilmIridescent)"
+            rx={8}
+            filter="url(#tfiFilmGlow)"
           />
 
-          {/* Film surface labels */}
-          <text x={filmRight + 10} y={filmTop + 10} fill={colors.filmTop} fontSize={10}>
-            Top surface
-          </text>
-          <text x={filmRight + 10} y={filmTop + filmHeight - 5} fill={colors.filmBottom} fontSize={10}>
-            Bottom surface
+          {/* Top surface sheen overlay */}
+          <rect
+            x={filmLeft}
+            y={filmTop}
+            width={filmRight - filmLeft}
+            height={8}
+            fill="url(#tfiFilmTopSurface)"
+            rx={8}
+          />
+
+          {/* Bottom depth overlay */}
+          <rect
+            x={filmLeft}
+            y={filmTop + filmHeight - 15}
+            width={filmRight - filmLeft}
+            height={15}
+            fill="url(#tfiFilmBottomSurface)"
+            style={{ clipPath: `inset(0 0 0 0 round 0 0 8px 8px)` }}
+          />
+
+          {/* Film border highlights */}
+          <rect
+            x={filmLeft}
+            y={filmTop}
+            width={filmRight - filmLeft}
+            height={filmHeight}
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth={2}
+            rx={8}
+            opacity="0.6"
+          />
+
+          {/* Film surface labels with connecting lines */}
+          <line x1={filmRight + 5} y1={filmTop + 4} x2={filmRight + 25} y2={filmTop + 4} stroke="#60a5fa" strokeWidth={1} opacity="0.6" />
+          <text x={filmRight + 30} y={filmTop + 8} fill="#60a5fa" fontSize={11} fontWeight="500">
+            Top Surface
           </text>
 
-          {/* Reflection from top surface */}
+          <line x1={filmRight + 5} y1={filmTop + filmHeight - 4} x2={filmRight + 25} y2={filmTop + filmHeight - 4} stroke="#3b82f6" strokeWidth={1} opacity="0.6" />
+          <text x={filmRight + 30} y={filmTop + filmHeight} fill="#3b82f6" fontSize={11} fontWeight="500">
+            Bottom Surface
+          </text>
+
+          {/* === REFLECTION FROM TOP SURFACE (RAY 1) === */}
           <line
             x1={filmLeft + 50}
-            y1={filmTop + 20}
-            x2={filmLeft + 100}
-            y2={filmTop - 30}
-            stroke={colors.filmTop}
-            strokeWidth={2}
-            strokeDasharray="5,3"
+            y1={filmTop + 25}
+            x2={filmLeft + 110}
+            y2={filmTop - 40}
+            stroke="url(#tfiReflectedRay1)"
+            strokeWidth={4}
+            filter="url(#tfiRayGlow)"
+            strokeLinecap="round"
           />
-          <text x={filmLeft + 105} y={filmTop - 35} fill={colors.filmTop} fontSize={9}>
+          {/* Ray 1 label badge */}
+          <rect x={filmLeft + 95} y={filmTop - 65} width={50} height={20} rx={10} fill="#1e3a8a" opacity="0.8" />
+          <text x={filmLeft + 120} y={filmTop - 51} fill="#93c5fd" fontSize={10} textAnchor="middle" fontWeight="600">
             Ray 1
           </text>
 
-          {/* Light entering film and reflecting from bottom */}
+          {/* === LIGHT TRAVELING THROUGH FILM === */}
           <line
             x1={filmLeft + 50}
-            y1={filmTop + 20}
-            x2={filmLeft + 70}
-            y2={filmTop + filmHeight - 20}
-            stroke={colors.lightRay}
-            strokeWidth={2}
+            y1={filmTop + 25}
+            x2={filmLeft + 75}
+            y2={filmTop + filmHeight - 25}
+            stroke="url(#tfiLightBeam)"
+            strokeWidth={3}
             opacity={0.7}
+            strokeLinecap="round"
           />
+
+          {/* === REFLECTION FROM BOTTOM SURFACE (RAY 2) === */}
           <line
-            x1={filmLeft + 70}
-            y1={filmTop + filmHeight - 20}
-            x2={filmLeft + 120}
-            y2={filmTop - 30}
-            stroke={colors.filmBottom}
-            strokeWidth={2}
-            strokeDasharray="5,3"
+            x1={filmLeft + 75}
+            y1={filmTop + filmHeight - 25}
+            x2={filmLeft + 140}
+            y2={filmTop - 40}
+            stroke="url(#tfiReflectedRay2)"
+            strokeWidth={4}
+            filter="url(#tfiRayGlow)"
+            strokeLinecap="round"
           />
-          <text x={filmLeft + 125} y={filmTop - 15} fill={colors.filmBottom} fontSize={9}>
+          {/* Ray 2 label badge */}
+          <rect x={filmLeft + 130} y={filmTop - 50} width={50} height={20} rx={10} fill="#1e3a5f" opacity="0.8" />
+          <text x={filmLeft + 155} y={filmTop - 36} fill="#60a5fa" fontSize={10} textAnchor="middle" fontWeight="600">
             Ray 2
           </text>
 
-          {/* Path difference indicator */}
+          {/* === PATH DIFFERENCE INDICATOR === */}
           <line
-            x1={filmLeft + 70}
-            y1={filmTop + 20}
-            x2={filmLeft + 70}
-            y2={filmTop + filmHeight - 20}
-            stroke={colors.accent}
-            strokeWidth={2}
-            strokeDasharray="3,3"
+            x1={filmLeft + 80}
+            y1={filmTop + 30}
+            x2={filmLeft + 80}
+            y2={filmTop + filmHeight - 30}
+            stroke="url(#tfiPathDiffGradient)"
+            strokeWidth={3}
+            strokeDasharray="6,4"
+            filter="url(#tfiRayGlow)"
           />
-          <text x={filmLeft + 75} y={filmTop + filmHeight / 2} fill={colors.accent} fontSize={10}>
-            Path diff
+          {/* Double-headed arrow */}
+          <polygon points={`${filmLeft + 80},${filmTop + 35} ${filmLeft + 75},${filmTop + 45} ${filmLeft + 85},${filmTop + 45}`} fill="#a855f7" />
+          <polygon points={`${filmLeft + 80},${filmTop + filmHeight - 35} ${filmLeft + 75},${filmTop + filmHeight - 45} ${filmLeft + 85},${filmTop + filmHeight - 45}`} fill="#a855f7" />
+          {/* Path diff label */}
+          <rect x={filmLeft + 88} y={filmTop + filmHeight / 2 - 12} width={75} height={24} rx={12} fill="rgba(139, 92, 246, 0.3)" />
+          <text x={filmLeft + 125} y={filmTop + filmHeight / 2 + 4} fill="#d8b4fe" fontSize={10} textAnchor="middle" fontWeight="500">
+            Path Difference
           </text>
 
-          {/* Resulting color display */}
-          <rect
-            x={filmLeft + 40}
-            y={filmTop + filmHeight + 30}
-            width={120}
-            height={40}
-            fill={calculateInterferenceColor(thickness, viewAngle)}
-            stroke={colors.textMuted}
-            strokeWidth={1}
-            rx={8}
-          />
-          <text x={filmLeft + 100} y={filmTop + filmHeight + 90} fill={colors.textSecondary} fontSize={12} textAnchor="middle">
+          {/* === OBSERVER EYE === */}
+          <g transform={`translate(${filmLeft + 130}, ${filmTop - 80})`}>
+            {/* Eye white */}
+            <ellipse cx="0" cy="0" rx="18" ry="12" fill="url(#tfiEyeGradient)" />
+            {/* Iris */}
+            <circle cx="0" cy="0" r="8" fill="url(#tfiIrisGradient)" />
+            {/* Pupil */}
+            <circle cx="0" cy="0" r="3" fill="#0f172a" />
+            {/* Highlight */}
+            <circle cx="-2" cy="-2" r="2" fill="#ffffff" opacity="0.8" />
+            {/* Eye outline */}
+            <ellipse cx="0" cy="0" rx="18" ry="12" fill="none" stroke="#64748b" strokeWidth="1.5" />
+          </g>
+          <text x={filmLeft + 130} y={filmTop - 95} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
+            Observer
+          </text>
+
+          {/* === INTERFERENCE RESULT DISPLAY === */}
+          <g transform={`translate(${filmLeft + 50}, ${filmTop + filmHeight + 40})`}>
+            {/* Glow behind result */}
+            <ellipse cx="60" cy="25" rx="80" ry="35" fill={calculateInterferenceColor(thickness, viewAngle)} opacity="0.2" filter="url(#tfiResultGlowFilter)" />
+
+            {/* Result color box */}
+            <rect
+              x="0"
+              y="0"
+              width="120"
+              height="50"
+              fill={calculateInterferenceColor(thickness, viewAngle)}
+              rx={12}
+              filter="url(#tfiResultGlowFilter)"
+            />
+            {/* Inner highlight */}
+            <rect
+              x="5"
+              y="5"
+              width="110"
+              height="20"
+              fill="rgba(255,255,255,0.2)"
+              rx={8}
+            />
+            {/* Border */}
+            <rect
+              x="0"
+              y="0"
+              width="120"
+              height="50"
+              fill="none"
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth="2"
+              rx={12}
+            />
+          </g>
+          <text x={filmLeft + 110} y={filmTop + filmHeight + 110} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="500">
             Resulting Color
           </text>
-
-          {/* Info display */}
-          <text x={20} y={height - 40} fill={colors.textSecondary} fontSize={11}>
-            Thickness: {thickness.toFixed(0)} nm
+          <text x={filmLeft + 110} y={filmTop + filmHeight + 125} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
+            (Constructive Interference)
           </text>
-          <text x={20} y={height - 20} fill={colors.textSecondary} fontSize={11}>
-            View Angle: {viewAngle.toFixed(0)}°
+
+          {/* === INFO DISPLAY PANEL === */}
+          <g transform="translate(15, 340)">
+            <rect x="0" y="0" width="160" height="60" rx="10" fill="rgba(30, 41, 59, 0.8)" stroke="#334155" strokeWidth="1" />
+            <text x="12" y="22" fill={colors.textSecondary} fontSize={11} fontWeight="500">
+              Film Thickness:
+            </text>
+            <text x="140" y="22" fill={colors.accent} fontSize={12} fontWeight="600" textAnchor="end">
+              {thickness.toFixed(0)} nm
+            </text>
+            <text x="12" y="45" fill={colors.textSecondary} fontSize={11} fontWeight="500">
+              View Angle:
+            </text>
+            <text x="140" y="45" fill={colors.accent} fontSize={12} fontWeight="600" textAnchor="end">
+              {viewAngle.toFixed(0)}°
+            </text>
+          </g>
+
+          {/* === INTERFERENCE COLOR SPECTRUM LEGEND === */}
+          <g transform={`translate(${width - 180}, 340)`}>
+            <rect x="0" y="0" width="165" height="60" rx="10" fill="rgba(30, 41, 59, 0.8)" stroke="#334155" strokeWidth="1" />
+            <text x="82" y="18" fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="500">
+              Interference Spectrum
+            </text>
+            {/* Color spectrum bar */}
+            <defs>
+              <linearGradient id="tfiSpectrumGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => {
+                  const t = 100 + i * 70;
+                  return <stop key={i} offset={`${i * 10}%`} stopColor={calculateInterferenceColor(t, 0)} />;
+                })}
+              </linearGradient>
+            </defs>
+            <rect x="10" y="28" width="145" height="12" rx="6" fill="url(#tfiSpectrumGradient)" />
+            <rect x="10" y="28" width="145" height="12" rx="6" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+            <text x="10" y="52" fill={colors.textMuted} fontSize={8}>Thin</text>
+            <text x="155" y="52" fill={colors.textMuted} fontSize={8} textAnchor="end">Thick</text>
+          </g>
+
+          {/* === REFRACTIVE INDEX LABEL === */}
+          <text x={filmLeft + (filmRight - filmLeft) / 2} y={filmTop + filmHeight / 2} fill="rgba(255,255,255,0.5)" fontSize={11} textAnchor="middle" fontWeight="500">
+            n = 1.33
           </text>
         </svg>
 
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '12px' }}>
             <button
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 28px',
+                borderRadius: '12px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
-                fontWeight: 'bold',
+                fontWeight: '600',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating
+                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
               {isAnimating ? 'Stop Draining' : 'Simulate Draining'}
@@ -439,14 +759,15 @@ const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> 
             <button
               onClick={() => { setThickness(400); setViewAngle(0); setIsAnimating(false); }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(139, 92, 246, 0.1)',
                 color: colors.accent,
-                fontWeight: 'bold',
+                fontWeight: '600',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

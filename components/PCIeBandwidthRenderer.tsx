@@ -315,105 +315,506 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
   };
 
   const renderVisualization = () => {
-    const width = 400;
-    const height = 300;
-    const dataFlowOffset = animationFrame % 50;
+    const width = 700;
+    const height = 400;
+    const dataFlowOffset = animationFrame % 60;
 
     return (
       <svg
         width="100%"
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ background: '#1e293b', borderRadius: '12px' }}
+        style={{ background: 'transparent', borderRadius: '16px' }}
       >
-        {/* CPU */}
-        <rect x={30} y={120} width={70} height={60} rx={8} fill={colors.cpu} />
-        <text x={65} y={155} textAnchor="middle" fill="white" fontSize={12} fontWeight="bold">CPU</text>
+        {/* Premium SVG Defs Section */}
+        <defs>
+          {/* Premium CPU chip gradient with metallic depth */}
+          <linearGradient id="pcieCpuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fb923c" />
+            <stop offset="25%" stopColor="#f97316" />
+            <stop offset="50%" stopColor="#ea580c" />
+            <stop offset="75%" stopColor="#c2410c" />
+            <stop offset="100%" stopColor="#9a3412" />
+          </linearGradient>
 
-        {/* PCIe Bus */}
-        <rect x={100} y={140} width={100} height={20} fill={colors.pcie} opacity={0.3} />
-        <text x={150} y={130} textAnchor="middle" fill={colors.textMuted} fontSize={10}>{pcieGen}</text>
-        <text x={150} y={175} textAnchor="middle" fill={colors.textSecondary} fontSize={9}>{pcieBandwidth.toFixed(1)} GB/s</text>
+          {/* CPU die heat glow */}
+          <radialGradient id="pcieCpuGlow" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fdba74" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#fb923c" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+          </radialGradient>
 
-        {/* Data flow animation on PCIe */}
-        {[0, 20, 40].map((offset, i) => (
-          <rect
-            key={i}
-            x={100 + ((dataFlowOffset + offset) % 100)}
-            y={145}
-            width={15}
-            height={10}
-            rx={2}
-            fill={colors.pcie}
-            opacity={0.8}
-          />
+          {/* GPU chip gradient with purple depth */}
+          <linearGradient id="pcieGpuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a78bfa" />
+            <stop offset="25%" stopColor="#8b5cf6" />
+            <stop offset="50%" stopColor="#7c3aed" />
+            <stop offset="75%" stopColor="#6d28d9" />
+            <stop offset="100%" stopColor="#5b21b6" />
+          </linearGradient>
+
+          {/* GPU processing glow */}
+          <radialGradient id="pcieGpuGlow" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.7" />
+            <stop offset="40%" stopColor="#a78bfa" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+          </radialGradient>
+
+          {/* PCIe slot gradient - blue metallic */}
+          <linearGradient id="pciePcieSlotGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1e3a5f" />
+            <stop offset="20%" stopColor="#1e40af" />
+            <stop offset="40%" stopColor="#2563eb" />
+            <stop offset="60%" stopColor="#3b82f6" />
+            <stop offset="80%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </linearGradient>
+
+          {/* PCIe lane data flow gradient */}
+          <linearGradient id="pcieLaneFlowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+            <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
+
+          {/* NVLink high-speed gradient - green with energy */}
+          <linearGradient id="pcieNvlinkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="25%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#16a34a" />
+            <stop offset="75%" stopColor="#15803d" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* NVLink data burst glow */}
+          <radialGradient id="pcieNvlinkGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+            <stop offset="30%" stopColor="#4ade80" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#22c55e" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Motherboard PCB gradient */}
+          <linearGradient id="pciePcbGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#064e3b" />
+            <stop offset="30%" stopColor="#065f46" />
+            <stop offset="50%" stopColor="#047857" />
+            <stop offset="70%" stopColor="#065f46" />
+            <stop offset="100%" stopColor="#064e3b" />
+          </linearGradient>
+
+          {/* Data packet glow effect */}
+          <radialGradient id="pcieDataPacketGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Bandwidth meter gradient - cyan energy */}
+          <linearGradient id="pcieBandwidthMeterGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#06b6d4" />
+            <stop offset="50%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#67e8f9" />
+          </linearGradient>
+
+          {/* Efficiency meter gradient - success to warning */}
+          <linearGradient id="pcieEfficiencyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#6ee7b7" />
+          </linearGradient>
+
+          {/* Warning efficiency gradient */}
+          <linearGradient id="pcieWarningGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#fcd34d" />
+          </linearGradient>
+
+          {/* Background lab gradient */}
+          <linearGradient id="pcieLabBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="30%" stopColor="#0f172a" />
+            <stop offset="70%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Premium glow filter for CPU */}
+          <filter id="pcieCpuGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Premium glow filter for GPU */}
+          <filter id="pcieGpuGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Data flow glow filter */}
+          <filter id="pcieDataGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* NVLink intense glow filter */}
+          <filter id="pcieNvlinkGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle shadow filter */}
+          <filter id="pcieShadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
+          </filter>
+
+          {/* PCB trace pattern */}
+          <pattern id="pciePcbTracePattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" />
+            <line x1="0" y1="10" x2="20" y2="10" stroke="#0d9488" strokeWidth="0.5" strokeOpacity="0.3" />
+            <line x1="10" y1="0" x2="10" y2="20" stroke="#0d9488" strokeWidth="0.5" strokeOpacity="0.3" />
+            <circle cx="10" cy="10" r="1" fill="#0d9488" fillOpacity="0.4" />
+          </pattern>
+
+          {/* Lane indicator pattern */}
+          <pattern id="pcieLanePattern" width="8" height="4" patternUnits="userSpaceOnUse">
+            <rect width="6" height="3" rx="1" fill="#60a5fa" fillOpacity="0.6" />
+          </pattern>
+        </defs>
+
+        {/* Premium dark lab background */}
+        <rect width={width} height={height} fill="url(#pcieLabBgGradient)" rx="16" />
+
+        {/* Subtle grid overlay */}
+        <rect width={width} height={height} fill="url(#pciePcbTracePattern)" opacity="0.4" rx="16" />
+
+        {/* === MOTHERBOARD BASE === */}
+        <rect x="15" y="320" width={width - 30} height="70" rx="8" fill="url(#pciePcbGradient)" filter="url(#pcieShadowFilter)" />
+        <rect x="15" y="320" width={width - 30} height="4" rx="2" fill="#10b981" opacity="0.3" />
+
+        {/* PCB mounting holes */}
+        {[50, 175, 350, 525, 650].map((x, i) => (
+          <g key={`mount-${i}`}>
+            <circle cx={x} cy="355" r="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <circle cx={x} cy="355" r="3" fill="#0f172a" />
+          </g>
         ))}
 
-        {/* GPUs */}
-        {Array.from({ length: Math.min(numGPUs, 4) }).map((_, i) => {
-          const gpuX = 220;
-          const gpuY = 40 + i * 65;
-          return (
-            <g key={i}>
-              <rect x={gpuX} y={gpuY} width={80} height={50} rx={6} fill={colors.gpu} />
-              <text x={gpuX + 40} y={gpuY + 30} textAnchor="middle" fill="white" fontSize={11} fontWeight="bold">GPU {i + 1}</text>
+        {/* === PREMIUM CPU WITH HEATSINK === */}
+        <g transform="translate(40, 150)">
+          {/* CPU socket base */}
+          <rect x="-10" y="-10" width="110" height="100" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="2" />
 
-              {/* PCIe connection line */}
-              <line x1={200} y1={150} x2={gpuX} y2={gpuY + 25} stroke={colors.pcie} strokeWidth={2} strokeDasharray="4,2" />
+          {/* CPU die with glow */}
+          <rect x="0" y="0" width="90" height="80" rx="6" fill="url(#pcieCpuGradient)" filter="url(#pcieCpuGlowFilter)" />
+
+          {/* CPU core pattern */}
+          <g opacity="0.4">
+            {[0, 1, 2, 3].map((row) => (
+              [0, 1, 2, 3].map((col) => (
+                <rect
+                  key={`core-${row}-${col}`}
+                  x={8 + col * 20}
+                  y={8 + row * 18}
+                  width="16"
+                  height="14"
+                  rx="2"
+                  fill="#fdba74"
+                  opacity={0.5 + Math.random() * 0.5}
+                >
+                  <animate
+                    attributeName="opacity"
+                    values={`${0.3 + Math.random() * 0.3};${0.6 + Math.random() * 0.4};${0.3 + Math.random() * 0.3}`}
+                    dur={`${0.5 + Math.random() * 0.5}s`}
+                    repeatCount="indefinite"
+                  />
+                </rect>
+              ))
+            ))}
+          </g>
+
+          {/* CPU label */}
+          <text x="45" y="95" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">CPU</text>
+          <text x="45" y="110" textAnchor="middle" fill={colors.textMuted} fontSize="9">Host Processor</text>
+
+          {/* Heat indicator glow */}
+          <ellipse cx="45" cy="40" rx="35" ry="30" fill="url(#pcieCpuGlow)" opacity="0.6">
+            <animate attributeName="opacity" values="0.4;0.7;0.4" dur="2s" repeatCount="indefinite" />
+          </ellipse>
+        </g>
+
+        {/* === PCIE SLOT VISUALIZATION === */}
+        <g transform="translate(160, 180)">
+          {/* PCIe slot housing */}
+          <rect x="0" y="-5" width="120" height="50" rx="4" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+
+          {/* PCIe slot connector */}
+          <rect x="5" y="5" width="110" height="30" rx="3" fill="url(#pciePcieSlotGradient)" />
+
+          {/* Lane indicators based on numLanes */}
+          <g>
+            {Array.from({ length: numLanes }).map((_, i) => (
+              <rect
+                key={`lane-${i}`}
+                x={8 + i * (104 / 16)}
+                y="10"
+                width={Math.max(2, (100 / 16) - 2)}
+                height="20"
+                rx="1"
+                fill="#60a5fa"
+                opacity={0.6 + (i % 2) * 0.2}
+              >
+                <animate
+                  attributeName="opacity"
+                  values="0.5;0.9;0.5"
+                  dur={`${0.3 + (i * 0.05)}s`}
+                  repeatCount="indefinite"
+                />
+              </rect>
+            ))}
+          </g>
+
+          {/* PCIe generation label */}
+          <rect x="30" y="-30" width="60" height="20" rx="4" fill="#1e293b" stroke={colors.pcie} strokeWidth="1" />
+          <text x="60" y="-16" textAnchor="middle" fill={colors.pcie} fontSize="10" fontWeight="bold">{pcieGen}</text>
+
+          {/* Bandwidth label */}
+          <text x="60" y="60" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+            x{numLanes} = {pcieBandwidth.toFixed(1)} GB/s
+          </text>
+        </g>
+
+        {/* === DATA FLOW ANIMATION === */}
+        <g>
+          {/* Main PCIe data bus path */}
+          <path
+            d={`M 130 190 Q 180 190 280 190`}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="8"
+            strokeOpacity="0.2"
+            strokeLinecap="round"
+          />
+
+          {/* Animated data packets on PCIe bus */}
+          {[0, 15, 30, 45].map((offset, i) => {
+            const progress = ((dataFlowOffset + offset) % 60) / 60;
+            const x = 130 + progress * 150;
+            return (
+              <g key={`packet-${i}`} filter="url(#pcieDataGlowFilter)">
+                <rect
+                  x={x}
+                  y={185}
+                  width="12"
+                  height="10"
+                  rx="2"
+                  fill="url(#pcieLaneFlowGradient)"
+                />
+                <ellipse cx={x + 6} cy={190} rx="8" ry="6" fill="url(#pcieDataPacketGlow)" opacity="0.5" />
+              </g>
+            );
+          })}
+        </g>
+
+        {/* === PREMIUM GPU CARDS === */}
+        {Array.from({ length: Math.min(numGPUs, 4) }).map((_, i) => {
+          const gpuX = 320;
+          const gpuY = 50 + i * 80;
+          const isActive = i < numGPUs;
+
+          return (
+            <g key={`gpu-${i}`} transform={`translate(${gpuX}, ${gpuY})`}>
+              {/* GPU card body */}
+              <rect x="0" y="0" width="140" height="60" rx="8" fill="#111827" stroke="#334155" strokeWidth="1.5" filter="url(#pcieShadowFilter)" />
+
+              {/* GPU die with gradient */}
+              <rect x="10" y="8" width="60" height="44" rx="4" fill="url(#pcieGpuGradient)" filter="url(#pcieGpuGlowFilter)" />
+
+              {/* GPU processing cores visualization */}
+              <g opacity="0.5">
+                {[0, 1, 2, 3].map((row) => (
+                  [0, 1, 2, 3, 4].map((col) => (
+                    <rect
+                      key={`gpucore-${i}-${row}-${col}`}
+                      x={14 + col * 11}
+                      y={12 + row * 10}
+                      width="8"
+                      height="7"
+                      rx="1"
+                      fill="#c4b5fd"
+                    >
+                      <animate
+                        attributeName="opacity"
+                        values={`${0.2 + Math.random() * 0.3};${0.7 + Math.random() * 0.3};${0.2 + Math.random() * 0.3}`}
+                        dur={`${0.2 + Math.random() * 0.3}s`}
+                        repeatCount="indefinite"
+                      />
+                    </rect>
+                  ))
+                ))}
+              </g>
+
+              {/* VRAM modules */}
+              {[0, 1, 2, 3].map((j) => (
+                <rect key={`vram-${i}-${j}`} x={80 + (j % 2) * 25} y={10 + Math.floor(j / 2) * 22} width="20" height="18" rx="2" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
+              ))}
+
+              {/* GPU label */}
+              <text x="70" y="70" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">GPU {i + 1}</text>
+
+              {/* PCIe connection line with animation */}
+              <line
+                x1="-40"
+                y1="30"
+                x2="0"
+                y2="30"
+                stroke={colors.pcie}
+                strokeWidth="3"
+                strokeDasharray="6,3"
+                opacity="0.7"
+              >
+                <animate attributeName="stroke-dashoffset" from="0" to="-9" dur="0.5s" repeatCount="indefinite" />
+              </line>
+
+              {/* Processing glow */}
+              <ellipse cx="40" cy="30" rx="25" ry="20" fill="url(#pcieGpuGlow)" opacity="0.4">
+                <animate attributeName="opacity" values="0.3;0.6;0.3" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
+              </ellipse>
             </g>
           );
         })}
 
-        {/* NVLink connections between GPUs */}
+        {/* === NVLINK CONNECTIONS === */}
         {useNVLink && numGPUs > 1 && (
           <g>
-            {Array.from({ length: Math.min(numGPUs - 1, 3) }).map((_, i) => (
-              <line
-                key={i}
-                x1={300}
-                y1={65 + i * 65}
-                x2={300}
-                y2={105 + i * 65}
-                stroke={colors.nvlink}
-                strokeWidth={4}
-              />
-            ))}
-            <text x={320} y={140} fill={colors.nvlink} fontSize={9} fontWeight="bold">NVLink</text>
-            <text x={320} y={155} fill={colors.nvlink} fontSize={8}>{nvlinkBandwidth} GB/s</text>
+            {Array.from({ length: Math.min(numGPUs - 1, 3) }).map((_, i) => {
+              const y1 = 80 + i * 80 + 30;
+              const y2 = 80 + (i + 1) * 80 + 30;
+              return (
+                <g key={`nvlink-${i}`}>
+                  {/* NVLink connection bar */}
+                  <rect
+                    x="475"
+                    y={y1}
+                    width="12"
+                    height={y2 - y1}
+                    rx="3"
+                    fill="url(#pcieNvlinkGradient)"
+                    filter="url(#pcieNvlinkGlowFilter)"
+                  />
+
+                  {/* Animated data flow on NVLink */}
+                  {[0, 1, 2].map((j) => {
+                    const flowY = y1 + ((dataFlowOffset * 2 + j * 20) % (y2 - y1));
+                    return (
+                      <ellipse
+                        key={`nvflow-${i}-${j}`}
+                        cx="481"
+                        cy={flowY}
+                        rx="4"
+                        ry="3"
+                        fill="url(#pcieNvlinkGlow)"
+                      />
+                    );
+                  })}
+                </g>
+              );
+            })}
+
+            {/* NVLink label */}
+            <g transform="translate(500, 160)">
+              <rect x="-5" y="-15" width="80" height="40" rx="6" fill="#0f172a" stroke={colors.nvlink} strokeWidth="1" />
+              <text x="35" y="2" textAnchor="middle" fill={colors.nvlink} fontSize="11" fontWeight="bold">NVLink</text>
+              <text x="35" y="16" textAnchor="middle" fill={colors.textMuted} fontSize="9">{nvlinkBandwidth} GB/s</text>
+            </g>
           </g>
         )}
 
-        {/* Bandwidth meter */}
-        <rect x={30} y={220} width={150} height={12} rx={3} fill="rgba(255,255,255,0.1)" />
-        <rect
-          x={30}
-          y={220}
-          width={150 * Math.min(effectiveBandwidth / 1000, 1)}
-          height={12}
-          rx={3}
-          fill={useNVLink ? colors.nvlink : colors.pcie}
-        />
-        <text x={30} y={250} fill={colors.textSecondary} fontSize={10}>
-          Effective: {effectiveBandwidth.toFixed(0)} GB/s
-        </text>
+        {/* === BANDWIDTH METER === */}
+        <g transform="translate(40, 265)">
+          <text x="0" y="0" fill={colors.textSecondary} fontSize="10" fontWeight="600">Effective Bandwidth</text>
 
-        {/* Scaling efficiency meter */}
-        <rect x={220} y={220} width={150} height={12} rx={3} fill="rgba(255,255,255,0.1)" />
-        <rect
-          x={220}
-          y={220}
-          width={150 * scalingEfficiency}
-          height={12}
-          rx={3}
-          fill={scalingEfficiency > 0.8 ? colors.success : scalingEfficiency > 0.5 ? colors.warning : colors.error}
-        />
-        <text x={220} y={250} fill={colors.textSecondary} fontSize={10}>
-          Efficiency: {(scalingEfficiency * 100).toFixed(0)}%
-        </text>
+          {/* Meter background */}
+          <rect x="0" y="8" width="200" height="16" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
 
-        {/* Stats */}
-        <text x={30} y={280} fill={colors.textMuted} fontSize={10}>
-          Speedup: {effectiveSpeedup.toFixed(2)}x with {numGPUs} GPUs
+          {/* Meter fill with gradient */}
+          <rect
+            x="2"
+            y="10"
+            width={Math.min(196 * (effectiveBandwidth / 1000), 196)}
+            height="12"
+            rx="3"
+            fill={useNVLink ? "url(#pcieNvlinkGradient)" : "url(#pcieBandwidthMeterGradient)"}
+          >
+            <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" />
+          </rect>
+
+          {/* Value label */}
+          <text x="210" y="22" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
+            {effectiveBandwidth.toFixed(0)} GB/s
+          </text>
+        </g>
+
+        {/* === SCALING EFFICIENCY METER === */}
+        <g transform="translate(320, 265)">
+          <text x="0" y="0" fill={colors.textSecondary} fontSize="10" fontWeight="600">Scaling Efficiency</text>
+
+          {/* Meter background */}
+          <rect x="0" y="8" width="200" height="16" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+          {/* Meter fill with conditional gradient */}
+          <rect
+            x="2"
+            y="10"
+            width={196 * scalingEfficiency}
+            height="12"
+            rx="3"
+            fill={scalingEfficiency > 0.8 ? "url(#pcieEfficiencyGradient)" : "url(#pcieWarningGradient)"}
+          />
+
+          {/* Value label */}
+          <text x="210" y="22" fill={scalingEfficiency > 0.8 ? colors.success : colors.warning} fontSize="12" fontWeight="bold">
+            {(scalingEfficiency * 100).toFixed(0)}%
+          </text>
+        </g>
+
+        {/* === STATS DISPLAY === */}
+        <g transform="translate(600, 320)">
+          <rect x="-10" y="-10" width="95" height="70" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+          <text x="38" y="8" textAnchor="middle" fill={colors.accent} fontSize="9" fontWeight="bold">PERFORMANCE</text>
+          <text x="38" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
+            {effectiveSpeedup.toFixed(2)}x
+          </text>
+          <text x="38" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="8">
+            Speedup
+          </text>
+          <text x="38" y="55" textAnchor="middle" fill={colors.textSecondary} fontSize="9">
+            {numGPUs} GPU{numGPUs > 1 ? 's' : ''}
+          </text>
+        </g>
+
+        {/* === LABELS === */}
+        <text x="350" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
+          PCIe Bandwidth Architecture
+        </text>
+        <text x="350" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+          CPU ➔ PCIe {pcieGen} x{numLanes} ➔ GPU{numGPUs > 1 ? 's' : ''} {useNVLink ? '+ NVLink' : ''}
         </text>
       </svg>
     );

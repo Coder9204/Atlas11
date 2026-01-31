@@ -449,177 +449,512 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
     const width = room.width;
     const height = room.height;
     const rt60 = calculateRT60(selectedRoom, hasFurnishings);
+    const svgHeight = height + 120; // Extra space for RT60 indicator and decay graph
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
           width="100%"
-          height={height + 60}
-          viewBox={`0 0 ${width} ${height + 60}`}
+          height={svgHeight}
+          viewBox={`0 0 ${width} ${svgHeight}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '400px' }}
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #020617 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '450px' }}
         >
-          {/* Room outline */}
+          <defs>
+            {/* Premium room wall gradient - creates depth effect */}
+            <linearGradient id="reverbWallGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Floor gradient - simulates reflective surface */}
+            <linearGradient id="reverbFloorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Ceiling gradient with subtle lighting */}
+            <linearGradient id="reverbCeilingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Sound source radial glow */}
+            <radialGradient id="reverbSoundSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Sound wave propagation gradient */}
+            <radialGradient id="reverbWavePropagation" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#0891b2" stopOpacity="0.3" />
+              <stop offset="70%" stopColor="#0e7490" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#155e75" stopOpacity="0" />
+            </radialGradient>
+
+            {/* High energy ray gradient */}
+            <radialGradient id="reverbRayHighEnergy" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Low energy ray gradient (absorbed) */}
+            <radialGradient id="reverbRayLowEnergy" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+            </radialGradient>
+
+            {/* RT60 indicator gradient */}
+            <linearGradient id="reverbRT60Gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" />
+              <stop offset="25%" stopColor="#a78bfa" />
+              <stop offset="50%" stopColor="#c4b5fd" />
+              <stop offset="75%" stopColor="#a78bfa" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+
+            {/* Decay graph background gradient */}
+            <linearGradient id="reverbDecayBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Energy curve glow gradient */}
+            <linearGradient id="reverbEnergyCurveGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Soft furnishing gradient */}
+            <linearGradient id="reverbFurnishingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c4b5fd" />
+              <stop offset="30%" stopColor="#a78bfa" />
+              <stop offset="70%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            {/* Sound source glow filter */}
+            <filter id="reverbSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ray trail glow filter */}
+            <filter id="reverbRayGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Wave propagation glow filter */}
+            <filter id="reverbWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* RT60 indicator glow filter */}
+            <filter id="reverbRT60Glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Energy curve glow filter */}
+            <filter id="reverbCurveGlow" x="-10%" y="-50%" width="120%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background gradient overlay */}
+          <rect width={width} height={svgHeight} fill="url(#reverbDecayBgGradient)" opacity="0.3" />
+
+          {/* Subtle grid pattern for depth */}
+          <pattern id="reverbGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.2" />
+          </pattern>
+          <rect x={15} y={15} width={width - 30} height={height - 30} fill="url(#reverbGrid)" />
+
+          {/* Room outline with premium gradient walls */}
           <rect
             x={15}
             y={15}
             width={width - 30}
             height={height - 30}
-            fill="#0f172a"
-            stroke={colors.wall}
-            strokeWidth={3}
+            fill="url(#reverbFloorGradient)"
+            stroke="url(#reverbWallGradient)"
+            strokeWidth={4}
+            rx={3}
           />
 
-          {/* Surface indicators on walls */}
-          {room.surfaces.map((surface, i) => {
-            const positions = [
-              { x: 15, y: 15 + (height - 30) * 0.25 * i, w: 8, h: (height - 30) * 0.2 },
-              { x: width - 23, y: 15 + (height - 30) * 0.25 * i, w: 8, h: (height - 30) * 0.2 },
-              { x: 15 + (width - 30) * 0.25 * i, y: 15, w: (width - 30) * 0.2, h: 8 },
-              { x: 15 + (width - 30) * 0.25 * i, y: height - 23, w: (width - 30) * 0.2, h: 8 },
+          {/* Wall surface indicators with depth */}
+          {/* Left wall */}
+          <rect
+            x={15}
+            y={15}
+            width={8}
+            height={height - 30}
+            fill={room.surfaces[0]?.color || '#94a3b8'}
+            opacity={0.7}
+          />
+          {/* Right wall */}
+          <rect
+            x={width - 23}
+            y={15}
+            width={8}
+            height={height - 30}
+            fill={room.surfaces[1]?.color || '#64748b'}
+            opacity={0.7}
+          />
+          {/* Ceiling */}
+          <rect
+            x={15}
+            y={15}
+            width={width - 30}
+            height={8}
+            fill="url(#reverbCeilingGradient)"
+            opacity={0.8}
+          />
+          {/* Floor */}
+          <rect
+            x={15}
+            y={height - 23}
+            width={width - 30}
+            height={8}
+            fill={room.surfaces[3]?.color || '#475569'}
+            opacity={0.7}
+          />
+
+          {/* Surface material labels */}
+          {room.surfaces.slice(0, 4).map((surface, i) => {
+            const labelPositions = [
+              { x: 28, y: height / 2, rotate: -90 },
+              { x: width - 28, y: height / 2, rotate: 90 },
+              { x: width / 2, y: 28, rotate: 0 },
+              { x: width / 2, y: height - 28, rotate: 0 },
             ];
-            const pos = positions[i % 4];
+            const pos = labelPositions[i];
             return (
-              <rect
-                key={i}
-                x={pos.x}
-                y={pos.y}
-                width={pos.w}
-                height={pos.h}
-                fill={surface.color}
-                opacity={0.8}
-              />
+              <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${pos.rotate})`}>
+                <text
+                  textAnchor="middle"
+                  fill={colors.textMuted}
+                  fontSize={7}
+                  fontWeight="bold"
+                >
+                  {surface.name}
+                </text>
+                <text
+                  y={10}
+                  textAnchor="middle"
+                  fill={surface.absorption > 0.3 ? colors.success : colors.error}
+                  fontSize={6}
+                >
+                  {(surface.absorption * 100).toFixed(0)}% abs
+                </text>
+              </g>
             );
           })}
 
-          {/* Furnishings if enabled */}
-          {hasFurnishings && (selectedRoom === 'bathroom' || selectedRoom === 'concertHall') && (
-            <>
-              <rect
-                x={width / 2 - 30}
-                y={height / 2}
-                width={60}
-                height={40}
-                fill="#a78bfa"
-                rx={5}
-                opacity={0.8}
-              />
-              <text
-                x={width / 2}
-                y={height / 2 + 25}
-                fill={colors.textPrimary}
-                fontSize={10}
-                textAnchor="middle"
-              >
-                Blankets
-              </text>
-            </>
+          {/* Sound wave propagation circles - animated concentric rings */}
+          {isPlaying && (
+            <g filter="url(#reverbWaveGlow)">
+              {[1, 2, 3, 4, 5].map((ring) => (
+                <circle
+                  key={ring}
+                  cx={width / 2}
+                  cy={height / 2 - 20}
+                  r={20 + ring * 18}
+                  fill="none"
+                  stroke="url(#reverbWavePropagation)"
+                  strokeWidth={1.5}
+                  opacity={0.6 - ring * 0.1}
+                >
+                  <animate
+                    attributeName="r"
+                    from={20 + ring * 18}
+                    to={20 + ring * 18 + 60}
+                    dur="2s"
+                    repeatCount="indefinite"
+                    begin={`${ring * 0.3}s`}
+                  />
+                  <animate
+                    attributeName="opacity"
+                    from={0.6 - ring * 0.1}
+                    to="0"
+                    dur="2s"
+                    repeatCount="indefinite"
+                    begin={`${ring * 0.3}s`}
+                  />
+                </circle>
+              ))}
+            </g>
           )}
 
-          {/* Sound source indicator */}
-          <circle
-            cx={width / 2}
-            cy={height / 2 - 20}
-            r={8}
-            fill={colors.soundWave}
-            opacity={0.9}
-          />
+          {/* Furnishings if enabled - premium styling */}
+          {hasFurnishings && (selectedRoom === 'bathroom' || selectedRoom === 'concertHall') && (
+            <g>
+              {/* Soft furnishing with gradient and shadow */}
+              <rect
+                x={width / 2 - 35}
+                y={height / 2 + 5}
+                width={70}
+                height={45}
+                fill="url(#reverbFurnishingGradient)"
+                rx={8}
+                filter="url(#reverbRayGlow)"
+              />
+              {/* Texture lines on furnishing */}
+              {[0, 1, 2].map((line) => (
+                <line
+                  key={line}
+                  x1={width / 2 - 25}
+                  y1={height / 2 + 15 + line * 12}
+                  x2={width / 2 + 25}
+                  y2={height / 2 + 15 + line * 12}
+                  stroke="#e9d5ff"
+                  strokeWidth={1}
+                  strokeOpacity={0.3}
+                />
+              ))}
+              <text
+                x={width / 2}
+                y={height / 2 + 32}
+                fill={colors.textPrimary}
+                fontSize={9}
+                textAnchor="middle"
+                fontWeight="bold"
+              >
+                Soft Absorbers
+              </text>
+            </g>
+          )}
+
+          {/* Premium sound source with glow effect */}
+          <g filter="url(#reverbSourceGlow)">
+            <circle
+              cx={width / 2}
+              cy={height / 2 - 20}
+              r={12}
+              fill="url(#reverbSoundSourceGlow)"
+            />
+            <circle
+              cx={width / 2}
+              cy={height / 2 - 20}
+              r={6}
+              fill="#93c5fd"
+            >
+              {isPlaying && (
+                <animate
+                  attributeName="r"
+                  values="6;8;6"
+                  dur="0.3s"
+                  repeatCount="indefinite"
+                />
+              )}
+            </circle>
+          </g>
           <text
             x={width / 2}
-            y={height / 2 - 35}
+            y={height / 2 - 40}
             fill={colors.textSecondary}
             fontSize={10}
             textAnchor="middle"
+            fontWeight="bold"
           >
             Sound Source
           </text>
 
-          {/* Sound rays */}
+          {/* Sound rays with premium glow effects */}
           {rays.map(ray => (
-            <g key={ray.id}>
-              {/* Trail */}
+            <g key={ray.id} filter="url(#reverbRayGlow)">
+              {/* Trail with gradient-like opacity */}
               {ray.trail.length > 1 && (
                 <polyline
                   points={ray.trail.map(p => `${p.x},${p.y}`).join(' ')}
                   fill="none"
-                  stroke={colors.soundWave}
-                  strokeWidth={2}
-                  opacity={ray.energy / 100 * 0.6}
+                  stroke={ray.energy > 50 ? '#fbbf24' : '#34d399'}
+                  strokeWidth={2.5}
+                  opacity={ray.energy / 100 * 0.7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               )}
-              {/* Ray head */}
+              {/* Ray head with radial glow */}
               <circle
                 cx={ray.x}
                 cy={ray.y}
-                r={4}
-                fill={ray.energy > 50 ? colors.reflected : colors.absorbed}
-                opacity={Math.max(ray.energy / 100, 0.2)}
+                r={5}
+                fill={ray.energy > 50 ? 'url(#reverbRayHighEnergy)' : 'url(#reverbRayLowEnergy)'}
+                opacity={Math.max(ray.energy / 100, 0.3)}
+              />
+              {/* Inner bright core */}
+              <circle
+                cx={ray.x}
+                cy={ray.y}
+                r={2}
+                fill={ray.energy > 50 ? '#fef3c7' : '#d1fae5'}
+                opacity={Math.max(ray.energy / 100, 0.4)}
               />
             </g>
           ))}
 
-          {/* Energy decay graph area */}
-          <rect
-            x={15}
-            y={height + 5}
-            width={width - 30}
-            height={50}
-            fill="rgba(0,0,0,0.3)"
-            rx={4}
-          />
-
-          {/* Energy decay curve */}
-          {energyHistory.length > 1 && (
-            <polyline
-              points={energyHistory.map((e, i) =>
-                `${15 + (i / 100) * (width - 30)},${height + 5 + 50 - (e / 100) * 45}`
-              ).join(' ')}
-              fill="none"
-              stroke={colors.success}
-              strokeWidth={2}
+          {/* RT60 Decay Indicator Section */}
+          <g transform={`translate(0, ${height + 5})`}>
+            {/* Section background */}
+            <rect
+              x={15}
+              y={0}
+              width={width - 30}
+              height={110}
+              fill="url(#reverbDecayBgGradient)"
+              rx={6}
+              stroke="#334155"
+              strokeWidth={1}
             />
-          )}
 
-          {/* 60dB line (RT60 threshold) */}
-          <line
-            x1={15}
-            y1={height + 5 + 50 - (0.1) * 45}
-            x2={width - 15}
-            y2={height + 5 + 50 - (0.1) * 45}
-            stroke={colors.warning}
-            strokeWidth={1}
-            strokeDasharray="4,4"
-          />
-          <text
-            x={width - 20}
-            y={height + 50}
-            fill={colors.warning}
-            fontSize={8}
-            textAnchor="end"
-          >
-            -60dB
-          </text>
+            {/* RT60 Value Display */}
+            <g transform={`translate(${width / 2}, 25)`}>
+              <rect
+                x={-60}
+                y={-18}
+                width={120}
+                height={36}
+                fill="rgba(139, 92, 246, 0.15)"
+                stroke="url(#reverbRT60Gradient)"
+                strokeWidth={2}
+                rx={8}
+                filter="url(#reverbRT60Glow)"
+              />
+              <text
+                textAnchor="middle"
+                y={-4}
+                fill={colors.textMuted}
+                fontSize={8}
+                fontWeight="bold"
+              >
+                RT60 (Reverb Time)
+              </text>
+              <text
+                textAnchor="middle"
+                y={12}
+                fill="#c4b5fd"
+                fontSize={16}
+                fontWeight="bold"
+              >
+                {rt60.toFixed(2)}s
+              </text>
+            </g>
 
-          {/* Labels */}
-          <text x={20} y={height + 20} fill={colors.textMuted} fontSize={9}>
-            Energy Decay
-          </text>
+            {/* Energy decay graph area */}
+            <rect
+              x={25}
+              y={45}
+              width={width - 50}
+              height={55}
+              fill="rgba(0,0,0,0.4)"
+              rx={4}
+              stroke="#475569"
+              strokeWidth={0.5}
+            />
+
+            {/* Graph labels */}
+            <text x={30} y={55} fill={colors.textMuted} fontSize={7} fontWeight="bold">
+              Energy Decay
+            </text>
+            <text x={width - 35} y={55} fill={colors.textMuted} fontSize={6} textAnchor="end">
+              100%
+            </text>
+            <text x={width - 35} y={95} fill={colors.textMuted} fontSize={6} textAnchor="end">
+              0%
+            </text>
+
+            {/* 60dB threshold line (RT60 measurement point) */}
+            <line
+              x1={25}
+              y1={45 + 55 - (0.001) * 50}
+              x2={width - 25}
+              y2={45 + 55 - (0.001) * 50}
+              stroke={colors.warning}
+              strokeWidth={1.5}
+              strokeDasharray="4,3"
+              opacity={0.8}
+            />
+            <rect
+              x={width - 65}
+              y={45 + 55 - (0.001) * 50 - 8}
+              width={35}
+              height={12}
+              fill="rgba(245, 158, 11, 0.2)"
+              rx={3}
+            />
+            <text
+              x={width - 48}
+              y={45 + 55 - (0.001) * 50 + 1}
+              fill={colors.warning}
+              fontSize={7}
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              -60dB
+            </text>
+
+            {/* Energy decay curve with glow */}
+            {energyHistory.length > 1 && (
+              <g filter="url(#reverbCurveGlow)">
+                <polyline
+                  points={energyHistory.map((e, i) =>
+                    `${25 + (i / 100) * (width - 50)},${45 + 55 - (e / 100) * 50}`
+                  ).join(' ')}
+                  fill="none"
+                  stroke="url(#reverbEnergyCurveGlow)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            )}
+
+            {/* Time axis markers */}
+            <text x={25} y={108} fill={colors.textMuted} fontSize={6}>
+              0s
+            </text>
+            <text x={width / 2} y={108} fill={colors.textMuted} fontSize={6} textAnchor="middle">
+              Time
+            </text>
+            <text x={width - 25} y={108} fill={colors.textMuted} fontSize={6} textAnchor="end">
+              {(time * 0.1).toFixed(1)}s
+            </text>
+          </g>
         </svg>
-
-        {/* RT60 Display */}
-        <div style={{
-          background: 'rgba(139, 92, 246, 0.2)',
-          padding: '12px 20px',
-          borderRadius: '8px',
-          textAlign: 'center',
-        }}>
-          <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-            Calculated RT60:
-          </div>
-          <div style={{ color: colors.accent, fontSize: '24px', fontWeight: 'bold' }}>
-            {rt60.toFixed(2)} seconds
-          </div>
-        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -629,11 +964,16 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isPlaying ? colors.error : colors.success,
+                background: isPlaying
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isPlaying
+                  ? '0 4px 15px rgba(239, 68, 68, 0.3)'
+                  : '0 4px 15px rgba(16, 185, 129, 0.3)',
               }}
             >
               {isPlaying ? 'Stop' : 'Play Sound'}
@@ -643,8 +983,8 @@ const ReverberationRenderer: React.FC<ReverberationRendererProps> = ({
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(139, 92, 246, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',

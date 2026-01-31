@@ -315,10 +315,10 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 420;
+    const width = 500;
+    const height = 520;
 
-    // Temperature color gradient
+    // Temperature color gradient - returns color based on panel temperature
     const getTempColor = () => {
       if (panelTemperature < 10) return colors.cold;
       if (panelTemperature < 25) return colors.success;
@@ -326,9 +326,15 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
       return colors.temperature;
     };
 
+    // Get temperature blend for gradient (0 = cold, 1 = hot)
+    const tempBlend = Math.max(0, Math.min(1, (panelTemperature + 10) / 80));
+
     // Sun intensity visual
     const sunOpacity = Math.min(1, irradiance / 1000);
-    const sunSize = 25 + (irradiance / 1000) * 15;
+    const sunSize = 30 + (irradiance / 1000) * 20;
+
+    // Efficiency percentage for graph
+    const efficiencyPercent = (values.efficiency / 22) * 100; // 22% is max efficiency baseline
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -337,190 +343,504 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '600px' }}
         >
           <defs>
-            <radialGradient id="sunGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.solar} stopOpacity={sunOpacity} />
-              <stop offset="100%" stopColor={colors.solar} stopOpacity="0" />
-            </radialGradient>
-            <linearGradient id="panelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e40af" />
-              <stop offset="100%" stopColor={getTempColor()} stopOpacity="0.5" />
+            {/* === PREMIUM BACKGROUND GRADIENTS === */}
+            <linearGradient id="stcoefSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="25%" stopColor="#162544" />
+              <stop offset="50%" stopColor="#1a365d" />
+              <stop offset="75%" stopColor="#1e3a5f" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+
+            {/* === SUN GRADIENTS === */}
+            <radialGradient id="stcoefSunCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fff7ed" />
+              <stop offset="20%" stopColor="#fef3c7" />
+              <stop offset="40%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="80%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            <radialGradient id="stcoefSunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#d97706" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="stcoefSunCorona" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#fde047" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === SOLAR PANEL GRADIENTS === */}
+            <linearGradient id="stcoefPanelFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            <linearGradient id="stcoefPanelCellCool" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#1e3a8a" />
+              <stop offset="50%" stopColor="#1d4ed8" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            <linearGradient id="stcoefPanelCellHot" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="25%" stopColor="#991b1b" />
+              <stop offset="50%" stopColor="#b91c1c" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            <linearGradient id="stcoefPanelReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+
+            {/* === THERMOMETER GRADIENTS === */}
+            <linearGradient id="stcoefThermometerBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#334155" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            <linearGradient id="stcoefThermometerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" stopOpacity="0.5" />
+              <stop offset="20%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.2" />
+              <stop offset="80%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.5" />
+            </linearGradient>
+
+            <linearGradient id="stcoefMercuryCold" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#0891b2" />
+              <stop offset="30%" stopColor="#06b6d4" />
+              <stop offset="60%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#67e8f9" />
+            </linearGradient>
+
+            <linearGradient id="stcoefMercuryWarm" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fde047" />
+            </linearGradient>
+
+            <linearGradient id="stcoefMercuryHot" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#991b1b" />
+              <stop offset="30%" stopColor="#dc2626" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* === GRAPH GRADIENTS === */}
+            <linearGradient id="stcoefGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            <linearGradient id="stcoefPowerLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#84cc16" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            <linearGradient id="stcoefEfficiencyLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#ec4899" />
+            </linearGradient>
+
+            <linearGradient id="stcoefGraphGridLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#334155" stopOpacity="0" />
+              <stop offset="10%" stopColor="#334155" stopOpacity="0.5" />
+              <stop offset="90%" stopColor="#334155" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
+            </linearGradient>
+
+            {/* === RADIAL TEMPERATURE EFFECT === */}
+            <radialGradient id="stcoefHeatRadiation" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.15" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="stcoefColdAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#0891b2" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+            <filter id="stcoefSunGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            <filter id="stcoefPanelGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="stcoefThermometerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="stcoefDataPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="stcoefTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="stcoefSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.4" />
+            </filter>
+
+            {/* === SUN RAY PATTERN === */}
+            <pattern id="stcoefSunRays" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <line x1="10" y1="0" x2="10" y2="20" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {/* Sun */}
-          <g transform="translate(60, 50)">
-            <circle cx="0" cy="0" r={sunSize + 20} fill="url(#sunGradient)" />
-            <circle cx="0" cy="0" r={sunSize} fill={colors.solar} filter="url(#glow)" />
-            <text x="0" y={sunSize + 25} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#stcoefSkyGradient)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="stcoefBgGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#stcoefBgGrid)" />
+
+          {/* === PREMIUM SUN === */}
+          <g transform="translate(70, 65)">
+            {/* Sun corona (outer glow) */}
+            <circle cx="0" cy="0" r={sunSize + 45} fill="url(#stcoefSunCorona)" opacity={sunOpacity * 0.8} />
+
+            {/* Sun glow (middle layer) */}
+            <circle cx="0" cy="0" r={sunSize + 25} fill="url(#stcoefSunGlow)" opacity={sunOpacity} />
+
+            {/* Sun core with glow filter */}
+            <circle cx="0" cy="0" r={sunSize} fill="url(#stcoefSunCore)" filter="url(#stcoefSunGlowFilter)" />
+
+            {/* Sun highlight */}
+            <ellipse cx={-sunSize * 0.25} cy={-sunSize * 0.25} rx={sunSize * 0.3} ry={sunSize * 0.2} fill="#ffffff" opacity="0.3" />
+
+            {/* Irradiance label */}
+            <text x="0" y={sunSize + 40} fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#stcoefTextGlow)">
               {irradiance} W/m²
             </text>
+            <text x="0" y={sunSize + 54} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+              Solar Irradiance
+            </text>
           </g>
 
-          {/* Solar Panel */}
-          <g transform="translate(150, 30)">
-            {/* Sun rays hitting panel */}
-            {[0, 1, 2, 3, 4].map(i => (
+          {/* === SUN RAYS HITTING PANEL === */}
+          <g opacity={sunOpacity * 0.6}>
+            {[0, 1, 2, 3, 4, 5, 6].map(i => (
               <line
-                key={i}
-                x1={-80 + i * 25}
-                y1={-10}
-                x2={10 + i * 25}
-                y2={40}
-                stroke={colors.solar}
+                key={`ray-${i}`}
+                x1={85 + i * 8}
+                y1={75 + i * 5}
+                x2={175 + i * 22}
+                y2={95}
+                stroke="url(#stcoefPowerLine)"
                 strokeWidth="2"
-                opacity={sunOpacity * 0.7}
-                strokeDasharray="4,4"
-              />
+                strokeDasharray="8,4"
+                strokeLinecap="round"
+              >
+                <animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite" />
+              </line>
             ))}
+          </g>
 
-            {/* Panel body */}
-            <rect x="0" y="20" width="140" height="80" fill="url(#panelGradient)" rx="4" stroke="#3b82f6" strokeWidth="2" />
+          {/* === PREMIUM SOLAR PANEL === */}
+          <g transform="translate(160, 55)" filter="url(#stcoefSoftShadow)">
+            {/* Panel mounting bracket */}
+            <rect x="60" y="95" width="50" height="15" fill="url(#stcoefPanelFrame)" rx="2" />
+            <rect x="75" y="108" width="20" height="30" fill="url(#stcoefPanelFrame)" rx="2" />
 
-            {/* Cell grid */}
+            {/* Panel frame */}
+            <rect x="-5" y="-5" width="180" height="105" fill="url(#stcoefPanelFrame)" rx="6" />
+
+            {/* Panel glass/cell area */}
+            <rect x="0" y="0" width="170" height="95" rx="3" fill={tempBlend > 0.5 ? 'url(#stcoefPanelCellHot)' : 'url(#stcoefPanelCellCool)'} opacity={1 - tempBlend * 0.3} />
+
+            {/* Temperature overlay based on panel temp */}
+            {tempBlend > 0.4 && (
+              <rect x="0" y="0" width="170" height="95" rx="3" fill="url(#stcoefHeatRadiation)" opacity={tempBlend * 0.8} />
+            )}
+            {tempBlend < 0.3 && (
+              <rect x="0" y="0" width="170" height="95" rx="3" fill="url(#stcoefColdAura)" opacity={(0.3 - tempBlend) * 2} />
+            )}
+
+            {/* Cell grid lines - horizontal */}
             {[1, 2, 3, 4, 5].map(i => (
-              <line key={`h${i}`} x1="0" y1={20 + i * 13.3} x2="140" y2={20 + i * 13.3} stroke="#1e3a8a" strokeWidth="0.5" />
+              <line key={`h-${i}`} x1="0" y1={i * 15.8} x2="170" y2={i * 15.8} stroke="#0f172a" strokeWidth="1.5" strokeOpacity="0.6" />
             ))}
-            {[1, 2, 3, 4, 5, 6, 7].map(i => (
-              <line key={`v${i}`} x1={i * 17.5} y1="20" x2={i * 17.5} y2="100" stroke="#1e3a8a" strokeWidth="0.5" />
+            {/* Cell grid lines - vertical */}
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
+              <line key={`v-${i}`} x1={i * 17} y1="0" x2={i * 17} y2="95" stroke="#0f172a" strokeWidth="1.5" strokeOpacity="0.6" />
             ))}
 
-            {/* Temperature indicator on panel */}
-            <rect x="50" y="45" width="40" height="30" fill="rgba(0,0,0,0.7)" rx="4" />
-            <text x="70" y="66" fill={getTempColor()} fontSize="14" fontWeight="bold" textAnchor="middle">
-              {panelTemperature}°C
-            </text>
+            {/* Glass reflection */}
+            <rect x="0" y="0" width="170" height="95" rx="3" fill="url(#stcoefPanelReflection)" />
+
+            {/* Temperature indicator badge */}
+            <g transform="translate(55, 32)">
+              <rect x="0" y="0" width="60" height="30" rx="6" fill="rgba(0,0,0,0.85)" stroke={getTempColor()} strokeWidth="2" />
+              <text x="30" y="21" fill={getTempColor()} fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#stcoefTextGlow)">
+                {panelTemperature}°C
+              </text>
+            </g>
+
+            {/* Panel label */}
+            <text x="85" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">350W Solar Panel</text>
           </g>
 
-          {/* Thermometer */}
-          <g transform="translate(320, 30)">
-            <rect x="0" y="0" width="35" height="100" fill="#1e293b" rx="17" stroke="#475569" strokeWidth="2" />
-            <rect
-              x="5"
-              y={5 + 80 * (1 - (panelTemperature + 10) / 80)}
-              width="25"
-              height={80 * ((panelTemperature + 10) / 80)}
-              fill={getTempColor()}
-              rx="12"
-            />
-            <circle cx="17.5" cy="88" r="12" fill={getTempColor()} />
-            <text x="17.5" y="115" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-              Panel Temp
-            </text>
+          {/* === PREMIUM THERMOMETER === */}
+          <g transform="translate(410, 40)">
+            {/* Thermometer body background */}
+            <rect x="0" y="0" width="45" height="130" rx="22" fill="url(#stcoefThermometerBg)" stroke="#475569" strokeWidth="2" />
+
+            {/* Glass effect overlay */}
+            <rect x="2" y="2" width="41" height="126" rx="20" fill="url(#stcoefThermometerGlass)" />
+
+            {/* Temperature scale marks */}
+            {[-10, 0, 10, 25, 40, 55, 70].map((temp, i) => {
+              const yPos = 10 + (1 - (temp + 10) / 80) * 95;
+              return (
+                <g key={`mark-${temp}`}>
+                  <line x1="8" y1={yPos} x2="15" y2={yPos} stroke={colors.textMuted} strokeWidth="1" />
+                  <text x="50" y={yPos + 3} fill={temp === 25 ? colors.accent : colors.textMuted} fontSize="8" fontWeight={temp === 25 ? 'bold' : 'normal'}>
+                    {temp}°
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Mercury column */}
+            {(() => {
+              const mercuryHeight = Math.max(5, 95 * ((panelTemperature + 10) / 80));
+              const mercuryY = 10 + 95 - mercuryHeight;
+              const mercuryGradient = panelTemperature < 15 ? 'url(#stcoefMercuryCold)' : panelTemperature < 40 ? 'url(#stcoefMercuryWarm)' : 'url(#stcoefMercuryHot)';
+              return (
+                <rect
+                  x="15"
+                  y={mercuryY}
+                  width="15"
+                  height={mercuryHeight}
+                  rx="7"
+                  fill={mercuryGradient}
+                  filter="url(#stcoefThermometerGlow)"
+                />
+              );
+            })()}
+
+            {/* Bulb at bottom */}
+            <circle cx="22.5" cy="115" r="12" fill={getTempColor()} filter="url(#stcoefThermometerGlow)" />
+            <circle cx="20" cy="112" r="4" fill="#ffffff" opacity="0.3" />
+
+            {/* Label */}
+            <text x="22" y="148" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">Panel</text>
+            <text x="22" y="160" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Temp</text>
           </g>
 
-          {/* Output values */}
-          <g transform="translate(20, 140)">
-            <rect x="0" y="0" width="360" height="90" fill="rgba(0,0,0,0.4)" rx="8" stroke={colors.accent} strokeWidth="1" />
-            <text x="180" y="18" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">
-              Panel Output (vs STC at 25°C, 1000 W/m²)
+          {/* === OUTPUT VALUES PANEL === */}
+          <g transform="translate(20, 180)">
+            <rect x="0" y="0" width="460" height="95" rx="10" fill="rgba(15, 23, 42, 0.9)" stroke={colors.accent} strokeWidth="1.5" />
+
+            {/* Header */}
+            <rect x="0" y="0" width="460" height="24" rx="10" fill="rgba(245, 158, 11, 0.15)" />
+            <text x="230" y="17" fill={colors.accent} fontSize="12" fontWeight="bold" textAnchor="middle">
+              Panel Output vs STC (25°C, 1000 W/m²)
             </text>
 
             {/* Voltage */}
-            <g transform="translate(20, 30)">
-              <text x="0" y="12" fill={colors.voltage} fontSize="11">Voltage (Voc):</text>
-              <text x="90" y="12" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-                {values.Voc.toFixed(1)}V
-              </text>
-              <text x="130" y="12" fill={values.deltaT > 0 ? colors.error : colors.success} fontSize="10">
+            <g transform="translate(25, 35)">
+              <circle cx="6" cy="8" r="6" fill={colors.voltage} opacity="0.3" />
+              <circle cx="6" cy="8" r="3" fill={colors.voltage} />
+              <text x="20" y="12" fill={colors.voltage} fontSize="11" fontWeight="bold">Voltage (Voc)</text>
+              <text x="115" y="12" fill={colors.textPrimary} fontSize="13" fontWeight="bold">{values.Voc.toFixed(1)}V</text>
+              <text x="160" y="12" fill={values.deltaT > 0 ? colors.error : colors.success} fontSize="10">
                 ({values.deltaT > 0 ? '' : '+'}{(-values.deltaT * TEMP_COEFF_VOC * 100).toFixed(1)}%)
               </text>
             </g>
 
             {/* Current */}
-            <g transform="translate(200, 30)">
-              <text x="0" y="12" fill={colors.current} fontSize="11">Current (Isc):</text>
-              <text x="90" y="12" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-                {values.Isc.toFixed(2)}A
-              </text>
+            <g transform="translate(245, 35)">
+              <circle cx="6" cy="8" r="6" fill={colors.current} opacity="0.3" />
+              <circle cx="6" cy="8" r="3" fill={colors.current} />
+              <text x="20" y="12" fill={colors.current} fontSize="11" fontWeight="bold">Current (Isc)</text>
+              <text x="115" y="12" fill={colors.textPrimary} fontSize="13" fontWeight="bold">{values.Isc.toFixed(2)}A</text>
             </g>
 
             {/* Power */}
-            <g transform="translate(20, 55)">
-              <text x="0" y="12" fill={colors.power} fontSize="12" fontWeight="bold">Power (Pmax):</text>
-              <text x="110" y="12" fill={colors.textPrimary} fontSize="14" fontWeight="bold">
-                {values.Pmax.toFixed(0)}W
-              </text>
-              <text x="160" y="12" fill={values.deltaT > 0 ? colors.error : colors.success} fontSize="11">
-                ({values.powerLoss > 0 ? '-' : '+'}{Math.abs(values.powerLoss).toFixed(0)}W from temp)
+            <g transform="translate(25, 60)">
+              <circle cx="6" cy="8" r="8" fill={colors.power} opacity="0.3" />
+              <circle cx="6" cy="8" r="4" fill={colors.power} />
+              <text x="20" y="12" fill={colors.power} fontSize="13" fontWeight="bold">Power (Pmax)</text>
+              <text x="130" y="12" fill={colors.textPrimary} fontSize="16" fontWeight="bold">{values.Pmax.toFixed(0)}W</text>
+              <text x="185" y="12" fill={values.deltaT > 0 ? colors.error : colors.success} fontSize="11" fontWeight="bold">
+                ({values.powerLoss > 0 ? '-' : '+'}{Math.abs(values.powerLoss).toFixed(0)}W)
               </text>
             </g>
 
             {/* Efficiency */}
-            <g transform="translate(200, 55)">
-              <text x="0" y="12" fill={colors.accent} fontSize="11">Efficiency:</text>
-              <text x="70" y="12" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
-                {values.efficiency.toFixed(1)}%
-              </text>
+            <g transform="translate(245, 60)">
+              <circle cx="6" cy="8" r="6" fill={colors.accent} opacity="0.3" />
+              <circle cx="6" cy="8" r="3" fill={colors.accent} />
+              <text x="20" y="12" fill={colors.accent} fontSize="11" fontWeight="bold">Efficiency</text>
+              <text x="95" y="12" fill={colors.textPrimary} fontSize="13" fontWeight="bold">{values.efficiency.toFixed(1)}%</text>
             </g>
           </g>
 
-          {/* Power vs Temperature graph */}
-          <g transform="translate(20, 250)">
-            <rect x="0" y="0" width="360" height="100" fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x="180" y="15" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">
+          {/* === TEMPERATURE VS EFFICIENCY GRAPH === */}
+          <g transform="translate(20, 290)">
+            <rect x="0" y="0" width="460" height="130" rx="10" fill="url(#stcoefGraphBg)" stroke="#334155" strokeWidth="1" />
+
+            {/* Graph title */}
+            <text x="230" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold" textAnchor="middle">
               Power Output vs Panel Temperature (at {irradiance} W/m²)
             </text>
 
-            {/* Axes */}
-            <line x1="40" y1="85" x2="340" y2="85" stroke={colors.textMuted} strokeWidth="1" />
-            <line x1="40" y1="25" x2="40" y2="85" stroke={colors.textMuted} strokeWidth="1" />
+            {/* Grid lines */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line key={`grid-h-${i}`} x1="55" y1={35 + i * 20} x2="440" y2={35 + i * 20} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+            ))}
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <line key={`grid-v-${i}`} x1={55 + i * 77} y1="35" x2={55 + i * 77} y2="115" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+            ))}
+
+            {/* Y-axis */}
+            <line x1="55" y1="35" x2="55" y2="115" stroke={colors.textMuted} strokeWidth="1.5" />
+            <text x="30" y="80" fill={colors.textMuted} fontSize="9" textAnchor="middle" transform="rotate(-90, 30, 80)">Power (W)</text>
+
+            {/* Y-axis labels */}
+            <text x="50" y="38" fill={colors.textMuted} fontSize="8" textAnchor="end">400</text>
+            <text x="50" y="58" fill={colors.textMuted} fontSize="8" textAnchor="end">350</text>
+            <text x="50" y="78" fill={colors.textMuted} fontSize="8" textAnchor="end">300</text>
+            <text x="50" y="98" fill={colors.textMuted} fontSize="8" textAnchor="end">250</text>
+            <text x="50" y="118" fill={colors.textMuted} fontSize="8" textAnchor="end">200</text>
+
+            {/* X-axis */}
+            <line x1="55" y1="115" x2="440" y2="115" stroke={colors.textMuted} strokeWidth="1.5" />
 
             {/* X-axis labels */}
-            <text x="40" y="95" fill={colors.textMuted} fontSize="8" textAnchor="middle">-10°C</text>
-            <text x="115" y="95" fill={colors.textMuted} fontSize="8" textAnchor="middle">10°C</text>
-            <text x="190" y="95" fill={colors.textSecondary} fontSize="8" textAnchor="middle" fontWeight="bold">25°C (STC)</text>
-            <text x="265" y="95" fill={colors.textMuted} fontSize="8" textAnchor="middle">45°C</text>
-            <text x="340" y="95" fill={colors.textMuted} fontSize="8" textAnchor="middle">70°C</text>
-
-            {/* Power line (decreasing with temperature) */}
-            <path
-              d={`M40,${25 + 60 * (1 - (STC_PMAX * (1 + TEMP_COEFF_PMAX * (-10 - STC_TEMP)) * (irradiance / STC_IRRADIANCE)) / (STC_PMAX * 1.2))}
-                  L340,${25 + 60 * (1 - (STC_PMAX * (1 + TEMP_COEFF_PMAX * (70 - STC_TEMP)) * (irradiance / STC_IRRADIANCE)) / (STC_PMAX * 1.2))}`}
-              fill="none"
-              stroke={colors.power}
-              strokeWidth="2"
-            />
+            <text x="55" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">-10°C</text>
+            <text x="132" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">10°C</text>
+            <text x="209" y="125" fill={colors.accent} fontSize="8" textAnchor="middle" fontWeight="bold">25°C</text>
+            <text x="286" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">40°C</text>
+            <text x="363" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">55°C</text>
+            <text x="440" y="125" fill={colors.textMuted} fontSize="8" textAnchor="middle">70°C</text>
 
             {/* STC reference line */}
-            <line x1="190" y1="25" x2="190" y2="85" stroke={colors.accent} strokeWidth="1" strokeDasharray="4,4" />
+            <line x1="209" y1="35" x2="209" y2="115" stroke={colors.accent} strokeWidth="1.5" strokeDasharray="4,4" strokeOpacity="0.7" />
+            <text x="209" y="32" fill={colors.accent} fontSize="7" textAnchor="middle">STC</text>
 
-            {/* Current operating point */}
-            <circle
-              cx={40 + 300 * ((panelTemperature + 10) / 80)}
-              cy={25 + 60 * (1 - values.Pmax / (STC_PMAX * 1.2))}
-              r="6"
-              fill={colors.accent}
-              stroke="white"
-              strokeWidth="2"
-              filter="url(#glow)"
+            {/* Power curve (decreasing with temperature) */}
+            <path
+              d={(() => {
+                const points = [];
+                for (let t = -10; t <= 70; t += 5) {
+                  const power = STC_PMAX * (1 + TEMP_COEFF_PMAX * (t - STC_TEMP)) * (irradiance / STC_IRRADIANCE);
+                  const x = 55 + ((t + 10) / 80) * 385;
+                  const y = 115 - ((power - 200) / 200) * 80;
+                  points.push(`${points.length === 0 ? 'M' : 'L'}${x},${Math.max(35, Math.min(115, y))}`);
+                }
+                return points.join(' ');
+              })()}
+              fill="none"
+              stroke="url(#stcoefPowerLine)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
 
-            {/* Y-axis label */}
-            <text x="25" y="55" fill={colors.textMuted} fontSize="8" transform="rotate(-90, 25, 55)">Power (W)</text>
+            {/* Current operating point */}
+            {(() => {
+              const x = 55 + ((panelTemperature + 10) / 80) * 385;
+              const y = 115 - ((values.Pmax - 200) / 200) * 80;
+              return (
+                <g>
+                  {/* Vertical reference line to x-axis */}
+                  <line x1={x} y1={Math.max(35, Math.min(115, y))} x2={x} y2="115" stroke={colors.accent} strokeWidth="1" strokeDasharray="2,2" strokeOpacity="0.5" />
+
+                  {/* Data point with glow */}
+                  <circle cx={x} cy={Math.max(35, Math.min(115, y))} r="10" fill={colors.accent} opacity="0.3" filter="url(#stcoefDataPointGlow)" />
+                  <circle cx={x} cy={Math.max(35, Math.min(115, y))} r="6" fill={colors.accent} stroke="#ffffff" strokeWidth="2" />
+
+                  {/* Value label */}
+                  <rect x={x - 25} y={Math.max(35, Math.min(115, y)) - 25} width="50" height="16" rx="4" fill="rgba(0,0,0,0.8)" />
+                  <text x={x} y={Math.max(35, Math.min(115, y)) - 12} fill={colors.textPrimary} fontSize="9" fontWeight="bold" textAnchor="middle">
+                    {values.Pmax.toFixed(0)}W
+                  </text>
+                </g>
+              );
+            })()}
           </g>
 
-          {/* Season comparison */}
+          {/* === SEASON COMPARISON (when active) === */}
           {showSeason && (
-            <g transform="translate(20, 360)">
-              <rect x="0" y="0" width="360" height="50" fill={showSeason === 'summer' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(6, 182, 212, 0.2)'} rx="6" />
-              <text x="180" y="18" fill={showSeason === 'summer' ? colors.temperature : colors.cold} fontSize="11" fontWeight="bold" textAnchor="middle">
+            <g transform="translate(20, 430)">
+              <rect
+                x="0"
+                y="0"
+                width="460"
+                height="55"
+                rx="10"
+                fill={showSeason === 'summer' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(6, 182, 212, 0.15)'}
+                stroke={showSeason === 'summer' ? colors.temperature : colors.cold}
+                strokeWidth="1.5"
+              />
+              <text x="230" y="20" fill={showSeason === 'summer' ? colors.temperature : colors.cold} fontSize="13" fontWeight="bold" textAnchor="middle">
                 {showSeason === 'summer' ? 'Hot Summer Day: 55°C panel, 1000 W/m²' : 'Cold Winter Day: 5°C panel, 800 W/m²'}
               </text>
-              <text x="180" y="38" fill={colors.textPrimary} fontSize="12" textAnchor="middle">
+              <text x="230" y="42" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">
                 Power Output: {values.Pmax.toFixed(0)}W
-                {showSeason === 'summer'
-                  ? ` (${((values.powerLoss / STC_PMAX) * 100).toFixed(0)}% temp loss)`
-                  : ` (+${((-values.powerLoss / STC_PMAX) * 100).toFixed(0)}% cold bonus)`}
+                <tspan fill={showSeason === 'summer' ? colors.error : colors.success} fontSize="12">
+                  {showSeason === 'summer'
+                    ? ` (${((values.powerLoss / STC_PMAX) * 100).toFixed(0)}% temp loss)`
+                    : ` (+${((-values.powerLoss / STC_PMAX) * 100).toFixed(0)}% cold bonus)`}
+                </tspan>
               </text>
             </g>
           )}
@@ -531,14 +851,17 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             <button
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
+                padding: '12px 24px',
+                borderRadius: '10px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)`
+                  : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: '14px',
+                boxShadow: isAnimating ? '0 4px 15px rgba(239, 68, 68, 0.4)' : '0 4px 15px rgba(16, 185, 129, 0.4)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -547,14 +870,15 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             <button
               onClick={() => setScenario('summer')}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
+                padding: '12px 24px',
+                borderRadius: '10px',
                 border: 'none',
-                background: colors.temperature,
+                background: `linear-gradient(135deg, ${colors.temperature} 0%, #dc2626 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: '14px',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -563,14 +887,15 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             <button
               onClick={() => setScenario('winter')}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
+                padding: '12px 24px',
+                borderRadius: '10px',
                 border: 'none',
-                background: colors.cold,
+                background: `linear-gradient(135deg, ${colors.cold} 0%, #0891b2 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: '14px',
+                boxShadow: '0 4px 15px rgba(6, 182, 212, 0.4)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -579,14 +904,14 @@ const SolarTempCoefficientRenderer: React.FC<SolarTempCoefficientRendererProps> 
             <button
               onClick={() => { setPanelTemperature(25); setIrradiance(1000); setShowSeason(null); }}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(245, 158, 11, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

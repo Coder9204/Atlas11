@@ -456,220 +456,644 @@ const ManufacturingDrivesArchitectureRenderer: React.FC<ManufacturingDrivesArchi
     const dieScale = Math.sqrt(dieSize) / 2;
 
     return (
-      <svg width="100%" height="550" viewBox="0 0 500 550" style={{ maxWidth: '600px' }}>
+      <svg width="100%" height="600" viewBox="0 0 520 600" style={{ maxWidth: '640px' }}>
         <defs>
-          <linearGradient id="yieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="50%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#22c55e" />
+          {/* === PREMIUM LINEAR GRADIENTS === */}
+
+          {/* Silicon wafer gradient with depth */}
+          <linearGradient id="mdaSiliconWafer" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a5f" />
+            <stop offset="25%" stopColor="#1e40af" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="75%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a5f" />
           </linearGradient>
-          <pattern id="defectPattern" width="10" height="10" patternUnits="userSpaceOnUse">
-            <circle cx="5" cy="5" r="2" fill="#ef4444" opacity="0.5" />
+
+          {/* Monolithic die premium gradient */}
+          <linearGradient id="mdaMonolithicDie" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="20%" stopColor="#2563eb" />
+            <stop offset="40%" stopColor="#1d4ed8" />
+            <stop offset="60%" stopColor="#1e40af" />
+            <stop offset="80%" stopColor="#1e3a8a" />
+            <stop offset="100%" stopColor="#172554" />
+          </linearGradient>
+
+          {/* Chiplet compute die gradient */}
+          <linearGradient id="mdaChipletCompute" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="25%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#16a34a" />
+            <stop offset="75%" stopColor="#15803d" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* Interposer/substrate gradient */}
+          <linearGradient id="mdaInterposer" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#334155" />
+            <stop offset="25%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="75%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#334155" />
+          </linearGradient>
+
+          {/* Yield curve gradient (red to yellow to green) */}
+          <linearGradient id="mdaYieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="30%" stopColor="#84cc16" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="70%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+
+          {/* Thermal heat gradient */}
+          <linearGradient id="mdaThermalHeat" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="25%" stopColor="#7c3aed" />
+            <stop offset="50%" stopColor="#dc2626" />
+            <stop offset="75%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
+
+          {/* Manufacturing flow indicator */}
+          <linearGradient id="mdaFlowArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#a855f7" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#c084fc" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* Card background gradient */}
+          <linearGradient id="mdaCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* === PREMIUM RADIAL GRADIENTS === */}
+
+          {/* Chip core glow effect */}
+          <radialGradient id="mdaChipCoreGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#2563eb" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Chiplet glow effect */}
+          <radialGradient id="mdaChipletGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#4ade80" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Defect point glow */}
+          <radialGradient id="mdaDefectGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+            <stop offset="40%" stopColor="#f87171" stopOpacity="0.7" />
+            <stop offset="70%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Thermal hotspot glow */}
+          <radialGradient id="mdaThermalHotspot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="30%" stopColor="#f97316" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#dc2626" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#7c2d12" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Processing node indicator */}
+          <radialGradient id="mdaProcessNode" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#c084fc" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#a855f7" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === GLOW FILTERS === */}
+
+          {/* Chip glow filter */}
+          <filter id="mdaChipGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Soft component glow */}
+          <filter id="mdaSoftGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Intense hotspot glow */}
+          <filter id="mdaHotspotGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Defect marker glow */}
+          <filter id="mdaDefectMarker" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Inner shadow for depth */}
+          <filter id="mdaInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* === PATTERNS === */}
+
+          {/* Defect pattern with glow */}
+          <pattern id="mdaDefectPattern" width="15" height="15" patternUnits="userSpaceOnUse">
+            <circle cx="7.5" cy="7.5" r="2.5" fill="url(#mdaDefectGlow)" filter="url(#mdaDefectMarker)" />
+          </pattern>
+
+          {/* Circuit trace pattern */}
+          <pattern id="mdaCircuitTrace" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M0 10 H8 M12 10 H20 M10 0 V8 M10 12 V20" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" fill="none" />
+            <circle cx="10" cy="10" r="1.5" fill="#60a5fa" fillOpacity="0.6" />
+          </pattern>
+
+          {/* Grid pattern for background */}
+          <pattern id="mdaGridPattern" width="25" height="25" patternUnits="userSpaceOnUse">
+            <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
           </pattern>
         </defs>
 
-        {/* Background */}
-        <rect width="500" height="550" fill="#0f172a" rx="12" />
+        {/* === PREMIUM BACKGROUND === */}
+        <rect width="520" height="600" fill="#030712" rx="12" />
+        <rect width="520" height="600" fill="url(#mdaGridPattern)" rx="12" />
 
-        {/* Title */}
-        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
-          Manufacturing vs Architecture Trade-offs
-        </text>
+        {/* Subtle gradient overlay */}
+        <rect width="520" height="600" fill="url(#mdaCardBg)" opacity="0.7" rx="12" />
 
-        {/* Die Visualization */}
-        <g transform="translate(50, 50)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="12" fontWeight="bold">MONOLITHIC DIE</text>
+        {/* === TITLE SECTION === */}
+        <g transform="translate(260, 28)">
+          <text x="0" y="0" fill="#f8fafc" fontSize="17" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+            Manufacturing vs Architecture Trade-offs
+          </text>
+          <text x="0" y="18" fill="#94a3b8" fontSize="10" textAnchor="middle">
+            Yield, Thermal, and Reticle Constraints
+          </text>
+        </g>
 
-          {/* Die outline */}
-          <rect
-            x="0"
-            y="15"
-            width={Math.min(150, dieScale * 5)}
-            height={Math.min(150, dieScale * 5)}
-            fill="#1e40af"
-            stroke="#3b82f6"
-            strokeWidth="2"
-            rx="4"
-          />
+        {/* === MONOLITHIC DIE SECTION === */}
+        <g transform="translate(35, 60)">
+          {/* Section label */}
+          <text x="0" y="0" fill="#60a5fa" fontSize="11" fontWeight="bold" letterSpacing="1">MONOLITHIC DIE</text>
 
-          {/* Defects overlay */}
-          {defectDensity > 0.05 && (
+          {/* Die visualization with premium effects */}
+          <g transform="translate(0, 12)">
+            {/* Die shadow */}
+            <rect
+              x="3"
+              y="3"
+              width={Math.min(160, dieScale * 5.5)}
+              height={Math.min(160, dieScale * 5.5)}
+              fill="#000"
+              opacity="0.4"
+              rx="6"
+            />
+
+            {/* Main die with gradient */}
             <rect
               x="0"
-              y="15"
-              width={Math.min(150, dieScale * 5)}
-              height={Math.min(150, dieScale * 5)}
-              fill="url(#defectPattern)"
+              y="0"
+              width={Math.min(160, dieScale * 5.5)}
+              height={Math.min(160, dieScale * 5.5)}
+              fill="url(#mdaMonolithicDie)"
+              stroke="#60a5fa"
+              strokeWidth="2"
+              rx="6"
+              filter="url(#mdaChipGlow)"
+            />
+
+            {/* Circuit traces overlay */}
+            <rect
+              x="0"
+              y="0"
+              width={Math.min(160, dieScale * 5.5)}
+              height={Math.min(160, dieScale * 5.5)}
+              fill="url(#mdaCircuitTrace)"
+              rx="6"
+              opacity="0.6"
+            />
+
+            {/* Core glow in center */}
+            <ellipse
+              cx={Math.min(80, dieScale * 2.75)}
+              cy={Math.min(80, dieScale * 2.75)}
+              rx={Math.min(50, dieScale * 1.8)}
+              ry={Math.min(50, dieScale * 1.8)}
+              fill="url(#mdaChipCoreGlow)"
+            />
+
+            {/* Defects overlay with premium styling */}
+            {defectDensity > 0.05 && (
+              <>
+                <rect
+                  x="0"
+                  y="0"
+                  width={Math.min(160, dieScale * 5.5)}
+                  height={Math.min(160, dieScale * 5.5)}
+                  fill="url(#mdaDefectPattern)"
+                  rx="6"
+                  opacity={Math.min(0.9, defectDensity * 4)}
+                />
+                {/* Random defect hotspots */}
+                {defectDensity > 0.15 && (
+                  <>
+                    <circle cx={dieScale * 1.5} cy={dieScale * 2} r="4" fill="url(#mdaDefectGlow)" filter="url(#mdaHotspotGlow)" />
+                    <circle cx={dieScale * 3.5} cy={dieScale * 1.2} r="3" fill="url(#mdaDefectGlow)" filter="url(#mdaDefectMarker)" />
+                  </>
+                )}
+              </>
+            )}
+
+            {/* Die size label */}
+            <rect
+              x={Math.min(80, dieScale * 2.75) - 35}
+              y={Math.min(80, dieScale * 2.75) - 12}
+              width="70"
+              height="24"
+              fill="#000"
+              fillOpacity="0.6"
               rx="4"
-              opacity={defectDensity * 3}
             />
-          )}
+            <text
+              x={Math.min(80, dieScale * 2.75)}
+              y={Math.min(80, dieScale * 2.75) + 5}
+              fill="#f8fafc"
+              fontSize="14"
+              fontWeight="bold"
+              textAnchor="middle"
+            >
+              {dieSize} mm²
+            </text>
+          </g>
 
-          {/* Size label */}
-          <text x={Math.min(75, dieScale * 2.5)} y={Math.min(100, dieScale * 3) + 15} fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
-            {dieSize} mm2
-          </text>
-
-          {/* Yield indicator */}
-          <text x="0" y={Math.min(180, dieScale * 5 + 30)} fill={yieldColor} fontSize="12">
-            Yield: {metrics.monolithicYield.toFixed(1)}%
-          </text>
+          {/* Yield indicator with styling */}
+          <g transform={`translate(0, ${Math.min(185, dieScale * 5.5 + 25)})`}>
+            <rect x="0" y="-2" width="100" height="20" fill={yieldColor} fillOpacity="0.15" rx="4" />
+            <text x="50" y="12" fill={yieldColor} fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+              Yield: {metrics.monolithicYield.toFixed(1)}%
+            </text>
+          </g>
         </g>
 
-        {/* Chiplet Visualization */}
-        <g transform="translate(250, 50)">
-          <text x="0" y="0" fill="#f8fafc" fontSize="12" fontWeight="bold">CHIPLET DESIGN ({chipletCount} dies)</text>
-
-          {/* Interposer */}
-          <rect
-            x="0"
-            y="15"
-            width="180"
-            height="150"
-            fill="#1e293b"
-            stroke="#475569"
-            strokeWidth="2"
-            rx="4"
+        {/* === MANUFACTURING FLOW ARROW === */}
+        <g transform="translate(205, 130)">
+          <path
+            d="M0 20 L35 20 L35 10 L55 25 L35 40 L35 30 L0 30 Z"
+            fill="url(#mdaFlowArrow)"
+            filter="url(#mdaSoftGlow)"
           />
-
-          {/* Chiplets */}
-          {Array.from({ length: chipletCount }).map((_, i) => {
-            const cols = Math.ceil(Math.sqrt(chipletCount));
-            const rows = Math.ceil(chipletCount / cols);
-            const col = i % cols;
-            const row = Math.floor(i / cols);
-            const chipletWidth = Math.min(60, 160 / cols - 10);
-            const chipletHeight = Math.min(50, 130 / rows - 10);
-            const x = 10 + col * (chipletWidth + 10);
-            const y = 25 + row * (chipletHeight + 10);
-
-            return (
-              <rect
-                key={i}
-                x={x}
-                y={y}
-                width={chipletWidth}
-                height={chipletHeight}
-                fill="#22c55e"
-                stroke="#4ade80"
-                strokeWidth="1"
-                rx="2"
-              />
-            );
-          })}
-
-          {/* Chiplet yield */}
-          <text x="0" y="180" fill="#22c55e" fontSize="12">
-            Per-chiplet yield: {(metrics.chipletYield).toFixed(1)}%
-          </text>
+          <text x="27" y="60" fill="#a855f7" fontSize="8" textAnchor="middle" fontWeight="bold">VS</text>
         </g>
 
-        {/* Yield Curve */}
-        <g transform="translate(20, 230)">
-          <rect width="220" height="100" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">YIELD vs DIE SIZE</text>
+        {/* === CHIPLET DESIGN SECTION === */}
+        <g transform="translate(270, 60)">
+          {/* Section label */}
+          <text x="0" y="0" fill="#4ade80" fontSize="11" fontWeight="bold" letterSpacing="1">CHIPLET DESIGN</text>
+          <text x="0" y="14" fill="#86efac" fontSize="9">({chipletCount} compute dies)</text>
 
-          {/* Yield curve */}
-          <g transform="translate(20, 30)">
-            {/* Axes */}
-            <line x1="0" y1="55" x2="180" y2="55" stroke="#475569" strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2="55" stroke="#475569" strokeWidth="1" />
+          {/* Interposer/Substrate */}
+          <g transform="translate(0, 24)">
+            {/* Interposer shadow */}
+            <rect x="3" y="3" width="200" height="160" fill="#000" opacity="0.4" rx="8" />
 
-            {/* Yield curve (exponential decay) */}
-            <path
-              d={`M 0 ${55 - 55 * Math.exp(-defectDensity * 0.5)}
-                  Q 45 ${55 - 55 * Math.exp(-defectDensity * 2)}
-                    90 ${55 - 55 * Math.exp(-defectDensity * 4)}
-                  Q 135 ${55 - 55 * Math.exp(-defectDensity * 6)}
-                    180 ${55 - 55 * Math.exp(-defectDensity * 8)}`}
-              fill="none"
-              stroke="url(#yieldGrad)"
-              strokeWidth="3"
+            {/* Main interposer */}
+            <rect
+              x="0"
+              y="0"
+              width="200"
+              height="160"
+              fill="url(#mdaInterposer)"
+              stroke="#64748b"
+              strokeWidth="2"
+              rx="8"
             />
 
-            {/* Current position marker */}
+            {/* Interposer label */}
+            <text x="100" y="152" fill="#94a3b8" fontSize="8" textAnchor="middle">INTERPOSER / SUBSTRATE</text>
+
+            {/* Chiplets with premium effects */}
+            {Array.from({ length: chipletCount }).map((_, i) => {
+              const cols = Math.ceil(Math.sqrt(chipletCount));
+              const rows = Math.ceil(chipletCount / cols);
+              const col = i % cols;
+              const row = Math.floor(i / cols);
+              const chipletWidth = Math.min(70, 180 / cols - 12);
+              const chipletHeight = Math.min(55, 130 / rows - 12);
+              const x = 10 + col * (chipletWidth + 10);
+              const y = 12 + row * (chipletHeight + 10);
+
+              return (
+                <g key={i}>
+                  {/* Chiplet shadow */}
+                  <rect
+                    x={x + 2}
+                    y={y + 2}
+                    width={chipletWidth}
+                    height={chipletHeight}
+                    fill="#000"
+                    opacity="0.3"
+                    rx="4"
+                  />
+                  {/* Main chiplet */}
+                  <rect
+                    x={x}
+                    y={y}
+                    width={chipletWidth}
+                    height={chipletHeight}
+                    fill="url(#mdaChipletCompute)"
+                    stroke="#4ade80"
+                    strokeWidth="1.5"
+                    rx="4"
+                    filter="url(#mdaSoftGlow)"
+                  />
+                  {/* Chiplet glow */}
+                  <ellipse
+                    cx={x + chipletWidth / 2}
+                    cy={y + chipletHeight / 2}
+                    rx={chipletWidth / 3}
+                    ry={chipletHeight / 3}
+                    fill="url(#mdaChipletGlow)"
+                  />
+                  {/* Chiplet number */}
+                  <text
+                    x={x + chipletWidth / 2}
+                    y={y + chipletHeight / 2 + 4}
+                    fill="#f0fdf4"
+                    fontSize="10"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    C{i + 1}
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Interconnect lines */}
+            {chipletCount > 1 && (
+              <g opacity="0.6">
+                {Array.from({ length: chipletCount - 1 }).map((_, i) => {
+                  const cols = Math.ceil(Math.sqrt(chipletCount));
+                  const chipletWidth = Math.min(70, 180 / cols - 12);
+                  const chipletHeight = Math.min(55, 130 / Math.ceil(chipletCount / cols) - 12);
+                  const col1 = i % cols;
+                  const row1 = Math.floor(i / cols);
+                  const col2 = (i + 1) % cols;
+                  const row2 = Math.floor((i + 1) / cols);
+                  const x1 = 10 + col1 * (chipletWidth + 10) + chipletWidth;
+                  const y1 = 12 + row1 * (chipletHeight + 10) + chipletHeight / 2;
+                  const x2 = 10 + col2 * (chipletWidth + 10);
+                  const y2 = 12 + row2 * (chipletHeight + 10) + chipletHeight / 2;
+
+                  if (col2 === 0 && row2 > row1) return null; // Skip vertical wraps
+
+                  return (
+                    <line
+                      key={i}
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke="#c084fc"
+                      strokeWidth="2"
+                      strokeDasharray="4,2"
+                      filter="url(#mdaSoftGlow)"
+                    />
+                  );
+                })}
+              </g>
+            )}
+          </g>
+
+          {/* Chiplet yield indicator */}
+          <g transform="translate(0, 198)">
+            <rect x="0" y="-2" width="130" height="20" fill="#22c55e" fillOpacity="0.15" rx="4" />
+            <text x="65" y="12" fill="#4ade80" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+              Per-die yield: {(metrics.chipletYield).toFixed(1)}%
+            </text>
+          </g>
+        </g>
+
+        {/* === YIELD CURVE CHART === */}
+        <g transform="translate(20, 290)">
+          <rect width="235" height="110" fill="url(#mdaCardBg)" rx="10" stroke="#334155" strokeWidth="1" />
+          <text x="117" y="20" fill="#f8fafc" fontSize="12" fontWeight="bold" textAnchor="middle">YIELD vs DIE SIZE</text>
+
+          <g transform="translate(25, 35)">
+            {/* Chart background */}
+            <rect x="0" y="0" width="185" height="60" fill="#0f172a" rx="4" />
+
+            {/* Grid lines */}
+            {[0, 20, 40, 60].map(y => (
+              <line key={y} x1="0" y1={y} x2="185" y2={y} stroke="#1e293b" strokeWidth="0.5" />
+            ))}
+
+            {/* Axes */}
+            <line x1="0" y1="60" x2="185" y2="60" stroke="#475569" strokeWidth="1.5" />
+            <line x1="0" y1="0" x2="0" y2="60" stroke="#475569" strokeWidth="1.5" />
+
+            {/* Yield curve with gradient */}
+            <path
+              d={`M 0 ${60 - 60 * Math.exp(-defectDensity * 0.5)}
+                  Q 46 ${60 - 60 * Math.exp(-defectDensity * 2)}
+                    92 ${60 - 60 * Math.exp(-defectDensity * 4)}
+                  Q 138 ${60 - 60 * Math.exp(-defectDensity * 6)}
+                    185 ${60 - 60 * Math.exp(-defectDensity * 8)}`}
+              fill="none"
+              stroke="url(#mdaYieldGrad)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              filter="url(#mdaSoftGlow)"
+            />
+
+            {/* Current position marker with glow */}
             <circle
-              cx={dieSize / 5}
-              cy={55 - 55 * (metrics.monolithicYield / 100)}
-              r="6"
+              cx={Math.min(180, dieSize / 5)}
+              cy={60 - 60 * (metrics.monolithicYield / 100)}
+              r="8"
+              fill="url(#mdaChipCoreGlow)"
+              filter="url(#mdaHotspotGlow)"
+            />
+            <circle
+              cx={Math.min(180, dieSize / 5)}
+              cy={60 - 60 * (metrics.monolithicYield / 100)}
+              r="5"
               fill={yieldColor}
               stroke="#f8fafc"
               strokeWidth="2"
             />
 
-            <text x="90" y="70" fill="#94a3b8" fontSize="8" textAnchor="middle">Die Size (mm2)</text>
+            {/* Axis labels */}
+            <text x="92" y="75" fill="#94a3b8" fontSize="9" textAnchor="middle">Die Size (mm²)</text>
+            <text x="-8" y="35" fill="#94a3b8" fontSize="8" textAnchor="middle" transform="rotate(-90, -8, 35)">Yield %</text>
           </g>
         </g>
 
-        {/* Thermal Display */}
-        <g transform="translate(260, 230)">
+        {/* === THERMAL STATUS === */}
+        <g transform="translate(265, 290)">
           <rect
-            width="220"
-            height="100"
-            fill={metrics.thermallyLimited ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)'}
-            rx="8"
+            width="235"
+            height="110"
+            fill={metrics.thermallyLimited ? 'rgba(127, 29, 29, 0.3)' : 'rgba(20, 83, 45, 0.3)'}
+            rx="10"
             stroke={thermalColor}
-            strokeWidth="1"
+            strokeWidth="1.5"
           />
-          <text x="110" y="18" fill={thermalColor} fontSize="11" fontWeight="bold" textAnchor="middle">THERMAL STATUS</text>
 
-          <text x="15" y="40" fill="#94a3b8" fontSize="10">Total Power: {metrics.totalPower.toFixed(0)} W</text>
-          <text x="15" y="55" fill="#94a3b8" fontSize="10">Cooling Capacity: {coolingCapacity} W</text>
+          {/* Thermal icon */}
+          <g transform="translate(20, 20)">
+            <circle r="12" fill={thermalColor} fillOpacity="0.2" filter="url(#mdaSoftGlow)" />
+            {metrics.thermallyLimited && (
+              <circle r="8" fill="url(#mdaThermalHotspot)" filter="url(#mdaHotspotGlow)" />
+            )}
+          </g>
 
-          {metrics.thermallyLimited && (
-            <>
-              <text x="15" y="75" fill="#ef4444" fontSize="12" fontWeight="bold">THROTTLING: {metrics.throttlePercent.toFixed(0)}%</text>
-              <text x="15" y="90" fill="#ef4444" fontSize="10">Effective Power: {metrics.effectivePower.toFixed(0)} W</text>
-            </>
-          )}
-          {!metrics.thermallyLimited && (
-            <text x="15" y="75" fill="#22c55e" fontSize="12" fontWeight="bold">WITHIN THERMAL BUDGET</text>
-          )}
+          <text x="40" y="25" fill={thermalColor} fontSize="12" fontWeight="bold">THERMAL STATUS</text>
+
+          <g transform="translate(20, 45)">
+            <text x="0" y="0" fill="#e2e8f0" fontSize="11">Total Power:</text>
+            <text x="90" y="0" fill="#f8fafc" fontSize="11" fontWeight="bold">{metrics.totalPower.toFixed(0)} W</text>
+
+            <text x="0" y="18" fill="#e2e8f0" fontSize="11">Cooling Capacity:</text>
+            <text x="110" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold">{coolingCapacity} W</text>
+
+            {metrics.thermallyLimited ? (
+              <>
+                <rect x="0" y="30" width="195" height="24" fill="#ef4444" fillOpacity="0.2" rx="4" />
+                <text x="97" y="46" fill="#fca5a5" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+                  THROTTLING: {metrics.throttlePercent.toFixed(0)}%
+                </text>
+              </>
+            ) : (
+              <>
+                <rect x="0" y="30" width="195" height="24" fill="#22c55e" fillOpacity="0.2" rx="4" />
+                <text x="97" y="46" fill="#86efac" fontSize="12" fontWeight="bold" textAnchor="middle" filter="url(#mdaSoftGlow)">
+                  WITHIN THERMAL BUDGET
+                </text>
+              </>
+            )}
+          </g>
         </g>
 
-        {/* Cost Comparison */}
-        <g transform="translate(20, 350)">
-          <rect width="220" height="80" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="18" fill="#f59e0b" fontSize="11" fontWeight="bold" textAnchor="middle">COST ANALYSIS</text>
+        {/* === COST ANALYSIS === */}
+        <g transform="translate(20, 415)">
+          <rect width="235" height="85" fill="url(#mdaCardBg)" rx="10" stroke="#f59e0b" strokeWidth="1" strokeOpacity="0.5" />
 
-          <text x="15" y="40" fill="#94a3b8" fontSize="10">Monolithic cost/die: ${metrics.costPerGoodDie.toFixed(0)}</text>
-          <text x="15" y="55" fill="#94a3b8" fontSize="10">Good dies/wafer: {metrics.goodDiesPerWafer.toFixed(1)}</text>
-          <text x="15" y="70" fill={metrics.chipletSystemCost < metrics.costPerGoodDie ? '#22c55e' : '#f59e0b'} fontSize="10">
-            Chiplet system: ${metrics.chipletSystemCost.toFixed(0)}
-          </text>
+          <g transform="translate(15, 18)">
+            <circle r="6" fill="#f59e0b" fillOpacity="0.3" />
+            <circle r="3" fill="#f59e0b" />
+          </g>
+          <text x="30" y="22" fill="#fbbf24" fontSize="12" fontWeight="bold">COST ANALYSIS</text>
+
+          <g transform="translate(20, 40)">
+            <text x="0" y="0" fill="#e2e8f0" fontSize="11">Monolithic cost/die:</text>
+            <text x="130" y="0" fill="#fbbf24" fontSize="11" fontWeight="bold">${metrics.costPerGoodDie.toFixed(0)}</text>
+
+            <text x="0" y="18" fill="#e2e8f0" fontSize="11">Good dies/wafer:</text>
+            <text x="130" y="18" fill="#f8fafc" fontSize="11" fontWeight="bold">{metrics.goodDiesPerWafer.toFixed(1)}</text>
+
+            <text x="0" y="36" fill="#e2e8f0" fontSize="11">Chiplet system:</text>
+            <text
+              x="130"
+              y="36"
+              fill={metrics.chipletSystemCost < metrics.costPerGoodDie ? '#4ade80' : '#fbbf24'}
+              fontSize="11"
+              fontWeight="bold"
+              filter="url(#mdaSoftGlow)"
+            >
+              ${metrics.chipletSystemCost.toFixed(0)}
+            </text>
+          </g>
         </g>
 
-        {/* Key Insight */}
-        <g transform="translate(260, 350)">
-          <rect width="220" height="80" fill="rgba(139, 92, 246, 0.1)" rx="8" stroke="#8b5cf6" strokeWidth="1" />
-          <text x="110" y="18" fill="#8b5cf6" fontSize="11" fontWeight="bold" textAnchor="middle">KEY INSIGHT</text>
+        {/* === KEY INSIGHT === */}
+        <g transform="translate(265, 415)">
+          <rect width="235" height="85" fill="rgba(139, 92, 246, 0.1)" rx="10" stroke="#8b5cf6" strokeWidth="1.5" />
 
-          <text x="15" y="40" fill="#f8fafc" fontSize="10">
-            {dieSize > 600 ? 'Die too large - yield uneconomical' :
-              metrics.thermallyLimited ? 'Thermal limit reached - must throttle' :
-                metrics.monolithicYield < 30 ? 'Yield too low - consider chiplets' :
-                  'Design within practical limits'}
-          </text>
-          <text x="15" y="60" fill="#94a3b8" fontSize="9">
-            {useChiplets ? `${chipletCount} chiplets improve both yield and thermal` : 'Toggle chiplets to compare'}
-          </text>
+          <g transform="translate(15, 18)">
+            <circle r="6" fill="#8b5cf6" fillOpacity="0.3" filter="url(#mdaSoftGlow)" />
+            <circle r="3" fill="#a855f7" />
+          </g>
+          <text x="30" y="22" fill="#c084fc" fontSize="12" fontWeight="bold">KEY INSIGHT</text>
+
+          <g transform="translate(15, 40)">
+            <text x="0" y="0" fill="#f8fafc" fontSize="11" fontWeight="500">
+              {dieSize > 600 ? 'Die too large - yield uneconomical' :
+                metrics.thermallyLimited ? 'Thermal limit reached - must throttle' :
+                  metrics.monolithicYield < 30 ? 'Yield too low - consider chiplets' :
+                    'Design within practical limits'}
+            </text>
+            <text x="0" y="22" fill="#a5b4fc" fontSize="10">
+              {useChiplets ? `${chipletCount} chiplets improve yield & thermal` : 'Toggle chiplets to compare solutions'}
+            </text>
+          </g>
         </g>
 
-        {/* Reticle limit indicator */}
-        <g transform="translate(20, 450)">
-          <rect width="460" height="50" fill="rgba(245, 158, 11, 0.1)" rx="8" />
-          <text x="230" y="20" fill="#f59e0b" fontSize="10" textAnchor="middle">
-            RETICLE LIMIT: ~858mm2 (lithography maximum exposure area)
+        {/* === RETICLE LIMIT INDICATOR === */}
+        <g transform="translate(20, 515)">
+          <rect width="480" height="55" fill="rgba(245, 158, 11, 0.08)" rx="10" stroke="#f59e0b" strokeWidth="1" strokeOpacity="0.4" />
+
+          <text x="240" y="18" fill="#fbbf24" fontSize="11" fontWeight="bold" textAnchor="middle">
+            RETICLE LIMIT: ~858mm² (EUV Lithography Maximum)
           </text>
-          <rect x="20" y="30" width={460 * (dieSize / 858)} height="10" fill={dieSize > 858 ? '#ef4444' : '#f59e0b'} rx="4" />
-          <text x={Math.min(450, 20 + 460 * (dieSize / 858))} y="38" fill="#f8fafc" fontSize="8">
+
+          {/* Progress bar background */}
+          <rect x="20" y="30" width="440" height="14" fill="#1e293b" rx="7" />
+
+          {/* Progress bar fill with gradient */}
+          <rect
+            x="20"
+            y="30"
+            width={Math.min(440, 440 * (dieSize / 858))}
+            height="14"
+            fill={dieSize > 858 ? '#ef4444' : dieSize > 600 ? '#f97316' : '#f59e0b'}
+            rx="7"
+            filter="url(#mdaSoftGlow)"
+          />
+
+          {/* Percentage label */}
+          <text
+            x={Math.min(450, 25 + 440 * (dieSize / 858))}
+            y="41"
+            fill="#f8fafc"
+            fontSize="10"
+            fontWeight="bold"
+            textAnchor={dieSize / 858 > 0.9 ? 'end' : 'start'}
+          >
             {(dieSize / 858 * 100).toFixed(0)}%
           </text>
+
+          {/* Danger zone indicator */}
+          {dieSize > 858 && (
+            <text x="240" y="56" fill="#fca5a5" fontSize="9" textAnchor="middle" fontWeight="bold">
+              EXCEEDS RETICLE LIMIT
+            </text>
+          )}
         </g>
 
-        {/* Bottom note */}
-        <text x="250" y="535" fill="#94a3b8" fontSize="10" textAnchor="middle">
-          Yield x Thermal x Reticle = Why we cannot just make one giant chip
+        {/* === BOTTOM NOTE === */}
+        <text x="260" y="588" fill="#64748b" fontSize="11" textAnchor="middle" fontStyle="italic">
+          Yield × Thermal × Reticle = Why we cannot just build one giant chip
         </text>
       </svg>
     );

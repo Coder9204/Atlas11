@@ -270,51 +270,76 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showPressure: boolean = true) => {
-    const width = 400;
-    const height = 400;
+    const width = 500;
+    const height = 450;
     const centerX = width / 2;
-    const centerY = height / 2 - 20;
+    const centerY = height / 2 - 30;
 
     // Hair dryer position and orientation
-    const dryerLength = 100;
-    const dryerWidth = 50;
+    const dryerLength = 110;
+    const dryerWidth = 55;
     const tiltRad = (tiltAngle * Math.PI) / 180;
 
     // Ball position
-    const ballRadius = 20;
-    const ballY = centerY - 80 + ballOffset.y;
+    const ballRadius = 22;
+    const ballY = centerY - 90 + ballOffset.y;
     const ballX = centerX + ballOffset.x;
 
     // Check if ball is stable
     const fallThreshold = 25 / ballMass;
     const isStable = Math.abs(tiltAngle) <= fallThreshold;
 
-    // Generate airflow particles
+    // Generate airflow particles with premium styling
     const airflowParticles = [];
-    const numParticles = 15;
+    const numParticles = 20;
     for (let i = 0; i < numParticles; i++) {
-      const t = ((animationTime * 2 + i * 0.3) % 3) / 3;
-      const spread = (1 - t) * 5 + t * 40;
-      const xOffset = Math.sin(i * 1.5) * spread * Math.cos(tiltRad) - t * 100 * Math.sin(tiltRad);
-      const yBase = centerY + 50 - t * 150;
-      const yOffset = -t * 100 * (1 - Math.abs(Math.cos(tiltRad)));
+      const t = ((animationTime * 2 + i * 0.25) % 3) / 3;
+      const spread = (1 - t) * 5 + t * 45;
+      const xOffset = Math.sin(i * 1.5) * spread * Math.cos(tiltRad) - t * 110 * Math.sin(tiltRad);
+      const yBase = centerY + 55 - t * 160;
+      const yOffset = -t * 110 * (1 - Math.abs(Math.cos(tiltRad)));
 
       airflowParticles.push(
         <circle
           key={`particle-${i}`}
           cx={centerX + xOffset}
           cy={yBase + yOffset}
-          r={3 - t * 2}
-          fill={colors.airflow}
-          opacity={0.6 - t * 0.4}
+          r={4 - t * 2.5}
+          fill="url(#slevAirParticle)"
+          filter="url(#slevParticleGlow)"
+          opacity={0.8 - t * 0.5}
         />
       );
     }
 
-    // Stability indicator
-    const stabilityWidth = 120;
-    const stabilityHeight = 60;
-    const wellDepth = isStable ? 30 * (1 / ballMass) : 5;
+    // Generate magnetic-like field lines (representing airflow force field)
+    const fieldLines = [];
+    const numFieldLines = 7;
+    for (let i = 0; i < numFieldLines; i++) {
+      const angle = ((i - 3) * 12) * Math.PI / 180;
+      const startY = centerY + 55;
+      const endY = centerY - 120;
+      const curveX = Math.sin(angle) * 60;
+      const opacity = 0.4 - Math.abs(i - 3) * 0.08;
+
+      fieldLines.push(
+        <path
+          key={`field-${i}`}
+          d={`M ${centerX + curveX * 0.3} ${startY}
+              Q ${centerX + curveX} ${centerY - 30} ${centerX + curveX * 0.5} ${endY}`}
+          fill="none"
+          stroke="url(#slevFieldLine)"
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+          opacity={opacity}
+        />
+      );
+    }
+
+    // Stability indicator dimensions
+    const stabilityWidth = 140;
+    const stabilityHeight = 65;
+    const wellDepth = isStable ? 35 * (1 / ballMass) : 8;
     const ballIndicatorX = (ballOffset.x / 50) * (stabilityWidth / 2);
 
     return (
@@ -324,153 +349,467 @@ const StableLevitationRenderer: React.FC<StableLevitationRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(to bottom, #1e3a5f 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #0c1929 0%, #0f172a 50%, #020617 100%)', borderRadius: '16px', maxWidth: '550px' }}
         >
-          {/* Pressure gradient shading */}
-          {showPressure && (
-            <defs>
-              <radialGradient id="pressureGradient" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={colors.pressure.low} stopOpacity="0.3" />
-                <stop offset="70%" stopColor={colors.pressure.high} stopOpacity="0.2" />
-                <stop offset="100%" stopColor={colors.pressure.high} stopOpacity="0" />
-              </radialGradient>
-              <linearGradient id="airflowGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" stopColor={colors.airflow} stopOpacity="0.4" />
-                <stop offset="100%" stopColor={colors.airflow} stopOpacity="0.1" />
-              </linearGradient>
-            </defs>
-          )}
+          {/* === PREMIUM DEFS SECTION === */}
+          <defs>
+            {/* Lab background gradient */}
+            <linearGradient id="slevLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-          {/* Airflow cone */}
-          <path
-            d={`M ${centerX - 20} ${centerY + 60}
-                Q ${centerX} ${centerY - 100} ${centerX + 20} ${centerY + 60}
-                L ${centerX - 20} ${centerY + 60}`}
-            fill="url(#airflowGradient)"
-            transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 60})`}
-          />
+            {/* Premium hair dryer body gradient - brushed metal look */}
+            <linearGradient id="slevDryerBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="45%" stopColor="#6b7280" />
+              <stop offset="65%" stopColor="#374151" />
+              <stop offset="85%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Hair dryer nozzle gradient with depth */}
+            <radialGradient id="slevDryerNozzle" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="40%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </radialGradient>
+
+            {/* Premium ball gradient with 3D shading */}
+            <radialGradient id="slevBallGradient" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="55%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+
+            {/* Ball highlight gradient */}
+            <radialGradient id="slevBallHighlight" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.9)" />
+              <stop offset="60%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </radialGradient>
+
+            {/* Airflow stream gradient */}
+            <linearGradient id="slevAirflowStream" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#0ea5e9" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#38bdf8" stopOpacity="0.25" />
+              <stop offset="85%" stopColor="#7dd3fc" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.05" />
+            </linearGradient>
+
+            {/* Air particle gradient */}
+            <radialGradient id="slevAirParticle" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#7dd3fc" />
+              <stop offset="50%" stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#0284c7" />
+            </radialGradient>
+
+            {/* Field line gradient */}
+            <linearGradient id="slevFieldLine" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Pressure zone - low pressure (fast flow) */}
+            <radialGradient id="slevPressureLow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Pressure zone - high pressure (slow flow) */}
+            <radialGradient id="slevPressureHigh" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#dc2626" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Stability indicator well gradient */}
+            <linearGradient id="slevWellGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={isStable ? '#10b981' : '#ef4444'} stopOpacity="0.1" />
+              <stop offset="100%" stopColor={isStable ? '#10b981' : '#ef4444'} stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Force arrow gradient */}
+            <linearGradient id="slevForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#6ee7b7" />
+            </linearGradient>
+
+            {/* Glow filter for particles */}
+            <filter id="slevParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Premium ball glow/shadow */}
+            <filter id="slevBallGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#fbbf24" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Dryer inner glow */}
+            <filter id="slevDryerGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Heat glow for nozzle */}
+            <filter id="slevHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feFlood floodColor="#f97316" floodOpacity="0.3" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrowhead marker */}
+            <marker id="slevArrowhead" markerWidth="12" markerHeight="9" refX="10" refY="4.5" orient="auto">
+              <polygon points="0 0, 12 4.5, 0 9" fill="url(#slevForceArrow)" />
+            </marker>
+
+            {/* Grid pattern for lab floor */}
+            <pattern id="slevLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.25" />
+            </pattern>
+          </defs>
+
+          {/* Background with grid */}
+          <rect width={width} height={height} fill="url(#slevLabBg)" />
+          <rect width={width} height={height} fill="url(#slevLabGrid)" />
+
+          {/* Magnetic-like field lines (airflow force field visualization) */}
+          <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 55})`} opacity={showPressure ? 0.7 : 0.3}>
+            {fieldLines}
+          </g>
+
+          {/* Airflow cone/stream */}
+          <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 55})`}>
+            <path
+              d={`M ${centerX - 25} ${centerY + 55}
+                  Q ${centerX} ${centerY - 110} ${centerX + 25} ${centerY + 55}
+                  L ${centerX - 25} ${centerY + 55}`}
+              fill="url(#slevAirflowStream)"
+            />
+          </g>
 
           {/* Airflow particles */}
-          <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 60})`}>
+          <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 55})`}>
             {airflowParticles}
           </g>
 
-          {/* Hair dryer body */}
-          <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 80})`}>
-            {/* Dryer barrel */}
+          {/* === PREMIUM HAIR DRYER === */}
+          <g transform={`rotate(${tiltAngle}, ${centerX}, ${centerY + 85})`}>
+            {/* Dryer barrel with depth */}
             <rect
               x={centerX - dryerWidth / 2}
               y={centerY + 60}
               width={dryerWidth}
               height={dryerLength}
-              rx={10}
-              fill={colors.dryer}
-              stroke="#4b5563"
-              strokeWidth={2}
+              rx={12}
+              fill="url(#slevDryerBody)"
+              stroke="#374151"
+              strokeWidth={1.5}
             />
-            {/* Dryer nozzle */}
+            {/* Barrel highlight */}
+            <rect
+              x={centerX - dryerWidth / 2 + 5}
+              y={centerY + 65}
+              width={8}
+              height={dryerLength - 15}
+              rx={4}
+              fill="rgba(255,255,255,0.1)"
+            />
+            {/* Nozzle with heat glow */}
             <ellipse
               cx={centerX}
               cy={centerY + 60}
-              rx={dryerWidth / 2 - 5}
-              ry={8}
-              fill="#374151"
+              rx={dryerWidth / 2 - 3}
+              ry={10}
+              fill="url(#slevDryerNozzle)"
+              filter="url(#slevHeatGlow)"
+            />
+            {/* Inner nozzle grate */}
+            <ellipse
+              cx={centerX}
+              cy={centerY + 60}
+              rx={dryerWidth / 2 - 8}
+              ry={6}
+              fill="#111827"
+              stroke="#f97316"
+              strokeWidth={1}
+              strokeOpacity={0.5}
             />
             {/* Dryer handle */}
             <rect
               x={centerX + dryerWidth / 2 - 5}
-              y={centerY + 100}
-              width={40}
-              height={20}
-              rx={5}
-              fill={colors.dryer}
-              stroke="#4b5563"
-              strokeWidth={2}
+              y={centerY + 105}
+              width={45}
+              height={22}
+              rx={6}
+              fill="url(#slevDryerBody)"
+              stroke="#374151"
+              strokeWidth={1.5}
             />
+            {/* Handle grip lines */}
+            {[0, 8, 16, 24, 32].map((offset) => (
+              <line
+                key={offset}
+                x1={centerX + dryerWidth / 2 + offset}
+                y1={centerY + 108}
+                x2={centerX + dryerWidth / 2 + offset}
+                y2={centerY + 124}
+                stroke="#1f2937"
+                strokeWidth={1}
+              />
+            ))}
+            {/* Power indicator */}
+            <circle
+              cx={centerX}
+              cy={centerY + 130}
+              r={4}
+              fill={isAnimating ? '#22c55e' : '#64748b'}
+              filter={isAnimating ? 'url(#slevParticleGlow)' : 'none'}
+            />
+            {/* Label on dryer */}
+            <text
+              x={centerX}
+              y={centerY + 95}
+              textAnchor="middle"
+              fill="#64748b"
+              fontSize={9}
+              fontWeight="bold"
+            >
+              AIR
+            </text>
           </g>
 
-          {/* Pressure indicator around ball */}
+          {/* Pressure indicators around ball */}
           {showPressure && isStable && (
+            <>
+              {/* Low pressure zones (sides where air speeds up) */}
+              <ellipse
+                cx={ballX - ballRadius - 8}
+                cy={ballY}
+                rx={12}
+                ry={18}
+                fill="url(#slevPressureLow)"
+                opacity={0.7}
+              />
+              <ellipse
+                cx={ballX + ballRadius + 8}
+                cy={ballY}
+                rx={12}
+                ry={18}
+                fill="url(#slevPressureLow)"
+                opacity={0.7}
+              />
+              {/* High pressure zone (below ball) */}
+              <ellipse
+                cx={ballX}
+                cy={ballY + ballRadius + 10}
+                rx={20}
+                ry={10}
+                fill="url(#slevPressureHigh)"
+                opacity={0.6}
+              />
+            </>
+          )}
+
+          {/* === PREMIUM LEVITATING BALL === */}
+          <g filter="url(#slevBallGlow)">
+            {/* Ball shadow on floor */}
+            <ellipse
+              cx={ballX + 5}
+              cy={centerY + 45}
+              rx={ballRadius * 0.6}
+              ry={6}
+              fill="#000"
+              opacity={0.3}
+            />
+            {/* Main ball */}
             <circle
               cx={ballX}
               cy={ballY}
-              r={ballRadius + 15}
-              fill="url(#pressureGradient)"
+              r={ballRadius}
+              fill="url(#slevBallGradient)"
+              stroke="#d97706"
+              strokeWidth={1.5}
             />
-          )}
-
-          {/* Levitating ball */}
-          <circle
-            cx={ballX}
-            cy={ballY}
-            r={ballRadius}
-            fill={colors.ball}
-            stroke="#f59e0b"
-            strokeWidth={2}
-            filter="drop-shadow(0 4px 6px rgba(0,0,0,0.3))"
-          />
-          {/* Ball highlight */}
-          <ellipse
-            cx={ballX - 6}
-            cy={ballY - 6}
-            rx={6}
-            ry={4}
-            fill="rgba(255,255,255,0.4)"
-          />
+            {/* Ball highlight */}
+            <ellipse
+              cx={ballX - 7}
+              cy={ballY - 8}
+              rx={8}
+              ry={5}
+              fill="url(#slevBallHighlight)"
+            />
+            {/* Secondary highlight */}
+            <circle
+              cx={ballX + 5}
+              cy={ballY + 6}
+              r={3}
+              fill="rgba(255,255,255,0.2)"
+            />
+          </g>
 
           {/* Force arrows when tilted */}
           {Math.abs(tiltAngle) > 3 && isStable && (
             <>
               {/* Restoring force arrow */}
               <line
-                x1={ballX + Math.sign(tiltAngle) * 30}
+                x1={ballX + Math.sign(tiltAngle) * 40}
                 y1={ballY}
-                x2={ballX + Math.sign(tiltAngle) * 10}
+                x2={ballX + Math.sign(tiltAngle) * 15}
                 y2={ballY}
-                stroke={colors.success}
-                strokeWidth={3}
-                markerEnd="url(#arrowhead)"
+                stroke="url(#slevForceArrow)"
+                strokeWidth={4}
+                strokeLinecap="round"
+                markerEnd="url(#slevArrowhead)"
               />
-              <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.success} />
-                </marker>
-              </defs>
+              {/* Force label */}
+              <text
+                x={ballX + Math.sign(tiltAngle) * 55}
+                y={ballY - 8}
+                textAnchor="middle"
+                fill={colors.success}
+                fontSize={10}
+                fontWeight="bold"
+              >
+                F restore
+              </text>
             </>
           )}
 
-          {/* Stability indicator / potential well */}
-          <g transform={`translate(${centerX - stabilityWidth / 2}, ${height - 80})`}>
-            <text x={stabilityWidth / 2} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-              Stability "Potential Well"
+          {/* === STABILITY INDICATOR PANEL === */}
+          <g transform={`translate(${centerX - stabilityWidth / 2}, ${height - 85})`}>
+            {/* Panel background */}
+            <rect
+              x={-10}
+              y={-20}
+              width={stabilityWidth + 20}
+              height={stabilityHeight + 30}
+              rx={10}
+              fill="rgba(15, 23, 42, 0.9)"
+              stroke={isStable ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}
+              strokeWidth={1}
+            />
+            {/* Title */}
+            <text x={stabilityWidth / 2} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={10} fontWeight="bold">
+              STABILITY POTENTIAL WELL
             </text>
+            {/* Well fill gradient */}
+            <path
+              d={`M 0 ${stabilityHeight / 2}
+                  Q ${stabilityWidth / 2} ${stabilityHeight / 2 + wellDepth} ${stabilityWidth} ${stabilityHeight / 2}
+                  L ${stabilityWidth} ${stabilityHeight}
+                  L 0 ${stabilityHeight}
+                  Z`}
+              fill="url(#slevWellGradient)"
+            />
             {/* Well curve */}
             <path
               d={`M 0 ${stabilityHeight / 2}
                   Q ${stabilityWidth / 2} ${stabilityHeight / 2 + wellDepth} ${stabilityWidth} ${stabilityHeight / 2}`}
               fill="none"
               stroke={isStable ? colors.success : colors.error}
-              strokeWidth={2}
+              strokeWidth={2.5}
+              strokeLinecap="round"
             />
-            {/* Ball indicator */}
+            {/* Ball indicator in well */}
             <circle
               cx={stabilityWidth / 2 + ballIndicatorX}
-              cy={stabilityHeight / 2 + wellDepth * (1 - Math.abs(ballIndicatorX) / (stabilityWidth / 2)) - 5}
-              r={6}
-              fill={colors.ball}
+              cy={stabilityHeight / 2 + wellDepth * (1 - Math.abs(ballIndicatorX) / (stabilityWidth / 2)) - 6}
+              r={8}
+              fill="url(#slevBallGradient)"
+              stroke="#d97706"
+              strokeWidth={1}
             />
+            {/* Stability status */}
+            <text
+              x={stabilityWidth / 2}
+              y={stabilityHeight + 8}
+              textAnchor="middle"
+              fill={isStable ? colors.success : colors.error}
+              fontSize={9}
+              fontWeight="bold"
+            >
+              {isStable ? 'STABLE EQUILIBRIUM' : 'UNSTABLE - ESCAPING WELL'}
+            </text>
           </g>
 
-          {/* Labels */}
-          <text x={20} y={25} fill={colors.textPrimary} fontSize={12}>
-            Tilt: {tiltAngle.toFixed(0)}°
-          </text>
-          <text x={20} y={42} fill={colors.textSecondary} fontSize={11}>
-            Ball mass: {ballMass === 0.5 ? 'Light' : ballMass === 1 ? 'Normal' : 'Heavy'}
-          </text>
-          <text x={width - 20} y={25} textAnchor="end" fill={isStable ? colors.success : colors.error} fontSize={12}>
-            {isStable ? 'Stable' : 'Unstable!'}
-          </text>
+          {/* === LABELS AND INFO === */}
+          {/* Top-left info panel */}
+          <g>
+            <rect x={10} y={10} width={120} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
+            <text x={20} y={28} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+              Tilt: {tiltAngle.toFixed(0)}deg
+            </text>
+            <text x={20} y={45} fill={colors.textSecondary} fontSize={10}>
+              Mass: {ballMass === 0.5 ? 'Light (foam)' : ballMass === 1 ? 'Normal (PP)' : 'Heavy (golf)'}
+            </text>
+          </g>
+
+          {/* Top-right stability badge */}
+          <g>
+            <rect
+              x={width - 95}
+              y={10}
+              width={85}
+              height={30}
+              rx={15}
+              fill={isStable ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}
+              stroke={isStable ? colors.success : colors.error}
+              strokeWidth={1.5}
+            />
+            <circle
+              cx={width - 78}
+              cy={25}
+              r={5}
+              fill={isStable ? colors.success : colors.error}
+            />
+            <text
+              x={width - 50}
+              y={29}
+              textAnchor="middle"
+              fill={isStable ? colors.success : colors.error}
+              fontSize={11}
+              fontWeight="bold"
+            >
+              {isStable ? 'STABLE' : 'UNSTABLE'}
+            </text>
+          </g>
+
+          {/* Pressure legend when showing pressure */}
+          {showPressure && (
+            <g transform={`translate(${width - 130}, ${height - 90})`}>
+              <rect x={-5} y={-5} width={125} height={50} rx={6} fill="rgba(15, 23, 42, 0.85)" stroke="rgba(71, 85, 105, 0.5)" strokeWidth={1} />
+              <text x={55} y={10} textAnchor="middle" fill={colors.textMuted} fontSize={9} fontWeight="bold">PRESSURE ZONES</text>
+              <circle cx={10} cy={25} r={6} fill="url(#slevPressureLow)" />
+              <text x={22} y={28} fill={colors.pressure.low} fontSize={9}>Low (fast flow)</text>
+              <circle cx={10} cy={40} r={6} fill="url(#slevPressureHigh)" />
+              <text x={22} y={43} fill={colors.pressure.high} fontSize={9}>High (slow flow)</text>
+            </g>
+          )}
         </svg>
 
         {interactive && (

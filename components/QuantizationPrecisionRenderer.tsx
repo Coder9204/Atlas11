@@ -320,111 +320,416 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   };
 
   const renderVisualization = () => {
-    const width = 400;
-    const height = 320;
+    const width = 700;
+    const height = 400;
 
-    // Binary representation visualization
-    const getBinaryPattern = (precision: string) => {
-      switch (precision) {
-        case 'FP32': return Array(32).fill(0).map((_, i) => Math.random() > 0.5);
-        case 'FP16': return Array(16).fill(0).map((_, i) => Math.random() > 0.5);
-        case 'INT8': return Array(8).fill(0).map((_, i) => Math.random() > 0.5);
-        case 'INT4': return Array(4).fill(0).map((_, i) => Math.random() > 0.5);
-        default: return [];
-      }
+    // Binary representation visualization with stable pattern based on precision
+    const getBinaryPattern = (precisionType: string) => {
+      // Use a stable pattern based on precision type for consistency
+      const patterns: Record<string, boolean[]> = {
+        'FP32': [true,false,true,true,false,false,true,false,true,true,true,false,false,true,false,true,
+                 false,true,true,false,true,false,false,true,true,false,true,true,false,false,true,false],
+        'FP16': [true,false,true,true,false,false,true,false,true,true,true,false,false,true,false,true],
+        'INT8': [true,false,true,true,false,false,true,false],
+        'INT4': [true,false,true,true],
+      };
+      return patterns[precisionType] || [];
     };
 
     const bits = getBinaryPattern(precision);
-    const bitWidth = Math.min(10, 300 / bits.length);
+    const bitWidth = Math.min(16, 500 / Math.max(bits.length, 1));
+    const bitSpacing = 3;
+
+    // Calculate bit section colors for FP32 breakdown
+    const getBitColor = (index: number, totalBits: number, precType: string) => {
+      if (precType === 'FP32') {
+        if (index === 0) return 'url(#qprecSignBit)'; // Sign bit
+        if (index < 9) return 'url(#qprecExponentBit)'; // Exponent (8 bits)
+        return 'url(#qprecMantissaBit)'; // Mantissa (23 bits)
+      }
+      if (precType === 'FP16') {
+        if (index === 0) return 'url(#qprecSignBit)';
+        if (index < 6) return 'url(#qprecExponentBit)';
+        return 'url(#qprecMantissaBit)';
+      }
+      // INT8/INT4 - all same
+      return `url(#qprec${precType}Gradient)`;
+    };
 
     return (
       <svg
-        width="100%"
-        height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ background: '#1e293b', borderRadius: '12px' }}
+        className="w-full h-full"
+        style={{ maxHeight: '100%' }}
       >
-        {/* Title */}
-        <text x={200} y={30} textAnchor="middle" fill={colors.textPrimary} fontSize={16} fontWeight="bold">
-          {precision}: {spec.bits} bits per number
-        </text>
+        <defs>
+          {/* Premium lab background gradient */}
+          <linearGradient id="qprecLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* Binary representation */}
-        <g transform="translate(50, 50)">
-          {bits.map((bit, i) => (
-            <rect
-              key={i}
-              x={i * (bitWidth + 2)}
-              y={0}
-              width={bitWidth}
-              height={30}
-              rx={2}
-              fill={bit ? spec.color : 'rgba(255,255,255,0.1)'}
-              stroke={spec.color}
-              strokeWidth={1}
-            />
-          ))}
-          <text x={150} y={50} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-            {bits.length} bits = {Math.pow(2, bits.length).toLocaleString()} possible values
+          {/* FP32 precision gradient - deep blue */}
+          <linearGradient id="qprecFP32Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="25%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="75%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </linearGradient>
+
+          {/* FP16 precision gradient - purple */}
+          <linearGradient id="qprecFP16Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#c084fc" />
+            <stop offset="25%" stopColor="#a855f7" />
+            <stop offset="50%" stopColor="#9333ea" />
+            <stop offset="75%" stopColor="#7c3aed" />
+            <stop offset="100%" stopColor="#6d28d9" />
+          </linearGradient>
+
+          {/* INT8 precision gradient - emerald */}
+          <linearGradient id="qprecINT8Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#6ee7b7" />
+            <stop offset="25%" stopColor="#34d399" />
+            <stop offset="50%" stopColor="#10b981" />
+            <stop offset="75%" stopColor="#059669" />
+            <stop offset="100%" stopColor="#047857" />
+          </linearGradient>
+
+          {/* INT4 precision gradient - orange */}
+          <linearGradient id="qprecINT4Gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fdba74" />
+            <stop offset="25%" stopColor="#fb923c" />
+            <stop offset="50%" stopColor="#f97316" />
+            <stop offset="75%" stopColor="#ea580c" />
+            <stop offset="100%" stopColor="#c2410c" />
+          </linearGradient>
+
+          {/* Sign bit gradient - red accent */}
+          <linearGradient id="qprecSignBit" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Exponent bit gradient - amber */}
+          <linearGradient id="qprecExponentBit" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+
+          {/* Mantissa bit gradient - cyan */}
+          <linearGradient id="qprecMantissaBit" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#67e8f9" />
+            <stop offset="50%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#0891b2" />
+          </linearGradient>
+
+          {/* Memory bar gradient */}
+          <linearGradient id="qprecMemoryBar" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#059669" />
+            <stop offset="100%" stopColor="#047857" />
+          </linearGradient>
+
+          {/* Speed bar gradient */}
+          <linearGradient id="qprecSpeedBar" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#06b6d4" />
+            <stop offset="50%" stopColor="#0891b2" />
+            <stop offset="100%" stopColor="#0e7490" />
+          </linearGradient>
+
+          {/* Accuracy indicator - radial glow */}
+          <radialGradient id="qprecAccuracyGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+            <stop offset="40%" stopColor="#16a34a" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="#15803d" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Performance indicator - radial glow */}
+          <radialGradient id="qprecPerformanceGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+            <stop offset="40%" stopColor="#d97706" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="#b45309" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Panel glass effect */}
+          <linearGradient id="qprecPanelGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+            <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+          </linearGradient>
+
+          {/* Metal frame gradient */}
+          <linearGradient id="qprecMetalFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="25%" stopColor="#334155" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="75%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+
+          {/* Bit glow filter */}
+          <filter id="qprecBitGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Value display glow */}
+          <filter id="qprecValueGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Panel shadow filter */}
+          <filter id="qprecPanelShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feOffset dx="2" dy="2" result="offsetBlur" />
+            <feMerge>
+              <feMergeNode in="offsetBlur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Indicator pulse filter */}
+          <filter id="qprecPulse" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle grid pattern */}
+          <pattern id="qprecGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+        </defs>
+
+        {/* Background */}
+        <rect width={width} height={height} fill="url(#qprecLabBg)" />
+        <rect width={width} height={height} fill="url(#qprecGrid)" />
+
+        {/* Main Title Panel */}
+        <g transform="translate(20, 15)">
+          <rect x="0" y="0" width="660" height="45" rx="8" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" />
+          <text x="330" y="28" textAnchor="middle" fill="#f8fafc" fontSize="18" fontWeight="bold">
+            {precision}: {spec.bits}-bit Numerical Precision
           </text>
+          <rect x="10" y="38" width="640" height="2" rx="1" fill={`url(#qprec${precision}Gradient)`} opacity="0.6" />
         </g>
 
-        {/* Value comparison */}
-        <g transform="translate(50, 120)">
-          <text x={0} y={0} fill={colors.textSecondary} fontSize={12}>Original (FP32):</text>
-          <text x={150} y={0} fill={colors.fp32} fontSize={14} fontWeight="bold">{originalValue}</text>
-
-          <text x={0} y={30} fill={colors.textSecondary} fontSize={12}>Quantized ({precision}):</text>
-          <text x={150} y={30} fill={spec.color} fontSize={14} fontWeight="bold">
-            {quantizedValues[precision]}
+        {/* Bit Representation Panel */}
+        <g transform="translate(20, 70)">
+          <rect x="0" y="0" width="450" height="120" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
+          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" textTransform="uppercase" letterSpacing="0.1em">
+            Binary Representation
           </text>
 
-          {showQuantizationError && (
-            <>
-              <text x={0} y={60} fill={colors.textSecondary} fontSize={12}>Quantization Error:</text>
-              <text
-                x={150}
-                y={60}
-                fill={quantizationError > 1 ? colors.warning : colors.success}
-                fontSize={14}
-                fontWeight="bold"
-              >
-                {quantizationError.toFixed(2)}%
-              </text>
-            </>
+          {/* Bit boxes with color coding */}
+          <g transform="translate(15, 35)">
+            {bits.map((bit, i) => (
+              <g key={i}>
+                <rect
+                  x={i * (bitWidth + bitSpacing)}
+                  y="0"
+                  width={bitWidth}
+                  height="35"
+                  rx="3"
+                  fill={bit ? getBitColor(i, bits.length, precision) : 'rgba(255,255,255,0.05)'}
+                  stroke={bit ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'}
+                  strokeWidth="1"
+                  filter={bit ? 'url(#qprecBitGlow)' : undefined}
+                />
+                <text
+                  x={i * (bitWidth + bitSpacing) + bitWidth / 2}
+                  y="23"
+                  textAnchor="middle"
+                  fill={bit ? '#ffffff' : '#475569'}
+                  fontSize="11"
+                  fontWeight="bold"
+                  fontFamily="monospace"
+                >
+                  {bit ? '1' : '0'}
+                </text>
+              </g>
+            ))}
+          </g>
+
+          {/* Bit section legend for floating point */}
+          {(precision === 'FP32' || precision === 'FP16') && (
+            <g transform="translate(15, 85)">
+              <rect x="0" y="0" width="10" height="10" rx="2" fill="url(#qprecSignBit)" />
+              <text x="14" y="9" fill="#94a3b8" fontSize="8">Sign</text>
+              <rect x="50" y="0" width="10" height="10" rx="2" fill="url(#qprecExponentBit)" />
+              <text x="64" y="9" fill="#94a3b8" fontSize="8">Exponent</text>
+              <rect x="120" y="0" width="10" height="10" rx="2" fill="url(#qprecMantissaBit)" />
+              <text x="134" y="9" fill="#94a3b8" fontSize="8">Mantissa</text>
+            </g>
           )}
+
+          {/* Bit count info */}
+          <text x="435" y="60" textAnchor="end" fill="#64748b" fontSize="10">
+            {bits.length} bits = {Math.pow(2, bits.length).toLocaleString()} values
+          </text>
         </g>
 
-        {/* Memory comparison bars */}
-        <g transform="translate(50, 210)">
-          <text x={0} y={-10} fill={colors.textMuted} fontSize={11}>Memory Usage</text>
-
-          <rect x={0} y={0} width={280} height={20} rx={4} fill="rgba(255,255,255,0.1)" />
-          <rect
-            x={0}
-            y={0}
-            width={280 * spec.memoryRatio}
-            height={20}
-            rx={4}
-            fill={spec.color}
-          />
-          <text x={285} y={15} fill={colors.textSecondary} fontSize={11}>
-            {(spec.memoryRatio * 100).toFixed(0)}%
+        {/* Precision Stats Panel */}
+        <g transform="translate(480, 70)">
+          <rect x="0" y="0" width="200" height="120" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
+          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+            PRECISION SPECS
           </text>
 
-          <text x={0} y={50} fill={colors.textMuted} fontSize={11}>Throughput Multiplier</text>
-          <rect x={0} y={60} width={280} height={20} rx={4} fill="rgba(255,255,255,0.1)" />
-          <rect
-            x={0}
-            y={60}
-            width={Math.min(280, 280 * spec.speedRatio / 8)}
-            height={20}
-            rx={4}
-            fill={colors.success}
-          />
-          <text x={285} y={75} fill={colors.textSecondary} fontSize={11}>
-            {spec.speedRatio}x
+          <text x="15" y="48" fill="#64748b" fontSize="10">Dynamic Range:</text>
+          <text x="185" y="48" textAnchor="end" fill={spec.color} fontSize="10" fontWeight="bold">{spec.range}</text>
+
+          <text x="15" y="70" fill="#64748b" fontSize="10">Memory Ratio:</text>
+          <text x="185" y="70" textAnchor="end" fill="#10b981" fontSize="12" fontWeight="bold">{(spec.memoryRatio * 100).toFixed(0)}%</text>
+
+          <text x="15" y="92" fill="#64748b" fontSize="10">Speed Multiplier:</text>
+          <text x="185" y="92" textAnchor="end" fill="#06b6d4" fontSize="12" fontWeight="bold">{spec.speedRatio}x</text>
+
+          <rect x="10" y="102" width="180" height="8" rx="4" fill="rgba(255,255,255,0.05)" />
+          <rect x="10" y="102" width={180 * spec.memoryRatio} height="8" rx="4" fill={`url(#qprec${precision}Gradient)`} />
+        </g>
+
+        {/* Value Comparison Panel */}
+        <g transform="translate(20, 200)">
+          <rect x="0" y="0" width="320" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
+          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+            VALUE COMPARISON
           </text>
+
+          <g transform="translate(15, 40)">
+            <text x="0" y="0" fill="#64748b" fontSize="11">Original (FP32):</text>
+            <text x="180" y="0" fill="#3b82f6" fontSize="14" fontWeight="bold" filter="url(#qprecValueGlow)">{originalValue.toFixed(6)}</text>
+
+            <text x="0" y="28" fill="#64748b" fontSize="11">Quantized ({precision}):</text>
+            <text x="180" y="28" fill={spec.color} fontSize="14" fontWeight="bold" filter="url(#qprecValueGlow)">
+              {quantizedValues[precision].toFixed(precision === 'INT4' ? 3 : precision === 'INT8' ? 4 : 6)}
+            </text>
+
+            {showQuantizationError && (
+              <>
+                <text x="0" y="56" fill="#64748b" fontSize="11">Quantization Error:</text>
+                <text
+                  x="180"
+                  y="56"
+                  fill={quantizationError > 1 ? colors.warning : colors.success}
+                  fontSize="14"
+                  fontWeight="bold"
+                  filter="url(#qprecValueGlow)"
+                >
+                  {quantizationError.toFixed(3)}%
+                </text>
+              </>
+            )}
+          </g>
+        </g>
+
+        {/* Accuracy vs Performance Tradeoff Indicators */}
+        <g transform="translate(350, 200)">
+          <rect x="0" y="0" width="330" height="100" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
+          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+            ACCURACY / PERFORMANCE TRADEOFF
+          </text>
+
+          {/* Accuracy indicator */}
+          <g transform="translate(30, 55)">
+            <circle cx="25" cy="15" r="22" fill="url(#qprecAccuracyGlow)" filter="url(#qprecPulse)" opacity={1 - (quantizationError / 5)}>
+              <animate attributeName="opacity" values={`${1 - quantizationError/5};${0.7 - quantizationError/5};${1 - quantizationError/5}`} dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="25" cy="15" r="15" fill="#15803d" stroke="#22c55e" strokeWidth="2" />
+            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">
+              {(100 - quantizationError).toFixed(0)}%
+            </text>
+            <text x="25" y="50" textAnchor="middle" fill="#22c55e" fontSize="9" fontWeight="bold">Accuracy</text>
+          </g>
+
+          {/* Performance indicator */}
+          <g transform="translate(120, 55)">
+            <circle cx="25" cy="15" r="22" fill="url(#qprecPerformanceGlow)" filter="url(#qprecPulse)" opacity={spec.speedRatio / 10}>
+              <animate attributeName="opacity" values={`${spec.speedRatio/10};${spec.speedRatio/12};${spec.speedRatio/10}`} dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="25" cy="15" r="15" fill="#92400e" stroke="#f59e0b" strokeWidth="2" />
+            <text x="25" y="20" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">
+              {spec.speedRatio}x
+            </text>
+            <text x="25" y="50" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="bold">Speed</text>
+          </g>
+
+          {/* Tradeoff arrow indicator */}
+          <g transform="translate(200, 40)">
+            <line x1="0" y1="25" x2="100" y2="25" stroke="#475569" strokeWidth="2" strokeDasharray="4 2" />
+            <polygon points="100,25 90,20 90,30" fill="#475569" />
+            <text x="50" y="15" textAnchor="middle" fill="#64748b" fontSize="8">Lower precision</text>
+            <text x="50" y="55" textAnchor="middle" fill="#64748b" fontSize="8">Better performance</text>
+          </g>
+        </g>
+
+        {/* Memory Footprint Visualization */}
+        <g transform="translate(20, 310)">
+          <rect x="0" y="0" width="660" height="80" rx="10" fill="url(#qprecPanelGlass)" stroke="#334155" strokeWidth="1" filter="url(#qprecPanelShadow)" />
+          <text x="15" y="22" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="0.1em">
+            MEMORY FOOTPRINT ({modelSize}B Parameter Model)
+          </text>
+
+          {/* Memory bars for all precisions */}
+          <g transform="translate(15, 35)">
+            {(['FP32', 'FP16', 'INT8', 'INT4'] as const).map((p, i) => {
+              const pSpec = PRECISION_SPECS[p];
+              const memGB = (modelSize * 4 * pSpec.memoryRatio).toFixed(1);
+              const barWidth = 400 * pSpec.memoryRatio;
+              const isActive = p === precision;
+              return (
+                <g key={p} transform={`translate(0, ${i * 11})`}>
+                  <text x="0" y="8" fill={isActive ? pSpec.color : '#64748b'} fontSize="9" fontWeight={isActive ? 'bold' : 'normal'}>{p}</text>
+                  <rect x="40" y="0" width="400" height="8" rx="2" fill="rgba(255,255,255,0.05)" />
+                  <rect
+                    x="40"
+                    y="0"
+                    width={barWidth}
+                    height="8"
+                    rx="2"
+                    fill={`url(#qprec${p}Gradient)`}
+                    opacity={isActive ? 1 : 0.5}
+                    filter={isActive ? 'url(#qprecBitGlow)' : undefined}
+                  />
+                  <text x="450" y="8" fill={isActive ? '#f8fafc' : '#64748b'} fontSize="9" fontWeight={isActive ? 'bold' : 'normal'}>
+                    {memGB} GB
+                  </text>
+                  {isActive && (
+                    <circle cx="500" cy="4" r="4" fill={pSpec.color}>
+                      <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+
+          {/* Savings indicator */}
+          <g transform="translate(540, 35)">
+            <rect x="0" y="0" width="105" height="35" rx="6" fill="rgba(16, 185, 129, 0.1)" stroke="#10b981" strokeWidth="1" />
+            <text x="52" y="15" textAnchor="middle" fill="#10b981" fontSize="9">Memory Saved</text>
+            <text x="52" y="30" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">
+              {((1 - spec.memoryRatio) * 100).toFixed(0)}%
+            </text>
+          </g>
         </g>
       </svg>
     );

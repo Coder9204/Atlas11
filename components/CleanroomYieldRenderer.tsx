@@ -69,13 +69,17 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     const waferArea = 706.86; // 300mm wafer in cm^2
     const numDefects = Math.floor(defectDensity * waferArea);
     const positions = [];
+    // Wafer center coordinates (must match renderVisualization)
+    const waferCenterX = 175;
+    const waferCenterY = 200;
+    const waferRadius = 140;
     for (let i = 0; i < numDefects; i++) {
       // Random position within circular wafer
       const angle = Math.random() * 2 * Math.PI;
-      const r = Math.sqrt(Math.random()) * 140; // radius up to 140 (wafer edge)
+      const r = Math.sqrt(Math.random()) * waferRadius; // radius up to wafer edge
       positions.push({
-        x: 150 + r * Math.cos(angle),
-        y: 150 + r * Math.sin(angle),
+        x: waferCenterX + r * Math.cos(angle),
+        y: waferCenterY + r * Math.sin(angle),
       });
     }
     setDefectPositions(positions);
@@ -303,14 +307,14 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showRedundancy: boolean = false) => {
-    const width = 500;
-    const height = 480;
+    const width = 700;
+    const height = 520;
     const yieldData = calculateYield();
 
     // Wafer visualization
-    const waferCenterX = 150;
-    const waferCenterY = 160;
-    const waferRadius = 130;
+    const waferCenterX = 175;
+    const waferCenterY = 200;
+    const waferRadius = 140;
 
     // Calculate die grid
     const dieSide = Math.sqrt(dieArea);
@@ -352,194 +356,439 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
           <defs>
-            <radialGradient id="waferGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.wafer} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={colors.wafer} stopOpacity="0.1" />
+            {/* === PREMIUM CLEANROOM ENVIRONMENT GRADIENTS === */}
+
+            {/* Cleanroom background - sterile blue-white gradient */}
+            <linearGradient id="cryCleanroomBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a1628" />
+              <stop offset="25%" stopColor="#0f1d32" />
+              <stop offset="50%" stopColor="#0c1929" />
+              <stop offset="75%" stopColor="#0f1d32" />
+              <stop offset="100%" stopColor="#081220" />
+            </linearGradient>
+
+            {/* Premium silicon wafer - metallic gradient with depth */}
+            <radialGradient id="cryWaferSilicon" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="#a5b4c8" />
+              <stop offset="20%" stopColor="#8b9cb4" />
+              <stop offset="45%" stopColor="#6b7d99" />
+              <stop offset="70%" stopColor="#505f78" />
+              <stop offset="90%" stopColor="#3d4a5c" />
+              <stop offset="100%" stopColor="#2d3748" />
             </radialGradient>
-            <filter id="defectGlow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+
+            {/* Wafer surface reflection - adds metallic sheen */}
+            <linearGradient id="cryWaferSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+              <stop offset="30%" stopColor="#a5b4fc" stopOpacity="0.08" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.02" />
+              <stop offset="70%" stopColor="#818cf8" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Wafer edge bevel - 3D effect */}
+            <linearGradient id="cryWaferEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="15%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="85%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Good die gradient - healthy green silicon */}
+            <linearGradient id="cryGoodDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="40%" stopColor="#10b981" />
+              <stop offset="70%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+
+            {/* Bad die gradient - defective red */}
+            <linearGradient id="cryBadDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="40%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Repaired die gradient - purple for spare rows */}
+            <linearGradient id="cryRepairedDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="40%" stopColor="#a855f7" />
+              <stop offset="70%" stopColor="#9333ea" />
+              <stop offset="100%" stopColor="#7e22ce" />
+            </linearGradient>
+
+            {/* Particle contamination - orange/red danger */}
+            <radialGradient id="cryParticleCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.6" />
+            </radialGradient>
+
+            {/* Particle outer glow */}
+            <radialGradient id="cryParticleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#ea580c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Stats panel background */}
+            <linearGradient id="cryPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Panel border glow */}
+            <linearGradient id="cryPanelBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#6366f1" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Yield curve success gradient */}
+            <linearGradient id="cryCurveSuccess" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#6ee7b7" />
+            </linearGradient>
+
+            {/* Cleanroom floor grid pattern */}
+            <pattern id="cryFloorGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+
+            {/* Defect/particle glow filter */}
+            <filter id="cryDefectGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur1" />
+              <feGaussianBlur stdDeviation="1.5" result="blur2" />
               <feMerge>
-                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Wafer edge glow */}
+            <filter id="cryWaferGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Die highlight glow */}
+            <filter id="cryDieGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text glow for labels */}
+            <filter id="cryTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for panels */}
+            <filter id="cryInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Ambient dust particles floating in air */}
+            <filter id="cryDustFloat" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {/* Title */}
-          <text x={250} y={25} fill={colors.accent} fontSize={14} fontWeight="bold" textAnchor="middle">
-            300mm Wafer - Yield Simulation
+          {/* === CLEANROOM ENVIRONMENT BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#cryCleanroomBg)" />
+          <rect width={width} height={height} fill="url(#cryFloorGrid)" />
+
+          {/* Ambient floating dust particles in cleanroom air */}
+          {[...Array(15)].map((_, i) => (
+            <circle
+              key={`dust${i}`}
+              cx={50 + (i * 47) % (width - 100)}
+              cy={40 + (i * 31) % 80}
+              r={0.5 + (i % 3) * 0.3}
+              fill="#94a3b8"
+              opacity={0.15 + (i % 4) * 0.05}
+              filter="url(#cryDustFloat)"
+            >
+              <animate
+                attributeName="cy"
+                values={`${40 + (i * 31) % 80};${50 + (i * 31) % 80};${40 + (i * 31) % 80}`}
+                dur={`${3 + i % 2}s`}
+                repeatCount="indefinite"
+              />
+            </circle>
+          ))}
+
+          {/* === TITLE SECTION === */}
+          <text x={width / 2} y={28} fill="#f59e0b" fontSize={16} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
+            300mm Silicon Wafer - Cleanroom Yield Simulation
+          </text>
+          <text x={width / 2} y={46} fill="#94a3b8" fontSize={10} textAnchor="middle">
+            Class 1 Cleanroom Environment | Defect Density Analysis
           </text>
 
-          {/* Wafer circle */}
-          <circle
-            cx={waferCenterX}
-            cy={waferCenterY}
-            r={waferRadius}
-            fill="url(#waferGrad)"
-            stroke={colors.wafer}
-            strokeWidth={2}
-          />
+          {/* === PREMIUM SILICON WAFER === */}
+          <g transform={`translate(${waferCenterX}, ${waferCenterY})`}>
+            {/* Wafer shadow for depth */}
+            <ellipse cx={5} cy={8} rx={waferRadius + 2} ry={waferRadius + 2} fill="#000000" opacity="0.3" />
 
-          {/* Wafer notch */}
-          <rect
-            x={waferCenterX - 5}
-            y={waferCenterY + waferRadius - 8}
-            width={10}
-            height={10}
-            fill={colors.bgPrimary}
-          />
+            {/* Outer metallic edge/bevel */}
+            <circle cx={0} cy={0} r={waferRadius + 3} fill="url(#cryWaferEdge)" filter="url(#cryWaferGlow)" />
 
-          {/* Dies */}
+            {/* Main silicon surface */}
+            <circle cx={0} cy={0} r={waferRadius} fill="url(#cryWaferSilicon)" />
+
+            {/* Surface reflection overlay */}
+            <circle cx={0} cy={0} r={waferRadius} fill="url(#cryWaferSheen)" />
+
+            {/* Concentric processing rings (realistic wafer texture) */}
+            {[0.3, 0.5, 0.7, 0.85, 0.95].map((ratio, i) => (
+              <circle
+                key={`ring${i}`}
+                cx={0}
+                cy={0}
+                r={waferRadius * ratio}
+                fill="none"
+                stroke="#475569"
+                strokeWidth={0.3}
+                strokeOpacity={0.2}
+              />
+            ))}
+
+            {/* Wafer notch (orientation marker) */}
+            <path
+              d={`M -8,${waferRadius - 4} L 0,${waferRadius + 4} L 8,${waferRadius - 4}`}
+              fill="#1e293b"
+              stroke="#475569"
+              strokeWidth={1}
+            />
+
+            {/* Wafer ID label */}
+            <text x={0} y={waferRadius - 15} fill="#64748b" fontSize={7} textAnchor="middle" fontFamily="monospace">
+              LOT-2024-A001
+            </text>
+          </g>
+
+          {/* === DIES ON WAFER === */}
           {dies.map((die, i) => (
-            <rect
-              key={`die${i}`}
-              x={die.x - dieDisplaySize / 2 + 1}
-              y={die.y - dieDisplaySize / 2 + 1}
-              width={dieDisplaySize - 2}
-              height={dieDisplaySize - 2}
-              fill={die.repaired ? colors.spare : die.good ? colors.goodDie : colors.badDie}
-              opacity={die.good ? 0.8 : 0.6}
-              rx={1}
-            />
+            <g key={`die${i}`}>
+              <rect
+                x={die.x - dieDisplaySize / 2 + 1}
+                y={die.y - dieDisplaySize / 2 + 1}
+                width={dieDisplaySize - 2}
+                height={dieDisplaySize - 2}
+                fill={die.repaired ? 'url(#cryRepairedDie)' : die.good ? 'url(#cryGoodDie)' : 'url(#cryBadDie)'}
+                opacity={die.good ? 0.85 : 0.75}
+                rx={1}
+                filter={die.hasDefect && !die.repaired ? 'url(#cryDieGlow)' : undefined}
+              />
+            </g>
           ))}
 
-          {/* Defect markers */}
-          {defectPositions.slice(0, 50).map((def, i) => (
-            <circle
-              key={`defect${i}`}
-              cx={def.x}
-              cy={def.y}
-              r={3}
-              fill={colors.defect}
-              filter="url(#defectGlow)"
-            />
+          {/* === PARTICLE CONTAMINATION MARKERS === */}
+          {defectPositions.slice(0, 60).map((def, i) => (
+            <g key={`defect${i}`} transform={`translate(${def.x}, ${def.y})`}>
+              {/* Outer glow */}
+              <circle r={6} fill="url(#cryParticleGlow)" filter="url(#cryDefectGlow)" />
+              {/* Inner core */}
+              <circle r={3} fill="url(#cryParticleCore)" />
+              {/* Bright center */}
+              <circle r={1} fill="#fef3c7" />
+            </g>
           ))}
 
-          {/* Legend */}
-          <g transform="translate(10, 310)">
-            <rect x={0} y={0} width={120} height={80} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={10} y={18} fill={colors.accent} fontSize={10} fontWeight="bold">Legend</text>
+          {/* === PREMIUM LEGEND PANEL === */}
+          <g transform="translate(12, 375)">
+            <rect x={0} y={0} width={140} height={showRedundancy ? 105 : 85} fill="url(#cryPanelBg)" rx={8} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
+            <text x={12} y={20} fill="#f59e0b" fontSize={11} fontWeight="bold">Legend</text>
 
-            <rect x={10} y={28} width={12} height={12} fill={colors.goodDie} rx={2} />
-            <text x={28} y={38} fill={colors.textSecondary} fontSize={9}>Good Die</text>
+            {/* Good die */}
+            <rect x={12} y={30} width={14} height={14} fill="url(#cryGoodDie)" rx={2} />
+            <text x={32} y={41} fill="#e2e8f0" fontSize={9}>Good Die (Functional)</text>
 
-            <rect x={10} y={45} width={12} height={12} fill={colors.badDie} rx={2} />
-            <text x={28} y={55} fill={colors.textSecondary} fontSize={9}>Defective</text>
+            {/* Bad die */}
+            <rect x={12} y={50} width={14} height={14} fill="url(#cryBadDie)" rx={2} />
+            <text x={32} y={61} fill="#e2e8f0" fontSize={9}>Defective (Killed)</text>
+
+            {/* Particle */}
+            <circle cx={19} cy={77} r={5} fill="url(#cryParticleCore)" filter="url(#cryDefectGlow)" />
+            <text x={32} y={80} fill="#e2e8f0" fontSize={9}>Particle Defect</text>
 
             {showRedundancy && (
               <>
-                <rect x={10} y={62} width={12} height={12} fill={colors.spare} rx={2} />
-                <text x={28} y={72} fill={colors.textSecondary} fontSize={9}>Repaired</text>
+                <rect x={12} y={88} width={14} height={14} fill="url(#cryRepairedDie)" rx={2} />
+                <text x={32} y={99} fill="#e2e8f0" fontSize={9}>Repaired (Spare Row)</text>
               </>
             )}
           </g>
 
-          {/* Stats panel */}
-          <g transform="translate(300, 50)">
-            <rect x={0} y={0} width={190} height={140} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={11} fontWeight="bold">Yield Statistics</text>
+          {/* === YIELD STATISTICS PANEL === */}
+          <g transform="translate(370, 70)">
+            <rect x={0} y={0} width={210} height={160} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
 
-            <text x={10} y={42} fill={colors.textSecondary} fontSize={10}>Defect Density:</text>
-            <text x={110} y={42} fill={colors.textPrimary} fontSize={10}>{defectDensity.toFixed(2)} /cm2</text>
+            {/* Panel header */}
+            <rect x={0} y={0} width={210} height={28} fill="rgba(59, 130, 246, 0.15)" rx={10} />
+            <text x={105} y={19} fill="#f59e0b" fontSize={12} fontWeight="bold" textAnchor="middle" filter="url(#cryTextGlow)">
+              Yield Statistics
+            </text>
 
-            <text x={10} y={58} fill={colors.textSecondary} fontSize={10}>Die Area:</text>
-            <text x={110} y={58} fill={colors.textPrimary} fontSize={10}>{dieArea} mm2</text>
+            {/* Stats rows */}
+            <text x={12} y={48} fill="#94a3b8" fontSize={10}>Defect Density:</text>
+            <text x={198} y={48} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{defectDensity.toFixed(2)} /cm2</text>
 
-            <text x={10} y={74} fill={colors.textSecondary} fontSize={10}>Dies per Wafer:</text>
-            <text x={110} y={74} fill={colors.textPrimary} fontSize={10}>{yieldData.diesPerWafer}</text>
+            <text x={12} y={68} fill="#94a3b8" fontSize={10}>Die Area:</text>
+            <text x={198} y={68} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{dieArea} mm2</text>
 
-            <text x={10} y={94} fill={colors.textSecondary} fontSize={10}>Poisson Yield:</text>
-            <text x={110} y={94} fill={yieldData.poissonYield > 50 ? colors.success : colors.error} fontSize={10} fontWeight="bold">
+            <text x={12} y={88} fill="#94a3b8" fontSize={10}>Dies per Wafer:</text>
+            <text x={198} y={88} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{yieldData.diesPerWafer}</text>
+
+            <line x1={12} y1={98} x2={198} y2={98} stroke="#334155" strokeWidth={1} />
+
+            <text x={12} y={116} fill="#94a3b8" fontSize={10}>Poisson Yield:</text>
+            <text x={198} y={116} fill={yieldData.poissonYield > 50 ? '#10b981' : '#ef4444'} fontSize={12} fontWeight="bold" textAnchor="end">
               {yieldData.poissonYield.toFixed(1)}%
             </text>
 
-            <text x={10} y={110} fill={colors.textSecondary} fontSize={10}>Good Dies:</text>
-            <text x={110} y={110} fill={colors.success} fontSize={10} fontWeight="bold">
+            <text x={12} y={136} fill="#94a3b8" fontSize={10}>Good Dies:</text>
+            <text x={198} y={136} fill="#10b981" fontSize={12} fontWeight="bold" textAnchor="end">
               {showRedundancy && redundancyEnabled ? yieldData.goodDiesRedundant : yieldData.goodDiesPoisson}
             </text>
 
-            <text x={10} y={130} fill={colors.textSecondary} fontSize={10}>Cost/Die:</text>
-            <text x={110} y={130} fill={colors.textPrimary} fontSize={10}>
+            <text x={12} y={154} fill="#94a3b8" fontSize={10}>Cost per Die:</text>
+            <text x={198} y={154} fill="#fbbf24" fontSize={11} fontWeight="bold" textAnchor="end">
               ${(showRedundancy && redundancyEnabled ? yieldData.costPerGoodDieRedundant : yieldData.costPerGoodDie).toFixed(0)}
             </text>
           </g>
 
-          {/* Yield curve */}
-          <g transform="translate(300, 200)">
-            <rect x={0} y={0} width={190} height={120} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={95} y={18} fill={colors.accent} fontSize={10} fontWeight="bold" textAnchor="middle">
+          {/* === YIELD CURVE GRAPH === */}
+          <g transform="translate(370, 245)">
+            <rect x={0} y={0} width={210} height={135} fill="url(#cryPanelBg)" rx={10} stroke="url(#cryPanelBorder)" strokeWidth={1} filter="url(#cryInnerShadow)" />
+
+            {/* Graph header */}
+            <rect x={0} y={0} width={210} height={24} fill="rgba(59, 130, 246, 0.15)" rx={10} />
+            <text x={105} y={17} fill="#f59e0b" fontSize={11} fontWeight="bold" textAnchor="middle">
               Yield vs Defect Density
             </text>
 
-            {/* Axes */}
-            <line x1={30} y1={100} x2={180} y2={100} stroke={colors.textMuted} strokeWidth={1} />
-            <line x1={30} y1={30} x2={30} y2={100} stroke={colors.textMuted} strokeWidth={1} />
+            {/* Graph area */}
+            <g transform="translate(35, 35)">
+              {/* Grid lines */}
+              {[0, 25, 50, 75].map((y, i) => (
+                <line key={`grid${i}`} x1={0} y1={y} x2={160} y2={y} stroke="#334155" strokeWidth={0.5} strokeDasharray="2,2" />
+              ))}
 
-            {/* Y-axis labels */}
-            <text x={25} y={35} fill={colors.textMuted} fontSize={8} textAnchor="end">100%</text>
-            <text x={25} y={65} fill={colors.textMuted} fontSize={8} textAnchor="end">50%</text>
-            <text x={25} y={100} fill={colors.textMuted} fontSize={8} textAnchor="end">0%</text>
+              {/* Axes */}
+              <line x1={0} y1={75} x2={160} y2={75} stroke="#64748b" strokeWidth={1.5} />
+              <line x1={0} y1={0} x2={0} y2={75} stroke="#64748b" strokeWidth={1.5} />
 
-            {/* X-axis labels */}
-            <text x={30} y={112} fill={colors.textMuted} fontSize={8}>0</text>
-            <text x={105} y={112} fill={colors.textMuted} fontSize={8}>1.5</text>
-            <text x={175} y={112} fill={colors.textMuted} fontSize={8}>3</text>
+              {/* Y-axis labels */}
+              <text x={-5} y={5} fill="#94a3b8" fontSize={8} textAnchor="end">100%</text>
+              <text x={-5} y={40} fill="#94a3b8" fontSize={8} textAnchor="end">50%</text>
+              <text x={-5} y={78} fill="#94a3b8" fontSize={8} textAnchor="end">0%</text>
 
-            {/* Yield curve */}
-            <path
-              d={`M 30,${100 - Math.exp(-0 * dieArea / 100) * 70}
-                  ${[...Array(30)].map((_, i) => {
-                    const d = (i / 29) * 3;
-                    const y = Math.exp(-d * dieArea / 100);
-                    return `L ${30 + i * 5},${100 - y * 70}`;
-                  }).join(' ')}`}
-              fill="none"
-              stroke={colors.success}
-              strokeWidth={2}
-            />
+              {/* X-axis labels */}
+              <text x={0} y={90} fill="#94a3b8" fontSize={8} textAnchor="middle">0</text>
+              <text x={80} y={90} fill="#94a3b8" fontSize={8} textAnchor="middle">1.5</text>
+              <text x={160} y={90} fill="#94a3b8" fontSize={8} textAnchor="middle">3.0</text>
+              <text x={80} y={100} fill="#64748b" fontSize={7} textAnchor="middle">Defects/cm2</text>
 
-            {/* Current position marker */}
-            <circle
-              cx={30 + (defectDensity / 3) * 150}
-              cy={100 - yieldData.poissonYield / 100 * 70}
-              r={5}
-              fill={colors.accent}
-            />
-
-            {/* Redundancy curve if enabled */}
-            {showRedundancy && redundancyEnabled && (
+              {/* Yield curve with gradient */}
               <path
-                d={`M 30,${100 - 70}
-                    ${[...Array(30)].map((_, i) => {
-                      const d = (i / 29) * 3;
-                      const baseY = Math.exp(-d * dieArea / 100);
-                      const repairProb = spareRows * 0.2;
-                      const redY = baseY + (1 - baseY) * repairProb;
-                      return `L ${30 + i * 5},${100 - redY * 70}`;
+                d={`M 0,${75 - Math.exp(-0 * dieArea / 100) * 75}
+                    ${[...Array(32)].map((_, i) => {
+                      const d = (i / 31) * 3;
+                      const y = Math.exp(-d * dieArea / 100);
+                      return `L ${i * 5},${75 - y * 75}`;
                     }).join(' ')}`}
                 fill="none"
-                stroke={colors.spare}
-                strokeWidth={2}
-                strokeDasharray="4,2"
+                stroke="url(#cryCurveSuccess)"
+                strokeWidth={2.5}
+                strokeLinecap="round"
               />
-            )}
+
+              {/* Current position marker with glow */}
+              <circle
+                cx={(defectDensity / 3) * 160}
+                cy={75 - yieldData.poissonYield / 100 * 75}
+                r={7}
+                fill="#f59e0b"
+                opacity={0.3}
+                filter="url(#cryDefectGlow)"
+              />
+              <circle
+                cx={(defectDensity / 3) * 160}
+                cy={75 - yieldData.poissonYield / 100 * 75}
+                r={5}
+                fill="#f59e0b"
+                stroke="#fef3c7"
+                strokeWidth={1.5}
+              />
+
+              {/* Redundancy curve if enabled */}
+              {showRedundancy && redundancyEnabled && (
+                <path
+                  d={`M 0,${75 - 75}
+                      ${[...Array(32)].map((_, i) => {
+                        const d = (i / 31) * 3;
+                        const baseY = Math.exp(-d * dieArea / 100);
+                        const repairProb = spareRows * 0.2;
+                        const redY = baseY + (1 - baseY) * repairProb;
+                        return `L ${i * 5},${75 - redY * 75}`;
+                      }).join(' ')}`}
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth={2}
+                  strokeDasharray="6,3"
+                  strokeLinecap="round"
+                />
+              )}
+            </g>
           </g>
 
-          {/* Redundancy indicator */}
+          {/* === REDUNDANCY INDICATOR PANEL === */}
           {showRedundancy && redundancyEnabled && (
-            <g transform="translate(300, 330)">
-              <rect x={0} y={0} width={190} height={50} fill="rgba(139, 92, 246, 0.2)" rx={8} />
-              <text x={10} y={18} fill={colors.spare} fontSize={10} fontWeight="bold">
-                Redundancy Active
-              </text>
-              <text x={10} y={35} fill={colors.textSecondary} fontSize={9}>
+            <g transform="translate(370, 390)">
+              <rect x={0} y={0} width={210} height={55} fill="rgba(139, 92, 246, 0.2)" rx={10} stroke="#8b5cf6" strokeWidth={1} strokeOpacity={0.5} />
+              <circle cx={20} cy={27} r={8} fill="#a855f7" opacity={0.6}>
+                <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              <text x={35} y={22} fill="#c4b5fd" fontSize={11} fontWeight="bold">Redundancy Active</text>
+              <text x={35} y={40} fill="#94a3b8" fontSize={9}>
                 Spare Rows: {spareRows} | Repair Rate: {(spareRows * 20).toFixed(0)}%
               </text>
             </g>
           )}
+
+          {/* === CLEANROOM CLASS INDICATOR === */}
+          <g transform="translate(590, 12)">
+            <rect x={0} y={0} width={95} height={35} fill="rgba(16, 185, 129, 0.15)" rx={6} stroke="#10b981" strokeWidth={1} strokeOpacity={0.5} />
+            <text x={48} y={15} fill="#10b981" fontSize={8} fontWeight="bold" textAnchor="middle">CLEANROOM</text>
+            <text x={48} y={28} fill="#6ee7b7" fontSize={11} fontWeight="bold" textAnchor="middle">CLASS 1</text>
+          </g>
         </svg>
 
         {interactive && (

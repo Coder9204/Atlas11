@@ -536,142 +536,499 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
 
   const renderVisualization = () => {
     const rad = calculateRadiation();
-    const particlePositions = [...Array(20)].map((_, i) => ({
-      x: (animPhase * (3 + i * 0.5) + i * 50) % 500,
-      y: 50 + Math.sin((animPhase + i * 30) * Math.PI / 180) * 30 + (i * 15) % 200
-    }));
 
-    // Belt visualization
-    const innerBeltY = 280 - (3000 / 40000 * 250);
-    const outerBeltY = 280 - (20000 / 40000 * 250);
-    const currentAltY = 280 - (altitude / 40000 * 250);
+    // Generate radiation particle tracks with physics-based trajectories
+    const particleTracks = [...Array(15)].map((_, i) => {
+      const startX = Math.random() * 100 - 50;
+      const startY = -20;
+      const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+      const speed = 2 + Math.random() * 2;
+      const trackLength = 80 + Math.random() * 60;
+      const phase = (animPhase * speed + i * 40) % 400;
+      return {
+        x1: 300 + startX + Math.cos(angle) * phase,
+        y1: startY + Math.sin(angle) * phase,
+        x2: 300 + startX + Math.cos(angle) * (phase + trackLength),
+        y2: startY + Math.sin(angle) * (phase + trackLength),
+        type: i % 4 === 0 ? 'proton' : i % 4 === 1 ? 'electron' : i % 4 === 2 ? 'heavy' : 'cosmic',
+        visible: phase < 300 && phase > 0
+      };
+    });
+
+    // SEU event positions on silicon die
+    const seuEvents = [...Array(Math.min(seuCount, 8))].map((_, i) => ({
+      x: 45 + (i % 4) * 15 + Math.sin(animPhase * 0.1 + i) * 3,
+      y: 75 + Math.floor(i / 4) * 18 + Math.cos(animPhase * 0.15 + i) * 2,
+      intensity: 0.4 + Math.sin(animPhase * 0.2 + i * 0.5) * 0.3
+    }));
 
     return (
       <svg viewBox="0 0 500 350" className="w-full h-auto max-w-xl">
         <defs>
-          <linearGradient id="spaceGradRad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0a0a1a" />
-            <stop offset="100%" stopColor="#1a1a3a" />
+          {/* === PREMIUM LINEAR GRADIENTS === */}
+
+          {/* Deep space background with stellar depth */}
+          <linearGradient id="radeffSpaceDepth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
           </linearGradient>
-          <radialGradient id="earthGradRad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#2563eb" />
+
+          {/* Chip package gradient with metallic depth */}
+          <linearGradient id="radeffChipPackage" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="20%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#111827" />
+            <stop offset="80%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Silicon die gradient - commercial (gray) */}
+          <linearGradient id="radeffSiliconCommercial" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="25%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="75%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+
+          {/* Silicon die gradient - rad-tolerant (blue) */}
+          <linearGradient id="radeffSiliconTolerant" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0ea5e9" />
+            <stop offset="25%" stopColor="#0284c7" />
+            <stop offset="50%" stopColor="#0369a1" />
+            <stop offset="75%" stopColor="#0284c7" />
+            <stop offset="100%" stopColor="#0ea5e9" />
+          </linearGradient>
+
+          {/* Silicon die gradient - rad-hard (green) */}
+          <linearGradient id="radeffSiliconHardened" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="25%" stopColor="#059669" />
+            <stop offset="50%" stopColor="#047857" />
+            <stop offset="75%" stopColor="#059669" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+
+          {/* Gold pin gradient with metallic sheen */}
+          <linearGradient id="radeffGoldPin" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ca8a04" />
+            <stop offset="25%" stopColor="#eab308" />
+            <stop offset="50%" stopColor="#fde047" />
+            <stop offset="75%" stopColor="#eab308" />
+            <stop offset="100%" stopColor="#ca8a04" />
+          </linearGradient>
+
+          {/* Inner Van Allen belt - proton-rich (red tones) */}
+          <linearGradient id="radeffInnerBelt" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="30%" stopColor="#dc2626" stopOpacity="0.25" />
+            <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0.05" />
+          </linearGradient>
+
+          {/* Outer Van Allen belt - electron-rich (amber/orange tones) */}
+          <linearGradient id="radeffOuterBelt" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.35" />
+            <stop offset="30%" stopColor="#d97706" stopOpacity="0.2" />
+            <stop offset="60%" stopColor="#b45309" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#78350f" stopOpacity="0.03" />
+          </linearGradient>
+
+          {/* Status panel gradient */}
+          <linearGradient id="radeffStatusPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#020617" stopOpacity="0.98" />
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0.95" />
+          </linearGradient>
+
+          {/* === PREMIUM RADIAL GRADIENTS === */}
+
+          {/* Earth with realistic atmospheric glow */}
+          <radialGradient id="radeffEarthCore" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="30%" stopColor="#3b82f6" />
+            <stop offset="60%" stopColor="#2563eb" />
+            <stop offset="85%" stopColor="#1d4ed8" />
             <stop offset="100%" stopColor="#1e3a5f" />
           </radialGradient>
+
+          {/* Earth atmosphere glow */}
+          <radialGradient id="radeffAtmosphere" cx="50%" cy="50%" r="50%">
+            <stop offset="70%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="85%" stopColor="#60a5fa" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.1" />
+          </radialGradient>
+
+          {/* Proton particle glow (red/orange) */}
+          <radialGradient id="radeffProtonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef2f2" stopOpacity="1" />
+            <stop offset="25%" stopColor="#fca5a5" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+            <stop offset="75%" stopColor="#dc2626" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Electron particle glow (blue/cyan) */}
+          <radialGradient id="radeffElectronGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ecfeff" stopOpacity="1" />
+            <stop offset="25%" stopColor="#67e8f9" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+            <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Heavy ion particle glow (purple) */}
+          <radialGradient id="radeffHeavyIonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#faf5ff" stopOpacity="1" />
+            <stop offset="25%" stopColor="#d8b4fe" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
+            <stop offset="75%" stopColor="#9333ea" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Cosmic ray glow (intense white/yellow) */}
+          <radialGradient id="radeffCosmicGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="20%" stopColor="#fef9c3" stopOpacity="0.95" />
+            <stop offset="45%" stopColor="#fde047" stopOpacity="0.7" />
+            <stop offset="70%" stopColor="#facc15" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+          </radialGradient>
+
+          {/* SEU damage indicator glow */}
+          <radialGradient id="radeffSEUDamage" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="20%" stopColor="#fef08a" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#f97316" stopOpacity="0.5" />
+            <stop offset="80%" stopColor="#ef4444" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Satellite glow */}
+          <radialGradient id="radeffSatelliteGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.7" />
+            <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === PREMIUM GLOW FILTERS === */}
+
+          {/* Particle track glow filter */}
+          <filter id="radeffParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* SEU flash glow filter */}
+          <filter id="radeffSEUFlash" x="-150%" y="-150%" width="400%" height="400%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur1" />
+              <feMergeNode in="blur2" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Earth atmosphere glow */}
+          <filter id="radeffEarthGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Satellite beacon glow */}
+          <filter id="radeffBeaconGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur2" />
+            <feMerge>
+              <feMergeNode in="blur1" />
+              <feMergeNode in="blur2" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Status indicator glow */}
+          <filter id="radeffStatusGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Van Allen belt shimmer effect */}
+          <filter id="radeffBeltShimmer" x="-20%" y="-20%" width="140%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" />
+          </filter>
+
+          {/* Subtle grid pattern for lab/space station feel */}
+          <pattern id="radeffGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+
+          {/* Circuit pattern for chip */}
+          <pattern id="radeffCircuit" width="8" height="8" patternUnits="userSpaceOnUse">
+            <path d="M0,4 L3,4 L3,0 M8,4 L5,4 L5,8 M4,0 L4,3 L8,3 M4,8 L4,5 L0,5"
+                  fill="none" stroke="#475569" strokeWidth="0.5" strokeOpacity="0.4" />
+          </pattern>
         </defs>
 
-        <rect width="500" height="350" fill="url(#spaceGradRad)" />
+        {/* === PREMIUM SPACE BACKGROUND === */}
+        <rect width="500" height="350" fill="url(#radeffSpaceDepth)" />
+        <rect width="500" height="350" fill="url(#radeffGrid)" opacity="0.5" />
 
-        {/* Van Allen belt visualization (side view) */}
-        <g transform="translate(180, 0)">
-          {/* Outer belt */}
-          <ellipse cx="60" cy="155" rx="130" ry="80" fill="#f59e0b" opacity="0.15" />
-          <ellipse cx="60" cy="155" rx="110" ry="60" fill="#0a0a1a" />
-
-          {/* Inner belt */}
-          <ellipse cx="60" cy="155" rx="70" ry="40" fill="#ef4444" opacity="0.2" />
-          <ellipse cx="60" cy="155" rx="50" ry="25" fill="#0a0a1a" />
-
-          {/* Earth */}
-          <circle cx="60" cy="155" r="25" fill="url(#earthGradRad)" />
-
-          {/* Satellite position indicator */}
+        {/* Distant stars */}
+        {[...Array(30)].map((_, i) => (
           <circle
-            cx={60 + (altitude / 1000) * 2}
-            cy={155 - (altitude / 1000) * 0.5}
-            r="5"
-            fill="#22d3ee"
-            stroke="white"
-            strokeWidth="2"
+            key={`star-${i}`}
+            cx={15 + (i * 47) % 470}
+            cy={10 + (i * 31) % 330}
+            r={0.3 + (i % 3) * 0.3}
+            fill="#ffffff"
+            opacity={0.3 + (i % 4) * 0.15}
           >
-            <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
-          </circle>
-
-          <text x="60" y="200" textAnchor="middle" fill="#94a3b8" fontSize="8">Inner Belt</text>
-          <text x="60" y="250" textAnchor="middle" fill="#94a3b8" fontSize="8">Outer Belt</text>
-        </g>
-
-        {/* Particle animation */}
-        {particlePositions.slice(0, altitude > 1000 ? 20 : 5).map((pos, i) => (
-          <circle
-            key={i}
-            cx={pos.x}
-            cy={pos.y}
-            r={Math.random() * 2 + 1}
-            fill={i % 3 === 0 ? '#ef4444' : i % 3 === 1 ? '#fbbf24' : '#60a5fa'}
-            opacity={0.7}
-          >
-            <animate attributeName="opacity" values="0.7;0.2;0.7" dur={`${0.5 + Math.random()}s`} repeatCount="indefinite" />
+            <animate attributeName="opacity"
+                     values={`${0.2 + (i % 4) * 0.1};${0.5 + (i % 3) * 0.15};${0.2 + (i % 4) * 0.1}`}
+                     dur={`${2 + i % 3}s`}
+                     repeatCount="indefinite" />
           </circle>
         ))}
 
-        {/* Chip diagram */}
-        <g transform="translate(20, 50)">
-          <rect x="0" y="0" width="100" height="80" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="4" />
-          <rect x="10" y="10" width="80" height="60" fill="#374151" rx="2" />
+        {/* === VAN ALLEN BELT VISUALIZATION === */}
+        <g transform="translate(300, 165)">
+          {/* Outer belt with gradient and shimmer */}
+          <ellipse cx="0" cy="0" rx="135" ry="85" fill="url(#radeffOuterBelt)" />
+          <ellipse cx="0" cy="0" rx="135" ry="85" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeOpacity="0.3" strokeDasharray="4 2" />
+          <ellipse cx="0" cy="0" rx="115" ry="65" fill="#020617" />
 
-          {/* Die */}
-          <rect x="25" y="20" width="50" height="40" fill={chipType === 'rad-hard' ? '#047857' : chipType === 'rad-tolerant' ? '#0369a1' : '#6b7280'} rx="1" />
+          {/* Inner belt with gradient */}
+          <ellipse cx="0" cy="0" rx="75" ry="45" fill="url(#radeffInnerBelt)" />
+          <ellipse cx="0" cy="0" rx="75" ry="45" fill="none" stroke="#ef4444" strokeWidth="0.5" strokeOpacity="0.4" strokeDasharray="3 2" />
+          <ellipse cx="0" cy="0" rx="55" ry="30" fill="#020617" />
 
-          {/* Pins */}
+          {/* Earth with atmosphere effect */}
+          <circle cx="0" cy="0" r="30" fill="url(#radeffAtmosphere)" filter="url(#radeffEarthGlow)" />
+          <circle cx="0" cy="0" r="25" fill="url(#radeffEarthCore)" />
+
+          {/* Earth surface details */}
+          <ellipse cx="-8" cy="-5" rx="8" ry="5" fill="#22c55e" opacity="0.4" />
+          <ellipse cx="5" cy="8" rx="6" ry="4" fill="#22c55e" opacity="0.3" />
+          <ellipse cx="-3" cy="12" rx="4" ry="3" fill="#22c55e" opacity="0.25" />
+
+          {/* Satellite position with glow */}
+          <g transform={`translate(${Math.min((altitude / 1000) * 3, 120)}, ${-Math.min((altitude / 1000) * 0.8, 30)})`}>
+            <circle r="12" fill="url(#radeffSatelliteGlow)" filter="url(#radeffBeaconGlow)" />
+            <rect x="-4" y="-2" width="8" height="4" fill="#94a3b8" rx="1" />
+            <rect x="-8" y="-1" width="4" height="2" fill="#06b6d4" />
+            <rect x="4" y="-1" width="4" height="2" fill="#06b6d4" />
+            <circle r="1.5" fill="#22d3ee">
+              <animate attributeName="opacity" values="1;0.4;1" dur="0.8s" repeatCount="indefinite" />
+            </circle>
+          </g>
+
+          {/* Belt region labels */}
+          <text x="0" y="55" textAnchor="middle" fill="#ef4444" fontSize="7" fontWeight="600" opacity="0.8">INNER BELT</text>
+          <text x="0" y="95" textAnchor="middle" fill="#f59e0b" fontSize="7" fontWeight="600" opacity="0.8">OUTER BELT</text>
+          <text x="0" y="-95" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="700">VAN ALLEN RADIATION BELTS</text>
+        </g>
+
+        {/* === RADIATION PARTICLE TRACKS === */}
+        {particleTracks.filter(t => t.visible).map((track, i) => {
+          const gradientId = track.type === 'proton' ? 'radeffProtonGlow' :
+                             track.type === 'electron' ? 'radeffElectronGlow' :
+                             track.type === 'heavy' ? 'radeffHeavyIonGlow' : 'radeffCosmicGlow';
+          const strokeColor = track.type === 'proton' ? '#ef4444' :
+                              track.type === 'electron' ? '#22d3ee' :
+                              track.type === 'heavy' ? '#a855f7' : '#fde047';
+          return (
+            <g key={`track-${i}`} filter="url(#radeffParticleGlow)">
+              {/* Main track line */}
+              <line
+                x1={track.x1} y1={track.y1}
+                x2={track.x2} y2={track.y2}
+                stroke={strokeColor}
+                strokeWidth={track.type === 'cosmic' ? 2 : track.type === 'heavy' ? 1.5 : 1}
+                strokeOpacity={0.7}
+                strokeLinecap="round"
+              />
+              {/* Particle head */}
+              <circle
+                cx={track.x2} cy={track.y2}
+                r={track.type === 'cosmic' ? 4 : track.type === 'heavy' ? 3 : 2}
+                fill={`url(#${gradientId})`}
+              />
+            </g>
+          );
+        })}
+
+        {/* === PREMIUM CHIP VISUALIZATION === */}
+        <g transform="translate(20, 45)">
+          {/* Chip package with premium gradient */}
+          <rect x="0" y="0" width="120" height="95" rx="6" fill="url(#radeffChipPackage)" stroke="#475569" strokeWidth="1.5" />
+
+          {/* Inner cavity */}
+          <rect x="8" y="8" width="104" height="79" rx="4" fill="#0f172a" stroke="#1e293b" strokeWidth="1" />
+
+          {/* Die attach pad */}
+          <rect x="18" y="18" width="84" height="59" rx="2" fill="#1e293b" />
+
+          {/* Silicon die with appropriate gradient */}
+          <rect
+            x="28" y="25"
+            width="64" height="45"
+            rx="2"
+            fill={chipType === 'rad-hard' ? 'url(#radeffSiliconHardened)' :
+                  chipType === 'rad-tolerant' ? 'url(#radeffSiliconTolerant)' : 'url(#radeffSiliconCommercial)'}
+            stroke={chipType === 'rad-hard' ? '#10b981' : chipType === 'rad-tolerant' ? '#0ea5e9' : '#6b7280'}
+            strokeWidth="0.5"
+          />
+
+          {/* Circuit pattern overlay on die */}
+          <rect x="28" y="25" width="64" height="45" rx="2" fill="url(#radeffCircuit)" opacity="0.6" />
+
+          {/* Die bond wires */}
           {[0, 1, 2, 3, 4].map(i => (
-            <React.Fragment key={i}>
-              <rect x={15 + i * 15} y="65" width="5" height="20" fill="#d4af37" />
-              <rect x={15 + i * 15} y="-5" width="5" height="20" fill="#d4af37" />
+            <React.Fragment key={`wire-${i}`}>
+              <path d={`M${32 + i * 12},25 Q${32 + i * 12},15 ${22 + i * 18},10`}
+                    fill="none" stroke="#fcd34d" strokeWidth="0.7" opacity="0.7" />
+              <path d={`M${32 + i * 12},70 Q${32 + i * 12},80 ${22 + i * 18},87`}
+                    fill="none" stroke="#fcd34d" strokeWidth="0.7" opacity="0.7" />
             </React.Fragment>
           ))}
 
-          {/* SEU flash effect */}
-          {seuCount > 0 && (animPhase % 60 < 10) && (
-            <circle cx="50" cy="40" r="15" fill="#ef4444" opacity="0.5">
-              <animate attributeName="r" values="5;20;5" dur="0.3s" repeatCount="1" />
-            </circle>
+          {/* Premium gold pins */}
+          {[0, 1, 2, 3, 4, 5].map(i => (
+            <React.Fragment key={`pin-${i}`}>
+              <rect x={12 + i * 17} y="87" width="6" height="18" rx="1" fill="url(#radeffGoldPin)" />
+              <rect x={12 + i * 17} y="-10" width="6" height="18" rx="1" fill="url(#radeffGoldPin)" />
+            </React.Fragment>
+          ))}
+
+          {/* SEU damage indicators on silicon die */}
+          {seuEvents.map((seu, i) => (
+            <g key={`seu-${i}`} transform={`translate(${seu.x}, ${seu.y})`}>
+              <circle r="6" fill="url(#radeffSEUDamage)" filter="url(#radeffSEUFlash)" opacity={seu.intensity}>
+                <animate attributeName="r" values="4;8;4" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+              <circle r="2" fill="#ffffff" opacity={seu.intensity * 0.8}>
+                <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.3s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          ))}
+
+          {/* Active SEU flash effect */}
+          {seuCount > 0 && (animPhase % 60 < 15) && (
+            <g transform="translate(60, 47)">
+              <circle r="20" fill="url(#radeffSEUDamage)" filter="url(#radeffSEUFlash)" opacity="0.8">
+                <animate attributeName="r" values="8;25;8" dur="0.4s" repeatCount="1" />
+                <animate attributeName="opacity" values="0.9;0.2;0" dur="0.4s" repeatCount="1" />
+              </circle>
+            </g>
           )}
 
-          <text x="50" y="100" textAnchor="middle" fill="#94a3b8" fontSize="9">
-            {chipType === 'rad-hard' ? 'Rad-Hard' : chipType === 'rad-tolerant' ? 'Rad-Tolerant' : 'Commercial'}
+          {/* Chip type label */}
+          <text x="60" y="115" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">
+            {chipType === 'rad-hard' ? 'RAD-HARDENED' : chipType === 'rad-tolerant' ? 'RAD-TOLERANT' : 'COMMERCIAL COTS'}
           </text>
+
+          {/* Chip protection level indicator */}
+          <rect x="25" y="120" width="70" height="4" rx="2" fill="#1e293b" />
+          <rect x="25" y="120"
+                width={chipType === 'rad-hard' ? 70 : chipType === 'rad-tolerant' ? 45 : 15}
+                height="4" rx="2"
+                fill={chipType === 'rad-hard' ? '#10b981' : chipType === 'rad-tolerant' ? '#0ea5e9' : '#ef4444'} />
         </g>
 
-        {/* Status panel */}
-        <g transform="translate(10, 190)">
-          <rect x="0" y="0" width="140" height="150" fill="rgba(0,0,0,0.7)" rx="8" stroke="#334155" />
-          <text x="70" y="18" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">RADIATION STATUS</text>
+        {/* === PREMIUM STATUS PANEL === */}
+        <g transform="translate(10, 180)">
+          <rect x="0" y="0" width="145" height="160" rx="8" fill="url(#radeffStatusPanel)" stroke="#334155" strokeWidth="1" />
 
-          <text x="10" y="38" fill="#94a3b8" fontSize="9">Altitude:</text>
-          <text x="130" y="38" textAnchor="end" fill="#22d3ee" fontSize="9">{altitude} km</text>
+          {/* Panel header */}
+          <rect x="0" y="0" width="145" height="24" rx="8" fill="#ef4444" opacity="0.15" />
+          <text x="72" y="16" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="700" filter="url(#radeffStatusGlow)">RADIATION STATUS</text>
 
-          <text x="10" y="53" fill="#94a3b8" fontSize="9">Region:</text>
-          <text x="130" y="53" textAnchor="end" fill={rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e'} fontSize="8">{rad.beltRegion}</text>
+          {/* Status rows with improved styling */}
+          <text x="10" y="40" fill="#64748b" fontSize="8">Altitude:</text>
+          <text x="135" y="40" textAnchor="end" fill="#22d3ee" fontSize="9" fontWeight="600">{altitude.toLocaleString()} km</text>
 
-          <text x="10" y="70" fill="#94a3b8" fontSize="9">Flux Factor:</text>
-          <text x="130" y="70" textAnchor="end" fill="#f59e0b" fontSize="9">{rad.fluxFactor}x</text>
+          <text x="10" y="55" fill="#64748b" fontSize="8">Region:</text>
+          <text x="135" y="55" textAnchor="end" fill={rad.beltRegion.includes('BELT') ? '#ef4444' : '#22c55e'} fontSize="8" fontWeight="600">{rad.beltRegion}</text>
 
-          <line x1="10" y1="78" x2="130" y2="78" stroke="#475569" />
+          <text x="10" y="70" fill="#64748b" fontSize="8">Flux Factor:</text>
+          <text x="135" y="70" textAnchor="end" fill="#f59e0b" fontSize="9" fontWeight="600">{rad.fluxFactor}x</text>
 
-          <text x="10" y="93" fill="#94a3b8" fontSize="9">SEU Rate:</text>
-          <text x="130" y="93" textAnchor="end" fill="#a855f7" fontSize="9">{rad.seuRate}/day</text>
+          <line x1="10" y1="78" x2="135" y2="78" stroke="#334155" strokeWidth="0.5" />
 
-          <text x="10" y="108" fill="#94a3b8" fontSize="9">TID Rate:</text>
-          <text x="130" y="108" textAnchor="end" fill="#f97316" fontSize="9">{rad.tidRate} rad/day</text>
+          <text x="10" y="93" fill="#64748b" fontSize="8">SEU Rate:</text>
+          <text x="135" y="93" textAnchor="end" fill="#a855f7" fontSize="9" fontWeight="600">{rad.seuRate}/day</text>
 
-          <text x="10" y="123" fill="#94a3b8" fontSize="9">Latchup Risk:</text>
-          <text x="130" y="123" textAnchor="end" fill={rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e'} fontSize="9">{rad.latchupRisk}</text>
+          <text x="10" y="108" fill="#64748b" fontSize="8">TID Rate:</text>
+          <text x="135" y="108" textAnchor="end" fill="#f97316" fontSize="9" fontWeight="600">{rad.tidRate} rad/day</text>
 
-          <rect x="10" y="130" width="120" height="14" fill={rad.riskLevel === 'CRITICAL' ? '#ef4444' : rad.riskLevel === 'HIGH' ? '#f97316' : '#22c55e'} rx="3" opacity="0.3" />
-          <text x="70" y="141" textAnchor="middle" fill={rad.riskLevel === 'CRITICAL' ? '#ef4444' : rad.riskLevel === 'HIGH' ? '#f97316' : '#22c55e'} fontSize="10" fontWeight="bold">{rad.riskLevel}</text>
+          <text x="10" y="123" fill="#64748b" fontSize="8">Latchup Risk:</text>
+          <text x="135" y="123" textAnchor="end"
+                fill={rad.latchupRisk === 'HIGH' ? '#ef4444' : rad.latchupRisk === 'MODERATE' ? '#f59e0b' : '#22c55e'}
+                fontSize="9" fontWeight="700">{rad.latchupRisk}</text>
+
+          {/* Risk level indicator bar */}
+          <rect x="10" y="133" width="125" height="18" rx="4" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+          <rect x="12" y="135" width="121" height="14" rx="3"
+                fill={rad.riskLevel === 'CRITICAL' ? '#ef4444' : rad.riskLevel === 'HIGH' ? '#f97316' : rad.riskLevel === 'MODERATE' ? '#eab308' : '#22c55e'}
+                opacity="0.25" />
+          <text x="72" y="146" textAnchor="middle"
+                fill={rad.riskLevel === 'CRITICAL' ? '#ef4444' : rad.riskLevel === 'HIGH' ? '#f97316' : rad.riskLevel === 'MODERATE' ? '#eab308' : '#22c55e'}
+                fontSize="10" fontWeight="700" filter="url(#radeffStatusGlow)">{rad.riskLevel}</text>
         </g>
 
-        {/* SEU counter */}
-        <g transform="translate(380, 280)">
-          <rect x="0" y="0" width="100" height="50" fill="rgba(0,0,0,0.6)" rx="6" stroke="#a855f7" />
-          <text x="50" y="18" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="bold">SEU COUNT</text>
-          <text x="50" y="40" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">{seuCount}</text>
+        {/* === SEU COUNTER PANEL === */}
+        <g transform="translate(380, 275)">
+          <rect x="0" y="0" width="105" height="60" rx="8" fill="url(#radeffStatusPanel)" stroke="#a855f7" strokeWidth="1" />
+          <rect x="0" y="0" width="105" height="20" rx="8" fill="#a855f7" opacity="0.15" />
+          <text x="52" y="14" textAnchor="middle" fill="#a855f7" fontSize="9" fontWeight="700">SEU EVENTS</text>
+          <text x="52" y="45" textAnchor="middle" fill="#ffffff" fontSize="20" fontWeight="700" filter="url(#radeffStatusGlow)">{seuCount}</text>
+          <circle cx="90" cy="45" r="4" fill={seuCount > 10 ? '#ef4444' : seuCount > 5 ? '#f59e0b' : '#22c55e'}>
+            <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
+          </circle>
         </g>
 
-        {/* Solar activity indicator */}
-        <text x="380" y="20" fill={solarActivity === 'storm' ? '#ef4444' : solarActivity === 'moderate' ? '#f59e0b' : '#22c55e'} fontSize="10">
-          Solar: {solarActivity.toUpperCase()}
-        </text>
+        {/* === SOLAR ACTIVITY INDICATOR === */}
+        <g transform="translate(380, 10)">
+          <rect x="0" y="0" width="105" height="30" rx="6" fill="url(#radeffStatusPanel)" stroke="#334155" strokeWidth="0.5" />
+          <circle cx="15" cy="15" r="8"
+                  fill={solarActivity === 'storm' ? '#ef4444' : solarActivity === 'moderate' ? '#f59e0b' : '#22c55e'}>
+            <animate attributeName="r" values="6;8;6" dur={solarActivity === 'storm' ? '0.3s' : '1s'} repeatCount="indefinite" />
+          </circle>
+          <text x="60" y="18" textAnchor="middle"
+                fill={solarActivity === 'storm' ? '#ef4444' : solarActivity === 'moderate' ? '#f59e0b' : '#22c55e'}
+                fontSize="9" fontWeight="700">{solarActivity.toUpperCase()}</text>
+        </g>
+
+        {/* Particle type legend */}
+        <g transform="translate(380, 50)">
+          <rect x="0" y="0" width="105" height="60" rx="6" fill="url(#radeffStatusPanel)" stroke="#334155" strokeWidth="0.5" opacity="0.8" />
+          <text x="52" y="12" textAnchor="middle" fill="#94a3b8" fontSize="7" fontWeight="600">PARTICLE TYPES</text>
+          <circle cx="12" cy="24" r="3" fill="url(#radeffProtonGlow)" />
+          <text x="22" y="27" fill="#94a3b8" fontSize="7">Proton</text>
+          <circle cx="62" cy="24" r="3" fill="url(#radeffElectronGlow)" />
+          <text x="72" y="27" fill="#94a3b8" fontSize="7">Electron</text>
+          <circle cx="12" cy="42" r="3" fill="url(#radeffHeavyIonGlow)" />
+          <text x="22" y="45" fill="#94a3b8" fontSize="7">Heavy Ion</text>
+          <circle cx="62" cy="42" r="3" fill="url(#radeffCosmicGlow)" />
+          <text x="72" y="45" fill="#94a3b8" fontSize="7">Cosmic</text>
+        </g>
       </svg>
     );
   };

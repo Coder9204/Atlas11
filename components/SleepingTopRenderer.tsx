@@ -372,6 +372,11 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
 
     const state = getTopState();
 
+    // Calculate angular momentum vector direction (along spin axis)
+    const lVectorLength = Math.min(80, 20 + top.psiDot * 1.2);
+    const lVectorEndX = topX + Math.sin(top.theta) * Math.cos(top.phi) * lVectorLength * -0.3;
+    const lVectorEndY = topY - Math.cos(top.theta) * lVectorLength * 0.8;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
@@ -379,148 +384,436 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #030712 0%, #0f172a 50%, #030712 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Surface */}
-          <ellipse cx={centerX} cy={tipY + 10} rx={120} ry={20} fill="#1e293b" />
+          {/* === PREMIUM DEFS SECTION === */}
+          <defs>
+            {/* Premium metallic body gradient - polished brass/gold */}
+            <linearGradient id="slptBodyMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="20%" stopColor="#f59e0b" />
+              <stop offset="40%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="80%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
 
-          {/* Precession circle indicator */}
-          <ellipse
-            cx={centerX}
-            cy={centerY - 20}
-            rx={Math.sin(top.theta) * topHeight}
-            ry={Math.sin(top.theta) * topHeight * 0.3}
-            fill="none"
-            stroke={colors.precession}
-            strokeWidth={1}
-            strokeDasharray="5,5"
-            opacity={0.5}
-          />
+            {/* Top disk metallic gradient with 3D effect */}
+            <radialGradient id="slptDiskMetallic" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="25%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#92400e" />
+            </radialGradient>
 
-          {/* Top body - cone shape */}
-          <polygon
-            points={`
-              ${tipX},${tipY}
-              ${topX - topRadius * Math.cos(spinPhase)},${topY}
-              ${topX + topRadius * Math.cos(spinPhase)},${topY}
-            `}
-            fill={colors.top}
-            stroke="#d97706"
-            strokeWidth={2}
-          />
+            {/* Secondary metallic gradient for cone shading */}
+            <linearGradient id="slptConeShading" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#78350f" />
+              <stop offset="25%" stopColor="#b45309" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
 
-          {/* Top disk at top */}
-          <ellipse
-            cx={topX}
-            cy={topY}
-            rx={topRadius}
-            ry={topRadius * 0.3}
-            fill={colors.top}
-            stroke="#d97706"
-            strokeWidth={2}
-          />
+            {/* Tip metallic gradient - chrome steel */}
+            <radialGradient id="slptTipChrome" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#f1f5f9" />
+              <stop offset="30%" stopColor="#94a3b8" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
 
-          {/* Spin indicator (stripes on disk) */}
+            {/* Angular momentum vector gradient - vibrant blue */}
+            <linearGradient id="slptAngularMomentum" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" />
+              <stop offset="30%" stopColor="#38bdf8" />
+              <stop offset="60%" stopColor="#7dd3fc" />
+              <stop offset="100%" stopColor="#bae6fd" />
+            </linearGradient>
+
+            {/* Precession arc gradient - emerald green */}
+            <linearGradient id="slptPrecessionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#34d399" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#6ee7b7" stopOpacity="1" />
+              <stop offset="70%" stopColor="#34d399" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Surface/ground gradient */}
+            <radialGradient id="slptSurfaceGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </radialGradient>
+
+            {/* Spin indicator stripe gradient */}
+            <linearGradient id="slptSpinStripe" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* State badge gradients */}
+            <linearGradient id="slptSleepingBadge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.3" />
+            </linearGradient>
+
+            <linearGradient id="slptFallenBadge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.3" />
+            </linearGradient>
+
+            <linearGradient id="slptPrecessingBadge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#9333ea" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Glow filter for angular momentum vector */}
+            <filter id="slptVectorGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for precession arc */}
+            <filter id="slptPrecessionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Tip highlight glow */}
+            <filter id="slptTipGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for disk depth */}
+            <filter id="slptDiskShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Arrow markers with gradients */}
+            <marker id="slptArrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L12,4 z" fill="url(#slptAngularMomentum)" />
+            </marker>
+            <marker id="slptArrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L12,4 z" fill="#34d399" />
+            </marker>
+
+            {/* Subtle grid pattern for lab floor */}
+            <pattern id="slptLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Background grid pattern */}
+          <rect width={width} height={height} fill="url(#slptLabGrid)" opacity="0.5" />
+
+          {/* Premium surface with shadow */}
+          <ellipse cx={centerX} cy={tipY + 15} rx={140} ry={25} fill="url(#slptSurfaceGrad)" opacity="0.8" />
+          <ellipse cx={centerX} cy={tipY + 12} rx={130} ry={22} fill="none" stroke="#475569" strokeWidth="1" opacity="0.5" />
+
+          {/* Precession circle indicator - enhanced with glow */}
+          {top.theta > 0.05 && (
+            <g filter="url(#slptPrecessionGlow)">
+              <ellipse
+                cx={centerX}
+                cy={centerY - 20}
+                rx={Math.sin(top.theta) * topHeight * 1.2}
+                ry={Math.sin(top.theta) * topHeight * 0.4}
+                fill="none"
+                stroke="url(#slptPrecessionGrad)"
+                strokeWidth={2}
+                strokeDasharray="8,4"
+                opacity={0.7}
+              />
+            </g>
+          )}
+
+          {/* Top body - premium cone with metallic gradient and shading */}
+          <g>
+            {/* Cone shadow */}
+            <polygon
+              points={`
+                ${tipX + 3},${tipY + 3}
+                ${topX - topRadius * Math.cos(spinPhase) + 3},${topY + 3}
+                ${topX + topRadius * Math.cos(spinPhase) + 3},${topY + 3}
+              `}
+              fill="#000"
+              opacity="0.3"
+            />
+
+            {/* Main cone body with metallic gradient */}
+            <polygon
+              points={`
+                ${tipX},${tipY}
+                ${topX - topRadius * Math.cos(spinPhase)},${topY}
+                ${topX + topRadius * Math.cos(spinPhase)},${topY}
+              `}
+              fill="url(#slptBodyMetallic)"
+              stroke="#92400e"
+              strokeWidth={1.5}
+            />
+
+            {/* Cone highlight line for 3D effect */}
+            <line
+              x1={tipX}
+              y1={tipY}
+              x2={topX}
+              y2={topY}
+              stroke="#fef3c7"
+              strokeWidth={1}
+              opacity={0.4}
+            />
+          </g>
+
+          {/* Chrome tip with glow */}
+          <g filter="url(#slptTipGlow)">
+            <circle cx={tipX} cy={tipY} r={4} fill="url(#slptTipChrome)" />
+            <circle cx={tipX - 1} cy={tipY - 1} r={1.5} fill="#fff" opacity="0.6" />
+          </g>
+
+          {/* Top disk with 3D metallic effect */}
+          <g filter="url(#slptDiskShadow)">
+            {/* Disk shadow */}
+            <ellipse
+              cx={topX + 2}
+              cy={topY + 2}
+              rx={topRadius}
+              ry={topRadius * 0.35}
+              fill="#000"
+              opacity="0.3"
+            />
+
+            {/* Main disk with radial metallic gradient */}
+            <ellipse
+              cx={topX}
+              cy={topY}
+              rx={topRadius}
+              ry={topRadius * 0.35}
+              fill="url(#slptDiskMetallic)"
+              stroke="#92400e"
+              strokeWidth={1.5}
+            />
+
+            {/* Disk edge highlight */}
+            <ellipse
+              cx={topX}
+              cy={topY - 2}
+              rx={topRadius - 3}
+              ry={topRadius * 0.25}
+              fill="none"
+              stroke="#fef3c7"
+              strokeWidth={0.8}
+              opacity={0.5}
+            />
+          </g>
+
+          {/* Premium spin indicator stripes */}
           {[0, 1, 2, 3].map((i) => {
             const angle = spinPhase + (i * Math.PI) / 2;
+            const stripeLength = topRadius * 0.85;
             return (
-              <line
-                key={i}
-                x1={topX}
-                y1={topY}
-                x2={topX + topRadius * Math.cos(angle)}
-                y2={topY + topRadius * 0.3 * Math.sin(angle)}
-                stroke={colors.spin}
-                strokeWidth={3}
-              />
+              <g key={i}>
+                {/* Stripe shadow */}
+                <line
+                  x1={topX + 1}
+                  y1={topY + 1}
+                  x2={topX + stripeLength * Math.cos(angle) + 1}
+                  y2={topY + stripeLength * 0.35 * Math.sin(angle) + 1}
+                  stroke="#000"
+                  strokeWidth={4}
+                  opacity={0.2}
+                  strokeLinecap="round"
+                />
+                {/* Main stripe */}
+                <line
+                  x1={topX}
+                  y1={topY}
+                  x2={topX + stripeLength * Math.cos(angle)}
+                  y2={topY + stripeLength * 0.35 * Math.sin(angle)}
+                  stroke="url(#slptSpinStripe)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+                {/* Stripe highlight */}
+                <line
+                  x1={topX}
+                  y1={topY}
+                  x2={topX + stripeLength * 0.7 * Math.cos(angle)}
+                  y2={topY + stripeLength * 0.7 * 0.35 * Math.sin(angle)}
+                  stroke="#93c5fd"
+                  strokeWidth={1}
+                  opacity={0.5}
+                  strokeLinecap="round"
+                />
+              </g>
             );
           })}
 
-          {/* Angular momentum vector */}
+          {/* Premium Angular momentum vector with glow */}
           {top.psiDot > 5 && (
-            <g>
+            <g filter="url(#slptVectorGlow)">
+              {/* Vector shaft */}
               <line
                 x1={topX}
                 y1={topY}
-                x2={topX - tiltX * 0.8}
-                y2={topY - 60}
-                stroke={colors.spin}
-                strokeWidth={3}
-                markerEnd="url(#arrowBlue)"
+                x2={lVectorEndX}
+                y2={lVectorEndY}
+                stroke="url(#slptAngularMomentum)"
+                strokeWidth={4}
+                strokeLinecap="round"
+                markerEnd="url(#slptArrowBlue)"
+              />
+              {/* Vector label with background */}
+              <rect
+                x={lVectorEndX - 55}
+                y={lVectorEndY - 22}
+                width={110}
+                height={18}
+                rx={4}
+                fill="#0c4a6e"
+                opacity={0.8}
               />
               <text
-                x={topX - tiltX * 0.8}
-                y={topY - 70}
+                x={lVectorEndX}
+                y={lVectorEndY - 9}
                 textAnchor="middle"
-                fill={colors.spin}
-                fontSize={10}
+                fill="#7dd3fc"
+                fontSize={11}
+                fontWeight="bold"
               >
-                L (angular momentum)
+                L (Angular Momentum)
               </text>
             </g>
           )}
 
-          {/* Precession arrow */}
+          {/* Premium precession arc with glow */}
           {top.phiDot > 0.1 && (
-            <g>
+            <g filter="url(#slptPrecessionGlow)">
               <path
-                d={`M ${centerX + 60} ${centerY - 20} A 60 20 0 0 1 ${centerX - 60} ${centerY - 20}`}
+                d={`M ${centerX + 70} ${centerY - 20} A 70 24 0 0 1 ${centerX - 70} ${centerY - 20}`}
                 fill="none"
-                stroke={colors.precession}
-                strokeWidth={2}
-                markerEnd="url(#arrowGreen)"
+                stroke="url(#slptPrecessionGrad)"
+                strokeWidth={3}
+                markerEnd="url(#slptArrowGreen)"
+              />
+              {/* Precession label with background */}
+              <rect
+                x={centerX - 42}
+                y={centerY - 62}
+                width={84}
+                height={18}
+                rx={4}
+                fill="#064e3b"
+                opacity={0.8}
               />
               <text
                 x={centerX}
-                y={centerY - 50}
+                y={centerY - 49}
                 textAnchor="middle"
-                fill={colors.precession}
-                fontSize={10}
+                fill="#6ee7b7"
+                fontSize={11}
+                fontWeight="bold"
               >
                 Precession
               </text>
             </g>
           )}
 
-          {/* Arrow markers */}
-          <defs>
-            <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.spin} />
-            </marker>
-            <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.precession} />
-            </marker>
-          </defs>
-
-          {/* State indicator */}
+          {/* Premium state indicator badge */}
           <g transform={`translate(20, 20)`}>
             <rect
               x={0}
               y={0}
-              width={100}
-              height={30}
-              rx={4}
-              fill={state === 'Sleeping' ? 'rgba(16, 185, 129, 0.3)' :
-                    state === 'Fallen' ? 'rgba(239, 68, 68, 0.3)' :
-                    'rgba(139, 92, 246, 0.3)'}
+              width={105}
+              height={32}
+              rx={6}
+              fill={state === 'Sleeping' ? 'url(#slptSleepingBadge)' :
+                    state === 'Fallen' ? 'url(#slptFallenBadge)' :
+                    'url(#slptPrecessingBadge)'}
+              stroke={state === 'Sleeping' ? '#10b981' :
+                      state === 'Fallen' ? '#ef4444' : '#a855f7'}
+              strokeWidth={1}
+              strokeOpacity={0.5}
             />
-            <text x={50} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
+            {/* Status indicator dot */}
+            <circle
+              cx={16}
+              cy={16}
+              r={5}
+              fill={state === 'Sleeping' ? '#10b981' :
+                    state === 'Fallen' ? '#ef4444' : '#a855f7'}
+            >
+              {state !== 'Fallen' && (
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+              )}
+            </circle>
+            <text x={58} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
               {state}
             </text>
           </g>
 
-          {/* Stats */}
-          <g transform={`translate(${width - 110}, 20)`}>
-            <text y={15} fill={colors.textMuted} fontSize={11}>
-              Spin: {top.psiDot.toFixed(0)} rad/s
+          {/* Premium stats panel */}
+          <g transform={`translate(${width - 120}, 15)`}>
+            <rect
+              x={0}
+              y={0}
+              width={110}
+              height={60}
+              rx={6}
+              fill="#0f172a"
+              fillOpacity={0.9}
+              stroke="#334155"
+              strokeWidth={1}
+            />
+            <text x={8} y={18} fill="#94a3b8" fontSize={10} fontWeight="600">
+              Spin
             </text>
-            <text y={30} fill={colors.textMuted} fontSize={11}>
-              Tilt: {(top.theta * 180 / Math.PI).toFixed(1)}°
+            <text x={102} y={18} textAnchor="end" fill="#38bdf8" fontSize={11} fontWeight="bold">
+              {top.psiDot.toFixed(0)} rad/s
             </text>
-            <text y={45} fill={colors.textMuted} fontSize={11}>
-              Prec: {top.phiDot.toFixed(1)} rad/s
+            <text x={8} y={35} fill="#94a3b8" fontSize={10} fontWeight="600">
+              Tilt
+            </text>
+            <text x={102} y={35} textAnchor="end" fill="#fbbf24" fontSize={11} fontWeight="bold">
+              {(top.theta * 180 / Math.PI).toFixed(1)}deg
+            </text>
+            <text x={8} y={52} fill="#94a3b8" fontSize={10} fontWeight="600">
+              Precession
+            </text>
+            <text x={102} y={52} textAnchor="end" fill="#34d399" fontSize={11} fontWeight="bold">
+              {top.phiDot.toFixed(1)} rad/s
             </text>
           </g>
+
+          {/* Rotation direction indicator on disk */}
+          {top.psiDot > 10 && (
+            <g opacity={0.6}>
+              <path
+                d={`M ${topX - topRadius * 0.6} ${topY}
+                    A ${topRadius * 0.6} ${topRadius * 0.6 * 0.35} 0 0 1
+                    ${topX + topRadius * 0.6} ${topY}`}
+                fill="none"
+                stroke="#fef3c7"
+                strokeWidth={1.5}
+                strokeDasharray="3,2"
+                markerEnd="url(#slptArrowBlue)"
+              />
+            </g>
+          )}
         </svg>
 
         {interactive && (
@@ -531,14 +824,19 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isPlaying ? colors.error : colors.success,
+                background: isPlaying
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isPlaying
+                  ? '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 15px rgba(16, 185, 129, 0.4)',
               }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Spin Top'}
+              {isPlaying ? 'Pause' : 'Spin Top'}
             </button>
             <button
               onClick={resetSimulation}
@@ -546,14 +844,14 @@ const SleepingTopRenderer: React.FC<SleepingTopRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(168, 85, 247, 0.2) 100%)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
               }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}

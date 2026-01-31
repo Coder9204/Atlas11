@@ -324,8 +324,8 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 500;
+    const width = 700;
+    const height = 550;
     const metrics = calculateMetrics();
     const commands = promptMode === 'naive' ? naiveCommands : toolAwareCommands;
 
@@ -336,99 +336,499 @@ const ToolAwarePromptingRenderer: React.FC<ToolAwarePromptingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            Command Confidence Meter
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium lab background gradient with depth */}
+            <linearGradient id="tapLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* AI Brain gradient - purple to cyan spectrum */}
+            <linearGradient id="tapAiBrainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#6366f1" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+
+            {/* Tool icon metallic gradient */}
+            <linearGradient id="tapToolMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Success gradient - verified commands */}
+            <linearGradient id="tapSuccessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="25%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="75%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
+
+            {/* Error gradient - hallucinated commands */}
+            <linearGradient id="tapErrorGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Warning gradient - partial matches */}
+            <linearGradient id="tapWarningGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="25%" stopColor="#facc15" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Confidence gauge gradient */}
+            <linearGradient id="tapGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+
+            {/* CLAUDE.md document gradient */}
+            <linearGradient id="tapDocGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="20%" stopColor="#fde68a" />
+              <stop offset="50%" stopColor="#fcd34d" />
+              <stop offset="80%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Terminal screen gradient */}
+            <linearGradient id="tapTerminalBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* AI processing core radial gradient */}
+            <radialGradient id="tapAiCoreGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#6366f1" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Tool selection glow */}
+            <radialGradient id="tapToolSelectGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#0891b2" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Data flow particle glow */}
+            <radialGradient id="tapDataGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Hallucination warning glow */}
+            <radialGradient id="tapHallucinationGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f87171" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Verified output glow */}
+            <radialGradient id="tapVerifiedGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#6ee7b7" stopOpacity="1" />
+              <stop offset="40%" stopColor="#34d399" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            </radialGradient>
+
+            {/* AI processing glow filter */}
+            <filter id="tapAiGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Tool icon glow filter */}
+            <filter id="tapToolGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Data particle glow filter */}
+            <filter id="tapDataParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Status indicator glow */}
+            <filter id="tapStatusGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Terminal text glow */}
+            <filter id="tapTerminalGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="tapLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#tapLabBg)" />
+          <rect width={width} height={height} fill="url(#tapLabGrid)" />
+
+          {/* === TITLE SECTION === */}
+          <text x={width/2} y={28} fill="#f8fafc" fontSize={16} textAnchor="middle" fontWeight="bold">
+            Tool-Aware Prompting Analyzer
           </text>
-          <text x={width/2} y={45} fill={promptMode === 'naive' ? colors.hallucination : colors.documented} fontSize={12} textAnchor="middle">
-            {promptMode === 'naive' ? 'Naive Prompting (No Tool Docs)' : 'Tool-Aware Prompting'}
+          <text x={width/2} y={48} fill={promptMode === 'naive' ? '#f87171' : '#34d399'} fontSize={12} textAnchor="middle" fontWeight="600">
+            {promptMode === 'naive' ? 'Naive Mode: No Tool Documentation' : 'Tool-Aware Mode: Verified Commands'}
           </text>
 
-          {/* Confidence gauge */}
-          <g transform="translate(200, 120)">
-            {/* Background arc */}
-            <path
-              d="M -80 0 A 80 80 0 0 1 80 0"
-              fill="none"
-              stroke="#374151"
-              strokeWidth={20}
-            />
-            {/* Confidence arc */}
-            <path
-              d={`M -80 0 A 80 80 0 0 1 ${-80 + 160 * (metrics.confidenceLevel / 100)} ${-Math.sin(Math.acos(-1 + 2 * metrics.confidenceLevel / 100)) * 80}`}
-              fill="none"
-              stroke={metrics.confidenceLevel > 70 ? colors.success : metrics.confidenceLevel > 40 ? colors.warning : colors.error}
-              strokeWidth={20}
-              strokeLinecap="round"
-            />
-            <text x={0} y={-10} fill={colors.textPrimary} fontSize={24} textAnchor="middle" fontWeight="bold">
-              {metrics.confidenceLevel}%
+          {/* === AI PROCESSING VISUALIZATION === */}
+          <g transform="translate(350, 140)">
+            {/* AI Brain core with animated glow */}
+            <circle cx={0} cy={0} r={55} fill="url(#tapAiCoreGlow)" filter="url(#tapAiGlow)">
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={0} cy={0} r={40} fill="#1e293b" stroke="url(#tapAiBrainGradient)" strokeWidth={3} />
+            <circle cx={0} cy={0} r={35} fill="#0f172a" />
+
+            {/* Neural network nodes inside brain */}
+            {[...Array(6)].map((_, i) => {
+              const angle = (i / 6) * Math.PI * 2;
+              const x = Math.cos(angle) * 20;
+              const y = Math.sin(angle) * 20;
+              return (
+                <circle key={i} cx={x} cy={y} r={4} fill="url(#tapAiBrainGradient)">
+                  <animate attributeName="opacity" values="0.3;1;0.3" dur={`${1.5 + i * 0.2}s`} repeatCount="indefinite" />
+                </circle>
+              );
+            })}
+            <circle cx={0} cy={0} r={6} fill="#a855f7">
+              <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+
+            {/* AI label */}
+            <text x={0} y={60} fill="#94a3b8" fontSize={10} textAnchor="middle" fontWeight="bold">
+              Claude AI
             </text>
-            <text x={0} y={15} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-              Command Confidence
+            <text x={0} y={72} fill="#64748b" fontSize={8} textAnchor="middle">
+              Processing
             </text>
           </g>
 
-          {/* Status indicators */}
-          <rect x={20} y={175} width={170} height={50} fill={colors.bgCard} rx={8} />
-          <text x={30} y={195} fill={colors.textSecondary} fontSize={10}>Hallucination Risk</text>
-          <rect x={30} y={205} width={100} height={10} fill="#374151" rx={4} />
-          <rect x={30} y={205} width={metrics.hallucinationRisk} height={10} fill={metrics.hallucinationRisk > 50 ? colors.error : colors.success} rx={4} />
-          <text x={140} y={215} fill={colors.textPrimary} fontSize={11}>{metrics.hallucinationRisk}%</text>
+          {/* === TOOL INPUT SECTION (Left) === */}
+          <g transform="translate(60, 100)">
+            {/* Tool documentation box */}
+            <rect x={0} y={0} width={160} height={120} rx={8} fill="url(#tapTerminalBg)" stroke="#334155" strokeWidth={1.5} />
+            <rect x={0} y={0} width={160} height={20} rx={8} fill="#1e293b" />
+            <rect x={0} y={12} width={160} height={8} fill="#1e293b" />
 
-          <rect x={210} y={175} width={170} height={50} fill={colors.bgCard} rx={8} />
-          <text x={220} y={195} fill={colors.textSecondary} fontSize={10}>Command Accuracy</text>
-          <rect x={220} y={205} width={100} height={10} fill="#374151" rx={4} />
-          <rect x={220} y={205} width={metrics.commandAccuracy} height={10} fill={metrics.commandAccuracy > 70 ? colors.success : colors.warning} rx={4} />
-          <text x={330} y={215} fill={colors.textPrimary} fontSize={11}>{metrics.commandAccuracy}%</text>
+            {/* Window controls */}
+            <circle cx={15} cy={10} r={4} fill="#ef4444" />
+            <circle cx={28} cy={10} r={4} fill="#f59e0b" />
+            <circle cx={41} cy={10} r={4} fill="#10b981" />
 
-          {/* Command examples */}
-          <text x={20} y={250} fill={colors.textSecondary} fontSize={11} fontWeight="bold">
-            Generated Commands:
-          </text>
-          <rect x={20} y={260} width={width - 40} height={140} fill={colors.bgCard} rx={8} />
+            <text x={80} y={14} fill="#64748b" fontSize={8} textAnchor="middle" fontWeight="600">
+              {promptMode === 'tool_aware' ? 'CLAUDE.md' : 'No Docs'}
+            </text>
 
-          {commands.map((cmd, i) => (
-            <g key={i}>
-              <circle
-                cx={35}
-                cy={280 + i * 32}
-                r={6}
-                fill={
-                  cmd.status === 'correct' ? colors.success :
-                  cmd.status === 'partial' ? colors.warning :
-                  colors.error
-                }
-              />
-              <text x={50} y={284 + i * 32} fill={colors.textPrimary} fontSize={10} fontFamily="monospace">
-                $ {cmd.cmd}
-              </text>
-              <text x={50} y={296 + i * 32} fill={colors.textMuted} fontSize={9}>
-                {cmd.note}
+            {/* Document content or empty state */}
+            {promptMode === 'tool_aware' ? (
+              <g>
+                <text x={10} y={38} fill="#22d3ee" fontSize={8} fontFamily="monospace" filter="url(#tapTerminalGlow)">
+                  ## Commands
+                </text>
+                <text x={10} y={52} fill="#94a3b8" fontSize={7} fontFamily="monospace">
+                  deploy --env [staging|prod]
+                </text>
+                <text x={10} y={64} fill="#94a3b8" fontSize={7} fontFamily="monospace">
+                  test --all | --watch
+                </text>
+                <text x={10} y={76} fill="#94a3b8" fontSize={7} fontFamily="monospace">
+                  build --output dist/
+                </text>
+                <text x={10} y={88} fill="#94a3b8" fontSize={7} fontFamily="monospace">
+                  lint-check src/
+                </text>
+                {/* Document glow indicator */}
+                <rect x={-5} y={-5} width={170} height={130} rx={10} fill="none" stroke="url(#tapSuccessGradient)" strokeWidth={2} strokeOpacity={0.5}>
+                  <animate attributeName="stroke-opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+                </rect>
+              </g>
+            ) : (
+              <g>
+                <text x={80} y={55} fill="#64748b" fontSize={9} textAnchor="middle">
+                  No documentation
+                </text>
+                <text x={80} y={70} fill="#475569" fontSize={8} textAnchor="middle">
+                  Claude will guess
+                </text>
+                <circle cx={80} cy={90} r={12} fill="url(#tapHallucinationGlow)" opacity={0.5}>
+                  <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+                <text x={80} y={94} fill="#f87171" fontSize={8} textAnchor="middle">?</text>
+              </g>
+            )}
+
+            {/* Label */}
+            <text x={80} y={135} fill="#94a3b8" fontSize={9} textAnchor="middle" fontWeight="bold">
+              Tool Documentation
+            </text>
+          </g>
+
+          {/* === DATA FLOW ARROWS === */}
+          {/* Input arrow from docs to AI */}
+          <g>
+            <line x1={230} y1={150} x2={290} y2={140} stroke={promptMode === 'tool_aware' ? '#22d3ee' : '#f87171'} strokeWidth={2} strokeOpacity={0.6} strokeDasharray="6 4">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="1s" repeatCount="indefinite" />
+            </line>
+            {/* Data particles flowing */}
+            {[...Array(3)].map((_, i) => (
+              <circle key={i} r={3} fill={promptMode === 'tool_aware' ? 'url(#tapDataGlow)' : 'url(#tapHallucinationGlow)'} filter="url(#tapDataParticleGlow)">
+                <animateMotion dur={`${1.2 + i * 0.3}s`} repeatCount="indefinite">
+                  <mpath href="#tapFlowPath1" />
+                </animateMotion>
+              </circle>
+            ))}
+            <path id="tapFlowPath1" d="M 230 150 Q 260 145 290 140" fill="none" stroke="none" />
+          </g>
+
+          {/* Output arrow from AI to terminal */}
+          <g>
+            <line x1={410} y1={140} x2={470} y2={130} stroke={promptMode === 'tool_aware' ? '#34d399' : '#f87171'} strokeWidth={2} strokeOpacity={0.6} strokeDasharray="6 4">
+              <animate attributeName="stroke-dashoffset" values="0;-20" dur="1s" repeatCount="indefinite" />
+            </line>
+            {[...Array(3)].map((_, i) => (
+              <circle key={i} r={3} fill={promptMode === 'tool_aware' ? 'url(#tapVerifiedGlow)' : 'url(#tapHallucinationGlow)'} filter="url(#tapDataParticleGlow)">
+                <animateMotion dur={`${1.2 + i * 0.3}s`} repeatCount="indefinite">
+                  <mpath href="#tapFlowPath2" />
+                </animateMotion>
+              </circle>
+            ))}
+            <path id="tapFlowPath2" d="M 410 140 Q 440 135 470 130" fill="none" stroke="none" />
+          </g>
+
+          {/* === COMMAND OUTPUT SECTION (Right) === */}
+          <g transform="translate(480, 80)">
+            {/* Terminal window */}
+            <rect x={0} y={0} width={200} height={145} rx={8} fill="url(#tapTerminalBg)" stroke="#334155" strokeWidth={1.5} />
+            <rect x={0} y={0} width={200} height={20} rx={8} fill="#1e293b" />
+            <rect x={0} y={12} width={200} height={8} fill="#1e293b" />
+
+            {/* Window controls */}
+            <circle cx={15} cy={10} r={4} fill="#ef4444" />
+            <circle cx={28} cy={10} r={4} fill="#f59e0b" />
+            <circle cx={41} cy={10} r={4} fill="#10b981" />
+
+            <text x={100} y={14} fill="#64748b" fontSize={8} textAnchor="middle" fontWeight="600">
+              Generated Commands
+            </text>
+
+            {/* Command entries with status indicators */}
+            {commands.slice(0, 4).map((cmd, i) => (
+              <g key={i} transform={`translate(8, ${28 + i * 28})`}>
+                {/* Status indicator with glow */}
+                <circle
+                  cx={8}
+                  cy={8}
+                  r={6}
+                  fill={
+                    cmd.status === 'correct' ? 'url(#tapSuccessGradient)' :
+                    cmd.status === 'partial' ? 'url(#tapWarningGradient)' :
+                    'url(#tapErrorGradient)'
+                  }
+                  filter="url(#tapStatusGlow)"
+                >
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
+                </circle>
+                {/* Checkmark or X */}
+                <text x={8} y={12} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">
+                  {cmd.status === 'correct' ? '\u2713' : cmd.status === 'partial' ? '~' : '\u2717'}
+                </text>
+                {/* Command text */}
+                <text x={22} y={7} fill="#e2e8f0" fontSize={7} fontFamily="monospace">
+                  $ {cmd.cmd.substring(0, 24)}{cmd.cmd.length > 24 ? '...' : ''}
+                </text>
+                <text x={22} y={18} fill="#64748b" fontSize={6}>
+                  {cmd.note.substring(0, 30)}{cmd.note.length > 30 ? '...' : ''}
+                </text>
+              </g>
+            ))}
+
+            {/* Terminal glow based on mode */}
+            <rect x={-3} y={-3} width={206} height={151} rx={10} fill="none"
+              stroke={promptMode === 'tool_aware' ? 'url(#tapSuccessGradient)' : 'url(#tapErrorGradient)'}
+              strokeWidth={2} strokeOpacity={0.4}>
+              <animate attributeName="stroke-opacity" values="0.2;0.5;0.2" dur="2s" repeatCount="indefinite" />
+            </rect>
+          </g>
+
+          {/* === CONFIDENCE GAUGE === */}
+          <g transform={`translate(${width/2}, 285)`}>
+            {/* Gauge background arc */}
+            <path
+              d="M -100 0 A 100 100 0 0 1 100 0"
+              fill="none"
+              stroke="#1e293b"
+              strokeWidth={18}
+            />
+            {/* Gradient arc showing level */}
+            <path
+              d="M -100 0 A 100 100 0 0 1 100 0"
+              fill="none"
+              stroke="url(#tapGaugeGradient)"
+              strokeWidth={16}
+              strokeLinecap="round"
+              strokeDasharray={`${Math.PI * 100 * metrics.confidenceLevel / 100} ${Math.PI * 100}`}
+            />
+            {/* Gauge tick marks */}
+            {[0, 25, 50, 75, 100].map((tick) => {
+              const angle = Math.PI * (1 - tick / 100);
+              const x1 = Math.cos(angle) * 85;
+              const y1 = -Math.sin(angle) * 85;
+              const x2 = Math.cos(angle) * 95;
+              const y2 = -Math.sin(angle) * 95;
+              return (
+                <line key={tick} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#475569" strokeWidth={2} />
+              );
+            })}
+            {/* Center display */}
+            <circle cx={0} cy={0} r={45} fill="#0f172a" stroke="#334155" strokeWidth={2} />
+            <text x={0} y={-8} fill="#f8fafc" fontSize={28} textAnchor="middle" fontWeight="bold">
+              {metrics.confidenceLevel}%
+            </text>
+            <text x={0} y={12} fill="#94a3b8" fontSize={10} textAnchor="middle">
+              Confidence
+            </text>
+            {/* Animated needle */}
+            <line
+              x1={0}
+              y1={0}
+              x2={Math.cos(Math.PI * (1 - metrics.confidenceLevel / 100)) * 75}
+              y2={-Math.sin(Math.PI * (1 - metrics.confidenceLevel / 100)) * 75}
+              stroke={metrics.confidenceLevel > 70 ? '#10b981' : metrics.confidenceLevel > 40 ? '#f59e0b' : '#ef4444'}
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+            <circle cx={0} cy={0} r={8} fill="#1e293b" stroke="#475569" strokeWidth={2} />
+          </g>
+
+          {/* === METRICS PANELS === */}
+          {/* Hallucination Risk Panel */}
+          <g transform="translate(100, 380)">
+            <rect x={0} y={0} width={200} height={70} rx={10} fill="#0f172a" stroke="#334155" strokeWidth={1} />
+            <text x={100} y={20} fill="#f87171" fontSize={10} textAnchor="middle" fontWeight="bold">
+              Hallucination Risk
+            </text>
+            {/* Progress bar background */}
+            <rect x={20} y={32} width={160} height={12} rx={6} fill="#1e293b" />
+            {/* Progress bar fill */}
+            <rect x={20} y={32} width={160 * metrics.hallucinationRisk / 100} height={12} rx={6}
+              fill="url(#tapErrorGradient)">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+            </rect>
+            <text x={100} y={58} fill="#f8fafc" fontSize={14} textAnchor="middle" fontWeight="bold">
+              {metrics.hallucinationRisk}%
+            </text>
+          </g>
+
+          {/* Command Accuracy Panel */}
+          <g transform="translate(400, 380)">
+            <rect x={0} y={0} width={200} height={70} rx={10} fill="#0f172a" stroke="#334155" strokeWidth={1} />
+            <text x={100} y={20} fill="#34d399" fontSize={10} textAnchor="middle" fontWeight="bold">
+              Command Accuracy
+            </text>
+            {/* Progress bar background */}
+            <rect x={20} y={32} width={160} height={12} rx={6} fill="#1e293b" />
+            {/* Progress bar fill */}
+            <rect x={20} y={32} width={160 * metrics.commandAccuracy / 100} height={12} rx={6}
+              fill="url(#tapSuccessGradient)">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+            </rect>
+            <text x={100} y={58} fill="#f8fafc" fontSize={14} textAnchor="middle" fontWeight="bold">
+              {metrics.commandAccuracy}%
+            </text>
+          </g>
+
+          {/* === DOCUMENTATION SOURCE INDICATORS === */}
+          <g transform="translate(100, 470)">
+            {/* --help indicator */}
+            <g transform="translate(0, 0)">
+              <rect x={0} y={0} width={180} height={35} rx={8} fill="#0f172a" stroke={showHelp ? '#22d3ee' : '#334155'} strokeWidth={showHelp ? 2 : 1} />
+              <circle cx={25} cy={17} r={10} fill={showHelp ? 'url(#tapToolSelectGlow)' : '#1e293b'} filter={showHelp ? 'url(#tapToolGlow)' : undefined}>
+                {showHelp && <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />}
+              </circle>
+              <text x={25} y={21} fill={showHelp ? '#22d3ee' : '#64748b'} fontSize={10} textAnchor="middle" fontWeight="bold">?</text>
+              <text x={105} y={21} fill="#e2e8f0" fontSize={10} textAnchor="middle">
+                --help queries {showHelp ? 'ON' : 'OFF'}
               </text>
             </g>
-          ))}
+          </g>
 
-          {/* Feature toggles status */}
-          <rect x={20} y={410} width={width - 40} height={80} fill={colors.bgCard} rx={8} />
-          <text x={30} y={430} fill={colors.textSecondary} fontSize={11} fontWeight="bold">
-            Documentation Sources:
-          </text>
+          <g transform="translate(420, 470)">
+            {/* CLAUDE.md indicator */}
+            <g transform="translate(0, 0)">
+              <rect x={0} y={0} width={180} height={35} rx={8} fill="#0f172a" stroke={hasClaudemd ? '#f59e0b' : '#334155'} strokeWidth={hasClaudemd ? 2 : 1} />
+              <rect x={15} y={7} width={20} height={22} rx={3} fill={hasClaudemd ? 'url(#tapDocGradient)' : '#1e293b'} filter={hasClaudemd ? 'url(#tapToolGlow)' : undefined}>
+                {hasClaudemd && <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" />}
+              </rect>
+              {hasClaudemd && (
+                <>
+                  <line x1={18} y1={13} x2={32} y2={13} stroke="#78350f" strokeWidth={1} />
+                  <line x1={18} y1={17} x2={28} y2={17} stroke="#78350f" strokeWidth={1} />
+                  <line x1={18} y1={21} x2={30} y2={21} stroke="#78350f" strokeWidth={1} />
+                </>
+              )}
+              <text x={105} y={21} fill="#e2e8f0" fontSize={10} textAnchor="middle">
+                CLAUDE.md {hasClaudemd ? 'Present' : 'Missing'}
+              </text>
+            </g>
+          </g>
 
-          <circle cx={40} cy={455} r={8} fill={showHelp ? colors.success : '#374151'} />
-          <text x={55} y={459} fill={colors.textPrimary} fontSize={10}>--help queries enabled</text>
-
-          <circle cx={200} cy={455} r={8} fill={hasClaudemd ? colors.success : '#374151'} />
-          <text x={215} y={459} fill={colors.textPrimary} fontSize={10}>CLAUDE.md present</text>
-
-          {/* Auto-suggest hint */}
+          {/* === AUTO-SUGGEST HINT === */}
           {promptMode === 'naive' && !showHelp && (
-            <g>
-              <rect x={20} y={495} width={width - 40} height={25} fill="rgba(245, 158, 11, 0.2)" rx={6} />
-              <text x={width/2} y={512} fill={colors.accent} fontSize={10} textAnchor="middle">
-                Suggestion: Add &quot;run tool --help first&quot; to your prompt
+            <g transform={`translate(${width/2}, 530)`}>
+              <rect x={-180} y={-12} width={360} height={24} rx={8} fill="rgba(245, 158, 11, 0.15)" stroke="#f59e0b" strokeWidth={1} strokeOpacity={0.5}>
+                <animate attributeName="stroke-opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+              </rect>
+              <text x={0} y={4} fill="#f59e0b" fontSize={10} textAnchor="middle" fontWeight="600">
+                Tip: Add &quot;run tool --help first&quot; to your prompt for better accuracy
               </text>
             </g>
           )}

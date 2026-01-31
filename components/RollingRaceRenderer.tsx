@@ -357,29 +357,31 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showTwist: boolean = false) => {
-    const width = 400;
-    const height = 300;
-    const rampStartX = 50;
-    const rampStartY = 50;
-    const rampEndX = 350;
-    const rampEndY = 250;
-    const rampLengthPx = Math.sqrt(Math.pow(rampEndX - rampStartX, 2) + Math.pow(rampEndY - rampStartY, 2));
+    const width = 500;
+    const height = 340;
+    const rampStartX = 60;
+    const rampStartY = 70;
+    const rampEndX = 400;
 
     // Calculate actual ramp based on angle
     const theta = (rampAngle * Math.PI) / 180;
     const actualRampEndY = rampStartY + (rampEndX - rampStartX) * Math.tan(theta);
-    const clampedRampEndY = Math.min(actualRampEndY, 270);
+    const clampedRampEndY = Math.min(actualRampEndY, 290);
 
     // Object positions along ramp
     const solidX = rampStartX + solidPosition * (rampEndX - rampStartX);
     const solidY = rampStartY + solidPosition * (clampedRampEndY - rampStartY);
     const hollowX = rampStartX + hollowPosition * (rampEndX - rampStartX);
-    const hollowY = rampStartY + hollowPosition * (clampedRampEndY - rampStartY) + 35;
+    const hollowY = rampStartY + hollowPosition * (clampedRampEndY - rampStartY) + 45;
 
-    const objectRadiusPx = 15;
+    const objectRadiusPx = 18;
 
     const solidEnergy = getSolidEnergySplit();
     const hollowEnergy = getHollowEnergySplit();
+
+    // Calculate ramp angle for rotation transforms
+    const rampAngleRad = Math.atan2(clampedRampEndY - rampStartY, rampEndX - rampStartX);
+    const rampAngleDeg = rampAngleRad * 180 / Math.PI;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -388,136 +390,428 @@ const RollingRaceRenderer: React.FC<RollingRaceRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '580px' }}
         >
-          {/* Ramp */}
+          {/* ========== PREMIUM DEFS SECTION ========== */}
+          <defs>
+            {/* === BACKGROUND GRADIENTS === */}
+            <linearGradient id="rraceBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="25%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* === RAMP GRADIENTS WITH DEPTH === */}
+            <linearGradient id="rraceRampSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="15%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="90%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            <linearGradient id="rraceRampEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            <linearGradient id="rraceRampHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.8" />
+              <stop offset="30%" stopColor="#94a3b8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0" />
+            </linearGradient>
+
+            {/* === SOLID CYLINDER GRADIENTS (3D SPHERE EFFECT) === */}
+            <radialGradient id="rraceSolidSphere" cx="35%" cy="35%" r="65%" fx="25%" fy="25%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+
+            <radialGradient id="rraceSolidCore" cx="40%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.2" />
+            </radialGradient>
+
+            <linearGradient id="rraceSolidShine" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+              <stop offset="30%" stopColor="#bfdbfe" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+
+            {/* === HOLLOW HOOP GRADIENTS (3D RING EFFECT) === */}
+            <linearGradient id="rraceHoopRing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            <radialGradient id="rraceHoopInner" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e293b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0.5" />
+            </radialGradient>
+
+            <linearGradient id="rraceHoopHighlight" x1="20%" y1="20%" x2="80%" y2="80%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#fecaca" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
+
+            {/* === COIN GRADIENT (GOLD METALLIC) === */}
+            <radialGradient id="rraceCoinGold" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            {/* === GROUND/FLOOR GRADIENT === */}
+            <linearGradient id="rraceGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* === FINISH LINE GRADIENT === */}
+            <linearGradient id="rraceFinishGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            <filter id="rraceSolidGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rraceHoopGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rraceWinnerGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rraceTrailBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+
+            <filter id="rraceLabelShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* === MOTION TRAIL GRADIENTS === */}
+            <linearGradient id="rraceSolidTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="rraceHoopTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+              <stop offset="30%" stopColor="#ef4444" stopOpacity="0.2" />
+              <stop offset="70%" stopColor="#f87171" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#fca5a5" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* === GRID PATTERN === */}
+            <pattern id="rraceLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+
+          {/* ========== BACKGROUND ========== */}
+          <rect width={width} height={height} fill="url(#rraceBgGradient)" />
+          <rect width={width} height={height} fill="url(#rraceLabGrid)" />
+
+          {/* ========== PREMIUM RAMP WITH DEPTH ========== */}
+          {/* Ramp shadow */}
           <polygon
-            points={`${rampStartX},${rampStartY} ${rampEndX},${clampedRampEndY} ${rampEndX},${clampedRampEndY + 10} ${rampStartX},${rampStartY + 10}`}
-            fill={colors.ramp}
-            stroke={colors.textMuted}
+            points={`${rampStartX + 5},${rampStartY + 8} ${rampEndX + 5},${clampedRampEndY + 8} ${rampEndX + 5},${clampedRampEndY + 22} ${rampStartX + 5},${rampStartY + 22}`}
+            fill="#000000"
+            opacity="0.3"
+          />
+
+          {/* Ramp side (depth effect) */}
+          <polygon
+            points={`${rampEndX},${clampedRampEndY} ${rampEndX + 8},${clampedRampEndY + 4} ${rampEndX + 8},${clampedRampEndY + 18} ${rampEndX},${clampedRampEndY + 14}`}
+            fill="url(#rraceRampEdge)"
+          />
+
+          {/* Main ramp surface */}
+          <polygon
+            points={`${rampStartX},${rampStartY} ${rampEndX},${clampedRampEndY} ${rampEndX},${clampedRampEndY + 14} ${rampStartX},${rampStartY + 14}`}
+            fill="url(#rraceRampSurface)"
+            stroke="#64748b"
             strokeWidth={1}
           />
 
-          {/* Ramp surface lines for texture */}
-          {[0.2, 0.4, 0.6, 0.8].map((t, i) => (
+          {/* Ramp top highlight */}
+          <line
+            x1={rampStartX}
+            y1={rampStartY}
+            x2={rampEndX}
+            y2={clampedRampEndY}
+            stroke="#94a3b8"
+            strokeWidth={2}
+            strokeOpacity={0.6}
+          />
+
+          {/* Ramp surface texture lines */}
+          {[0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((t, i) => (
             <line
               key={i}
               x1={rampStartX + t * (rampEndX - rampStartX)}
               y1={rampStartY + t * (clampedRampEndY - rampStartY)}
               x2={rampStartX + t * (rampEndX - rampStartX)}
-              y2={rampStartY + t * (clampedRampEndY - rampStartY) + 10}
-              stroke="rgba(255,255,255,0.2)"
+              y2={rampStartY + t * (clampedRampEndY - rampStartY) + 14}
+              stroke="rgba(255,255,255,0.15)"
               strokeWidth={1}
             />
           ))}
 
-          {/* Ground line */}
-          <line
-            x1={rampEndX - 10}
-            y1={clampedRampEndY + 5}
-            x2={width - 10}
-            y2={clampedRampEndY + 5}
-            stroke={colors.ramp}
-            strokeWidth={3}
+          {/* Starting platform */}
+          <rect
+            x={rampStartX - 25}
+            y={rampStartY - 5}
+            width={30}
+            height={25}
+            rx={3}
+            fill="url(#rraceRampSurface)"
+            stroke="#64748b"
+            strokeWidth={1}
           />
 
-          {/* Solid Cylinder (top track) */}
-          <g transform={`translate(${solidX}, ${solidY - objectRadiusPx - 5})`}>
-            <circle
-              cx={0}
-              cy={0}
-              r={objectRadiusPx}
-              fill={colors.solidCylinder}
-              stroke={colors.textPrimary}
-              strokeWidth={2}
-            />
-            {/* Rotation indicator */}
-            <line
-              x1={0}
-              y1={0}
-              x2={objectRadiusPx * Math.cos(solidRotation * Math.PI / 180)}
-              y2={objectRadiusPx * Math.sin(solidRotation * Math.PI / 180)}
-              stroke={colors.textPrimary}
-              strokeWidth={2}
-            />
-            {/* Fill pattern to show solid */}
-            <circle cx={0} cy={0} r={objectRadiusPx * 0.7} fill={colors.solidCylinder} opacity={0.7} />
-            <circle cx={0} cy={0} r={objectRadiusPx * 0.4} fill={colors.solidCylinder} opacity={0.5} />
+          {/* ========== GROUND LINE ========== */}
+          <rect
+            x={rampEndX - 15}
+            y={clampedRampEndY + 12}
+            width={width - rampEndX + 5}
+            height={8}
+            fill="url(#rraceGroundGradient)"
+            rx={2}
+          />
+
+          {/* ========== FINISH LINE ========== */}
+          <g transform={`translate(${rampEndX + 45}, ${clampedRampEndY - 50})`}>
+            {/* Finish pole */}
+            <rect x={-3} y={0} width={6} height={65} fill="url(#rraceFinishGradient)" rx={2} />
+            {/* Checkered flag pattern */}
+            <g>
+              {[0, 1, 2].map((row) =>
+                [0, 1, 2, 3].map((col) => (
+                  <rect
+                    key={`${row}-${col}`}
+                    x={8 + col * 8}
+                    y={row * 8}
+                    width={8}
+                    height={8}
+                    fill={(row + col) % 2 === 0 ? '#ffffff' : '#1e293b'}
+                  />
+                ))
+              )}
+            </g>
+            <rect x={8} y={0} width={32} height={24} fill="none" stroke="#64748b" strokeWidth={1} />
+            <text x={24} y={38} textAnchor="middle" fill="#22c55e" fontSize={9} fontWeight="bold">FINISH</text>
           </g>
 
-          {/* Hollow Hoop (bottom track) */}
-          <g transform={`translate(${hollowX}, ${hollowY - objectRadiusPx - 5})`}>
+          {/* ========== MOTION TRAILS ========== */}
+          {isRacing && solidPosition > 0.05 && (
+            <ellipse
+              cx={solidX - 15}
+              cy={solidY - objectRadiusPx - 5}
+              rx={solidPosition * 40 + 10}
+              ry={4}
+              fill="url(#rraceSolidTrail)"
+              filter="url(#rraceTrailBlur)"
+              transform={`rotate(${rampAngleDeg}, ${solidX - 15}, ${solidY - objectRadiusPx - 5})`}
+            />
+          )}
+          {isRacing && hollowPosition > 0.05 && (
+            <ellipse
+              cx={hollowX - 15}
+              cy={hollowY - objectRadiusPx - 5}
+              rx={hollowPosition * 40 + 10}
+              ry={4}
+              fill="url(#rraceHoopTrail)"
+              filter="url(#rraceTrailBlur)"
+              transform={`rotate(${rampAngleDeg}, ${hollowX - 15}, ${hollowY - objectRadiusPx - 5})`}
+            />
+          )}
+
+          {/* ========== SOLID CYLINDER (PREMIUM 3D SPHERE) ========== */}
+          <g transform={`translate(${solidX}, ${solidY - objectRadiusPx - 5})`} filter="url(#rraceSolidGlow)">
+            {/* Main sphere body */}
             <circle
               cx={0}
               cy={0}
               r={objectRadiusPx}
-              fill="transparent"
-              stroke={colors.hollowHoop}
-              strokeWidth={4}
+              fill="url(#rraceSolidSphere)"
             />
-            {/* Rotation indicator */}
+            {/* Inner core showing solid mass */}
+            <circle cx={0} cy={0} r={objectRadiusPx * 0.75} fill="url(#rraceSolidCore)" />
+            <circle cx={0} cy={0} r={objectRadiusPx * 0.5} fill="url(#rraceSolidCore)" opacity={0.7} />
+            <circle cx={0} cy={0} r={objectRadiusPx * 0.25} fill="#60a5fa" opacity={0.5} />
+            {/* Highlight shine */}
+            <ellipse cx={-5} cy={-6} rx={6} ry={4} fill="url(#rraceSolidShine)" />
+            {/* Rotation indicator line */}
             <line
               x1={0}
               y1={0}
-              x2={objectRadiusPx * Math.cos(hollowRotation * Math.PI / 180)}
-              y2={objectRadiusPx * Math.sin(hollowRotation * Math.PI / 180)}
-              stroke={colors.hollowHoop}
+              x2={objectRadiusPx * 0.8 * Math.cos(solidRotation * Math.PI / 180)}
+              y2={objectRadiusPx * 0.8 * Math.sin(solidRotation * Math.PI / 180)}
+              stroke="#ffffff"
+              strokeWidth={2}
+              strokeLinecap="round"
+              opacity={0.8}
+            />
+            {/* Edge highlight */}
+            <circle cx={0} cy={0} r={objectRadiusPx} fill="none" stroke="#93c5fd" strokeWidth={1} strokeOpacity={0.5} />
+          </g>
+
+          {/* ========== HOLLOW HOOP (PREMIUM 3D RING) ========== */}
+          <g transform={`translate(${hollowX}, ${hollowY - objectRadiusPx - 5})`} filter="url(#rraceHoopGlow)">
+            {/* Outer ring with gradient */}
+            <circle
+              cx={0}
+              cy={0}
+              r={objectRadiusPx}
+              fill="none"
+              stroke="url(#rraceHoopRing)"
+              strokeWidth={5}
+            />
+            {/* Inner dark area showing hollow */}
+            <circle cx={0} cy={0} r={objectRadiusPx - 4} fill="url(#rraceHoopInner)" />
+            {/* Ring highlight */}
+            <circle
+              cx={0}
+              cy={0}
+              r={objectRadiusPx}
+              fill="none"
+              stroke="url(#rraceHoopHighlight)"
               strokeWidth={2}
             />
-            {/* Coins inside (if twist) */}
+            {/* Rotation indicator */}
+            <line
+              x1={(objectRadiusPx - 5) * Math.cos(hollowRotation * Math.PI / 180)}
+              y1={(objectRadiusPx - 5) * Math.sin(hollowRotation * Math.PI / 180)}
+              x2={objectRadiusPx * Math.cos(hollowRotation * Math.PI / 180)}
+              y2={objectRadiusPx * Math.sin(hollowRotation * Math.PI / 180)}
+              stroke="#ffffff"
+              strokeWidth={3}
+              strokeLinecap="round"
+              opacity={0.9}
+            />
+            {/* Coins inside (if twist mode) */}
             {showTwist && coinsAdded && coinCount > 0 && (
-              <>
+              <g>
                 {Array.from({ length: Math.min(coinCount, 5) }).map((_, i) => (
                   <circle
                     key={i}
-                    cx={(i - 2) * 4}
+                    cx={(i - 2) * 5}
                     cy={0}
-                    r={3}
-                    fill={colors.energy}
-                    stroke={colors.textPrimary}
+                    r={4}
+                    fill="url(#rraceCoinGold)"
+                    stroke="#fbbf24"
                     strokeWidth={0.5}
                   />
                 ))}
                 {coinCount > 5 && (
-                  <text x={0} y={-5} fill={colors.energy} fontSize={8} textAnchor="middle">+{coinCount - 5}</text>
+                  <text x={0} y={-8} fill="#fbbf24" fontSize={9} textAnchor="middle" fontWeight="bold">+{coinCount - 5}</text>
                 )}
-              </>
+              </g>
             )}
           </g>
 
-          {/* Labels */}
-          <text x={rampStartX} y={25} fill={colors.solidCylinder} fontSize={12} fontWeight="bold">
-            Solid Cylinder
-          </text>
-          <text x={rampStartX} y={rampStartY + 55} fill={colors.hollowHoop} fontSize={12} fontWeight="bold">
-            Hollow Hoop
-          </text>
+          {/* ========== LABELS ========== */}
+          <g filter="url(#rraceLabelShadow)">
+            <rect x={rampStartX - 5} y={12} width={95} height={18} rx={4} fill="rgba(59, 130, 246, 0.2)" />
+            <text x={rampStartX} y={26} fill="#60a5fa" fontSize={12} fontWeight="bold">
+              Solid Cylinder
+            </text>
+          </g>
+          <g filter="url(#rraceLabelShadow)">
+            <rect x={rampStartX - 5} y={rampStartY + 48} width={85} height={18} rx={4} fill="rgba(239, 68, 68, 0.2)" />
+            <text x={rampStartX} y={rampStartY + 62} fill="#f87171" fontSize={12} fontWeight="bold">
+              Hollow Hoop
+            </text>
+          </g>
 
           {/* Angle indicator */}
-          <text x={rampEndX - 40} y={clampedRampEndY + 25} fill={colors.textMuted} fontSize={11}>
-            {rampAngle}deg
-          </text>
+          <g transform={`translate(${rampEndX - 55}, ${clampedRampEndY + 28})`}>
+            <rect x={-5} y={-12} width={50} height={16} rx={4} fill="rgba(100, 116, 139, 0.3)" />
+            <text x={20} y={0} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="bold">
+              {rampAngle} degrees
+            </text>
+          </g>
 
           {/* Winner indicator */}
           {raceFinished && winner && (
-            <text
-              x={width / 2}
-              y={height - 20}
-              fill={winner === 'solid' ? colors.solidCylinder : colors.hollowHoop}
-              fontSize={16}
-              fontWeight="bold"
-              textAnchor="middle"
-            >
-              {winner === 'solid' ? 'Solid Cylinder Wins!' : 'Hollow Hoop Wins!'}
-            </text>
+            <g filter="url(#rraceWinnerGlow)">
+              <rect
+                x={width / 2 - 90}
+                y={height - 45}
+                width={180}
+                height={30}
+                rx={8}
+                fill={winner === 'solid' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)'}
+                stroke={winner === 'solid' ? '#3b82f6' : '#ef4444'}
+                strokeWidth={2}
+              />
+              <text
+                x={width / 2}
+                y={height - 24}
+                fill={winner === 'solid' ? '#60a5fa' : '#f87171'}
+                fontSize={16}
+                fontWeight="bold"
+                textAnchor="middle"
+              >
+                {winner === 'solid' ? 'Solid Cylinder Wins!' : 'Hollow Hoop Wins!'}
+              </text>
+            </g>
           )}
 
           {/* Time display */}
           {isRacing && (
-            <text x={width - 60} y={25} fill={colors.textSecondary} fontSize={12}>
-              Time: {raceTime.toFixed(2)}s
-            </text>
+            <g>
+              <rect x={width - 95} y={12} width={80} height={22} rx={6} fill="rgba(30, 41, 59, 0.8)" stroke="#475569" strokeWidth={1} />
+              <text x={width - 55} y={28} fill={colors.textSecondary} fontSize={13} textAnchor="middle" fontWeight="bold">
+                {raceTime.toFixed(2)}s
+              </text>
+            </g>
           )}
+
+          {/* Physics info badge */}
+          <g transform={`translate(15, ${height - 35})`}>
+            <rect x={0} y={0} width={130} height={22} rx={5} fill="rgba(139, 92, 246, 0.2)" stroke="#8b5cf6" strokeWidth={1} />
+            <text x={65} y={15} fill="#a78bfa" fontSize={9} textAnchor="middle" fontWeight="bold">
+              I = {winner === 'solid' || !raceFinished ? '1/2' : '1'} MR squared
+            </text>
+          </g>
         </svg>
 
         {/* Energy Bars */}

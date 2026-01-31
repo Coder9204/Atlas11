@@ -692,58 +692,284 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({
         How atoms share electrons to form chemical bonds
       </p>
 
-      {/* Premium Card */}
-      <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-6 max-w-lg border border-slate-700/50 shadow-2xl mb-6">
-        <div className="relative w-full h-48 bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-xl overflow-hidden flex items-center justify-center">
-          <svg viewBox="0 0 400 200" className="w-full h-full">
-            {/* Background */}
-            <rect x="0" y="0" width="400" height="200" fill="url(#moGradient)" />
+      {/* Premium Card with Premium SVG */}
+      <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-6 max-w-2xl border border-slate-700/50 shadow-2xl mb-6">
+        <div className="relative w-full h-64 bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-xl overflow-hidden flex items-center justify-center">
+          <svg viewBox="0 0 700 300" className="w-full h-full">
+            {/* ============================================================ */}
+            {/* COMPREHENSIVE DEFS SECTION - Premium Gradients & Filters */}
+            {/* ============================================================ */}
             <defs>
-              <linearGradient id="moGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#1e1b4b" />
-                <stop offset="100%" stopColor="#0f172a" />
+              {/* Premium background gradient */}
+              <linearGradient id="morbBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0c0a1d" />
+                <stop offset="25%" stopColor="#1a1333" />
+                <stop offset="50%" stopColor="#0f172a" />
+                <stop offset="75%" stopColor="#1a1333" />
+                <stop offset="100%" stopColor="#0c0a1d" />
+              </linearGradient>
+
+              {/* Atomic nucleus gradient - 3D sphere effect */}
+              <radialGradient id="morbNucleusLeft" cx="35%" cy="35%" r="60%" fx="25%" fy="25%">
+                <stop offset="0%" stopColor="#a78bfa" />
+                <stop offset="25%" stopColor="#8b5cf6" />
+                <stop offset="50%" stopColor="#7c3aed" />
+                <stop offset="75%" stopColor="#6d28d9" />
+                <stop offset="100%" stopColor="#4c1d95" />
+              </radialGradient>
+
+              <radialGradient id="morbNucleusRight" cx="35%" cy="35%" r="60%" fx="25%" fy="25%">
+                <stop offset="0%" stopColor="#93c5fd" />
+                <stop offset="25%" stopColor="#60a5fa" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="75%" stopColor="#2563eb" />
+                <stop offset="100%" stopColor="#1d4ed8" />
+              </radialGradient>
+
+              {/* Bonding orbital cloud - positive phase (green) */}
+              <radialGradient id="morbBondingCloud" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
+                <stop offset="30%" stopColor="#22c55e" stopOpacity="0.6" />
+                <stop offset="60%" stopColor="#16a34a" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Antibonding orbital cloud - negative phase (red) */}
+              <radialGradient id="morbAntibondingCloud" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#f87171" stopOpacity="0.9" />
+                <stop offset="30%" stopColor="#ef4444" stopOpacity="0.6" />
+                <stop offset="60%" stopColor="#dc2626" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Atomic orbital s-type cloud - purple */}
+              <radialGradient id="morbAtomicOrbitalLeft" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.7" />
+                <stop offset="35%" stopColor="#a78bfa" stopOpacity="0.5" />
+                <stop offset="65%" stopColor="#8b5cf6" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Atomic orbital s-type cloud - blue */}
+              <radialGradient id="morbAtomicOrbitalRight" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.7" />
+                <stop offset="35%" stopColor="#93c5fd" stopOpacity="0.5" />
+                <stop offset="65%" stopColor="#60a5fa" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Electron gradient - golden glow */}
+              <radialGradient id="morbElectronGlow" cx="40%" cy="40%" r="50%">
+                <stop offset="0%" stopColor="#fef08a" />
+                <stop offset="30%" stopColor="#fbbf24" />
+                <stop offset="60%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#d97706" stopOpacity="0.5" />
+              </radialGradient>
+
+              {/* Energy level gradient for MO diagram */}
+              <linearGradient id="morbEnergyGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="30%" stopColor="#84cc16" />
+                <stop offset="50%" stopColor="#eab308" />
+                <stop offset="70%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </linearGradient>
+
+              {/* Bond formation gradient */}
+              <linearGradient id="morbBondGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                <stop offset="25%" stopColor="#a78bfa" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#22c55e" stopOpacity="0.9" />
+                <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+              </linearGradient>
+
+              {/* Nucleus glow filter */}
+              <filter id="morbNucleusGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Orbital cloud glow filter */}
+              <filter id="morbOrbitalGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Electron glow filter */}
+              <filter id="morbElectronFilter" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Bond glow filter */}
+              <filter id="morbBondGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Inner shadow for depth */}
+              <filter id="morbInnerShadow">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+
+              {/* Label background gradient */}
+              <linearGradient id="morbLabelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#0f172a" stopOpacity="0.95" />
               </linearGradient>
             </defs>
 
-            {/* Left atom */}
-            <circle cx="100" cy="100" r="25" fill="#6366f1" opacity="0.9">
-              <animate attributeName="cx" values="100;120;100" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="100" cy="100" r="45" fill="none" stroke="#818cf8" strokeWidth="2" opacity="0.5">
-              <animate attributeName="r" values="45;55;45" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="cx" values="100;120;100" dur="2s" repeatCount="indefinite" />
-            </circle>
+            {/* ============================================================ */}
+            {/* BACKGROUND & GRID */}
+            {/* ============================================================ */}
+            <rect width="700" height="300" fill="url(#morbBgGradient)" />
 
-            {/* Right atom */}
-            <circle cx="300" cy="100" r="25" fill="#6366f1" opacity="0.9">
-              <animate attributeName="cx" values="300;280;300" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="300" cy="100" r="45" fill="none" stroke="#818cf8" strokeWidth="2" opacity="0.5">
-              <animate attributeName="r" values="45;55;45" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="cx" values="300;280;300" dur="2s" repeatCount="indefinite" />
-            </circle>
+            {/* Subtle grid pattern */}
+            <pattern id="morbGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+            <rect width="700" height="300" fill="url(#morbGrid)" />
 
-            {/* Overlapping orbital region */}
-            <ellipse cx="200" cy="100" rx="40" ry="30" fill="#22c55e" opacity="0">
-              <animate attributeName="opacity" values="0;0.6;0" dur="2s" repeatCount="indefinite" />
-              <animate attributeName="rx" values="0;60;0" dur="2s" repeatCount="indefinite" />
-            </ellipse>
+            {/* ============================================================ */}
+            {/* LEFT ATOM - Approaching */}
+            {/* ============================================================ */}
+            <g>
+              {/* Atomic orbital cloud (s orbital) */}
+              <ellipse cx="175" cy="150" rx="70" ry="70" fill="url(#morbAtomicOrbitalLeft)" filter="url(#morbOrbitalGlow)">
+                <animate attributeName="cx" values="175;220;175" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="rx" values="70;60;70" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="ry" values="70;60;70" dur="3s" repeatCount="indefinite" />
+              </ellipse>
 
-            {/* Electron dots */}
-            <circle cx="140" cy="100" r="6" fill="#fbbf24">
-              <animate attributeName="cx" values="140;180;140" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="260" cy="100" r="6" fill="#fbbf24">
-              <animate attributeName="cx" values="260;220;260" dur="2s" repeatCount="indefinite" />
-            </circle>
+              {/* Nucleus - 3D sphere */}
+              <circle cx="175" cy="150" r="22" fill="url(#morbNucleusLeft)" filter="url(#morbNucleusGlow)">
+                <animate attributeName="cx" values="175;220;175" dur="3s" repeatCount="indefinite" />
+              </circle>
 
-            {/* Labels */}
-            <text x="100" y="170" fontSize="14" fill="#94a3b8" textAnchor="middle">Atom A</text>
-            <text x="300" y="170" fontSize="14" fill="#94a3b8" textAnchor="middle">Atom B</text>
-            <text x="200" y="50" fontSize="14" fill="#22c55e" textAnchor="middle" fontWeight="bold" opacity="0">
-              BOND!
-              <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" />
-            </text>
+              {/* Nucleus highlight for 3D effect */}
+              <ellipse cx="168" cy="142" rx="8" ry="6" fill="white" opacity="0.3">
+                <animate attributeName="cx" values="168;213;168" dur="3s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Electron in orbit */}
+              <circle cx="205" cy="150" r="7" fill="url(#morbElectronGlow)" filter="url(#morbElectronFilter)">
+                <animate attributeName="cx" values="205;270;205" dur="3s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Label */}
+              <g>
+                <rect x="140" y="235" width="70" height="22" rx="6" fill="url(#morbLabelBg)" stroke="#7c3aed" strokeWidth="1" />
+                <text x="175" y="250" textAnchor="middle" fontSize="11" fill="#c4b5fd" fontWeight="600">Atom A</text>
+                <animate attributeName="transform" values="translate(0,0);translate(45,0);translate(0,0)" dur="3s" repeatCount="indefinite" />
+              </g>
+            </g>
+
+            {/* ============================================================ */}
+            {/* RIGHT ATOM - Approaching */}
+            {/* ============================================================ */}
+            <g>
+              {/* Atomic orbital cloud (s orbital) */}
+              <ellipse cx="525" cy="150" rx="70" ry="70" fill="url(#morbAtomicOrbitalRight)" filter="url(#morbOrbitalGlow)">
+                <animate attributeName="cx" values="525;480;525" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="rx" values="70;60;70" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="ry" values="70;60;70" dur="3s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Nucleus - 3D sphere */}
+              <circle cx="525" cy="150" r="22" fill="url(#morbNucleusRight)" filter="url(#morbNucleusGlow)">
+                <animate attributeName="cx" values="525;480;525" dur="3s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Nucleus highlight for 3D effect */}
+              <ellipse cx="518" cy="142" rx="8" ry="6" fill="white" opacity="0.3">
+                <animate attributeName="cx" values="518;473;518" dur="3s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Electron in orbit */}
+              <circle cx="495" cy="150" r="7" fill="url(#morbElectronGlow)" filter="url(#morbElectronFilter)">
+                <animate attributeName="cx" values="495;430;495" dur="3s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Label */}
+              <g>
+                <rect x="490" y="235" width="70" height="22" rx="6" fill="url(#morbLabelBg)" stroke="#2563eb" strokeWidth="1" />
+                <text x="525" y="250" textAnchor="middle" fontSize="11" fill="#93c5fd" fontWeight="600">Atom B</text>
+                <animate attributeName="transform" values="translate(0,0);translate(-45,0);translate(0,0)" dur="3s" repeatCount="indefinite" />
+              </g>
+            </g>
+
+            {/* ============================================================ */}
+            {/* BONDING REGION - Orbital Overlap */}
+            {/* ============================================================ */}
+            <g>
+              {/* Bonding orbital formation (green - constructive) */}
+              <ellipse cx="350" cy="150" rx="0" ry="45" fill="url(#morbBondingCloud)" filter="url(#morbBondGlow)" opacity="0">
+                <animate attributeName="rx" values="0;80;0" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0;0.8;0" dur="3s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Bond indication line */}
+              <line x1="200" y1="150" x2="500" y2="150" stroke="url(#morbBondGradient)" strokeWidth="3" strokeOpacity="0" filter="url(#morbBondGlow)">
+                <animate attributeName="stroke-opacity" values="0;0.6;0" dur="3s" repeatCount="indefinite" />
+              </line>
+
+              {/* "BOND!" text */}
+              <g opacity="0">
+                <rect x="300" y="55" width="100" height="30" rx="8" fill="#166534" stroke="#22c55e" strokeWidth="2" />
+                <text x="350" y="76" textAnchor="middle" fontSize="14" fill="#86efac" fontWeight="bold">BONDING!</text>
+                <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" />
+              </g>
+            </g>
+
+            {/* ============================================================ */}
+            {/* ENERGY LEVEL INDICATOR (MO Diagram preview) */}
+            {/* ============================================================ */}
+            <g transform="translate(620, 40)">
+              {/* Energy axis */}
+              <rect x="0" y="0" width="8" height="180" rx="4" fill="url(#morbEnergyGradient)" opacity="0.6" />
+
+              {/* Energy labels */}
+              <text x="20" y="15" fontSize="8" fill="#ef4444" fontWeight="600">High E</text>
+              <text x="20" y="180" fontSize="8" fill="#22c55e" fontWeight="600">Low E</text>
+
+              {/* Antibonding level indicator */}
+              <line x1="-10" y1="40" x2="40" y2="40" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" opacity="0.7" />
+              <text x="-15" y="44" fontSize="7" fill="#fca5a5" textAnchor="end">sigma*</text>
+
+              {/* Bonding level indicator */}
+              <line x1="-10" y1="140" x2="40" y2="140" stroke="#22c55e" strokeWidth="2" opacity="0.7" />
+              <text x="-15" y="144" fontSize="7" fill="#86efac" textAnchor="end">sigma</text>
+            </g>
+
+            {/* ============================================================ */}
+            {/* LABELS & ANNOTATIONS */}
+            {/* ============================================================ */}
+            {/* Main title */}
+            <text x="350" y="28" textAnchor="middle" fontSize="12" fill="#94a3b8" fontWeight="500" letterSpacing="2">ORBITAL COMBINATION</text>
+
+            {/* Phase indicators */}
+            <g transform="translate(40, 100)">
+              <circle cx="0" cy="0" r="8" fill="#22c55e" opacity="0.8" />
+              <text x="15" y="4" fontSize="9" fill="#86efac">+ phase</text>
+            </g>
+            <g transform="translate(40, 125)">
+              <circle cx="0" cy="0" r="8" fill="#ef4444" opacity="0.8" />
+              <text x="15" y="4" fontSize="9" fill="#fca5a5">- phase</text>
+            </g>
           </svg>
         </div>
         <p className="text-xl text-slate-200 mt-4 mb-3">
@@ -912,6 +1138,178 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({
   const renderReview = () => (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-6">Understanding Bond Order</h2>
+
+      {/* Premium MO Energy Diagram SVG */}
+      <div className="bg-slate-800/60 rounded-xl p-4 max-w-2xl w-full mb-6">
+        <svg viewBox="0 0 600 280" className="w-full h-auto">
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="morbReviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0c0a1d" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0c0a1d" />
+            </linearGradient>
+
+            {/* Atomic orbital level gradient - left atom */}
+            <linearGradient id="morbAOLevelLeft" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Atomic orbital level gradient - right atom */}
+            <linearGradient id="morbAOLevelRight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Bonding MO level gradient */}
+            <linearGradient id="morbBondingLevel" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#15803d" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Antibonding MO level gradient */}
+            <linearGradient id="morbAntibondingLevel" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b91c1c" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Electron gradient */}
+            <radialGradient id="morbReviewElectron" cx="40%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            {/* Energy arrow gradient */}
+            <linearGradient id="morbEnergyArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Connection line gradient */}
+            <linearGradient id="morbConnectionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#9ca3af" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#6b7280" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="morbLevelGlow" x="-50%" y="-100%" width="200%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="morbElectronGlowReview" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="600" height="280" fill="url(#morbReviewBg)" rx="8" />
+
+          {/* Title */}
+          <text x="300" y="25" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="600" letterSpacing="1">MOLECULAR ORBITAL ENERGY DIAGRAM</text>
+
+          {/* Energy axis */}
+          <g transform="translate(30, 50)">
+            <rect x="0" y="0" width="6" height="200" rx="3" fill="url(#morbEnergyArrow)" opacity="0.7" />
+            <polygon points="3,0 -5,15 11,15" fill="#ef4444" />
+            <text x="3" y="-8" textAnchor="middle" fontSize="9" fill="#94a3b8">Energy</text>
+            <text x="-5" y="210" fontSize="8" fill="#22c55e">Low</text>
+            <text x="-5" y="12" fontSize="8" fill="#ef4444">High</text>
+          </g>
+
+          {/* Left Atom - Atomic Orbitals */}
+          <g transform="translate(80, 50)">
+            <text x="50" y="0" textAnchor="middle" fontSize="11" fill="#a78bfa" fontWeight="600">Atom A</text>
+            <text x="50" y="15" textAnchor="middle" fontSize="9" fill="#64748b">(1s orbital)</text>
+
+            {/* AO Energy level */}
+            <rect x="10" y="95" width="80" height="6" rx="3" fill="url(#morbAOLevelLeft)" filter="url(#morbLevelGlow)" />
+
+            {/* Electron */}
+            <circle cx="35" cy="88" r="8" fill="url(#morbReviewElectron)" filter="url(#morbElectronGlowReview)">
+              <animate attributeName="cy" values="88;85;88" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <text x="35" y="91" textAnchor="middle" fontSize="7" fill="#422006" fontWeight="bold">e-</text>
+
+            {/* Spin arrow */}
+            <text x="35" y="78" textAnchor="middle" fontSize="12" fill="#fbbf24">↑</text>
+          </g>
+
+          {/* Right Atom - Atomic Orbitals */}
+          <g transform="translate(420, 50)">
+            <text x="50" y="0" textAnchor="middle" fontSize="11" fill="#60a5fa" fontWeight="600">Atom B</text>
+            <text x="50" y="15" textAnchor="middle" fontSize="9" fill="#64748b">(1s orbital)</text>
+
+            {/* AO Energy level */}
+            <rect x="10" y="95" width="80" height="6" rx="3" fill="url(#morbAOLevelRight)" filter="url(#morbLevelGlow)" />
+
+            {/* Electron */}
+            <circle cx="65" cy="88" r="8" fill="url(#morbReviewElectron)" filter="url(#morbElectronGlowReview)">
+              <animate attributeName="cy" values="88;85;88" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1" />
+            </circle>
+            <text x="65" y="91" textAnchor="middle" fontSize="7" fill="#422006" fontWeight="bold">e-</text>
+
+            {/* Spin arrow */}
+            <text x="65" y="78" textAnchor="middle" fontSize="12" fill="#fbbf24">↑</text>
+          </g>
+
+          {/* Center - Molecular Orbitals */}
+          <g transform="translate(230, 50)">
+            <text x="70" y="0" textAnchor="middle" fontSize="11" fill="#e2e8f0" fontWeight="600">Molecular Orbitals</text>
+
+            {/* Antibonding orbital (sigma*) - higher energy */}
+            <rect x="20" y="35" width="100" height="6" rx="3" fill="url(#morbAntibondingLevel)" filter="url(#morbLevelGlow)" />
+            <text x="135" y="40" fontSize="10" fill="#fca5a5" fontWeight="600">sigma* (antibonding)</text>
+            <text x="70" y="28" textAnchor="middle" fontSize="8" fill="#ef4444">Higher energy - destabilizes</text>
+
+            {/* Bonding orbital (sigma) - lower energy */}
+            <rect x="20" y="155" width="100" height="6" rx="3" fill="url(#morbBondingLevel)" filter="url(#morbLevelGlow)" />
+            <text x="135" y="160" fontSize="10" fill="#86efac" fontWeight="600">sigma (bonding)</text>
+            <text x="70" y="175" textAnchor="middle" fontSize="8" fill="#22c55e">Lower energy - stabilizes</text>
+
+            {/* Electrons in bonding orbital */}
+            <circle cx="55" cy="148" r="8" fill="url(#morbReviewElectron)" filter="url(#morbElectronGlowReview)">
+              <animate attributeName="cy" values="148;145;148" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <text x="55" y="151" textAnchor="middle" fontSize="7" fill="#422006" fontWeight="bold">e-</text>
+            <text x="55" y="138" textAnchor="middle" fontSize="12" fill="#fbbf24">↑</text>
+
+            <circle cx="85" cy="148" r="8" fill="url(#morbReviewElectron)" filter="url(#morbElectronGlowReview)">
+              <animate attributeName="cy" values="148;145;148" dur="2s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1" />
+            </circle>
+            <text x="85" y="151" textAnchor="middle" fontSize="7" fill="#422006" fontWeight="bold">e-</text>
+            <text x="85" y="138" textAnchor="middle" fontSize="12" fill="#fbbf24">↓</text>
+          </g>
+
+          {/* Connection lines (dashed) */}
+          <line x1="170" y1="148" x2="250" y2="88" stroke="url(#morbConnectionGrad)" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1="170" y1="148" x2="250" y2="208" stroke="url(#morbConnectionGrad)" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1="430" y1="148" x2="350" y2="88" stroke="url(#morbConnectionGrad)" strokeWidth="1.5" strokeDasharray="4 3" />
+          <line x1="430" y1="148" x2="350" y2="208" stroke="url(#morbConnectionGrad)" strokeWidth="1.5" strokeDasharray="4 3" />
+
+          {/* Bond Order calculation box */}
+          <g transform="translate(200, 220)">
+            <rect x="0" y="0" width="200" height="45" rx="8" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <text x="100" y="18" textAnchor="middle" fontSize="10" fill="#94a3b8">Bond Order = (2 - 0) / 2 =</text>
+            <text x="100" y="36" textAnchor="middle" fontSize="16" fill="#22c55e" fontWeight="bold">1 (Single Bond)</text>
+          </g>
+        </svg>
+      </div>
 
       <div className="bg-slate-800 p-6 rounded-xl max-w-lg mb-6">
         <h3 className="text-lg font-bold text-white mb-4">Key Concepts</h3>
@@ -1136,6 +1534,225 @@ const MolecularOrbitalsRenderer: React.FC<MolecularOrbitalsRendererProps> = ({
   const renderTwistReview = () => (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-6">Why O2 is Paramagnetic</h2>
+
+      {/* Premium O2 vs N2 Comparison SVG */}
+      <div className="bg-slate-800/60 rounded-xl p-4 max-w-3xl w-full mb-6">
+        <svg viewBox="0 0 700 320" className="w-full h-auto">
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="morbTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1c1917" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1c1917" />
+            </linearGradient>
+
+            {/* O2 nucleus gradient - red tones */}
+            <radialGradient id="morbO2Nucleus" cx="35%" cy="35%" r="60%" fx="25%" fy="25%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+
+            {/* N2 nucleus gradient - blue tones */}
+            <radialGradient id="morbN2Nucleus" cx="35%" cy="35%" r="60%" fx="25%" fy="25%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
+
+            {/* Paired electron orbital - cyan */}
+            <linearGradient id="morbPairedOrbital" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Unpaired electron orbital - yellow/amber glow */}
+            <linearGradient id="morbUnpairedOrbital" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Electron gradient */}
+            <radialGradient id="morbTwistElectron" cx="40%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            {/* Unpaired electron special glow - magnetic */}
+            <radialGradient id="morbMagneticElectron" cx="40%" cy="40%" r="50%">
+              <stop offset="0%" stopColor="#fef9c3" />
+              <stop offset="30%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#facc15" />
+              <stop offset="100%" stopColor="#eab308" />
+            </radialGradient>
+
+            {/* Magnetic field lines gradient */}
+            <linearGradient id="morbMagneticField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" stopOpacity="0" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="morbTwistGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="morbMagneticGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="morbNucleusGlowTwist" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="700" height="320" fill="url(#morbTwistBg)" rx="8" />
+
+          {/* Dividing line */}
+          <line x1="350" y1="40" x2="350" y2="280" stroke="#334155" strokeWidth="2" strokeDasharray="8 4" />
+
+          {/* ============================================================ */}
+          {/* LEFT SIDE - O2 (Paramagnetic) */}
+          {/* ============================================================ */}
+          <g transform="translate(0, 0)">
+            {/* Title */}
+            <rect x="100" y="15" width="150" height="28" rx="8" fill="#7f1d1d" stroke="#ef4444" strokeWidth="1.5" />
+            <text x="175" y="34" textAnchor="middle" fontSize="14" fill="#fca5a5" fontWeight="bold">O2 - Oxygen</text>
+
+            {/* Molecule visualization */}
+            <g transform="translate(100, 100)">
+              {/* Left O atom */}
+              <circle cx="30" cy="40" r="25" fill="url(#morbO2Nucleus)" filter="url(#morbNucleusGlowTwist)" />
+              <ellipse cx="24" cy="32" rx="8" ry="5" fill="white" opacity="0.25" />
+              <text x="30" y="45" textAnchor="middle" fontSize="14" fill="white" fontWeight="bold">O</text>
+
+              {/* Right O atom */}
+              <circle cx="120" cy="40" r="25" fill="url(#morbO2Nucleus)" filter="url(#morbNucleusGlowTwist)" />
+              <ellipse cx="114" cy="32" rx="8" ry="5" fill="white" opacity="0.25" />
+              <text x="120" y="45" textAnchor="middle" fontSize="14" fill="white" fontWeight="bold">O</text>
+
+              {/* Double bond */}
+              <line x1="55" y1="35" x2="95" y2="35" stroke="#94a3b8" strokeWidth="4" />
+              <line x1="55" y1="45" x2="95" y2="45" stroke="#94a3b8" strokeWidth="4" />
+            </g>
+
+            {/* Pi* orbital levels with UNPAIRED electrons */}
+            <g transform="translate(60, 175)">
+              <text x="115" y="0" textAnchor="middle" fontSize="10" fill="#fbbf24" fontWeight="600">pi* antibonding orbitals (degenerate)</text>
+
+              {/* First pi* orbital */}
+              <rect x="30" y="12" width="70" height="5" rx="2" fill="url(#morbUnpairedOrbital)" filter="url(#morbMagneticGlow)" />
+              <circle cx="65" cy="8" r="7" fill="url(#morbMagneticElectron)" filter="url(#morbMagneticGlow)">
+                <animate attributeName="r" values="7;8;7" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <text x="65" y="0" textAnchor="middle" fontSize="10" fill="#fbbf24" fontWeight="bold">↑</text>
+
+              {/* Second pi* orbital */}
+              <rect x="130" y="12" width="70" height="5" rx="2" fill="url(#morbUnpairedOrbital)" filter="url(#morbMagneticGlow)" />
+              <circle cx="165" cy="8" r="7" fill="url(#morbMagneticElectron)" filter="url(#morbMagneticGlow)">
+                <animate attributeName="r" values="7;8;7" dur="1s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.6 1; 0.4 0 0.6 1" />
+              </circle>
+              <text x="165" y="0" textAnchor="middle" fontSize="10" fill="#fbbf24" fontWeight="bold">↑</text>
+
+              {/* Unpaired label */}
+              <rect x="70" y="30" width="90" height="20" rx="6" fill="#92400e" stroke="#fbbf24" strokeWidth="1" />
+              <text x="115" y="44" textAnchor="middle" fontSize="9" fill="#fef08a" fontWeight="bold">2 UNPAIRED e-</text>
+            </g>
+
+            {/* Magnetic field visualization */}
+            <g transform="translate(130, 250)">
+              <ellipse cx="45" cy="15" rx="60" ry="20" fill="none" stroke="url(#morbMagneticField)" strokeWidth="2">
+                <animate attributeName="stroke-opacity" values="0.3;0.8;0.3" dur="2s" repeatCount="indefinite" />
+              </ellipse>
+              <ellipse cx="45" cy="15" rx="40" ry="13" fill="none" stroke="url(#morbMagneticField)" strokeWidth="1.5">
+                <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+              </ellipse>
+              <text x="45" y="50" textAnchor="middle" fontSize="11" fill="#22c55e" fontWeight="bold">PARAMAGNETIC</text>
+              <text x="45" y="65" textAnchor="middle" fontSize="9" fill="#86efac">Attracted to magnets</text>
+            </g>
+          </g>
+
+          {/* ============================================================ */}
+          {/* RIGHT SIDE - N2 (Diamagnetic) */}
+          {/* ============================================================ */}
+          <g transform="translate(350, 0)">
+            {/* Title */}
+            <rect x="100" y="15" width="150" height="28" rx="8" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="1.5" />
+            <text x="175" y="34" textAnchor="middle" fontSize="14" fill="#93c5fd" fontWeight="bold">N2 - Nitrogen</text>
+
+            {/* Molecule visualization */}
+            <g transform="translate(100, 100)">
+              {/* Left N atom */}
+              <circle cx="30" cy="40" r="25" fill="url(#morbN2Nucleus)" filter="url(#morbNucleusGlowTwist)" />
+              <ellipse cx="24" cy="32" rx="8" ry="5" fill="white" opacity="0.25" />
+              <text x="30" y="45" textAnchor="middle" fontSize="14" fill="white" fontWeight="bold">N</text>
+
+              {/* Right N atom */}
+              <circle cx="120" cy="40" r="25" fill="url(#morbN2Nucleus)" filter="url(#morbNucleusGlowTwist)" />
+              <ellipse cx="114" cy="32" rx="8" ry="5" fill="white" opacity="0.25" />
+              <text x="120" y="45" textAnchor="middle" fontSize="14" fill="white" fontWeight="bold">N</text>
+
+              {/* Triple bond */}
+              <line x1="55" y1="32" x2="95" y2="32" stroke="#94a3b8" strokeWidth="4" />
+              <line x1="55" y1="40" x2="95" y2="40" stroke="#94a3b8" strokeWidth="4" />
+              <line x1="55" y1="48" x2="95" y2="48" stroke="#94a3b8" strokeWidth="4" />
+            </g>
+
+            {/* Pi bonding orbital levels with PAIRED electrons */}
+            <g transform="translate(60, 175)">
+              <text x="115" y="0" textAnchor="middle" fontSize="10" fill="#22d3ee" fontWeight="600">pi bonding orbitals (filled)</text>
+
+              {/* First pi orbital - paired */}
+              <rect x="30" y="12" width="70" height="5" rx="2" fill="url(#morbPairedOrbital)" filter="url(#morbTwistGlow)" />
+              <circle cx="55" cy="8" r="6" fill="url(#morbTwistElectron)" />
+              <text x="55" y="0" textAnchor="middle" fontSize="9" fill="#fbbf24">↑</text>
+              <circle cx="75" cy="8" r="6" fill="url(#morbTwistElectron)" />
+              <text x="75" y="0" textAnchor="middle" fontSize="9" fill="#fbbf24">↓</text>
+
+              {/* Second pi orbital - paired */}
+              <rect x="130" y="12" width="70" height="5" rx="2" fill="url(#morbPairedOrbital)" filter="url(#morbTwistGlow)" />
+              <circle cx="155" cy="8" r="6" fill="url(#morbTwistElectron)" />
+              <text x="155" y="0" textAnchor="middle" fontSize="9" fill="#fbbf24">↑</text>
+              <circle cx="175" cy="8" r="6" fill="url(#morbTwistElectron)" />
+              <text x="175" y="0" textAnchor="middle" fontSize="9" fill="#fbbf24">↓</text>
+
+              {/* Paired label */}
+              <rect x="70" y="30" width="90" height="20" rx="6" fill="#164e63" stroke="#22d3ee" strokeWidth="1" />
+              <text x="115" y="44" textAnchor="middle" fontSize="9" fill="#a5f3fc" fontWeight="bold">ALL PAIRED</text>
+            </g>
+
+            {/* No magnetic field */}
+            <g transform="translate(130, 250)">
+              <circle cx="45" cy="15" r="25" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="20" y1="15" x2="70" y2="15" stroke="#64748b" strokeWidth="2" />
+              <text x="45" y="50" textAnchor="middle" fontSize="11" fill="#ef4444" fontWeight="bold">DIAMAGNETIC</text>
+              <text x="45" y="65" textAnchor="middle" fontSize="9" fill="#fca5a5">Not attracted to magnets</text>
+            </g>
+          </g>
+
+          {/* Bottom comparison text */}
+          <text x="350" y="305" textAnchor="middle" fontSize="10" fill="#94a3b8">Hund's Rule: Electrons fill degenerate orbitals singly before pairing</text>
+        </svg>
+      </div>
 
       <div className="bg-slate-800 p-6 rounded-xl max-w-lg mb-6">
         <h3 className="text-lg font-bold text-white mb-4">The Key: Hund's Rule</h3>

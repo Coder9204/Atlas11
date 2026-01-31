@@ -704,89 +704,315 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhas
 
         <div className="relative w-full max-w-lg h-64 bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
           <svg viewBox="0 0 400 260" className="w-full h-full">
-            {/* Main pipe with Venturi shape */}
+            <defs>
+              {/* Premium meter tube gradient */}
+              <linearGradient id="ventMeterTube" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#5a7a9c" />
+                <stop offset="20%" stopColor="#4a6a8c" />
+                <stop offset="50%" stopColor="#3a5a7c" />
+                <stop offset="80%" stopColor="#4a6a8c" />
+                <stop offset="100%" stopColor="#5a7a9c" />
+              </linearGradient>
+
+              {/* Inner channel gradient */}
+              <linearGradient id="ventMeterInner" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1a3a5c" />
+                <stop offset="50%" stopColor="#051525" />
+                <stop offset="100%" stopColor="#1a3a5c" />
+              </linearGradient>
+
+              {/* Manometer glass gradient */}
+              <linearGradient id="ventMeterGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1e3a5a" />
+                <stop offset="30%" stopColor="#2a4a6a" />
+                <stop offset="70%" stopColor="#2a4a6a" />
+                <stop offset="100%" stopColor="#1e3a5a" />
+              </linearGradient>
+
+              {/* High pressure fluid gradient */}
+              <linearGradient id="ventMeterHighP" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#dc2626" />
+                <stop offset="40%" stopColor="#ef4444" />
+                <stop offset="60%" stopColor="#f87171" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </linearGradient>
+
+              {/* Low pressure fluid gradient */}
+              <linearGradient id="ventMeterLowP" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#1d4ed8" />
+                <stop offset="40%" stopColor="#3b82f6" />
+                <stop offset="60%" stopColor="#60a5fa" />
+                <stop offset="100%" stopColor="#3b82f6" />
+              </linearGradient>
+
+              {/* Flow particle glow */}
+              <radialGradient id="ventMeterFlowGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Display panel gradient */}
+              <linearGradient id="ventMeterDisplay" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1a2a3a" />
+                <stop offset="50%" stopColor="#0a1a2a" />
+                <stop offset="100%" stopColor="#1a2a3a" />
+              </linearGradient>
+
+              {/* Glow filters */}
+              <filter id="ventMeterGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="ventMeterDisplayGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Background */}
+            <rect width="400" height="260" fill="#0a1628" />
+
+            {/* Main pipe with Venturi shape - premium gradient */}
             <path
               d="M20 80 L100 80 Q140 80 160 95 L240 95 Q260 80 300 80 L380 80 L380 140 L300 140 Q260 140 240 125 L160 125 Q140 140 100 140 L20 140 Z"
-              fill="#3a5a7c"
-              stroke="#5588aa"
-              strokeWidth="3"
+              fill="url(#ventMeterTube)"
+              stroke="#6a8aac"
+              strokeWidth="2"
             />
 
-            {/* Flow animation */}
-            {[90, 110].map((y, i) => (
-              <line
-                key={`flow-${i}`}
-                x1="30"
-                y1={y}
-                x2="370"
-                y2={y}
-                stroke="#00ccff"
-                strokeWidth="3"
-                strokeDasharray="10,8"
-              >
-                <animate
-                  attributeName="stroke-dashoffset"
-                  from="0"
-                  to="-18"
-                  dur={`${0.8 / (meterFlowRate / 50)}s`}
-                  repeatCount="indefinite"
-                />
-              </line>
-            ))}
+            {/* Inner channel */}
+            <path
+              d="M25 85 L100 85 Q138 85 158 98 L242 98 Q262 85 300 85 L375 85 L375 135 L300 135 Q262 135 242 122 L158 122 Q138 135 100 135 L25 135 Z"
+              fill="url(#ventMeterInner)"
+            />
 
-            {/* Faster flow in narrow section */}
-            <line
-              x1="155"
-              y1="110"
-              x2="245"
-              y2="110"
-              stroke="#00ffff"
-              strokeWidth="2"
-              strokeDasharray="6,4"
-            >
-              <animate
-                attributeName="stroke-dashoffset"
-                from="0"
-                to="-10"
-                dur={`${0.4 / (meterFlowRate / 50)}s`}
-                repeatCount="indefinite"
-              />
-            </line>
+            {/* Pipe highlight */}
+            <path
+              d="M25 87 L100 87 Q138 87 158 100"
+              fill="none"
+              stroke="#8aaacc"
+              strokeWidth="1"
+              strokeOpacity="0.4"
+            />
+
+            {/* Flow animation with glow */}
+            <g filter="url(#ventMeterGlow)">
+              {/* Wide section streamlines */}
+              {[95, 105, 115, 125].map((y, i) => (
+                <line
+                  key={`flow-left-${i}`}
+                  x1="30"
+                  y1={y}
+                  x2="100"
+                  y2={y}
+                  stroke="#00ccff"
+                  strokeWidth={i === 1 || i === 2 ? 3 : 2}
+                  strokeDasharray="10,6"
+                  strokeLinecap="round"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="-16"
+                    dur={`${0.8 / (meterFlowRate / 50)}s`}
+                    repeatCount="indefinite"
+                  />
+                </line>
+              ))}
+
+              {/* Converging streamlines */}
+              {[95, 105, 115, 125].map((y, i) => {
+                const narrowY = 110 + (y - 110) * 0.4;
+                return (
+                  <line
+                    key={`converge-${i}`}
+                    x1="100"
+                    y1={y}
+                    x2="160"
+                    y2={narrowY}
+                    stroke="#00ccff"
+                    strokeWidth={1.5}
+                    strokeDasharray="8,5"
+                    strokeOpacity="0.7"
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      from="0"
+                      to="-13"
+                      dur={`${0.6 / (meterFlowRate / 50)}s`}
+                      repeatCount="indefinite"
+                    />
+                  </line>
+                );
+              })}
+
+              {/* Faster flow in narrow section */}
+              {[104, 110, 116].map((y, i) => (
+                <line
+                  key={`narrow-${i}`}
+                  x1="160"
+                  y1={y}
+                  x2="240"
+                  y2={y}
+                  stroke="#00ffff"
+                  strokeWidth={i === 1 ? 3 : 2}
+                  strokeDasharray="6,3"
+                  strokeLinecap="round"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="-9"
+                    dur={`${0.3 / (meterFlowRate / 50)}s`}
+                    repeatCount="indefinite"
+                  />
+                </line>
+              ))}
+
+              {/* Diverging streamlines */}
+              {[104, 110, 116].map((y, i) => {
+                const wideY = i === 0 ? 95 : i === 1 ? 110 : 125;
+                return (
+                  <line
+                    key={`diverge-${i}`}
+                    x1="240"
+                    y1={y}
+                    x2="300"
+                    y2={wideY}
+                    stroke="#00ccff"
+                    strokeWidth={1.5}
+                    strokeDasharray="8,5"
+                    strokeOpacity="0.7"
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      from="0"
+                      to="-13"
+                      dur={`${0.6 / (meterFlowRate / 50)}s`}
+                      repeatCount="indefinite"
+                    />
+                  </line>
+                );
+              })}
+
+              {/* Wide section right */}
+              {[95, 105, 115, 125].map((y, i) => (
+                <line
+                  key={`flow-right-${i}`}
+                  x1="300"
+                  y1={y}
+                  x2="370"
+                  y2={y}
+                  stroke="#00ccff"
+                  strokeWidth={i === 1 || i === 2 ? 3 : 2}
+                  strokeDasharray="10,6"
+                  strokeLinecap="round"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="-16"
+                    dur={`${0.8 / (meterFlowRate / 50)}s`}
+                    repeatCount="indefinite"
+                  />
+                </line>
+              ))}
+
+              {/* Flow particles */}
+              {[0, 1, 2].map((i) => (
+                <circle
+                  key={`mparticle-${i}`}
+                  cx="50"
+                  cy={105 + i * 10}
+                  r="3"
+                  fill="url(#ventMeterFlowGlow)"
+                >
+                  <animate
+                    attributeName="cx"
+                    values="30;100;200;300;370;30"
+                    dur={`${2.5 / (meterFlowRate / 50)}s`}
+                    begin={`${i * 0.25}s`}
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              ))}
+            </g>
 
             {showMeterReadings && (
-              <>
-                {/* Wide section manometer */}
-                <rect x="55" y="25" width="14" height="55" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
-                <rect x="57" y={80 - REFERENCE_PRESSURE * 0.45} width="10" height={REFERENCE_PRESSURE * 0.45} fill="#ff6666" rx="1" />
-                <text x="62" y="18" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P1</text>
-                <text x="62" y="160" fontSize="10" fill="#ff6666" textAnchor="middle">{REFERENCE_PRESSURE.toFixed(0)} kPa</text>
+              <g>
+                {/* Wide section manometer (inlet) */}
+                <g filter="url(#ventMeterGlow)">
+                  <rect x="50" y="20" width="24" height="60" rx="4" fill="url(#ventMeterGlass)" stroke="#4a6a8a" strokeWidth="1.5" />
+                  <rect x="54" y="24" width="16" height="52" rx="2" fill="#0a1a2a" />
+                  <rect x="57" y={76 - REFERENCE_PRESSURE * 0.48} width="10" height={REFERENCE_PRESSURE * 0.48} rx="2" fill="url(#ventMeterHighP)" />
+                  <rect x="48" y="16" width="28" height="6" rx="2" fill="#5a7a9a" />
+                  <line x1="62" y1="80" x2="62" y2="85" stroke="#4a6a8a" strokeWidth="4" />
+                </g>
+                <text x="62" y="12" fontSize="10" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
+                <rect x="40" y="150" width="44" height="16" rx="4" fill="#1a2a3a" stroke="#ef4444" strokeWidth="1" />
+                <text x="62" y="161" fontSize="9" fill="#f87171" textAnchor="middle" fontWeight="bold">{REFERENCE_PRESSURE.toFixed(0)} kPa</text>
 
-                {/* Narrow section manometer */}
-                <rect x="193" y="15" width="14" height="70" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
-                <rect x="195" y={85 - Math.max(meterNarrowPressure, 10) * 0.55} width="10" height={Math.max(meterNarrowPressure, 10) * 0.55} fill="#6666ff" rx="1" />
-                <text x="200" y="8" fontSize="11" fill="#6666ff" textAnchor="middle" fontWeight="bold">P2</text>
-                <text x="200" y="160" fontSize="10" fill="#6666ff" textAnchor="middle">{meterNarrowPressure.toFixed(0)} kPa</text>
+                {/* Narrow section manometer (throat) */}
+                <g filter="url(#ventMeterGlow)">
+                  <rect x="188" y="10" width="24" height="75" rx="4" fill="url(#ventMeterGlass)" stroke="#4a6a8a" strokeWidth="1.5" />
+                  <rect x="192" y="14" width="16" height="67" rx="2" fill="#0a1a2a" />
+                  <rect x="195" y={81 - Math.max(meterNarrowPressure, 10) * 0.6} width="10" height={Math.max(meterNarrowPressure, 10) * 0.6} rx="2" fill="url(#ventMeterLowP)" />
+                  <rect x="186" y="6" width="28" height="6" rx="2" fill="#5a7a9a" />
+                  <line x1="200" y1="85" x2="200" y2="98" stroke="#4a6a8a" strokeWidth="4" />
+                </g>
+                <text x="200" y="3" fontSize="10" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
+                <rect x="178" y="150" width="44" height="16" rx="4" fill="#1a2a3a" stroke="#3b82f6" strokeWidth="1" />
+                <text x="200" y="161" fontSize="9" fill="#60a5fa" textAnchor="middle" fontWeight="bold">{meterNarrowPressure.toFixed(0)} kPa</text>
 
                 {/* Wide section manometer (exit) */}
-                <rect x="331" y="25" width="14" height="55" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
-                <rect x="333" y={80 - REFERENCE_PRESSURE * 0.45} width="10" height={REFERENCE_PRESSURE * 0.45} fill="#ff6666" rx="1" />
-                <text x="338" y="18" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P3</text>
+                <g filter="url(#ventMeterGlow)">
+                  <rect x="326" y="20" width="24" height="60" rx="4" fill="url(#ventMeterGlass)" stroke="#4a6a8a" strokeWidth="1.5" />
+                  <rect x="330" y="24" width="16" height="52" rx="2" fill="#0a1a2a" />
+                  <rect x="333" y={76 - REFERENCE_PRESSURE * 0.48} width="10" height={REFERENCE_PRESSURE * 0.48} rx="2" fill="url(#ventMeterHighP)" />
+                  <rect x="324" y="16" width="28" height="6" rx="2" fill="#5a7a9a" />
+                  <line x1="338" y1="80" x2="338" y2="85" stroke="#4a6a8a" strokeWidth="4" />
+                </g>
+                <text x="338" y="12" fontSize="10" fill="#f87171" textAnchor="middle" fontWeight="bold">P3</text>
 
-                {/* Delta P display */}
-                <rect x="130" y="175" width="140" height="35" fill="#1a1a2e" stroke="#4a4a6a" strokeWidth="2" rx="5" />
-                <text x="200" y="193" fontSize="12" fill="#00ff00" textAnchor="middle" fontWeight="bold">
+                {/* Premium Delta P display panel */}
+                <g filter="url(#ventMeterDisplayGlow)">
+                  <rect x="120" y="178" width="160" height="45" rx="8" fill="url(#ventMeterDisplay)" stroke="#22c55e" strokeWidth="2" />
+                  <rect x="125" y="183" width="150" height="35" rx="5" fill="#051510" />
+                </g>
+                <text x="200" y="200" fontSize="13" fill="#4ade80" textAnchor="middle" fontWeight="bold" fontFamily="monospace">
                   Delta P = {(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)} kPa
                 </text>
-                <text x="200" y="206" fontSize="10" fill="#88ff88" textAnchor="middle">
-                  Calculated Q = {calculatedFlowRate.toFixed(0)}%
+                <text x="200" y="215" fontSize="11" fill="#86efac" textAnchor="middle" fontFamily="monospace">
+                  Q = {calculatedFlowRate.toFixed(0)}% (calculated)
                 </text>
-              </>
+
+                {/* Connection lines visual */}
+                <line x1="84" y1="158" x2="120" y2="190" stroke="#4a6a8a" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+                <line x1="200" y1="166" x2="200" y2="178" stroke="#4a6a8a" strokeWidth="1" strokeDasharray="3,2" opacity="0.5" />
+              </g>
             )}
 
-            {/* Section labels */}
-            <text x="62" y="230" fontSize="11" fill="#aaa" textAnchor="middle">Wide</text>
-            <text x="200" y="230" fontSize="11" fill="#aaa" textAnchor="middle">Throat</text>
-            <text x="338" y="230" fontSize="11" fill="#aaa" textAnchor="middle">Wide</text>
+            {/* Section labels with premium styling */}
+            <rect x="40" y="232" width="44" height="16" rx="4" fill="#1a2a3a" stroke="#3a5a7a" strokeWidth="1" />
+            <text x="62" y="243" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="600">Inlet</text>
+
+            <rect x="172" y="232" width="56" height="16" rx="4" fill="#1a2a3a" stroke="#06b6d4" strokeWidth="1" />
+            <text x="200" y="243" fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="600">Throat</text>
+
+            <rect x="316" y="232" width="44" height="16" rx="4" fill="#1a2a3a" stroke="#3a5a7a" strokeWidth="1" />
+            <text x="338" y="243" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="600">Outlet</text>
+
+            {/* Flow direction */}
+            <text x="12" y="115" fontSize="10" fill="#4a6a8a" fontWeight="bold">IN</text>
+            <text x="378" y="115" fontSize="10" fill="#4a6a8a" fontWeight="bold">OUT</text>
           </svg>
         </div>
 
@@ -1005,35 +1231,187 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhas
 
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 300" className="w-full h-full">
-                {/* Venturi tube shape */}
+                <defs>
+                  {/* Premium Venturi tube metal gradient with depth */}
+                  <linearGradient id="ventTubeMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#5a7a9c" />
+                    <stop offset="20%" stopColor="#4a6a8c" />
+                    <stop offset="40%" stopColor="#3a5a7c" />
+                    <stop offset="60%" stopColor="#2a4a6c" />
+                    <stop offset="80%" stopColor="#3a5a7c" />
+                    <stop offset="100%" stopColor="#4a6a8c" />
+                  </linearGradient>
+
+                  {/* Inner tube gradient for 3D effect */}
+                  <linearGradient id="ventTubeInner" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#1a3a5c" />
+                    <stop offset="30%" stopColor="#0a2a4c" />
+                    <stop offset="50%" stopColor="#051525" />
+                    <stop offset="70%" stopColor="#0a2a4c" />
+                    <stop offset="100%" stopColor="#1a3a5c" />
+                  </linearGradient>
+
+                  {/* Radial gradient for flow effect */}
+                  <radialGradient id="ventFlowGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#00ffff" stopOpacity="1" />
+                    <stop offset="40%" stopColor="#00ccff" stopOpacity="0.8" />
+                    <stop offset="70%" stopColor="#0088cc" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#004466" stopOpacity="0" />
+                  </radialGradient>
+
+                  {/* Flow particle gradient */}
+                  <radialGradient id="ventParticleGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                    <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+                    <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+                  </radialGradient>
+
+                  {/* Pressure tube glass gradient */}
+                  <linearGradient id="ventPressureGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#1e3a5a" />
+                    <stop offset="20%" stopColor="#2a4a6a" />
+                    <stop offset="50%" stopColor="#3a5a7a" />
+                    <stop offset="80%" stopColor="#2a4a6a" />
+                    <stop offset="100%" stopColor="#1e3a5a" />
+                  </linearGradient>
+
+                  {/* High pressure fluid gradient (red) */}
+                  <linearGradient id="ventHighPressure" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#dc2626" />
+                    <stop offset="30%" stopColor="#ef4444" />
+                    <stop offset="50%" stopColor="#f87171" />
+                    <stop offset="70%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#dc2626" />
+                  </linearGradient>
+
+                  {/* Low pressure fluid gradient (blue) */}
+                  <linearGradient id="ventLowPressure" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#1d4ed8" />
+                    <stop offset="30%" stopColor="#3b82f6" />
+                    <stop offset="50%" stopColor="#60a5fa" />
+                    <stop offset="70%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#1d4ed8" />
+                  </linearGradient>
+
+                  {/* Velocity arrow gradient */}
+                  <linearGradient id="ventVelocityArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="50%" stopColor="#4ade80" />
+                    <stop offset="100%" stopColor="#86efac" />
+                  </linearGradient>
+
+                  {/* Fast velocity arrow gradient */}
+                  <linearGradient id="ventFastVelocity" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#06b6d4" />
+                    <stop offset="50%" stopColor="#22d3ee" />
+                    <stop offset="100%" stopColor="#67e8f9" />
+                  </linearGradient>
+
+                  {/* Glow filter for flow lines */}
+                  <filter id="ventFlowBlur" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Glow filter for pressure indicators */}
+                  <filter id="ventPressureGlow" x="-100%" y="-100%" width="300%" height="300%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Inner glow for tube depth */}
+                  <filter id="ventInnerShadow">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                    <feOffset dx="0" dy="2" result="offsetBlur" />
+                    <feComposite in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowDiff" />
+                    <feFlood floodColor="#000000" floodOpacity="0.5" />
+                    <feComposite in2="shadowDiff" operator="in" />
+                    <feComposite in2="SourceGraphic" operator="over" />
+                  </filter>
+
+                  {/* Streamline pattern */}
+                  <pattern id="ventStreamlines" width="20" height="10" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="5" x2="15" y2="5" stroke="#00ccff" strokeWidth="1" strokeOpacity="0.3" />
+                  </pattern>
+                </defs>
+
+                {/* Background with subtle gradient */}
+                <rect width="400" height="300" fill="#0a1628" />
+                <rect width="400" height="300" fill="url(#ventStreamlines)" opacity="0.2" />
+
+                {/* Venturi tube outer shape with premium gradient */}
                 <path
                   d={`M20 100 L100 100 Q150 100 180 ${100 + (50 - constrictionSize) * 0.6} L220 ${100 + (50 - constrictionSize) * 0.6} Q250 100 300 100 L380 100 L380 200 L300 200 Q250 200 220 ${200 - (50 - constrictionSize) * 0.6} L180 ${200 - (50 - constrictionSize) * 0.6} Q150 200 100 200 L20 200 Z`}
-                  fill="#3a5a7c"
-                  stroke="#5588aa"
-                  strokeWidth="3"
+                  fill="url(#ventTubeMetal)"
+                  stroke="#6a8aac"
+                  strokeWidth="2"
+                  filter="url(#ventInnerShadow)"
                 />
 
-                {/* Flow lines animation */}
+                {/* Inner tube channel for depth */}
+                <path
+                  d={`M25 105 L100 105 Q148 105 178 ${105 + (50 - constrictionSize) * 0.55} L222 ${105 + (50 - constrictionSize) * 0.55} Q252 105 300 105 L375 105 L375 195 L300 195 Q252 195 222 ${195 - (50 - constrictionSize) * 0.55} L178 ${195 - (50 - constrictionSize) * 0.55} Q148 195 100 195 L25 195 Z`}
+                  fill="url(#ventTubeInner)"
+                />
+
+                {/* Tube highlight for 3D effect */}
+                <path
+                  d={`M25 108 L100 108 Q148 108 178 ${108 + (50 - constrictionSize) * 0.5}`}
+                  fill="none"
+                  stroke="#8aaacc"
+                  strokeWidth="1"
+                  strokeOpacity="0.4"
+                />
+
+                {/* Flow lines animation with glow effect */}
                 {isFlowing && (
-                  <>
-                    {/* Wide section - slower, spread out */}
-                    {[130, 150, 170].map((y, i) => (
+                  <g filter="url(#ventFlowBlur)">
+                    {/* Wide section left - slower, spread out streamlines */}
+                    {[125, 140, 150, 160, 175].map((y, i) => (
                       <line
                         key={`left-${i}`}
                         x1="30"
                         y1={y}
                         x2="100"
                         y2={y}
-                        stroke="#00ccff"
-                        strokeWidth="4"
-                        strokeDasharray="15,10"
+                        stroke="url(#ventParticleGlow)"
+                        strokeWidth={i === 2 ? 4 : 2}
+                        strokeDasharray="12,8"
+                        strokeLinecap="round"
                       >
-                        <animate attributeName="stroke-dashoffset" from="0" to="-25" dur={`${1.5 / (flowRate / 50)}s`} repeatCount="indefinite" />
+                        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur={`${1.5 / (flowRate / 50)}s`} repeatCount="indefinite" />
                       </line>
                     ))}
 
-                    {/* Narrow section - faster, compressed */}
-                    {[140 + (50 - constrictionSize) * 0.4, 150, 160 - (50 - constrictionSize) * 0.4].map((y, i) => (
+                    {/* Converging section - streamlines compress */}
+                    {[125, 140, 150, 160, 175].map((y, i) => {
+                      const narrowY = 150 + (y - 150) * (constrictionSize / 100);
+                      return (
+                        <line
+                          key={`converge-${i}`}
+                          x1="100"
+                          y1={y}
+                          x2="175"
+                          y2={narrowY}
+                          stroke="#00ccff"
+                          strokeWidth={i === 2 ? 3 : 1.5}
+                          strokeDasharray="10,6"
+                          strokeOpacity="0.7"
+                        >
+                          <animate attributeName="stroke-dashoffset" from="0" to="-16" dur={`${1.0 / (flowRate / 50)}s`} repeatCount="indefinite" />
+                        </line>
+                      );
+                    })}
+
+                    {/* Narrow section - faster, compressed with bright glow */}
+                    {[145 + (50 - constrictionSize) * 0.35, 150, 155 - (50 - constrictionSize) * 0.35].map((y, i) => (
                       <line
                         key={`middle-${i}`}
                         x1="175"
@@ -1041,75 +1419,154 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhas
                         x2="225"
                         y2={y}
                         stroke="#00ffff"
-                        strokeWidth="2"
-                        strokeDasharray="10,5"
+                        strokeWidth={i === 1 ? 3 : 2}
+                        strokeDasharray="8,4"
+                        strokeLinecap="round"
                       >
-                        <animate attributeName="stroke-dashoffset" from="0" to="-15" dur={`${0.5 / (flowRate / 50) / areaRatio}s`} repeatCount="indefinite" />
+                        <animate attributeName="stroke-dashoffset" from="0" to="-12" dur={`${0.4 / (flowRate / 50) / areaRatio}s`} repeatCount="indefinite" />
                       </line>
                     ))}
 
+                    {/* Diverging section - streamlines expand */}
+                    {[145 + (50 - constrictionSize) * 0.35, 150, 155 - (50 - constrictionSize) * 0.35].map((y, i) => {
+                      const wideY = i === 0 ? 125 : i === 1 ? 150 : 175;
+                      return (
+                        <line
+                          key={`diverge-${i}`}
+                          x1="225"
+                          y1={y}
+                          x2="300"
+                          y2={wideY}
+                          stroke="#00ccff"
+                          strokeWidth={i === 1 ? 3 : 1.5}
+                          strokeDasharray="10,6"
+                          strokeOpacity="0.7"
+                        >
+                          <animate attributeName="stroke-dashoffset" from="0" to="-16" dur={`${1.0 / (flowRate / 50)}s`} repeatCount="indefinite" />
+                        </line>
+                      );
+                    })}
+
                     {/* Wide section right - slower again */}
-                    {[130, 150, 170].map((y, i) => (
+                    {[125, 140, 150, 160, 175].map((y, i) => (
                       <line
                         key={`right-${i}`}
                         x1="300"
                         y1={y}
                         x2="370"
                         y2={y}
-                        stroke="#00ccff"
-                        strokeWidth="4"
-                        strokeDasharray="15,10"
+                        stroke="url(#ventParticleGlow)"
+                        strokeWidth={i === 2 ? 4 : 2}
+                        strokeDasharray="12,8"
+                        strokeLinecap="round"
                       >
-                        <animate attributeName="stroke-dashoffset" from="0" to="-25" dur={`${1.5 / (flowRate / 50)}s`} repeatCount="indefinite" />
+                        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur={`${1.5 / (flowRate / 50)}s`} repeatCount="indefinite" />
                       </line>
                     ))}
-                  </>
+
+                    {/* Flow particles for extra visual effect */}
+                    {[0, 1, 2].map((i) => (
+                      <circle
+                        key={`particle-${i}`}
+                        cx="50"
+                        cy={140 + i * 10}
+                        r="3"
+                        fill="url(#ventFlowGlow)"
+                      >
+                        <animate
+                          attributeName="cx"
+                          values="30;100;200;300;370;30"
+                          dur={`${3 / (flowRate / 50)}s`}
+                          begin={`${i * 0.3}s`}
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    ))}
+                  </g>
                 )}
 
-                {/* Pressure indicators (manometer tubes) */}
+                {/* Premium pressure indicator tubes */}
                 {showPressure && (
-                  <>
-                    {/* Left (wide) pressure */}
-                    <rect x="55" y="55" width="14" height="45" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
-                    <rect x="57" y={100 - widePressure * 0.4} width="10" height={widePressure * 0.4} fill="#ff6666" rx="1" />
-                    <text x="62" y="48" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P1</text>
+                  <g filter="url(#ventPressureGlow)">
+                    {/* Left (wide) pressure tube */}
+                    <rect x="52" y="45" width="20" height="55" rx="4" fill="url(#ventPressureGlass)" stroke="#4a6a8a" strokeWidth="1.5" />
+                    <rect x="55" y="48" width="14" height="49" rx="2" fill="#0a1a2a" />
+                    <rect x="57" y={97 - widePressure * 0.45} width="10" height={widePressure * 0.45} rx="2" fill="url(#ventHighPressure)" />
+                    {/* Tube cap */}
+                    <rect x="50" y="42" width="24" height="6" rx="2" fill="#5a7a9a" />
+                    <text x="62" y="38" fontSize="10" fill="#f87171" textAnchor="middle" fontWeight="bold">P1</text>
+                    {/* Connection line to tube */}
+                    <line x1="62" y1="100" x2="62" y2="105" stroke="#4a6a8a" strokeWidth="4" />
 
-                    {/* Middle (narrow) pressure */}
-                    <rect x="193" y="35" width="14" height="55" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
-                    <rect x="195" y={90 - Math.max(narrowPressure, 10) * 0.45} width="10" height={Math.max(narrowPressure, 10) * 0.45} fill="#6666ff" rx="1" />
-                    <text x="200" y="28" fontSize="11" fill="#6666ff" textAnchor="middle" fontWeight="bold">P2</text>
+                    {/* Middle (narrow) pressure tube - taller to show lower pressure */}
+                    <rect x="190" y="25" width="20" height="65" rx="4" fill="url(#ventPressureGlass)" stroke="#4a6a8a" strokeWidth="1.5" />
+                    <rect x="193" y="28" width="14" height="59" rx="2" fill="#0a1a2a" />
+                    <rect x="195" y={87 - Math.max(narrowPressure, 10) * 0.5} width="10" height={Math.max(narrowPressure, 10) * 0.5} rx="2" fill="url(#ventLowPressure)" />
+                    {/* Tube cap */}
+                    <rect x="188" y="22" width="24" height="6" rx="2" fill="#5a7a9a" />
+                    <text x="200" y="18" fontSize="10" fill="#60a5fa" textAnchor="middle" fontWeight="bold">P2</text>
+                    {/* Connection line */}
+                    <line x1="200" y1="90" x2="200" y2={100 + (50 - constrictionSize) * 0.6 - 5} stroke="#4a6a8a" strokeWidth="4" />
 
-                    {/* Right (wide) pressure */}
-                    <rect x="331" y="55" width="14" height="45" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
-                    <rect x="333" y={100 - widePressure * 0.4} width="10" height={widePressure * 0.4} fill="#ff6666" rx="1" />
-                    <text x="338" y="48" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P3</text>
-                  </>
+                    {/* Right (wide) pressure tube */}
+                    <rect x="328" y="45" width="20" height="55" rx="4" fill="url(#ventPressureGlass)" stroke="#4a6a8a" strokeWidth="1.5" />
+                    <rect x="331" y="48" width="14" height="49" rx="2" fill="#0a1a2a" />
+                    <rect x="333" y={97 - widePressure * 0.45} width="10" height={widePressure * 0.45} rx="2" fill="url(#ventHighPressure)" />
+                    {/* Tube cap */}
+                    <rect x="326" y="42" width="24" height="6" rx="2" fill="#5a7a9a" />
+                    <text x="338" y="38" fontSize="10" fill="#f87171" textAnchor="middle" fontWeight="bold">P3</text>
+                    {/* Connection line */}
+                    <line x1="338" y1="100" x2="338" y2="105" stroke="#4a6a8a" strokeWidth="4" />
+
+                    {/* Pressure scale markings on middle tube */}
+                    {[0, 25, 50, 75, 100].map((mark, i) => (
+                      <g key={`scale-${i}`}>
+                        <line x1="207" y1={87 - mark * 0.5} x2="212" y2={87 - mark * 0.5} stroke="#6a8aaa" strokeWidth="1" />
+                      </g>
+                    ))}
+                  </g>
                 )}
 
-                {/* Velocity arrows */}
+                {/* Premium velocity arrows with gradients */}
                 {showVelocity && (
-                  <>
-                    {/* Left velocity */}
-                    <line x1="50" y1="230" x2={50 + wideVelocity * 12} y2="230" stroke="#00ff00" strokeWidth="4" />
-                    <polygon points={`${55 + wideVelocity * 12},230 ${45 + wideVelocity * 12},224 ${45 + wideVelocity * 12},236`} fill="#00ff00" />
-                    <text x="60" y="255" fontSize="11" fill="#00ff00" fontWeight="bold">v1 = {wideVelocity.toFixed(1)} m/s</text>
+                  <g>
+                    {/* Left velocity arrow */}
+                    <line x1="45" y1="230" x2={45 + wideVelocity * 14} y2="230" stroke="url(#ventVelocityArrow)" strokeWidth="5" strokeLinecap="round" />
+                    <polygon points={`${52 + wideVelocity * 14},230 ${40 + wideVelocity * 14},222 ${40 + wideVelocity * 14},238`} fill="#4ade80" />
+                    <rect x="35" y="242" width="80" height="18" rx="4" fill="#0a2a1a" stroke="#22c55e" strokeWidth="1" />
+                    <text x="75" y="254" fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v1 = {wideVelocity.toFixed(1)} m/s</text>
 
-                    {/* Middle velocity */}
-                    <line x1="165" y1="230" x2={165 + Math.min(narrowVelocity, 18) * 6} y2="230" stroke="#00ffff" strokeWidth="4" />
-                    <polygon points={`${170 + Math.min(narrowVelocity, 18) * 6},230 ${160 + Math.min(narrowVelocity, 18) * 6},224 ${160 + Math.min(narrowVelocity, 18) * 6},236`} fill="#00ffff" />
-                    <text x="175" y="255" fontSize="11" fill="#00ffff" fontWeight="bold">v2 = {narrowVelocity.toFixed(1)} m/s</text>
+                    {/* Middle velocity arrow (faster) */}
+                    <line x1="155" y1="230" x2={155 + Math.min(narrowVelocity, 18) * 7} y2="230" stroke="url(#ventFastVelocity)" strokeWidth="6" strokeLinecap="round" />
+                    <polygon points={`${162 + Math.min(narrowVelocity, 18) * 7},230 ${150 + Math.min(narrowVelocity, 18) * 7},220 ${150 + Math.min(narrowVelocity, 18) * 7},240`} fill="#22d3ee" />
+                    <rect x="145" y="242" width="100" height="18" rx="4" fill="#0a1a2a" stroke="#06b6d4" strokeWidth="1" />
+                    <text x="195" y="254" fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="bold">v2 = {narrowVelocity.toFixed(1)} m/s</text>
 
-                    {/* Right velocity */}
-                    <line x1="305" y1="230" x2={305 + wideVelocity * 12} y2="230" stroke="#00ff00" strokeWidth="4" />
-                    <polygon points={`${310 + wideVelocity * 12},230 ${300 + wideVelocity * 12},224 ${300 + wideVelocity * 12},236`} fill="#00ff00" />
-                    <text x="315" y="255" fontSize="11" fill="#00ff00" fontWeight="bold">v3 = {wideVelocity.toFixed(1)} m/s</text>
-                  </>
+                    {/* Right velocity arrow */}
+                    <line x1="295" y1="230" x2={295 + wideVelocity * 14} y2="230" stroke="url(#ventVelocityArrow)" strokeWidth="5" strokeLinecap="round" />
+                    <polygon points={`${302 + wideVelocity * 14},230 ${290 + wideVelocity * 14},222 ${290 + wideVelocity * 14},238`} fill="#4ade80" />
+                    <rect x="285" y="242" width="80" height="18" rx="4" fill="#0a2a1a" stroke="#22c55e" strokeWidth="1" />
+                    <text x="325" y="254" fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="bold">v3 = {wideVelocity.toFixed(1)} m/s</text>
+                  </g>
                 )}
 
-                {/* Section labels */}
-                <text x="62" y="285" fontSize="12" fill="#aaa" textAnchor="middle">Wide</text>
-                <text x="200" y="285" fontSize="12" fill="#aaa" textAnchor="middle">Narrow</text>
-                <text x="338" y="285" fontSize="12" fill="#aaa" textAnchor="middle">Wide</text>
+                {/* Section labels with premium styling */}
+                <rect x="40" y="275" width="44" height="16" rx="4" fill="#1a2a3a" stroke="#3a5a7a" strokeWidth="1" />
+                <text x="62" y="286" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="600">Wide</text>
+
+                <rect x="168" y="275" width="64" height="16" rx="4" fill="#1a2a3a" stroke="#06b6d4" strokeWidth="1" />
+                <text x="200" y="286" fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="600">Narrow</text>
+
+                <rect x="316" y="275" width="44" height="16" rx="4" fill="#1a2a3a" stroke="#3a5a7a" strokeWidth="1" />
+                <text x="338" y="286" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="600">Wide</text>
+
+                {/* Flow direction indicators */}
+                <text x="15" y="155" fontSize="12" fill="#4a6a8a" fontWeight="bold">IN</text>
+                <text x="375" y="155" fontSize="12" fill="#4a6a8a" fontWeight="bold">OUT</text>
+
+                {/* Continuity equation label */}
+                <rect x="130" y="5" width="140" height="22" rx="6" fill="#0a1a2a" stroke="#06b6d4" strokeWidth="1" />
+                <text x="200" y="19" fontSize="10" fill="#22d3ee" textAnchor="middle" fontWeight="bold" fontFamily="monospace">A1v1 = A2v2</text>
               </svg>
             </div>
 

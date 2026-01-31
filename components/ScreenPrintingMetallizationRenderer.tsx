@@ -75,6 +75,10 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   const [designType, setDesignType] = useState<'standard' | 'mbb' | 'busbarless'>('standard');
   const [isAnimating, setIsAnimating] = useState(false);
 
+  // Screen printing animation state
+  const [squeegeePos, setSqueegeePos] = useState(0);
+  const [pasteDroplets, setPasteDroplets] = useState<Array<{x: number, y: number, id: number}>>([]);
+
   // Phase-specific state
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -186,21 +190,30 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
     };
   }, [fingerWidth, fingerPitch, numBusbars, designType]);
 
-  // Animation for finger optimization
+  // Animation for screen printing squeegee
   useEffect(() => {
-    if (!isAnimating) return;
+    if (!isAnimating) {
+      setPasteDroplets([]);
+      return;
+    }
+    const cellX = 60;
+    const cellY = 80;
+    const cellW = 220;
+    const cellH = 220;
+
     const interval = setInterval(() => {
-      setFingerPitch(prev => {
-        const newVal = prev + 0.1;
-        if (newVal > 4) {
-          setIsAnimating(false);
-          return 2;
-        }
-        return newVal;
-      });
-    }, 150);
+      setSqueegeePos(prev => (prev + 3) % (cellW + 40));
+      // Add paste droplets as squeegee moves
+      if (Math.random() > 0.6) {
+        setPasteDroplets(prev => [...prev.slice(-15), {
+          x: cellX + (squeegeePos % (cellW + 40)) + Math.random() * 10,
+          y: cellY + Math.random() * cellH,
+          id: Date.now() + Math.random()
+        }]);
+      }
+    }, 50);
     return () => clearInterval(interval);
-  }, [isAnimating]);
+  }, [isAnimating, squeegeePos]);
 
   const predictions = [
     { id: 'full_cover', label: 'More metal = better collection, so cover the whole cell' },
@@ -355,18 +368,18 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
   };
 
   const renderVisualization = (interactive: boolean, showComparison: boolean = false) => {
-    const width = 400;
-    const height = 380;
+    const width = 700;
+    const height = 420;
     const output = calculatePerformance();
 
-    // Cell visual parameters
-    const cellX = 80;
-    const cellY = 40;
-    const cellW = 200;
-    const cellH = 200;
+    // Cell visual parameters - premium layout
+    const cellX = 60;
+    const cellY = 80;
+    const cellW = 220;
+    const cellH = 220;
 
     // Calculate finger positions
-    const fingerSpacing = cellW / output.numFingers;
+    const fingerSpacing = cellH / output.numFingers;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -375,121 +388,350 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
           <defs>
-            <linearGradient id="solarCellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
-              <stop offset="100%" stopColor="#1e40af" />
+            {/* === PREMIUM GRADIENTS === */}
+
+            {/* Lab background gradient */}
+            <linearGradient id="scrpmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-            <pattern id="cellTexture" width="10" height="10" patternUnits="userSpaceOnUse">
-              <rect width="10" height="10" fill="#1e3a5f" />
-              <rect x="0" y="0" width="5" height="5" fill="#1e4080" opacity="0.3" />
+
+            {/* Silicon wafer gradient with realistic blue-gray */}
+            <linearGradient id="scrpmSiliconWafer" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="20%" stopColor="#1e40af" />
+              <stop offset="40%" stopColor="#1e3a8a" />
+              <stop offset="60%" stopColor="#1e40af" />
+              <stop offset="80%" stopColor="#1e3a5f" />
+              <stop offset="100%" stopColor="#172554" />
+            </linearGradient>
+
+            {/* Radial silicon reflection */}
+            <radialGradient id="scrpmSiliconSheen" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#1e40af" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Silver paste metallic gradient */}
+            <linearGradient id="scrpmSilverPaste" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f1f5f9" />
+              <stop offset="20%" stopColor="#e2e8f0" />
+              <stop offset="40%" stopColor="#cbd5e1" />
+              <stop offset="60%" stopColor="#e2e8f0" />
+              <stop offset="80%" stopColor="#f1f5f9" />
+              <stop offset="100%" stopColor="#cbd5e1" />
+            </linearGradient>
+
+            {/* Radial paste droplet effect */}
+            <radialGradient id="scrpmPasteDroplet" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#f8fafc" stopOpacity="1" />
+              <stop offset="30%" stopColor="#e2e8f0" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#94a3b8" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Screen mesh gradient */}
+            <linearGradient id="scrpmScreenMesh" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="75%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Squeegee rubber gradient */}
+            <linearGradient id="scrpmSqueegee" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="20%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="80%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Squeegee handle brushed metal */}
+            <linearGradient id="scrpmSqueegeeHandle" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="20%" stopColor="#9ca3af" />
+              <stop offset="40%" stopColor="#6b7280" />
+              <stop offset="60%" stopColor="#9ca3af" />
+              <stop offset="80%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Busbar metallic gradient */}
+            <linearGradient id="scrpmBusbarMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="25%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#f1f5f9" />
+              <stop offset="75%" stopColor="#cbd5e1" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+
+            {/* Finger electrode gradient */}
+            <linearGradient id="scrpmFingerMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e2e8f0" />
+              <stop offset="30%" stopColor="#f1f5f9" />
+              <stop offset="50%" stopColor="#cbd5e1" />
+              <stop offset="70%" stopColor="#f1f5f9" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+
+            {/* Metrics panel gradient */}
+            <linearGradient id="scrpmMetricsPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+
+            {/* Silver paste glow */}
+            <filter id="scrpmPasteGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Squeegee motion glow */}
+            <filter id="scrpmSqueegeeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Accent glow for highlights */}
+            <filter id="scrpmAccentGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow */}
+            <filter id="scrpmInnerGlow">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Screen mesh pattern */}
+            <pattern id="scrpmMeshPattern" width="4" height="4" patternUnits="userSpaceOnUse">
+              <rect width="4" height="4" fill="#374151" />
+              <rect x="0" y="0" width="2" height="2" fill="#4b5563" />
+              <rect x="2" y="2" width="2" height="2" fill="#4b5563" />
             </pattern>
+
+            {/* Lab grid pattern */}
+            <pattern id="scrpmLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Current flow arrow marker */}
+            <marker id="scrpmArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
+            </marker>
           </defs>
 
-          {/* Solar cell */}
-          <rect x={cellX} y={cellY} width={cellW} height={cellH} fill="url(#cellTexture)" rx="4" />
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width="700" height="420" fill="url(#scrpmLabBg)" />
+          <rect width="700" height="420" fill="url(#scrpmLabGrid)" />
+
+          {/* Title */}
+          <text x="350" y="30" fill={colors.textPrimary} fontSize="16" fontWeight="bold" textAnchor="middle">
+            Screen Printing Metallization
+          </text>
+          <text x="350" y="50" fill={colors.textMuted} fontSize="11" textAnchor="middle">
+            Silver Paste Deposition Process
+          </text>
+
+          {/* === SCREEN PRINTING APPARATUS === */}
+
+          {/* Screen frame */}
+          <rect x={cellX - 15} y={cellY - 35} width={cellW + 30} height="25" rx="3" fill="url(#scrpmScreenMesh)" stroke="#4b5563" strokeWidth="1" />
+          <rect x={cellX - 15} y={cellY - 35} width={cellW + 30} height="25" fill="url(#scrpmMeshPattern)" opacity="0.5" />
+          <text x={cellX + cellW / 2} y={cellY - 18} fill={colors.textMuted} fontSize="8" textAnchor="middle">SCREEN MESH</text>
+
+          {/* Squeegee (animated) */}
+          <g transform={`translate(${cellX - 20 + squeegeePos}, ${cellY - 50})`} filter="url(#scrpmSqueegeeGlow)">
+            <rect x="0" y="0" width="8" height="40" rx="2" fill="url(#scrpmSqueegeeHandle)" />
+            <rect x="-2" y="35" width="12" height="20" rx="1" fill="url(#scrpmSqueegee)" />
+            <text x="4" y="-5" fill={colors.success} fontSize="7" textAnchor="middle">SQUEEGEE</text>
+          </g>
+
+          {/* Silver paste reservoir */}
+          <ellipse cx={cellX - 5 + squeegeePos} cy={cellY - 8} rx="15" ry="6" fill="url(#scrpmPasteDroplet)" filter="url(#scrpmPasteGlow)" />
+
+          {/* === SOLAR CELL WAFER === */}
+
+          {/* Wafer base with silicon gradient */}
+          <rect x={cellX} y={cellY} width={cellW} height={cellH} fill="url(#scrpmSiliconWafer)" rx="4" stroke="#1e3a5f" strokeWidth="2" />
+          <rect x={cellX} y={cellY} width={cellW} height={cellH} fill="url(#scrpmSiliconSheen)" rx="4" />
+
+          {/* Texture pyramids (simplified) */}
+          {[...Array(12)].map((_, i) => (
+            <g key={`texture-${i}`} opacity="0.15">
+              {[...Array(12)].map((_, j) => (
+                <polygon
+                  key={`pyr-${i}-${j}`}
+                  points={`${cellX + 8 + i * 18},${cellY + 8 + j * 18} ${cellX + 14 + i * 18},${cellY + 2 + j * 18} ${cellX + 20 + i * 18},${cellY + 8 + j * 18}`}
+                  fill="#3b82f6"
+                />
+              ))}
+            </g>
+          ))}
+
+          {/* === METALLIZATION PATTERN === */}
 
           {/* Busbars (vertical) */}
           {designType !== 'busbarless' && [...Array(numBusbars)].map((_, i) => {
-            const busbarWidth = designType === 'mbb' ? 2 : 8;
+            const busbarWidth = designType === 'mbb' ? 3 : 10;
             const x = cellX + (i + 1) * cellW / (numBusbars + 1) - busbarWidth / 2;
             return (
-              <rect
-                key={`busbar-${i}`}
-                x={x}
-                y={cellY}
-                width={busbarWidth}
-                height={cellH}
-                fill={colors.silver}
-                opacity={0.9}
-              />
+              <g key={`busbar-${i}`}>
+                <rect
+                  x={x}
+                  y={cellY}
+                  width={busbarWidth}
+                  height={cellH}
+                  fill="url(#scrpmBusbarMetal)"
+                  filter="url(#scrpmPasteGlow)"
+                />
+                {/* Busbar highlight */}
+                <rect
+                  x={x + busbarWidth * 0.3}
+                  y={cellY}
+                  width={busbarWidth * 0.2}
+                  height={cellH}
+                  fill="white"
+                  opacity="0.3"
+                />
+              </g>
             );
           })}
 
           {/* Fingers (horizontal) */}
-          {[...Array(Math.min(output.numFingers, 50))].map((_, i) => {
+          {[...Array(Math.min(output.numFingers, 40))].map((_, i) => {
             const y = cellY + (i + 0.5) * fingerSpacing;
-            const fingerH = Math.max(1, fingerWidth / 50); // Scale for visibility
+            const fingerH = Math.max(1.5, fingerWidth / 40);
             return (
-              <rect
-                key={`finger-${i}`}
-                x={cellX}
-                y={y - fingerH / 2}
-                width={cellW}
-                height={fingerH}
-                fill={colors.metal}
-                opacity={0.8}
-              />
+              <g key={`finger-${i}`}>
+                <rect
+                  x={cellX}
+                  y={y - fingerH / 2}
+                  width={cellW}
+                  height={fingerH}
+                  fill="url(#scrpmFingerMetal)"
+                  filter="url(#scrpmInnerGlow)"
+                />
+              </g>
             );
           })}
 
-          {/* Current flow arrows */}
+          {/* Paste droplets animation */}
+          {pasteDroplets.map(drop => (
+            <circle
+              key={drop.id}
+              cx={drop.x}
+              cy={drop.y}
+              r="2"
+              fill="url(#scrpmPasteDroplet)"
+              filter="url(#scrpmPasteGlow)"
+              opacity="0.8"
+            />
+          ))}
+
+          {/* Current flow visualization */}
           {interactive && (
-            <g opacity={0.6}>
-              <defs>
-                <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
-                </marker>
-              </defs>
+            <g opacity={0.7}>
               {/* Current from silicon to finger */}
-              <line x1={cellX + 30} y1={cellY + cellH / 2 - 20} x2={cellX + 30} y2={cellY + cellH / 2 - 5}
-                    stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead2)" />
-              <text x={cellX + 35} y={cellY + cellH / 2 - 10} fill={colors.accent} fontSize="8">I</text>
+              <line x1={cellX + 40} y1={cellY + cellH / 2 - 25} x2={cellX + 40} y2={cellY + cellH / 2 - 8}
+                    stroke={colors.accent} strokeWidth="2" markerEnd="url(#scrpmArrowhead)" />
+              <text x={cellX + 48} y={cellY + cellH / 2 - 15} fill={colors.accent} fontSize="9" fontWeight="bold">I</text>
 
               {/* Current along finger to busbar */}
-              <line x1={cellX + 50} y1={cellY + cellH / 2} x2={cellX + 80} y2={cellY + cellH / 2}
-                    stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead2)" />
+              <line x1={cellX + 55} y1={cellY + cellH / 2} x2={cellX + 85} y2={cellY + cellH / 2}
+                    stroke={colors.accent} strokeWidth="2" markerEnd="url(#scrpmArrowhead)" />
+
+              {/* Collection path label */}
+              <text x={cellX + 30} y={cellY + cellH / 2 + 20} fill={colors.textMuted} fontSize="8">collection</text>
+              <text x={cellX + 70} y={cellY + cellH / 2 + 10} fill={colors.textMuted} fontSize="8">transport</text>
             </g>
           )}
 
-          {/* Labels */}
-          <text x={cellX + cellW / 2} y={cellY + cellH + 20} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+          {/* Wafer labels */}
+          <text x={cellX + cellW / 2} y={cellY + cellH + 18} fill={colors.textSecondary} fontSize="11" fontWeight="600" textAnchor="middle">
             {designType === 'standard' ? `${numBusbars} Busbars` : designType === 'mbb' ? 'Multi-Busbar (12 wires)' : 'Busbarless'}
           </text>
-          <text x={cellX + cellW / 2} y={cellY + cellH + 35} fill={colors.textMuted} fontSize="9" textAnchor="middle">
-            {output.numFingers} fingers, {fingerPitch.toFixed(1)}mm pitch
+          <text x={cellX + cellW / 2} y={cellY + cellH + 32} fill={colors.textMuted} fontSize="9" textAnchor="middle">
+            {output.numFingers} fingers @ {fingerPitch.toFixed(1)}mm pitch | {fingerWidth}um width
           </text>
 
-          {/* Performance meters */}
-          <g transform="translate(300, 50)">
-            <rect x="0" y="0" width="90" height="190" fill="rgba(0,0,0,0.6)" rx="8" stroke={colors.accent} strokeWidth="1" />
-            <text x="45" y="20" fill={colors.textSecondary} fontSize="10" textAnchor="middle">METRICS</text>
+          {/* === LEGEND === */}
+          <g transform="translate(60, 340)">
+            <rect x="0" y="0" width="220" height="55" fill="rgba(15,23,42,0.8)" rx="6" stroke={colors.accent} strokeWidth="0.5" strokeOpacity="0.3" />
+            <text x="110" y="15" fill={colors.textSecondary} fontSize="9" fontWeight="bold" textAnchor="middle">COMPONENTS</text>
 
-            {/* Shading loss */}
-            <text x="10" y="45" fill={colors.textMuted} fontSize="9">Shading</text>
-            <rect x="10" y="50" width="70" height="8" fill="rgba(255,255,255,0.1)" rx="2" />
-            <rect x="10" y="50" width={Math.min(70, 70 * output.shadingLoss / 10)} height="8" fill={colors.error} rx="2" />
-            <text x="45" y="72" fill={colors.textPrimary} fontSize="10" textAnchor="middle">{output.shadingLoss.toFixed(1)}%</text>
+            <rect x="10" y="25" width="20" height="8" fill="url(#scrpmSiliconWafer)" rx="1" />
+            <text x="35" y="32" fill={colors.textMuted} fontSize="8">Silicon Wafer</text>
 
-            {/* Series resistance */}
-            <text x="10" y="92" fill={colors.textMuted} fontSize="9">Rs Loss</text>
-            <rect x="10" y="97" width="70" height="8" fill="rgba(255,255,255,0.1)" rx="2" />
-            <rect x="10" y="97" width={Math.min(70, 70 * output.seriesResistance / 100)} height="8" fill={colors.warning} rx="2" />
-            <text x="45" y="119" fill={colors.textPrimary} fontSize="10" textAnchor="middle">{output.seriesResistance.toFixed(1)} mOhm</text>
+            <rect x="10" y="38" width="20" height="8" fill="url(#scrpmFingerMetal)" rx="1" />
+            <text x="35" y="45" fill={colors.textMuted} fontSize="8">Ag Fingers</text>
 
-            {/* Fill Factor */}
-            <text x="10" y="139" fill={colors.textMuted} fontSize="9">Fill Factor</text>
-            <text x="45" y="158" fill={colors.success} fontSize="14" fontWeight="bold" textAnchor="middle">{output.fillFactor.toFixed(1)}%</text>
+            <rect x="115" y="25" width="20" height="8" fill="url(#scrpmBusbarMetal)" rx="1" />
+            <text x="140" y="32" fill={colors.textMuted} fontSize="8">Ag Busbars</text>
 
-            {/* Efficiency */}
-            <text x="10" y="178" fill={colors.textMuted} fontSize="9">Efficiency</text>
-            <text x="45" y="197" fill={colors.accent} fontSize="14" fontWeight="bold" textAnchor="middle">{output.efficiency.toFixed(2)}%</text>
+            <rect x="115" y="38" width="20" height="8" fill="url(#scrpmSqueegee)" rx="1" />
+            <text x="140" y="45" fill={colors.textMuted} fontSize="8">Squeegee</text>
           </g>
 
-          {/* Shading illustration */}
-          <g transform="translate(80, 260)">
-            <text x="100" y="0" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Light Blocked vs Collection Distance</text>
-            <rect x="0" y="10" width="200" height="40" fill="rgba(0,0,0,0.3)" rx="4" />
+          {/* === PERFORMANCE METRICS PANEL === */}
+          <g transform="translate(520, 70)">
+            <rect x="0" y="0" width="160" height="280" fill="url(#scrpmMetricsPanel)" rx="10" stroke={colors.accent} strokeWidth="1" strokeOpacity="0.5" />
+            <text x="80" y="25" fill={colors.textPrimary} fontSize="12" fontWeight="bold" textAnchor="middle">PERFORMANCE</text>
 
-            {/* Light blocked by metal */}
-            <rect x="10" y="15" width={80 * output.shadingLoss / 10} height="12" fill={colors.error} rx="2" />
-            <text x="10" y="40" fill={colors.textMuted} fontSize="8">Shaded: {output.shadingLoss.toFixed(1)}%</text>
+            {/* Shading loss meter */}
+            <text x="15" y="55" fill={colors.textMuted} fontSize="10">Shading Loss</text>
+            <rect x="15" y="62" width="130" height="10" fill="rgba(255,255,255,0.1)" rx="3" />
+            <rect x="15" y="62" width={Math.min(130, 130 * output.shadingLoss / 10)} height="10" fill={colors.error} rx="3" filter="url(#scrpmAccentGlow)" />
+            <text x="80" y="88" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">{output.shadingLoss.toFixed(2)}%</text>
 
-            {/* Collection distance */}
-            <rect x="110" y="15" width={70 * output.collectionDistance / 2} height="12" fill={colors.solar} rx="2" />
-            <text x="110" y="40" fill={colors.textMuted} fontSize="8">Path: {output.collectionDistance.toFixed(1)}mm</text>
+            {/* Series resistance meter */}
+            <text x="15" y="110" fill={colors.textMuted} fontSize="10">Series Resistance</text>
+            <rect x="15" y="117" width="130" height="10" fill="rgba(255,255,255,0.1)" rx="3" />
+            <rect x="15" y="117" width={Math.min(130, 130 * output.seriesResistance / 100)} height="10" fill={colors.warning} rx="3" />
+            <text x="80" y="143" fill={colors.textPrimary} fontSize="14" fontWeight="bold" textAnchor="middle">{output.seriesResistance.toFixed(1)} mΩ</text>
+
+            {/* Fill Factor */}
+            <text x="15" y="165" fill={colors.textMuted} fontSize="10">Fill Factor</text>
+            <rect x="15" y="172" width="130" height="10" fill="rgba(255,255,255,0.1)" rx="3" />
+            <rect x="15" y="172" width={130 * output.fillFactor / 100} height="10" fill={colors.success} rx="3" />
+            <text x="80" y="198" fill={colors.success} fontSize="16" fontWeight="bold" textAnchor="middle" filter="url(#scrpmAccentGlow)">{output.fillFactor.toFixed(1)}%</text>
+
+            {/* Efficiency - highlighted */}
+            <rect x="10" y="210" width="140" height="60" fill="rgba(245,158,11,0.1)" rx="8" stroke={colors.accent} strokeWidth="1" />
+            <text x="80" y="232" fill={colors.textMuted} fontSize="10" textAnchor="middle">Cell Efficiency</text>
+            <text x="80" y="258" fill={colors.accent} fontSize="22" fontWeight="bold" textAnchor="middle" filter="url(#scrpmAccentGlow)">{output.efficiency.toFixed(2)}%</text>
+          </g>
+
+          {/* === PROCESS INFO === */}
+          <g transform="translate(320, 340)">
+            <rect x="0" y="0" width="180" height="55" fill="rgba(15,23,42,0.8)" rx="6" stroke={colors.warning} strokeWidth="0.5" strokeOpacity="0.3" />
+            <text x="90" y="15" fill={colors.warning} fontSize="9" fontWeight="bold" textAnchor="middle">TRADEOFF</text>
+            <text x="90" y="30" fill={colors.textSecondary} fontSize="8" textAnchor="middle">More metal → Better collection</text>
+            <text x="90" y="42" fill={colors.textSecondary} fontSize="8" textAnchor="middle">More metal → More shading</text>
+            <text x="90" y="54" fill={colors.accent} fontSize="8" fontWeight="bold" textAnchor="middle">Find the optimal balance!</text>
           </g>
         </svg>
 
@@ -501,15 +743,16 @@ const ScreenPrintingMetallizationRenderer: React.FC<ScreenPrintingMetallizationR
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)` : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating ? `0 4px 20px ${colors.error}40` : `0 4px 20px ${colors.success}40`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {isAnimating ? 'Stop' : 'Sweep Pitch'}
+              {isAnimating ? 'Stop Animation' : 'Animate Printing'}
             </button>
             <button
               onClick={() => { setFingerWidth(50); setFingerPitch(2); setNumBusbars(4); setDesignType('standard'); }}

@@ -366,134 +366,454 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
 
   const renderAccelerometerScene = () => {
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <svg viewBox="0 0 700 400" className="w-full h-72">
+        <defs>
+          {/* Premium background gradient */}
+          <linearGradient id="pseisLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a1628" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* MEMS chip diagram */}
-        <g transform="translate(50, 40)">
-          <text x="60" y="-10" textAnchor="middle" className="fill-gray-400 text-xs font-semibold">
-            MEMS Accelerometer (inside your phone)
+          {/* MEMS chip housing gradient - metallic look */}
+          <linearGradient id="pseisChipMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="20%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="80%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Silicon substrate gradient */}
+          <linearGradient id="pseisSilicon" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="30%" stopColor="#374151" />
+            <stop offset="70%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+
+          {/* Proof mass gradient - golden metallic */}
+          <linearGradient id="pseisProofMass" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="75%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+
+          {/* Capacitor plate gradient - green metallic */}
+          <linearGradient id="pseisCapacitor" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#16a34a" />
+          </linearGradient>
+
+          {/* Spring gradient - blue metallic */}
+          <linearGradient id="pseisSpring" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="50%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+
+          {/* Phone body gradient - premium dark metal */}
+          <linearGradient id="pseisPhoneBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="20%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#1f2937" />
+            <stop offset="80%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+
+          {/* Phone screen gradient */}
+          <linearGradient id="pseisPhoneScreen" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* Signal waveform glow */}
+          <radialGradient id="pseisSignalGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+            <stop offset="40%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Oscilloscope screen gradient */}
+          <linearGradient id="pseisOscilloscope" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#022c22" />
+            <stop offset="50%" stopColor="#064e3b" />
+            <stop offset="100%" stopColor="#022c22" />
+          </linearGradient>
+
+          {/* Vibration wave radial */}
+          <radialGradient id="pseisVibrationWave" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Glow filter for signal dot */}
+          <filter id="pseisSignalDotGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Glow filter for proof mass */}
+          <filter id="pseisProofMassGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Phone screen glow */}
+          <filter id="pseisScreenGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Vibration shake filter */}
+          <filter id="pseisShakeEffect" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Grid pattern for oscilloscope */}
+          <pattern id="pseisGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#134e4a" strokeWidth="0.5" strokeOpacity="0.4" />
+          </pattern>
+
+          {/* Lab grid pattern */}
+          <pattern id="pseisLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+            <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+        </defs>
+
+        {/* Premium dark background */}
+        <rect width="700" height="400" fill="url(#pseisLabBg)" />
+        <rect width="700" height="400" fill="url(#pseisLabGrid)" />
+
+        {/* === MEMS CHIP SECTION === */}
+        <g transform="translate(40, 60)">
+          {/* Section label */}
+          <text x="100" y="-20" textAnchor="middle" fill="#94a3b8" fontSize="13" fontWeight="600" letterSpacing="0.5">
+            MEMS ACCELEROMETER
+          </text>
+          <text x="100" y="-5" textAnchor="middle" fill="#64748b" fontSize="10">
+            (inside your smartphone)
           </text>
 
-          {/* Chip housing */}
-          <rect x="0" y="0" width="120" height="80" rx="5" fill="#1f2937" stroke="#4b5563" strokeWidth="2" />
+          {/* Chip outer housing - premium metallic */}
+          <rect x="0" y="0" width="200" height="140" rx="10" fill="url(#pseisChipMetal)" stroke="#64748b" strokeWidth="2" />
 
-          {/* Fixed frame */}
-          <rect x="10" y="10" width="100" height="60" fill="#374151" rx="3" />
+          {/* Chip inner bezel */}
+          <rect x="8" y="8" width="184" height="124" rx="6" fill="#111827" stroke="#374151" strokeWidth="1" />
 
-          {/* Springs */}
+          {/* Silicon substrate */}
+          <rect x="16" y="16" width="168" height="108" rx="4" fill="url(#pseisSilicon)" />
+
+          {/* Fixed frame rails */}
+          <rect x="20" y="20" width="160" height="10" fill="#475569" rx="2" />
+          <rect x="20" y="110" width="160" height="10" fill="#475569" rx="2" />
+
+          {/* Left spring - animated zigzag */}
           <path
-            d={`M 30 40 Q 25 35 30 30 Q 35 25 30 20`}
+            d={`M 45 30
+                Q 35 40 45 50
+                Q 55 60 45 70
+                Q 35 80 45 90
+                Q 55 100 45 110`}
             fill="none"
-            stroke="#60a5fa"
-            strokeWidth="2"
+            stroke="url(#pseisSpring)"
+            strokeWidth="4"
+            strokeLinecap="round"
           />
+
+          {/* Right spring - animated zigzag */}
           <path
-            d={`M 90 40 Q 95 35 90 30 Q 85 25 90 20`}
+            d={`M 155 30
+                Q 165 40 155 50
+                Q 145 60 155 70
+                Q 165 80 155 90
+                Q 145 100 155 110`}
             fill="none"
-            stroke="#60a5fa"
-            strokeWidth="2"
+            stroke="url(#pseisSpring)"
+            strokeWidth="4"
+            strokeLinecap="round"
           />
+
+          {/* Left capacitor plate (fixed) */}
+          <rect x="55" y="35" width="6" height="70" fill="url(#pseisCapacitor)" rx="2" />
+
+          {/* Right capacitor plate (fixed) */}
+          <rect x="139" y="35" width="6" height="70" fill="url(#pseisCapacitor)" rx="2" />
 
           {/* Proof mass (moves with acceleration) */}
-          <rect
-            x={45 + massPosition}
-            y="25"
-            width="30"
-            height="30"
-            fill="#f59e0b"
-            rx="3"
-            className="transition-transform"
-          />
+          <g transform={`translate(${massPosition * 0.8}, 0)`} filter="url(#pseisProofMassGlow)">
+            <rect
+              x="70"
+              y="40"
+              width="60"
+              height="60"
+              fill="url(#pseisProofMass)"
+              rx="6"
+              stroke="#fcd34d"
+              strokeWidth="1"
+            />
+            {/* Mass surface detail */}
+            <rect x="75" y="45" width="50" height="50" rx="4" fill="#d97706" opacity="0.3" />
+            <text x="100" y="75" textAnchor="middle" fill="#78350f" fontSize="10" fontWeight="bold">
+              MASS
+            </text>
+          </g>
 
-          {/* Capacitor plates (fixed) */}
-          <rect x="35" y="20" width="3" height="40" fill="#22c55e" />
-          <rect x="82" y="20" width="3" height="40" fill="#22c55e" />
+          {/* Capacitance arrows */}
+          <g opacity="0.7">
+            <text x="62" y="90" fill="#4ade80" fontSize="8">C₁</text>
+            <text x="130" y="90" fill="#4ade80" fontSize="8">C₂</text>
+          </g>
 
-          {/* Labels */}
-          <text x="60" y="95" textAnchor="middle" className="fill-gray-500 text-xs">
-            Mass moves → Capacitance changes
+          {/* Labels below chip */}
+          <text x="100" y="160" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="500">
+            Mass displacement → Capacitance change → Voltage signal
           </text>
         </g>
 
-        {/* Signal waveform */}
-        <g transform="translate(200, 30)">
-          <text x="90" y="0" textAnchor="middle" className="fill-gray-400 text-xs font-semibold">
-            Accelerometer Signal
+        {/* === OSCILLOSCOPE / SIGNAL DISPLAY === */}
+        <g transform="translate(280, 50)">
+          {/* Section label */}
+          <text x="180" y="-15" textAnchor="middle" fill="#94a3b8" fontSize="13" fontWeight="600" letterSpacing="0.5">
+            ACCELEROMETER SIGNAL
           </text>
 
-          {/* Graph background */}
-          <rect x="0" y="10" width="180" height="100" fill="#0f172a" rx="5" />
+          {/* Oscilloscope frame */}
+          <rect x="0" y="0" width="360" height="170" rx="8" fill="#1f2937" stroke="#475569" strokeWidth="2" />
 
-          {/* Grid lines */}
-          {[...Array(5)].map((_, i) => (
+          {/* Screen bezel */}
+          <rect x="8" y="8" width="344" height="154" rx="4" fill="#111827" />
+
+          {/* Phosphor screen */}
+          <rect x="12" y="12" width="336" height="146" rx="2" fill="url(#pseisOscilloscope)" />
+
+          {/* Grid overlay */}
+          <rect x="12" y="12" width="336" height="146" rx="2" fill="url(#pseisGridPattern)" />
+
+          {/* Grid major lines */}
+          {[...Array(7)].map((_, i) => (
             <line
-              key={i}
-              x1="0"
-              y1={30 + i * 20}
-              x2="180"
-              y2={30 + i * 20}
-              stroke="#1e293b"
-              strokeWidth="1"
+              key={`h${i}`}
+              x1="12"
+              y1={33 + i * 21}
+              x2="348"
+              y2={33 + i * 21}
+              stroke="#134e4a"
+              strokeWidth={i === 3 ? "1.5" : "0.5"}
+              opacity={i === 3 ? 1 : 0.6}
+            />
+          ))}
+          {[...Array(17)].map((_, i) => (
+            <line
+              key={`v${i}`}
+              x1={12 + i * 21}
+              y1="12"
+              x2={12 + i * 21}
+              y2="158"
+              stroke="#134e4a"
+              strokeWidth="0.5"
+              opacity="0.6"
             />
           ))}
 
-          {/* Zero line */}
-          <line x1="0" y1="60" x2="180" y2="60" stroke="#4b5563" strokeWidth="1" />
+          {/* Zero reference line */}
+          <line x1="12" y1="85" x2="348" y2="85" stroke="#22c55e" strokeWidth="1" opacity="0.4" />
 
-          {/* Signal trace */}
+          {/* Signal trace with glow */}
           <path
-            d={`M 0 60 ${signalHistory.map((v, i) => `L ${i * 1.8} ${60 - v * 40}`).join(' ')}`}
+            d={`M 12 85 ${signalHistory.map((v, i) => `L ${12 + i * 3.36} ${85 - v * 65}`).join(' ')}`}
             fill="none"
-            stroke="#22c55e"
-            strokeWidth="2"
+            stroke="#4ade80"
+            strokeWidth="2.5"
+            filter="url(#pseisScreenGlow)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
 
-          {/* Current value indicator */}
+          {/* Current value indicator with glow */}
           <circle
-            cx={180}
-            cy={60 - (signalHistory[signalHistory.length - 1] || 0) * 40}
-            r={4}
-            fill="#22c55e"
-            className="animate-pulse"
+            cx={348}
+            cy={85 - (signalHistory[signalHistory.length - 1] || 0) * 65}
+            r={6}
+            fill="url(#pseisSignalGlow)"
+            filter="url(#pseisSignalDotGlow)"
           />
 
           {/* Y-axis labels */}
-          <text x="-5" y="35" textAnchor="end" className="fill-gray-500 text-xs">+1g</text>
-          <text x="-5" y="65" textAnchor="end" className="fill-gray-500 text-xs">0</text>
-          <text x="-5" y="95" textAnchor="end" className="fill-gray-500 text-xs">-1g</text>
+          <text x="5" y="25" textAnchor="end" fill="#4ade80" fontSize="10" fontWeight="500">+1g</text>
+          <text x="5" y="88" textAnchor="end" fill="#6b7280" fontSize="10" fontWeight="500">0</text>
+          <text x="5" y="155" textAnchor="end" fill="#4ade80" fontSize="10" fontWeight="500">-1g</text>
+
+          {/* Accelerometer reading display */}
+          <g transform="translate(12, 175)">
+            <rect x="0" y="0" width="336" height="40" rx="4" fill="#111827" stroke="#374151" strokeWidth="1" />
+            <text x="10" y="16" fill="#64748b" fontSize="10">X-AXIS:</text>
+            <text x="60" y="16" fill="#4ade80" fontSize="11" fontWeight="600">
+              {(signalHistory[signalHistory.length - 1] || 0).toFixed(3)}g
+            </text>
+            <text x="120" y="16" fill="#64748b" fontSize="10">Y-AXIS:</text>
+            <text x="170" y="16" fill="#60a5fa" fontSize="11" fontWeight="600">0.000g</text>
+            <text x="230" y="16" fill="#64748b" fontSize="10">Z-AXIS:</text>
+            <text x="280" y="16" fill="#f472b6" fontSize="11" fontWeight="600">1.000g</text>
+            <text x="10" y="32" fill="#64748b" fontSize="9">SAMPLE RATE: 100Hz</text>
+            <text x="150" y="32" fill="#64748b" fontSize="9">SENSITIVITY: ±2g</text>
+            <text x="280" y="32" fill={vibrationSource !== 'none' ? '#f59e0b' : '#22c55e'} fontSize="9" fontWeight="600">
+              {vibrationSource !== 'none' ? 'ACTIVE' : 'IDLE'}
+            </text>
+          </g>
         </g>
 
-        {/* Phone visualization */}
-        <g transform="translate(50, 150)">
-          <rect x="0" y="0" width="60" height="100" rx="8" fill="#374151" stroke="#6b7280" strokeWidth="2" />
-          <rect x="5" y="15" width="50" height="70" rx="3" fill="#0f172a" />
-          {/* Screen showing waveform mini */}
-          <path
-            d={`M 10 50 ${signalHistory.slice(-20).map((v, i) => `L ${10 + i * 2} ${50 - v * 15}`).join(' ')}`}
-            fill="none"
-            stroke="#22c55e"
-            strokeWidth="1"
-          />
-          <circle cx="30" cy="93" r="4" fill="#4b5563" />
+        {/* === SMARTPHONE VISUALIZATION === */}
+        <g transform="translate(40, 240)">
+          {/* Section label */}
+          <text x="50" y="-10" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">
+            SMARTPHONE
+          </text>
 
-          {/* Shake indicator */}
+          {/* Phone body with premium gradient */}
+          <rect x="0" y="0" width="100" height="150" rx="12" fill="url(#pseisPhoneBody)" stroke="#6b7280" strokeWidth="2" />
+
+          {/* Phone inner bezel */}
+          <rect x="4" y="4" width="92" height="142" rx="10" fill="#1f2937" />
+
+          {/* Screen */}
+          <rect x="8" y="20" width="84" height="110" rx="4" fill="url(#pseisPhoneScreen)" />
+
+          {/* Mini waveform on screen */}
+          <path
+            d={`M 12 75 ${signalHistory.slice(-35).map((v, i) => `L ${12 + i * 2.3} ${75 - v * 25}`).join(' ')}`}
+            fill="none"
+            stroke="#4ade80"
+            strokeWidth="1.5"
+            filter="url(#pseisScreenGlow)"
+          />
+
+          {/* Screen UI elements */}
+          <text x="50" y="35" textAnchor="middle" fill="#94a3b8" fontSize="8">ACCELEROMETER</text>
+          <text x="50" y="115" textAnchor="middle" fill="#6b7280" fontSize="7">
+            {(signalHistory[signalHistory.length - 1] || 0).toFixed(2)}g
+          </text>
+
+          {/* Camera notch */}
+          <rect x="35" y="8" width="30" height="6" rx="3" fill="#111827" />
+          <circle cx="50" cy="11" r="2" fill="#374151" />
+
+          {/* Home button */}
+          <circle cx="50" cy="140" r="6" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+
+          {/* Vibration waves when active */}
           {vibrationSource !== 'none' && (
-            <g className="animate-pulse">
-              <line x1="-10" y1="50" x2="-5" y2="45" stroke="#f59e0b" strokeWidth="2" />
-              <line x1="-10" y1="50" x2="-5" y2="55" stroke="#f59e0b" strokeWidth="2" />
-              <line x1="70" y1="50" x2="65" y2="45" stroke="#f59e0b" strokeWidth="2" />
-              <line x1="70" y1="50" x2="65" y2="55" stroke="#f59e0b" strokeWidth="2" />
+            <g filter="url(#pseisShakeEffect)">
+              {[1, 2, 3].map(i => (
+                <ellipse
+                  key={i}
+                  cx="50"
+                  cy="75"
+                  rx={20 + i * 15}
+                  ry={10 + i * 8}
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="2"
+                  opacity={0.6 - i * 0.15}
+                  style={{
+                    animation: `pulse ${1 + i * 0.3}s ease-out infinite`,
+                  }}
+                />
+              ))}
+              {/* Shake arrows */}
+              <path d="M -15 75 L -8 68 M -15 75 L -8 82" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M 115 75 L 108 68 M 115 75 L 108 82" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" />
             </g>
           )}
         </g>
 
-        {/* Source label */}
-        <text x="200" y="270" textAnchor="middle" className="fill-gray-300 text-sm">
-          Source: {vibrationSource === 'none' ? 'Background noise' :
-            vibrationSource === 'footstep' ? '👟 Footsteps' :
-              vibrationSource === 'door' ? '🚪 Door slam' : '🌋 Earthquake!'}
-        </text>
+        {/* === SEISMIC WAVE VISUALIZATION === */}
+        <g transform="translate(160, 280)">
+          <text x="220" y="-5" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">
+            SEISMIC WAVE PROPAGATION
+          </text>
+
+          {/* Ground layer */}
+          <rect x="0" y="30" width="480" height="60" rx="4" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+          <text x="10" y="65" fill="#64748b" fontSize="9">GROUND SURFACE</text>
+
+          {/* P-wave and S-wave visualization */}
+          {vibrationSource === 'earthquake' && (
+            <>
+              {/* P-wave (compression) */}
+              <g>
+                {[...Array(8)].map((_, i) => (
+                  <rect
+                    key={`p${i}`}
+                    x={50 + i * 25 + Math.sin(animPhase * 3 + i) * 5}
+                    y="40"
+                    width="15"
+                    height="40"
+                    fill="#22c55e"
+                    opacity={0.3 + Math.sin(animPhase * 3 + i) * 0.2}
+                    rx="2"
+                  />
+                ))}
+                <text x="130" y="25" fill="#22c55e" fontSize="10" fontWeight="600">P-WAVE (Primary)</text>
+              </g>
+
+              {/* S-wave (shear) */}
+              <g>
+                <path
+                  d={`M 280 60 ${[...Array(10)].map((_, i) =>
+                    `Q ${290 + i * 20} ${50 + Math.sin(animPhase * 2 + i) * 15} ${300 + i * 20} 60`
+                  ).join(' ')}`}
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="3"
+                />
+                <text x="380" y="25" fill="#f59e0b" fontSize="10" fontWeight="600">S-WAVE (Secondary)</text>
+              </g>
+            </>
+          )}
+
+          {/* Idle state */}
+          {vibrationSource === 'none' && (
+            <text x="240" y="65" textAnchor="middle" fill="#64748b" fontSize="10" fontStyle="italic">
+              Select a vibration source above to visualize seismic waves
+            </text>
+          )}
+        </g>
+
+        {/* === SOURCE INDICATOR === */}
+        <g transform="translate(0, 375)">
+          <rect x="200" y="0" width="300" height="25" rx="6" fill="#111827" stroke="#374151" strokeWidth="1" />
+          <text x="350" y="17" textAnchor="middle" fill="#e2e8f0" fontSize="12" fontWeight="600">
+            Source: {vibrationSource === 'none' ? 'Background noise' :
+              vibrationSource === 'footstep' ? 'Footsteps' :
+                vibrationSource === 'door' ? 'Door slam' : 'Earthquake!'}
+          </text>
+          {vibrationSource !== 'none' && (
+            <circle cx="215" cy="12" r="5" fill={vibrationSource === 'earthquake' ? '#ef4444' : '#f59e0b'}>
+              <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />
+            </circle>
+          )}
+        </g>
       </svg>
     );
   };
@@ -503,69 +823,332 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
     const accuracy = phoneCount > 0 ? (detectionsCount / phoneCount * 100).toFixed(0) : 0;
 
     return (
-      <svg viewBox="0 0 400 250" className="w-full h-48">
-        <rect width="400" height="250" fill="#111827" />
+      <svg viewBox="0 0 700 350" className="w-full h-64">
+        <defs>
+          {/* Premium background gradient - darker for network view */}
+          <linearGradient id="pseisNetBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0c1929" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0c1929" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
 
-        {/* Map background */}
-        <ellipse cx="200" cy="120" rx="150" ry="100" fill="#1e3a5f" opacity="0.3" />
+          {/* Map region gradient - earth tones */}
+          <radialGradient id="pseisMapRegion" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#164e63" stopOpacity="0.4" />
+            <stop offset="40%" stopColor="#155e75" stopOpacity="0.25" />
+            <stop offset="70%" stopColor="#0e4456" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0" />
+          </radialGradient>
 
-        {/* Earthquake epicenter */}
+          {/* Earthquake epicenter gradient */}
+          <radialGradient id="pseisEpicenter" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+            <stop offset="30%" stopColor="#ef4444" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#dc2626" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Phone detected gradient - green glow */}
+          <radialGradient id="pseisPhoneDetected" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+            <stop offset="50%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Phone idle gradient */}
+          <linearGradient id="pseisPhoneIdle" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="50%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Phone detected body gradient */}
+          <linearGradient id="pseisPhoneActive" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#16a34a" />
+          </linearGradient>
+
+          {/* Stats panel gradient */}
+          <linearGradient id="pseisStatsPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+
+          {/* Connection line gradient */}
+          <linearGradient id="pseisConnectionLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
+            <stop offset="50%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Seismic wave gradient */}
+          <radialGradient id="pseisSeismicWave" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+            <stop offset="70%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Glow filter for epicenter */}
+          <filter id="pseisEpicenterGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Glow filter for detected phones */}
+          <filter id="pseisDetectionGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Pulse animation for detection rings */}
+          <filter id="pseisPulseGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Grid pattern for map */}
+          <pattern id="pseisMapGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+        </defs>
+
+        {/* Background */}
+        <rect width="700" height="350" fill="url(#pseisNetBg)" />
+
+        {/* Map grid overlay */}
+        <rect width="700" height="350" fill="url(#pseisMapGrid)" />
+
+        {/* Map region - larger coverage area */}
+        <ellipse cx="350" cy="175" rx="280" ry="140" fill="url(#pseisMapRegion)" />
+
+        {/* Terrain contour lines */}
+        {[1, 2, 3].map(i => (
+          <ellipse
+            key={`contour${i}`}
+            cx="350"
+            cy="175"
+            rx={100 + i * 60}
+            ry={50 + i * 30}
+            fill="none"
+            stroke="#164e63"
+            strokeWidth="0.5"
+            opacity={0.4 - i * 0.1}
+          />
+        ))}
+
+        {/* === EARTHQUAKE EPICENTER === */}
         {earthquakeStrength > 0 && (
-          <g transform="translate(200, 120)">
-            {[1, 2, 3].map(i => (
+          <g transform="translate(350, 175)">
+            {/* Seismic waves propagating outward */}
+            {[1, 2, 3, 4, 5].map(i => (
               <circle
                 key={i}
                 cx={0}
                 cy={0}
-                r={i * 30 * (animPhase % 1)}
+                r={i * 40 * ((animPhase * 0.5) % 1)}
                 fill="none"
-                stroke="#ef4444"
-                strokeWidth="2"
-                opacity={1 - (animPhase % 1)}
+                stroke="url(#pseisSeismicWave)"
+                strokeWidth={4 - i * 0.5}
+                opacity={1 - ((animPhase * 0.5) % 1)}
               />
             ))}
-            <circle cx={0} cy={0} r={10} fill="#ef4444" className="animate-pulse" />
-            <text x={0} y={-20} textAnchor="middle" className="fill-red-400 text-xs font-bold">
-              M{earthquakeStrength.toFixed(1)}
+
+            {/* Epicenter core with glow */}
+            <g filter="url(#pseisEpicenterGlow)">
+              <circle cx={0} cy={0} r={20} fill="url(#pseisEpicenter)" />
+              <circle cx={0} cy={0} r={12} fill="#ef4444">
+                <animate attributeName="r" values="12;15;12" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={0} cy={0} r={5} fill="#fca5a5" />
+            </g>
+
+            {/* Magnitude label */}
+            <g transform="translate(0, -40)">
+              <rect x="-35" y="-12" width="70" height="24" rx="4" fill="#7f1d1d" stroke="#ef4444" strokeWidth="1" />
+              <text x={0} y={5} textAnchor="middle" fill="#fca5a5" fontSize="13" fontWeight="700">
+                M {earthquakeStrength.toFixed(1)}
+              </text>
+            </g>
+
+            {/* Depth indicator */}
+            <text x={0} y={40} textAnchor="middle" fill="#f87171" fontSize="9" fontWeight="500">
+              DEPTH: 10km
             </text>
           </g>
         )}
 
-        {/* Phone icons distributed on map */}
+        {/* Idle epicenter marker when no earthquake */}
+        {earthquakeStrength === 0 && (
+          <g transform="translate(350, 175)">
+            <circle cx={0} cy={0} r={15} fill="#374151" stroke="#4b5563" strokeWidth="2" strokeDasharray="4 2" />
+            <text x={0} y={5} textAnchor="middle" fill="#6b7280" fontSize="10">?</text>
+            <text x={0} y={35} textAnchor="middle" fill="#64748b" fontSize="9">Epicenter</text>
+          </g>
+        )}
+
+        {/* === DISTRIBUTED PHONE NETWORK === */}
         {Array(phoneCount).fill(0).map((_, i) => {
-          const angle = (i / phoneCount) * Math.PI * 2;
-          const radius = 50 + (i % 3) * 30;
-          const x = 200 + Math.cos(angle) * radius;
-          const y = 120 + Math.sin(angle) * radius * 0.6;
+          const angle = (i / Math.max(phoneCount, 1)) * Math.PI * 2 + (i * 0.3);
+          const radius = 70 + (i % 4) * 45;
+          const x = 350 + Math.cos(angle) * radius;
+          const y = 175 + Math.sin(angle) * radius * 0.5;
           const detected = phoneDetections[i];
 
           return (
             <g key={i} transform={`translate(${x}, ${y})`}>
-              <rect x="-8" y="-12" width="16" height="24" rx="2" fill={detected ? '#22c55e' : '#4b5563'} />
-              <rect x="-6" y="-8" width="12" height="16" rx="1" fill={detected ? '#86efac' : '#1f2937'} />
+              {/* Connection lines to epicenter when detected */}
+              {detected && earthquakeStrength > 0 && (
+                <line
+                  x1={0}
+                  y1={0}
+                  x2={350 - x}
+                  y2={175 - y}
+                  stroke="url(#pseisConnectionLine)"
+                  strokeWidth="2"
+                  strokeDasharray="6 3"
+                  opacity="0.6"
+                />
+              )}
+
+              {/* Detection pulse ring */}
               {detected && (
-                <circle cx={0} cy={0} r={20} fill="none" stroke="#22c55e" strokeWidth="2" opacity="0.5" className="animate-ping" />
+                <g filter="url(#pseisPulseGlow)">
+                  <circle cx={0} cy={0} r={25} fill="none" stroke="#22c55e" strokeWidth="2" opacity="0.6">
+                    <animate attributeName="r" values="15;30;15" dur="1.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              )}
+
+              {/* Phone device */}
+              <g filter={detected ? "url(#pseisDetectionGlow)" : undefined}>
+                {/* Phone body */}
+                <rect
+                  x="-10"
+                  y="-16"
+                  width="20"
+                  height="32"
+                  rx="4"
+                  fill={detected ? "url(#pseisPhoneActive)" : "url(#pseisPhoneIdle)"}
+                  stroke={detected ? "#86efac" : "#6b7280"}
+                  strokeWidth="1.5"
+                />
+
+                {/* Phone screen */}
+                <rect
+                  x="-7"
+                  y="-12"
+                  width="14"
+                  height="20"
+                  rx="2"
+                  fill={detected ? "#dcfce7" : "#1f2937"}
+                />
+
+                {/* Screen content - mini waveform when detected */}
+                {detected && (
+                  <path
+                    d="M -5 -2 Q -3 -6 -1 -2 Q 1 2 3 -2 Q 5 -6 7 -2"
+                    fill="none"
+                    stroke="#16a34a"
+                    strokeWidth="1.5"
+                  />
+                )}
+
+                {/* Home button */}
+                <circle cx={0} cy={12} r={2} fill={detected ? "#16a34a" : "#4b5563"} />
+              </g>
+
+              {/* Detection timestamp */}
+              {detected && earthquakeStrength > 0 && (
+                <text x={0} y={-24} textAnchor="middle" fill="#86efac" fontSize="8" fontWeight="600">
+                  {(Math.random() * 2).toFixed(1)}s
+                </text>
               )}
             </g>
           );
         })}
 
-        {/* Statistics panel */}
-        <g transform="translate(10, 10)">
-          <rect x="0" y="0" width="120" height="70" fill="#1f2937" rx="5" opacity="0.95" />
-          <text x="10" y="20" className="fill-gray-300 text-xs">Phones: {phoneCount}</text>
-          <text x="10" y="38" className="fill-gray-300 text-xs">
-            Detected: {detectionsCount}/{phoneCount}
+        {/* === STATISTICS PANEL === */}
+        <g transform="translate(15, 15)">
+          <rect x="0" y="0" width="160" height="100" rx="8" fill="url(#pseisStatsPanel)" stroke="#334155" strokeWidth="1.5" />
+
+          {/* Panel header */}
+          <rect x="0" y="0" width="160" height="24" rx="8" fill="#1e293b" />
+          <text x="80" y="16" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" letterSpacing="0.5">
+            NETWORK STATUS
           </text>
-          <text x="10" y="56" className={`text-xs ${detectionsCount > phoneCount * 0.5 ? 'fill-green-400' : 'fill-yellow-400'}`}>
-            Confidence: {accuracy}%
+
+          {/* Stats content */}
+          <text x="12" y="42" fill="#94a3b8" fontSize="10">Phones in Network:</text>
+          <text x="148" y="42" textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="600">{phoneCount}</text>
+
+          <text x="12" y="58" fill="#94a3b8" fontSize="10">Active Detections:</text>
+          <text x="148" y="58" textAnchor="end" fill={detectionsCount > 0 ? "#4ade80" : "#6b7280"} fontSize="11" fontWeight="600">
+            {detectionsCount}/{phoneCount}
           </text>
+
+          <text x="12" y="74" fill="#94a3b8" fontSize="10">Detection Confidence:</text>
+          <text x="148" y="74" textAnchor="end" fill={Number(accuracy) > 50 ? "#22c55e" : Number(accuracy) > 0 ? "#f59e0b" : "#6b7280"} fontSize="11" fontWeight="700">
+            {accuracy}%
+          </text>
+
+          {/* Confidence bar */}
+          <rect x="12" y="82" width="136" height="6" rx="3" fill="#1f2937" />
+          <rect x="12" y="82" width={136 * Number(accuracy) / 100} height="6" rx="3" fill={Number(accuracy) > 50 ? "#22c55e" : "#f59e0b"} />
         </g>
 
-        {/* Network benefit explanation */}
-        <text x="200" y="240" textAnchor="middle" className="fill-gray-400 text-xs">
-          More phones = better triangulation + noise rejection
-        </text>
+        {/* === LEGEND === */}
+        <g transform="translate(525, 15)">
+          <rect x="0" y="0" width="160" height="80" rx="8" fill="url(#pseisStatsPanel)" stroke="#334155" strokeWidth="1.5" />
+
+          <text x="80" y="18" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" letterSpacing="0.5">
+            LEGEND
+          </text>
+
+          <circle cx="18" cy="38" r="6" fill="#ef4444" />
+          <text x="32" y="42" fill="#f8fafc" fontSize="10">Epicenter</text>
+
+          <rect x="12" y="52" width="12" height="18" rx="2" fill="url(#pseisPhoneActive)" />
+          <text x="32" y="64" fill="#f8fafc" fontSize="10">Phone Detected</text>
+
+          <rect x="12" y="72" width="12" height="18" rx="2" fill="url(#pseisPhoneIdle)" opacity="0.6" />
+          <text x="32" y="84" fill="#6b7280" fontSize="10">Phone Idle</text>
+        </g>
+
+        {/* === BOTTOM INFO BAR === */}
+        <g transform="translate(0, 310)">
+          <rect x="100" y="0" width="500" height="35" rx="6" fill="#111827" stroke="#334155" strokeWidth="1" />
+
+          <text x="350" y="14" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">
+            DISTRIBUTED SEISMIC NETWORK
+          </text>
+          <text x="350" y="28" textAnchor="middle" fill="#64748b" fontSize="9">
+            Multiple detections enable triangulation, noise rejection, and early warning systems
+          </text>
+
+          {/* Status indicator */}
+          <circle cx="115" cy="17" r="5" fill={earthquakeStrength > 0 ? "#ef4444" : "#22c55e"}>
+            {earthquakeStrength > 0 && (
+              <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
+            )}
+          </circle>
+          <text x="130" y="21" fill={earthquakeStrength > 0 ? "#f87171" : "#86efac"} fontSize="9" fontWeight="600">
+            {earthquakeStrength > 0 ? "ALERT" : "MONITORING"}
+          </text>
+        </g>
       </svg>
     );
   };

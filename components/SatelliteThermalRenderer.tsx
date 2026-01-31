@@ -514,153 +514,579 @@ const SatelliteThermalRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
   const renderVisualization = () => {
     const thermal = calculateThermal();
     const sunAngle = animPhase * 0.5;
-    const tempColor = parseInt(thermal.tempC) > 50 ? '#ef4444' : parseInt(thermal.tempC) < -20 ? '#3b82f6' : '#22c55e';
+    const tempC = parseInt(thermal.tempC);
+    const tempColor = tempC > 50 ? '#ef4444' : tempC < -20 ? '#3b82f6' : '#22c55e';
+    const tempStatus = tempC > 50 ? 'HOT' : tempC < -20 ? 'COLD' : 'NOMINAL';
+
+    // Temperature gauge calculation (map -100 to 100 C to 0-100%)
+    const tempPercent = Math.max(0, Math.min(100, ((tempC + 100) / 200) * 100));
 
     return (
-      <svg viewBox="0 0 500 350" className="w-full h-auto max-w-xl">
+      <svg viewBox="0 0 600 400" className="w-full h-auto max-w-2xl">
         <defs>
-          <linearGradient id="spaceGradThermal" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0a0a1a" />
-            <stop offset="100%" stopColor="#1a1a3a" />
+          {/* === PREMIUM SPACE BACKGROUND GRADIENT === */}
+          <linearGradient id="satthSpaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0c1526" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
           </linearGradient>
-          <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#fcd34d" />
+
+          {/* === SUN RADIAL GRADIENT WITH DEPTH === */}
+          <radialGradient id="satthSunCore" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fff7ed" />
+            <stop offset="20%" stopColor="#fef3c7" />
+            <stop offset="40%" stopColor="#fcd34d" />
             <stop offset="70%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            <stop offset="100%" stopColor="#d97706" />
           </radialGradient>
+
+          <radialGradient id="satthSunGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.4" />
+            <stop offset="70%" stopColor="#ea580c" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === SATELLITE BODY MLI (MULTI-LAYER INSULATION) === */}
+          <linearGradient id="satthMLIGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fef3c7" />
+            <stop offset="20%" stopColor="#fcd34d" />
+            <stop offset="40%" stopColor="#b8860b" />
+            <stop offset="60%" stopColor="#fcd34d" />
+            <stop offset="80%" stopColor="#b8860b" />
+            <stop offset="100%" stopColor="#92400e" />
+          </linearGradient>
+
+          {/* === SATELLITE BODY METALLIC GRADIENT === */}
+          <linearGradient id="satthBodyMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="25%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="75%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* === THERMAL HEAT ZONE (HOT) === */}
+          <radialGradient id="satthHotZone" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#ef4444" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#dc2626" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === THERMAL COLD ZONE === */}
+          <radialGradient id="satthColdZone" cx="70%" cy="70%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.8" />
+            <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === SOLAR PANEL GRADIENT === */}
+          <linearGradient id="satthSolarPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="25%" stopColor="#1e40af" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="75%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+
+          {/* === RADIATOR WHITE SURFACE === */}
+          <linearGradient id="satthRadiator" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f8fafc" />
+            <stop offset="30%" stopColor="#e2e8f0" />
+            <stop offset="70%" stopColor="#cbd5e1" />
+            <stop offset="100%" stopColor="#94a3b8" />
+          </linearGradient>
+
+          {/* === LOUVER METALLIC === */}
+          <linearGradient id="satthLouverMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="25%" stopColor="#9ca3af" />
+            <stop offset="50%" stopColor="#d1d5db" />
+            <stop offset="75%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+
+          {/* === HEAT ARROW GRADIENT === */}
+          <linearGradient id="satthHeatArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="0" />
+            <stop offset="20%" stopColor="#fcd34d" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="1" />
+            <stop offset="80%" stopColor="#ea580c" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#ea580c" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* === RADIATION OUT GRADIENT (BLUE/IR) === */}
+          <linearGradient id="satthRadiationOut" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0" />
+          </linearGradient>
+
+          {/* === TEMPERATURE GAUGE GRADIENTS === */}
+          <linearGradient id="satthTempGauge" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="25%" stopColor="#22d3ee" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="75%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+
+          {/* === CONTROL PANEL GRADIENT === */}
+          <linearGradient id="satthPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* === EARTH SHADOW GRADIENT === */}
+          <radialGradient id="satthEarthShadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#0c1526" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#030712" stopOpacity="0.3" />
+          </radialGradient>
+
+          {/* === GLOW FILTERS === */}
+          <filter id="satthSunBlur" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satthHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satthHeaterGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satthColdGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satthStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1.5" />
+          </filter>
+
+          {/* === ARROW MARKERS === */}
+          <marker id="satthArrowHeat" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+          </marker>
+
+          <marker id="satthArrowCold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+          </marker>
         </defs>
 
-        <rect width="500" height="350" fill="url(#spaceGradThermal)" />
+        {/* === PREMIUM SPACE BACKGROUND === */}
+        <rect width="600" height="400" fill="url(#satthSpaceBg)" />
 
-        {/* Stars */}
-        {[...Array(20)].map((_, i) => (
-          <circle
-            key={i}
-            cx={(i * 37 + 20) % 500}
-            cy={(i * 23 + 10) % 350}
-            r={Math.random() * 1.5 + 0.5}
-            fill="white"
-            opacity={0.5}
-          />
-        ))}
+        {/* Subtle grid pattern */}
+        <pattern id="satthGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.2" />
+        </pattern>
+        <rect width="600" height="400" fill="url(#satthGrid)" />
 
-        {/* Sun */}
+        {/* === STARS WITH VARYING SIZES AND GLOW === */}
+        {[...Array(35)].map((_, i) => {
+          const x = (i * 47 + 15) % 600;
+          const y = (i * 31 + 8) % 400;
+          const size = (i % 3 === 0) ? 1.5 : (i % 2 === 0) ? 1 : 0.7;
+          const opacity = (i % 4 === 0) ? 0.9 : 0.5;
+          return (
+            <circle
+              key={i}
+              cx={x}
+              cy={y}
+              r={size}
+              fill="white"
+              opacity={opacity}
+              filter={i % 5 === 0 ? "url(#satthStarGlow)" : undefined}
+            >
+              {i % 7 === 0 && (
+                <animate attributeName="opacity" values={`${opacity};${opacity * 0.4};${opacity}`} dur={`${2 + (i % 3)}s`} repeatCount="indefinite" />
+              )}
+            </circle>
+          );
+        })}
+
+        {/* === SUN WITH PREMIUM GLOW AND RAYS === */}
         {!inShadow && (
-          <g transform={`translate(${60 + Math.sin(sunAngle * Math.PI / 180) * 10}, 80)`}>
-            <circle cx="0" cy="0" r="50" fill="url(#sunGlow)" />
-            <circle cx="0" cy="0" r="30" fill="#fcd34d" />
-            {/* Sun rays */}
-            {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+          <g transform={`translate(${70 + Math.sin(sunAngle * Math.PI / 180) * 8}, 85)`}>
+            {/* Outer glow */}
+            <circle cx="0" cy="0" r="70" fill="url(#satthSunGlow)" filter="url(#satthSunBlur)" />
+
+            {/* Sun corona */}
+            <circle cx="0" cy="0" r="50" fill="url(#satthSunGlow)" opacity="0.6">
+              <animate attributeName="r" values="48;52;48" dur="2s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Sun core */}
+            <circle cx="0" cy="0" r="32" fill="url(#satthSunCore)" />
+
+            {/* Sun surface detail */}
+            <circle cx="-8" cy="-8" r="6" fill="#fef3c7" opacity="0.4" />
+            <circle cx="10" cy="5" r="4" fill="#fed7aa" opacity="0.3" />
+
+            {/* Animated sun rays */}
+            {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, idx) => (
               <line
                 key={angle}
-                x1={Math.cos(angle * Math.PI / 180) * 35}
-                y1={Math.sin(angle * Math.PI / 180) * 35}
-                x2={Math.cos(angle * Math.PI / 180) * 55}
-                y2={Math.sin(angle * Math.PI / 180) * 55}
+                x1={Math.cos(angle * Math.PI / 180) * 36}
+                y1={Math.sin(angle * Math.PI / 180) * 36}
+                x2={Math.cos(angle * Math.PI / 180) * (55 + (idx % 2) * 8)}
+                y2={Math.sin(angle * Math.PI / 180) * (55 + (idx % 2) * 8)}
                 stroke="#fcd34d"
-                strokeWidth="3"
-                opacity="0.6"
-              />
+                strokeWidth={idx % 3 === 0 ? 3 : 2}
+                opacity={0.5}
+                strokeLinecap="round"
+              >
+                <animate
+                  attributeName="opacity"
+                  values="0.5;0.8;0.5"
+                  dur={`${1.5 + (idx % 3) * 0.3}s`}
+                  repeatCount="indefinite"
+                />
+              </line>
+            ))}
+
+            {/* Sun label */}
+            <text x="0" y="85" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold" letterSpacing="1">
+              SOLAR INPUT: {thermal.qAbsorbed}W
+            </text>
+          </g>
+        )}
+
+        {/* === EARTH SHADOW / ECLIPSE INDICATOR === */}
+        {inShadow && (
+          <g transform="translate(70, 100)">
+            <circle cx="0" cy="0" r="60" fill="url(#satthEarthShadow)" />
+            <circle cx="0" cy="0" r="45" fill="#0c1526" opacity="0.8" />
+
+            {/* Earth limb glow */}
+            <ellipse cx="-15" cy="0" rx="30" ry="45" fill="none" stroke="#1e40af" strokeWidth="2" opacity="0.4" />
+
+            {/* Eclipse label */}
+            <text x="0" y="-70" textAnchor="middle" fill="#64748b" fontSize="11" fontWeight="bold" letterSpacing="2">
+              ECLIPSE
+            </text>
+            <text x="0" y="-55" textAnchor="middle" fill="#475569" fontSize="8">
+              NO SOLAR INPUT
+            </text>
+
+            {/* Cold indicator */}
+            <g filter="url(#satthColdGlow)">
+              <circle cx="0" cy="35" r="8" fill="#3b82f6" opacity="0.6">
+                <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          </g>
+        )}
+
+        {/* === HEAT TRANSFER ARROWS FROM SUN === */}
+        {!inShadow && (
+          <g filter="url(#satthHeatGlow)">
+            {/* Main heat ray */}
+            <path
+              d="M 135 100 Q 200 110 265 135"
+              stroke="url(#satthHeatArrow)"
+              strokeWidth="4"
+              fill="none"
+              markerEnd="url(#satthArrowHeat)"
+              opacity="0.9"
+            />
+            {/* Secondary rays */}
+            <path
+              d="M 140 85 Q 195 95 260 115"
+              stroke="url(#satthHeatArrow)"
+              strokeWidth="2"
+              fill="none"
+              markerEnd="url(#satthArrowHeat)"
+              opacity="0.6"
+            />
+            <path
+              d="M 140 115 Q 200 125 265 155"
+              stroke="url(#satthHeatArrow)"
+              strokeWidth="2"
+              fill="none"
+              markerEnd="url(#satthArrowHeat)"
+              opacity="0.6"
+            />
+
+            {/* Heat wave indicators */}
+            {[0, 1, 2].map(i => (
+              <path
+                key={i}
+                d={`M ${170 + i * 30} ${95 + i * 8} q 5 -5 10 0 q 5 5 10 0`}
+                stroke="#f59e0b"
+                strokeWidth="1.5"
+                fill="none"
+                opacity={0.4 - i * 0.1}
+              >
+                <animate
+                  attributeName="opacity"
+                  values={`${0.4 - i * 0.1};${0.7 - i * 0.1};${0.4 - i * 0.1}`}
+                  dur="1.5s"
+                  repeatCount="indefinite"
+                />
+              </path>
             ))}
           </g>
         )}
 
-        {/* Earth shadow indicator */}
-        {inShadow && (
-          <g transform="translate(50, 175)">
-            <text x="0" y="0" fill="#64748b" fontSize="12" fontWeight="bold">ECLIPSE</text>
-            <circle cx="-20" cy="-5" r="40" fill="#1e3a5f" opacity="0.5" />
-          </g>
-        )}
+        {/* === PREMIUM SATELLITE === */}
+        <g transform="translate(350, 165)">
+          {/* Thermal zones overlay (behind satellite) */}
+          {tempC > 20 && !inShadow && (
+            <ellipse cx="-30" cy="-10" rx="50" ry="40" fill="url(#satthHotZone)" opacity="0.5" />
+          )}
+          {tempC < 0 && (
+            <ellipse cx="30" cy="10" rx="45" ry="35" fill="url(#satthColdZone)" opacity="0.5" />
+          )}
 
-        {/* Satellite body */}
-        <g transform="translate(280, 150)">
-          {/* MLI layers (gold foil look) */}
-          <rect x="-40" y="-30" width="80" height="60" fill={tempColor} rx="4" opacity="0.3" />
-          <rect x="-38" y="-28" width="76" height="56" fill="#b8860b" rx="3" opacity="0.6" />
-          <rect x="-36" y="-26" width="72" height="52" fill="#ffd700" rx="2" opacity="0.4" />
-
-          {/* Main body */}
-          <rect x="-35" y="-25" width="70" height="50" fill="#374151" stroke="#94a3b8" strokeWidth="2" rx="2" />
-
-          {/* Solar panels */}
-          <rect x="-90" y="-15" width="50" height="30" fill="#1e40af" stroke="#3b82f6" strokeWidth="1" />
-          <rect x="40" y="-15" width="50" height="30" fill="#1e40af" stroke="#3b82f6" strokeWidth="1" />
-          {/* Panel grid lines */}
-          {[1, 2, 3, 4].map(i => (
-            <React.Fragment key={i}>
-              <line x1={-90 + i * 10} y1="-15" x2={-90 + i * 10} y2="15" stroke="#3b82f6" strokeWidth="0.5" />
-              <line x1={40 + i * 10} y1="-15" x2={40 + i * 10} y2="15" stroke="#3b82f6" strokeWidth="0.5" />
-            </React.Fragment>
-          ))}
-
-          {/* Radiator (white surface) */}
-          <rect x="15" y="-20" width="15" height="40" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-          <text x="22" y="30" textAnchor="middle" fill="#64748b" fontSize="7">RAD</text>
-
-          {/* Louvers */}
-          <g transform="translate(-25, -20)">
+          {/* === SOLAR PANELS === */}
+          {/* Left panel structure */}
+          <g transform="translate(-100, -20)">
+            <rect x="0" y="0" width="55" height="40" rx="2" fill="url(#satthSolarPanel)" stroke="#3b82f6" strokeWidth="1.5" />
+            {/* Panel cells */}
             {[0, 1, 2, 3, 4].map(i => (
+              <React.Fragment key={`left-${i}`}>
+                <line x1={11 * i + 11} y1="0" x2={11 * i + 11} y2="40" stroke="#1e3a8a" strokeWidth="0.8" />
+                <line x1="0" y1={i * 8 + 8} x2="55" y2={i * 8 + 8} stroke="#1e3a8a" strokeWidth="0.5" />
+              </React.Fragment>
+            ))}
+            {/* Panel reflection highlight */}
+            <rect x="2" y="2" width="15" height="10" fill="#60a5fa" opacity="0.15" rx="1" />
+            {/* Panel arm */}
+            <rect x="55" y="15" width="10" height="10" fill="#475569" stroke="#64748b" strokeWidth="1" />
+          </g>
+
+          {/* Right panel structure */}
+          <g transform="translate(55, -20)">
+            <rect x="0" y="15" width="10" height="10" fill="#475569" stroke="#64748b" strokeWidth="1" />
+            <rect x="10" y="0" width="55" height="40" rx="2" fill="url(#satthSolarPanel)" stroke="#3b82f6" strokeWidth="1.5" />
+            {[0, 1, 2, 3, 4].map(i => (
+              <React.Fragment key={`right-${i}`}>
+                <line x1={10 + 11 * i + 11} y1="0" x2={10 + 11 * i + 11} y2="40" stroke="#1e3a8a" strokeWidth="0.8" />
+                <line x1="10" y1={i * 8 + 8} x2="65" y2={i * 8 + 8} stroke="#1e3a8a" strokeWidth="0.5" />
+              </React.Fragment>
+            ))}
+            <rect x="47" y="2" width="15" height="10" fill="#60a5fa" opacity="0.15" rx="1" />
+          </g>
+
+          {/* === MLI OUTER LAYER (Gold foil) === */}
+          <rect x="-42" y="-32" width="84" height="64" rx="6" fill="url(#satthMLIGold)" opacity="0.4" />
+          <rect x="-40" y="-30" width="80" height="60" rx="5" fill="url(#satthMLIGold)" opacity="0.3" />
+
+          {/* === MAIN SATELLITE BODY === */}
+          <rect x="-38" y="-28" width="76" height="56" rx="4" fill="url(#satthBodyMetal)" stroke="#64748b" strokeWidth="1.5" />
+
+          {/* Body panel lines */}
+          <line x1="-38" y1="-10" x2="38" y2="-10" stroke="#475569" strokeWidth="0.5" />
+          <line x1="-38" y1="10" x2="38" y2="10" stroke="#475569" strokeWidth="0.5" />
+          <line x1="-10" y1="-28" x2="-10" y2="28" stroke="#475569" strokeWidth="0.5" />
+          <line x1="15" y1="-28" x2="15" y2="28" stroke="#475569" strokeWidth="0.5" />
+
+          {/* === RADIATOR PANEL (White, high emissivity) === */}
+          <g transform="translate(18, -22)">
+            <rect x="0" y="0" width="16" height="44" rx="2" fill="url(#satthRadiator)" stroke="#94a3b8" strokeWidth="1" />
+            {/* Radiator fins */}
+            {[0, 1, 2, 3, 4, 5].map(i => (
+              <line key={i} x1="0" y1={i * 7 + 7} x2="16" y2={i * 7 + 7} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+            <text x="8" y="52" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">RAD</text>
+          </g>
+
+          {/* === LOUVERS (Adjustable thermal control) === */}
+          <g transform="translate(-32, -22)">
+            <rect x="-2" y="-2" width="40" height="48" rx="2" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
+            {[0, 1, 2, 3, 4, 5].map(i => (
               <rect
                 key={i}
                 x="0"
-                y={i * 8}
-                width="35"
-                height="6"
-                fill="#94a3b8"
-                transform={`rotate(${(louversOpen / 100) * 30}, 17.5, ${i * 8 + 3})`}
+                y={i * 7}
+                width="36"
+                height="5"
+                rx="1"
+                fill="url(#satthLouverMetal)"
+                stroke="#9ca3af"
+                strokeWidth="0.5"
+                transform={`rotate(${(louversOpen / 100) * 45}, 18, ${i * 7 + 2.5})`}
               />
             ))}
+            <text x="18" y="52" textAnchor="middle" fill="#64748b" fontSize="7" fontWeight="bold">LOUVERS</text>
+            <text x="18" y="60" textAnchor="middle" fill="#94a3b8" fontSize="6">{louversOpen}% OPEN</text>
           </g>
-          <text x="-7" y="35" textAnchor="middle" fill="#64748b" fontSize="7">LOUVERS</text>
 
-          {/* Heater indicator */}
+          {/* === HEATER INDICATOR === */}
           {heatersOn && (
-            <circle cx="0" cy="0" r="8" fill="#ef4444" opacity="0.7">
-              <animate attributeName="opacity" values="0.7;0.3;0.7" dur="1s" repeatCount="indefinite" />
-            </circle>
+            <g transform="translate(0, 0)" filter="url(#satthHeaterGlow)">
+              <circle cx="0" cy="0" r="12" fill="#ef4444" opacity="0.3">
+                <animate attributeName="r" values="10;14;10" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="0" cy="0" r="8" fill="#ef4444" opacity="0.6">
+                <animate attributeName="opacity" values="0.6;0.9;0.6" dur="0.8s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="0" cy="0" r="4" fill="#fca5a5" />
+              <text x="0" y="22" textAnchor="middle" fill="#ef4444" fontSize="6" fontWeight="bold">HEATER ON</text>
+            </g>
           )}
 
-          {/* Heat arrows from sun */}
-          {!inShadow && (
-            <>
-              <path d="M -120 -50 L -45 -10" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrowOrange)" />
-              <text x="-100" y="-55" fill="#f59e0b" fontSize="8">Solar: {thermal.qAbsorbed}W</text>
-            </>
-          )}
+          {/* === ANTENNA === */}
+          <line x1="0" y1="-28" x2="0" y2="-45" stroke="#64748b" strokeWidth="2" />
+          <circle cx="0" cy="-48" r="4" fill="#475569" stroke="#64748b" strokeWidth="1" />
 
-          {/* Radiation arrows out */}
-          <path d="M 95 0 L 130 0" stroke="#3b82f6" strokeWidth="2" />
-          <path d="M 0 35 L 0 60" stroke="#3b82f6" strokeWidth="2" />
-          <text x="125" y="-10" fill="#3b82f6" fontSize="8">Radiated: {thermal.qRadiated}W</text>
+          {/* Satellite label */}
+          <text x="0" y="45" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" letterSpacing="0.5">
+            SPACECRAFT
+          </text>
         </g>
 
-        {/* Thermal status panel */}
-        <g transform="translate(10, 220)">
-          <rect x="0" y="0" width="150" height="120" fill="rgba(0,0,0,0.7)" rx="8" stroke="#334155" />
-          <text x="75" y="20" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">THERMAL STATUS</text>
+        {/* === RADIATION OUTPUT ARROWS === */}
+        <g>
+          {/* Right radiation */}
+          <path
+            d="M 435 165 L 480 165"
+            stroke="url(#satthRadiationOut)"
+            strokeWidth="3"
+            fill="none"
+            markerEnd="url(#satthArrowCold)"
+          />
+          <path
+            d="M 430 145 L 470 130"
+            stroke="url(#satthRadiationOut)"
+            strokeWidth="2"
+            fill="none"
+            markerEnd="url(#satthArrowCold)"
+            opacity="0.7"
+          />
+          <path
+            d="M 430 185 L 470 200"
+            stroke="url(#satthRadiationOut)"
+            strokeWidth="2"
+            fill="none"
+            markerEnd="url(#satthArrowCold)"
+            opacity="0.7"
+          />
 
-          <text x="10" y="40" fill="#94a3b8" fontSize="9">Solar Input:</text>
-          <text x="140" y="40" textAnchor="end" fill="#fcd34d" fontSize="9">{thermal.qAbsorbed} W</text>
+          {/* Bottom radiation */}
+          <path
+            d="M 350 235 L 350 270"
+            stroke="url(#satthRadiationOut)"
+            strokeWidth="3"
+            fill="none"
+            markerEnd="url(#satthArrowCold)"
+          />
 
-          <text x="10" y="55" fill="#94a3b8" fontSize="9">Internal Heat:</text>
-          <text x="140" y="55" textAnchor="end" fill="#f97316" fontSize="9">{thermal.qInternal} W</text>
-
-          <text x="10" y="70" fill="#94a3b8" fontSize="9">Heaters:</text>
-          <text x="140" y="70" textAnchor="end" fill={heatersOn ? '#ef4444' : '#64748b'} fontSize="9">{thermal.qHeater} W</text>
-
-          <line x1="10" y1="78" x2="140" y2="78" stroke="#475569" />
-
-          <text x="10" y="93" fill="#94a3b8" fontSize="9">Temperature:</text>
-          <text x="140" y="93" textAnchor="end" fill={tempColor} fontSize="10" fontWeight="bold">{thermal.tempC} C</text>
-
-          <rect x="10" y="100" width="130" height="14" fill={tempColor} rx="3" opacity="0.3" />
-          <text x="75" y="111" textAnchor="middle" fill={tempColor} fontSize="10" fontWeight="bold">{thermal.status}</text>
+          {/* Radiation label */}
+          <text x="490" y="150" fill="#60a5fa" fontSize="9" fontWeight="bold">
+            IR RADIATION
+          </text>
+          <text x="490" y="162" fill="#3b82f6" fontSize="8">
+            {thermal.qRadiated}W
+          </text>
         </g>
 
-        {/* Emissivity display */}
-        <text x="380" y="320" textAnchor="middle" fill="#94a3b8" fontSize="9">
-          Effective Emissivity: {thermal.effectiveEmissivity}
+        {/* === PREMIUM THERMAL STATUS PANEL === */}
+        <g transform="translate(15, 230)">
+          <rect x="0" y="0" width="175" height="155" rx="10" fill="url(#satthPanelBg)" stroke="#334155" strokeWidth="1.5" />
+
+          {/* Panel header */}
+          <rect x="0" y="0" width="175" height="28" rx="10" fill="#1e293b" />
+          <rect x="0" y="18" width="175" height="10" fill="#1e293b" />
+          <text x="87" y="18" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold" letterSpacing="1">
+            THERMAL STATUS
+          </text>
+
+          {/* Data rows */}
+          <text x="12" y="45" fill="#94a3b8" fontSize="9">Solar Absorbed:</text>
+          <text x="163" y="45" textAnchor="end" fill="#fcd34d" fontSize="9" fontWeight="bold">{thermal.qAbsorbed} W</text>
+
+          <text x="12" y="60" fill="#94a3b8" fontSize="9">Internal Heat:</text>
+          <text x="163" y="60" textAnchor="end" fill="#f97316" fontSize="9" fontWeight="bold">{thermal.qInternal} W</text>
+
+          <text x="12" y="75" fill="#94a3b8" fontSize="9">Heaters:</text>
+          <text x="163" y="75" textAnchor="end" fill={heatersOn ? '#ef4444' : '#475569'} fontSize="9" fontWeight="bold">{thermal.qHeater} W</text>
+
+          <text x="12" y="90" fill="#94a3b8" fontSize="9">Radiated Out:</text>
+          <text x="163" y="90" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{thermal.qRadiated} W</text>
+
+          <line x1="12" y1="98" x2="163" y2="98" stroke="#334155" strokeWidth="1" />
+
+          {/* Temperature display */}
+          <text x="12" y="115" fill="#e2e8f0" fontSize="10" fontWeight="bold">Temperature:</text>
+          <text x="163" y="115" textAnchor="end" fill={tempColor} fontSize="12" fontWeight="bold">{thermal.tempC}°C</text>
+
+          {/* Temperature gauge */}
+          <rect x="12" y="122" width="151" height="10" rx="5" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
+          <rect x="12" y="122" width="151" height="10" rx="5" fill="url(#satthTempGauge)" opacity="0.3" />
+          <rect x="12" y="122" width={151 * tempPercent / 100} height="10" rx="5" fill="url(#satthTempGauge)" />
+
+          {/* Gauge markers */}
+          <text x="12" y="143" fill="#3b82f6" fontSize="6">-100°C</text>
+          <text x="87" y="143" textAnchor="middle" fill="#22c55e" fontSize="6">0°C</text>
+          <text x="163" y="143" textAnchor="end" fill="#ef4444" fontSize="6">+100°C</text>
+
+          {/* Status indicator */}
+          <rect x="45" y="148" width="85" height="18" rx="9" fill={tempColor} opacity="0.2" stroke={tempColor} strokeWidth="1" />
+          <circle cx="55" cy="157" r="4" fill={tempColor}>
+            <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <text x="95" y="161" textAnchor="middle" fill={tempColor} fontSize="10" fontWeight="bold">{tempStatus}</text>
+        </g>
+
+        {/* === PHYSICS PARAMETERS PANEL === */}
+        <g transform="translate(420, 260)">
+          <rect x="0" y="0" width="165" height="125" rx="10" fill="url(#satthPanelBg)" stroke="#334155" strokeWidth="1.5" />
+
+          <rect x="0" y="0" width="165" height="26" rx="10" fill="#1e293b" />
+          <rect x="0" y="16" width="165" height="10" fill="#1e293b" />
+          <text x="82" y="17" textAnchor="middle" fill="#a855f7" fontSize="10" fontWeight="bold" letterSpacing="1">
+            PARAMETERS
+          </text>
+
+          <text x="10" y="42" fill="#94a3b8" fontSize="8">Absorptivity (alpha):</text>
+          <text x="155" y="42" textAnchor="end" fill="#f59e0b" fontSize="9" fontWeight="bold">{absorptivity.toFixed(2)}</text>
+
+          <text x="10" y="58" fill="#94a3b8" fontSize="8">Base Emissivity (eps):</text>
+          <text x="155" y="58" textAnchor="end" fill="#3b82f6" fontSize="9" fontWeight="bold">{emissivity.toFixed(2)}</text>
+
+          <text x="10" y="74" fill="#94a3b8" fontSize="8">Effective Emissivity:</text>
+          <text x="155" y="74" textAnchor="end" fill="#22d3ee" fontSize="9" fontWeight="bold">{thermal.effectiveEmissivity}</text>
+
+          <line x1="10" y1="82" x2="155" y2="82" stroke="#334155" strokeWidth="0.5" />
+
+          <text x="10" y="96" fill="#94a3b8" fontSize="8">Solar Constant:</text>
+          <text x="155" y="96" textAnchor="end" fill="#fcd34d" fontSize="8" fontWeight="bold">{solarInput} W/m²</text>
+
+          <text x="10" y="112" fill="#94a3b8" fontSize="8">Stefan-Boltzmann:</text>
+          <text x="155" y="112" textAnchor="end" fill="#94a3b8" fontSize="7">5.67×10⁻⁸ W/m²K⁴</text>
+        </g>
+
+        {/* === TITLE LABEL === */}
+        <text x="300" y="25" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold" letterSpacing="1">
+          SATELLITE THERMAL CONTROL SYSTEM
+        </text>
+        <text x="300" y="40" textAnchor="middle" fill="#64748b" fontSize="9">
+          Stefan-Boltzmann Law: Q = ε·σ·A·T⁴
         </text>
       </svg>
     );

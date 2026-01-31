@@ -370,8 +370,8 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showRanges: boolean = false) => {
-    const width = 450;
-    const height = 400;
+    const width = 700;
+    const height = 420;
     const output = calculateOutput();
 
     return (
@@ -381,155 +381,450 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '720px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Assumption Panel - Live Output Updates
+          {/* ===================== PREMIUM DEFS SECTION ===================== */}
+          <defs>
+            {/* Premium background gradient with depth */}
+            <linearGradient id="afaBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Assumption panel gradient */}
+            <linearGradient id="afaPanelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Output panel premium gradient */}
+            <linearGradient id="afaOutputPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="20%" stopColor="#0f172a" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* HIGH confidence - emerald gradient with depth */}
+            <linearGradient id="afaHighConfidence" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="25%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="75%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
+
+            {/* MEDIUM confidence - amber gradient */}
+            <linearGradient id="afaMediumConfidence" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
+
+            {/* LOW confidence - red gradient */}
+            <linearGradient id="afaLowConfidence" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* 3D sphere for assumption nodes - HIGH */}
+            <radialGradient id="afaSphereHigh" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="30%" stopColor="#34d399" />
+              <stop offset="60%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#047857" />
+            </radialGradient>
+
+            {/* 3D sphere for assumption nodes - MEDIUM */}
+            <radialGradient id="afaSphereMedium" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+
+            {/* 3D sphere for assumption nodes - LOW */}
+            <radialGradient id="afaSphereLow" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+
+            {/* Server stack metallic gradient */}
+            <linearGradient id="afaServerMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Cost badge gradient */}
+            <linearGradient id="afaCostBadge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
+
+            {/* Risk meter gradient - dynamic based on risk */}
+            <linearGradient id="afaRiskMeter" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Progress bar track */}
+            <linearGradient id="afaProgressTrack" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Connection line gradient */}
+            <linearGradient id="afaConnectionLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Hidden assumption warning gradient */}
+            <linearGradient id="afaHiddenWarning" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#450a0a" />
+              <stop offset="50%" stopColor="#7f1d1d" />
+              <stop offset="100%" stopColor="#450a0a" />
+            </linearGradient>
+
+            {/* Glow filter for HIGH confidence */}
+            <filter id="afaGlowHigh" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#10b981" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for MEDIUM confidence */}
+            <filter id="afaGlowMedium" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#f59e0b" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for LOW confidence */}
+            <filter id="afaGlowLow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow filter */}
+            <filter id="afaShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Inner glow for panels */}
+            <filter id="afaInnerGlow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Pulse animation for warning */}
+            <filter id="afaPulseWarning" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Grid pattern for background */}
+            <pattern id="afaGridPattern" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* ===================== BACKGROUND ===================== */}
+          <rect width={width} height={height} fill="url(#afaBgGradient)" />
+          <rect width={width} height={height} fill="url(#afaGridPattern)" />
+
+          {/* Title with premium styling */}
+          <text x={width/2} y={28} fill="#f8fafc" fontSize={16} fontWeight="bold" textAnchor="middle" letterSpacing="0.5">
+            Assumption Panel - Live System Design
+          </text>
+          <text x={width/2} y={46} fill="#94a3b8" fontSize={11} textAnchor="middle">
+            Explicit assumptions reduce failure risk
           </text>
 
-          {/* Assumptions list */}
-          <g transform="translate(20, 50)">
-            <rect x={0} y={0} width={200} height={260} fill="rgba(0,0,0,0.4)" rx={8} />
-            <text x={10} y={20} fill={colors.textSecondary} fontSize={10}>ASSUMPTIONS</text>
+          {/* ===================== ASSUMPTIONS PANEL (LEFT) ===================== */}
+          <g transform="translate(20, 60)">
+            {/* Panel background with depth */}
+            <rect x={0} y={0} width={260} height={320} fill="url(#afaPanelGradient)" rx={12} filter="url(#afaShadow)" />
+            <rect x={2} y={2} width={256} height={316} fill="none" stroke="#334155" strokeWidth={1} rx={11} />
 
-            {assumptions.filter(a => !a.hidden || showHiddenAssumptions).map((assumption, i) => (
-              <g key={assumption.id} transform={`translate(10, ${35 + i * 45})`}>
-                <rect
-                  x={0}
-                  y={0}
-                  width={180}
-                  height={40}
-                  fill={assumption.hidden ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)'}
-                  stroke={colors.confidence[assumption.confidence]}
-                  strokeWidth={1}
-                  rx={4}
-                />
-                <text x={5} y={14} fill={colors.textPrimary} fontSize={9}>
-                  {assumption.label}
-                </text>
-                <text x={5} y={28} fill={colors.confidence[assumption.confidence]} fontSize={11} fontWeight="bold">
-                  {showRanges && useRanges
-                    ? `${Math.round(assumption.value * (1 - rangeWidth / 100))}-${Math.round(assumption.value * (1 + rangeWidth / 100))} ${assumption.unit}`
-                    : `${assumption.value} ${assumption.unit}`
-                  }
-                </text>
-                <text x={175} y={20} fill={colors.confidence[assumption.confidence]} fontSize={8} textAnchor="end">
-                  {assumption.confidence.toUpperCase()}
-                </text>
-                {assumption.hidden && (
-                  <text x={175} y={32} fill={colors.error} fontSize={7} textAnchor="end">
-                    (was hidden)
+            {/* Panel header */}
+            <rect x={0} y={0} width={260} height={35} fill="rgba(30,41,59,0.8)" rx={12} />
+            <rect x={0} y={25} width={260} height={10} fill="rgba(30,41,59,0.8)" />
+            <text x={20} y={23} fill="#e2e8f0" fontSize={12} fontWeight="bold" letterSpacing="1">ASSUMPTIONS</text>
+            <circle cx={240} cy={17} r={6} fill={showHiddenAssumptions ? 'url(#afaSphereHigh)' : 'url(#afaSphereLow)'}>
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Assumption items */}
+            {assumptions.filter(a => !a.hidden || showHiddenAssumptions).map((assumption, i) => {
+              const sphereGradient = assumption.confidence === 'high' ? 'url(#afaSphereHigh)' :
+                assumption.confidence === 'medium' ? 'url(#afaSphereMedium)' : 'url(#afaSphereLow)';
+              const glowFilter = assumption.confidence === 'high' ? 'url(#afaGlowHigh)' :
+                assumption.confidence === 'medium' ? 'url(#afaGlowMedium)' : 'url(#afaGlowLow)';
+              const confidenceGradient = assumption.confidence === 'high' ? 'url(#afaHighConfidence)' :
+                assumption.confidence === 'medium' ? 'url(#afaMediumConfidence)' : 'url(#afaLowConfidence)';
+
+              return (
+                <g key={assumption.id} transform={`translate(10, ${45 + i * 52})`}>
+                  {/* Card background */}
+                  <rect
+                    x={0}
+                    y={0}
+                    width={240}
+                    height={46}
+                    fill={assumption.hidden ? 'rgba(127, 29, 29, 0.15)' : 'rgba(15, 23, 42, 0.6)'}
+                    stroke={assumption.hidden ? '#7f1d1d' : '#334155'}
+                    strokeWidth={1}
+                    rx={8}
+                  />
+
+                  {/* Confidence indicator sphere */}
+                  <circle cx={20} cy={23} r={10} fill={sphereGradient} filter={glowFilter}>
+                    <animate attributeName="r" values="9;11;9" dur="3s" repeatCount="indefinite" />
+                  </circle>
+
+                  {/* Assumption label */}
+                  <text x={38} y={16} fill="#f8fafc" fontSize={10} fontWeight="600">
+                    {assumption.label}
                   </text>
-                )}
-              </g>
-            ))}
 
+                  {/* Value display */}
+                  <text x={38} y={32} fill={assumption.confidence === 'high' ? '#34d399' : assumption.confidence === 'medium' ? '#fbbf24' : '#f87171'} fontSize={12} fontWeight="bold">
+                    {showRanges && useRanges
+                      ? `${Math.round(assumption.value * (1 - rangeWidth / 100))}-${Math.round(assumption.value * (1 + rangeWidth / 100))} ${assumption.unit}`
+                      : `${assumption.value} ${assumption.unit}`
+                    }
+                  </text>
+
+                  {/* Confidence badge */}
+                  <rect x={175} y={8} width={55} height={18} fill={confidenceGradient} rx={9} />
+                  <text x={202} y={20} fill="#ffffff" fontSize={8} fontWeight="bold" textAnchor="middle">
+                    {assumption.confidence.toUpperCase()}
+                  </text>
+
+                  {/* Hidden indicator */}
+                  {assumption.hidden && (
+                    <g>
+                      <rect x={175} y={28} width={55} height={14} fill="url(#afaHiddenWarning)" rx={7} />
+                      <text x={202} y={38} fill="#fca5a5" fontSize={7} textAnchor="middle">REVEALED</text>
+                    </g>
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Hidden assumptions warning */}
             {!showHiddenAssumptions && output.hiddenCount > 0 && (
-              <g transform={`translate(10, ${35 + (assumptions.length - output.hiddenCount) * 45})`}>
-                <rect x={0} y={0} width={180} height={30} fill="rgba(239, 68, 68, 0.2)" rx={4} strokeDasharray="5,5" stroke={colors.error} />
-                <text x={90} y={18} fill={colors.error} fontSize={10} textAnchor="middle">
-                  + {output.hiddenCount} hidden assumptions
+              <g transform={`translate(10, ${45 + (assumptions.length - output.hiddenCount) * 52})`}>
+                <rect x={0} y={0} width={240} height={46} fill="url(#afaHiddenWarning)" rx={8} strokeDasharray="6,4" stroke="#ef4444" filter="url(#afaPulseWarning)">
+                  <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+                </rect>
+                <text x={120} y={20} fill="#fca5a5" fontSize={11} textAnchor="middle" fontWeight="bold">
+                  + {output.hiddenCount} HIDDEN ASSUMPTIONS
+                </text>
+                <text x={120} y={36} fill="#f87171" fontSize={9} textAnchor="middle">
+                  Click "Show Hidden" to reveal
                 </text>
               </g>
             )}
           </g>
 
-          {/* Output panel */}
-          <g transform="translate(240, 50)">
-            <rect x={0} y={0} width={190} height={260} fill="rgba(0,0,0,0.4)" rx={8} />
-            <text x={10} y={20} fill={colors.textSecondary} fontSize={10}>DESIGN OUTPUT</text>
+          {/* ===================== CONNECTION FLOW ===================== */}
+          <g transform="translate(285, 180)">
+            {/* Animated connection line */}
+            <path d="M 0 40 C 40 40, 40 40, 80 40" stroke="url(#afaConnectionLine)" strokeWidth={3} fill="none">
+              <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
+            </path>
+            <polygon points="75,35 85,40 75,45" fill="#a855f7">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+            </polygon>
+            <text x={40} y={60} fill="#94a3b8" fontSize={8} textAnchor="middle">FEEDS INTO</text>
+          </g>
 
-            {/* Risk meter */}
-            <g transform="translate(10, 35)">
-              <text x={0} y={0} fill={colors.textMuted} fontSize={9}>Failure Risk</text>
-              <rect x={0} y={8} width={170} height={16} fill="rgba(255,255,255,0.1)" rx={4} />
+          {/* ===================== OUTPUT PANEL (RIGHT) ===================== */}
+          <g transform="translate(380, 60)">
+            {/* Panel background */}
+            <rect x={0} y={0} width={300} height={320} fill="url(#afaOutputPanel)" rx={12} filter="url(#afaShadow)" />
+            <rect x={2} y={2} width={296} height={316} fill="none" stroke="#334155" strokeWidth={1} rx={11} />
+
+            {/* Panel header */}
+            <rect x={0} y={0} width={300} height={35} fill="rgba(30,41,59,0.8)" rx={12} />
+            <rect x={0} y={25} width={300} height={10} fill="rgba(30,41,59,0.8)" />
+            <text x={20} y={23} fill="#e2e8f0" fontSize={12} fontWeight="bold" letterSpacing="1">DESIGN OUTPUT</text>
+
+            {/* Risk Gauge */}
+            <g transform="translate(20, 50)">
+              <text x={0} y={0} fill="#94a3b8" fontSize={10} fontWeight="600">Failure Risk Assessment</text>
+
+              {/* Gauge background */}
+              <rect x={0} y={10} width={260} height={24} fill="url(#afaProgressTrack)" rx={12} />
+              <rect x={2} y={12} width={256} height={20} fill="rgba(0,0,0,0.3)" rx={10} />
+
+              {/* Risk level indicator */}
               <rect
-                x={0}
-                y={8}
-                width={output.risk * 1.7}
-                height={16}
-                fill={output.risk > 60 ? colors.error : output.risk > 30 ? colors.warning : colors.success}
-                rx={4}
-              />
-              <text x={85} y={21} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold">
-                {output.risk.toFixed(0)}%
+                x={2}
+                y={12}
+                width={Math.min(256, output.risk * 2.56)}
+                height={20}
+                fill={output.risk > 60 ? 'url(#afaLowConfidence)' : output.risk > 30 ? 'url(#afaMediumConfidence)' : 'url(#afaHighConfidence)'}
+                rx={10}
+              >
+                <animate attributeName="width" from="0" to={Math.min(256, output.risk * 2.56)} dur="1s" fill="freeze" />
+              </rect>
+
+              <text x={130} y={27} fill="#ffffff" fontSize={12} textAnchor="middle" fontWeight="bold">
+                {output.risk.toFixed(0)}% RISK
               </text>
             </g>
 
-            {/* Server estimate */}
-            <g transform="translate(10, 80)">
-              <text x={0} y={0} fill={colors.textMuted} fontSize={9}>Servers Needed</text>
-              <text x={0} y={20} fill={colors.textPrimary} fontSize={16} fontWeight="bold">
-                {output.estimatedServers}
+            {/* Server Stack Visualization */}
+            <g transform="translate(20, 100)">
+              <text x={0} y={0} fill="#94a3b8" fontSize={10} fontWeight="600">Infrastructure Required</text>
+
+              {/* Server rack */}
+              {Array.from({ length: Math.min(output.estimatedServers, 4) }).map((_, i) => (
+                <g key={i} transform={`translate(${i * 60}, 15)`}>
+                  <rect x={0} y={0} width={50} height={35} fill="url(#afaServerMetal)" rx={4} filter="url(#afaShadow)" />
+                  <rect x={5} y={5} width={40} height={4} fill="#10b981" rx={2}>
+                    <animate attributeName="opacity" values="0.5;1;0.5" dur={`${0.8 + i * 0.2}s`} repeatCount="indefinite" />
+                  </rect>
+                  <rect x={5} y={12} width={40} height={4} fill="#06b6d4" rx={2}>
+                    <animate attributeName="opacity" values="0.6;1;0.6" dur={`${1 + i * 0.2}s`} repeatCount="indefinite" />
+                  </rect>
+                  <rect x={5} y={19} width={40} height={4} fill="#8b5cf6" rx={2}>
+                    <animate attributeName="opacity" values="0.7;1;0.7" dur={`${1.2 + i * 0.2}s`} repeatCount="indefinite" />
+                  </rect>
+                  <circle cx={10} cy={30} r={2} fill="#22c55e">
+                    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              ))}
+
+              <text x={0} y={65} fill="#f8fafc" fontSize={14} fontWeight="bold">
+                {output.estimatedServers} Server{output.estimatedServers > 1 ? 's' : ''} Required
               </text>
             </g>
 
-            {/* Cost estimate */}
-            <g transform="translate(10, 125)">
-              <text x={0} y={0} fill={colors.textMuted} fontSize={9}>Monthly Cost</text>
-              <text x={0} y={20} fill={colors.accent} fontSize={16} fontWeight="bold">
+            {/* Cost Estimate */}
+            <g transform="translate(20, 185)">
+              <text x={0} y={0} fill="#94a3b8" fontSize={10} fontWeight="600">Monthly Cost Estimate</text>
+
+              {/* Cost badge */}
+              <rect x={0} y={10} width={180} height={36} fill="url(#afaCostBadge)" rx={8} filter="url(#afaShadow)" />
+              <text x={90} y={34} fill="#ffffff" fontSize={16} fontWeight="bold" textAnchor="middle">
                 {showRanges && useRanges
                   ? `$${output.costRange.min} - $${output.costRange.max}`
                   : `$${output.estimatedCost}`
                 }
               </text>
+              <text x={90} y={50} fill="#fef3c7" fontSize={9} textAnchor="middle">/month</text>
             </g>
 
-            {/* Reliability */}
-            <g transform="translate(10, 170)">
-              <text x={0} y={0} fill={colors.textMuted} fontSize={9}>Design Reliability</text>
-              <rect x={0} y={8} width={170} height={16} fill="rgba(255,255,255,0.1)" rx={4} />
+            {/* Reliability Score */}
+            <g transform="translate(20, 245)">
+              <text x={0} y={0} fill="#94a3b8" fontSize={10} fontWeight="600">Design Reliability Score</text>
+
+              <rect x={0} y={10} width={260} height={24} fill="url(#afaProgressTrack)" rx={12} />
+              <rect x={2} y={12} width={256} height={20} fill="rgba(0,0,0,0.3)" rx={10} />
+
               <rect
-                x={0}
-                y={8}
-                width={output.reliability * 1.7}
-                height={16}
-                fill={output.reliability > 70 ? colors.success : output.reliability > 40 ? colors.warning : colors.error}
-                rx={4}
-              />
-              <text x={85} y={21} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold">
-                {output.reliability.toFixed(0)}%
+                x={2}
+                y={12}
+                width={Math.min(256, output.reliability * 2.56)}
+                height={20}
+                fill={output.reliability > 70 ? 'url(#afaHighConfidence)' : output.reliability > 40 ? 'url(#afaMediumConfidence)' : 'url(#afaLowConfidence)'}
+                rx={10}
+              >
+                <animate attributeName="width" from="0" to={Math.min(256, output.reliability * 2.56)} dur="1s" fill="freeze" />
+              </rect>
+
+              <text x={130} y={27} fill="#ffffff" fontSize={12} textAnchor="middle" fontWeight="bold">
+                {output.reliability.toFixed(0)}% RELIABLE
               </text>
             </g>
 
-            {/* Status message */}
-            <g transform="translate(10, 215)">
+            {/* Status indicator */}
+            <g transform="translate(20, 285)">
               <rect
                 x={0}
                 y={0}
-                width={170}
-                height={35}
-                fill={output.risk > 50 ? 'rgba(239, 68, 68, 0.3)' : output.risk > 25 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(16, 185, 129, 0.3)'}
-                rx={4}
+                width={260}
+                height={28}
+                fill={output.risk > 50 ? 'url(#afaHiddenWarning)' : output.risk > 25 ? 'rgba(180, 83, 9, 0.3)' : 'rgba(4, 120, 87, 0.3)'}
+                rx={8}
+                stroke={output.risk > 50 ? '#ef4444' : output.risk > 25 ? '#f59e0b' : '#10b981'}
+                strokeWidth={1}
               />
-              <text x={85} y={22} fill={output.risk > 50 ? colors.error : output.risk > 25 ? colors.warning : colors.success} fontSize={10} textAnchor="middle" fontWeight="bold">
+              <text x={130} y={18} fill={output.risk > 50 ? '#fca5a5' : output.risk > 25 ? '#fcd34d' : '#6ee7b7'} fontSize={10} textAnchor="middle" fontWeight="bold">
                 {output.risk > 50
-                  ? 'HIGH RISK - Review assumptions!'
+                  ? 'HIGH RISK - Review hidden assumptions!'
                   : output.risk > 25
-                    ? 'MODERATE - Some assumptions LOW'
-                    : 'SOLID - Assumptions documented'}
+                    ? 'MODERATE - Validate LOW confidence items'
+                    : 'SOLID - Assumptions well documented'}
               </text>
             </g>
           </g>
 
-          {/* Legend */}
-          <g transform="translate(20, 330)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={9}>Confidence Levels:</text>
-            <circle cx={10} cy={18} r={5} fill={colors.confidence.high} />
-            <text x={20} y={22} fill={colors.textMuted} fontSize={9}>HIGH</text>
-            <circle cx={70} cy={18} r={5} fill={colors.confidence.medium} />
-            <text x={80} y={22} fill={colors.textMuted} fontSize={9}>MEDIUM</text>
-            <circle cx={145} cy={18} r={5} fill={colors.confidence.low} />
-            <text x={155} y={22} fill={colors.textMuted} fontSize={9}>LOW</text>
-          </g>
+          {/* ===================== LEGEND ===================== */}
+          <g transform="translate(20, 392)">
+            <text x={0} y={0} fill="#94a3b8" fontSize={10} fontWeight="600">Confidence Levels:</text>
 
-          {/* Impact indicator */}
-          <g transform="translate(240, 330)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={9}>Visible: {output.visibleCount} / {assumptions.length}</text>
+            <circle cx={120} cy={-3} r={7} fill="url(#afaSphereHigh)" />
+            <text x={132} y={1} fill="#94a3b8" fontSize={9}>HIGH</text>
+
+            <circle cx={180} cy={-3} r={7} fill="url(#afaSphereMedium)" />
+            <text x={192} y={1} fill="#94a3b8" fontSize={9}>MEDIUM</text>
+
+            <circle cx={250} cy={-3} r={7} fill="url(#afaSphereLow)" />
+            <text x={262} y={1} fill="#94a3b8" fontSize={9}>LOW</text>
+
+            <text x={380} y={0} fill="#64748b" fontSize={9}>
+              Visible: {output.visibleCount} / {assumptions.length} assumptions
+            </text>
             {!showHiddenAssumptions && output.hiddenCount > 0 && (
-              <text x={0} y={18} fill={colors.error} fontSize={9}>
-                {output.hiddenCount} assumptions not listed!
+              <text x={550} y={0} fill="#ef4444" fontSize={9} fontWeight="bold">
+                {output.hiddenCount} hidden!
               </text>
             )}
           </g>
@@ -543,15 +838,20 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: showHiddenAssumptions ? colors.success : colors.error,
+                background: showHiddenAssumptions
+                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
+                boxShadow: showHiddenAssumptions
+                  ? '0 4px 20px rgba(16, 185, 129, 0.4)'
+                  : '0 4px 20px rgba(239, 68, 68, 0.4)',
               }}
             >
-              {showHiddenAssumptions ? 'All Shown' : 'Show Hidden'}
+              {showHiddenAssumptions ? 'All Assumptions Visible' : 'Show Hidden Assumptions'}
             </button>
             <button
               onClick={() => {
@@ -560,16 +860,17 @@ const AskForAssumptionsRenderer: React.FC<AskForAssumptionsRendererProps> = ({
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
-              Validate All
+              Validate All to HIGH
             </button>
           </div>
         )}

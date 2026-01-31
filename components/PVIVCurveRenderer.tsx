@@ -547,14 +547,14 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
   };
 
   const renderVisualization = (interactive: boolean, showTempControl: boolean = false) => {
-    const width = 400;
-    const height = 380;
+    const width = 440;
+    const height = 420;
     const graphWidth = 160;
     const graphHeight = 120;
     const ivGraphX = 30;
-    const ivGraphY = 160;
-    const pvGraphX = 220;
-    const pvGraphY = 160;
+    const ivGraphY = 180;
+    const pvGraphX = 240;
+    const pvGraphY = 180;
     const maxVoltage = 0.7;
     const maxCurrent = 10;
     const maxPower = 5;
@@ -563,6 +563,20 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
     const scaleI = (i: number) => graphHeight - (i / maxCurrent) * graphHeight;
     const scaleP = (p: number) => graphHeight - (p / maxPower) * graphHeight;
 
+    // Generate I-V curve fill path (area under curve)
+    const ivFillPath = curveData.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'} ${scaleV(p.voltage)} ${scaleI(p.current)}`
+    ).join(' ') + ` L ${scaleV(curveData[curveData.length - 1].voltage)} ${graphHeight} L 0 ${graphHeight} Z`;
+
+    // Generate P-V curve fill path
+    const pvFillPath = curveData.map((p, i) =>
+      `${i === 0 ? 'M' : 'L'} ${scaleV(p.voltage)} ${scaleP(p.power)}`
+    ).join(' ') + ` L ${scaleV(curveData[curveData.length - 1].voltage)} ${graphHeight} L 0 ${graphHeight} Z`;
+
+    // Power rectangle dimensions for MPP visualization
+    const mppRectWidth = scaleV(mpp.voltage);
+    const mppRectHeight = graphHeight - scaleI(mpp.current);
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
@@ -570,155 +584,459 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.solar} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.solar} stopOpacity="0" />
+            {/* === PREMIUM GRADIENTS FOR SOLAR VISUALIZATION === */}
+
+            {/* Sun radial gradient with realistic corona effect */}
+            <radialGradient id="pvivSunCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fff7ed" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.9" />
+              <stop offset="85%" stopColor="#d97706" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
             </radialGradient>
-            <linearGradient id="panelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+
+            {/* Sun outer glow */}
+            <radialGradient id="pvivSunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Premium solar panel gradient with depth */}
+            <linearGradient id="pvivPanelMain" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#1e40af" />
-              <stop offset="100%" stopColor="#1e3a5f" />
+              <stop offset="25%" stopColor="#1d4ed8" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e3a8a" />
             </linearGradient>
+
+            {/* Solar cell reflection effect */}
+            <linearGradient id="pvivCellReflect" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#3b82f6" stopOpacity="0.1" />
+              <stop offset="80%" stopColor="#1e3a8a" stopOpacity="0.05" />
+              <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Panel frame brushed metal */}
+            <linearGradient id="pvivPanelFrame" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#94a3b8" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* I-V Curve gradient fill */}
+            <linearGradient id="pvivIVCurveFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.05" />
+            </linearGradient>
+
+            {/* I-V Curve stroke gradient */}
+            <linearGradient id="pvivIVCurveStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* P-V Curve gradient fill */}
+            <linearGradient id="pvivPVCurveFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#9333ea" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.05" />
+            </linearGradient>
+
+            {/* P-V Curve stroke gradient */}
+            <linearGradient id="pvivPVCurveStroke" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="40%" stopColor="#a855f7" />
+              <stop offset="70%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#d8b4fe" />
+            </linearGradient>
+
+            {/* MPP marker radial glow */}
+            <radialGradient id="pvivMPPGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ec4899" stopOpacity="1" />
+              <stop offset="40%" stopColor="#db2777" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#be185d" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#9d174d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Power rectangle gradient */}
+            <linearGradient id="pvivPowerRect" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Operating point accent glow */}
+            <radialGradient id="pvivOperatingGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#d97706" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Thermometer gradient (cool to hot) */}
+            <linearGradient id="pvivThermoFill" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="30%" stopColor="#84cc16" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="pvivGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Display panel gradient */}
+            <linearGradient id="pvivDisplayBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Analysis panel gradient */}
+            <linearGradient id="pvivAnalysisBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#312e81" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+
+            {/* Sun glow filter */}
+            <filter id="pvivSunBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Operating point glow filter */}
+            <filter id="pvivPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* MPP marker glow filter */}
+            <filter id="pvivMPPBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Curve glow filter */}
+            <filter id="pvivCurveGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Display text glow */}
+            <filter id="pvivTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Panel reflection filter */}
+            <filter id="pvivPanelShine">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="pvivGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          <circle cx="60" cy="40" r="35" fill="url(#sunGlow)" />
-          <circle cx="60" cy="40" r="18" fill={colors.solar} />
-          <text x="60" y="85" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-            {lightIntensity}% Intensity
-          </text>
+          {/* Background with grid */}
+          <rect width={width} height={height} fill="url(#pvivGridPattern)" />
 
-          <g transform="translate(140, 20)">
-            <rect x="0" y="0" width="80" height="50" fill="url(#panelGrad)" rx="4" stroke="#3b82f6" strokeWidth="2" />
-            {[1, 2, 3].map(i => (
-              <line key={`h${i}`} x1="0" y1={i * 12.5} x2="80" y2={i * 12.5} stroke="#1e3a8a" strokeWidth="0.5" />
-            ))}
-            {[1, 2, 3, 4, 5].map(i => (
-              <line key={`v${i}`} x1={i * 13.3} y1="0" x2={i * 13.3} y2="50" stroke="#1e3a8a" strokeWidth="0.5" />
-            ))}
-            {[0, 1, 2].map(i => (
+          {/* === SUN WITH PREMIUM GLOW === */}
+          <g transform="translate(55, 45)">
+            {/* Outer corona glow */}
+            <circle cx="0" cy="0" r="45" fill="url(#pvivSunGlow)" filter="url(#pvivSunBlur)" />
+            {/* Inner sun core */}
+            <circle cx="0" cy="0" r="22" fill="url(#pvivSunCore)" />
+            {/* Sun rays animation effect */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
               <line
                 key={`ray${i}`}
-                x1={-60 + i * 20}
-                y1={-20 + i * 5}
-                x2={20 + i * 20}
-                y2={10}
-                stroke={colors.solar}
+                x1={Math.cos(angle * Math.PI / 180) * 26}
+                y1={Math.sin(angle * Math.PI / 180) * 26}
+                x2={Math.cos(angle * Math.PI / 180) * 38}
+                y2={Math.sin(angle * Math.PI / 180) * 38}
+                stroke="#fbbf24"
                 strokeWidth="2"
-                opacity={lightIntensity / 100}
-                strokeDasharray="4,4"
-              />
+                strokeLinecap="round"
+                opacity={0.4 + (lightIntensity / 100) * 0.6}
+              >
+                <animate attributeName="opacity" values={`${0.3 + (lightIntensity / 100) * 0.3};${0.6 + (lightIntensity / 100) * 0.4};${0.3 + (lightIntensity / 100) * 0.3}`} dur="2s" repeatCount="indefinite" begin={`${i * 0.25}s`} />
+              </line>
+            ))}
+            <text y="60" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="600">
+              {lightIntensity}% Intensity
+            </text>
+          </g>
+
+          {/* === PREMIUM SOLAR PANEL === */}
+          <g transform="translate(130, 18)">
+            {/* Panel frame with brushed metal effect */}
+            <rect x="-4" y="-4" width="98" height="68" rx="4" fill="url(#pvivPanelFrame)" />
+            {/* Main panel body */}
+            <rect x="0" y="0" width="90" height="60" fill="url(#pvivPanelMain)" rx="2" />
+            {/* Reflection overlay */}
+            <rect x="0" y="0" width="90" height="60" fill="url(#pvivCellReflect)" rx="2" />
+
+            {/* Solar cell grid lines */}
+            {[1, 2, 3, 4].map(i => (
+              <line key={`hline${i}`} x1="2" y1={i * 12} x2="88" y2={i * 12} stroke="#1e3a8a" strokeWidth="1" strokeOpacity="0.6" />
+            ))}
+            {[1, 2, 3, 4, 5].map(i => (
+              <line key={`vline${i}`} x1={i * 15} y1="2" x2={i * 15} y2="58" stroke="#1e3a8a" strokeWidth="1" strokeOpacity="0.6" />
+            ))}
+
+            {/* Sunlight rays hitting panel */}
+            {[0, 1, 2, 3].map(i => (
+              <line
+                key={`sunray${i}`}
+                x1={-50 + i * 25}
+                y1={-25 + i * 3}
+                x2={15 + i * 22}
+                y2={12 + i * 8}
+                stroke="url(#pvivSunCore)"
+                strokeWidth="3"
+                opacity={0.2 + (lightIntensity / 100) * 0.5}
+                strokeLinecap="round"
+              >
+                <animate attributeName="opacity" values={`${0.15 + (lightIntensity / 100) * 0.3};${0.3 + (lightIntensity / 100) * 0.5};${0.15 + (lightIntensity / 100) * 0.3}`} dur="1.5s" repeatCount="indefinite" begin={`${i * 0.2}s`} />
+              </line>
+            ))}
+
+            {/* Panel label */}
+            <text x="45" y="75" fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+              PV Module
+            </text>
+          </g>
+
+          {/* === THERMOMETER === */}
+          <g transform="translate(260, 18)">
+            {/* Thermometer housing */}
+            <rect x="0" y="0" width="36" height="60" fill="#1e293b" rx="6" stroke="#475569" strokeWidth="1" />
+            {/* Inner tube */}
+            <rect x="13" y="6" width="10" height="40" fill="#0f172a" rx="3" />
+            {/* Temperature fill */}
+            <rect
+              x="13"
+              y={6 + 40 * (1 - (temperature - 10) / 50)}
+              width="10"
+              height={40 * ((temperature - 10) / 50)}
+              fill="url(#pvivThermoFill)"
+              rx="3"
+            />
+            {/* Bulb at bottom */}
+            <circle cx="18" cy="52" r="8" fill={temperature > 35 ? '#ef4444' : temperature > 25 ? '#f59e0b' : '#22c55e'}>
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Temperature reading */}
+            <text x="18" y="75" fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+              {temperature}C
+            </text>
+            {/* Scale marks */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line key={`mark${i}`} x1="25" y1={10 + i * 10} x2="30" y2={10 + i * 10} stroke="#64748b" strokeWidth="1" />
             ))}
           </g>
 
-          <g transform="translate(250, 20)">
-            <rect x="0" y="0" width="40" height="50" fill="#1e293b" rx="4" stroke="#475569" />
-            <rect x="15" y="5" width="10" height="35" fill="#0f172a" rx="2" />
-            <rect
-              x="15"
-              y={5 + 35 * (1 - (temperature - 10) / 50)}
-              width="10"
-              height={35 * ((temperature - 10) / 50)}
-              fill={temperature > 35 ? colors.error : temperature > 25 ? colors.warning : colors.success}
-              rx="2"
-            />
-            <circle cx="20" cy="45" r="6" fill={temperature > 35 ? colors.error : colors.warning} />
-            <text x="20" y="65" fill={colors.textSecondary} fontSize="9" textAnchor="middle">
-              {temperature}C
-            </text>
+          {/* === OPERATING POINT DISPLAY === */}
+          <g transform="translate(310, 15)">
+            <rect x="0" y="0" width="120" height="85" fill="url(#pvivDisplayBg)" rx="8" stroke={colors.accent} strokeWidth="1.5" />
+            {/* Display header */}
+            <rect x="0" y="0" width="120" height="18" fill="rgba(245, 158, 11, 0.15)" rx="8" />
+            <rect x="0" y="10" width="120" height="8" fill="rgba(245, 158, 11, 0.15)" />
+            <text x="60" y="13" fill={colors.accent} fontSize="8" textAnchor="middle" fontWeight="700" letterSpacing="0.5">OPERATING POINT</text>
+
+            {/* Values with glow effect */}
+            <g filter="url(#pvivTextGlow)">
+              <text x="12" y="36" fill={colors.voltage} fontSize="11" fontWeight="600">V:</text>
+              <text x="28" y="36" fill={colors.voltage} fontSize="11" fontFamily="monospace">{currentValues.voltage.toFixed(3)} V</text>
+            </g>
+            <g filter="url(#pvivTextGlow)">
+              <text x="12" y="52" fill={colors.current} fontSize="11" fontWeight="600">I:</text>
+              <text x="28" y="52" fill={colors.current} fontSize="11" fontFamily="monospace">{currentValues.current.toFixed(2)} A</text>
+            </g>
+            <g filter="url(#pvivTextGlow)">
+              <text x="12" y="68" fill={colors.power} fontSize="12" fontWeight="700">P:</text>
+              <text x="28" y="68" fill={colors.power} fontSize="12" fontFamily="monospace" fontWeight="700">{currentValues.power.toFixed(2)} W</text>
+            </g>
+
+            {/* Efficiency bar */}
+            <rect x="12" y="74" width="96" height="4" fill="#1e293b" rx="2" />
+            <rect x="12" y="74" width={96 * Math.min(1, currentValues.power / mpp.power)} height="4" fill={colors.mpp} rx="2">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
+            </rect>
           </g>
 
-          <g transform="translate(300, 20)">
-            <rect x="0" y="0" width="90" height="70" fill="rgba(0,0,0,0.5)" rx="6" stroke={colors.accent} strokeWidth="1" />
-            <text x="45" y="14" fill={colors.textMuted} fontSize="8" textAnchor="middle">OPERATING POINT</text>
-            <text x="10" y="30" fill={colors.voltage} fontSize="10">V: {currentValues.voltage.toFixed(3)} V</text>
-            <text x="10" y="44" fill={colors.current} fontSize="10">I: {currentValues.current.toFixed(2)} A</text>
-            <text x="10" y="58" fill={colors.power} fontSize="10" fontWeight="bold">P: {currentValues.power.toFixed(2)} W</text>
-          </g>
-
+          {/* === I-V CURVE GRAPH === */}
           <g transform={`translate(${ivGraphX}, ${ivGraphY})`}>
-            <rect x="-5" y="-20" width={graphWidth + 30} height={graphHeight + 40} fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x={graphWidth / 2} y="-6" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">
-              Current vs Voltage (I-V Curve)
+            {/* Graph background */}
+            <rect x="-8" y="-24" width={graphWidth + 35} height={graphHeight + 48} fill="url(#pvivGraphBg)" rx="8" stroke="#334155" strokeWidth="0.5" />
+
+            {/* Graph title */}
+            <text x={graphWidth / 2} y="-8" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="700">
+              I-V Characteristic Curve
             </text>
-            <line x1="0" y1={graphHeight} x2={graphWidth} y2={graphHeight} stroke={colors.textMuted} strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2={graphHeight} stroke={colors.textMuted} strokeWidth="1" />
-            <text x={graphWidth / 2} y={graphHeight + 15} fill={colors.textSecondary} fontSize="8" textAnchor="middle">
+
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map(frac => (
+              <g key={`ivgrid${frac}`}>
+                <line x1={frac * graphWidth} y1="0" x2={frac * graphWidth} y2={graphHeight} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+                <line x1="0" y1={frac * graphHeight} x2={graphWidth} y2={frac * graphHeight} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+              </g>
+            ))}
+
+            {/* Axes */}
+            <line x1="0" y1={graphHeight} x2={graphWidth + 5} y2={graphHeight} stroke={colors.textMuted} strokeWidth="1.5" />
+            <line x1="0" y1="-2" x2="0" y2={graphHeight} stroke={colors.textMuted} strokeWidth="1.5" />
+
+            {/* Axis labels */}
+            <text x={graphWidth / 2} y={graphHeight + 18} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
               Voltage (V)
             </text>
-            <text x="-8" y={graphHeight / 2} fill={colors.textSecondary} fontSize="8" textAnchor="middle" transform={`rotate(-90, -8, ${graphHeight / 2})`}>
+            <text x="-12" y={graphHeight / 2} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600" transform={`rotate(-90, -12, ${graphHeight / 2})`}>
               Current (A)
             </text>
+
+            {/* I-V Curve with fill and stroke */}
             {showIVCurve && (
-              <path
-                d={curveData.map((p, i) =>
-                  `${i === 0 ? 'M' : 'L'} ${scaleV(p.voltage)} ${scaleI(p.current)}`
-                ).join(' ')}
-                fill="none"
-                stroke={colors.current}
-                strokeWidth="2"
-              />
-            )}
-            <circle
-              cx={scaleV(currentValues.voltage)}
-              cy={scaleI(currentValues.current)}
-              r="5"
-              fill={colors.accent}
-              stroke="white"
-              strokeWidth="2"
-            />
-            {showMPP && (
               <>
-                <circle
-                  cx={scaleV(mpp.voltage)}
-                  cy={scaleI(mpp.current)}
-                  r="4"
+                {/* Area fill under curve */}
+                <path d={ivFillPath} fill="url(#pvivIVCurveFill)" />
+                {/* Curve line with glow */}
+                <path
+                  d={curveData.map((p, i) =>
+                    `${i === 0 ? 'M' : 'L'} ${scaleV(p.voltage)} ${scaleI(p.current)}`
+                  ).join(' ')}
                   fill="none"
-                  stroke={colors.mpp}
-                  strokeWidth="2"
-                  strokeDasharray="3,2"
+                  stroke="url(#pvivIVCurveStroke)"
+                  strokeWidth="2.5"
+                  filter="url(#pvivCurveGlow)"
                 />
-                <text x={scaleV(mpp.voltage) + 8} y={scaleI(mpp.current) - 5} fill={colors.mpp} fontSize="8">
-                  MPP
-                </text>
               </>
             )}
-            <text x="5" y="10" fill={colors.current} fontSize="8">Isc</text>
-            <text x={graphWidth - 15} y={graphHeight - 5} fill={colors.voltage} fontSize="8">Voc</text>
-          </g>
 
-          <g transform={`translate(${pvGraphX}, ${pvGraphY})`}>
-            <rect x="-5" y="-20" width={graphWidth + 30} height={graphHeight + 40} fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x={graphWidth / 2} y="-6" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">
-              Power vs Voltage (P-V Curve)
-            </text>
-            <line x1="0" y1={graphHeight} x2={graphWidth} y2={graphHeight} stroke={colors.textMuted} strokeWidth="1" />
-            <line x1="0" y1="0" x2="0" y2={graphHeight} stroke={colors.textMuted} strokeWidth="1" />
-            <text x={graphWidth / 2} y={graphHeight + 15} fill={colors.textSecondary} fontSize="8" textAnchor="middle">
-              Voltage (V)
-            </text>
-            <text x="-8" y={graphHeight / 2} fill={colors.textSecondary} fontSize="8" textAnchor="middle" transform={`rotate(-90, -8, ${graphHeight / 2})`}>
-              Power (W)
-            </text>
-            {showPVCurve && (
-              <path
-                d={curveData.map((p, i) =>
-                  `${i === 0 ? 'M' : 'L'} ${scaleV(p.voltage)} ${scaleP(p.power)}`
-                ).join(' ')}
-                fill="none"
-                stroke={colors.power}
-                strokeWidth="2"
+            {/* Power rectangle visualization (V x I area) */}
+            {showMPP && (
+              <rect
+                x="0"
+                y={scaleI(mpp.current)}
+                width={mppRectWidth}
+                height={mppRectHeight}
+                fill="url(#pvivPowerRect)"
+                stroke="#fbbf24"
+                strokeWidth="1"
+                strokeDasharray="4,2"
+                strokeOpacity="0.6"
               />
             )}
-            <circle
-              cx={scaleV(currentValues.voltage)}
-              cy={scaleP(currentValues.power)}
-              r="5"
-              fill={colors.accent}
-              stroke="white"
-              strokeWidth="2"
-            />
+
+            {/* MPP marker on I-V curve */}
+            {showMPP && (
+              <g transform={`translate(${scaleV(mpp.voltage)}, ${scaleI(mpp.current)})`}>
+                <circle r="10" fill="url(#pvivMPPGlow)" opacity="0.5" filter="url(#pvivMPPBlur)" />
+                <circle r="5" fill="none" stroke={colors.mpp} strokeWidth="2" strokeDasharray="4,2">
+                  <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+                <text x="12" y="-8" fill={colors.mpp} fontSize="8" fontWeight="700">MPP</text>
+              </g>
+            )}
+
+            {/* Operating point with glow */}
+            <g transform={`translate(${scaleV(currentValues.voltage)}, ${scaleI(currentValues.current)})`} filter="url(#pvivPointGlow)">
+              <circle r="8" fill="url(#pvivOperatingGlow)" opacity="0.6" />
+              <circle r="5" fill={colors.accent} stroke="white" strokeWidth="2" />
+            </g>
+
+            {/* Isc and Voc labels */}
+            <text x="8" y="14" fill={colors.current} fontSize="9" fontWeight="700">Isc</text>
+            <text x={graphWidth - 20} y={graphHeight - 6} fill={colors.voltage} fontSize="9" fontWeight="700">Voc</text>
+          </g>
+
+          {/* === P-V CURVE GRAPH === */}
+          <g transform={`translate(${pvGraphX}, ${pvGraphY})`}>
+            {/* Graph background */}
+            <rect x="-8" y="-24" width={graphWidth + 35} height={graphHeight + 48} fill="url(#pvivGraphBg)" rx="8" stroke="#334155" strokeWidth="0.5" />
+
+            {/* Graph title */}
+            <text x={graphWidth / 2} y="-8" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="700">
+              P-V Power Curve
+            </text>
+
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map(frac => (
+              <g key={`pvgrid${frac}`}>
+                <line x1={frac * graphWidth} y1="0" x2={frac * graphWidth} y2={graphHeight} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+                <line x1="0" y1={frac * graphHeight} x2={graphWidth} y2={frac * graphHeight} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.5" />
+              </g>
+            ))}
+
+            {/* Axes */}
+            <line x1="0" y1={graphHeight} x2={graphWidth + 5} y2={graphHeight} stroke={colors.textMuted} strokeWidth="1.5" />
+            <line x1="0" y1="-2" x2="0" y2={graphHeight} stroke={colors.textMuted} strokeWidth="1.5" />
+
+            {/* Axis labels */}
+            <text x={graphWidth / 2} y={graphHeight + 18} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600">
+              Voltage (V)
+            </text>
+            <text x="-12" y={graphHeight / 2} fill={colors.textSecondary} fontSize="9" textAnchor="middle" fontWeight="600" transform={`rotate(-90, -12, ${graphHeight / 2})`}>
+              Power (W)
+            </text>
+
+            {/* P-V Curve with fill and stroke */}
+            {showPVCurve && (
+              <>
+                {/* Area fill under curve */}
+                <path d={pvFillPath} fill="url(#pvivPVCurveFill)" />
+                {/* Curve line with glow */}
+                <path
+                  d={curveData.map((p, i) =>
+                    `${i === 0 ? 'M' : 'L'} ${scaleV(p.voltage)} ${scaleP(p.power)}`
+                  ).join(' ')}
+                  fill="none"
+                  stroke="url(#pvivPVCurveStroke)"
+                  strokeWidth="2.5"
+                  filter="url(#pvivCurveGlow)"
+                />
+              </>
+            )}
+
+            {/* MPP vertical line and marker */}
             {showMPP && (
               <>
                 <line
@@ -727,35 +1045,83 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                   x2={scaleV(mpp.voltage)}
                   y2={graphHeight}
                   stroke={colors.mpp}
-                  strokeWidth="1"
-                  strokeDasharray="4,4"
+                  strokeWidth="1.5"
+                  strokeDasharray="6,3"
+                  strokeOpacity="0.6"
                 />
-                <circle
-                  cx={scaleV(mpp.voltage)}
-                  cy={scaleP(mpp.power)}
-                  r="6"
-                  fill={colors.mpp}
-                  stroke="white"
-                  strokeWidth="2"
-                />
-                <text x={scaleV(mpp.voltage)} y={scaleP(mpp.power) - 10} fill={colors.mpp} fontSize="9" textAnchor="middle" fontWeight="bold">
-                  Max Power
-                </text>
+                <g transform={`translate(${scaleV(mpp.voltage)}, ${scaleP(mpp.power)})`} filter="url(#pvivMPPBlur)">
+                  <circle r="12" fill="url(#pvivMPPGlow)" opacity="0.4" />
+                  <circle r="7" fill={colors.mpp} stroke="white" strokeWidth="2">
+                    <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                  <text y="-16" fill={colors.mpp} fontSize="10" textAnchor="middle" fontWeight="700">
+                    Max Power
+                  </text>
+                  <text y="-6" fill="white" fontSize="7" textAnchor="middle" fontWeight="600">
+                    {mpp.power.toFixed(2)}W
+                  </text>
+                </g>
               </>
             )}
+
+            {/* Operating point with glow */}
+            <g transform={`translate(${scaleV(currentValues.voltage)}, ${scaleP(currentValues.power)})`} filter="url(#pvivPointGlow)">
+              <circle r="8" fill="url(#pvivOperatingGlow)" opacity="0.6" />
+              <circle r="5" fill={colors.accent} stroke="white" strokeWidth="2" />
+            </g>
           </g>
 
-          <g transform="translate(30, 310)">
-            <rect x="0" y="0" width="340" height="60" fill="rgba(0,0,0,0.4)" rx="8" stroke={colors.mpp} strokeWidth="1" />
-            <text x="170" y="16" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">
+          {/* === MPP ANALYSIS PANEL === */}
+          <g transform="translate(25, 325)">
+            <rect x="0" y="0" width={width - 50} height="85" fill="url(#pvivAnalysisBg)" rx="10" stroke={colors.mpp} strokeWidth="1.5" />
+
+            {/* Header */}
+            <rect x="0" y="0" width={width - 50} height="22" fill="rgba(236, 72, 153, 0.15)" rx="10" />
+            <rect x="0" y="12" width={width - 50} height="10" fill="rgba(236, 72, 153, 0.15)" />
+            <text x={(width - 50) / 2} y="15" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="700" letterSpacing="0.5">
               Maximum Power Point (MPP) Analysis
             </text>
-            <text x="20" y="34" fill={colors.textSecondary} fontSize="9">
-              MPP Voltage: {mpp.voltage.toFixed(3)} V | MPP Current: {mpp.current.toFixed(2)} A
-            </text>
-            <text x="20" y="50" fill={colors.mpp} fontSize="10" fontWeight="bold">
-              Maximum Power: {mpp.power.toFixed(2)} W | Current Efficiency: {((currentValues.power / mpp.power) * 100).toFixed(0)}%
-            </text>
+
+            {/* MPP Values - Left column */}
+            <g transform="translate(15, 38)">
+              <circle cx="0" cy="0" r="4" fill={colors.mpp} />
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+                MPP Voltage: <tspan fill={colors.voltage} fontWeight="700" fontFamily="monospace">{mpp.voltage.toFixed(3)} V</tspan>
+              </text>
+            </g>
+            <g transform="translate(15, 56)">
+              <circle cx="0" cy="0" r="4" fill={colors.mpp} />
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+                MPP Current: <tspan fill={colors.current} fontWeight="700" fontFamily="monospace">{mpp.current.toFixed(2)} A</tspan>
+              </text>
+            </g>
+
+            {/* MPP Values - Right column */}
+            <g transform="translate(200, 38)">
+              <circle cx="0" cy="0" r="4" fill={colors.power} />
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+                Max Power: <tspan fill={colors.mpp} fontWeight="700" fontFamily="monospace">{mpp.power.toFixed(2)} W</tspan>
+              </text>
+            </g>
+            <g transform="translate(200, 56)">
+              <circle cx="0" cy="0" r="4" fill={colors.accent} />
+              <text x="10" y="4" fill={colors.textSecondary} fontSize="10">
+                Efficiency: <tspan fill={colors.accent} fontWeight="700" fontFamily="monospace">{((currentValues.power / mpp.power) * 100).toFixed(1)}%</tspan>
+              </text>
+            </g>
+
+            {/* Efficiency progress bar */}
+            <rect x="15" y="68" width={width - 80} height="8" fill="#1e293b" rx="4" />
+            <rect
+              x="15"
+              y="68"
+              width={(width - 80) * Math.min(1, currentValues.power / mpp.power)}
+              height="8"
+              fill={`url(#pvivMPPGlow)`}
+              rx="4"
+            >
+              <animate attributeName="opacity" values="0.8;1;0.8" dur="1.2s" repeatCount="indefinite" />
+            </rect>
           </g>
         </svg>
 
@@ -767,11 +1133,16 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '13px',
+                boxShadow: isAnimating
+                  ? '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 15px rgba(34, 197, 94, 0.4)',
               }}
             >
               {isAnimating ? 'Stop Sweep' : 'Sweep Load'}
@@ -782,11 +1153,12 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.mpp,
+                background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '13px',
+                boxShadow: '0 4px 15px rgba(236, 72, 153, 0.4)',
               }}
             >
               Jump to MPP
@@ -796,7 +1168,7 @@ const PVIVCurveRenderer: React.FC<PVIVCurveRendererProps> = ({ onGameEvent, game
               style={{
                 padding: '10px 20px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',

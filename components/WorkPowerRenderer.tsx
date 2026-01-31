@@ -490,10 +490,14 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
     return null; // Replaced by fixed header in main return
   }
 
-  // Helper function: Staircase visualization
+  // Helper function: Premium Staircase visualization with advanced SVG graphics
   function StaircaseVisualization() {
     const values = calculateValues();
     const numStairs = Math.ceil(stairHeight / 0.2); // ~20cm per stair
+
+    // Energy transfer animation progress
+    const energyPulse = isClimbing ? climbProgress : (showResults ? 1 : 0);
+    const powerPercent = Math.min(100, (values.power / 1000) * 100); // Scale to 1000W max
 
     return (
       <div style={{
@@ -502,59 +506,483 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, 
         padding: spacing.lg,
         border: `1px solid ${colors.border}`,
       }}>
-        {/* Staircase SVG */}
+        {/* Premium Staircase SVG */}
         <svg
-          viewBox="0 0 300 200"
+          viewBox="0 0 500 320"
           style={{
             width: '100%',
-            height: isMobile ? 180 : 220,
-            background: `linear-gradient(180deg, #1a1a2e 0%, #0f0f13 100%)`,
+            height: isMobile ? 240 : 300,
+            background: `linear-gradient(180deg, #0a0f1a 0%, #030712 100%)`,
             borderRadius: radius.md,
           }}
         >
-          {/* Stairs */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* PREMIUM DEFS SECTION - Gradients, Filters, and Effects */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <defs>
+            {/* Premium Lab Background Gradient */}
+            <linearGradient id="wkpwLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Stair Step Gradient - Concrete/Stone appearance */}
+            <linearGradient id="wkpwStairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="20%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#3f4a5c" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#2d3748" />
+            </linearGradient>
+
+            {/* Stair Side Gradient - Depth effect */}
+            <linearGradient id="wkpwStairSide" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#2d3748" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Person Body Gradient - Athletic appearance */}
+            <linearGradient id="wkpwPersonBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="30%" stopColor="#6366f1" />
+              <stop offset="60%" stopColor="#4f46e5" />
+              <stop offset="100%" stopColor="#4338ca" />
+            </linearGradient>
+
+            {/* Person Glow Gradient */}
+            <radialGradient id="wkpwPersonGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#818cf8" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#6366f1" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Energy Transfer Gradient - Yellow/Orange for work */}
+            <linearGradient id="wkpwEnergyFlow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#d97706" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#b45309" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Power Meter Gradient - Blue to Cyan */}
+            <linearGradient id="wkpwPowerMeter" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#93c5fd" />
+            </linearGradient>
+
+            {/* Energy Bar Gradient - Green to Emerald */}
+            <linearGradient id="wkpwEnergyBar" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#065f46" />
+              <stop offset="25%" stopColor="#047857" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="75%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            {/* Force Arrow Gradient */}
+            <linearGradient id="wkpwForceArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="30%" stopColor="#fb923c" />
+              <stop offset="60%" stopColor="#fdba74" />
+              <stop offset="100%" stopColor="#fed7aa" />
+            </linearGradient>
+
+            {/* Gravity Arrow Gradient */}
+            <linearGradient id="wkpwGravityArrow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="30%" stopColor="#dc2626" />
+              <stop offset="60%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Ground/Floor Gradient */}
+            <linearGradient id="wkpwGround" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Ceiling/Top Gradient */}
+            <linearGradient id="wkpwCeiling" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* ═══════════════════════════════════════════════════════════════════════════ */}
+            {/* PREMIUM FILTER EFFECTS */}
+            {/* ═══════════════════════════════════════════════════════════════════════════ */}
+
+            {/* Person Glow Filter */}
+            <filter id="wkpwPersonGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Energy Pulse Glow */}
+            <filter id="wkpwEnergyGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Power Meter Glow */}
+            <filter id="wkpwPowerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Stair Shadow */}
+            <filter id="wkpwStairShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="shadow" />
+              <feOffset dx="2" dy="3" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle Inner Glow */}
+            <filter id="wkpwInnerGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Label Background */}
+            <filter id="wkpwLabelBg" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" />
+            </filter>
+          </defs>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* BACKGROUND */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <rect width="500" height="320" fill="url(#wkpwLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="wkpwGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.2" />
+          </pattern>
+          <rect width="500" height="320" fill="url(#wkpwGrid)" />
+
+          {/* Ground line */}
+          <rect x="0" y="280" width="500" height="40" fill="url(#wkpwGround)" />
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* STAIRS - 3D APPEARANCE */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
           {Array.from({ length: numStairs }).map((_, i) => {
-            const stepHeight = 180 / numStairs;
-            const y = 180 - (i + 1) * stepHeight;
-            const x = 40 + i * (220 / numStairs);
+            const stepHeight = 200 / numStairs;
+            const stepWidth = 180 / numStairs;
+            const y = 280 - (i + 1) * stepHeight;
+            const x = 80 + i * stepWidth;
+            const depth = 8; // 3D depth
+
             return (
-              <g key={i}>
+              <g key={i} filter="url(#wkpwStairShadow)">
+                {/* Stair top surface */}
                 <rect
                   x={x}
                   y={y}
-                  width={220 / numStairs + 2}
-                  height={stepHeight + 2}
-                  fill={colors.bgHover}
-                  stroke={colors.border}
-                  strokeWidth="1"
+                  width={stepWidth + 4}
+                  height={stepHeight}
+                  fill="url(#wkpwStairGrad)"
+                  stroke="#4b5563"
+                  strokeWidth="0.5"
                 />
+                {/* Stair front face (3D effect) */}
+                <rect
+                  x={x}
+                  y={y + stepHeight - depth}
+                  width={stepWidth + 4}
+                  height={depth}
+                  fill="url(#wkpwStairSide)"
+                  stroke="#374151"
+                  strokeWidth="0.5"
+                />
+                {/* Step number indicator */}
+                {(i + 1) % 3 === 0 && (
+                  <text
+                    x={x + stepWidth / 2}
+                    y={y + stepHeight - 2}
+                    fill="#64748b"
+                    fontSize="8"
+                    textAnchor="middle"
+                    fontWeight="600"
+                  >
+                    {i + 1}
+                  </text>
+                )}
               </g>
             );
           })}
 
-          {/* Person (stick figure) */}
-          <g transform={`translate(${60 + climbProgress * 180}, ${170 - climbProgress * 150})`}>
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* ENERGY TRANSFER ANIMATION - Flowing energy particles */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {isClimbing && (
+            <g filter="url(#wkpwEnergyGlow)">
+              {/* Energy flow path along stairs */}
+              {Array.from({ length: 8 }).map((_, i) => {
+                const particleProgress = ((climbProgress * 3 + i * 0.125) % 1);
+                const px = 90 + particleProgress * 180;
+                const py = 270 - particleProgress * 200;
+                return (
+                  <circle
+                    key={`energy-${i}`}
+                    cx={px}
+                    cy={py}
+                    r={3 + Math.sin(particleProgress * Math.PI) * 2}
+                    fill="#fbbf24"
+                    opacity={0.6 + Math.sin(particleProgress * Math.PI) * 0.4}
+                  >
+                    <animate
+                      attributeName="r"
+                      values="2;5;2"
+                      dur="0.5s"
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                );
+              })}
+            </g>
+          )}
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* PERSON - PREMIUM ATHLETIC FIGURE */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g
+            transform={`translate(${100 + climbProgress * 180}, ${260 - climbProgress * 200})`}
+            filter="url(#wkpwPersonGlowFilter)"
+          >
+            {/* Person glow aura */}
+            <ellipse cx="0" cy="-15" rx="20" ry="35" fill="url(#wkpwPersonGlow)" opacity={isClimbing ? 0.8 : 0.4} />
+
             {/* Head */}
-            <circle cx="0" cy="-35" r="8" fill={colors.brand} />
-            {/* Body */}
-            <line x1="0" y1="-27" x2="0" y2="-5" stroke={colors.brand} strokeWidth="3" strokeLinecap="round" />
-            {/* Arms */}
-            <line x1="-12" y1="-20" x2="12" y2="-20" stroke={colors.brand} strokeWidth="3" strokeLinecap="round" />
-            {/* Legs */}
-            <line x1="0" y1="-5" x2="-8" y2="10" stroke={colors.brand} strokeWidth="3" strokeLinecap="round" />
-            <line x1="0" y1="-5" x2="8" y2="10" stroke={colors.brand} strokeWidth="3" strokeLinecap="round" />
+            <circle cx="0" cy="-45" r="12" fill="url(#wkpwPersonBody)" />
+            <circle cx="-3" cy="-47" r="2" fill="#e0e7ff" opacity="0.6" /> {/* Eye highlight */}
+
+            {/* Neck */}
+            <rect x="-3" y="-34" width="6" height="6" fill="url(#wkpwPersonBody)" rx="2" />
+
+            {/* Torso */}
+            <path
+              d="M-10,-28 L10,-28 L8,-8 L-8,-8 Z"
+              fill="url(#wkpwPersonBody)"
+              stroke="#4338ca"
+              strokeWidth="0.5"
+            />
+
+            {/* Arms - animated based on climbing */}
+            <g>
+              {/* Left arm */}
+              <line
+                x1="-10" y1="-26"
+                x2={-18 + Math.sin(climbProgress * Math.PI * 4) * 5}
+                y2={-15 + Math.cos(climbProgress * Math.PI * 4) * 3}
+                stroke="url(#wkpwPersonBody)"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+              {/* Right arm */}
+              <line
+                x1="10" y1="-26"
+                x2={18 - Math.sin(climbProgress * Math.PI * 4) * 5}
+                y2={-15 - Math.cos(climbProgress * Math.PI * 4) * 3}
+                stroke="url(#wkpwPersonBody)"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+            </g>
+
+            {/* Legs - animated for climbing motion */}
+            <g>
+              {/* Left leg */}
+              <line
+                x1="-5" y1="-8"
+                x2={-8 + Math.sin(climbProgress * Math.PI * 6) * 4}
+                y2={10 + Math.abs(Math.sin(climbProgress * Math.PI * 6)) * 5}
+                stroke="url(#wkpwPersonBody)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+              {/* Right leg */}
+              <line
+                x1="5" y1="-8"
+                x2={8 - Math.sin(climbProgress * Math.PI * 6) * 4}
+                y2={10 + Math.abs(Math.cos(climbProgress * Math.PI * 6)) * 5}
+                stroke="url(#wkpwPersonBody)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+            </g>
+
+            {/* Mass label with background */}
+            <rect x="-22" y="18" width="44" height="16" rx="4" fill="#1e293b" opacity="0.9" />
+            <text x="0" y="30" fill="#a5b4fc" fontSize="11" textAnchor="middle" fontWeight="600">
+              {personMass}kg
+            </text>
           </g>
 
-          {/* Height indicator */}
-          <line x1="25" y1="20" x2="25" y2="180" stroke={colors.textTertiary} strokeWidth="1" strokeDasharray="4,2" />
-          <text x="15" y="100" fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform="rotate(-90, 15, 100)">
-            {stairHeight}m
-          </text>
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* FORCE ARROWS - Applied Force and Gravity */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g transform={`translate(${100 + climbProgress * 180}, ${260 - climbProgress * 200})`}>
+            {/* Upward force arrow (applied force) */}
+            <g filter="url(#wkpwPowerGlow)" opacity={isClimbing ? 1 : 0.5}>
+              <line x1="0" y1="-60" x2="0" y2="-90" stroke="url(#wkpwForceArrow)" strokeWidth="4" />
+              <polygon points="-8,-85 0,-100 8,-85" fill="url(#wkpwForceArrow)" />
+              <text x="15" y="-75" fill="#fb923c" fontSize="10" fontWeight="600">F</text>
+            </g>
 
-          {/* Mass label */}
-          <text x={70 + climbProgress * 170} y={190 - climbProgress * 150} fill={colors.textTertiary} fontSize="10" textAnchor="middle">
-            {personMass}kg
-          </text>
+            {/* Downward gravity arrow */}
+            <g opacity="0.7">
+              <line x1="25" y1="5" x2="25" y2="30" stroke="url(#wkpwGravityArrow)" strokeWidth="3" />
+              <polygon points="17,25 25,38 33,25" fill="url(#wkpwGravityArrow)" />
+              <text x="35" y="25" fill="#ef4444" fontSize="9" fontWeight="600">mg</text>
+            </g>
+          </g>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* HEIGHT INDICATOR */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g>
+            {/* Vertical measurement line */}
+            <line x1="50" y1="80" x2="50" y2="280" stroke="#64748b" strokeWidth="1.5" strokeDasharray="6,3" />
+            <line x1="45" y1="80" x2="55" y2="80" stroke="#64748b" strokeWidth="2" />
+            <line x1="45" y1="280" x2="55" y2="280" stroke="#64748b" strokeWidth="2" />
+
+            {/* Height label with background */}
+            <rect x="25" y="165" width="50" height="22" rx="4" fill="#1e293b" opacity="0.95" />
+            <text x="50" y="180" fill="#10b981" fontSize="12" textAnchor="middle" fontWeight="700">
+              h = {stairHeight}m
+            </text>
+          </g>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* POWER METER - Vertical gauge on the right */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g transform="translate(320, 40)">
+            {/* Meter background */}
+            <rect x="0" y="0" width="40" height="200" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+            {/* Meter scale marks */}
+            {[0, 25, 50, 75, 100].map((val) => (
+              <g key={val}>
+                <line x1="0" y1={200 - val * 2} x2="8" y2={200 - val * 2} stroke="#64748b" strokeWidth="1" />
+                <text x="-5" y={204 - val * 2} fill="#64748b" fontSize="8" textAnchor="end">
+                  {val * 10}
+                </text>
+              </g>
+            ))}
+
+            {/* Power fill */}
+            <rect
+              x="4"
+              y={200 - powerPercent * 1.92}
+              width="32"
+              height={powerPercent * 1.92}
+              rx="3"
+              fill="url(#wkpwPowerMeter)"
+              filter="url(#wkpwPowerGlow)"
+            >
+              {isClimbing && (
+                <animate
+                  attributeName="opacity"
+                  values="0.7;1;0.7"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              )}
+            </rect>
+
+            {/* Current power value */}
+            <rect x="0" y="208" width="40" height="24" rx="4" fill="#1e3a5f" />
+            <text x="20" y="224" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">
+              {values.power.toFixed(0)}W
+            </text>
+
+            {/* Label */}
+            <text x="20" y="-8" fill="#60a5fa" fontSize="10" textAnchor="middle" fontWeight="600">POWER</text>
+          </g>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* ENERGY BAR - Horizontal gauge at top */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g transform="translate(380, 40)">
+            {/* Energy meter background */}
+            <rect x="0" y="0" width="40" height="200" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+            {/* Energy fill - based on work done (progress) */}
+            <rect
+              x="4"
+              y={200 - energyPulse * 192}
+              width="32"
+              height={energyPulse * 192}
+              rx="3"
+              fill="url(#wkpwEnergyBar)"
+              filter="url(#wkpwPowerGlow)"
+            />
+
+            {/* Work value */}
+            <rect x="0" y="208" width="40" height="24" rx="4" fill="#064e3b" />
+            <text x="20" y="224" fill="#10b981" fontSize="10" textAnchor="middle" fontWeight="700">
+              {(values.work * energyPulse).toFixed(0)}J
+            </text>
+
+            {/* Label */}
+            <text x="20" y="-8" fill="#34d399" fontSize="10" textAnchor="middle" fontWeight="600">WORK</text>
+          </g>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* TIME INDICATOR */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g transform="translate(440, 40)">
+            <rect x="0" y="0" width="50" height="40" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <text x="25" y="18" fill="#64748b" fontSize="9" textAnchor="middle" fontWeight="600">TIME</text>
+            <text x="25" y="32" fill="#fbbf24" fontSize="12" textAnchor="middle" fontWeight="700">
+              {isClimbing ? (climbProgress * climbTime).toFixed(1) : climbTime}s
+            </text>
+          </g>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* FORMULA DISPLAY */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          <g transform="translate(250, 295)">
+            <rect x="-80" y="-12" width="160" height="22" rx="4" fill="#1e293b" opacity="0.95" stroke="#334155" strokeWidth="0.5" />
+            <text x="0" y="4" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600">
+              P = mgh/t = <tspan fill="#3b82f6">{values.power.toFixed(0)}W</tspan>
+            </text>
+          </g>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {/* COMPLETION INDICATOR */}
+          {/* ═══════════════════════════════════════════════════════════════════════════ */}
+          {showResults && (
+            <g transform="translate(250, 30)">
+              <rect x="-60" y="-15" width="120" height="30" rx="6" fill="#065f46" opacity="0.95" />
+              <text x="0" y="5" fill="#34d399" fontSize="14" textAnchor="middle" fontWeight="700">
+                COMPLETE
+              </text>
+            </g>
+          )}
         </svg>
 
         {/* Results Panel */}

@@ -388,128 +388,442 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
   const renderCannonScene = () => {
     return (
       <svg viewBox="0 0 400 350" className="w-full h-64">
-        <rect width="400" height="350" fill="#0a0a1a" />
+        {/* Premium SVG Definitions */}
+        <defs>
+          {/* === LINEAR GRADIENTS === */}
 
-        {/* Stars */}
-        {[...Array(30)].map((_, i) => (
-          <circle
-            key={i}
-            cx={(i * 37) % 400}
-            cy={(i * 23) % 200}
-            r={0.5 + Math.random()}
-            fill="#ffffff"
-            opacity={0.3 + Math.random() * 0.5}
-          />
-        ))}
+          {/* Premium space background gradient */}
+          <linearGradient id="orbmSpaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0c1222" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* Earth */}
+          {/* Earth surface gradient with depth */}
+          <linearGradient id="orbmEarthSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="20%" stopColor="#16a34a" />
+            <stop offset="40%" stopColor="#15803d" />
+            <stop offset="60%" stopColor="#166534" />
+            <stop offset="80%" stopColor="#14532d" />
+            <stop offset="100%" stopColor="#052e16" />
+          </linearGradient>
+
+          {/* Ocean gradient */}
+          <linearGradient id="orbmOcean" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="25%" stopColor="#2563eb" />
+            <stop offset="50%" stopColor="#1d4ed8" />
+            <stop offset="75%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+
+          {/* Atmosphere gradient */}
+          <linearGradient id="orbmAtmosphere" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#2563eb" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Mountain metal gradient */}
+          <linearGradient id="orbmMountain" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#9ca3af" />
+            <stop offset="25%" stopColor="#6b7280" />
+            <stop offset="50%" stopColor="#4b5563" />
+            <stop offset="75%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Cannon barrel gradient */}
+          <linearGradient id="orbmCannonBarrel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="20%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="80%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Velocity vector gradient */}
+          <linearGradient id="orbmVelocityVector" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="30%" stopColor="#4ade80" />
+            <stop offset="70%" stopColor="#86efac" />
+            <stop offset="100%" stopColor="#bbf7d0" />
+          </linearGradient>
+
+          {/* Trajectory orbit gradient */}
+          <linearGradient id="orbmTrajectoryOrbit" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#86efac" stopOpacity="0.5" />
+          </linearGradient>
+
+          {/* Trajectory crash gradient */}
+          <linearGradient id="orbmTrajectoryCrash" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#f87171" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#fca5a5" stopOpacity="0.5" />
+          </linearGradient>
+
+          {/* Trajectory escape gradient */}
+          <linearGradient id="orbmTrajectoryEscape" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#c084fc" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#e879f9" stopOpacity="0.5" />
+          </linearGradient>
+
+          {/* === RADIAL GRADIENTS === */}
+
+          {/* Earth 3D sphere gradient */}
+          <radialGradient id="orbmEarth3D" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="20%" stopColor="#3b82f6" />
+            <stop offset="45%" stopColor="#2563eb" />
+            <stop offset="70%" stopColor="#1d4ed8" />
+            <stop offset="90%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a5f" />
+          </radialGradient>
+
+          {/* Earth landmass overlay */}
+          <radialGradient id="orbmEarthLand" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#16a34a" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#15803d" stopOpacity="0.1" />
+          </radialGradient>
+
+          {/* Atmospheric glow gradient */}
+          <radialGradient id="orbmAtmoGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="70%" stopColor="#60a5fa" stopOpacity="0" />
+            <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="95%" stopColor="#60a5fa" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.2" />
+          </radialGradient>
+
+          {/* Projectile glow gradient */}
+          <radialGradient id="orbmProjectileGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Star glow gradient */}
+          <radialGradient id="orbmStarGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#bae6fd" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === FILTERS === */}
+
+          {/* Atmospheric glow filter */}
+          <filter id="orbmAtmoFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Projectile glow filter */}
+          <filter id="orbmProjectileFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Star twinkle filter */}
+          <filter id="orbmStarFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Trajectory glow filter */}
+          <filter id="orbmTrajectoryFilter" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Velocity arrow marker */}
+          <marker id="orbmArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="url(#orbmVelocityVector)" />
+          </marker>
+
+          {/* Gravity arrow marker */}
+          <marker id="orbmGravityArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+          </marker>
+        </defs>
+
+        {/* Premium space background */}
+        <rect width="400" height="350" fill="url(#orbmSpaceBg)" />
+
+        {/* Distant stars with varied sizes and glow */}
+        {[...Array(40)].map((_, i) => {
+          const x = (i * 37 + i * i * 3) % 400;
+          const y = (i * 23 + i * 7) % 180;
+          const size = 0.5 + (i % 4) * 0.4;
+          const opacity = 0.3 + (i % 5) * 0.15;
+          return (
+            <circle
+              key={`star-${i}`}
+              cx={x}
+              cy={y}
+              r={size}
+              fill="url(#orbmStarGlow)"
+              filter={size > 1 ? "url(#orbmStarFilter)" : undefined}
+              opacity={opacity}
+            />
+          );
+        })}
+
+        {/* Outer atmospheric glow ring */}
+        <circle
+          cx={EARTH_CENTER.x}
+          cy={EARTH_CENTER.y}
+          r={EARTH_RADIUS + 12}
+          fill="none"
+          stroke="url(#orbmAtmosphere)"
+          strokeWidth="8"
+          opacity="0.4"
+          filter="url(#orbmAtmoFilter)"
+        />
+
+        {/* Atmospheric haze */}
+        <circle
+          cx={EARTH_CENTER.x}
+          cy={EARTH_CENTER.y}
+          r={EARTH_RADIUS + 6}
+          fill="url(#orbmAtmoGlow)"
+          filter="url(#orbmAtmoFilter)"
+        />
+
+        {/* Earth main sphere */}
         <circle
           cx={EARTH_CENTER.x}
           cy={EARTH_CENTER.y}
           r={EARTH_RADIUS}
-          fill="url(#earthGradient)"
+          fill="url(#orbmEarth3D)"
         />
 
-        {/* Atmosphere glow */}
+        {/* Continent overlay patterns */}
+        <ellipse
+          cx={EARTH_CENTER.x - 15}
+          cy={EARTH_CENTER.y - 20}
+          rx={25}
+          ry={20}
+          fill="url(#orbmEarthLand)"
+        />
+        <ellipse
+          cx={EARTH_CENTER.x + 25}
+          cy={EARTH_CENTER.y + 10}
+          rx={18}
+          ry={22}
+          fill="url(#orbmEarthLand)"
+        />
+        <ellipse
+          cx={EARTH_CENTER.x - 10}
+          cy={EARTH_CENTER.y + 30}
+          rx={15}
+          ry={12}
+          fill="url(#orbmEarthLand)"
+        />
+
+        {/* Earth highlight rim */}
         <circle
           cx={EARTH_CENTER.x}
           cy={EARTH_CENTER.y}
-          r={EARTH_RADIUS + 5}
+          r={EARTH_RADIUS}
           fill="none"
-          stroke="#3b82f6"
-          strokeWidth="3"
+          stroke="#93c5fd"
+          strokeWidth="1"
           opacity="0.3"
         />
 
-        {/* Mountain/cannon position */}
+        {/* Premium mountain with layered depth */}
         <polygon
-          points={`${EARTH_CENTER.x - 15},${EARTH_CENTER.y - EARTH_RADIUS} ${EARTH_CENTER.x},${EARTH_CENTER.y - EARTH_RADIUS - 15} ${EARTH_CENTER.x + 15},${EARTH_CENTER.y - EARTH_RADIUS}`}
-          fill="#6b7280"
+          points={`${EARTH_CENTER.x - 20},${EARTH_CENTER.y - EARTH_RADIUS + 2} ${EARTH_CENTER.x},${EARTH_CENTER.y - EARTH_RADIUS - 18} ${EARTH_CENTER.x + 20},${EARTH_CENTER.y - EARTH_RADIUS + 2}`}
+          fill="url(#orbmMountain)"
+          stroke="#4b5563"
+          strokeWidth="1"
+        />
+        {/* Mountain snow cap */}
+        <polygon
+          points={`${EARTH_CENTER.x - 5},${EARTH_CENTER.y - EARTH_RADIUS - 10} ${EARTH_CENTER.x},${EARTH_CENTER.y - EARTH_RADIUS - 18} ${EARTH_CENTER.x + 5},${EARTH_CENTER.y - EARTH_RADIUS - 10}`}
+          fill="#f1f5f9"
+          opacity="0.8"
         />
 
-        {/* Cannon */}
-        <rect
-          x={EARTH_CENTER.x}
-          y={EARTH_CENTER.y - EARTH_RADIUS - 18}
-          width="30"
-          height="8"
-          fill="#374151"
-          rx="2"
-        />
+        {/* Premium cannon with 3D effect */}
+        <g>
+          {/* Cannon base */}
+          <ellipse
+            cx={EARTH_CENTER.x + 15}
+            cy={EARTH_CENTER.y - EARTH_RADIUS - 12}
+            rx={8}
+            ry={4}
+            fill="#1e293b"
+          />
+          {/* Cannon barrel */}
+          <rect
+            x={EARTH_CENTER.x}
+            y={EARTH_CENTER.y - EARTH_RADIUS - 20}
+            width="35"
+            height="10"
+            rx="3"
+            fill="url(#orbmCannonBarrel)"
+            stroke="#475569"
+            strokeWidth="1"
+          />
+          {/* Cannon barrel highlight */}
+          <rect
+            x={EARTH_CENTER.x + 2}
+            y={EARTH_CENTER.y - EARTH_RADIUS - 19}
+            width="31"
+            height="3"
+            rx="1"
+            fill="#64748b"
+            opacity="0.4"
+          />
+          {/* Cannon muzzle */}
+          <ellipse
+            cx={EARTH_CENTER.x + 35}
+            cy={EARTH_CENTER.y - EARTH_RADIUS - 15}
+            rx={3}
+            ry={5}
+            fill="#1e293b"
+          />
+        </g>
 
-        {/* Trajectory trail */}
+        {/* Trajectory trail with premium gradient */}
         {trail.length > 1 && (
           <path
             d={`M ${trail[0].x} ${trail[0].y} ${trail.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ')}`}
             fill="none"
-            stroke={outcome === 'orbit' ? '#22c55e' : outcome === 'crash' ? '#ef4444' : '#fbbf24'}
-            strokeWidth="2"
-            strokeDasharray={outcome === 'orbit' ? 'none' : '4,2'}
-            opacity="0.7"
+            stroke={outcome === 'orbit' ? 'url(#orbmTrajectoryOrbit)' : outcome === 'crash' ? 'url(#orbmTrajectoryCrash)' : 'url(#orbmTrajectoryEscape)'}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#orbmTrajectoryFilter)"
+            opacity="0.85"
           />
         )}
 
-        {/* Projectile */}
+        {/* Premium projectile with glow */}
         {isLaunched && outcome === 'none' && (
-          <circle
-            cx={projectilePos.x}
-            cy={projectilePos.y}
-            r={5}
-            fill="#fbbf24"
-            className="animate-pulse"
-          />
+          <g filter="url(#orbmProjectileFilter)">
+            <circle
+              cx={projectilePos.x}
+              cy={projectilePos.y}
+              r={8}
+              fill="url(#orbmProjectileGlow)"
+            />
+            <circle
+              cx={projectilePos.x}
+              cy={projectilePos.y}
+              r={4}
+              fill="#fef08a"
+            />
+          </g>
         )}
 
         {/* Velocity vector indicator (before launch) */}
         {!isLaunched && (
           <g>
+            {/* Velocity arrow */}
             <line
-              x1={EARTH_CENTER.x + 30}
-              y1={EARTH_CENTER.y - EARTH_RADIUS - 14}
-              x2={EARTH_CENTER.x + 30 + launchSpeed * 6}
-              y2={EARTH_CENTER.y - EARTH_RADIUS - 14}
-              stroke="#22c55e"
-              strokeWidth="3"
-              markerEnd="url(#arrowhead)"
+              x1={EARTH_CENTER.x + 38}
+              y1={EARTH_CENTER.y - EARTH_RADIUS - 15}
+              x2={EARTH_CENTER.x + 38 + launchSpeed * 5}
+              y2={EARTH_CENTER.y - EARTH_RADIUS - 15}
+              stroke="url(#orbmVelocityVector)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#orbmArrowhead)"
+            />
+            {/* Velocity label with background */}
+            <rect
+              x={EARTH_CENTER.x + 40 + launchSpeed * 2.5 - 22}
+              y={EARTH_CENTER.y - EARTH_RADIUS - 35}
+              width="44"
+              height="16"
+              rx="4"
+              fill="#0f172a"
+              opacity="0.8"
             />
             <text
-              x={EARTH_CENTER.x + 35 + launchSpeed * 3}
-              y={EARTH_CENTER.y - EARTH_RADIUS - 25}
-              className="fill-green-400 text-xs"
+              x={EARTH_CENTER.x + 40 + launchSpeed * 2.5}
+              y={EARTH_CENTER.y - EARTH_RADIUS - 23}
+              textAnchor="middle"
+              className="fill-green-400 text-xs font-semibold"
             >
-              {launchSpeed} km/s
+              v = {launchSpeed} km/s
             </text>
           </g>
         )}
 
-        {/* Outcome indicator */}
-        {outcome === 'crash' && (
-          <text x="200" y="30" textAnchor="middle" className="fill-red-400 text-sm font-bold">
-            💥 Crashed! Not enough horizontal speed
-          </text>
-        )}
-        {outcome === 'orbit' && (
-          <text x="200" y="30" textAnchor="middle" className="fill-green-400 text-sm font-bold">
-            🛰️ Orbit achieved! Falling around Earth
-          </text>
-        )}
-        {outcome === 'escape' && (
-          <text x="200" y="30" textAnchor="middle" className="fill-purple-400 text-sm font-bold">
-            🚀 Escape velocity! Left Earth&apos;s gravity
-          </text>
+        {/* Gravity vector (shown when projectile is moving) */}
+        {isLaunched && outcome === 'none' && (
+          <g>
+            <line
+              x1={projectilePos.x}
+              y1={projectilePos.y + 10}
+              x2={projectilePos.x}
+              y2={projectilePos.y + 35}
+              stroke="#ef4444"
+              strokeWidth="2"
+              strokeLinecap="round"
+              markerEnd="url(#orbmGravityArrow)"
+              opacity="0.8"
+            />
+            <text
+              x={projectilePos.x + 12}
+              y={projectilePos.y + 28}
+              className="fill-red-400 text-xs"
+              opacity="0.9"
+            >
+              g
+            </text>
+          </g>
         )}
 
-        {/* Gradients and markers */}
-        <defs>
-          <radialGradient id="earthGradient" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#1e40af" />
-            <stop offset="100%" stopColor="#1e3a5f" />
-          </radialGradient>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
-          </marker>
-        </defs>
+        {/* Outcome indicators with premium styling */}
+        {outcome === 'crash' && (
+          <g>
+            <rect x="50" y="12" width="300" height="28" rx="14" fill="#0f172a" opacity="0.9" />
+            <text x="200" y="32" textAnchor="middle" className="fill-red-400 text-sm font-bold">
+              Crashed - Not enough horizontal speed
+            </text>
+          </g>
+        )}
+        {outcome === 'orbit' && (
+          <g>
+            <rect x="50" y="12" width="300" height="28" rx="14" fill="#0f172a" opacity="0.9" />
+            <text x="200" y="32" textAnchor="middle" className="fill-green-400 text-sm font-bold">
+              Orbit achieved - Falling around Earth!
+            </text>
+          </g>
+        )}
+        {outcome === 'escape' && (
+          <g>
+            <rect x="50" y="12" width="300" height="28" rx="14" fill="#0f172a" opacity="0.9" />
+            <text x="200" y="32" textAnchor="middle" className="fill-purple-400 text-sm font-bold">
+              Escape velocity - Left Earth&apos;s gravity!
+            </text>
+          </g>
+        )}
 
         {/* Labels */}
         <text x="200" y="340" textAnchor="middle" className="fill-gray-400 text-xs">
@@ -525,118 +839,322 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
 
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#0a0a1a" />
+        {/* Premium SVG Definitions for ISS Scene */}
+        <defs>
+          {/* === LINEAR GRADIENTS === */}
 
-        {/* Stars */}
-        {[...Array(40)].map((_, i) => (
-          <circle
-            key={i}
-            cx={(i * 31) % 400}
-            cy={(i * 17) % 280}
-            r={0.5 + Math.random() * 0.5}
-            fill="#ffffff"
-            opacity={0.3 + Math.random() * 0.4}
-          />
-        ))}
+          {/* Premium space background */}
+          <linearGradient id="orbmISSSpaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0c1629" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
 
-        {/* Earth (partial, from space view) */}
+          {/* ISS solar panel gradient */}
+          <linearGradient id="orbmSolarPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="20%" stopColor="#fbbf24" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="80%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+
+          {/* ISS body metallic gradient */}
+          <linearGradient id="orbmISSBody" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#e2e8f0" />
+            <stop offset="25%" stopColor="#cbd5e1" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="75%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+
+          {/* ISS module gradient */}
+          <linearGradient id="orbmISSModule" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="30%" stopColor="#64748b" />
+            <stop offset="70%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#334155" />
+          </linearGradient>
+
+          {/* Orbital path gradient */}
+          <linearGradient id="orbmOrbitPath" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
+            <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#2563eb" stopOpacity="0.6" />
+            <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Velocity vector gradient */}
+          <linearGradient id="orbmISSVelocity" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#86efac" />
+          </linearGradient>
+
+          {/* Gravity vector gradient */}
+          <linearGradient id="orbmISSGravity" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#fca5a5" />
+          </linearGradient>
+
+          {/* Info panel gradient */}
+          <linearGradient id="orbmInfoPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* === RADIAL GRADIENTS === */}
+
+          {/* Earth from orbit view */}
+          <radialGradient id="orbmEarthOrbit" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="20%" stopColor="#60a5fa" />
+            <stop offset="40%" stopColor="#3b82f6" />
+            <stop offset="60%" stopColor="#2563eb" />
+            <stop offset="80%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </radialGradient>
+
+          {/* Earth atmosphere from orbit */}
+          <radialGradient id="orbmEarthAtmoOrbit" cx="50%" cy="30%" r="75%">
+            <stop offset="80%" stopColor="#60a5fa" stopOpacity="0" />
+            <stop offset="90%" stopColor="#93c5fd" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#bfdbfe" stopOpacity="0.2" />
+          </radialGradient>
+
+          {/* ISS glow gradient */}
+          <radialGradient id="orbmISSGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Star glow */}
+          <radialGradient id="orbmISSStarGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#bae6fd" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === FILTERS === */}
+
+          {/* Earth atmosphere filter */}
+          <filter id="orbmISSAtmoFilter" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* ISS glow filter */}
+          <filter id="orbmISSGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Vector arrow filter */}
+          <filter id="orbmVectorFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Panel shadow filter */}
+          <filter id="orbmPanelShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
+          </filter>
+
+          {/* Velocity arrow marker */}
+          <marker id="orbmISSVelArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#4ade80" />
+          </marker>
+
+          {/* Gravity arrow marker */}
+          <marker id="orbmISSGravArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#f87171" />
+          </marker>
+        </defs>
+
+        {/* Premium space background */}
+        <rect width="400" height="280" fill="url(#orbmISSSpaceBg)" />
+
+        {/* Stars with varied glow */}
+        {[...Array(50)].map((_, i) => {
+          const x = (i * 31 + i * i * 2) % 400;
+          const y = (i * 17 + i * 5) % 180;
+          const size = 0.4 + (i % 5) * 0.3;
+          const opacity = 0.2 + (i % 6) * 0.12;
+          return (
+            <circle
+              key={`iss-star-${i}`}
+              cx={x}
+              cy={y}
+              r={size}
+              fill="url(#orbmISSStarGlow)"
+              opacity={opacity}
+            />
+          );
+        })}
+
+        {/* Earth from orbit (partial view) with atmospheric glow */}
         <ellipse
           cx={200}
-          cy={350}
+          cy={360}
+          rx={190}
+          ry={170}
+          fill="url(#orbmEarthAtmoOrbit)"
+          filter="url(#orbmISSAtmoFilter)"
+        />
+        <ellipse
+          cx={200}
+          cy={360}
           rx={180}
           ry={160}
-          fill="url(#earthGradient2)"
+          fill="url(#orbmEarthOrbit)"
         />
 
-        {/* Atmosphere */}
+        {/* Earth cloud patterns */}
+        <ellipse cx={150} cy={250} rx={40} ry={15} fill="#ffffff" opacity="0.15" />
+        <ellipse cx={250} cy={270} rx={30} ry={12} fill="#ffffff" opacity="0.12" />
+        <ellipse cx={180} cy={290} rx={25} ry={10} fill="#ffffff" opacity="0.1" />
+
+        {/* Atmospheric rim light */}
         <ellipse
           cx={200}
-          cy={350}
-          rx={185}
-          ry={165}
+          cy={360}
+          rx={182}
+          ry={162}
           fill="none"
-          stroke="#60a5fa"
-          strokeWidth="4"
-          opacity="0.3"
+          stroke="#93c5fd"
+          strokeWidth="2"
+          opacity="0.4"
         />
 
-        {/* Orbital path (dashed) */}
+        {/* Premium orbital path */}
         <ellipse
           cx={200}
           cy={200}
           rx={120}
           ry={40}
           fill="none"
-          stroke="#4b5563"
-          strokeWidth="1"
-          strokeDasharray="5,5"
+          stroke="url(#orbmOrbitPath)"
+          strokeWidth="2"
+          strokeDasharray="8,4"
         />
 
-        {/* ISS */}
-        <g transform={`translate(${issX}, ${issY})`}>
-          {/* Solar panels */}
-          <rect x="-25" y="-3" width="50" height="6" fill="#fbbf24" />
-          {/* Main body */}
-          <rect x="-8" y="-5" width="16" height="10" fill="#9ca3af" rx="2" />
-          {/* Smaller modules */}
-          <rect x="-12" y="-3" width="4" height="6" fill="#6b7280" />
-          <rect x="8" y="-3" width="4" height="6" fill="#6b7280" />
+        {/* Premium ISS */}
+        <g transform={`translate(${issX}, ${issY})`} filter="url(#orbmISSGlowFilter)">
+          {/* ISS ambient glow */}
+          <ellipse cx="0" cy="0" rx="35" ry="15" fill="url(#orbmISSGlow)" />
+
+          {/* Solar panel left */}
+          <g transform="translate(-28, -4)">
+            <rect width="22" height="8" rx="1" fill="url(#orbmSolarPanel)" stroke="#b45309" strokeWidth="0.5" />
+            {/* Panel grid lines */}
+            <line x1="5.5" y1="0" x2="5.5" y2="8" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+            <line x1="11" y1="0" x2="11" y2="8" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+            <line x1="16.5" y1="0" x2="16.5" y2="8" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+          </g>
+
+          {/* Solar panel right */}
+          <g transform="translate(6, -4)">
+            <rect width="22" height="8" rx="1" fill="url(#orbmSolarPanel)" stroke="#b45309" strokeWidth="0.5" />
+            <line x1="5.5" y1="0" x2="5.5" y2="8" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+            <line x1="11" y1="0" x2="11" y2="8" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+            <line x1="16.5" y1="0" x2="16.5" y2="8" stroke="#d97706" strokeWidth="0.5" opacity="0.5" />
+          </g>
+
+          {/* Main truss */}
+          <rect x="-30" y="-2" width="60" height="4" rx="1" fill="url(#orbmISSBody)" stroke="#64748b" strokeWidth="0.5" />
+
+          {/* Central module */}
+          <rect x="-10" y="-7" width="20" height="14" rx="3" fill="url(#orbmISSBody)" stroke="#94a3b8" strokeWidth="0.5" />
+          {/* Module highlight */}
+          <rect x="-8" y="-6" width="16" height="4" rx="2" fill="#e2e8f0" opacity="0.3" />
+
+          {/* Left module */}
+          <rect x="-16" y="-5" width="6" height="10" rx="2" fill="url(#orbmISSModule)" stroke="#64748b" strokeWidth="0.5" />
+
+          {/* Right module */}
+          <rect x="10" y="-5" width="6" height="10" rx="2" fill="url(#orbmISSModule)" stroke="#64748b" strokeWidth="0.5" />
+
+          {/* Docking port indicator */}
+          <circle cx="0" cy="-7" r="2" fill="#3b82f6" opacity="0.8" />
         </g>
 
-        {/* Gravity arrow (always pointing down toward Earth) */}
-        <g transform={`translate(${issX}, ${issY + 20})`}>
-          <line x1="0" y1="0" x2="0" y2="25" stroke="#ef4444" strokeWidth="2" />
-          <polygon points="-5,25 5,25 0,35" fill="#ef4444" />
-          <text x="10" y="20" className="fill-red-400 text-xs">Gravity</text>
-        </g>
-
-        {/* Velocity arrow (tangent to orbit) */}
-        <g transform={`translate(${issX}, ${issY})`}>
+        {/* Premium Gravity vector */}
+        <g transform={`translate(${issX}, ${issY + 18})`} filter="url(#orbmVectorFilter)">
           <line
             x1="0"
             y1="0"
-            x2={Math.cos(issAngle + Math.PI / 2) * 30}
-            y2={Math.sin(issAngle + Math.PI / 2) * 10}
-            stroke="#22c55e"
-            strokeWidth="2"
+            x2="0"
+            y2="30"
+            stroke="url(#orbmISSGravity)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            markerEnd="url(#orbmISSGravArrow)"
           />
-          <text
-            x={Math.cos(issAngle + Math.PI / 2) * 35}
-            y={Math.sin(issAngle + Math.PI / 2) * 12 - 5}
-            className="fill-green-400 text-xs"
-          >
-            Velocity
+          <rect x="8" y="8" width="52" height="16" rx="4" fill="url(#orbmInfoPanel)" opacity="0.9" />
+          <text x="34" y="20" textAnchor="middle" className="fill-red-400 text-xs font-semibold">Gravity (g)</text>
+        </g>
+
+        {/* Premium Velocity vector */}
+        <g transform={`translate(${issX}, ${issY})`} filter="url(#orbmVectorFilter)">
+          <line
+            x1="0"
+            y1="0"
+            x2={Math.cos(issAngle + Math.PI / 2) * 35}
+            y2={Math.sin(issAngle + Math.PI / 2) * 12}
+            stroke="url(#orbmISSVelocity)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            markerEnd="url(#orbmISSVelArrow)"
+          />
+          <g transform={`translate(${Math.cos(issAngle + Math.PI / 2) * 42}, ${Math.sin(issAngle + Math.PI / 2) * 14 - 8})`}>
+            <rect x="-28" y="-6" width="56" height="16" rx="4" fill="url(#orbmInfoPanel)" opacity="0.9" />
+            <text x="0" y="6" textAnchor="middle" className="fill-green-400 text-xs font-semibold">Velocity (v)</text>
+          </g>
+        </g>
+
+        {/* Premium ISS Status Panel */}
+        <g transform="translate(20, 20)" filter="url(#orbmPanelShadow)">
+          <rect x="0" y="0" width="130" height="55" rx="10" fill="url(#orbmInfoPanel)" stroke="#334155" strokeWidth="1" />
+          <rect x="0" y="0" width="130" height="18" rx="10" fill="#1e293b" />
+          <rect x="0" y="10" width="130" height="8" fill="#1e293b" />
+          <text x="10" y="14" className="fill-slate-300 text-xs font-bold">ISS Status</text>
+          <circle cx="118" cy="10" r="4" fill="#22c55e" opacity="0.9" />
+          <text x="10" y="32" className="fill-cyan-400 text-xs">Altitude: 408 km</text>
+          <text x="10" y="46" className="fill-amber-400 text-xs">Speed: 7.66 km/s</text>
+        </g>
+
+        {/* Premium Astronaut Panel */}
+        <g transform="translate(260, 20)" filter="url(#orbmPanelShadow)">
+          <rect x="0" y="0" width="120" height="65" rx="10" fill="url(#orbmInfoPanel)" stroke="#334155" strokeWidth="1" />
+          <rect x="0" y="0" width="120" height="18" rx="10" fill="#1e293b" />
+          <rect x="0" y="10" width="120" height="8" fill="#1e293b" />
+          <text x="10" y="14" className="fill-slate-300 text-xs font-bold">Inside ISS</text>
+          <text x="60" y="48" textAnchor="middle" className="text-xl">🧑‍🚀</text>
+          <text x="60" y="60" textAnchor="middle" className="fill-purple-400 text-xs">Free falling!</text>
+        </g>
+
+        {/* Premium explanation label */}
+        <g transform="translate(200, 260)">
+          <rect x="-175" y="-10" width="350" height="20" rx="10" fill="url(#orbmInfoPanel)" opacity="0.8" />
+          <text x="0" y="4" textAnchor="middle" className="fill-slate-400 text-xs">
+            ISS falls toward Earth at 7.66 km/s - but misses because it&apos;s moving sideways!
           </text>
         </g>
-
-        {/* Free fall indicator */}
-        <g transform="translate(30, 30)">
-          <rect x="0" y="0" width="120" height="50" fill="#1f2937" rx="8" opacity="0.9" />
-          <text x="10" y="20" className="fill-gray-300 text-xs font-semibold">ISS Status:</text>
-          <text x="10" y="38" className="fill-yellow-400 text-xs">
-            ↓ Falling at 7.66 km/s!
-          </text>
-        </g>
-
-        {/* Floating astronaut inside ISS (conceptual) */}
-        <g transform="translate(280, 50)">
-          <rect x="0" y="0" width="100" height="60" fill="#1f2937" rx="8" opacity="0.9" />
-          <text x="10" y="18" className="fill-gray-300 text-xs font-semibold">Inside ISS:</text>
-          <text x="50" y="45" textAnchor="middle" className="text-2xl">🧑‍🚀</text>
-        </g>
-
-        {/* Explanation */}
-        <text x="200" y="270" textAnchor="middle" className="fill-gray-400 text-xs">
-          ISS falls toward Earth at 7.66 km/s - but misses because it&apos;s moving sideways!
-        </text>
-
-        <defs>
-          <radialGradient id="earthGradient2" cx="50%" cy="20%">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="40%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#1e3a8a" />
-          </radialGradient>
-        </defs>
       </svg>
     );
   };

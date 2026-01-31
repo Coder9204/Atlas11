@@ -169,65 +169,332 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
     const cycloidIdx = Math.floor(raceProgress.cycloid * (cycloidPath.length - 1));
     const cycloidBall = cycloidPath[cycloidIdx] || { x: startX, y: startY };
 
+    // Get motion trail points (previous positions for trail effect)
+    const getTrailPoints = (progress: number, path: {x: number, y: number}[]) => {
+      const trails: {x: number, y: number, opacity: number}[] = [];
+      const trailLength = 8;
+      for (let i = 0; i < trailLength; i++) {
+        const trailProgress = Math.max(0, progress - (i * 0.03));
+        const idx = Math.floor(trailProgress * (path.length - 1));
+        if (idx >= 0 && path[idx]) {
+          trails.push({ ...path[idx], opacity: 1 - (i / trailLength) });
+        }
+      }
+      return trails;
+    };
+
+    const straightTrail = isRacing ? Array.from({ length: 8 }, (_, i) => {
+      const p = Math.max(0, raceProgress.straight - (i * 0.03));
+      return {
+        x: startX + (endX - startX) * p,
+        y: startY + (endY - startY) * p,
+        opacity: 1 - (i / 8)
+      };
+    }) : [];
+    const parabolaTrail = isRacing ? getTrailPoints(raceProgress.parabola, parabolaPath) : [];
+    const cycloidTrail = isRacing ? getTrailPoints(raceProgress.cycloid, cycloidPath) : [];
+
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
         <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
+          {/* ============================================= */}
+          {/* PREMIUM SVG DEFINITIONS - Gradients & Filters */}
+          {/* ============================================= */}
+          <defs>
+            {/* === TRACK GRADIENTS === */}
+            {/* Straight path - red metallic track */}
+            <linearGradient id="brachStraightTrack" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            {/* Parabola path - amber/gold metallic track */}
+            <linearGradient id="brachParabolaTrack" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="20%" stopColor="#fcd34d" />
+              <stop offset="40%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#d97706" />
+              <stop offset="80%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
+
+            {/* Cycloid path - emerald premium track */}
+            <linearGradient id="brachCycloidTrack" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="20%" stopColor="#4ade80" />
+              <stop offset="40%" stopColor="#22c55e" />
+              <stop offset="60%" stopColor="#16a34a" />
+              <stop offset="80%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
+
+            {/* Track depth/shadow gradient */}
+            <linearGradient id="brachTrackDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#000000" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* === BALL GRADIENTS - 3D Metallic Spheres === */}
+            {/* Red ball - polished metal */}
+            <radialGradient id="brachRedBall" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="15%" stopColor="#fecaca" />
+              <stop offset="40%" stopColor="#f87171" />
+              <stop offset="65%" stopColor="#ef4444" />
+              <stop offset="85%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </radialGradient>
+
+            {/* Amber ball - polished gold */}
+            <radialGradient id="brachAmberBall" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="15%" stopColor="#fef3c7" />
+              <stop offset="40%" stopColor="#fcd34d" />
+              <stop offset="65%" stopColor="#f59e0b" />
+              <stop offset="85%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#78350f" />
+            </radialGradient>
+
+            {/* Green ball - polished emerald */}
+            <radialGradient id="brachGreenBall" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="15%" stopColor="#dcfce7" />
+              <stop offset="40%" stopColor="#4ade80" />
+              <stop offset="65%" stopColor="#22c55e" />
+              <stop offset="85%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#14532d" />
+            </radialGradient>
+
+            {/* === ENDPOINT MARKERS === */}
+            <radialGradient id="brachStartPoint" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#e2e8f0" />
+              <stop offset="40%" stopColor="#94a3b8" />
+              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            <radialGradient id="brachEndPoint" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#facc15" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#a16207" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+            {/* Ball glow effect */}
+            <filter id="brachBallGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Winner glow - stronger */}
+            <filter id="brachWinnerGlow" x="-150%" y="-150%" width="400%" height="400%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Track glow for depth */}
+            <filter id="brachTrackGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Motion blur filter */}
+            <filter id="brachMotionBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" />
+            </filter>
+
+            {/* === BACKGROUND GRADIENTS === */}
+            <linearGradient id="brachLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Grid pattern for lab feel */}
+            <pattern id="brachLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Legend panel gradient */}
+            <linearGradient id="brachLegendBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Title text gradient */}
+            <linearGradient id="brachTitleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#a78bfa" />
+              <stop offset="100%" stopColor="#f472b6" />
+            </linearGradient>
+          </defs>
+
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width="400" height="320" fill="url(#brachLabBg)" />
+          <rect width="400" height="320" fill="url(#brachLabGrid)" />
+
+          {/* === TITLE === */}
+          <text x="200" y="25" textAnchor="middle" fill="url(#brachTitleGrad)" fontSize="16" fontWeight="bold">
             Brachistochrone Problem
           </text>
           <text x="200" y="42" textAnchor="middle" fill={colors.textMuted} fontSize="10">
             Which path is fastest?
           </text>
 
-          {/* Start point */}
-          <circle cx={startX} cy={startY} r="8" fill={colors.textMuted} />
-          <text x={startX - 15} y={startY - 12} fill={colors.textMuted} fontSize="10">Start</text>
+          {/* === START POINT - Premium 3D marker === */}
+          <g>
+            {/* Outer glow ring */}
+            <circle cx={startX} cy={startY} r="12" fill="none" stroke="#475569" strokeWidth="1" strokeOpacity="0.5" />
+            {/* Main point */}
+            <circle cx={startX} cy={startY} r="8" fill="url(#brachStartPoint)" />
+            {/* Highlight */}
+            <circle cx={startX - 2} cy={startY - 2} r="2" fill="white" fillOpacity="0.6" />
+            <text x={startX - 20} y={startY - 15} fill={colors.textSecondary} fontSize="11" fontWeight="600">Start</text>
+          </g>
 
-          {/* End point */}
-          <circle cx={endX} cy={endY} r="8" fill={colors.textMuted} />
-          <text x={endX + 5} y={endY + 15} fill={colors.textMuted} fontSize="10">End</text>
+          {/* === END POINT - Premium gold target === */}
+          <g>
+            {/* Outer glow ring */}
+            <circle cx={endX} cy={endY} r="14" fill="none" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.4" />
+            <circle cx={endX} cy={endY} r="11" fill="none" stroke="#fbbf24" strokeWidth="0.5" strokeOpacity="0.3" />
+            {/* Main point */}
+            <circle cx={endX} cy={endY} r="8" fill="url(#brachEndPoint)" />
+            {/* Highlight */}
+            <circle cx={endX - 2} cy={endY - 2} r="2" fill="white" fillOpacity="0.7" />
+            <text x={endX + 10} y={endY + 5} fill="#fbbf24" fontSize="11" fontWeight="600">Finish</text>
+          </g>
 
-          {/* Straight line path */}
-          <line x1={startX} y1={startY} x2={endX} y2={endY}
-            stroke={colors.straight} strokeWidth="3" strokeDasharray="8,4" />
+          {/* === TRACK PATHS WITH DEPTH === */}
+          {/* Straight line path - with shadow layer for depth */}
+          <g filter="url(#brachTrackGlow)">
+            {/* Shadow/depth layer */}
+            <line x1={startX} y1={startY + 2} x2={endX} y2={endY + 2}
+              stroke="#7f1d1d" strokeWidth="5" strokeOpacity="0.5" strokeLinecap="round" />
+            {/* Main track */}
+            <line x1={startX} y1={startY} x2={endX} y2={endY}
+              stroke="url(#brachStraightTrack)" strokeWidth="4" strokeLinecap="round" />
+            {/* Highlight edge */}
+            <line x1={startX} y1={startY - 1} x2={endX} y2={endY - 1}
+              stroke="#fecaca" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" />
+          </g>
 
-          {/* Parabola path */}
-          <path
-            d={`M ${startX},${startY} ${parabolaPath.map(p => `L ${p.x},${p.y}`).join(' ')}`}
-            fill="none" stroke={colors.parabola} strokeWidth="3" strokeDasharray="5,3" />
+          {/* Parabola path - with shadow layer for depth */}
+          <g filter="url(#brachTrackGlow)">
+            {/* Shadow/depth layer */}
+            <path
+              d={`M ${startX},${startY + 2} ${parabolaPath.map(p => `L ${p.x},${p.y + 2}`).join(' ')}`}
+              fill="none" stroke="#78350f" strokeWidth="5" strokeOpacity="0.5" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Main track */}
+            <path
+              d={`M ${startX},${startY} ${parabolaPath.map(p => `L ${p.x},${p.y}`).join(' ')}`}
+              fill="none" stroke="url(#brachParabolaTrack)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Highlight edge */}
+            <path
+              d={`M ${startX},${startY - 1} ${parabolaPath.map(p => `L ${p.x},${p.y - 1}`).join(' ')}`}
+              fill="none" stroke="#fef3c7" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
 
-          {/* Cycloid path */}
-          <path
-            d={`M ${startX},${startY} ${cycloidPath.map(p => `L ${p.x},${p.y}`).join(' ')}`}
-            fill="none" stroke={colors.cycloid} strokeWidth="3" />
+          {/* Cycloid path - with shadow layer for depth (THE WINNER!) */}
+          <g filter="url(#brachTrackGlow)">
+            {/* Shadow/depth layer */}
+            <path
+              d={`M ${startX},${startY + 2} ${cycloidPath.map(p => `L ${p.x},${p.y + 2}`).join(' ')}`}
+              fill="none" stroke="#14532d" strokeWidth="5" strokeOpacity="0.5" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Main track */}
+            <path
+              d={`M ${startX},${startY} ${cycloidPath.map(p => `L ${p.x},${p.y}`).join(' ')}`}
+              fill="none" stroke="url(#brachCycloidTrack)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+            {/* Highlight edge */}
+            <path
+              d={`M ${startX},${startY - 1} ${cycloidPath.map(p => `L ${p.x},${p.y - 1}`).join(' ')}`}
+              fill="none" stroke="#dcfce7" strokeWidth="1" strokeOpacity="0.4" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
 
-          {/* Balls */}
+          {/* === MOTION TRAILS === */}
+          {isRacing && raceProgress.straight > 0.05 && straightTrail.map((t, i) => (
+            <circle key={`st-${i}`} cx={t.x} cy={t.y} r={8 - i * 0.8}
+              fill="#ef4444" fillOpacity={t.opacity * 0.4} filter="url(#brachMotionBlur)" />
+          ))}
+          {isRacing && raceProgress.parabola > 0.05 && parabolaTrail.map((t, i) => (
+            <circle key={`pt-${i}`} cx={t.x} cy={t.y} r={8 - i * 0.8}
+              fill="#f59e0b" fillOpacity={t.opacity * 0.4} filter="url(#brachMotionBlur)" />
+          ))}
+          {isRacing && raceProgress.cycloid > 0.05 && cycloidTrail.map((t, i) => (
+            <circle key={`ct-${i}`} cx={t.x} cy={t.y} r={8 - i * 0.8}
+              fill="#22c55e" fillOpacity={t.opacity * 0.4} filter="url(#brachMotionBlur)" />
+          ))}
+
+          {/* === RACING BALLS - Premium 3D Spheres === */}
           {isRacing && (
             <>
-              <circle cx={straightBall.x} cy={straightBall.y} r="10" fill={colors.straight} />
-              <circle cx={parabolaBall.x} cy={parabolaBall.y} r="10" fill={colors.parabola} />
-              <circle cx={cycloidBall.x} cy={cycloidBall.y} r="10" fill={colors.cycloid} />
+              {/* Red ball (straight path) */}
+              <g filter={winner === 'straight' ? 'url(#brachWinnerGlow)' : 'url(#brachBallGlow)'}>
+                <circle cx={straightBall.x} cy={straightBall.y} r="10" fill="url(#brachRedBall)" />
+                <circle cx={straightBall.x - 3} cy={straightBall.y - 3} r="3" fill="white" fillOpacity="0.7" />
+              </g>
+
+              {/* Amber ball (parabola path) */}
+              <g filter={winner === 'parabola' ? 'url(#brachWinnerGlow)' : 'url(#brachBallGlow)'}>
+                <circle cx={parabolaBall.x} cy={parabolaBall.y} r="10" fill="url(#brachAmberBall)" />
+                <circle cx={parabolaBall.x - 3} cy={parabolaBall.y - 3} r="3" fill="white" fillOpacity="0.7" />
+              </g>
+
+              {/* Green ball (cycloid path) - THE WINNER */}
+              <g filter={winner === 'cycloid' ? 'url(#brachWinnerGlow)' : 'url(#brachBallGlow)'}>
+                <circle cx={cycloidBall.x} cy={cycloidBall.y} r="10" fill="url(#brachGreenBall)" />
+                <circle cx={cycloidBall.x - 3} cy={cycloidBall.y - 3} r="3" fill="white" fillOpacity="0.7" />
+              </g>
             </>
           )}
 
-          {/* Legend */}
+          {/* === PREMIUM LEGEND PANEL === */}
           <g transform="translate(20, 260)">
-            <rect x="0" y="0" width="360" height="50" fill={colors.bgCard} rx="6" />
+            {/* Panel background with border */}
+            <rect x="0" y="0" width="360" height="55" fill="url(#brachLegendBg)" rx="8" stroke="#334155" strokeWidth="1" />
 
-            <line x1="15" y1="18" x2="45" y2="18" stroke={colors.straight} strokeWidth="3" strokeDasharray="8,4" />
-            <text x="55" y="22" fill={colors.straight} fontSize="11">Straight</text>
+            {/* Path indicators with premium styling */}
+            {/* Straight path */}
+            <g transform="translate(15, 15)">
+              <rect x="0" y="0" width="30" height="6" rx="3" fill="url(#brachStraightTrack)" />
+              <text x="38" y="8" fill="#f87171" fontSize="11" fontWeight="600">Straight</text>
+            </g>
 
-            <line x1="120" y1="18" x2="150" y2="18" stroke={colors.parabola} strokeWidth="3" strokeDasharray="5,3" />
-            <text x="160" y="22" fill={colors.parabola} fontSize="11">Parabola</text>
+            {/* Parabola path */}
+            <g transform="translate(125, 15)">
+              <rect x="0" y="0" width="30" height="6" rx="3" fill="url(#brachParabolaTrack)" />
+              <text x="38" y="8" fill="#fbbf24" fontSize="11" fontWeight="600">Parabola</text>
+            </g>
 
-            <line x1="240" y1="18" x2="270" y2="18" stroke={colors.cycloid} strokeWidth="3" />
-            <text x="280" y="22" fill={colors.cycloid} fontSize="11">Cycloid</text>
+            {/* Cycloid path */}
+            <g transform="translate(245, 15)">
+              <rect x="0" y="0" width="30" height="6" rx="3" fill="url(#brachCycloidTrack)" />
+              <text x="38" y="8" fill="#4ade80" fontSize="11" fontWeight="600">Cycloid</text>
+            </g>
 
+            {/* Winner announcement */}
             {winner && (
-              <text x="180" y="42" textAnchor="middle" fill={colors.cycloid} fontSize="12" fontWeight="bold">
-                🏆 CYCLOID WINS!
-              </text>
+              <g transform="translate(180, 40)">
+                <text textAnchor="middle" fill="#4ade80" fontSize="13" fontWeight="bold" filter="url(#brachBallGlow)">
+                  CYCLOID WINS - Fastest Path!
+                </text>
+              </g>
             )}
           </g>
         </svg>

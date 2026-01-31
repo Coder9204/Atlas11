@@ -341,145 +341,575 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
 
   // ─── Render Helpers ──────────────────────────────────────────────────────────
 
-  const renderInductionCooktop = (material: string, temp: number, heating: boolean, phase: number) => {
+  const renderInductionCooktop = (material: string, temp: number, heating: boolean, animPhase: number) => {
     const props = getMaterialProperties(material);
-    const tempColor = temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : temp > 50 ? '#fbbf24' : '#6b7280';
     const hasEddyCurrents = heating && props.conductivity > 0;
 
+    // Calculate temperature-based colors for the heated object
+    const getTempGradientId = () => {
+      if (temp > 300) return 'indhTempHot';
+      if (temp > 150) return 'indhTempMedium';
+      if (temp > 50) return 'indhTempWarm';
+      return 'indhTempCool';
+    };
+
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <svg viewBox="0 0 500 340" className="w-full h-64">
+        <defs>
+          {/* === PREMIUM GRADIENT DEFINITIONS === */}
 
-        {/* Cooktop surface */}
-        <rect x="50" y="180" width="300" height="30" rx="4" fill="#1f2937" />
+          {/* Lab background gradient */}
+          <linearGradient id="indhLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* Induction coil (under surface) */}
-        <g>
-          {[...Array(5)].map((_, i) => (
-            <ellipse
-              key={i}
-              cx="200"
-              cy="195"
-              rx={30 + i * 15}
-              ry={6 + i * 3}
-              fill="none"
-              stroke={heating ? '#f97316' : '#4b5563'}
-              strokeWidth="3"
-              opacity={heating ? 0.5 + Math.sin(phase + i) * 0.3 : 0.5}
-            />
-          ))}
+          {/* Ceramic cooktop surface gradient */}
+          <linearGradient id="indhCeramicSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="20%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="80%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Copper coil metallic gradient */}
+          <linearGradient id="indhCopperCoil" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#dc8a5f" />
+            <stop offset="20%" stopColor="#c2410c" />
+            <stop offset="40%" stopColor="#ea580c" />
+            <stop offset="60%" stopColor="#c2410c" />
+            <stop offset="80%" stopColor="#ea580c" />
+            <stop offset="100%" stopColor="#9a3412" />
+          </linearGradient>
+
+          {/* Steel pan metallic gradient */}
+          <linearGradient id="indhSteelPan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#9ca3af" />
+            <stop offset="20%" stopColor="#6b7280" />
+            <stop offset="40%" stopColor="#9ca3af" />
+            <stop offset="60%" stopColor="#4b5563" />
+            <stop offset="80%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Aluminum pan gradient */}
+          <linearGradient id="indhAluminumPan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#e5e7eb" />
+            <stop offset="25%" stopColor="#d1d5db" />
+            <stop offset="50%" stopColor="#e5e7eb" />
+            <stop offset="75%" stopColor="#d1d5db" />
+            <stop offset="100%" stopColor="#9ca3af" />
+          </linearGradient>
+
+          {/* Glass pan gradient with transparency */}
+          <linearGradient id="indhGlassPan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.5" />
+          </linearGradient>
+
+          {/* Copper cookware gradient */}
+          <linearGradient id="indhCopperPan" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fb923c" />
+            <stop offset="25%" stopColor="#f97316" />
+            <stop offset="50%" stopColor="#ea580c" />
+            <stop offset="75%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#c2410c" />
+          </linearGradient>
+
+          {/* === TEMPERATURE GRADIENTS FOR HEATED OBJECT === */}
+
+          {/* Cool temperature (room temp) */}
+          <linearGradient id="indhTempCool" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+
+          {/* Warm temperature (50-150C) */}
+          <linearGradient id="indhTempWarm" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#92400e" />
+            <stop offset="40%" stopColor="#b45309" />
+            <stop offset="70%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
+
+          {/* Medium temperature (150-300C) */}
+          <linearGradient id="indhTempMedium" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#9a3412" />
+            <stop offset="30%" stopColor="#c2410c" />
+            <stop offset="60%" stopColor="#ea580c" />
+            <stop offset="85%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#fb923c" />
+          </linearGradient>
+
+          {/* Hot temperature (300C+) */}
+          <linearGradient id="indhTempHot" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#7f1d1d" />
+            <stop offset="25%" stopColor="#991b1b" />
+            <stop offset="50%" stopColor="#dc2626" />
+            <stop offset="75%" stopColor="#ef4444" />
+            <stop offset="90%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#fca5a5" />
+          </linearGradient>
+
+          {/* === RADIAL GRADIENTS FOR GLOW EFFECTS === */}
+
+          {/* Coil heat glow */}
+          <radialGradient id="indhCoilGlow" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#ea580c" stopOpacity="0.4" />
+            <stop offset="70%" stopColor="#c2410c" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#9a3412" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Magnetic field glow */}
+          <radialGradient id="indhFieldGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#2563eb" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Eddy current glow */}
+          <radialGradient id="indhEddyGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#ea580c" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#dc2626" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Pan interior shadow */}
+          <radialGradient id="indhPanInterior" cx="50%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#1e293b" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+          </radialGradient>
+
+          {/* Handle wood grain gradient */}
+          <linearGradient id="indhHandleWood" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#292524" />
+            <stop offset="25%" stopColor="#44403c" />
+            <stop offset="50%" stopColor="#292524" />
+            <stop offset="75%" stopColor="#44403c" />
+            <stop offset="100%" stopColor="#1c1917" />
+          </linearGradient>
+
+          {/* === GLOW FILTERS === */}
+
+          {/* Coil glow filter */}
+          <filter id="indhCoilBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Eddy current glow filter */}
+          <filter id="indhEddyBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Magnetic field glow filter */}
+          <filter id="indhFieldBlur" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Temperature glow filter */}
+          <filter id="indhTempGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Control panel LED glow */}
+          <filter id="indhLedGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
+
+          {/* Arrow marker for field lines */}
+          <marker id="indhArrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#3b82f6" />
+          </marker>
+
+          {/* Grid pattern for lab background */}
+          <pattern id="indhLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+        </defs>
+
+        {/* === BACKGROUND === */}
+        <rect width="500" height="340" fill="url(#indhLabBg)" />
+        <rect width="500" height="340" fill="url(#indhLabGrid)" />
+
+        {/* === COOKTOP UNIT === */}
+        <g transform="translate(50, 180)">
+          {/* Main cooktop body */}
+          <rect x="0" y="0" width="400" height="60" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
+
+          {/* Ceramic surface */}
+          <rect x="5" y="5" width="390" height="25" rx="4" fill="url(#indhCeramicSurface)" />
+
+          {/* Cooking zone ring (visual indicator) */}
+          <ellipse cx="200" cy="17" rx="85" ry="12" fill="none" stroke={heating ? '#f97316' : '#374151'} strokeWidth="2" strokeDasharray="4,2" opacity={heating ? 0.8 : 0.3} />
         </g>
 
-        {/* Magnetic field arrows (oscillating) */}
+        {/* === INDUCTION COIL (under ceramic surface) === */}
+        <g transform="translate(250, 195)">
+          {/* Coil glow background when heating */}
+          {heating && (
+            <ellipse cx="0" cy="0" rx="90" ry="18" fill="url(#indhCoilGlow)" opacity={0.6 + Math.sin(animPhase) * 0.2} />
+          )}
+
+          {/* Copper coil windings */}
+          {[...Array(6)].map((_, i) => {
+            const radius = 20 + i * 14;
+            const yRadius = 4 + i * 2.5;
+            const isActive = heating;
+            const pulseOpacity = isActive ? 0.7 + Math.sin(animPhase + i * 0.5) * 0.3 : 0.4;
+
+            return (
+              <ellipse
+                key={i}
+                cx="0"
+                cy="0"
+                rx={radius}
+                ry={yRadius}
+                fill="none"
+                stroke={isActive ? 'url(#indhCopperCoil)' : '#78350f'}
+                strokeWidth={isActive ? 4 : 3}
+                opacity={pulseOpacity}
+                filter={isActive ? 'url(#indhCoilBlur)' : undefined}
+              />
+            );
+          })}
+
+          {/* Center connection point */}
+          <circle cx="0" cy="0" r="8" fill="#292524" stroke="#c2410c" strokeWidth="2" />
+        </g>
+
+        {/* === OSCILLATING MAGNETIC FIELD VISUALIZATION === */}
         {heating && (
-          <g>
-            {[-1, 1].map(side => (
-              <g key={side} transform={`translate(${200 + side * 80}, 160)`}>
-                <path
-                  d={`M 0 30 L 0 ${30 - Math.sin(phase) * 20}`}
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                  markerEnd="url(#arrowhead)"
-                />
-                <text y="50" textAnchor="middle" className="fill-blue-400 text-xs">B</text>
-              </g>
-            ))}
+          <g transform="translate(250, 140)">
+            {/* Field lines going up */}
+            {[-60, -30, 0, 30, 60].map((xOffset, i) => {
+              const phaseOffset = i * 0.4;
+              const amplitude = 25 + Math.sin(animPhase + phaseOffset) * 15;
+              const opacity = 0.4 + Math.sin(animPhase + phaseOffset) * 0.3;
+
+              return (
+                <g key={i} filter="url(#indhFieldBlur)">
+                  <path
+                    d={`M ${xOffset} 50 Q ${xOffset + Math.sin(animPhase + phaseOffset) * 8} ${50 - amplitude / 2} ${xOffset} ${50 - amplitude}`}
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    opacity={opacity}
+                    markerEnd="url(#indhArrow)"
+                  />
+                </g>
+              );
+            })}
+
+            {/* "B" field label */}
+            <text x="90" y="25" className="text-xs fill-blue-400 font-bold" style={{ fontSize: '11px' }}>
+              B(t)
+            </text>
+            <text x="90" y="38" className="text-[9px] fill-blue-300" style={{ fontSize: '9px' }}>
+              oscillating
+            </text>
           </g>
         )}
 
-        {/* Pan */}
-        <g>
+        {/* === PAN WITH TEMPERATURE GRADIENT === */}
+        <g transform="translate(250, 130)">
+          {/* Pan shadow */}
+          <ellipse cx="3" cy="48" rx="85" ry="18" fill="#000000" opacity="0.3" />
+
+          {/* Pan bottom (shows temperature) */}
+          <ellipse
+            cx="0"
+            cy="45"
+            rx="82"
+            ry="16"
+            fill={`url(#${getTempGradientId()})`}
+            filter={temp > 100 ? 'url(#indhTempGlow)' : undefined}
+          />
+
           {/* Pan body */}
-          <ellipse cx="200" cy="175" rx="80" ry="15" fill={tempColor} />
-          <rect x="120" y="100" width="160" height="75" fill={props.color} />
-          <ellipse cx="200" cy="100" rx="80" ry="20" fill={props.color} />
-          <ellipse cx="200" cy="100" rx="70" ry="15" fill="#111827" />
+          <ellipse cx="0" cy="-30" rx="82" ry="22" fill={
+            material === 'steel' ? 'url(#indhSteelPan)' :
+            material === 'aluminum' ? 'url(#indhAluminumPan)' :
+            material === 'glass' ? 'url(#indhGlassPan)' :
+            'url(#indhCopperPan)'
+          } />
+
+          {/* Pan sides */}
+          <path
+            d={`M -82 -30 L -82 45 A 82 16 0 0 0 82 45 L 82 -30`}
+            fill={
+              material === 'steel' ? 'url(#indhSteelPan)' :
+              material === 'aluminum' ? 'url(#indhAluminumPan)' :
+              material === 'glass' ? 'url(#indhGlassPan)' :
+              'url(#indhCopperPan)'
+            }
+            stroke={material === 'glass' ? '#60a5fa' : '#374151'}
+            strokeWidth="1"
+          />
+
+          {/* Pan interior */}
+          <ellipse cx="0" cy="-30" rx="72" ry="17" fill="url(#indhPanInterior)" />
+
+          {/* Pan rim highlight */}
+          <ellipse cx="0" cy="-30" rx="82" ry="22" fill="none" stroke={material === 'glass' ? '#93c5fd' : '#9ca3af'} strokeWidth="1" opacity="0.5" />
 
           {/* Handle */}
-          <rect x="280" y="125" width="60" height="15" rx="4" fill="#1f2937" />
+          <g transform="translate(82, 0)">
+            <rect x="0" y="-10" width="65" height="20" rx="4" fill="url(#indhHandleWood)" stroke="#44403c" strokeWidth="1" />
+            {/* Handle rivets */}
+            <circle cx="15" cy="0" r="3" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+            <circle cx="50" cy="0" r="3" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+          </g>
 
-          {/* Eddy currents in pan (when conducting) */}
+          {/* === EDDY CURRENT VISUALIZATION === */}
           {hasEddyCurrents && (
-            <g className="animate-pulse">
-              {[...Array(3)].map((_, i) => (
-                <ellipse
-                  key={i}
-                  cx="200"
-                  cy={170 - i * 20}
-                  rx={60 - i * 10}
-                  ry={10 - i * 2}
-                  fill="none"
-                  stroke={temp > 100 ? '#ef4444' : '#f97316'}
-                  strokeWidth="2"
-                  strokeDasharray="8,4"
-                  opacity={0.6 - i * 0.15}
-                  style={{ transform: `rotate(${Math.sin(phase) * 5}deg)`, transformOrigin: '200px 150px' }}
-                />
-              ))}
+            <g filter="url(#indhEddyBlur)">
+              {/* Multiple swirling eddy current loops */}
+              {[0, 1, 2, 3].map((ring) => {
+                const baseRadius = 55 - ring * 12;
+                const yRadius = 12 - ring * 2.5;
+                const rotationOffset = (animPhase * (ring % 2 === 0 ? 1 : -1) * 2) % 360;
+                const dashOffset = animPhase * 30 * (ring % 2 === 0 ? 1 : -1);
+                const opacity = 0.8 - ring * 0.15;
+                const strokeColor = temp > 200 ? '#ef4444' : temp > 100 ? '#f97316' : '#fbbf24';
+
+                return (
+                  <g key={ring} style={{ transform: `rotate(${rotationOffset}deg)`, transformOrigin: '0px 5px' }}>
+                    <ellipse
+                      cx="0"
+                      cy={5 + ring * 8}
+                      rx={baseRadius}
+                      ry={yRadius}
+                      fill="none"
+                      stroke={strokeColor}
+                      strokeWidth={3 - ring * 0.4}
+                      strokeDasharray="12,6,4,6"
+                      strokeDashoffset={dashOffset}
+                      opacity={opacity}
+                    />
+                    {/* Arrow indicators showing current direction */}
+                    {ring === 0 && (
+                      <>
+                        <circle cx={baseRadius - 5} cy={5} r="3" fill={strokeColor} opacity={0.9}>
+                          <animate attributeName="opacity" values="0.5;1;0.5" dur="0.3s" repeatCount="indefinite" />
+                        </circle>
+                        <circle cx={-baseRadius + 5} cy={5} r="3" fill={strokeColor} opacity={0.9}>
+                          <animate attributeName="opacity" values="1;0.5;1" dur="0.3s" repeatCount="indefinite" />
+                        </circle>
+                      </>
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* I²R heating indicator */}
+              <text x="0" y="-5" textAnchor="middle" className="fill-orange-300 font-bold" style={{ fontSize: '10px' }}>
+                I²R
+              </text>
             </g>
           )}
 
           {/* No heating indicator for glass */}
           {material === 'glass' && heating && (
-            <text x="200" y="140" textAnchor="middle" className="fill-blue-300 text-sm font-bold">
-              No currents!
-            </text>
+            <g>
+              <rect x="-50" y="-10" width="100" height="24" rx="4" fill="#1e3a5f" opacity="0.9" />
+              <text x="0" y="5" textAnchor="middle" className="fill-blue-300 font-bold" style={{ fontSize: '11px' }}>
+                No eddy currents!
+              </text>
+              <text x="0" y="18" textAnchor="middle" className="fill-blue-400" style={{ fontSize: '8px' }}>
+                (insulator)
+              </text>
+            </g>
           )}
         </g>
 
-        {/* Temperature display */}
-        <rect x="20" y="20" width="100" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="70" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Pan Temp</text>
-        <text x="70" y="60" textAnchor="middle" className={`text-lg font-bold ${
-          temp > 100 ? 'fill-red-400' : 'fill-gray-300'
-        }`}>
-          {temp.toFixed(0)}°C
-        </text>
+        {/* === TEMPERATURE DISPLAY === */}
+        <g transform="translate(30, 25)">
+          <rect x="0" y="0" width="90" height="55" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
+          <rect x="4" y="4" width="82" height="47" rx="6" fill="#0f172a" />
+          <text x="45" y="18" textAnchor="middle" className="fill-slate-400" style={{ fontSize: '10px' }}>PAN TEMP</text>
+          <text
+            x="45"
+            y="42"
+            textAnchor="middle"
+            className={`font-bold ${temp > 200 ? 'fill-red-400' : temp > 100 ? 'fill-orange-400' : temp > 50 ? 'fill-amber-400' : 'fill-slate-300'}`}
+            style={{ fontSize: '18px' }}
+          >
+            {temp.toFixed(0)}°C
+          </text>
+        </g>
 
-        {/* Material label */}
-        <rect x="280" y="20" width="100" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="330" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Material</text>
-        <text x="330" y="60" textAnchor="middle" className="fill-white text-sm font-bold capitalize">
-          {material}
-        </text>
+        {/* === MATERIAL DISPLAY === */}
+        <g transform="translate(380, 25)">
+          <rect x="0" y="0" width="90" height="55" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
+          <rect x="4" y="4" width="82" height="47" rx="6" fill="#0f172a" />
+          <text x="45" y="18" textAnchor="middle" className="fill-slate-400" style={{ fontSize: '10px' }}>MATERIAL</text>
+          <text x="45" y="42" textAnchor="middle" className="fill-white font-bold" style={{ fontSize: '14px', textTransform: 'capitalize' }}>
+            {material}
+          </text>
+        </g>
 
-        {/* Power indicator */}
-        <rect x="150" y="230" width="100" height="40" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="200" y="250" textAnchor="middle" className="fill-gray-400 text-xs">Induction</text>
-        <text x="200" y="265" textAnchor="middle" className={`text-sm font-bold ${
-          heating ? 'fill-orange-400' : 'fill-gray-500'
-        }`}>
-          {heating ? 'ON' : 'OFF'}
+        {/* === POWER STATUS === */}
+        <g transform="translate(175, 265)">
+          <rect x="0" y="0" width="150" height="50" rx="8" fill="#111827" stroke="#374151" strokeWidth="2" />
+          <rect x="4" y="4" width="142" height="42" rx="6" fill="#0f172a" />
+
+          {/* LED indicator */}
+          <circle cx="25" cy="25" r="8" fill={heating ? '#22c55e' : '#374151'} filter={heating ? 'url(#indhLedGlow)' : undefined}>
+            {heating && <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />}
+          </circle>
+          <circle cx="25" cy="25" r="5" fill={heating ? '#4ade80' : '#4b5563'} />
+
+          <text x="85" y="20" textAnchor="middle" className="fill-slate-400" style={{ fontSize: '10px' }}>INDUCTION</text>
+          <text
+            x="85"
+            y="36"
+            textAnchor="middle"
+            className={`font-bold ${heating ? 'fill-orange-400' : 'fill-slate-500'}`}
+            style={{ fontSize: '14px' }}
+          >
+            {heating ? 'ACTIVE' : 'STANDBY'}
+          </text>
+        </g>
+
+        {/* === LABELS === */}
+        <text x="250" y="310" textAnchor="middle" className="fill-slate-500" style={{ fontSize: '10px' }}>
+          INDUCTION COOKTOP SIMULATION
         </text>
       </svg>
     );
   };
 
   const renderEddyCurrentDiagram = () => (
-    <svg viewBox="0 0 300 150" className="w-full h-32">
-      <rect width="300" height="150" fill="#111827" />
+    <svg viewBox="0 0 400 180" className="w-full h-40">
+      <defs>
+        {/* Background gradient */}
+        <linearGradient id="indhDiagBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#030712" />
+          <stop offset="50%" stopColor="#0f172a" />
+          <stop offset="100%" stopColor="#030712" />
+        </linearGradient>
+
+        {/* Metal conductor gradient */}
+        <linearGradient id="indhDiagMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#9ca3af" />
+          <stop offset="25%" stopColor="#6b7280" />
+          <stop offset="50%" stopColor="#9ca3af" />
+          <stop offset="75%" stopColor="#4b5563" />
+          <stop offset="100%" stopColor="#6b7280" />
+        </linearGradient>
+
+        {/* Magnetic field glow */}
+        <radialGradient id="indhDiagFieldGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Eddy current glow */}
+        <radialGradient id="indhDiagEddyGlow" cx="50%" cy="50%" r="60%">
+          <stop offset="0%" stopColor="#f97316" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Glow filters */}
+        <filter id="indhDiagBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        {/* Arrow marker */}
+        <marker id="indhDiagArrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 L3,5 Z" fill="#fbbf24" />
+        </marker>
+
+        <marker id="indhDiagArrowBlue" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#3b82f6" />
+        </marker>
+      </defs>
+
+      <rect width="400" height="180" fill="url(#indhDiagBg)" />
 
       {/* Changing B field */}
-      <g transform="translate(60, 75)">
-        <text x="0" y="-50" textAnchor="middle" className="fill-gray-400 text-xs">Changing B field</text>
-        <circle r="30" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4,4" />
-        <path d="M 0 -20 L 0 20" stroke="#3b82f6" strokeWidth="3" markerEnd="url(#arrowhead)" />
-        <text x="0" y="50" textAnchor="middle" className="fill-blue-400 text-xs">↕ B(t)</text>
+      <g transform="translate(80, 90)">
+        <text x="0" y="-60" textAnchor="middle" className="fill-slate-300 font-semibold" style={{ fontSize: '11px' }}>Changing B Field</text>
+
+        {/* Field glow */}
+        <circle r="45" fill="url(#indhDiagFieldGlow)" />
+
+        {/* Field lines circle */}
+        <circle r="38" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray="6,4" filter="url(#indhDiagBlur)">
+          <animate attributeName="stroke-dashoffset" values="0;20" dur="1s" repeatCount="indefinite" />
+        </circle>
+
+        {/* Oscillating arrow */}
+        <path d="M 0 -25 L 0 25" stroke="#60a5fa" strokeWidth="4" markerEnd="url(#indhDiagArrowBlue)" filter="url(#indhDiagBlur)">
+          <animate attributeName="d" values="M 0 -25 L 0 25;M 0 25 L 0 -25;M 0 -25 L 0 25" dur="0.8s" repeatCount="indefinite" />
+        </path>
+
+        <text x="0" y="58" textAnchor="middle" className="fill-blue-400 font-bold" style={{ fontSize: '12px' }}>B(t)</text>
       </g>
 
-      {/* Arrow */}
-      <path d="M 100 75 L 130 75" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#arrowhead)" />
-      <text x="115" y="90" textAnchor="middle" className="fill-yellow-400 text-xs">induces</text>
+      {/* Induces arrow */}
+      <g transform="translate(145, 90)">
+        <path d="M 0 0 L 50 0" stroke="#fbbf24" strokeWidth="3" markerEnd="url(#indhDiagArrow)" />
+        <text x="25" y="20" textAnchor="middle" className="fill-amber-400 font-semibold" style={{ fontSize: '10px' }}>induces</text>
+      </g>
 
       {/* Eddy currents in conductor */}
-      <g transform="translate(190, 75)">
-        <text x="0" y="-50" textAnchor="middle" className="fill-gray-400 text-xs">Metal conductor</text>
-        <rect x="-40" y="-30" width="80" height="60" rx="4" fill="#6b7280" />
-        {/* Swirling currents */}
-        <ellipse cx="0" cy="0" rx="25" ry="15" fill="none" stroke="#f97316" strokeWidth="2" strokeDasharray="4,4" />
-        <ellipse cx="0" cy="0" rx="15" ry="8" fill="none" stroke="#ef4444" strokeWidth="2" />
-        <text x="0" y="50" textAnchor="middle" className="fill-orange-400 text-xs">Eddy currents → I²R heat</text>
+      <g transform="translate(280, 90)">
+        <text x="0" y="-60" textAnchor="middle" className="fill-slate-300 font-semibold" style={{ fontSize: '11px' }}>Metal Conductor</text>
+
+        {/* Metal block */}
+        <rect x="-55" y="-40" width="110" height="80" rx="6" fill="url(#indhDiagMetal)" stroke="#4b5563" strokeWidth="1" />
+
+        {/* Eddy glow */}
+        <ellipse cx="0" cy="0" rx="40" ry="25" fill="url(#indhDiagEddyGlow)" />
+
+        {/* Swirling currents - animated */}
+        <ellipse cx="0" cy="0" rx="35" ry="20" fill="none" stroke="#f97316" strokeWidth="2.5" strokeDasharray="8,4" filter="url(#indhDiagBlur)">
+          <animate attributeName="stroke-dashoffset" values="0;24" dur="0.5s" repeatCount="indefinite" />
+        </ellipse>
+        <ellipse cx="0" cy="0" rx="22" ry="12" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="6,3" filter="url(#indhDiagBlur)">
+          <animate attributeName="stroke-dashoffset" values="18;0" dur="0.5s" repeatCount="indefinite" />
+        </ellipse>
+        <ellipse cx="0" cy="0" rx="10" ry="5" fill="none" stroke="#fbbf24" strokeWidth="1.5">
+          <animate attributeName="stroke-dashoffset" values="0;12" dur="0.4s" repeatCount="indefinite" />
+        </ellipse>
+
+        {/* I²R label */}
+        <text x="0" y="3" textAnchor="middle" className="fill-white font-bold" style={{ fontSize: '10px' }}>I²R</text>
+
+        <text x="0" y="58" textAnchor="middle" className="fill-orange-400 font-bold" style={{ fontSize: '11px' }}>Eddy Currents</text>
+        <text x="0" y="72" textAnchor="middle" className="fill-orange-300" style={{ fontSize: '9px' }}>generate heat</text>
       </g>
     </svg>
   );

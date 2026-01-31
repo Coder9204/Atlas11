@@ -474,11 +474,11 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
   };
 
   const renderVisualization = (interactive: boolean, showProfiling: boolean = false) => {
-    const width = 450;
-    const height = 380;
+    const width = 700;
+    const height = 420;
     const metrics = calculateMetrics();
-    const barWidth = 60;
-    const maxBarHeight = 200;
+    const barWidth = 70;
+    const maxBarHeight = 180;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -487,82 +487,437 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '720px' }}
         >
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Benchmark Dashboard
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="vharLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Metallic panel gradient for status panel */}
+            <linearGradient id="vharPanelMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="20%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Baseline bar gradient - cool blue */}
+            <linearGradient id="vharBaselineBar" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Verified/measured bar gradient - success green */}
+            <linearGradient id="vharVerifiedBar" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="75%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#166534" />
+            </linearGradient>
+
+            {/* Unverified/claimed bar gradient - warning amber */}
+            <linearGradient id="vharUnverifiedBar" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Flamegraph hotspot gradient - red hot */}
+            <linearGradient id="vharFlameHot" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="75%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Flamegraph warm gradient - orange */}
+            <linearGradient id="vharFlameWarm" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c2410c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+
+            {/* Flamegraph cool gradient - green */}
+            <linearGradient id="vharFlameCool" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#15803d" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Test flow data gradient */}
+            <linearGradient id="vharDataFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="20%" stopColor="#22d3ee" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="80%" stopColor="#22d3ee" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Status indicator radial gradients */}
+            <radialGradient id="vharStatusSuccess" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="vharStatusError" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="vharStatusWarning" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="vharStatusMuted" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#64748b" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Reliable badge glow effect */}
+            <radialGradient id="vharReliableGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#16a34a" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="vharUnreliableGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#dc2626" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filters using feGaussianBlur + feMerge pattern */}
+            <filter id="vharGlowSuccess" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="vharGlowError" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="vharGlowWarning" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="vharGlowCyan" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="vharBarShadow" x="-20%" y="-10%" width="140%" height="130%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            <filter id="vharPanelShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="3" dy="3" stdDeviation="5" floodColor="#000000" floodOpacity="0.6" />
+            </filter>
+
+            {/* Grid pattern for lab background */}
+            <pattern id="vharLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Animated data pulse */}
+            <linearGradient id="vharPulse" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0">
+                <animate attributeName="offset" values="0;1" dur="2s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="10%" stopColor="#22d3ee" stopOpacity="0.8">
+                <animate attributeName="offset" values="0.1;1.1" dur="2s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="20%" stopColor="#06b6d4" stopOpacity="0">
+                <animate attributeName="offset" values="0.2;1.2" dur="2s" repeatCount="indefinite" />
+              </stop>
+            </linearGradient>
+          </defs>
+
+          {/* Background with gradient and grid */}
+          <rect width={width} height={height} fill="url(#vharLabBg)" />
+          <rect width={width} height={height} fill="url(#vharLabGrid)" />
+
+          {/* Title banner */}
+          <rect x="0" y="0" width={width} height="45" fill="rgba(15,23,42,0.9)" />
+          <text x={width/2} y="30" fill="#f8fafc" fontSize="18" fontWeight="bold" textAnchor="middle" fontFamily="system-ui, sans-serif">
+            Verification Harness Dashboard
           </text>
+          <line x1="0" y1="45" x2={width} y2="45" stroke="#334155" strokeWidth="1" />
 
-          <g transform="translate(80, 250)">
-            <rect x={-barWidth/2} y={-maxBarHeight} width={barWidth} height={maxBarHeight} fill={colors.perf.baseline} rx={4} />
-            <text x={0} y={20} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Baseline</text>
-            <text x={0} y={-maxBarHeight - 10} fill={colors.textPrimary} fontSize={12} textAnchor="middle">
-              {metrics.baselineMs}ms
-            </text>
+          {/* === TEST HARNESS DIAGRAM - Left Section === */}
+          <g transform="translate(30, 70)">
+            {/* Code Input Box */}
+            <rect x="0" y="0" width="100" height="60" rx="6" fill="url(#vharPanelMetal)" stroke="#475569" strokeWidth="1.5" filter="url(#vharPanelShadow)" />
+            <text x="50" y="18" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">INPUT</text>
+            <rect x="8" y="24" width="84" height="28" rx="3" fill="#0f172a" />
+            <text x="50" y="42" fill="#22d3ee" fontSize="10" textAnchor="middle" fontFamily="monospace">function()</text>
+
+            {/* Arrow 1: Input to Benchmark */}
+            <g transform="translate(100, 30)">
+              <line x1="0" y1="0" x2="30" y2="0" stroke="url(#vharDataFlow)" strokeWidth="3" />
+              <polygon points="30,0 22,-5 22,5" fill="#22d3ee" />
+              {hasBenchmark && (
+                <circle cx="15" cy="0" r="4" fill="#22d3ee" filter="url(#vharGlowCyan)">
+                  <animate attributeName="cx" values="5;25;5" dur="1.5s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+              )}
+            </g>
+
+            {/* Benchmark Box */}
+            <g transform="translate(130, 0)">
+              <rect x="0" y="0" width="100" height="60" rx="6" fill={hasBenchmark ? 'rgba(22,101,52,0.3)' : 'rgba(185,28,28,0.2)'} stroke={hasBenchmark ? '#22c55e' : '#dc2626'} strokeWidth="2" filter="url(#vharPanelShadow)" />
+              <text x="50" y="18" fill={hasBenchmark ? '#4ade80' : '#f87171'} fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">BENCHMARK</text>
+              <rect x="8" y="24" width="84" height="28" rx="3" fill="#0f172a" />
+              <text x="50" y="42" fill={hasBenchmark ? '#22c55e' : '#94a3b8'} fontSize="10" textAnchor="middle" fontFamily="monospace">
+                {hasBenchmark ? `${iterations} iter` : 'disabled'}
+              </text>
+              {/* Status indicator */}
+              <circle cx="90" cy="8" r="5" fill={hasBenchmark ? 'url(#vharStatusSuccess)' : 'url(#vharStatusError)'} filter={hasBenchmark ? 'url(#vharGlowSuccess)' : 'url(#vharGlowError)'} />
+            </g>
+
+            {/* Arrow 2: Benchmark to Correctness */}
+            <g transform="translate(230, 30)">
+              <line x1="0" y1="0" x2="30" y2="0" stroke="url(#vharDataFlow)" strokeWidth="3" />
+              <polygon points="30,0 22,-5 22,5" fill="#22d3ee" />
+              {hasCorrectness && (
+                <circle cx="15" cy="0" r="4" fill="#22d3ee" filter="url(#vharGlowCyan)">
+                  <animate attributeName="cx" values="5;25;5" dur="1.5s" repeatCount="indefinite" begin="0.5s" />
+                  <animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite" begin="0.5s" />
+                </circle>
+              )}
+            </g>
+
+            {/* Correctness Tests Box */}
+            <g transform="translate(260, 0)">
+              <rect x="0" y="0" width="100" height="60" rx="6" fill={hasCorrectness ? 'rgba(22,101,52,0.3)' : 'rgba(185,28,28,0.2)'} stroke={hasCorrectness ? '#22c55e' : '#dc2626'} strokeWidth="2" filter="url(#vharPanelShadow)" />
+              <text x="50" y="18" fill={hasCorrectness ? '#4ade80' : '#f87171'} fontSize="9" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">CORRECTNESS</text>
+              <rect x="8" y="24" width="84" height="28" rx="3" fill="#0f172a" />
+              <text x="50" y="42" fill={hasCorrectness ? '#22c55e' : '#94a3b8'} fontSize="10" textAnchor="middle" fontFamily="monospace">
+                {hasCorrectness ? 'tests pass' : 'disabled'}
+              </text>
+              {/* Status indicator */}
+              <circle cx="90" cy="8" r="5" fill={hasCorrectness ? 'url(#vharStatusSuccess)' : 'url(#vharStatusError)'} filter={hasCorrectness ? 'url(#vharGlowSuccess)' : 'url(#vharGlowError)'} />
+            </g>
           </g>
 
-          <g transform="translate(180, 250)">
-            <rect
-              x={-barWidth/2}
-              y={-(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight}
-              width={barWidth}
-              height={(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight}
-              fill={hasBenchmark ? colors.perf.fast : 'rgba(255,255,255,0.3)'}
-              rx={4}
-              strokeDasharray={hasBenchmark ? 'none' : '5,5'}
-              stroke={hasBenchmark ? 'none' : colors.textMuted}
-            />
-            <text x={0} y={20} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-              {hasBenchmark ? 'Measured' : 'Claimed'}
-            </text>
-            <text x={0} y={-(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight - 10} fill={hasBenchmark ? colors.success : colors.textMuted} fontSize={12} textAnchor="middle">
-              {hasBenchmark ? `${metrics.actualMs.toFixed(0)}ms` : `~${metrics.perceivedMs.toFixed(0)}ms?`}
-            </text>
+          {/* === PERFORMANCE BARS - Center Section === */}
+          <g transform="translate(100, 280)">
+            {/* Baseline Bar */}
+            <g transform="translate(0, 0)">
+              <rect x={-barWidth/2} y={-maxBarHeight} width={barWidth} height={maxBarHeight} rx="6" fill="url(#vharBaselineBar)" filter="url(#vharBarShadow)" />
+              {/* Bar highlight */}
+              <rect x={-barWidth/2 + 4} y={-maxBarHeight + 4} width="8" height={maxBarHeight - 8} rx="3" fill="rgba(255,255,255,0.15)" />
+              <text x="0" y="20" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">Baseline</text>
+              <text x="0" y={-maxBarHeight - 12} fill="#60a5fa" fontSize="14" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {metrics.baselineMs}ms
+              </text>
+            </g>
+
+            {/* Measured/Claimed Bar */}
+            <g transform="translate(120, 0)">
+              <rect
+                x={-barWidth/2}
+                y={-(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight}
+                width={barWidth}
+                height={(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight}
+                rx="6"
+                fill={hasBenchmark ? 'url(#vharVerifiedBar)' : 'url(#vharUnverifiedBar)'}
+                filter="url(#vharBarShadow)"
+                strokeDasharray={hasBenchmark ? 'none' : '8,4'}
+                stroke={hasBenchmark ? 'none' : '#fbbf24'}
+                strokeWidth="2"
+              />
+              {/* Bar highlight when verified */}
+              {hasBenchmark && (
+                <rect x={-barWidth/2 + 4} y={-(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight + 4} width="8" height={(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight - 8} rx="3" fill="rgba(255,255,255,0.15)" />
+              )}
+              <text x="0" y="20" fill="#94a3b8" fontSize="11" textAnchor="middle" fontWeight="600" fontFamily="system-ui, sans-serif">
+                {hasBenchmark ? 'Measured' : 'Claimed'}
+              </text>
+              <text
+                x="0"
+                y={-(metrics.perceivedMs / metrics.baselineMs) * maxBarHeight - 12}
+                fill={hasBenchmark ? '#4ade80' : '#fbbf24'}
+                fontSize="14"
+                textAnchor="middle"
+                fontWeight="bold"
+                fontFamily="system-ui, sans-serif"
+                filter={hasBenchmark ? 'url(#vharGlowSuccess)' : 'url(#vharGlowWarning)'}
+              >
+                {hasBenchmark ? `${metrics.actualMs.toFixed(0)}ms` : `~${metrics.perceivedMs.toFixed(0)}ms?`}
+              </text>
+            </g>
+
+            {/* Speedup indicator */}
+            <g transform="translate(60, -maxBarHeight - 40)">
+              <rect x="-55" y="-12" width="110" height="24" rx="12" fill={hasBenchmark ? 'rgba(22,163,74,0.2)' : 'rgba(245,158,11,0.2)'} stroke={hasBenchmark ? '#22c55e' : '#f59e0b'} strokeWidth="1" />
+              <text x="0" y="4" fill={hasBenchmark ? '#4ade80' : '#fcd34d'} fontSize="11" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {hasBenchmark ? `Verified ${metrics.actualSpeedup}%` : `Claimed ${metrics.perceivedSpeedup}%`} faster
+              </text>
+            </g>
           </g>
 
-          <g transform="translate(300, 70)">
-            <rect x={0} y={0} width={130} height={170} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={65} y={25} fill={colors.textSecondary} fontSize={11} textAnchor="middle">STATUS</text>
-            <circle cx={20} cy={50} r={8} fill={hasBenchmark ? colors.success : colors.error} />
-            <text x={35} y={54} fill={colors.textPrimary} fontSize={10}>Benchmark</text>
-            <circle cx={20} cy={80} r={8} fill={hasCorrectness ? colors.success : colors.error} />
-            <text x={35} y={84} fill={colors.textPrimary} fontSize={10}>Correctness</text>
-            <circle cx={20} cy={110} r={8} fill={showProfiling && showFlamegraph ? colors.success : colors.textMuted} />
-            <text x={35} y={114} fill={colors.textPrimary} fontSize={10}>Profiling</text>
-            <rect x={10} y={130} width={110} height={30} fill={metrics.reliable ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'} rx={4} />
-            <text x={65} y={150} fill={metrics.reliable ? colors.success : colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
-              {metrics.reliable ? 'RELIABLE' : 'UNVERIFIED'}
-            </text>
+          {/* === STATUS PANEL - Right Section === */}
+          <g transform="translate(width - 200, 60)">
+            <rect x="0" y="0" width="180" height="220" rx="10" fill="url(#vharPanelMetal)" stroke="#475569" strokeWidth="1.5" filter="url(#vharPanelShadow)" />
+
+            {/* Panel header */}
+            <rect x="0" y="0" width="180" height="35" rx="10" fill="rgba(15,23,42,0.8)" />
+            <rect x="0" y="25" width="180" height="10" fill="rgba(15,23,42,0.8)" />
+            <text x="90" y="24" fill="#f8fafc" fontSize="12" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">VERIFICATION STATUS</text>
+            <line x1="10" y1="35" x2="170" y2="35" stroke="#334155" strokeWidth="1" />
+
+            {/* Benchmark status */}
+            <g transform="translate(20, 55)">
+              <circle cx="0" cy="0" r="10" fill={hasBenchmark ? 'url(#vharStatusSuccess)' : 'url(#vharStatusError)'} filter={hasBenchmark ? 'url(#vharGlowSuccess)' : 'url(#vharGlowError)'} />
+              <text x="20" y="4" fill="#f8fafc" fontSize="12" fontFamily="system-ui, sans-serif">Benchmark</text>
+              <text x="145" y="4" fill={hasBenchmark ? '#4ade80' : '#f87171'} fontSize="11" textAnchor="end" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {hasBenchmark ? 'ON' : 'OFF'}
+              </text>
+            </g>
+
+            {/* Correctness status */}
+            <g transform="translate(20, 90)">
+              <circle cx="0" cy="0" r="10" fill={hasCorrectness ? 'url(#vharStatusSuccess)' : 'url(#vharStatusError)'} filter={hasCorrectness ? 'url(#vharGlowSuccess)' : 'url(#vharGlowError)'} />
+              <text x="20" y="4" fill="#f8fafc" fontSize="12" fontFamily="system-ui, sans-serif">Correctness</text>
+              <text x="145" y="4" fill={hasCorrectness ? '#4ade80' : '#f87171'} fontSize="11" textAnchor="end" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {hasCorrectness ? 'ON' : 'OFF'}
+              </text>
+            </g>
+
+            {/* Profiling status */}
+            <g transform="translate(20, 125)">
+              <circle cx="0" cy="0" r="10" fill={showProfiling && showFlamegraph ? 'url(#vharStatusSuccess)' : 'url(#vharStatusMuted)'} filter={showProfiling && showFlamegraph ? 'url(#vharGlowSuccess)' : undefined} />
+              <text x="20" y="4" fill="#f8fafc" fontSize="12" fontFamily="system-ui, sans-serif">Profiling</text>
+              <text x="145" y="4" fill={showProfiling && showFlamegraph ? '#4ade80' : '#64748b'} fontSize="11" textAnchor="end" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                {showProfiling && showFlamegraph ? 'ON' : 'OFF'}
+              </text>
+            </g>
+
+            {/* Divider */}
+            <line x1="10" y1="150" x2="170" y2="150" stroke="#334155" strokeWidth="1" />
+
+            {/* Reliability badge */}
+            <g transform="translate(90, 185)">
+              <ellipse cx="0" cy="0" rx="70" ry="25" fill={metrics.reliable ? 'url(#vharReliableGlow)' : 'url(#vharUnreliableGlow)'} />
+              <rect x="-60" y="-18" width="120" height="36" rx="18" fill={metrics.reliable ? 'rgba(22,163,74,0.3)' : 'rgba(220,38,38,0.3)'} stroke={metrics.reliable ? '#22c55e' : '#dc2626'} strokeWidth="2" />
+              <text x="0" y="6" fill={metrics.reliable ? '#4ade80' : '#f87171'} fontSize="14" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif" filter={metrics.reliable ? 'url(#vharGlowSuccess)' : 'url(#vharGlowError)'}>
+                {metrics.reliable ? 'RELIABLE' : 'UNVERIFIED'}
+              </text>
+            </g>
           </g>
 
-          <g transform="translate(80, 300)">
-            <text x={50} y={0} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-              Claimed: {metrics.perceivedSpeedup}% faster
-            </text>
-            <text x={50} y={20} fill={hasBenchmark ? colors.success : colors.warning} fontSize={11} textAnchor="middle">
-              {hasBenchmark ? `Verified: ${metrics.actualSpeedup}% faster` : 'Unverified!'}
-            </text>
-          </g>
+          {/* === FLAMEGRAPH VISUALIZATION === */}
+          {showProfiling && showFlamegraph && (
+            <g transform="translate(30, 310)">
+              <rect x="0" y="0" width="300" height="95" rx="8" fill="rgba(15,23,42,0.9)" stroke="#334155" strokeWidth="1" filter="url(#vharPanelShadow)" />
+              <text x="150" y="20" fill="#f8fafc" fontSize="11" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">FLAMEGRAPH PROFILING</text>
 
+              {/* Flamegraph bars - stacked visualization */}
+              <g transform="translate(10, 30)">
+                {/* Base layer - main() */}
+                <rect x="0" y="0" width="280" height="18" rx="3" fill="url(#vharFlameCool)" />
+                <text x="140" y="13" fill="white" fontSize="9" textAnchor="middle" fontFamily="monospace">main()</text>
+
+                {/* Second layer */}
+                <rect x="10" y="20" width="180" height="18" rx="3" fill="url(#vharFlameWarm)" />
+                <text x="100" y="33" fill="white" fontSize="9" textAnchor="middle" fontFamily="monospace">processData()</text>
+                <rect x="195" y="20" width="75" height="18" rx="3" fill="url(#vharFlameCool)" />
+                <text x="232" y="33" fill="white" fontSize="9" textAnchor="middle" fontFamily="monospace">io()</text>
+
+                {/* Hotspot layer - the bottleneck */}
+                <rect x="20" y="40" width="140" height="18" rx="3" fill="url(#vharFlameHot)">
+                  <animate attributeName="opacity" values="0.8;1;0.8" dur="1s" repeatCount="indefinite" />
+                </rect>
+                <text x="90" y="53" fill="white" fontSize="9" textAnchor="middle" fontWeight="bold" fontFamily="monospace">hotspot() - 70%</text>
+              </g>
+
+              {/* Legend */}
+              <g transform="translate(10, 75)">
+                <rect x="0" y="0" width="12" height="12" rx="2" fill="url(#vharFlameHot)" />
+                <text x="16" y="10" fill="#94a3b8" fontSize="8" fontFamily="system-ui, sans-serif">Hot (optimize)</text>
+                <rect x="90" y="0" width="12" height="12" rx="2" fill="url(#vharFlameWarm)" />
+                <text x="106" y="10" fill="#94a3b8" fontSize="8" fontFamily="system-ui, sans-serif">Warm</text>
+                <rect x="160" y="0" width="12" height="12" rx="2" fill="url(#vharFlameCool)" />
+                <text x="176" y="10" fill="#94a3b8" fontSize="8" fontFamily="system-ui, sans-serif">Cool</text>
+              </g>
+            </g>
+          )}
+
+          {/* === RISK WARNING === */}
           {!hasCorrectness && (
-            <g transform={`translate(${width/2}, 340)`}>
-              <rect x={-100} y={-15} width={200} height={30} fill="rgba(239, 68, 68, 0.3)" rx={4} />
-              <text x={0} y={5} fill={colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
+            <g transform={`translate(${width/2}, ${height - 30})`}>
+              <rect x="-140" y="-18" width="280" height="36" rx="18" fill="rgba(185,28,28,0.3)" stroke="#dc2626" strokeWidth="2">
+                <animate attributeName="stroke-opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+              </rect>
+              <circle cx="-115" cy="0" r="8" fill="url(#vharStatusError)" filter="url(#vharGlowError)">
+                <animate attributeName="r" values="6;9;6" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <text x="0" y="5" fill="#f87171" fontSize="12" textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
                 RISK: {metrics.correctnessRisk}% chance of wrong results
               </text>
             </g>
           )}
 
-          {showProfiling && showFlamegraph && (
-            <g transform="translate(80, 280)">
-              <rect x={0} y={0} width={180} height={40} fill="rgba(0,0,0,0.4)" rx={4} />
-              <text x={90} y={15} fill={colors.textSecondary} fontSize={9} textAnchor="middle">FLAMEGRAPH SUMMARY</text>
-              <rect x={5} y={22} width={80} height={12} fill={colors.error} rx={2} />
-              <rect x={88} y={22} width={50} height={12} fill={colors.warning} rx={2} />
-              <rect x={141} y={22} width={34} height={12} fill={colors.success} rx={2} />
-              <text x={45} y={32} fill="white" fontSize={8} textAnchor="middle">hotspot()</text>
-            </g>
-          )}
+          {/* === PASS/FAIL INDICATORS - Summary Footer === */}
+          <g transform={`translate(${width/2}, ${height - 30})`}>
+            {hasCorrectness && (
+              <>
+                {metrics.reliable ? (
+                  <g>
+                    <circle cx="-80" cy="0" r="6" fill="#22c55e" filter="url(#vharGlowSuccess)">
+                      <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <text x="-65" y="4" fill="#4ade80" fontSize="10" fontFamily="system-ui, sans-serif">All checks passing</text>
+                  </g>
+                ) : (
+                  <g>
+                    <circle cx="-80" cy="0" r="6" fill="#f59e0b" filter="url(#vharGlowWarning)">
+                      <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+                    </circle>
+                    <text x="-65" y="4" fill="#fbbf24" fontSize="10" fontFamily="system-ui, sans-serif">Enable all verifications</text>
+                  </g>
+                )}
+              </>
+            )}
+          </g>
         </svg>
 
         {interactive && (
@@ -573,11 +928,17 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: hasBenchmark ? colors.success : colors.error,
+                background: hasBenchmark
+                  ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: hasBenchmark
+                  ? '0 4px 15px rgba(34,197,94,0.4)'
+                  : '0 4px 15px rgba(239,68,68,0.4)',
+                transition: 'all 0.3s ease',
               }}
             >
               {hasBenchmark ? 'Benchmark ON' : 'Benchmark OFF'}
@@ -588,11 +949,17 @@ const VerificationHarnessRenderer: React.FC<VerificationHarnessRendererProps> = 
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: hasCorrectness ? colors.success : colors.error,
+                background: hasCorrectness
+                  ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
+                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: hasCorrectness
+                  ? '0 4px 15px rgba(34,197,94,0.4)'
+                  : '0 4px 15px rgba(239,68,68,0.4)',
+                transition: 'all 0.3s ease',
               }}
             >
               {hasCorrectness ? 'Tests ON' : 'Tests OFF'}

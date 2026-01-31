@@ -494,153 +494,697 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
       </div>
    );
 
-   // Phase change visualization
+   // Phase change visualization - Premium SVG graphics
    const renderPhaseChangeViz = () => {
       const getMoleculeColor = () => {
-         if (matterPhase === 'solid') return colors.secondary;
-         if (matterPhase === 'melting') return '#22d3ee';
-         if (matterPhase === 'liquid') return colors.primary;
-         if (matterPhase === 'boiling') return '#a855f7';
-         return '#f472b6';
+         if (matterPhase === 'solid') return 'url(#pceSolidMolecule)';
+         if (matterPhase === 'melting') return 'url(#pceMeltingMolecule)';
+         if (matterPhase === 'liquid') return 'url(#pceLiquidMolecule)';
+         if (matterPhase === 'boiling') return 'url(#pceBoilingMolecule)';
+         return 'url(#pceGasMolecule)';
       };
 
+      // Temperature indicator position (maps -20 to 120 degrees to 0-100%)
+      const tempPercent = Math.max(0, Math.min(100, ((temperature + 20) / 140) * 100));
+
+      // Energy bar position (maps 0 to 3200 energy to 0-100%)
+      const energyPercent = Math.max(0, Math.min(100, (energyAdded / 3200) * 100));
+
       return (
-         <svg viewBox="0 0 300 200" style={{ width: '100%', height: '100%' }}>
+         <svg viewBox="0 0 400 280" style={{ width: '100%', height: '100%' }}>
             <defs>
-               <linearGradient id="pcFlame" x1="0%" y1="100%" x2="0%" y2="0%">
-                  <stop offset="0%" stopColor="#f97316" />
-                  <stop offset="50%" stopColor="#eab308" />
-                  <stop offset="100%" stopColor="#fef08a" />
+               {/* === PREMIUM LINEAR GRADIENTS === */}
+
+               {/* Container glass gradient with depth */}
+               <linearGradient id="pceContainerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.4" />
+                  <stop offset="25%" stopColor="#0c4a6e" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#164e63" stopOpacity="0.2" />
+                  <stop offset="75%" stopColor="#155e75" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#0e7490" stopOpacity="0.15" />
                </linearGradient>
-               <filter id="pcGlow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feGaussianBlur stdDeviation="2" result="glow" />
-                  <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
+
+               {/* Premium flame gradient with 6 color stops */}
+               <linearGradient id="pceFlameGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#7c2d12" />
+                  <stop offset="20%" stopColor="#c2410c" />
+                  <stop offset="40%" stopColor="#ea580c" />
+                  <stop offset="60%" stopColor="#f97316" />
+                  <stop offset="80%" stopColor="#fb923c" />
+                  <stop offset="100%" stopColor="#fed7aa" />
+               </linearGradient>
+
+               {/* Temperature bar gradient - cold to hot */}
+               <linearGradient id="pceTempGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#0ea5e9" />
+                  <stop offset="25%" stopColor="#06b6d4" />
+                  <stop offset="50%" stopColor="#fbbf24" />
+                  <stop offset="75%" stopColor="#f97316" />
+                  <stop offset="100%" stopColor="#ef4444" />
+               </linearGradient>
+
+               {/* Energy bar gradient */}
+               <linearGradient id="pceEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" />
+                  <stop offset="25%" stopColor="#6366f1" />
+                  <stop offset="50%" stopColor="#8b5cf6" />
+                  <stop offset="75%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#d946ef" />
+               </linearGradient>
+
+               {/* Metal frame gradient */}
+               <linearGradient id="pceMetalFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="30%" stopColor="#475569" />
+                  <stop offset="50%" stopColor="#64748b" />
+                  <stop offset="70%" stopColor="#334155" />
+                  <stop offset="100%" stopColor="#1e293b" />
+               </linearGradient>
+
+               {/* Ice crystal gradient */}
+               <linearGradient id="pceIceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.9" />
+                  <stop offset="30%" stopColor="#bae6fd" stopOpacity="0.7" />
+                  <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.3" />
+               </linearGradient>
+
+               {/* Liquid water gradient */}
+               <linearGradient id="pceLiquidGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.2" />
+                  <stop offset="30%" stopColor="#0284c7" stopOpacity="0.4" />
+                  <stop offset="70%" stopColor="#0369a1" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
+               </linearGradient>
+
+               {/* Steam/vapor gradient */}
+               <linearGradient id="pceSteamGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#cbd5e1" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#f1f5f9" stopOpacity="0.1" />
+               </linearGradient>
+
+               {/* === RADIAL GRADIENTS FOR MOLECULES === */}
+
+               {/* Solid phase molecule - ice blue with crystalline appearance */}
+               <radialGradient id="pceSolidMolecule" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#e0f2fe" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#7dd3fc" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#0ea5e9" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#0369a1" stopOpacity="0.7" />
+               </radialGradient>
+
+               {/* Melting phase molecule - transitioning cyan */}
+               <radialGradient id="pceMeltingMolecule" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                  <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.9" />
+                  <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.85" />
+                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0.75" />
+               </radialGradient>
+
+               {/* Liquid phase molecule - blue water */}
+               <radialGradient id="pceLiquidMolecule" cx="35%" cy="35%" r="65%">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
+                  <stop offset="35%" stopColor="#3b82f6" stopOpacity="0.9" />
+                  <stop offset="65%" stopColor="#2563eb" stopOpacity="0.85" />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.8" />
+               </radialGradient>
+
+               {/* Boiling phase molecule - purple energized */}
+               <radialGradient id="pceBoilingMolecule" cx="40%" cy="40%" r="60%">
+                  <stop offset="0%" stopColor="#c4b5fd" stopOpacity="1" />
+                  <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.95" />
+                  <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.85" />
+               </radialGradient>
+
+               {/* Gas phase molecule - pink energetic */}
+               <radialGradient id="pceGasMolecule" cx="45%" cy="45%" r="55%">
+                  <stop offset="0%" stopColor="#f9a8d4" stopOpacity="1" />
+                  <stop offset="30%" stopColor="#f472b6" stopOpacity="0.9" />
+                  <stop offset="60%" stopColor="#ec4899" stopOpacity="0.85" />
+                  <stop offset="100%" stopColor="#db2777" stopOpacity="0.8" />
+               </radialGradient>
+
+               {/* Bubble gradient */}
+               <radialGradient id="pceBubbleGradient" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                  <stop offset="40%" stopColor="#a5b4fc" stopOpacity="0.4" />
+                  <stop offset="70%" stopColor="#818cf8" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0.1" />
+               </radialGradient>
+
+               {/* Heat source glow */}
+               <radialGradient id="pceHeatGlow" cx="50%" cy="100%" r="80%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+                  <stop offset="40%" stopColor="#f97316" stopOpacity="0.5" />
+                  <stop offset="70%" stopColor="#ea580c" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+               </radialGradient>
+
+               {/* === PREMIUM GLOW FILTERS === */}
+
+               {/* Molecule glow filter */}
+               <filter id="pceMoleculeGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                     <feMergeNode in="blur" />
+                     <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+               </filter>
+
+               {/* Intense glow for energized molecules */}
+               <filter id="pceIntenseGlow" x="-150%" y="-150%" width="400%" height="400%">
+                  <feGaussianBlur stdDeviation="4" result="blur1" />
+                  <feGaussianBlur stdDeviation="2" result="blur2" />
+                  <feMerge>
+                     <feMergeNode in="blur1" />
+                     <feMergeNode in="blur2" />
+                     <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+               </filter>
+
+               {/* Flame glow */}
+               <filter id="pceFlameGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge>
+                     <feMergeNode in="blur" />
+                     <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+               </filter>
+
+               {/* Bubble shimmer */}
+               <filter id="pceBubbleShimmer" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                     <feMergeNode in="blur" />
+                     <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+               </filter>
+
+               {/* Steam blur */}
+               <filter id="pceSteamBlur" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="3" />
+               </filter>
+
+               {/* Inner shadow for container */}
+               <filter id="pceInnerShadow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
                </filter>
             </defs>
 
-            {/* Background */}
-            <rect width="300" height="200" fill={colors.bgDark} />
+            {/* === PREMIUM DARK LAB BACKGROUND === */}
+            <rect width="400" height="280" fill="#030712" />
+            <rect width="400" height="280" fill="url(#pceContainerGlass)" opacity="0.3" />
 
-            {/* Container */}
-            <rect x="40" y="20" width="220" height="160" rx="10" fill={colors.bgCard} stroke={colors.border} strokeWidth="2" />
+            {/* Subtle grid pattern */}
+            <g stroke="#1e293b" strokeWidth="0.5" opacity="0.3">
+               {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                  <line key={`h${i}`} x1="0" y1={i * 35} x2="400" y2={i * 35} />
+               ))}
+               {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+                  <line key={`v${i}`} x1={i * 40} y1="0" x2={i * 40} y2="280" />
+               ))}
+            </g>
 
-            {/* Liquid level indicator */}
-            {(matterPhase === 'liquid' || matterPhase === 'boiling') && (
-               <rect x="45" y="100" width="210" height="75" rx="5" fill={colors.primary} opacity="0.2" />
-            )}
+            {/* === CONTAINER WITH PREMIUM STYLING === */}
+            <g transform="translate(50, 30)">
+               {/* Container outer frame */}
+               <rect x="-5" y="-5" width="230" height="190" rx="12" fill="url(#pceMetalFrame)" />
 
-            {/* Molecules */}
-            {moleculePositions.map((mol, i) => (
-               <circle
-                  key={i}
-                  cx={mol.x}
-                  cy={mol.y}
-                  r={matterPhase === 'gas' ? 5 : 6}
-                  fill={getMoleculeColor()}
-                  opacity={0.9}
-                  filter="url(#pcGlow)"
-               />
-            ))}
+               {/* Container glass body */}
+               <rect x="0" y="0" width="220" height="180" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="2" />
 
-            {/* Bubbles when boiling */}
-            {matterPhase === 'boiling' && (
-               <g>
-                  {[0, 1, 2, 3, 4].map(i => (
-                     <circle
+               {/* Glass reflection highlight */}
+               <rect x="5" y="5" width="210" height="50" rx="6" fill="url(#pceIceGradient)" opacity="0.1" />
+
+               {/* Ice/solid background when in solid/melting phase */}
+               {(matterPhase === 'solid' || matterPhase === 'melting') && (
+                  <rect x="5" y="80" width="210" height="95" rx="4" fill="url(#pceIceGradient)" opacity="0.15" />
+               )}
+
+               {/* Liquid water level */}
+               {(matterPhase === 'liquid' || matterPhase === 'boiling') && (
+                  <g>
+                     <rect x="5" y="60" width="210" height="115" rx="4" fill="url(#pceLiquidGradient)" />
+                     {/* Water surface ripple */}
+                     <ellipse cx="110" cy="60" rx="105" ry="3" fill="#0ea5e9" opacity="0.3">
+                        <animate attributeName="ry" values="2;4;2" dur="2s" repeatCount="indefinite" />
+                     </ellipse>
+                  </g>
+               )}
+
+               {/* Steam/vapor rising (gas phase) */}
+               {matterPhase === 'gas' && (
+                  <g filter="url(#pceSteamBlur)">
+                     {[0, 1, 2, 3, 4].map(i => (
+                        <ellipse
+                           key={i}
+                           cx={40 + i * 40}
+                           rx={15 + Math.random() * 10}
+                           ry={8 + Math.random() * 5}
+                           fill="url(#pceSteamGradient)"
+                           opacity={0.4}
+                        >
+                           <animate
+                              attributeName="cy"
+                              values="160;20;160"
+                              dur={`${3 + i * 0.5}s`}
+                              repeatCount="indefinite"
+                           />
+                           <animate
+                              attributeName="opacity"
+                              values="0.4;0.1;0.4"
+                              dur={`${3 + i * 0.5}s`}
+                              repeatCount="indefinite"
+                           />
+                        </ellipse>
+                     ))}
+                  </g>
+               )}
+
+               {/* === MOLECULAR ARRANGEMENT === */}
+               {moleculePositions.map((mol, i) => {
+                  // Adjust positions relative to container
+                  const adjX = mol.x - 40;
+                  const adjY = mol.y - 20;
+
+                  // Different molecule sizes based on phase
+                  const baseRadius = matterPhase === 'gas' ? 5 : matterPhase === 'boiling' ? 6 : 7;
+
+                  // Use intense glow for hot phases
+                  const glowFilter = (matterPhase === 'boiling' || matterPhase === 'gas')
+                     ? 'url(#pceIntenseGlow)'
+                     : 'url(#pceMoleculeGlow)';
+
+                  return (
+                     <g key={i}>
+                        {/* Molecule with gradient fill */}
+                        <circle
+                           cx={adjX}
+                           cy={adjY}
+                           r={baseRadius}
+                           fill={getMoleculeColor()}
+                           filter={glowFilter}
+                        />
+                        {/* Highlight dot for 3D effect */}
+                        <circle
+                           cx={adjX - baseRadius * 0.3}
+                           cy={adjY - baseRadius * 0.3}
+                           r={baseRadius * 0.25}
+                           fill="white"
+                           opacity="0.5"
+                        />
+                     </g>
+                  );
+               })}
+
+               {/* === BOILING BUBBLES === */}
+               {matterPhase === 'boiling' && (
+                  <g>
+                     {[0, 1, 2, 3, 4, 5, 6].map(i => (
+                        <circle
+                           key={i}
+                           cx={30 + i * 30}
+                           r={6 + (i % 3) * 2}
+                           fill="url(#pceBubbleGradient)"
+                           filter="url(#pceBubbleShimmer)"
+                        >
+                           <animate
+                              attributeName="cy"
+                              values="170;40;170"
+                              dur={`${1.2 + i * 0.25}s`}
+                              repeatCount="indefinite"
+                           />
+                           <animate
+                              attributeName="r"
+                              values={`${4 + (i % 3)};${10 + (i % 3) * 2};${4 + (i % 3)}`}
+                              dur={`${1.2 + i * 0.25}s`}
+                              repeatCount="indefinite"
+                           />
+                           <animate
+                              attributeName="opacity"
+                              values="0.8;0.3;0.8"
+                              dur={`${1.2 + i * 0.25}s`}
+                              repeatCount="indefinite"
+                           />
+                        </circle>
+                     ))}
+                  </g>
+               )}
+
+               {/* Phase label */}
+               <text x="110" y="15" textAnchor="middle" fontSize="11" fontWeight="600" fill="#94a3b8">
+                  {matterPhase === 'solid' ? 'SOLID (Ice)' :
+                   matterPhase === 'melting' ? 'MELTING' :
+                   matterPhase === 'liquid' ? 'LIQUID (Water)' :
+                   matterPhase === 'boiling' ? 'BOILING' : 'GAS (Steam)'}
+               </text>
+            </g>
+
+            {/* === PREMIUM HEAT SOURCE === */}
+            {isHeating && (
+               <g transform="translate(160, 230)">
+                  {/* Heat glow background */}
+                  <ellipse cx="0" cy="10" rx="90" ry="30" fill="url(#pceHeatGlow)" />
+
+                  {/* Flame base */}
+                  <ellipse cx="0" cy="5" rx="70" ry="18" fill="url(#pceFlameGradient)" filter="url(#pceFlameGlow)">
+                     <animate attributeName="ry" values="15;22;15" dur="0.4s" repeatCount="indefinite" />
+                  </ellipse>
+
+                  {/* Flame tongues */}
+                  {[-40, -20, 0, 20, 40].map((offset, i) => (
+                     <ellipse
                         key={i}
-                        cx={80 + i * 40}
-                        r="8"
-                        fill={colors.accent}
-                        opacity="0.3"
+                        cx={offset}
+                        cy={0}
+                        rx={8}
+                        ry={12 + i * 2}
+                        fill="url(#pceFlameGradient)"
+                        opacity={0.8}
                      >
                         <animate
-                           attributeName="cy"
-                           values="170;40;170"
-                           dur={`${1.5 + i * 0.3}s`}
+                           attributeName="ry"
+                           values={`${10 + i * 2};${18 + i * 2};${10 + i * 2}`}
+                           dur={`${0.3 + i * 0.05}s`}
                            repeatCount="indefinite"
                         />
-                        <animate
-                           attributeName="r"
-                           values="4;10;4"
-                           dur={`${1.5 + i * 0.3}s`}
-                           repeatCount="indefinite"
-                        />
-                     </circle>
+                     </ellipse>
                   ))}
+
+                  {/* Burner label */}
+                  <text x="0" y="35" textAnchor="middle" fontSize="9" fill="#f97316" fontWeight="500">HEATING</text>
                </g>
             )}
 
-            {/* Heat source */}
-            {isHeating && (
-               <g transform="translate(150, 185)">
-                  <ellipse cx="0" cy="0" rx="60" ry="15" fill="url(#pcFlame)" opacity="0.9">
-                     <animate attributeName="ry" values="12;18;12" dur="0.3s" repeatCount="indefinite" />
-                  </ellipse>
-               </g>
-            )}
+            {/* === TEMPERATURE INDICATOR (Left Side) === */}
+            <g transform="translate(20, 40)">
+               {/* Thermometer label */}
+               <text x="0" y="-5" fontSize="9" fill="#94a3b8" fontWeight="600">TEMP</text>
+
+               {/* Thermometer body */}
+               <rect x="0" y="0" width="18" height="160" rx="9" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+               {/* Temperature fill */}
+               <rect
+                  x="3"
+                  y={157 - (tempPercent * 1.5)}
+                  width="12"
+                  height={tempPercent * 1.5 + 3}
+                  rx="6"
+                  fill="url(#pceTempGradient)"
+               />
+
+               {/* Thermometer bulb */}
+               <circle cx="9" cy="160" r="12" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+               <circle cx="9" cy="160" r="9" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'} />
+
+               {/* Temperature scale markers */}
+               {[120, 100, 50, 0, -20].map((temp, i) => {
+                  const y = 5 + ((120 - temp) / 140) * 150;
+                  return (
+                     <g key={i}>
+                        <line x1="20" y1={y} x2="26" y2={y} stroke="#475569" strokeWidth="1" />
+                        <text x="28" y={y + 3} fontSize="7" fill="#64748b">{temp}°</text>
+                     </g>
+                  );
+               })}
+
+               {/* Current temperature display */}
+               <rect x="-2" y="175" width="50" height="18" rx="4" fill="#0f172a" stroke="#334155" />
+               <text x="23" y="188" textAnchor="middle" fontSize="11" fontWeight="700" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'}>
+                  {temperature.toFixed(0)}°C
+               </text>
+            </g>
+
+            {/* === ENERGY BAR (Bottom) === */}
+            <g transform="translate(50, 255)">
+               {/* Energy label */}
+               <text x="0" y="-5" fontSize="9" fill="#94a3b8" fontWeight="600">ENERGY ADDED</text>
+
+               {/* Energy bar background */}
+               <rect x="0" y="0" width="220" height="14" rx="7" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+               {/* Energy fill */}
+               <rect
+                  x="2"
+                  y="2"
+                  width={Math.max(0, (energyPercent / 100) * 216)}
+                  height="10"
+                  rx="5"
+                  fill="url(#pceEnergyGradient)"
+               />
+
+               {/* Phase markers on energy bar */}
+               {[
+                  { pos: 42/3200, label: '0°C', color: '#0ea5e9' },
+                  { pos: 376/3200, label: 'Melt', color: '#06b6d4' },
+                  { pos: 794/3200, label: '100°C', color: '#f59e0b' },
+                  { pos: 3054/3200, label: 'Boil', color: '#a855f7' }
+               ].map((marker, i) => (
+                  <g key={i}>
+                     <line x1={marker.pos * 220} y1="0" x2={marker.pos * 220} y2="14" stroke={marker.color} strokeWidth="1" strokeDasharray="2 1" />
+                     <text x={marker.pos * 220} y="22" textAnchor="middle" fontSize="6" fill={marker.color}>{marker.label}</text>
+                  </g>
+               ))}
+
+               {/* Energy value display */}
+               <text x="240" y="10" fontSize="10" fontWeight="600" fill="#8b5cf6">{energyAdded.toFixed(0)} J/g</text>
+            </g>
+
+            {/* === PHASE DIAGRAM INDICATOR (Right Side) === */}
+            <g transform="translate(295, 40)">
+               <text x="0" y="-5" fontSize="9" fill="#94a3b8" fontWeight="600">PHASE</text>
+
+               {/* Phase states */}
+               {[
+                  { name: 'Solid', active: matterPhase === 'solid', color: '#0ea5e9', y: 0 },
+                  { name: 'Melting', active: matterPhase === 'melting', color: '#22d3ee', y: 30 },
+                  { name: 'Liquid', active: matterPhase === 'liquid', color: '#3b82f6', y: 60 },
+                  { name: 'Boiling', active: matterPhase === 'boiling', color: '#a855f7', y: 90 },
+                  { name: 'Gas', active: matterPhase === 'gas', color: '#ec4899', y: 120 }
+               ].map((phase, i) => (
+                  <g key={i}>
+                     <rect
+                        x="0"
+                        y={phase.y}
+                        width="85"
+                        height="24"
+                        rx="6"
+                        fill={phase.active ? phase.color : '#1e293b'}
+                        opacity={phase.active ? 1 : 0.5}
+                        stroke={phase.active ? phase.color : '#334155'}
+                        strokeWidth={phase.active ? 2 : 1}
+                     />
+                     <text
+                        x="42"
+                        y={phase.y + 16}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fontWeight={phase.active ? '700' : '500'}
+                        fill={phase.active ? '#fff' : '#64748b'}
+                     >
+                        {phase.name}
+                     </text>
+                     {phase.active && (
+                        <circle cx="8" cy={phase.y + 12} r="4" fill="#fff">
+                           <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+                        </circle>
+                     )}
+                  </g>
+               ))}
+            </g>
          </svg>
       );
    };
 
-   // Heating curve visualization
+   // Heating curve visualization - Premium SVG graphics
    const renderHeatingCurve = () => {
       const maxEnergy = 3100;
       const progress = Math.min(1, energyAdded / maxEnergy);
 
       return (
-         <svg viewBox="0 0 350 180" style={{ width: '100%', height: '100%' }}>
-            {/* Background */}
-            <rect width="350" height="180" fill={colors.bgDark} />
+         <svg viewBox="0 0 400 220" style={{ width: '100%', height: '100%' }}>
+            <defs>
+               {/* Chart background gradient */}
+               <linearGradient id="pceChartBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="50%" stopColor="#0a0f1a" />
+                  <stop offset="100%" stopColor="#030712" />
+               </linearGradient>
 
-            {/* Grid */}
-            <g stroke={colors.border} strokeWidth="0.5" opacity="0.3">
-               {[0, 1, 2, 3, 4].map(i => (
-                  <line key={`h${i}`} x1="50" y1={20 + i * 35} x2="330" y2={20 + i * 35} />
+               {/* Curve gradient - progresses through phases */}
+               <linearGradient id="pceCurveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#0ea5e9" />
+                  <stop offset="12%" stopColor="#06b6d4" />
+                  <stop offset="25%" stopColor="#22d3ee" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="75%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#ec4899" />
+               </linearGradient>
+
+               {/* Phase region gradients */}
+               <linearGradient id="pceIceRegion" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.02" />
+               </linearGradient>
+
+               <linearGradient id="pceMeltRegion" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.02" />
+               </linearGradient>
+
+               <linearGradient id="pceWaterRegion" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+               </linearGradient>
+
+               <linearGradient id="pceBoilRegion" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.02" />
+               </linearGradient>
+
+               <linearGradient id="pceSteamRegion" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#ec4899" stopOpacity="0.02" />
+               </linearGradient>
+
+               {/* Marker glow */}
+               <radialGradient id="pceMarkerGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#dc2626" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+               </radialGradient>
+
+               {/* Curve glow filter */}
+               <filter id="pceCurveGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                     <feMergeNode in="blur" />
+                     <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+               </filter>
+
+               {/* Marker pulse filter */}
+               <filter id="pceMarkerPulse" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                     <feMergeNode in="blur" />
+                     <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+               </filter>
+            </defs>
+
+            {/* Premium dark background */}
+            <rect width="400" height="220" fill="url(#pceChartBg)" />
+
+            {/* Subtle grid pattern */}
+            <g stroke="#1e293b" strokeWidth="0.5" opacity="0.4">
+               {[0, 1, 2, 3, 4, 5].map(i => (
+                  <line key={`h${i}`} x1="60" y1={30 + i * 30} x2="370" y2={30 + i * 30} />
                ))}
-               {[0, 1, 2, 3, 4, 5, 6].map(i => (
-                  <line key={`v${i}`} x1={50 + i * 46.67} y1="20" x2={50 + i * 46.67} y2="160" />
+               {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+                  <line key={`v${i}`} x1={60 + i * 44.3} y1="30" x2={60 + i * 44.3} y2="180" />
                ))}
             </g>
 
-            {/* Axes */}
-            <line x1="50" y1="160" x2="330" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-            <line x1="50" y1="20" x2="50" y2="160" stroke={colors.textMuted} strokeWidth="2" />
+            {/* Phase region backgrounds */}
+            <rect x="60" y="30" width="30" height="150" fill="url(#pceIceRegion)" />
+            <rect x="90" y="30" width="90" height="150" fill="url(#pceMeltRegion)" />
+            <rect x="180" y="30" width="50" height="150" fill="url(#pceWaterRegion)" />
+            <rect x="230" y="30" width="120" height="150" fill="url(#pceBoilRegion)" />
+            <rect x="350" y="30" width="20" height="150" fill="url(#pceSteamRegion)" />
 
-            {/* Labels */}
-            <text x="190" y="175" textAnchor="middle" fontSize="10" fill={colors.textMuted}>Energy Added (J/g)</text>
-            <text x="20" y="90" textAnchor="middle" fontSize="10" fill={colors.textMuted} transform="rotate(-90, 20, 90)">Temperature (°C)</text>
+            {/* Premium axes with gradient */}
+            <line x1="60" y1="180" x2="370" y2="180" stroke="#475569" strokeWidth="2" />
+            <line x1="60" y1="30" x2="60" y2="180" stroke="#475569" strokeWidth="2" />
 
-            {/* Temperature scale */}
-            <text x="45" y="160" textAnchor="end" fontSize="8" fill={colors.textMuted}>-20</text>
-            <text x="45" y="125" textAnchor="end" fontSize="8" fill={colors.textMuted}>0</text>
-            <text x="45" y="55" textAnchor="end" fontSize="8" fill={colors.textMuted}>100</text>
+            {/* Axis arrows */}
+            <polygon points="370,180 362,176 362,184" fill="#475569" />
+            <polygon points="60,30 56,38 64,38" fill="#475569" />
 
-            {/* Ideal heating curve (background) */}
+            {/* Chart title */}
+            <text x="215" y="18" textAnchor="middle" fontSize="11" fontWeight="700" fill="#94a3b8">
+               HEATING CURVE OF WATER
+            </text>
+
+            {/* Axis labels */}
+            <text x="215" y="200" textAnchor="middle" fontSize="10" fontWeight="600" fill="#64748b">
+               Energy Added (J/g)
+            </text>
+            <text x="18" y="105" textAnchor="middle" fontSize="10" fontWeight="600" fill="#64748b" transform="rotate(-90, 18, 105)">
+               Temperature (°C)
+            </text>
+
+            {/* Temperature scale with styled markers */}
+            {[
+               { temp: 120, y: 30, color: '#ec4899' },
+               { temp: 100, y: 55, color: '#a855f7' },
+               { temp: 50, y: 90, color: '#3b82f6' },
+               { temp: 0, y: 125, color: '#22d3ee' },
+               { temp: -20, y: 160, color: '#0ea5e9' }
+            ].map((marker, i) => (
+               <g key={i}>
+                  <line x1="55" y1={marker.y} x2="60" y2={marker.y} stroke={marker.color} strokeWidth="2" />
+                  <text x="50" y={marker.y + 3} textAnchor="end" fontSize="9" fontWeight="500" fill={marker.color}>
+                     {marker.temp}°
+                  </text>
+               </g>
+            ))}
+
+            {/* Phase labels with styled badges */}
+            {[
+               { label: 'ICE', x: 75, y: 145, color: '#0ea5e9' },
+               { label: 'MELTING', x: 135, y: 115, color: '#22d3ee' },
+               { label: 'WATER', x: 205, y: 85, color: '#3b82f6' },
+               { label: 'BOILING', x: 290, y: 45, color: '#8b5cf6' },
+               { label: 'STEAM', x: 360, y: 35, color: '#ec4899' }
+            ].map((phase, i) => (
+               <g key={i}>
+                  <rect
+                     x={phase.x - 22}
+                     y={phase.y - 10}
+                     width="44"
+                     height="14"
+                     rx="7"
+                     fill={phase.color}
+                     opacity="0.2"
+                  />
+                  <text
+                     x={phase.x}
+                     y={phase.y}
+                     textAnchor="middle"
+                     fontSize="7"
+                     fontWeight="700"
+                     fill={phase.color}
+                  >
+                     {phase.label}
+                  </text>
+               </g>
+            ))}
+
+            {/* Ideal heating curve (reference) with premium dashed style */}
             <path
-               d={`M 50 160 L 75 125 L 155 125 L 195 55 L 305 55 L 330 35`}
+               d="M 60 160 L 90 125 L 180 125 L 230 55 L 350 55 L 370 35"
                fill="none"
-               stroke={colors.textMuted}
-               strokeWidth="1"
-               strokeDasharray="4 2"
-               opacity="0.3"
+               stroke="#475569"
+               strokeWidth="1.5"
+               strokeDasharray="6 3"
+               opacity="0.5"
             />
 
-            {/* Phase labels */}
-            <text x="62" y="145" fontSize="7" fill={colors.secondary}>Ice</text>
-            <text x="100" y="115" fontSize="7" fill={colors.secondary}>Melting</text>
-            <text x="170" y="85" fontSize="7" fill={colors.primary}>Water</text>
-            <text x="245" y="45" fontSize="7" fill={colors.accent}>Boiling</text>
-
-            {/* Current progress curve */}
+            {/* Current progress curve with gradient and glow */}
             <path
                d={(() => {
                   const e = energyAdded;
-                  let path = 'M 50 160';
+                  let path = 'M 60 160';
 
                   // Ice heating (-20 to 0)
                   if (e > 0) {
                      const iceEnd = Math.min(e, 42);
-                     const x = 50 + (iceEnd / 42) * 25;
+                     const x = 60 + (iceEnd / 42) * 30;
                      const y = 160 - (iceEnd / 42) * 35;
                      path += ` L ${x} ${y}`;
                   }
@@ -648,14 +1192,14 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   // Melting (0°C plateau)
                   if (e > 42) {
                      const meltEnd = Math.min(e - 42, 334);
-                     const x = 75 + (meltEnd / 334) * 80;
+                     const x = 90 + (meltEnd / 334) * 90;
                      path += ` L ${x} 125`;
                   }
 
                   // Water heating (0 to 100)
                   if (e > 376) {
                      const waterEnd = Math.min(e - 376, 418);
-                     const x = 155 + (waterEnd / 418) * 40;
+                     const x = 180 + (waterEnd / 418) * 50;
                      const y = 125 - (waterEnd / 418) * 70;
                      path += ` L ${x} ${y}`;
                   }
@@ -663,14 +1207,14 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   // Boiling (100°C plateau)
                   if (e > 794) {
                      const boilEnd = Math.min(e - 794, 2260);
-                     const x = 195 + (boilEnd / 2260) * 110;
+                     const x = 230 + (boilEnd / 2260) * 120;
                      path += ` L ${x} 55`;
                   }
 
                   // Steam heating
                   if (e > 3054) {
                      const steamEnd = Math.min(e - 3054, 100);
-                     const x = 305 + (steamEnd / 100) * 25;
+                     const x = 350 + (steamEnd / 100) * 20;
                      const y = 55 - (steamEnd / 100) * 20;
                      path += ` L ${x} ${y}`;
                   }
@@ -678,42 +1222,107 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   return path;
                })()}
                fill="none"
-               stroke={colors.primary}
-               strokeWidth="3"
+               stroke="url(#pceCurveGradient)"
+               strokeWidth="4"
                strokeLinecap="round"
+               strokeLinejoin="round"
+               filter="url(#pceCurveGlow)"
             />
 
-            {/* Current position marker */}
+            {/* Current position marker with glow */}
             {energyAdded > 0 && (
-               <circle
-                  cx={(() => {
-                     const e = energyAdded;
-                     if (e <= 42) return 50 + (e / 42) * 25;
-                     if (e <= 376) return 75 + ((e - 42) / 334) * 80;
-                     if (e <= 794) return 155 + ((e - 376) / 418) * 40;
-                     if (e <= 3054) return 195 + ((e - 794) / 2260) * 110;
-                     return 305 + ((e - 3054) / 100) * 25;
-                  })()}
-                  cy={(() => {
-                     if (temperature < 0) return 160 - ((temperature + 20) / 20) * 35;
-                     if (temperature === 0) return 125;
-                     if (temperature > 0 && temperature < 100) return 125 - (temperature / 100) * 70;
-                     if (temperature === 100) return 55;
-                     return 55 - ((temperature - 100) / 20) * 20;
-                  })()}
-                  r="6"
-                  fill={colors.danger}
-                  stroke={colors.textPrimary}
-                  strokeWidth="2"
-               />
+               <g filter="url(#pceMarkerPulse)">
+                  <circle
+                     cx={(() => {
+                        const e = energyAdded;
+                        if (e <= 42) return 60 + (e / 42) * 30;
+                        if (e <= 376) return 90 + ((e - 42) / 334) * 90;
+                        if (e <= 794) return 180 + ((e - 376) / 418) * 50;
+                        if (e <= 3054) return 230 + ((e - 794) / 2260) * 120;
+                        return 350 + ((e - 3054) / 100) * 20;
+                     })()}
+                     cy={(() => {
+                        if (temperature < 0) return 160 - ((temperature + 20) / 20) * 35;
+                        if (temperature === 0) return 125;
+                        if (temperature > 0 && temperature < 100) return 125 - (temperature / 100) * 70;
+                        if (temperature === 100) return 55;
+                        return 55 - ((temperature - 100) / 20) * 20;
+                     })()}
+                     r="10"
+                     fill="url(#pceMarkerGlow)"
+                     opacity="0.5"
+                  >
+                     <animate attributeName="r" values="8;12;8" dur="1s" repeatCount="indefinite" />
+                  </circle>
+                  <circle
+                     cx={(() => {
+                        const e = energyAdded;
+                        if (e <= 42) return 60 + (e / 42) * 30;
+                        if (e <= 376) return 90 + ((e - 42) / 334) * 90;
+                        if (e <= 794) return 180 + ((e - 376) / 418) * 50;
+                        if (e <= 3054) return 230 + ((e - 794) / 2260) * 120;
+                        return 350 + ((e - 3054) / 100) * 20;
+                     })()}
+                     cy={(() => {
+                        if (temperature < 0) return 160 - ((temperature + 20) / 20) * 35;
+                        if (temperature === 0) return 125;
+                        if (temperature > 0 && temperature < 100) return 125 - (temperature / 100) * 70;
+                        if (temperature === 100) return 55;
+                        return 55 - ((temperature - 100) / 20) * 20;
+                     })()}
+                     r="6"
+                     fill="#ef4444"
+                     stroke="#ffffff"
+                     strokeWidth="2"
+                  />
+               </g>
             )}
 
-            {/* Latent heat annotations */}
-            <rect x="90" y="127" width="50" height="15" rx="3" fill={colors.secondary} opacity="0.3" />
-            <text x="115" y="137" textAnchor="middle" fontSize="7" fill={colors.secondary}>Lf = 334 J/g</text>
+            {/* Latent heat annotations with premium styling */}
+            <g>
+               {/* Latent heat of fusion annotation */}
+               <rect x="115" y="128" width="60" height="18" rx="4" fill="#22d3ee" opacity="0.15" stroke="#22d3ee" strokeWidth="1" />
+               <text x="145" y="140" textAnchor="middle" fontSize="8" fontWeight="700" fill="#22d3ee">
+                  Lf = 334 J/g
+               </text>
+               <line x1="115" y1="125" x2="115" y2="137" stroke="#22d3ee" strokeWidth="1" strokeDasharray="2 1" />
+               <line x1="175" y1="125" x2="175" y2="137" stroke="#22d3ee" strokeWidth="1" strokeDasharray="2 1" />
 
-            <rect x="230" y="57" width="55" height="15" rx="3" fill={colors.accent} opacity="0.3" />
-            <text x="257" y="67" textAnchor="middle" fontSize="7" fill={colors.accent}>Lv = 2260 J/g</text>
+               {/* Latent heat of vaporization annotation */}
+               <rect x="265" y="58" width="70" height="18" rx="4" fill="#8b5cf6" opacity="0.15" stroke="#8b5cf6" strokeWidth="1" />
+               <text x="300" y="70" textAnchor="middle" fontSize="8" fontWeight="700" fill="#8b5cf6">
+                  Lv = 2260 J/g
+               </text>
+               <line x1="235" y1="55" x2="235" y2="67" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="2 1" />
+               <line x1="345" y1="55" x2="345" y2="67" stroke="#8b5cf6" strokeWidth="1" strokeDasharray="2 1" />
+            </g>
+
+            {/* Current values display */}
+            <g transform="translate(60, 205)">
+               <rect x="0" y="0" width="90" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+               <text x="45" y="11" textAnchor="middle" fontSize="9" fill="#f8fafc">
+                  <tspan fill="#64748b">T: </tspan>
+                  <tspan fontWeight="700" fill={temperature > 50 ? '#ef4444' : temperature > 0 ? '#fbbf24' : '#0ea5e9'}>
+                     {temperature.toFixed(1)}°C
+                  </tspan>
+               </text>
+
+               <rect x="100" y="0" width="100" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+               <text x="150" y="11" textAnchor="middle" fontSize="9" fill="#f8fafc">
+                  <tspan fill="#64748b">E: </tspan>
+                  <tspan fontWeight="700" fill="#a855f7">{energyAdded.toFixed(0)} J/g</tspan>
+               </text>
+
+               <rect x="210" y="0" width="80" height="16" rx="4" fill="#1e293b" stroke="#334155" />
+               <text x="250" y="11" textAnchor="middle" fontSize="9" fontWeight="600" fill={
+                  matterPhase === 'solid' ? '#0ea5e9' :
+                  matterPhase === 'melting' ? '#22d3ee' :
+                  matterPhase === 'liquid' ? '#3b82f6' :
+                  matterPhase === 'boiling' ? '#8b5cf6' : '#ec4899'
+               }>
+                  {matterPhase.toUpperCase()}
+               </text>
+            </g>
          </svg>
       );
    };

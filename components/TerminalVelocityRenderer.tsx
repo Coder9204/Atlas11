@@ -311,177 +311,649 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showCrumple: boolean = false) => {
-    const width = 400;
-    const height = 350;
-    const dropZoneHeight = 200;
-    const graphHeight = 130;
-    const margin = 40;
+    const width = 700;
+    const height = 400;
+    const dropZoneWidth = 280;
+    const dropZoneHeight = 320;
+    const graphWidth = 180;
+    const graphHeight = 140;
 
     // Calculate filter position for animation
-    const maxFallDistance = dropZoneHeight - 60;
-    const filterY = 30 + Math.min(position * 20, maxFallDistance);
+    const maxFallDistance = dropZoneHeight - 80;
+    const filterY = 50 + Math.min(position * 25, maxFallDistance);
 
     // Calculate forces for arrows
     const gravityForce = totalMass * g;
     const dragForce = 0.5 * airDensity * velocity * velocity * dragCoefficient * effectiveArea;
     const maxForce = gravityForce * 1.5;
-    const gravityArrowLength = (gravityForce / maxForce) * 50;
-    const dragArrowLength = (dragForce / maxForce) * 50;
+    const gravityArrowLength = Math.min((gravityForce / maxForce) * 60, 60);
+    const dragArrowLength = Math.min((dragForce / maxForce) * 60, 60);
 
     // Graph scaling
-    const graphMaxV = Math.ceil(terminalVelocity * 1.2);
+    const graphMaxV = Math.ceil(terminalVelocity * 1.3);
     const graphMaxT = 5;
 
+    // Air particle positions for resistance visualization
+    const airParticles = Array.from({ length: 20 }, (_, i) => ({
+      x: 80 + (i % 5) * 35,
+      y: filterY - 60 + Math.floor(i / 5) * 20 + Math.sin(time * 3 + i) * 5,
+      size: 3 + Math.random() * 2,
+      opacity: 0.3 + Math.random() * 0.3
+    }));
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #87ceeb 0%, #e0f0ff 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '16px', maxWidth: '800px' }}
         >
-          {/* Drop zone background */}
-          <rect x={50} y={10} width={150} height={dropZoneHeight} fill="rgba(255,255,255,0.3)" rx={8} />
+          {/* ========== PREMIUM DEFS SECTION ========== */}
+          <defs>
+            {/* Sky gradient with atmospheric depth - 6 color stops */}
+            <linearGradient id="tvelSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="15%" stopColor="#2563eb" />
+              <stop offset="35%" stopColor="#3b82f6" />
+              <stop offset="55%" stopColor="#60a5fa" />
+              <stop offset="80%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#dbeafe" />
+            </linearGradient>
 
-          {/* Height markers */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <g key={i}>
-              <line x1={45} y1={20 + i * 45} x2={50} y2={20 + i * 45} stroke="#666" strokeWidth={1} />
-              <text x={40} y={24 + i * 45} fill="#666" fontSize={10} textAnchor="end">{4 - i}m</text>
+            {/* Ground gradient with depth - 5 color stops */}
+            <linearGradient id="tvelGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#65a30d" />
+              <stop offset="20%" stopColor="#4d7c0f" />
+              <stop offset="50%" stopColor="#3f6212" />
+              <stop offset="80%" stopColor="#365314" />
+              <stop offset="100%" stopColor="#1a2e05" />
+            </linearGradient>
+
+            {/* Coffee filter gradient - warm tones with depth */}
+            <linearGradient id="tvelFilterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="25%" stopColor="#fde68a" />
+              <stop offset="50%" stopColor="#d4a574" />
+              <stop offset="75%" stopColor="#b8956c" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
+
+            {/* Crumpled filter radial gradient */}
+            <radialGradient id="tvelCrumpledGradient" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="30%" stopColor="#fde68a" />
+              <stop offset="60%" stopColor="#d4a574" />
+              <stop offset="100%" stopColor="#78350f" />
+            </radialGradient>
+
+            {/* Gravity force arrow gradient */}
+            <linearGradient id="tvelGravityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Drag force arrow gradient */}
+            <linearGradient id="tvelDragGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="70%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* Air resistance particle radial gradient */}
+            <radialGradient id="tvelAirParticleGradient" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Graph panel gradient */}
+            <linearGradient id="tvelGraphBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Velocity curve glow gradient */}
+            <linearGradient id="tvelVelocityCurveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Terminal velocity line gradient */}
+            <linearGradient id="tvelTerminalLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="1" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="tvelInfoPanelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Object glow filter */}
+            <filter id="tvelObjectGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Force arrow glow filter */}
+            <filter id="tvelForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Air particle glow filter */}
+            <filter id="tvelAirGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Curve glow filter */}
+            <filter id="tvelCurveGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Drop shadow filter */}
+            <filter id="tvelDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodOpacity="0.3" />
+            </filter>
+
+            {/* Panel shadow filter */}
+            <filter id="tvelPanelShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#000" floodOpacity="0.5" />
+            </filter>
+          </defs>
+
+          {/* ========== BACKGROUND ========== */}
+          {/* Sky with atmospheric gradient */}
+          <rect x="0" y="0" width={width} height={height - 50} fill="url(#tvelSkyGradient)" />
+
+          {/* Subtle clouds */}
+          <ellipse cx="100" cy="40" rx="60" ry="20" fill="white" opacity="0.3" />
+          <ellipse cx="130" cy="35" rx="40" ry="15" fill="white" opacity="0.4" />
+          <ellipse cx="550" cy="60" rx="70" ry="25" fill="white" opacity="0.25" />
+          <ellipse cx="590" cy="55" rx="45" ry="18" fill="white" opacity="0.35" />
+
+          {/* Ground with grass texture */}
+          <rect x="0" y={height - 50} width={width} height="50" fill="url(#tvelGroundGradient)" />
+          {/* Grass texture lines */}
+          {Array.from({ length: 40 }, (_, i) => (
+            <line
+              key={`grass-${i}`}
+              x1={i * 18 + 5}
+              y1={height - 50}
+              x2={i * 18 + 5 + (Math.random() - 0.5) * 6}
+              y2={height - 50 - 8 - Math.random() * 10}
+              stroke="#4d7c0f"
+              strokeWidth="2"
+              opacity={0.6 + Math.random() * 0.4}
+            />
+          ))}
+
+          {/* ========== DROP ZONE ========== */}
+          {/* Drop zone frame */}
+          <rect
+            x="30"
+            y="20"
+            width={dropZoneWidth}
+            height={dropZoneHeight}
+            fill="rgba(255,255,255,0.1)"
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="2"
+            rx="12"
+            strokeDasharray="8,4"
+          />
+
+          {/* Height markers with better styling */}
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+            <g key={`height-${i}`}>
+              <line
+                x1="25"
+                y1={35 + i * 45}
+                x2="35"
+                y2={35 + i * 45}
+                stroke="rgba(255,255,255,0.7)"
+                strokeWidth="2"
+              />
+              <text
+                x="18"
+                y={39 + i * 45}
+                fill="white"
+                fontSize="11"
+                fontWeight="bold"
+                textAnchor="end"
+                style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
+              >
+                {(6 - i) * 0.5}m
+              </text>
             </g>
           ))}
 
-          {/* Ground */}
-          <rect x={50} y={dropZoneHeight + 5} width={150} height={10} fill="#8b7355" />
-          <rect x={50} y={dropZoneHeight + 15} width={150} height={5} fill="#6b5344" />
+          {/* ========== AIR RESISTANCE VISUALIZATION ========== */}
+          {isDropped && velocity > 0.2 && (
+            <g filter="url(#tvelAirGlow)">
+              {airParticles.map((particle, i) => (
+                <circle
+                  key={`air-${i}`}
+                  cx={particle.x}
+                  cy={particle.y}
+                  r={particle.size}
+                  fill="url(#tvelAirParticleGradient)"
+                  opacity={particle.opacity * Math.min(velocity / terminalVelocity, 1)}
+                >
+                  <animate
+                    attributeName="cy"
+                    values={`${particle.y};${particle.y - 15};${particle.y}`}
+                    dur="0.8s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              ))}
+              {/* Air flow lines */}
+              {[-30, -15, 0, 15, 30].map((offset, i) => (
+                <line
+                  key={`airflow-${i}`}
+                  x1={170 + offset}
+                  y1={filterY - 40}
+                  x2={170 + offset}
+                  y2={filterY - 80 - velocity * 3}
+                  stroke="#60a5fa"
+                  strokeWidth="1.5"
+                  strokeOpacity={0.3 * Math.min(velocity / terminalVelocity, 1)}
+                  strokeDasharray="4,4"
+                >
+                  <animate
+                    attributeName="stroke-dashoffset"
+                    from="0"
+                    to="-8"
+                    dur="0.3s"
+                    repeatCount="indefinite"
+                  />
+                </line>
+              ))}
+            </g>
+          )}
 
-          {/* Coffee filter(s) - stacked appearance */}
-          <g transform={`translate(125, ${filterY})`}>
+          {/* ========== FALLING OBJECT (COFFEE FILTER) ========== */}
+          <g transform={`translate(170, ${filterY})`} filter="url(#tvelObjectGlow)">
             {showCrumple && isCrumpled ? (
-              // Crumpled filter - small irregular ball
-              <g>
-                <ellipse cx={0} cy={0} rx={12} ry={10} fill={colors.filterDark} />
-                <ellipse cx={-2} cy={-2} rx={10} ry={8} fill={colors.filter} />
-                <path d="M-6,-4 Q0,-8 6,-4" stroke={colors.filterDark} fill="none" strokeWidth={1} />
-                <path d="M-4,2 Q0,6 4,2" stroke={colors.filterDark} fill="none" strokeWidth={1} />
+              // Crumpled filter - irregular ball with premium gradient
+              <g filter="url(#tvelDropShadow)">
+                <ellipse cx="0" cy="0" rx="16" ry="14" fill="url(#tvelCrumpledGradient)" />
+                <ellipse cx="-4" cy="-4" rx="12" ry="10" fill="#fde68a" opacity="0.5" />
+                {/* Crumple texture lines */}
+                <path d="M-8,-6 Q-2,-10 8,-5" stroke="#92400e" fill="none" strokeWidth="1.5" opacity="0.6" />
+                <path d="M-6,3 Q2,8 7,2" stroke="#92400e" fill="none" strokeWidth="1.5" opacity="0.6" />
+                <path d="M-3,-2 Q0,0 3,-1" stroke="#b45309" fill="none" strokeWidth="1" opacity="0.4" />
               </g>
             ) : (
-              // Flat filter(s) - cone shape
-              <g>
+              // Flat filter(s) - cone shape with premium gradient
+              <g filter="url(#tvelDropShadow)">
                 {Array.from({ length: numFilters }).map((_, i) => (
-                  <g key={i} transform={`translate(0, ${i * 2})`}>
-                    <ellipse cx={0} cy={0} rx={30 - i} ry={8 - i * 0.3} fill={colors.filter} stroke={colors.filterDark} strokeWidth={1} opacity={1 - i * 0.1} />
+                  <g key={`filter-${i}`} transform={`translate(0, ${i * 3})`}>
+                    <ellipse
+                      cx="0"
+                      cy="0"
+                      rx={38 - i * 1.5}
+                      ry={10 - i * 0.4}
+                      fill="url(#tvelFilterGradient)"
+                      stroke="#92400e"
+                      strokeWidth="1.5"
+                      opacity={1 - i * 0.08}
+                    />
                   </g>
                 ))}
-                {/* Filter ridges */}
-                {[-20, -10, 0, 10, 20].map((x, i) => (
-                  <line key={i} x1={x} y1={-5} x2={x * 0.8} y2={5} stroke={colors.filterDark} strokeWidth={0.5} opacity={0.5} />
+                {/* Filter ridges with gradient */}
+                {[-28, -18, -8, 0, 8, 18, 28].map((x, i) => (
+                  <line
+                    key={`ridge-${i}`}
+                    x1={x}
+                    y1={-7}
+                    x2={x * 0.85}
+                    y2={7}
+                    stroke="#b45309"
+                    strokeWidth="1"
+                    opacity="0.5"
+                  />
                 ))}
+                {/* Center highlight */}
+                <ellipse cx="0" cy="-2" rx="15" ry="4" fill="white" opacity="0.2" />
               </g>
             )}
 
-            {/* Force arrows when moving */}
+            {/* ========== FORCE ARROWS WITH PREMIUM GRADIENTS ========== */}
             {isDropped && velocity > 0.1 && (
               <g>
-                {/* Gravity arrow (red, pointing down) */}
-                <line x1={0} y1={15} x2={0} y2={15 + gravityArrowLength} stroke={colors.gravity} strokeWidth={3} />
-                <polygon points={`0,${20 + gravityArrowLength} -5,${15 + gravityArrowLength} 5,${15 + gravityArrowLength}`} fill={colors.gravity} />
-                <text x={10} y={20 + gravityArrowLength / 2} fill={colors.gravity} fontSize={10} fontWeight="bold">W</text>
+                {/* Gravity arrow (red gradient, pointing down) */}
+                <g filter="url(#tvelForceGlow)">
+                  <line
+                    x1="0"
+                    y1={20}
+                    x2="0"
+                    y2={20 + gravityArrowLength}
+                    stroke="url(#tvelGravityGradient)"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
+                  <polygon
+                    points={`0,${28 + gravityArrowLength} -8,${18 + gravityArrowLength} 8,${18 + gravityArrowLength}`}
+                    fill="url(#tvelGravityGradient)"
+                  />
+                  <rect
+                    x="12"
+                    y={15 + gravityArrowLength / 2}
+                    width="28"
+                    height="18"
+                    rx="4"
+                    fill="rgba(239, 68, 68, 0.9)"
+                  />
+                  <text
+                    x="26"
+                    y={28 + gravityArrowLength / 2}
+                    fill="white"
+                    fontSize="11"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    W
+                  </text>
+                </g>
 
-                {/* Drag arrow (blue, pointing up) */}
-                <line x1={0} y1={-15} x2={0} y2={-15 - dragArrowLength} stroke={colors.air} strokeWidth={3} />
-                <polygon points={`0,${-20 - dragArrowLength} -5,${-15 - dragArrowLength} 5,${-15 - dragArrowLength}`} fill={colors.air} />
-                <text x={10} y={-15 - dragArrowLength / 2} fill={colors.air} fontSize={10} fontWeight="bold">Fd</text>
+                {/* Drag arrow (blue gradient, pointing up) */}
+                <g filter="url(#tvelForceGlow)">
+                  <line
+                    x1="0"
+                    y1={-20}
+                    x2="0"
+                    y2={-20 - dragArrowLength}
+                    stroke="url(#tvelDragGradient)"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                  />
+                  <polygon
+                    points={`0,${-28 - dragArrowLength} -8,${-18 - dragArrowLength} 8,${-18 - dragArrowLength}`}
+                    fill="url(#tvelDragGradient)"
+                  />
+                  <rect
+                    x="12"
+                    y={-30 - dragArrowLength / 2}
+                    width="28"
+                    height="18"
+                    rx="4"
+                    fill="rgba(59, 130, 246, 0.9)"
+                  />
+                  <text
+                    x="26"
+                    y={-17 - dragArrowLength / 2}
+                    fill="white"
+                    fontSize="10"
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    Fd
+                  </text>
+                </g>
               </g>
             )}
           </g>
 
-          {/* Velocity vs Time Graph */}
-          <g transform={`translate(${width - margin - 140}, ${20})`}>
-            <rect x={0} y={0} width={130} height={graphHeight} fill="rgba(255,255,255,0.9)" rx={4} />
+          {/* ========== VELOCITY VS TIME GRAPH ========== */}
+          <g transform={`translate(${width - graphWidth - 50}, 25)`} filter="url(#tvelPanelShadow)">
+            {/* Graph background panel */}
+            <rect
+              x="0"
+              y="0"
+              width={graphWidth}
+              height={graphHeight + 10}
+              fill="url(#tvelGraphBgGradient)"
+              rx="12"
+              stroke="#334155"
+              strokeWidth="1"
+            />
 
             {/* Graph title */}
-            <text x={65} y={15} fill="#333" fontSize={10} textAnchor="middle" fontWeight="bold">Velocity vs Time</text>
+            <text
+              x={graphWidth / 2}
+              y="20"
+              fill="#f8fafc"
+              fontSize="13"
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              Velocity vs Time
+            </text>
+
+            {/* Graph area background */}
+            <rect
+              x="35"
+              y="30"
+              width={graphWidth - 50}
+              height={graphHeight - 45}
+              fill="#020617"
+              rx="4"
+            />
+
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map((frac, i) => (
+              <line
+                key={`hgrid-${i}`}
+                x1="35"
+                y1={30 + (graphHeight - 45) * frac}
+                x2={graphWidth - 15}
+                y2={30 + (graphHeight - 45) * frac}
+                stroke="#1e293b"
+                strokeWidth="1"
+              />
+            ))}
+            {[0.25, 0.5, 0.75].map((frac, i) => (
+              <line
+                key={`vgrid-${i}`}
+                x1={35 + (graphWidth - 50) * frac}
+                y1="30"
+                x2={35 + (graphWidth - 50) * frac}
+                y2={graphHeight - 15}
+                stroke="#1e293b"
+                strokeWidth="1"
+              />
+            ))}
 
             {/* Axes */}
-            <line x1={25} y1={graphHeight - 20} x2={120} y2={graphHeight - 20} stroke="#333" strokeWidth={1} />
-            <line x1={25} y1={25} x2={25} y2={graphHeight - 20} stroke="#333" strokeWidth={1} />
+            <line
+              x1="35"
+              y1={graphHeight - 15}
+              x2={graphWidth - 15}
+              y2={graphHeight - 15}
+              stroke="#64748b"
+              strokeWidth="2"
+            />
+            <line
+              x1="35"
+              y1="30"
+              x2="35"
+              y2={graphHeight - 15}
+              stroke="#64748b"
+              strokeWidth="2"
+            />
 
             {/* Axis labels */}
-            <text x={75} y={graphHeight - 5} fill="#333" fontSize={8} textAnchor="middle">Time (s)</text>
-            <text x={10} y={70} fill="#333" fontSize={8} textAnchor="middle" transform="rotate(-90, 10, 70)">v (m/s)</text>
+            <text
+              x={graphWidth / 2 + 10}
+              y={graphHeight + 5}
+              fill="#94a3b8"
+              fontSize="10"
+              textAnchor="middle"
+            >
+              Time (s)
+            </text>
+            <text
+              x="12"
+              y={(graphHeight - 15 + 30) / 2}
+              fill="#94a3b8"
+              fontSize="10"
+              textAnchor="middle"
+              transform={`rotate(-90, 12, ${(graphHeight - 15 + 30) / 2})`}
+            >
+              v (m/s)
+            </text>
 
-            {/* Terminal velocity line (dashed) */}
+            {/* Terminal velocity reference line */}
             <line
-              x1={25}
-              y1={graphHeight - 20 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              x2={120}
-              y2={graphHeight - 20 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              stroke={colors.accent}
-              strokeWidth={1}
-              strokeDasharray="4,2"
+              x1="35"
+              y1={graphHeight - 15 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              x2={graphWidth - 15}
+              y2={graphHeight - 15 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              stroke="url(#tvelTerminalLineGradient)"
+              strokeWidth="2"
+              strokeDasharray="6,3"
+            />
+            <rect
+              x={graphWidth - 35}
+              y={graphHeight - 23 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              width="22"
+              height="14"
+              rx="3"
+              fill="rgba(139, 92, 246, 0.8)"
             />
             <text
-              x={122}
-              y={graphHeight - 18 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
-              fill={colors.accent}
-              fontSize={7}
+              x={graphWidth - 24}
+              y={graphHeight - 13 - (terminalVelocity / graphMaxV) * (graphHeight - 45)}
+              fill="white"
+              fontSize="9"
+              fontWeight="bold"
+              textAnchor="middle"
             >
               vt
             </text>
 
-            {/* Velocity history plot */}
+            {/* Velocity curve with glow */}
             {velocityHistory.length > 1 && (
-              <polyline
-                points={velocityHistory.map((pt, i) => {
-                  const x = 25 + (pt.t / graphMaxT) * 95;
-                  const y = graphHeight - 20 - (pt.v / graphMaxV) * (graphHeight - 45);
-                  return `${x},${y}`;
-                }).join(' ')}
-                fill="none"
-                stroke={colors.success}
-                strokeWidth={2}
-              />
+              <g filter="url(#tvelCurveGlow)">
+                <polyline
+                  points={velocityHistory.map((pt) => {
+                    const x = 35 + (pt.t / graphMaxT) * (graphWidth - 50);
+                    const y = graphHeight - 15 - (pt.v / graphMaxV) * (graphHeight - 45);
+                    return `${x},${Math.max(30, Math.min(graphHeight - 15, y))}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke="url(#tvelVelocityCurveGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
             )}
 
             {/* Y-axis values */}
-            <text x={22} y={graphHeight - 18} fill="#333" fontSize={7} textAnchor="end">0</text>
-            <text x={22} y={27} fill="#333" fontSize={7} textAnchor="end">{graphMaxV.toFixed(1)}</text>
+            <text x="30" y={graphHeight - 12} fill="#64748b" fontSize="9" textAnchor="end">0</text>
+            <text x="30" y="35" fill="#64748b" fontSize="9" textAnchor="end">{graphMaxV.toFixed(1)}</text>
+            <text x="30" y={(graphHeight - 15 + 30) / 2 + 3} fill="#64748b" fontSize="9" textAnchor="end">
+              {(graphMaxV / 2).toFixed(1)}
+            </text>
           </g>
 
-          {/* Info panel */}
-          <g transform={`translate(${width - margin - 140}, ${graphHeight + 30})`}>
-            <rect x={0} y={0} width={130} height={60} fill="rgba(15, 23, 42, 0.9)" rx={4} />
-            <text x={65} y={15} fill={colors.textPrimary} fontSize={10} textAnchor="middle">
-              Filters: {numFilters} | {showCrumple && isCrumpled ? 'Crumpled' : 'Flat'}
+          {/* ========== INFO PANEL ========== */}
+          <g transform={`translate(${width - graphWidth - 50}, ${graphHeight + 50})`} filter="url(#tvelPanelShadow)">
+            <rect
+              x="0"
+              y="0"
+              width={graphWidth}
+              height="100"
+              fill="url(#tvelInfoPanelGradient)"
+              rx="12"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+
+            {/* Panel header */}
+            <rect x="0" y="0" width={graphWidth} height="28" rx="12" fill="#1e293b" />
+            <rect x="0" y="14" width={graphWidth} height="14" fill="#1e293b" />
+            <text
+              x={graphWidth / 2}
+              y="18"
+              fill="#f8fafc"
+              fontSize="12"
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              {numFilters} Filter{numFilters > 1 ? 's' : ''} | {showCrumple && isCrumpled ? 'Crumpled' : 'Flat'}
             </text>
-            <text x={65} y={30} fill={colors.textSecondary} fontSize={9} textAnchor="middle">
+
+            {/* Current velocity */}
+            <text x="15" y="48" fill="#94a3b8" fontSize="10">Current:</text>
+            <text x={graphWidth - 15} y="48" fill="#22c55e" fontSize="14" fontWeight="bold" textAnchor="end">
               v = {velocity.toFixed(2)} m/s
             </text>
-            <text x={65} y={43} fill={colors.accent} fontSize={9} textAnchor="middle">
+
+            {/* Terminal velocity */}
+            <text x="15" y="68" fill="#94a3b8" fontSize="10">Terminal:</text>
+            <text x={graphWidth - 15} y="68" fill="#a855f7" fontSize="14" fontWeight="bold" textAnchor="end">
               vt = {terminalVelocity.toFixed(2)} m/s
             </text>
-            <text x={65} y={55} fill={colors.textMuted} fontSize={8} textAnchor="middle">
+
+            {/* Time elapsed */}
+            <text x="15" y="88" fill="#94a3b8" fontSize="10">Time:</text>
+            <text x={graphWidth - 15} y="88" fill="#60a5fa" fontSize="14" fontWeight="bold" textAnchor="end">
               t = {time.toFixed(2)} s
+            </text>
+          </g>
+
+          {/* ========== LEGEND ========== */}
+          <g transform={`translate(${width - graphWidth - 50}, ${height - 45})`}>
+            <rect x="0" y="0" width={graphWidth} height="38" fill="url(#tvelInfoPanelGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+            <circle cx="20" cy="12" r="5" fill="url(#tvelGravityGradient)" />
+            <text x="32" y="16" fill="#f8fafc" fontSize="9">Weight (W = mg)</text>
+            <circle cx="20" cy="28" r="5" fill="url(#tvelDragGradient)" />
+            <text x="32" y="32" fill="#f8fafc" fontSize="9">Drag (Fd = 1/2 rho v^2 Cd A)</text>
+          </g>
+
+          {/* ========== DROP ZONE LABEL ========== */}
+          <g transform="translate(170, 10)">
+            <rect x="-50" y="0" width="100" height="22" rx="6" fill="rgba(15, 23, 42, 0.85)" />
+            <text x="0" y="15" fill="#f8fafc" fontSize="11" fontWeight="bold" textAnchor="middle">
+              Drop Zone
             </text>
           </g>
         </svg>
 
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '12px' }}>
             <button
               onClick={dropFilter}
               disabled={isDropped}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 32px',
+                borderRadius: '12px',
                 border: 'none',
-                background: isDropped ? colors.textMuted : colors.success,
+                background: isDropped
+                  ? 'linear-gradient(135deg, #64748b 0%, #475569 100%)'
+                  : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: isDropped ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
+                fontSize: '15px',
+                boxShadow: isDropped ? 'none' : '0 4px 20px rgba(34, 197, 94, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
               Drop Filter
@@ -489,14 +961,15 @@ const TerminalVelocityRenderer: React.FC<TerminalVelocityRendererProps> = ({
             <button
               onClick={resetSimulation}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                padding: '14px 32px',
+                borderRadius: '12px',
+                border: '2px solid #8b5cf6',
                 background: 'transparent',
-                color: colors.accent,
+                color: '#a855f7',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '15px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

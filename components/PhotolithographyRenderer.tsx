@@ -339,14 +339,13 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
+    const width = 500;
+    const height = 440;
     const output = calculateResolution();
 
     // Pattern visualization
-    const patternY = 180;
     const featureWidth = Math.max(2, output.effectiveResolution / 5);
-    const numFeatures = Math.floor(300 / (featureWidth * 2));
+    const numFeatures = Math.floor(180 / (featureWidth * 2));
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -355,150 +354,529 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
+          {/* ============================================ */}
+          {/* PREMIUM DEFS SECTION - Gradients & Filters */}
+          {/* ============================================ */}
+          <defs>
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="phlithLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* UV Light Source Gradient - DUV (violet) */}
+            <linearGradient id="phlithDUVSource" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="25%" stopColor="#9333ea" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="75%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#5b21b6" />
+            </linearGradient>
+
+            {/* EUV Light Source Gradient (cyan) */}
+            <linearGradient id="phlithEUVSource" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="25%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#0891b2" />
+              <stop offset="75%" stopColor="#0e7490" />
+              <stop offset="100%" stopColor="#155e75" />
+            </linearGradient>
+
+            {/* UV Beam Radial Glow - DUV */}
+            <radialGradient id="phlithDUVGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="1" />
+              <stop offset="30%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
+
+            {/* UV Beam Radial Glow - EUV */}
+            <radialGradient id="phlithEUVGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Premium lens glass gradient with depth */}
+            <linearGradient id="phlithLensGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.15" />
+              <stop offset="80%" stopColor="#2563eb" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Lens edge highlight */}
+            <linearGradient id="phlithLensEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Mask chrome gradient with brushed metal effect */}
+            <linearGradient id="phlithMaskChrome" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="15%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="85%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Mask glass substrate */}
+            <linearGradient id="phlithMaskGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Silicon wafer gradient with realistic depth */}
+            <linearGradient id="phlithSiliconWafer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Photoresist layer gradient */}
+            <linearGradient id="phlithPhotoresist" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="30%" stopColor="#fb923c" />
+              <stop offset="60%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ea580c" />
+            </linearGradient>
+
+            {/* Exposed photoresist (developed areas) */}
+            <linearGradient id="phlithExposedResist" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Housing metal gradient */}
+            <linearGradient id="phlithHousingMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Control panel gradient */}
+            <linearGradient id="phlithControlPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* UV Beam linear gradient for exposure visualization */}
+            <linearGradient id="phlithUVBeamDUV" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
+              <stop offset="20%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#c084fc" stopOpacity="0.9" />
+              <stop offset="80%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            </linearGradient>
+
+            <linearGradient id="phlithUVBeamEUV" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="20%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.9" />
+              <stop offset="80%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Power indicator glow */}
+            <radialGradient id="phlithPowerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filter for UV light effect */}
+            <filter id="phlithUVGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow filter for general use */}
+            <filter id="phlithSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense glow filter for beam core */}
+            <filter id="phlithIntenseGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow filter for depth */}
+            <filter id="phlithInnerShadow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Lab grid pattern */}
+            <pattern id="phlithLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* ============================================ */}
+          {/* BACKGROUND */}
+          {/* ============================================ */}
+          <rect width={width} height={height} fill="url(#phlithLabBg)" />
+          <rect width={width} height={height} fill="url(#phlithLabGrid)" />
+
           {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Photolithography: {output.isEUV ? 'EUV' : 'DUV'} at {wavelength}nm
+          <text x={width/2} y={22} fill={colors.textPrimary} fontSize={13} fontWeight="bold" textAnchor="middle" fontFamily="system-ui, sans-serif">
+            Photolithography System: {output.isEUV ? 'EUV' : 'DUV'} at {wavelength}nm
           </text>
 
-          {/* Light source */}
-          <g transform="translate(50, 45)">
-            <rect x={0} y={0} width={60} height={30} fill={output.isEUV ? colors.euv : colors.uv} rx={4} />
-            <text x={30} y={20} fill="white" fontSize={10} textAnchor="middle" fontWeight="bold">
+          {/* ============================================ */}
+          {/* PREMIUM UV LIGHT SOURCE */}
+          {/* ============================================ */}
+          <g transform="translate(50, 35)">
+            {/* Housing */}
+            <rect x={0} y={0} width={90} height={45} rx={6} fill="url(#phlithHousingMetal)" stroke="#475569" strokeWidth="1" />
+            <rect x={3} y={3} width={84} height={39} rx={5} fill="#111827" opacity="0.5" />
+
+            {/* Light source window */}
+            <rect x={10} y={8} width={70} height={30} rx={4} fill={output.isEUV ? 'url(#phlithEUVSource)' : 'url(#phlithDUVSource)'} />
+
+            {/* Glowing core */}
+            <ellipse cx={45} cy={23} rx={25} ry={10} fill={output.isEUV ? 'url(#phlithEUVGlow)' : 'url(#phlithDUVGlow)'} filter="url(#phlithUVGlow)">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="0.8s" repeatCount="indefinite" />
+            </ellipse>
+
+            {/* Source label */}
+            <text x={45} y={27} fill="white" fontSize={10} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
               {output.isEUV ? 'EUV' : 'DUV'}
             </text>
-            {/* Light rays */}
-            {[...Array(5)].map((_, i) => (
-              <line
-                key={i}
-                x1={10 + i * 10}
-                y1={30}
-                x2={10 + i * 10}
-                y2={55}
-                stroke={output.isEUV ? colors.euv : colors.uv}
-                strokeWidth={2}
-                opacity={0.7}
-              >
-                <animate
-                  attributeName="y2"
-                  values="55;60;55"
-                  dur="1s"
-                  repeatCount="indefinite"
-                  begin={`${i * 0.1}s`}
-                />
-              </line>
-            ))}
+
+            {/* Power indicator */}
+            <circle cx={85} cy={10} r={4} fill="url(#phlithPowerGlow)" filter="url(#phlithSoftGlow)">
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Label */}
+            <text x={45} y={-5} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+              LIGHT SOURCE
+            </text>
           </g>
 
           {/* Wavelength indicator */}
-          <text x={130} y={65} fill={colors.textMuted} fontSize={10}>
-            lambda = {wavelength}nm
-          </text>
+          <g transform="translate(150, 45)">
+            <rect x={0} y={0} width={55} height={18} rx={4} fill="#111827" stroke="#334155" strokeWidth="0.5" />
+            <text x={27} y={13} fill={output.isEUV ? colors.euv : colors.uv} fontSize={9} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+              {'\u03BB'}={wavelength}nm
+            </text>
+          </g>
 
-          {/* Mask */}
-          <g transform="translate(50, 105)">
-            <rect x={0} y={0} width={140} height={20} fill="#1f2937" />
-            {/* Mask pattern - alternating clear/opaque */}
-            {[...Array(7)].map((_, i) => (
-              <rect
+          {/* ============================================ */}
+          {/* UV EXPOSURE BEAM VISUALIZATION */}
+          {/* ============================================ */}
+          <g>
+            {/* Main beam from source to mask */}
+            <rect x={70} y={80} width={50} height={30} fill={output.isEUV ? 'url(#phlithUVBeamEUV)' : 'url(#phlithUVBeamDUV)'} opacity="0.5">
+              <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.2s" repeatCount="indefinite" />
+            </rect>
+
+            {/* Animated beam particles */}
+            {[...Array(6)].map((_, i) => (
+              <circle
                 key={i}
-                x={10 + i * 20}
-                y={0}
-                width={10}
-                height={20}
-                fill={i % 2 === 0 ? 'transparent' : '#0f172a'}
-              />
+                cx={75 + i * 8}
+                r={2}
+                fill={output.isEUV ? '#67e8f9' : '#c084fc'}
+                filter="url(#phlithSoftGlow)"
+              >
+                <animate
+                  attributeName="cy"
+                  values="82;108;82"
+                  dur="0.8s"
+                  repeatCount="indefinite"
+                  begin={`${i * 0.1}s`}
+                />
+                <animate
+                  attributeName="opacity"
+                  values="0;1;0"
+                  dur="0.8s"
+                  repeatCount="indefinite"
+                  begin={`${i * 0.1}s`}
+                />
+              </circle>
             ))}
-            <text x={70} y={-5} fill={colors.textMuted} fontSize={9} textAnchor="middle">Mask</text>
           </g>
 
-          {/* Lens system */}
-          <g transform="translate(200, 55)">
-            <ellipse cx={40} cy={30} rx={35} ry={15} fill="none" stroke={colors.textSecondary} strokeWidth={2} />
-            <ellipse cx={40} cy={60} rx={40} ry={18} fill="none" stroke={colors.textSecondary} strokeWidth={2} />
-            <text x={40} y={90} fill={colors.textMuted} fontSize={9} textAnchor="middle">Lens (NA={numericalAperture})</text>
-          </g>
+          {/* ============================================ */}
+          {/* PREMIUM PHOTOMASK */}
+          {/* ============================================ */}
+          <g transform="translate(30, 110)">
+            {/* Mask frame */}
+            <rect x={0} y={0} width={200} height={32} rx={4} fill="url(#phlithHousingMetal)" stroke="#4b5563" strokeWidth="1" />
 
-          {/* Wafer with pattern */}
-          <g transform="translate(50, patternY)">
-            {/* Silicon substrate */}
-            <rect x={0} y={20} width={300} height={40} fill={colors.silicon} rx={4} />
-            <text x={150} y={50} fill={colors.textMuted} fontSize={9} textAnchor="middle">Silicon Wafer</text>
+            {/* Mask glass substrate */}
+            <rect x={5} y={4} width={190} height={24} rx={2} fill="url(#phlithMaskGlass)" />
 
-            {/* Photoresist layer */}
-            <rect x={0} y={0} width={300} height={20} fill={colors.photoresist} opacity={0.6} rx={2} />
-
-            {/* Exposed pattern */}
-            {[...Array(numFeatures)].map((_, i) => {
-              const x = 10 + i * featureWidth * 2;
-              // Add diffraction blur effect for larger features relative to wavelength
-              const blur = output.effectiveResolution > 30 ? 2 : 0;
-              return (
+            {/* Chrome pattern layer (mask absorber pattern) */}
+            <g>
+              {[...Array(9)].map((_, i) => (
                 <rect
                   key={i}
-                  x={x}
-                  y={2}
-                  width={featureWidth}
-                  height={16}
-                  fill="#1f2937"
-                  opacity={0.8}
-                  style={{ filter: blur > 0 ? `blur(${blur}px)` : 'none' }}
+                  x={15 + i * 20}
+                  y={6}
+                  width={10}
+                  height={20}
+                  fill={i % 2 === 0 ? 'url(#phlithMaskChrome)' : 'transparent'}
+                  rx={1}
                 />
+              ))}
+            </g>
+
+            {/* Mask edge highlights */}
+            <line x1={5} y1={4} x2={195} y2={4} stroke="#6b7280" strokeWidth="0.5" strokeOpacity="0.5" />
+            <line x1={5} y1={28} x2={195} y2={28} stroke="#1f2937" strokeWidth="0.5" />
+
+            {/* Label */}
+            <text x={100} y={-6} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+              PHOTOMASK (RETICLE)
+            </text>
+          </g>
+
+          {/* ============================================ */}
+          {/* PREMIUM LENS SYSTEM */}
+          {/* ============================================ */}
+          <g transform="translate(250, 50)">
+            {/* Lens housing */}
+            <rect x={-15} y={0} width={90} height={105} rx={6} fill="url(#phlithHousingMetal)" stroke="#475569" strokeWidth="1" />
+            <rect x={-12} y={3} width={84} height={99} rx={5} fill="#0f172a" opacity="0.4" />
+
+            {/* Upper condenser lens */}
+            <ellipse cx={30} cy={25} rx={28} ry={12} fill="url(#phlithLensGlass)" stroke="url(#phlithLensEdge)" strokeWidth="1.5" />
+            <ellipse cx={30} cy={25} rx={24} ry={9} fill="none" stroke="#93c5fd" strokeWidth="0.5" strokeOpacity="0.4" />
+
+            {/* Middle projection lens (larger) */}
+            <ellipse cx={30} cy={55} rx={32} ry={14} fill="url(#phlithLensGlass)" stroke="url(#phlithLensEdge)" strokeWidth="1.5" />
+            <ellipse cx={30} cy={55} rx={28} ry={11} fill="none" stroke="#93c5fd" strokeWidth="0.5" strokeOpacity="0.4" />
+
+            {/* Lower objective lens */}
+            <ellipse cx={30} cy={85} rx={26} ry={11} fill="url(#phlithLensGlass)" stroke="url(#phlithLensEdge)" strokeWidth="1.5" />
+            <ellipse cx={30} cy={85} rx={22} ry={8} fill="none" stroke="#93c5fd" strokeWidth="0.5" strokeOpacity="0.4" />
+
+            {/* Light path through lenses */}
+            <path
+              d={`M30,12 L30,38 L10,70 L50,70 L30,38 L30,98`}
+              fill="none"
+              stroke={output.isEUV ? colors.euv : colors.uv}
+              strokeWidth="1"
+              strokeOpacity="0.3"
+              strokeDasharray="3 2"
+            />
+
+            {/* NA indicator */}
+            <rect x={68} y={45} width={50} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth="0.5" />
+            <text x={93} y={58} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="monospace">
+              NA={numericalAperture.toFixed(2)}
+            </text>
+
+            {/* Label */}
+            <text x={30} y={-8} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+              PROJECTION OPTICS
+            </text>
+          </g>
+
+          {/* ============================================ */}
+          {/* UV BEAM FROM LENS TO WAFER */}
+          {/* ============================================ */}
+          <g>
+            {/* Converging beam visualization */}
+            <polygon
+              points="280,155 250,175 310,175"
+              fill={output.isEUV ? 'url(#phlithUVBeamEUV)' : 'url(#phlithUVBeamDUV)'}
+              opacity="0.4"
+            >
+              <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1s" repeatCount="indefinite" />
+            </polygon>
+
+            {/* Pattern projection beams through mask openings */}
+            {[...Array(5)].map((_, i) => {
+              const startX = 50 + i * 40;
+              const endX = 70 + i * 35;
+              return (
+                <line
+                  key={i}
+                  x1={startX}
+                  y1={142}
+                  x2={endX}
+                  y2={195}
+                  stroke={output.isEUV ? colors.euv : colors.uv}
+                  strokeWidth="2"
+                  strokeOpacity="0.3"
+                  filter="url(#phlithSoftGlow)"
+                >
+                  <animate
+                    attributeName="strokeOpacity"
+                    values="0.2;0.5;0.2"
+                    dur="0.6s"
+                    repeatCount="indefinite"
+                    begin={`${i * 0.1}s`}
+                  />
+                </line>
+              );
+            })}
+          </g>
+
+          {/* ============================================ */}
+          {/* PREMIUM WAFER WITH PHOTORESIST */}
+          {/* ============================================ */}
+          <g transform="translate(50, 195)">
+            {/* Stage/chuck */}
+            <rect x={-15} y={55} width={230} height={20} rx={4} fill="url(#phlithHousingMetal)" stroke="#334155" strokeWidth="1" />
+            <rect x={-12} y={58} width={224} height={14} rx={3} fill="#111827" opacity="0.5" />
+
+            {/* Silicon wafer substrate */}
+            <rect x={0} y={30} width={200} height={30} rx={3} fill="url(#phlithSiliconWafer)" />
+            <rect x={2} y={32} width={196} height={2} fill="#94a3b8" opacity="0.3" />
+
+            {/* Photoresist layer */}
+            <rect x={0} y={8} width={200} height={22} rx={2} fill="url(#phlithPhotoresist)" />
+
+            {/* Exposed pattern on photoresist */}
+            {[...Array(numFeatures)].map((_, i) => {
+              const x = 10 + i * featureWidth * 2.2;
+              const blurAmount = output.effectiveResolution > 40 ? 1 : 0;
+              return (
+                <g key={i}>
+                  <rect
+                    x={x}
+                    y={10}
+                    width={Math.max(2, featureWidth)}
+                    height={18}
+                    fill="url(#phlithExposedResist)"
+                    rx={1}
+                    style={{ filter: blurAmount > 0 ? `blur(${blurAmount}px)` : 'none' }}
+                  />
+                  {/* Pattern highlight */}
+                  <line
+                    x1={x}
+                    y1={10}
+                    x2={x + Math.max(2, featureWidth)}
+                    y2={10}
+                    stroke={output.isEUV ? colors.euv : colors.uv}
+                    strokeWidth="1"
+                    strokeOpacity="0.4"
+                  />
+                </g>
               );
             })}
 
             {/* Resolution indicator */}
-            <line x1={10} y1={-10} x2={10 + featureWidth} y2={-10} stroke={colors.accent} strokeWidth={2} />
-            <text x={10 + featureWidth / 2} y={-15} fill={colors.accent} fontSize={9} textAnchor="middle">
-              {output.effectiveResolution.toFixed(0)}nm
+            <g transform="translate(10, -15)">
+              <line x1={0} y1={0} x2={Math.max(8, featureWidth)} y2={0} stroke={colors.accent} strokeWidth="2" />
+              <line x1={0} y1={-3} x2={0} y2={3} stroke={colors.accent} strokeWidth="1" />
+              <line x1={Math.max(8, featureWidth)} y1={-3} x2={Math.max(8, featureWidth)} y2={3} stroke={colors.accent} strokeWidth="1" />
+              <text x={Math.max(8, featureWidth) / 2} y={-6} fill={colors.accent} fontSize={8} textAnchor="middle" fontWeight="bold" fontFamily="monospace">
+                {output.effectiveResolution.toFixed(0)}nm
+              </text>
+            </g>
+
+            {/* Labels */}
+            <text x={100} y={-25} fill={colors.textSecondary} fontSize={8} textAnchor="middle" fontFamily="system-ui, sans-serif" fontWeight="600">
+              WAFER WITH PHOTORESIST
             </text>
+            <text x={220} y={20} fill={colors.photoresist} fontSize={7} fontFamily="system-ui, sans-serif">Photoresist</text>
+            <text x={220} y={45} fill={colors.silicon} fontSize={7} fontFamily="system-ui, sans-serif">Silicon</text>
           </g>
 
-          {/* Multiple patterning indicator */}
+          {/* ============================================ */}
+          {/* MULTIPLE PATTERNING INDICATOR */}
+          {/* ============================================ */}
           {useMultiplePatterning && (
-            <g transform="translate(280, 100)">
-              <rect x={0} y={0} width={100} height={60} fill="rgba(245, 158, 11, 0.2)" rx={8} />
-              <text x={50} y={20} fill={colors.accent} fontSize={10} textAnchor="middle" fontWeight="bold">
-                Multi-Pattern
+            <g transform="translate(370, 100)">
+              <rect x={0} y={0} width={110} height={70} rx={8} fill="rgba(245, 158, 11, 0.15)" stroke={colors.accent} strokeWidth="1" strokeOpacity="0.5" />
+              <rect x={3} y={3} width={104} height={64} rx={6} fill="rgba(0,0,0,0.3)" />
+
+              <text x={55} y={22} fill={colors.accent} fontSize={10} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+                MULTI-PATTERN
               </text>
-              <text x={50} y={38} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-                {patterningSteps}x steps
+              <text x={55} y={40} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontFamily="system-ui, sans-serif">
+                {patterningSteps}x exposures
               </text>
-              <text x={50} y={52} fill={colors.textMuted} fontSize={9} textAnchor="middle">
+              <text x={55} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle" fontFamily="system-ui, sans-serif">
                 Cost: {output.costFactor.toFixed(1)}x
               </text>
             </g>
           )}
 
-          {/* Metrics panel */}
-          <rect x={20} y={280} width={360} height={90} fill="rgba(0,0,0,0.4)" rx={8} />
+          {/* ============================================ */}
+          {/* METRICS PANEL */}
+          {/* ============================================ */}
+          <g transform="translate(20, 300)">
+            <rect x={0} y={0} width={460} height={130} rx={8} fill="url(#phlithControlPanel)" stroke="#334155" strokeWidth="1" />
+            <rect x={2} y={2} width={456} height={126} rx={7} fill="rgba(0,0,0,0.2)" />
 
-          <text x={35} y={305} fill={colors.textSecondary} fontSize={11}>
-            Resolution: {output.effectiveResolution.toFixed(1)}nm
-          </text>
-          <text x={35} y={325} fill={colors.textSecondary} fontSize={11}>
-            Diffraction limit: {output.diffractionLimit.toFixed(1)}nm
-          </text>
-          <text x={35} y={345} fill={colors.textSecondary} fontSize={11}>
-            Depth of focus: {output.depthOfFocus.toFixed(1)}nm
-          </text>
+            {/* Panel title */}
+            <text x={230} y={20} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+              SYSTEM PARAMETERS
+            </text>
+            <line x1={20} y1={28} x2={440} y2={28} stroke="#334155" strokeWidth="0.5" />
 
-          <text x={220} y={305} fill={colors.textSecondary} fontSize={11}>
-            Process node: ~{output.processNode}nm
-          </text>
-          <text x={220} y={325} fill={output.canReach7nm ? colors.success : colors.error} fontSize={11}>
-            7nm capable: {output.canReach7nm ? 'Yes' : 'No'}
-          </text>
-          <text x={220} y={345} fill={output.canReach5nm ? colors.success : colors.error} fontSize={11}>
-            5nm capable: {output.canReach5nm ? 'Yes' : 'No'}
-          </text>
+            {/* Left column */}
+            <text x={25} y={50} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+              Resolution: <tspan fill={colors.textPrimary} fontWeight="bold">{output.effectiveResolution.toFixed(1)}nm</tspan>
+            </text>
+            <text x={25} y={70} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+              Diffraction limit: <tspan fill={colors.textPrimary}>{output.diffractionLimit.toFixed(1)}nm</tspan>
+            </text>
+            <text x={25} y={90} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+              Depth of focus: <tspan fill={colors.textPrimary}>{output.depthOfFocus.toFixed(1)}nm</tspan>
+            </text>
 
-          {/* Technology indicator */}
-          <rect x={320} y={50} width={60} height={25} fill={output.isEUV ? colors.euv : colors.uv} rx={4} opacity={0.3} />
-          <text x={350} y={67} fill={output.isEUV ? colors.euv : colors.uv} fontSize={11} textAnchor="middle" fontWeight="bold">
-            {output.isEUV ? 'EUV' : 'DUV'}
-          </text>
+            {/* Right column */}
+            <text x={250} y={50} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+              Process node: <tspan fill={colors.textPrimary} fontWeight="bold">~{output.processNode}nm</tspan>
+            </text>
+            <text x={250} y={70} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+              7nm capable: <tspan fill={output.canReach7nm ? colors.success : colors.error} fontWeight="bold">{output.canReach7nm ? 'YES' : 'NO'}</tspan>
+            </text>
+            <text x={250} y={90} fill={colors.textSecondary} fontSize={10} fontFamily="system-ui, sans-serif">
+              5nm capable: <tspan fill={output.canReach5nm ? colors.success : colors.error} fontWeight="bold">{output.canReach5nm ? 'YES' : 'NO'}</tspan>
+            </text>
+
+            {/* Formula display */}
+            <rect x={25} y={100} width={410} height={22} rx={4} fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+            <text x={230} y={115} fill={colors.accent} fontSize={9} textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+              Resolution = k1 x {'\u03BB'} / NA = {k1Factor.toFixed(2)} x {wavelength}nm / {numericalAperture.toFixed(2)} = {output.effectiveResolution.toFixed(1)}nm
+            </text>
+          </g>
+
+          {/* Technology badge */}
+          <g transform="translate(400, 35)">
+            <rect x={0} y={0} width={70} height={28} rx={6} fill={output.isEUV ? 'rgba(6, 182, 212, 0.2)' : 'rgba(139, 92, 246, 0.2)'} stroke={output.isEUV ? colors.euv : colors.uv} strokeWidth="1" />
+            <text x={35} y={18} fill={output.isEUV ? colors.euv : colors.uv} fontSize={12} textAnchor="middle" fontWeight="bold" fontFamily="system-ui, sans-serif">
+              {output.isEUV ? 'EUV' : 'DUV'}
+            </text>
+          </g>
         </svg>
 
         {interactive && (
@@ -509,11 +887,12 @@ const PhotolithographyRenderer: React.FC<PhotolithographyRendererProps> = ({
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: wavelength === 13.5 ? colors.euv : colors.uv,
+                background: wavelength === 13.5 ? `linear-gradient(135deg, ${colors.euv} 0%, #0e7490 100%)` : `linear-gradient(135deg, ${colors.uv} 0%, #6d28d9 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '13px',
+                boxShadow: `0 4px 15px ${wavelength === 13.5 ? 'rgba(6, 182, 212, 0.4)' : 'rgba(139, 92, 246, 0.4)'}`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

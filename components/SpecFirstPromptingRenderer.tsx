@@ -325,8 +325,8 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 450;
+    const width = 700;
+    const height = 520;
     const metrics = calculateMetrics();
     const currentPrompt = promptMode === 'vague' ? vaguePrompt : structuredPrompt;
 
@@ -337,101 +337,460 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '720px' }}
         >
           <defs>
-            <linearGradient id="assumptionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.error} />
-              <stop offset="100%" stopColor={colors.assumption} />
+            {/* === PREMIUM LINEAR GRADIENTS === */}
+            {/* Lab background gradient with depth */}
+            <linearGradient id="sfpLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
+
+            {/* Workflow arrow gradient - vague mode (red-orange) */}
+            <linearGradient id="sfpWorkflowVague" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#fb923c" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ea580c" />
+            </linearGradient>
+
+            {/* Workflow arrow gradient - structured mode (green-cyan) */}
+            <linearGradient id="sfpWorkflowStructured" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="25%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#2dd4bf" />
+              <stop offset="75%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+
+            {/* Document card gradient */}
+            <linearGradient id="sfpDocumentCard" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Specification document header gradient */}
+            <linearGradient id="sfpSpecHeader" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="70%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Code panel gradient */}
+            <linearGradient id="sfpCodePanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#18181b" />
+              <stop offset="20%" stopColor="#27272a" />
+              <stop offset="50%" stopColor="#18181b" />
+              <stop offset="80%" stopColor="#27272a" />
+              <stop offset="100%" stopColor="#18181b" />
+            </linearGradient>
+
+            {/* LLM brain gradient */}
+            <linearGradient id="sfpLlmBrain" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="75%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#5b21b6" />
+            </linearGradient>
+
+            {/* Success status gradient */}
+            <linearGradient id="sfpSuccessStatus" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            {/* Error status gradient */}
+            <linearGradient id="sfpErrorStatus" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b91c1c" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Warning status gradient */}
+            <linearGradient id="sfpWarningStatus" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* === PREMIUM RADIAL GRADIENTS === */}
+            {/* Status indicator glow - success */}
+            <radialGradient id="sfpSuccessGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="40%" stopColor="#10b981" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#059669" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Status indicator glow - error */}
+            <radialGradient id="sfpErrorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Status indicator glow - warning */}
+            <radialGradient id="sfpWarningGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* LLM processing glow */}
+            <radialGradient id="sfpLlmGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#5b21b6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Assumption pulse glow */}
+            <radialGradient id="sfpAssumptionPulse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="1" />
+              <stop offset="30%" stopColor="#ea580c" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#c2410c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#9a3412" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+            {/* Document glow filter */}
+            <filter id="sfpDocGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Success indicator glow */}
+            <filter id="sfpSuccessFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Error indicator glow */}
+            <filter id="sfpErrorFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Warning indicator glow */}
+            <filter id="sfpWarningFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* LLM brain glow */}
+            <filter id="sfpLlmFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow filter */}
+            <filter id="sfpSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="sfpGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            Assumption Detector
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#sfpLabBg)" />
+          <rect width={width} height={height} fill="url(#sfpGrid)" />
+
+          {/* === HEADER === */}
+          <text x={width/2} y={30} fill="#f8fafc" fontSize={16} textAnchor="middle" fontWeight="bold">
+            Spec-First Prompting Workflow
           </text>
-          <text x={width/2} y={45} fill={promptMode === 'vague' ? colors.vague : colors.structured} fontSize={12} textAnchor="middle">
-            {promptMode === 'vague' ? 'Vague Prompt Analysis' : 'Structured Spec Analysis'}
+          <text x={width/2} y={50} fill={promptMode === 'vague' ? '#ef4444' : '#10b981'} fontSize={12} textAnchor="middle" fontWeight="600">
+            {promptMode === 'vague' ? 'Vague Prompt Mode - High Assumption Risk' : 'Structured Spec Mode - Minimal Assumptions'}
           </text>
 
-          {/* Prompt display box */}
-          <rect x={20} y={60} width={width - 40} height={80} fill={colors.bgCard} rx={8} stroke={promptMode === 'vague' ? colors.vague : colors.structured} strokeWidth={2} />
-          <text x={30} y={78} fill={colors.textMuted} fontSize={10}>PROMPT:</text>
+          {/* === WORKFLOW VISUALIZATION === */}
+          {/* Step 1: Prompt/Spec Document */}
+          <g transform="translate(30, 75)">
+            {/* Document card with shadow */}
+            <rect x={0} y={0} width={160} height={200} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
 
-          {/* Prompt text (truncated for display) */}
-          {promptMode === 'vague' ? (
-            <text x={30} y={100} fill={colors.textPrimary} fontSize={12}>
-              &quot;Build me a user authentication system&quot;
+            {/* Document header */}
+            <rect x={0} y={0} width={160} height={32} rx={8} fill="url(#sfpSpecHeader)" />
+            <rect x={0} y={24} width={160} height={8} fill="url(#sfpSpecHeader)" />
+
+            {/* Header icon and text */}
+            <text x={12} y={22} fill="#ffffff" fontSize={11} fontWeight="bold">
+              {promptMode === 'vague' ? '📝 PROMPT' : '📋 SPECIFICATION'}
             </text>
-          ) : (
-            <>
-              <text x={30} y={95} fill={colors.textPrimary} fontSize={10}>Build auth system with:</text>
-              <text x={30} y={110} fill={colors.textSecondary} fontSize={9}>- Email/password, JWT 24hr, min 8 chars...</text>
-              <text x={30} y={125} fill={colors.textSecondary} fontSize={9}>- Rate limit 5/15min, no MFA, single role...</text>
-            </>
-          )}
 
-          {/* Assumption count indicator */}
-          <rect x={20} y={150} width={width - 40} height={50} fill="rgba(239, 68, 68, 0.1)" rx={8} />
-          <text x={30} y={170} fill={colors.error} fontSize={12} fontWeight="bold">
-            Detected Assumptions: {currentPrompt.assumptions.length}
-          </text>
-          <text x={30} y={188} fill={colors.textMuted} fontSize={10}>
-            {currentPrompt.assumptions.length > 2 ? 'High risk of wrong guesses!' : 'Low ambiguity - good spec!'}
-          </text>
+            {/* Document content */}
+            <rect x={8} y={40} width={144} height={150} rx={4} fill="#0f172a" />
 
-          {/* Assumption list with highlighting */}
+            {promptMode === 'vague' ? (
+              <g>
+                <text x={16} y={60} fill="#94a3b8" fontSize={9}>User Request:</text>
+                <text x={16} y={78} fill="#f8fafc" fontSize={10} fontWeight="600">&quot;Build me a user</text>
+                <text x={16} y={92} fill="#f8fafc" fontSize={10} fontWeight="600">authentication system&quot;</text>
+                <line x1={16} y1={110} x2={140} y2={110} stroke="#334155" strokeWidth={1} />
+                <text x={16} y={130} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No specifications</text>
+                <text x={16} y={145} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No constraints</text>
+                <text x={16} y={160} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No edge cases</text>
+                <text x={16} y={175} fill="#ef4444" fontSize={9} fontWeight="bold">⚠ No examples</text>
+              </g>
+            ) : (
+              <g>
+                <text x={16} y={58} fill="#10b981" fontSize={8}>✓ Email/password only</text>
+                <text x={16} y={72} fill="#10b981" fontSize={8}>✓ JWT 24hr expiration</text>
+                <text x={16} y={86} fill="#10b981" fontSize={8}>✓ Min 8 chars, 1 upper, 1 num</text>
+                <text x={16} y={100} fill="#10b981" fontSize={8}>✓ Rate limit: 5/15min</text>
+                <text x={16} y={114} fill="#10b981" fontSize={8}>✓ No MFA for MVP</text>
+                <text x={16} y={128} fill="#10b981" fontSize={8}>✓ Single user role</text>
+                <text x={16} y={142} fill="#10b981" fontSize={8}>✓ Email reset flow</text>
+                <text x={16} y={156} fill="#10b981" fontSize={8}>✓ Lock after 10 fails</text>
+                <line x1={16} y1={166} x2={140} y2={166} stroke="#334155" strokeWidth={1} />
+                <text x={16} y={182} fill="#22d3ee" fontSize={9} fontWeight="bold">8 constraints defined</text>
+              </g>
+            )}
+          </g>
+
+          {/* Workflow arrow 1 */}
+          <g transform="translate(200, 165)">
+            <rect x={0} y={0} width={60} height={20} rx={4} fill={promptMode === 'vague' ? 'url(#sfpWorkflowVague)' : 'url(#sfpWorkflowStructured)'} />
+            <polygon points="60,10 70,0 70,20" fill={promptMode === 'vague' ? '#ea580c' : '#06b6d4'} />
+            <text x={30} y={14} fill="#ffffff" fontSize={8} textAnchor="middle" fontWeight="bold">INPUT</text>
+          </g>
+
+          {/* Step 2: LLM Processing */}
+          <g transform="translate(280, 90)">
+            {/* LLM brain container */}
+            <ellipse cx={60} cy={85} rx={55} ry={75} fill="url(#sfpLlmBrain)" filter="url(#sfpLlmFilter)" />
+            <ellipse cx={60} cy={85} rx={50} ry={70} fill="#1e1b4b" />
+
+            {/* Brain circuits */}
+            <circle cx={40} cy={65} r={8} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7}>
+              <animate attributeName="opacity" values="0.4;1;0.4" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={80} cy={65} r={8} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7}>
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={60} cy={95} r={10} fill="none" stroke="#a855f7" strokeWidth={1.5} opacity={0.7}>
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.8s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Connecting lines */}
+            <line x1={48} y1={65} x2={52} y2={85} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+            <line x1={72} y1={65} x2={68} y2={85} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+            <line x1={40} y1={73} x2={80} y2={73} stroke="#a855f7" strokeWidth={1} opacity={0.5} />
+
+            {/* LLM label */}
+            <text x={60} y={130} fill="#e9d5ff" fontSize={10} textAnchor="middle" fontWeight="bold">LLM</text>
+            <text x={60} y={145} fill="#c4b5fd" fontSize={8} textAnchor="middle">Processing</text>
+
+            {/* Assumption indicators */}
+            {promptMode === 'vague' && (
+              <g>
+                <circle cx={20} cy={50} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
+                  <animate attributeName="r" values="10;14;10" dur="0.8s" repeatCount="indefinite" />
+                </circle>
+                <text x={20} y={54} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+
+                <circle cx={100} cy={50} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
+                  <animate attributeName="r" values="10;14;10" dur="1s" repeatCount="indefinite" />
+                </circle>
+                <text x={100} y={54} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+
+                <circle cx={15} cy={110} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
+                  <animate attributeName="r" values="10;14;10" dur="1.2s" repeatCount="indefinite" />
+                </circle>
+                <text x={15} y={114} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+
+                <circle cx={105} cy={110} r={12} fill="url(#sfpAssumptionPulse)" filter="url(#sfpWarningFilter)">
+                  <animate attributeName="r" values="10;14;10" dur="0.9s" repeatCount="indefinite" />
+                </circle>
+                <text x={105} y={114} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">?</text>
+              </g>
+            )}
+          </g>
+
+          {/* Workflow arrow 2 */}
+          <g transform="translate(410, 165)">
+            <rect x={0} y={0} width={60} height={20} rx={4} fill={promptMode === 'vague' ? 'url(#sfpWorkflowVague)' : 'url(#sfpWorkflowStructured)'} />
+            <polygon points="60,10 70,0 70,20" fill={promptMode === 'vague' ? '#ea580c' : '#06b6d4'} />
+            <text x={30} y={14} fill="#ffffff" fontSize={8} textAnchor="middle" fontWeight="bold">OUTPUT</text>
+          </g>
+
+          {/* Step 3: Generated Code */}
+          <g transform="translate(490, 75)">
+            {/* Code panel */}
+            <rect x={0} y={0} width={180} height={200} rx={8} fill="url(#sfpCodePanel)" filter="url(#sfpSoftShadow)" />
+
+            {/* Code header */}
+            <rect x={0} y={0} width={180} height={28} rx={8} fill="#27272a" />
+            <rect x={0} y={20} width={180} height={8} fill="#27272a" />
+
+            {/* Window buttons */}
+            <circle cx={14} cy={14} r={5} fill="#ef4444" />
+            <circle cx={30} cy={14} r={5} fill="#f59e0b" />
+            <circle cx={46} cy={14} r={5} fill="#10b981" />
+            <text x={100} y={18} fill="#71717a" fontSize={9} textAnchor="middle">auth.ts</text>
+
+            {/* Code content area */}
+            <rect x={8} y={36} width={164} height={154} rx={4} fill="#09090b" />
+
+            {/* Code lines */}
+            <text x={14} y={52} fill="#6b7280" fontSize={8} fontFamily="monospace">1</text>
+            <text x={28} y={52} fill="#c084fc" fontSize={8} fontFamily="monospace">async function</text>
+            <text x={14} y={66} fill="#6b7280" fontSize={8} fontFamily="monospace">2</text>
+            <text x={28} y={66} fill="#22d3ee" fontSize={8} fontFamily="monospace">  login(credentials)</text>
+            <text x={14} y={80} fill="#6b7280" fontSize={8} fontFamily="monospace">3</text>
+            <text x={28} y={80} fill="#a3a3a3" fontSize={8} fontFamily="monospace">{'  {'}</text>
+
+            {promptMode === 'vague' ? (
+              <g>
+                <text x={14} y={94} fill="#6b7280" fontSize={8} fontFamily="monospace">4</text>
+                <text x={28} y={94} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: email'}</text>
+                <text x={14} y={108} fill="#6b7280" fontSize={8} fontFamily="monospace">5</text>
+                <text x={28} y={108} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: bcrypt'}</text>
+                <text x={14} y={122} fill="#6b7280" fontSize={8} fontFamily="monospace">6</text>
+                <text x={28} y={122} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: JWT 1hr'}</text>
+                <text x={14} y={136} fill="#6b7280" fontSize={8} fontFamily="monospace">7</text>
+                <text x={28} y={136} fill="#fbbf24" fontSize={8} fontFamily="monospace">{'  // ASSUMED: no rate'}</text>
+                <text x={14} y={150} fill="#6b7280" fontSize={8} fontFamily="monospace">8</text>
+                <text x={28} y={150} fill="#ef4444" fontSize={8} fontFamily="monospace">{'  // ⚠ May not match'}</text>
+                <text x={14} y={164} fill="#6b7280" fontSize={8} fontFamily="monospace">9</text>
+                <text x={28} y={164} fill="#ef4444" fontSize={8} fontFamily="monospace">{'  // your requirements!'}</text>
+              </g>
+            ) : (
+              <g>
+                <text x={14} y={94} fill="#6b7280" fontSize={8} fontFamily="monospace">4</text>
+                <text x={28} y={94} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: email'}</text>
+                <text x={14} y={108} fill="#6b7280" fontSize={8} fontFamily="monospace">5</text>
+                <text x={28} y={108} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: 24hr JWT'}</text>
+                <text x={14} y={122} fill="#6b7280" fontSize={8} fontFamily="monospace">6</text>
+                <text x={28} y={122} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: 5/15min'}</text>
+                <text x={14} y={136} fill="#6b7280" fontSize={8} fontFamily="monospace">7</text>
+                <text x={28} y={136} fill="#10b981" fontSize={8} fontFamily="monospace">{'  // Per spec: 8+ chars'}</text>
+                <text x={14} y={150} fill="#6b7280" fontSize={8} fontFamily="monospace">8</text>
+                <text x={28} y={150} fill="#22d3ee" fontSize={8} fontFamily="monospace">{'  // ✓ Matches spec!'}</text>
+                <text x={14} y={164} fill="#6b7280" fontSize={8} fontFamily="monospace">9</text>
+                <text x={28} y={164} fill="#22d3ee" fontSize={8} fontFamily="monospace">{'  // ✓ No guessing'}</text>
+              </g>
+            )}
+          </g>
+
+          {/* === TEST/CODE STATUS INDICATORS === */}
+          <g transform="translate(30, 295)">
+            <rect x={0} y={0} width={640} height={90} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
+
+            <text x={15} y={22} fill="#f8fafc" fontSize={11} fontWeight="bold">Quality Metrics</text>
+
+            {/* Assumption count indicator */}
+            <g transform="translate(20, 35)">
+              <circle cx={12} cy={12} r={16} fill={currentPrompt.assumptions.length > 4 ? 'url(#sfpErrorGlow)' : currentPrompt.assumptions.length > 2 ? 'url(#sfpWarningGlow)' : 'url(#sfpSuccessGlow)'} filter={currentPrompt.assumptions.length > 4 ? 'url(#sfpErrorFilter)' : currentPrompt.assumptions.length > 2 ? 'url(#sfpWarningFilter)' : 'url(#sfpSuccessFilter)'} />
+              <circle cx={12} cy={12} r={10} fill={currentPrompt.assumptions.length > 4 ? '#ef4444' : currentPrompt.assumptions.length > 2 ? '#f59e0b' : '#10b981'} />
+              <text x={12} y={16} fill="#fff" fontSize={10} textAnchor="middle" fontWeight="bold">{currentPrompt.assumptions.length}</text>
+              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Assumptions</text>
+              <text x={40} y={24} fill="#94a3b8" fontSize={8}>{currentPrompt.assumptions.length > 4 ? 'High risk!' : currentPrompt.assumptions.length > 2 ? 'Some risk' : 'Low risk'}</text>
+            </g>
+
+            {/* Success rate indicator */}
+            <g transform="translate(180, 35)">
+              <circle cx={12} cy={12} r={16} fill={metrics.successRate > 70 ? 'url(#sfpSuccessGlow)' : 'url(#sfpWarningGlow)'} filter={metrics.successRate > 70 ? 'url(#sfpSuccessFilter)' : 'url(#sfpWarningFilter)'} />
+              <circle cx={12} cy={12} r={10} fill={metrics.successRate > 70 ? '#10b981' : '#f59e0b'} />
+              <text x={12} y={16} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">%</text>
+              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Success Rate</text>
+              <rect x={40} y={16} width={80} height={8} rx={4} fill="#374151" />
+              <rect x={40} y={16} width={metrics.successRate * 0.8} height={8} rx={4} fill={metrics.successRate > 70 ? 'url(#sfpSuccessStatus)' : 'url(#sfpWarningStatus)'} />
+              <text x={125} y={23} fill="#f8fafc" fontSize={9}>{metrics.successRate}%</text>
+            </g>
+
+            {/* Rework cycles indicator */}
+            <g transform="translate(340, 35)">
+              <circle cx={12} cy={12} r={16} fill={metrics.reworkCycles < 3 ? 'url(#sfpSuccessGlow)' : 'url(#sfpErrorGlow)'} filter={metrics.reworkCycles < 3 ? 'url(#sfpSuccessFilter)' : 'url(#sfpErrorFilter)'} />
+              <circle cx={12} cy={12} r={10} fill={metrics.reworkCycles < 3 ? '#10b981' : '#ef4444'} />
+              <text x={12} y={16} fill="#fff" fontSize={10} textAnchor="middle" fontWeight="bold">{metrics.reworkCycles}</text>
+              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Rework Cycles</text>
+              <text x={40} y={24} fill="#94a3b8" fontSize={8}>{metrics.reworkCycles < 3 ? 'Efficient' : 'Costly iterations'}</text>
+            </g>
+
+            {/* Time to correct indicator */}
+            <g transform="translate(500, 35)">
+              <circle cx={12} cy={12} r={16} fill={metrics.timeToCorrect < 20 ? 'url(#sfpSuccessGlow)' : 'url(#sfpWarningGlow)'} filter={metrics.timeToCorrect < 20 ? 'url(#sfpSuccessFilter)' : 'url(#sfpWarningFilter)'} />
+              <circle cx={12} cy={12} r={10} fill={metrics.timeToCorrect < 20 ? '#10b981' : '#f59e0b'} />
+              <text x={12} y={16} fill="#fff" fontSize={8} textAnchor="middle" fontWeight="bold">⏱</text>
+              <text x={40} y={10} fill="#f8fafc" fontSize={10} fontWeight="600">Fix Time</text>
+              <text x={40} y={24} fill="#94a3b8" fontSize={8}>{metrics.timeToCorrect} min avg</text>
+            </g>
+          </g>
+
+          {/* === ASSUMPTION DETAIL PANEL === */}
           {showAssumptions && (
-            <g>
-              <text x={20} y={220} fill={colors.textSecondary} fontSize={11} fontWeight="bold">
-                Missing Requirements (LLM will guess):
+            <g transform="translate(30, 400)">
+              <rect x={0} y={0} width={640} height={110} rx={8} fill="url(#sfpDocumentCard)" filter="url(#sfpSoftShadow)" />
+
+              <text x={15} y={22} fill={promptMode === 'vague' ? '#ef4444' : '#10b981'} fontSize={11} fontWeight="bold">
+                {promptMode === 'vague' ? '⚠ LLM Must Guess These Requirements:' : '✓ Clearly Specified Requirements:'}
               </text>
-              {currentPrompt.assumptions.slice(0, 6).map((assumption, i) => (
-                <g key={i}>
-                  <rect
-                    x={20}
-                    y={228 + i * 24}
-                    width={width - 40}
-                    height={20}
-                    fill={
-                      assumption.severity === 'high' ? 'rgba(239, 68, 68, 0.2)' :
-                      assumption.severity === 'medium' ? 'rgba(249, 115, 22, 0.2)' :
-                      'rgba(245, 158, 11, 0.1)'
-                    }
-                    rx={4}
-                  />
-                  <circle
-                    cx={32}
-                    cy={238 + i * 24}
-                    r={5}
-                    fill={
-                      assumption.severity === 'high' ? colors.error :
-                      assumption.severity === 'medium' ? colors.assumption :
-                      colors.warning
-                    }
-                  />
-                  <text
-                    x={45}
-                    y={242 + i * 24}
-                    fill={colors.textPrimary}
-                    fontSize={10}
-                  >
-                    {assumption.text}
-                  </text>
-                </g>
-              ))}
+
+              {/* Assumption/Spec items in columns */}
+              {currentPrompt.assumptions.slice(0, 8).map((assumption, i) => {
+                const col = i % 2;
+                const row = Math.floor(i / 2);
+                const x = 15 + col * 315;
+                const y = 38 + row * 18;
+
+                return (
+                  <g key={i}>
+                    <circle
+                      cx={x + 6}
+                      cy={y}
+                      r={4}
+                      fill={
+                        assumption.severity === 'high' ? 'url(#sfpErrorGlow)' :
+                        assumption.severity === 'medium' ? 'url(#sfpWarningGlow)' :
+                        'url(#sfpSuccessGlow)'
+                      }
+                    />
+                    <circle
+                      cx={x + 6}
+                      cy={y}
+                      r={3}
+                      fill={
+                        assumption.severity === 'high' ? '#ef4444' :
+                        assumption.severity === 'medium' ? '#f59e0b' :
+                        '#10b981'
+                      }
+                    />
+                    <text x={x + 16} y={y + 4} fill="#e2e8f0" fontSize={9}>{assumption.text}</text>
+                  </g>
+                );
+              })}
             </g>
           )}
-
-          {/* Success metrics */}
-          <rect x={20} y={385} width={width - 40} height={55} fill={colors.bgCard} rx={8} />
-          <text x={30} y={405} fill={colors.textSecondary} fontSize={10}>Success Rate</text>
-          <rect x={100} y={396} width={100} height={12} fill="#374151" rx={4} />
-          <rect x={100} y={396} width={metrics.successRate} height={12} fill={metrics.successRate > 70 ? colors.success : colors.warning} rx={4} />
-          <text x={210} y={406} fill={colors.textPrimary} fontSize={11}>{metrics.successRate}%</text>
-
-          <text x={30} y={428} fill={colors.textSecondary} fontSize={10}>Rework Cycles</text>
-          <text x={210} y={428} fill={metrics.reworkCycles < 3 ? colors.success : colors.error} fontSize={11}>{metrics.reworkCycles}</text>
         </svg>
 
         {interactive && (
@@ -439,34 +798,38 @@ const SpecFirstPromptingRenderer: React.FC<SpecFirstPromptingRendererProps> = ({
             <button
               onClick={() => setPromptMode('vague')}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
+                padding: '12px 24px',
+                borderRadius: '12px',
                 border: promptMode === 'vague' ? `2px solid ${colors.vague}` : '1px solid rgba(255,255,255,0.2)',
-                background: promptMode === 'vague' ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                background: promptMode === 'vague' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(249, 115, 22, 0.2) 100%)' : 'transparent',
                 color: colors.vague,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: promptMode === 'vague' ? '0 4px 20px rgba(239, 68, 68, 0.3)' : 'none',
+                transition: 'all 0.3s ease',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Vague Prompt
+              ⚠ Vague Prompt
             </button>
             <button
               onClick={() => setPromptMode('structured')}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
+                padding: '12px 24px',
+                borderRadius: '12px',
                 border: promptMode === 'structured' ? `2px solid ${colors.structured}` : '1px solid rgba(255,255,255,0.2)',
-                background: promptMode === 'structured' ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                background: promptMode === 'structured' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(6, 182, 212, 0.2) 100%)' : 'transparent',
                 color: colors.structured,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: promptMode === 'structured' ? '0 4px 20px rgba(16, 185, 129, 0.3)' : 'none',
+                transition: 'all 0.3s ease',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Structured Spec
+              ✓ Structured Spec
             </button>
           </div>
         )}

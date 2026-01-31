@@ -440,183 +440,663 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
     }
   ];
 
-  // Render hot surface and droplet
+  // Render hot surface and droplet - Premium SVG visualization
   const renderSurfaceVisualization = () => {
     const isAboveLeidenfrost = surfaceTemp >= LEIDENFROST_POINT;
-    const surfaceColor = getSurfaceColor(surfaceTemp);
 
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px' }}>
-        {/* Background */}
-        <rect width="300" height="200" fill="#0f172a" rx="8" />
+      <svg viewBox="0 0 400 280" style={{ width: '100%', maxWidth: '400px' }}>
+        <defs>
+          {/* Premium background gradient */}
+          <linearGradient id="leidLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="30%" stopColor="#0a0f1a" />
+            <stop offset="70%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* Hot surface */}
-        <rect
-          x="50"
-          y="130"
-          width="200"
-          height="50"
-          fill={surfaceColor}
-          rx="4"
-        />
+          {/* Hot surface gradient - temperature responsive */}
+          <linearGradient id="leidHotSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={surfaceTemp >= 300 ? '#ef4444' : surfaceTemp >= 250 ? '#dc2626' : surfaceTemp >= 200 ? '#c2410c' : surfaceTemp >= 150 ? '#9a3412' : '#78350f'} />
+            <stop offset="20%" stopColor={surfaceTemp >= 300 ? '#dc2626' : surfaceTemp >= 250 ? '#b91c1c' : surfaceTemp >= 200 ? '#9a3412' : surfaceTemp >= 150 ? '#78350f' : '#57534e'} />
+            <stop offset="50%" stopColor={surfaceTemp >= 300 ? '#b91c1c' : surfaceTemp >= 250 ? '#991b1b' : surfaceTemp >= 200 ? '#78350f' : surfaceTemp >= 150 ? '#57534e' : '#44403c'} />
+            <stop offset="80%" stopColor={surfaceTemp >= 300 ? '#991b1b' : surfaceTemp >= 250 ? '#7f1d1d' : surfaceTemp >= 200 ? '#57534e' : surfaceTemp >= 150 ? '#44403c' : '#374151'} />
+            <stop offset="100%" stopColor="#1c1917" />
+          </linearGradient>
 
-        {/* Heat waves from surface */}
+          {/* Heat glow radial gradient */}
+          <radialGradient id="leidHeatGlow" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stopColor={surfaceTemp >= 250 ? '#ef4444' : surfaceTemp >= 200 ? '#f97316' : '#fbbf24'} stopOpacity={surfaceTemp >= 200 ? 0.6 : 0.3} />
+            <stop offset="40%" stopColor={surfaceTemp >= 250 ? '#dc2626' : surfaceTemp >= 200 ? '#ea580c' : '#f59e0b'} stopOpacity={surfaceTemp >= 200 ? 0.3 : 0.15} />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Water droplet gradient - 3D appearance */}
+          <radialGradient id="leidWaterDroplet" cx="35%" cy="25%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
+            <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.85" />
+            <stop offset="75%" stopColor="#2563eb" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.75" />
+          </radialGradient>
+
+          {/* Droplet highlight/shine */}
+          <radialGradient id="leidDropletShine" cx="30%" cy="20%" r="40%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Vapor cushion gradient */}
+          <linearGradient id="leidVaporCushion" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+            <stop offset="30%" stopColor="#e2e8f0" stopOpacity="0.35" />
+            <stop offset="60%" stopColor="#cbd5e1" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Steam/vapor particle gradient */}
+          <radialGradient id="leidSteamParticle" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+            <stop offset="40%" stopColor="#e2e8f0" stopOpacity="0.4" />
+            <stop offset="70%" stopColor="#cbd5e1" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Thermometer gradient */}
+          <linearGradient id="leidThermometer" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </linearGradient>
+
+          {/* Thermometer mercury gradient */}
+          <linearGradient id="leidMercury" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor={surfaceTemp >= 250 ? '#dc2626' : surfaceTemp >= 200 ? '#ea580c' : surfaceTemp >= 150 ? '#f59e0b' : '#84cc16'} />
+            <stop offset="50%" stopColor={surfaceTemp >= 250 ? '#ef4444' : surfaceTemp >= 200 ? '#f97316' : surfaceTemp >= 150 ? '#fbbf24' : '#a3e635'} />
+            <stop offset="100%" stopColor={surfaceTemp >= 250 ? '#f87171' : surfaceTemp >= 200 ? '#fb923c' : surfaceTemp >= 150 ? '#fcd34d' : '#bef264'} />
+          </linearGradient>
+
+          {/* Glow filters */}
+          <filter id="leidHeatGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="leidDropletGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="leidVaporGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="leidSteamBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
+        </defs>
+
+        {/* Premium dark lab background */}
+        <rect width="400" height="280" fill="url(#leidLabBg)" rx="12" />
+
+        {/* Subtle grid pattern */}
+        <pattern id="leidLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+        </pattern>
+        <rect width="400" height="280" fill="url(#leidLabGrid)" rx="12" />
+
+        {/* Heat glow above surface */}
+        {surfaceTemp >= 150 && (
+          <ellipse
+            cx="200"
+            cy="180"
+            rx="120"
+            ry="60"
+            fill="url(#leidHeatGlow)"
+            filter="url(#leidHeatGlowFilter)"
+            opacity={Math.min(1, (surfaceTemp - 100) / 200)}
+          >
+            <animate attributeName="ry" values="55;65;55" dur="2s" repeatCount="indefinite" />
+          </ellipse>
+        )}
+
+        {/* Hot surface with premium gradient */}
+        <g>
+          {/* Surface shadow */}
+          <rect x="48" y="195" width="224" height="52" rx="6" fill="#000000" opacity="0.5" />
+
+          {/* Main surface */}
+          <rect x="50" y="190" width="220" height="50" rx="6" fill="url(#leidHotSurface)" />
+
+          {/* Surface texture lines */}
+          {[0, 1, 2, 3, 4, 5].map(i => (
+            <line
+              key={i}
+              x1={70 + i * 35}
+              y1="195"
+              x2={70 + i * 35}
+              y2="235"
+              stroke="#ffffff"
+              strokeWidth="0.5"
+              strokeOpacity="0.1"
+            />
+          ))}
+
+          {/* Surface highlight */}
+          <rect x="50" y="190" width="220" height="8" rx="4" fill="#ffffff" opacity="0.1" />
+
+          {/* Surface label */}
+          <text x="160" y="250" textAnchor="middle" fontSize="9" fill="#94a3b8" fontWeight="500">
+            HOT SURFACE
+          </text>
+        </g>
+
+        {/* Animated heat waves */}
         {surfaceTemp >= 100 && (
-          <g opacity="0.5">
-            {[0, 1, 2, 3, 4].map(i => {
-              const y = 120 - (animationFrame + i * 20) % 40;
+          <g opacity={Math.min(0.8, (surfaceTemp - 80) / 150)}>
+            {[0, 1, 2, 3, 4, 5, 6].map(i => {
+              const baseY = 180 - ((animationFrame * 2 + i * 25) % 80);
+              const opacity = 1 - ((animationFrame * 2 + i * 25) % 80) / 80;
               return (
                 <path
                   key={i}
-                  d={`M ${80 + i * 35} ${y} Q ${90 + i * 35} ${y - 10} ${80 + i * 35} ${y - 20}`}
+                  d={`M ${75 + i * 40} ${baseY}
+                      Q ${85 + i * 40} ${baseY - 8} ${75 + i * 40} ${baseY - 16}
+                      Q ${65 + i * 40} ${baseY - 24} ${75 + i * 40} ${baseY - 32}`}
                   fill="none"
-                  stroke={surfaceColor}
+                  stroke={surfaceTemp >= 250 ? '#fca5a5' : surfaceTemp >= 200 ? '#fdba74' : '#fde047'}
                   strokeWidth="2"
-                  opacity={1 - ((animationFrame + i * 20) % 40) / 40}
+                  strokeLinecap="round"
+                  opacity={opacity * 0.6}
                 />
               );
             })}
           </g>
         )}
 
-        {/* Droplet */}
+        {/* Water droplet */}
         {isDropped && dropletRadius > 0 && (
           <g>
-            {/* Vapor layer (only above Leidenfrost) */}
+            {/* Vapor cushion layer (only above Leidenfrost) */}
             {isAboveLeidenfrost && dropletY >= 120 && (
-              <ellipse
-                cx={dropletX}
-                cy={128}
-                rx={dropletRadius * 1.2}
-                ry={4}
-                fill="rgba(255,255,255,0.3)"
-              >
-                <animate attributeName="opacity" values="0.3;0.5;0.3" dur="0.3s" repeatCount="indefinite" />
-              </ellipse>
+              <g filter="url(#leidVaporGlow)">
+                {/* Main vapor cushion */}
+                <ellipse
+                  cx={dropletX + 50}
+                  cy={188}
+                  rx={dropletRadius * 1.4}
+                  ry={6}
+                  fill="url(#leidVaporCushion)"
+                >
+                  <animate attributeName="ry" values="5;7;5" dur="0.2s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.6;0.9;0.6" dur="0.3s" repeatCount="indefinite" />
+                </ellipse>
+
+                {/* Vapor wisps */}
+                {[0, 1, 2].map(i => (
+                  <ellipse
+                    key={i}
+                    cx={dropletX + 50 + (i - 1) * dropletRadius * 0.8}
+                    cy={185 - i * 2}
+                    rx={4}
+                    ry={2}
+                    fill="#ffffff"
+                    opacity={0.3 - i * 0.08}
+                  >
+                    <animate
+                      attributeName="cy"
+                      values={`${185 - i * 2};${180 - i * 2};${185 - i * 2}`}
+                      dur={`${0.3 + i * 0.1}s`}
+                      repeatCount="indefinite"
+                    />
+                  </ellipse>
+                ))}
+              </g>
             )}
 
-            {/* The droplet */}
-            <ellipse
-              cx={dropletX}
-              cy={isAboveLeidenfrost && dropletY >= 120 ? 118 : dropletY}
-              rx={dropletRadius}
-              ry={dropletRadius * 0.8}
-              fill="#3b82f6"
-              opacity="0.8"
-            >
-              {isAboveLeidenfrost && dropletY >= 120 && (
-                <animate attributeName="cy" values="116;120;116" dur="0.5s" repeatCount="indefinite" />
-              )}
-            </ellipse>
+            {/* The water droplet with 3D effect */}
+            <g filter="url(#leidDropletGlow)">
+              {/* Droplet shadow */}
+              <ellipse
+                cx={dropletX + 52}
+                cy={(isAboveLeidenfrost && dropletY >= 120 ? 175 : dropletY + 55) + 5}
+                rx={dropletRadius * 0.7}
+                ry={dropletRadius * 0.2}
+                fill="#000000"
+                opacity="0.3"
+              />
 
-            {/* Droplet shine */}
-            <ellipse
-              cx={dropletX - dropletRadius * 0.3}
-              cy={(isAboveLeidenfrost && dropletY >= 120 ? 118 : dropletY) - dropletRadius * 0.2}
-              rx={dropletRadius * 0.3}
-              ry={dropletRadius * 0.2}
-              fill="rgba(255,255,255,0.4)"
-            />
+              {/* Main droplet body */}
+              <ellipse
+                cx={dropletX + 50}
+                cy={isAboveLeidenfrost && dropletY >= 120 ? 175 : dropletY + 55}
+                rx={dropletRadius}
+                ry={dropletRadius * 0.85}
+                fill="url(#leidWaterDroplet)"
+              >
+                {isAboveLeidenfrost && dropletY >= 120 && (
+                  <animate attributeName="cy" values="173;177;173" dur="0.4s" repeatCount="indefinite" />
+                )}
+              </ellipse>
+
+              {/* Droplet highlight/shine */}
+              <ellipse
+                cx={dropletX + 50 - dropletRadius * 0.25}
+                cy={(isAboveLeidenfrost && dropletY >= 120 ? 175 : dropletY + 55) - dropletRadius * 0.3}
+                rx={dropletRadius * 0.4}
+                ry={dropletRadius * 0.25}
+                fill="url(#leidDropletShine)"
+              >
+                {isAboveLeidenfrost && dropletY >= 120 && (
+                  <animate attributeName="cy" values={`${173 - dropletRadius * 0.3};${177 - dropletRadius * 0.3};${173 - dropletRadius * 0.3}`} dur="0.4s" repeatCount="indefinite" />
+                )}
+              </ellipse>
+
+              {/* Small secondary highlight */}
+              <ellipse
+                cx={dropletX + 50 + dropletRadius * 0.3}
+                cy={(isAboveLeidenfrost && dropletY >= 120 ? 175 : dropletY + 55) + dropletRadius * 0.2}
+                rx={dropletRadius * 0.15}
+                ry={dropletRadius * 0.1}
+                fill="#ffffff"
+                opacity="0.3"
+              />
+            </g>
           </g>
         )}
 
-        {/* Vapor bubbles (below Leidenfrost) */}
+        {/* Steam/vapor bubbles (below Leidenfrost - rapid boiling) */}
         {vaporBubbles.map(b => (
-          <circle
-            key={b.id}
-            cx={b.x}
-            cy={b.y}
-            r={3}
-            fill="rgba(255,255,255,0.5)"
-          />
+          <g key={b.id} filter="url(#leidSteamBlur)">
+            <circle
+              cx={b.x + 50}
+              cy={b.y + 55}
+              r={4}
+              fill="url(#leidSteamParticle)"
+            />
+          </g>
         ))}
 
-        {/* Temperature indicator */}
-        <g transform="translate(265, 60)">
-          <rect x="-20" y="0" width="40" height="100" fill="#1f2937" stroke="#374151" rx="4" />
-          <rect
-            x="-15"
-            y={100 - (surfaceTemp / 400) * 90}
-            width="30"
-            height={(surfaceTemp / 400) * 90}
-            fill={surfaceColor}
-            rx="2"
-          />
-          <text x="0" y="-10" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
-            {surfaceTemp}C
-          </text>
+        {/* Rising steam animation (continuous) */}
+        {isDropped && dropletRadius > 0 && (
+          <g opacity={0.4}>
+            {[0, 1, 2, 3, 4].map(i => {
+              const steamY = 160 - ((animationFrame * 1.5 + i * 30) % 100);
+              const steamOpacity = 1 - ((animationFrame * 1.5 + i * 30) % 100) / 100;
+              const steamX = dropletX + 50 + Math.sin(animationFrame * 0.1 + i) * 8;
+              return (
+                <circle
+                  key={i}
+                  cx={steamX}
+                  cy={steamY}
+                  r={3 + i * 0.5}
+                  fill="url(#leidSteamParticle)"
+                  opacity={steamOpacity * (isAboveLeidenfrost ? 0.5 : 0.8)}
+                  filter="url(#leidSteamBlur)"
+                />
+              );
+            })}
+          </g>
+        )}
 
-          {/* Leidenfrost point marker */}
-          <line x1="-20" y1={100 - (LEIDENFROST_POINT / 400) * 90} x2="20" y2={100 - (LEIDENFROST_POINT / 400) * 90} stroke="#f59e0b" strokeWidth="2" strokeDasharray="3" />
-          <text x="0" y={95 - (LEIDENFROST_POINT / 400) * 90} fontSize="7" fill="#f59e0b" textAnchor="middle">200C</text>
+        {/* Premium thermometer */}
+        <g transform="translate(340, 40)">
+          {/* Thermometer background */}
+          <rect x="-18" y="-5" width="36" height="140" rx="8" fill="url(#leidThermometer)" stroke="#475569" strokeWidth="1" />
+
+          {/* Inner tube */}
+          <rect x="-10" y="5" width="20" height="115" rx="4" fill="#111827" />
+
+          {/* Mercury level */}
+          <rect
+            x="-7"
+            y={115 - (surfaceTemp / 400) * 105}
+            width="14"
+            height={(surfaceTemp / 400) * 105 + 5}
+            rx="3"
+            fill="url(#leidMercury)"
+          />
+
+          {/* Scale marks */}
+          {[0, 100, 200, 300, 400].map((temp, i) => (
+            <g key={temp}>
+              <line
+                x1="12"
+                y1={115 - (temp / 400) * 105}
+                x2="18"
+                y2={115 - (temp / 400) * 105}
+                stroke={temp === 200 ? '#f59e0b' : '#64748b'}
+                strokeWidth={temp === 200 ? 2 : 1}
+              />
+              <text
+                x="22"
+                y={118 - (temp / 400) * 105}
+                fontSize="7"
+                fill={temp === 200 ? '#f59e0b' : '#94a3b8'}
+                fontWeight={temp === 200 ? 'bold' : 'normal'}
+              >
+                {temp}
+              </text>
+            </g>
+          ))}
+
+          {/* Leidenfrost point indicator */}
+          <g transform={`translate(-25, ${115 - (LEIDENFROST_POINT / 400) * 105})`}>
+            <polygon points="0,0 8,-4 8,4" fill="#f59e0b" />
+            <text x="-35" y="3" fontSize="6" fill="#f59e0b" fontWeight="bold">L.P.</text>
+          </g>
+
+          {/* Temperature display */}
+          <rect x="-20" y="125" width="40" height="20" rx="4" fill="#0f172a" stroke="#334155" />
+          <text x="0" y="139" textAnchor="middle" fontSize="11" fill="#f8fafc" fontWeight="bold">
+            {surfaceTemp}°C
+          </text>
         </g>
 
-        {/* State indicator */}
-        <text x="150" y="185" textAnchor="middle" fontSize="11" fill="#e2e8f0" fontWeight="bold">
-          {!isDropped ? 'Drop water to test!' :
-            isAboveLeidenfrost ? 'LEIDENFROST EFFECT - Hovering!' :
-              dropletState === 'sizzling' ? 'Rapid Sizzle (Direct Contact)' :
-                dropletState === 'boiling' ? 'Boiling on Surface' : 'Slow Evaporation'}
+        {/* Status indicator panel */}
+        <g transform="translate(10, 10)">
+          <rect x="0" y="0" width="180" height="28" rx="6" fill={isAboveLeidenfrost ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)'} stroke={isAboveLeidenfrost ? '#10b981' : '#f97316'} strokeWidth="1" />
+          <circle cx="12" cy="14" r="4" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'}>
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+          </circle>
+          <text x="22" y="18" fontSize="10" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'} fontWeight="bold">
+            {!isDropped ? 'READY - Drop water to test' :
+              isAboveLeidenfrost ? 'LEIDENFROST ACTIVE - Hovering!' :
+                dropletState === 'sizzling' ? 'RAPID SIZZLE - Direct Contact' :
+                  dropletState === 'boiling' ? 'BOILING - Surface Contact' : 'EVAPORATING'}
+          </text>
+        </g>
+
+        {/* Labels */}
+        <text x="200" y="268" textAnchor="middle" fontSize="8" fill="#64748b">
+          {isAboveLeidenfrost ? 'Vapor cushion insulates droplet from surface' : 'Direct contact causes rapid heat transfer'}
         </text>
       </svg>
     );
   };
 
-  // Render evaporation time comparison for twist
+  // Render evaporation time comparison for twist - Premium SVG visualization
   const renderEvaporationComparison = () => {
     const isAboveLeidenfrost = twistTemp >= LEIDENFROST_POINT;
 
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px' }}>
+      <svg viewBox="0 0 400 260" style={{ width: '100%', maxWidth: '400px' }}>
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="leidTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Hot surface gradient for twist */}
+          <linearGradient id="leidTwistSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={twistTemp >= 250 ? '#ef4444' : twistTemp >= 200 ? '#f97316' : twistTemp >= 150 ? '#f59e0b' : '#78350f'} />
+            <stop offset="30%" stopColor={twistTemp >= 250 ? '#dc2626' : twistTemp >= 200 ? '#ea580c' : twistTemp >= 150 ? '#d97706' : '#57534e'} />
+            <stop offset="70%" stopColor={twistTemp >= 250 ? '#b91c1c' : twistTemp >= 200 ? '#c2410c' : twistTemp >= 150 ? '#b45309' : '#44403c'} />
+            <stop offset="100%" stopColor="#1c1917" />
+          </linearGradient>
+
+          {/* Heat glow for twist */}
+          <radialGradient id="leidTwistHeatGlow" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stopColor={twistTemp >= 250 ? '#ef4444' : twistTemp >= 200 ? '#f97316' : '#fbbf24'} stopOpacity={twistTemp >= 200 ? 0.5 : 0.25} />
+            <stop offset="60%" stopColor={twistTemp >= 250 ? '#dc2626' : twistTemp >= 200 ? '#ea580c' : '#f59e0b'} stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Water droplet gradient for twist */}
+          <radialGradient id="leidTwistDroplet" cx="35%" cy="25%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
+            <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.75" />
+          </radialGradient>
+
+          {/* Droplet shine for twist */}
+          <radialGradient id="leidTwistShine" cx="30%" cy="20%" r="40%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#bfdbfe" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Vapor cushion for twist */}
+          <linearGradient id="leidTwistVapor" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#e2e8f0" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Timer glow gradient */}
+          <radialGradient id="leidTimerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={isAboveLeidenfrost ? '#10b981' : '#f97316'} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={isAboveLeidenfrost ? '#10b981' : '#f97316'} stopOpacity="0" />
+          </radialGradient>
+
+          {/* Steam particle */}
+          <radialGradient id="leidTwistSteam" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+            <stop offset="60%" stopColor="#e2e8f0" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Filters */}
+          <filter id="leidTwistGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="leidTwistDropGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="leidTwistBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" />
+          </filter>
+        </defs>
+
         {/* Background */}
-        <rect width="300" height="200" fill="#1e293b" rx="8" />
+        <rect width="400" height="260" fill="url(#leidTwistBg)" rx="12" />
 
-        {/* Surface */}
-        <rect x="50" y="130" width="200" height="40" fill={getSurfaceColor(twistTemp)} rx="4" />
+        {/* Grid pattern */}
+        <pattern id="leidTwistGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="400" height="260" fill="url(#leidTwistGrid)" rx="12" />
 
-        {/* Droplet */}
-        {twistDropletRadius > 0 && (
-          <g>
-            {/* Vapor layer */}
-            {isAboveLeidenfrost && (
-              <ellipse cx="150" cy="128" rx={twistDropletRadius * 1.2} ry="4" fill="rgba(255,255,255,0.3)">
-                <animate attributeName="opacity" values="0.3;0.5;0.3" dur="0.3s" repeatCount="indefinite" />
-              </ellipse>
-            )}
+        {/* Timer display - premium style */}
+        <g transform="translate(200, 50)">
+          {/* Timer glow background */}
+          <ellipse cx="0" cy="0" rx="70" ry="35" fill="url(#leidTimerGlow)" />
 
-            <ellipse
-              cx="150"
-              cy={isAboveLeidenfrost ? 118 : 125}
-              rx={twistDropletRadius}
-              ry={twistDropletRadius * 0.8}
-              fill="#3b82f6"
-              opacity="0.8"
-            >
-              {isAboveLeidenfrost && (
-                <animate attributeName="cy" values="116;120;116" dur="0.5s" repeatCount="indefinite" />
-              )}
-            </ellipse>
+          {/* Timer frame */}
+          <rect x="-60" y="-25" width="120" height="50" rx="10" fill="#0f172a" stroke={isAboveLeidenfrost ? '#10b981' : '#f97316'} strokeWidth="2" />
+
+          {/* Timer value */}
+          <text x="0" y="8" textAnchor="middle" fontSize="28" fill="#f8fafc" fontWeight="bold" fontFamily="monospace">
+            {evaporationTime.toFixed(1)}s
+          </text>
+
+          {/* Timer label */}
+          <text x="0" y="38" textAnchor="middle" fontSize="9" fill="#94a3b8" fontWeight="500">
+            EVAPORATION TIME
+          </text>
+        </g>
+
+        {/* Temperature status bar */}
+        <g transform="translate(200, 85)">
+          <rect x="-100" y="0" width="200" height="22" rx="6" fill={isAboveLeidenfrost ? 'rgba(16, 185, 129, 0.15)' : 'rgba(249, 115, 22, 0.15)'} stroke={isAboveLeidenfrost ? 'rgba(16, 185, 129, 0.4)' : 'rgba(249, 115, 22, 0.4)'} />
+          <text x="0" y="15" textAnchor="middle" fontSize="11" fill={isAboveLeidenfrost ? '#10b981' : '#f97316'} fontWeight="600">
+            {twistTemp}°C — {isAboveLeidenfrost ? 'ABOVE Leidenfrost Point' : 'BELOW Leidenfrost Point'}
+          </text>
+        </g>
+
+        {/* Heat glow above surface */}
+        {twistTemp >= 150 && (
+          <ellipse
+            cx="200"
+            cy="175"
+            rx="100"
+            ry="50"
+            fill="url(#leidTwistHeatGlow)"
+            filter="url(#leidTwistGlow)"
+            opacity={Math.min(0.8, (twistTemp - 100) / 200)}
+          >
+            <animate attributeName="ry" values="45;55;45" dur="1.5s" repeatCount="indefinite" />
+          </ellipse>
+        )}
+
+        {/* Hot surface */}
+        <g>
+          <rect x="78" y="182" width="244" height="42" rx="6" fill="#000000" opacity="0.4" />
+          <rect x="80" y="180" width="240" height="40" rx="6" fill="url(#leidTwistSurface)" />
+          <rect x="80" y="180" width="240" height="6" rx="3" fill="#ffffff" opacity="0.08" />
+
+          {/* Surface texture */}
+          {[0, 1, 2, 3, 4, 5, 6].map(i => (
+            <line key={i} x1={100 + i * 32} y1="185" x2={100 + i * 32} y2="215" stroke="#ffffff" strokeWidth="0.4" strokeOpacity="0.08" />
+          ))}
+        </g>
+
+        {/* Animated heat waves */}
+        {twistTemp >= 120 && (
+          <g opacity={Math.min(0.6, (twistTemp - 100) / 150)}>
+            {[0, 1, 2, 3, 4].map(i => {
+              const baseY = 170 - ((animationFrame * 2 + i * 30) % 60);
+              const opacity = 1 - ((animationFrame * 2 + i * 30) % 60) / 60;
+              return (
+                <path
+                  key={i}
+                  d={`M ${120 + i * 40} ${baseY} Q ${130 + i * 40} ${baseY - 6} ${120 + i * 40} ${baseY - 12}`}
+                  fill="none"
+                  stroke={twistTemp >= 250 ? '#fca5a5' : twistTemp >= 200 ? '#fdba74' : '#fde047'}
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity={opacity * 0.5}
+                />
+              );
+            })}
           </g>
         )}
 
-        {/* Timer */}
-        <text x="150" y="40" textAnchor="middle" fontSize="24" fill="#e2e8f0" fontWeight="bold">
-          {evaporationTime.toFixed(1)}s
-        </text>
-        <text x="150" y="55" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          Time to evaporate
-        </text>
+        {/* Water droplet with premium effects */}
+        {twistDropletRadius > 0 && (
+          <g>
+            {/* Vapor cushion (above Leidenfrost) */}
+            {isAboveLeidenfrost && (
+              <g filter="url(#leidTwistBlur)">
+                <ellipse
+                  cx="200"
+                  cy="178"
+                  rx={twistDropletRadius * 1.3}
+                  ry={5}
+                  fill="url(#leidTwistVapor)"
+                >
+                  <animate attributeName="ry" values="4;6;4" dur="0.25s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.5;0.8;0.5" dur="0.3s" repeatCount="indefinite" />
+                </ellipse>
+              </g>
+            )}
 
-        {/* Temperature display */}
-        <text x="150" y="80" textAnchor="middle" fontSize="14" fill={getSurfaceColor(twistTemp)}>
-          Surface: {twistTemp}C {isAboveLeidenfrost ? '(Above Leidenfrost)' : '(Below Leidenfrost)'}
-        </text>
+            {/* Droplet with 3D appearance */}
+            <g filter="url(#leidTwistDropGlow)">
+              {/* Shadow */}
+              <ellipse
+                cx="202"
+                cy={(isAboveLeidenfrost ? 163 : 172) + 5}
+                rx={twistDropletRadius * 0.6}
+                ry={twistDropletRadius * 0.15}
+                fill="#000000"
+                opacity="0.25"
+              />
 
-        {/* Status */}
-        <text x="150" y="180" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          {isEvaporating ? (isAboveLeidenfrost ? 'Hovering with slow evaporation...' : 'Rapid evaporation from contact!') :
-            twistDropletRadius <= 0 ? 'Fully evaporated!' : 'Ready to drop'}
-        </text>
+              {/* Main droplet */}
+              <ellipse
+                cx="200"
+                cy={isAboveLeidenfrost ? 163 : 172}
+                rx={twistDropletRadius}
+                ry={twistDropletRadius * 0.85}
+                fill="url(#leidTwistDroplet)"
+              >
+                {isAboveLeidenfrost && (
+                  <animate attributeName="cy" values="161;165;161" dur="0.4s" repeatCount="indefinite" />
+                )}
+              </ellipse>
+
+              {/* Highlight */}
+              <ellipse
+                cx={200 - twistDropletRadius * 0.25}
+                cy={(isAboveLeidenfrost ? 163 : 172) - twistDropletRadius * 0.3}
+                rx={twistDropletRadius * 0.35}
+                ry={twistDropletRadius * 0.22}
+                fill="url(#leidTwistShine)"
+              >
+                {isAboveLeidenfrost && (
+                  <animate attributeName="cy" values={`${161 - twistDropletRadius * 0.3};${165 - twistDropletRadius * 0.3};${161 - twistDropletRadius * 0.3}`} dur="0.4s" repeatCount="indefinite" />
+                )}
+              </ellipse>
+            </g>
+
+            {/* Rising steam (continuous when evaporating) */}
+            {isEvaporating && (
+              <g opacity={0.5}>
+                {[0, 1, 2, 3].map(i => {
+                  const steamY = 155 - ((animationFrame * 1.5 + i * 25) % 70);
+                  const steamOpacity = 1 - ((animationFrame * 1.5 + i * 25) % 70) / 70;
+                  const steamX = 200 + Math.sin(animationFrame * 0.1 + i * 1.5) * 6;
+                  return (
+                    <circle
+                      key={i}
+                      cx={steamX}
+                      cy={steamY}
+                      r={2.5 + i * 0.4}
+                      fill="url(#leidTwistSteam)"
+                      opacity={steamOpacity * (isAboveLeidenfrost ? 0.4 : 0.7)}
+                      filter="url(#leidTwistBlur)"
+                    />
+                  );
+                })}
+              </g>
+            )}
+          </g>
+        )}
+
+        {/* Fully evaporated indicator */}
+        {twistDropletRadius <= 0 && (
+          <g transform="translate(200, 155)">
+            <text x="0" y="0" textAnchor="middle" fontSize="14" fill="#94a3b8" fontWeight="bold">
+              FULLY EVAPORATED
+            </text>
+            <text x="0" y="16" textAnchor="middle" fontSize="10" fill="#64748b">
+              in {evaporationTime.toFixed(1)} seconds
+            </text>
+          </g>
+        )}
+
+        {/* Status message */}
+        <g transform="translate(200, 240)">
+          <text x="0" y="0" textAnchor="middle" fontSize="10" fill="#94a3b8">
+            {isEvaporating ? (isAboveLeidenfrost ? 'Hovering on vapor cushion — slow evaporation' : 'Direct surface contact — rapid evaporation!') :
+              twistDropletRadius <= 0 ? 'Experiment complete — try a different temperature' : 'Ready to start experiment'}
+          </text>
+        </g>
       </svg>
     );
   };

@@ -373,10 +373,110 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({
   };
 
   const renderVisualization = () => {
-    const width = 550;
-    const height = 420;
+    const width = 700;
+    const height = 480;
     const output = calculateOutput();
     const source = lightSources[lightSource];
+
+    // Calculate spectrum curve points for solar spectrum
+    const getSolarSpectrumPath = () => {
+      // AM1.5 solar spectrum approximation (normalized)
+      const points = [
+        { nm: 300, power: 0.05 },
+        { nm: 400, power: 0.35 },
+        { nm: 500, power: 0.85 },
+        { nm: 550, power: 1.0 },
+        { nm: 600, power: 0.95 },
+        { nm: 700, power: 0.75 },
+        { nm: 800, power: 0.55 },
+        { nm: 900, power: 0.40 },
+        { nm: 1000, power: 0.30 },
+        { nm: 1100, power: 0.20 },
+        { nm: 1200, power: 0.10 },
+      ];
+      return points.map((p, i) => {
+        const x = 80 + ((p.nm - 300) / 900) * 380;
+        const y = 200 - p.power * 120;
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ');
+    };
+
+    // Calculate cell response curve (silicon QE)
+    const getCellResponsePath = () => {
+      // Silicon cell quantum efficiency curve
+      const points = [
+        { nm: 300, qe: 0.2 },
+        { nm: 400, qe: 0.65 },
+        { nm: 500, qe: 0.85 },
+        { nm: 600, qe: 0.90 },
+        { nm: 700, qe: 0.88 },
+        { nm: 800, qe: 0.82 },
+        { nm: 900, qe: 0.70 },
+        { nm: 1000, qe: 0.45 },
+        { nm: 1100, qe: 0.15 },
+        { nm: 1200, qe: 0.0 },
+      ];
+      return points.map((p, i) => {
+        const x = 80 + ((p.nm - 300) / 900) * 380;
+        const y = 200 - p.qe * 120;
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ');
+    };
+
+    // Light source spectrum curve
+    const getLightSourcePath = () => {
+      let points: { nm: number; power: number }[] = [];
+      if (lightSource === 'incandescent') {
+        // Blackbody at 2700K - peaks in IR
+        points = [
+          { nm: 300, power: 0.01 },
+          { nm: 400, power: 0.05 },
+          { nm: 500, power: 0.12 },
+          { nm: 600, power: 0.22 },
+          { nm: 700, power: 0.35 },
+          { nm: 800, power: 0.55 },
+          { nm: 900, power: 0.75 },
+          { nm: 1000, power: 0.90 },
+          { nm: 1100, power: 0.98 },
+          { nm: 1200, power: 1.0 },
+        ];
+      } else if (lightSource === 'led') {
+        // LED spectrum - peaks in blue/green visible
+        points = [
+          { nm: 300, power: 0.0 },
+          { nm: 400, power: 0.15 },
+          { nm: 450, power: 0.95 },
+          { nm: 500, power: 0.70 },
+          { nm: 550, power: 0.85 },
+          { nm: 600, power: 0.75 },
+          { nm: 650, power: 0.45 },
+          { nm: 700, power: 0.10 },
+          { nm: 800, power: 0.02 },
+          { nm: 1000, power: 0.0 },
+          { nm: 1200, power: 0.0 },
+        ];
+      } else {
+        // Sunlight AM1.5
+        points = [
+          { nm: 300, power: 0.05 },
+          { nm: 400, power: 0.35 },
+          { nm: 500, power: 0.85 },
+          { nm: 550, power: 1.0 },
+          { nm: 600, power: 0.95 },
+          { nm: 700, power: 0.75 },
+          { nm: 800, power: 0.55 },
+          { nm: 900, power: 0.40 },
+          { nm: 1000, power: 0.30 },
+          { nm: 1100, power: 0.20 },
+          { nm: 1200, power: 0.10 },
+        ];
+      }
+      return points.map((p, i) => {
+        const x = 80 + ((p.nm - 300) / 900) * 380;
+        const y = 200 - p.power * 120;
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ');
+    };
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -385,129 +485,397 @@ const SpectralMismatchRenderer: React.FC<SpectralMismatchRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '600px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
           <defs>
-            <linearGradient id="spectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.uv} />
-              <stop offset="20%" stopColor="#3b82f6" />
-              <stop offset="40%" stopColor="#22c55e" />
-              <stop offset="60%" stopColor="#eab308" />
-              <stop offset="80%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor={colors.ir} />
+            {/* === PREMIUM BACKGROUND GRADIENTS === */}
+            <linearGradient id="spmisLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
+
+            {/* === SPECTRUM GRADIENT - Full visible + UV/IR === */}
+            <linearGradient id="spmisSpectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="15%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#06b6d4" />
+              <stop offset="45%" stopColor="#22c55e" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="90%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* === LIGHT SOURCE GLOW GRADIENTS === */}
+            <radialGradient id="spmisIncandescentGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fff7ed" stopOpacity="1" />
+              <stop offset="20%" stopColor="#ffedd5" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#fed7aa" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#fdba74" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#fb923c" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="spmisLedGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="20%" stopColor="#f0f9ff" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#e0f2fe" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#bae6fd" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#7dd3fc" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="spmisSunlightGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fefce8" stopOpacity="1" />
+              <stop offset="15%" stopColor="#fef9c3" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#fef08a" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fde047" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#facc15" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === SOLAR CELL GRADIENT === */}
+            <linearGradient id="spmisSolarCellGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="25%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            <linearGradient id="spmisSolarCellFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* === MISMATCH INDICATOR GRADIENTS === */}
+            <linearGradient id="spmisMismatchGood" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            <linearGradient id="spmisMismatchMedium" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            <linearGradient id="spmisMismatchPoor" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b91c1c" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* === DISPLAY PANEL GRADIENT === */}
+            <linearGradient id="spmisDisplayPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="20%" stopColor="#111827" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            <filter id="spmisLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="spmisSpectrumGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="spmisTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="spmisInnerGlow">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* === PATTERNS === */}
+            <pattern id="spmisGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            <pattern id="spmisSolarCellGrid" width="15" height="10" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="10" stroke="#1e3a8a" strokeWidth="0.5" />
+              <line x1="0" y1="5" x2="15" y2="5" stroke="#1e3a8a" strokeWidth="0.3" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={width / 2} y={25} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle">
-            Spectral Mismatch - Light Source Comparison
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#spmisLabBg)" />
+          <rect width={width} height={height} fill="url(#spmisGridPattern)" />
+
+          {/* === TITLE === */}
+          <text x={width / 2} y={28} fill={colors.textPrimary} fontSize={18} fontWeight="bold" textAnchor="middle" filter="url(#spmisTextGlow)">
+            Spectral Mismatch Analysis
+          </text>
+          <text x={width / 2} y={48} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+            Solar Spectrum vs Cell Response
           </text>
 
-          {/* Light source selector visual */}
-          <g transform="translate(80, 80)">
-            <text x="60" y="-10" fill={colors.textSecondary} fontSize={12} textAnchor="middle">Light Source</text>
+          {/* === LIGHT SOURCE VISUALIZATION === */}
+          <g transform="translate(55, 95)">
+            {/* Housing */}
+            <rect x="-35" y="-35" width="70" height="85" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1.5" />
+            <rect x="-30" y="-30" width="60" height="75" rx="6" fill="#111827" />
 
-            {/* Bulb icon */}
-            <circle cx="60" cy="40" r={35} fill={source.color} opacity={0.8}>
-              <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+            {/* Light source glow */}
+            <circle
+              cx="0"
+              cy="5"
+              r="28"
+              fill={lightSource === 'incandescent' ? 'url(#spmisIncandescentGlow)' : lightSource === 'led' ? 'url(#spmisLedGlow)' : 'url(#spmisSunlightGlow)'}
+              filter="url(#spmisLightGlow)"
+            >
+              <animate attributeName="r" values="26;30;26" dur="2s" repeatCount="indefinite" />
             </circle>
-            <circle cx="60" cy="40" r={20} fill="#fff" opacity={0.4} />
 
-            <text x="60" y={95} fill={colors.textPrimary} fontSize={11} fontWeight="bold" textAnchor="middle">{source.name}</text>
-            <text x="60" y={110} fill={colors.textSecondary} fontSize={10} textAnchor="middle">{source.description}</text>
+            {/* Inner bright core */}
+            <circle cx="0" cy="5" r="12" fill="#ffffff" opacity="0.9">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Light rays */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+              <line
+                key={i}
+                x1={Math.cos(angle * Math.PI / 180) * 20}
+                y1={5 + Math.sin(angle * Math.PI / 180) * 20}
+                x2={Math.cos(angle * Math.PI / 180) * 38}
+                y2={5 + Math.sin(angle * Math.PI / 180) * 38}
+                stroke={source.color}
+                strokeWidth="2"
+                strokeOpacity="0.4"
+                strokeLinecap="round"
+              >
+                <animate attributeName="strokeOpacity" values="0.2;0.6;0.2" dur="1.5s" begin={`${i * 0.1}s`} repeatCount="indefinite" />
+              </line>
+            ))}
+
+            {/* Source label */}
+            <text x="0" y="65" fill={colors.textPrimary} fontSize={10} fontWeight="bold" textAnchor="middle">{source.name.split(' ')[0]}</text>
+            <text x="0" y="78" fill={colors.textMuted} fontSize={8} textAnchor="middle">{source.description}</text>
           </g>
 
-          {/* Spectral power distribution graph */}
-          <g transform="translate(200, 60)">
-            <text x="130" y="0" fill={colors.textSecondary} fontSize={11} textAnchor="middle">Spectral Power Distribution</text>
+          {/* === SPECTRUM GRAPH === */}
+          <g transform="translate(0, 0)">
+            {/* Graph panel */}
+            <rect x="140" y="60" width="400" height="160" rx="6" fill="url(#spmisDisplayPanel)" stroke="#374151" strokeWidth="1" />
 
-            {/* Graph background */}
-            <rect x="0" y="10" width="260" height="100" fill="#111827" rx={4} />
+            {/* Graph title */}
+            <text x="340" y="78" fill={colors.accent} fontSize={10} fontWeight="bold" textAnchor="middle">SPECTRAL POWER DISTRIBUTION</text>
 
-            {/* Wavelength axis */}
-            <line x1="0" y1="110" x2="260" y2="110" stroke={colors.textMuted} strokeWidth={1} />
-            <text x="0" y="125" fill={colors.textMuted} fontSize={8}>300nm</text>
-            <text x="65" y="125" fill={colors.textMuted} fontSize={8}>500nm</text>
-            <text x="130" y="125" fill={colors.textMuted} fontSize={8}>700nm</text>
-            <text x="195" y="125" fill={colors.textMuted} fontSize={8}>900nm</text>
-            <text x="250" y="125" fill={colors.textMuted} fontSize={8}>1100nm</text>
+            {/* Spectrum color band at bottom */}
+            <rect x="160" y="185" width="360" height="15" rx="2" fill="url(#spmisSpectrumGrad)" opacity="0.8" />
 
-            {/* Spectrum bars */}
-            {/* UV */}
-            <rect x="10" y={110 - source.uvContent * 80} width="40" height={source.uvContent * 80} fill={colors.uv} opacity={hasUVFilter ? 0.2 : 0.8} />
-            {/* Visible */}
-            <rect x="60" y={110 - source.visibleContent * 80} width="80" height={source.visibleContent * 80} fill="url(#spectrumGrad)" opacity={0.8} />
-            {/* IR */}
-            <rect x="150" y={110 - source.irContent * 80} width="100" height={source.irContent * 80} fill={colors.ir} opacity={hasIRFilter ? 0.2 : 0.8} />
+            {/* Wavelength labels */}
+            <text x="160" y="210" fill={colors.textMuted} fontSize={8} textAnchor="middle">300nm</text>
+            <text x="250" y="210" fill={colors.textMuted} fontSize={8} textAnchor="middle">500nm</text>
+            <text x="340" y="210" fill={colors.textMuted} fontSize={8} textAnchor="middle">700nm</text>
+            <text x="430" y="210" fill={colors.textMuted} fontSize={8} textAnchor="middle">900nm</text>
+            <text x="520" y="210" fill={colors.textMuted} fontSize={8} textAnchor="middle">1100nm</text>
 
-            {/* Bandgap threshold line */}
-            <line x1="195" y1="10" x2="195" y2="110" stroke={colors.error} strokeWidth={2} strokeDasharray="5,3" />
-            <text x="200" y="25" fill={colors.error} fontSize={8}>Bandgap</text>
-            <text x="200" y="35" fill={colors.error} fontSize={8}>limit</text>
+            {/* UV/Visible/IR region labels */}
+            <text x="175" y="178" fill={colors.uv} fontSize={7} fontWeight="bold" textAnchor="middle">UV</text>
+            <text x="290" y="178" fill="#22c55e" fontSize={7} fontWeight="bold" textAnchor="middle">VISIBLE</text>
+            <text x="460" y="178" fill={colors.ir} fontSize={7} fontWeight="bold" textAnchor="middle">INFRARED</text>
 
-            {/* Filter indicators */}
+            {/* Y-axis */}
+            <line x1="160" y1="85" x2="160" y2="175" stroke={colors.textMuted} strokeWidth="0.5" />
+            <text x="155" y="90" fill={colors.textMuted} fontSize={7} textAnchor="end">1.0</text>
+            <text x="155" y="130" fill={colors.textMuted} fontSize={7} textAnchor="end">0.5</text>
+            <text x="155" y="175" fill={colors.textMuted} fontSize={7} textAnchor="end">0</text>
+
+            {/* Light source spectrum curve */}
+            <path
+              d={getLightSourcePath()}
+              fill="none"
+              stroke={source.color}
+              strokeWidth="3"
+              filter="url(#spmisSpectrumGlow)"
+              opacity={0.9}
+            />
+
+            {/* Cell response curve (silicon QE) */}
+            <path
+              d={getCellResponsePath()}
+              fill="none"
+              stroke={colors.success}
+              strokeWidth="2"
+              strokeDasharray="6 3"
+              opacity="0.8"
+            />
+
+            {/* Bandgap limit line */}
+            <line x1="455" y1="85" x2="455" y2="175" stroke={colors.error} strokeWidth="2" strokeDasharray="4 2" />
+            <text x="460" y="95" fill={colors.error} fontSize={7} fontWeight="bold">1127nm</text>
+            <text x="460" y="105" fill={colors.error} fontSize={6}>Bandgap</text>
+
+            {/* Filter overlays */}
             {hasUVFilter && (
               <g>
-                <line x1="0" y1="10" x2="50" y2="110" stroke={colors.accent} strokeWidth={3} />
-                <text x="25" y="60" fill={colors.accent} fontSize={8} transform="rotate(-70, 25, 60)">UV Filter</text>
+                <rect x="160" y="85" width="45" height="90" fill={colors.uv} opacity="0.3" />
+                <text x="182" y="130" fill={colors.uv} fontSize={8} fontWeight="bold" textAnchor="middle" transform="rotate(-90, 182, 130)">UV FILTER</text>
               </g>
             )}
             {hasIRFilter && (
               <g>
-                <line x1="150" y1="10" x2="260" y2="110" stroke={colors.accent} strokeWidth={3} />
-                <text x="205" y="60" fill={colors.accent} fontSize={8}>IR Filter</text>
+                <rect x="400" y="85" width="120" height="90" fill={colors.ir} opacity="0.3" />
+                <text x="460" y="130" fill={colors.ir} fontSize={8} fontWeight="bold" textAnchor="middle">IR FILTER</text>
               </g>
             )}
+
+            {/* Legend */}
+            <g transform="translate(165, 92)">
+              <line x1="0" y1="0" x2="20" y2="0" stroke={source.color} strokeWidth="3" />
+              <text x="25" y="3" fill={colors.textSecondary} fontSize={7}>Light Source</text>
+              <line x1="90" y1="0" x2="110" y2="0" stroke={colors.success} strokeWidth="2" strokeDasharray="4 2" />
+              <text x="115" y="3" fill={colors.textSecondary} fontSize={7}>Cell Response</text>
+            </g>
           </g>
 
-          {/* Solar cell */}
-          <g transform="translate(80, 220)">
-            <rect x="0" y="0" width="100" height="60" rx={4} fill="#1e40af" />
-            <rect x="5" y="5" width="90" height="50" rx={2} fill="#3b82f6" />
-            {/* Grid lines */}
-            {[1, 2, 3, 4].map(i => (
-              <line key={`h${i}`} x1="5" y1={5 + i * 10} x2="95" y2={5 + i * 10} stroke="#1e3a8a" strokeWidth={1} />
-            ))}
-            {[1, 2, 3, 4, 5].map(i => (
-              <line key={`v${i}`} x1={5 + i * 15} y1="5" x2={5 + i * 15} y2="55" stroke="#1e3a8a" strokeWidth={1} />
-            ))}
-            <text x="50" y="80" fill={colors.textSecondary} fontSize={11} textAnchor="middle">Silicon Cell</text>
-            <text x="50" y="95" fill={colors.textMuted} fontSize={9} textAnchor="middle">Bandgap: {cellBandgap} eV</text>
+          {/* === SOLAR CELL VISUALIZATION === */}
+          <g transform="translate(55, 280)">
+            {/* Cell frame */}
+            <rect x="-40" y="-30" width="80" height="75" rx="4" fill="url(#spmisSolarCellFrame)" stroke="#4b5563" strokeWidth="1" />
+
+            {/* Cell surface */}
+            <rect x="-35" y="-25" width="70" height="55" rx="2" fill="url(#spmisSolarCellGrad)" />
+
+            {/* Grid pattern overlay */}
+            <rect x="-35" y="-25" width="70" height="55" rx="2" fill="url(#spmisSolarCellGrid)" />
+
+            {/* Busbar */}
+            <rect x="-3" y="-25" width="6" height="55" fill="#9ca3af" opacity="0.8" />
+
+            {/* Reflection highlight */}
+            <rect x="-35" y="-25" width="70" height="8" rx="2" fill="#ffffff" opacity="0.15" />
+
+            {/* Label */}
+            <text x="0" y="55" fill={colors.textPrimary} fontSize={9} fontWeight="bold" textAnchor="middle">Silicon PV Cell</text>
+            <text x="0" y="68" fill={colors.textMuted} fontSize={8} textAnchor="middle">Eg = {cellBandgap} eV</text>
           </g>
 
-          {/* Output display */}
-          <g transform="translate(220, 200)">
-            <rect x="0" y="0" width="240" height="130" rx={8} fill="#111827" stroke={colors.accent} strokeWidth={1} />
-            <text x="120" y="20" fill={colors.accent} fontSize={12} fontWeight="bold" textAnchor="middle">PV OUTPUT COMPARISON</text>
+          {/* === ENERGY FLOW ARROWS === */}
+          <g>
+            {/* Arrow from light to spectrum */}
+            <line x1="90" y1="95" x2="135" y2="95" stroke={source.color} strokeWidth="2" markerEnd="url(#spmisArrow)" opacity="0.6" />
+
+            {/* Arrow from spectrum to cell */}
+            <path d="M 140 180 Q 100 230 70 250" fill="none" stroke={colors.success} strokeWidth="2" strokeDasharray="4 2" opacity="0.5" />
+          </g>
+
+          {/* === MISMATCH INDICATOR === */}
+          <g transform="translate(560, 70)">
+            <rect x="0" y="0" width="120" height="150" rx="8" fill="url(#spmisDisplayPanel)" stroke="#374151" strokeWidth="1" />
+            <text x="60" y="20" fill={colors.accent} fontSize={10} fontWeight="bold" textAnchor="middle">MISMATCH</text>
+            <text x="60" y="32" fill={colors.textMuted} fontSize={8} textAnchor="middle">INDICATOR</text>
+
+            {/* Mismatch gauge */}
+            <rect x="15" y="45" width="90" height="12" rx="3" fill="#1f2937" />
+            <rect
+              x="15"
+              y="45"
+              width={Math.min(90, output.spectralMismatch * 0.9)}
+              height="12"
+              rx="3"
+              fill={output.spectralMismatch > 70 ? 'url(#spmisMismatchGood)' : output.spectralMismatch > 40 ? 'url(#spmisMismatchMedium)' : 'url(#spmisMismatchPoor)'}
+            />
+            <text x="60" y="72" fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">{output.spectralMismatch.toFixed(0)}%</text>
+            <text x="60" y="85" fill={colors.textMuted} fontSize={8} textAnchor="middle">Spectral Match</text>
+
+            {/* Quality label */}
+            <rect
+              x="20"
+              y="95"
+              width="80"
+              height="20"
+              rx="4"
+              fill={output.spectralMismatch > 70 ? 'rgba(16, 185, 129, 0.2)' : output.spectralMismatch > 40 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)'}
+            />
+            <text
+              x="60"
+              y="109"
+              fill={output.spectralMismatch > 70 ? colors.success : output.spectralMismatch > 40 ? colors.warning : colors.error}
+              fontSize={9}
+              fontWeight="bold"
+              textAnchor="middle"
+            >
+              {output.spectralMismatch > 70 ? 'EXCELLENT' : output.spectralMismatch > 40 ? 'MODERATE' : 'POOR'}
+            </text>
+
+            {/* Loss breakdown */}
+            <text x="15" y="132" fill={colors.textMuted} fontSize={7}>Thermalization: {(100 - output.spectralMismatch * 0.7).toFixed(0)}%</text>
+            <text x="15" y="143" fill={colors.textMuted} fontSize={7}>Sub-bandgap: {(100 - output.spectralMismatch * 0.3).toFixed(0)}%</text>
+          </g>
+
+          {/* === OUTPUT PANEL === */}
+          <g transform="translate(140, 240)">
+            <rect x="0" y="0" width="400" height="100" rx="8" fill="url(#spmisDisplayPanel)" stroke={colors.accent} strokeWidth="1.5" />
+            <text x="200" y="20" fill={colors.accent} fontSize={11} fontWeight="bold" textAnchor="middle" filter="url(#spmisTextGlow)">PV OUTPUT COMPARISON</text>
 
             {/* Human brightness bar */}
-            <text x="10" y="45" fill={colors.textSecondary} fontSize={10}>Human Brightness:</text>
-            <rect x="120" y="35" width={output.humanBrightness} height="12" rx={2} fill={colors.led} />
-            <text x="225" y="45" fill={colors.textPrimary} fontSize={10}>{output.humanBrightness}%</text>
+            <text x="15" y="42" fill={colors.textSecondary} fontSize={9}>Perceived Brightness:</text>
+            <rect x="130" y="32" width="200" height="14" rx="3" fill="#1f2937" />
+            <rect x="130" y="32" width={output.humanBrightness * 2} height="14" rx="3" fill="url(#spmisLedGlow)" opacity="0.9" />
+            <text x="340" y="43" fill={colors.textPrimary} fontSize={10} fontWeight="bold">{output.humanBrightness}%</text>
 
             {/* PV Power bar */}
-            <text x="10" y="70" fill={colors.textSecondary} fontSize={10}>PV Power Output:</text>
-            <rect x="120" y="60" width={output.power / 30 * 100} height="12" rx={2} fill={colors.success} />
-            <text x="225" y="70" fill={colors.success} fontSize={10} fontWeight="bold">{output.power.toFixed(1)}</text>
+            <text x="15" y="62" fill={colors.textSecondary} fontSize={9}>Electrical Output:</text>
+            <rect x="130" y="52" width="200" height="14" rx="3" fill="#1f2937" />
+            <rect x="130" y="52" width={Math.min(200, output.power / 30 * 200)} height="14" rx="3" fill="url(#spmisMismatchGood)" />
+            <text x="340" y="63" fill={colors.success} fontSize={10} fontWeight="bold">{output.power.toFixed(1)} mW</text>
 
-            {/* Spectral mismatch */}
-            <text x="10" y="95" fill={colors.textSecondary} fontSize={10}>Spectral Match:</text>
-            <rect x="120" y="85" width={output.spectralMismatch} height="12" rx={2} fill={colors.warning} />
-            <text x="225" y="95" fill={colors.warning} fontSize={10}>{output.spectralMismatch.toFixed(0)}%</text>
-
-            {/* Current and Voltage */}
-            <text x="10" y="118" fill={colors.textMuted} fontSize={9}>Current: {output.current.toFixed(1)} mA/cm²</text>
-            <text x="130" y="118" fill={colors.textMuted} fontSize={9}>Voltage: {output.voltage.toFixed(2)} V</text>
+            {/* Technical specs */}
+            <text x="15" y="88" fill={colors.textMuted} fontSize={8}>Isc: {output.current.toFixed(1)} mA/cm²</text>
+            <text x="120" y="88" fill={colors.textMuted} fontSize={8}>Voc: {output.voltage.toFixed(2)} V</text>
+            <text x="220" y="88" fill={colors.textMuted} fontSize={8}>Fill Factor: 0.75</text>
+            <text x="320" y="88" fill={colors.textMuted} fontSize={8}>Eff: {(output.power / 100 * 20).toFixed(1)}%</text>
           </g>
 
-          {/* Key insight */}
-          <rect x={30} y={350} width={490} height={55} rx={8} fill="rgba(245, 158, 11, 0.15)" stroke={colors.accent} strokeWidth={1} />
-          <text x={275} y={372} fill={colors.accent} fontSize={11} fontWeight="bold" textAnchor="middle">
-            Key Insight: Same brightness ≠ Same PV power!
-          </text>
-          <text x={275} y={392} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            PV cells respond to photon energy distribution, not human-perceived brightness
-          </text>
+          {/* === KEY INSIGHT BOX === */}
+          <g transform="translate(560, 240)">
+            <rect x="0" y="0" width="120" height="100" rx="8" fill="rgba(245, 158, 11, 0.1)" stroke={colors.accent} strokeWidth="1" />
+            <text x="60" y="18" fill={colors.accent} fontSize={9} fontWeight="bold" textAnchor="middle">KEY INSIGHT</text>
+
+            <text x="60" y="38" fill={colors.textPrimary} fontSize={8} textAnchor="middle" fontWeight="bold">Same Brightness</text>
+            <text x="60" y="50" fill={colors.error} fontSize={14} fontWeight="bold" textAnchor="middle">≠</text>
+            <text x="60" y="65" fill={colors.textPrimary} fontSize={8} textAnchor="middle" fontWeight="bold">Same PV Power</text>
+
+            <text x="60" y="82" fill={colors.textMuted} fontSize={7} textAnchor="middle">Spectrum determines</text>
+            <text x="60" y="92" fill={colors.textMuted} fontSize={7} textAnchor="middle">electrical output</text>
+          </g>
+
+          {/* === BOTTOM INFO BAR === */}
+          <g transform="translate(0, 355)">
+            <rect x="20" y="0" width={width - 40} height="50" rx="6" fill="rgba(6, 182, 212, 0.1)" stroke="#0891b2" strokeWidth="0.5" />
+            <text x={width / 2} y="18" fill={colors.textPrimary} fontSize={10} fontWeight="bold" textAnchor="middle">
+              Physics: Photon Energy E = hc/λ | Silicon absorbs λ &lt; 1127nm (E &gt; 1.1 eV)
+            </text>
+            <text x={width / 2} y="35" fill={colors.textSecondary} fontSize={9} textAnchor="middle">
+              High-energy UV photons waste excess as heat (thermalization) | Low-energy IR photons pass through unused
+            </text>
+          </g>
         </svg>
       </div>
     );

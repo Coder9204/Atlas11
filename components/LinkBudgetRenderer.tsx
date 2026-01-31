@@ -504,112 +504,450 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     }
   ];
 
+  // Generate consistent star positions
+  const starPositions = React.useMemo(() => {
+    const stars = [];
+    for (let i = 0; i < 40; i++) {
+      stars.push({
+        cx: (i * 137.5) % 500,
+        cy: ((i * 89.3) % 180) + 10,
+        r: ((i * 7.3) % 1.5) + 0.5,
+        opacity: ((i * 11.7) % 0.5) + 0.3,
+        twinkleOffset: i * 36
+      });
+    }
+    return stars;
+  }, []);
+
   const renderVisualization = () => {
     const budget = calculateLinkBudget();
     const waveOffset = animPhase * 2;
+    const marginValue = parseFloat(budget.margin);
+    const signalStrength = Math.max(0, Math.min(100, (marginValue + 30) * 2)); // Map margin to 0-100%
 
     return (
-      <svg viewBox="0 0 500 320" className="w-full h-auto max-w-xl">
+      <svg viewBox="0 0 560 380" className="w-full h-auto max-w-2xl">
         <defs>
-          <linearGradient id="spaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0a0a1a" />
-            <stop offset="100%" stopColor="#1a1a3a" />
+          {/* ==================== PREMIUM GRADIENT DEFINITIONS ==================== */}
+
+          {/* Deep space background gradient */}
+          <linearGradient id="lnkbSpaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
           </linearGradient>
-          <linearGradient id="signalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.1" />
+
+          {/* Satellite body metallic gradient */}
+          <linearGradient id="lnkbSatelliteMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="25%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#475569" />
+            <stop offset="75%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
           </linearGradient>
+
+          {/* Solar panel gradient with depth */}
+          <linearGradient id="lnkbSolarPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="20%" stopColor="#2563eb" />
+            <stop offset="50%" stopColor="#1d4ed8" />
+            <stop offset="80%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+
+          {/* Ground station building gradient */}
+          <linearGradient id="lnkbBuildingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="30%" stopColor="#374151" />
+            <stop offset="60%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+
+          {/* Antenna dish gradient - receiver */}
+          <radialGradient id="lnkbDishGradRx" cx="40%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="30%" stopColor="#60a5fa" />
+            <stop offset="60%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </radialGradient>
+
+          {/* Antenna dish gradient - transmitter */}
+          <radialGradient id="lnkbDishGradTx" cx="40%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="30%" stopColor="#fbbf24" />
+            <stop offset="60%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
+          </radialGradient>
+
+          {/* Signal wave gradient with attenuation */}
+          <linearGradient id="lnkbSignalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.9" />
+            <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#0891b2" stopOpacity="0.5" />
+            <stop offset="75%" stopColor="#0e7490" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#155e75" stopOpacity="0.15" />
+          </linearGradient>
+
+          {/* Signal strength good gradient */}
+          <linearGradient id="lnkbStrengthGood" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="40%" stopColor="#16a34a" />
+            <stop offset="70%" stopColor="#15803d" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* Signal strength marginal gradient */}
+          <linearGradient id="lnkbStrengthMarginal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="40%" stopColor="#dc2626" />
+            <stop offset="70%" stopColor="#b91c1c" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </linearGradient>
+
+          {/* Earth atmosphere gradient */}
+          <radialGradient id="lnkbEarthGrad" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#1d4ed8" />
+            <stop offset="60%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#172554" />
+          </radialGradient>
+
+          {/* Earth land mass gradient */}
+          <linearGradient id="lnkbLandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#16a34a" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#15803d" stopOpacity="0.4" />
+          </linearGradient>
+
+          {/* Panel info box gradient */}
+          <linearGradient id="lnkbPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+            <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+          </linearGradient>
+
+          {/* Transmitter glow radial gradient */}
+          <radialGradient id="lnkbTxGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#d97706" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Receiver glow radial gradient */}
+          <radialGradient id="lnkbRxGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* ==================== GLOW FILTER DEFINITIONS ==================== */}
+
+          {/* Satellite glow filter */}
+          <filter id="lnkbSatGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Signal wave glow filter */}
+          <filter id="lnkbSignalGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Strong antenna glow */}
+          <filter id="lnkbAntennaGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Star twinkle filter */}
+          <filter id="lnkbStarGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Status indicator glow */}
+          <filter id="lnkbStatusGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        <rect width="500" height="320" fill="url(#spaceGrad)" />
+        {/* ==================== SPACE BACKGROUND ==================== */}
+        <rect width="560" height="380" fill="url(#lnkbSpaceGrad)" />
 
-        {/* Stars */}
-        {[...Array(30)].map((_, i) => (
+        {/* Animated stars with twinkle effect */}
+        {starPositions.map((star, i) => (
           <circle
             key={i}
-            cx={Math.random() * 500}
-            cy={Math.random() * 200}
-            r={Math.random() * 1.5 + 0.5}
-            fill="white"
-            opacity={Math.random() * 0.5 + 0.3}
+            cx={star.cx}
+            cy={star.cy}
+            r={star.r}
+            fill="#ffffff"
+            opacity={star.opacity * (0.7 + 0.3 * Math.sin((animPhase + star.twinkleOffset) * 0.05))}
+            filter={star.r > 1 ? "url(#lnkbStarGlow)" : undefined}
           />
         ))}
 
-        {/* Earth */}
-        <ellipse cx="450" cy="280" rx="80" ry="50" fill="#1e40af" />
-        <ellipse cx="450" cy="270" rx="70" ry="20" fill="#22c55e" opacity="0.5" />
-
-        {/* Ground Station */}
-        <g transform="translate(400, 230)">
-          <rect x="-20" y="0" width="40" height="30" fill="#374151" rx="3" />
-          <path d="M0 0 L-30 -40 L30 -40 Z" fill="#60a5fa" />
-          <ellipse cx="0" cy="-45" rx="25" ry="10" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" />
-          <text x="0" y="50" textAnchor="middle" fill="#94a3b8" fontSize="10">Ground Station</text>
-          <text x="0" y="62" textAnchor="middle" fill="#22d3ee" fontSize="8">{rxGain} dBi</text>
+        {/* ==================== EARTH ==================== */}
+        <g transform="translate(450, 320)">
+          {/* Atmosphere halo */}
+          <ellipse cx="0" cy="0" rx="130" ry="85" fill="url(#lnkbEarthGrad)" opacity="0.3" />
+          {/* Earth body */}
+          <ellipse cx="0" cy="0" rx="110" ry="70" fill="url(#lnkbEarthGrad)" />
+          {/* Land masses */}
+          <ellipse cx="-20" cy="-20" rx="45" ry="18" fill="url(#lnkbLandGrad)" transform="rotate(-15)" />
+          <ellipse cx="30" cy="10" rx="30" ry="12" fill="url(#lnkbLandGrad)" transform="rotate(10)" />
+          {/* Earth highlight */}
+          <ellipse cx="-30" cy="-25" rx="25" ry="10" fill="#60a5fa" opacity="0.15" />
         </g>
 
-        {/* Satellite */}
-        <g transform="translate(80, 80)">
-          <rect x="-15" y="-8" width="30" height="16" fill="#475569" stroke="#94a3b8" strokeWidth="1" />
-          <rect x="-50" y="-4" width="30" height="8" fill="#3b82f6" /> {/* Solar panel left */}
-          <rect x="20" y="-4" width="30" height="8" fill="#3b82f6" /> {/* Solar panel right */}
-          <ellipse cx="0" cy="12" rx="8" ry="4" fill="#60a5fa" /> {/* Antenna */}
-          <text x="0" y="-20" textAnchor="middle" fill="#94a3b8" fontSize="10">Satellite</text>
-          <text x="0" y="35" textAnchor="middle" fill="#f59e0b" fontSize="8">{txPower} dBW, {txGain} dBi</text>
+        {/* ==================== SATELLITE (TRANSMITTER) ==================== */}
+        <g transform="translate(70, 70)">
+          {/* Transmitter glow effect */}
+          <ellipse cx="0" cy="18" rx="20" ry="12" fill="url(#lnkbTxGlow)" opacity={0.5 + 0.3 * Math.sin(animPhase * 0.1)} />
+
+          {/* Satellite body */}
+          <rect x="-18" y="-10" width="36" height="20" fill="url(#lnkbSatelliteMetal)" rx="3" stroke="#94a3b8" strokeWidth="0.5" />
+
+          {/* Solar panel left */}
+          <g transform="translate(-55, 0)">
+            <rect x="0" y="-6" width="35" height="12" fill="url(#lnkbSolarPanel)" rx="1" />
+            {/* Panel grid lines */}
+            <line x1="7" y1="-6" x2="7" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="14" y1="-6" x2="14" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="21" y1="-6" x2="21" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="28" y1="-6" x2="28" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="0" y1="0" x2="35" y2="0" stroke="#1e3a8a" strokeWidth="0.5" />
+          </g>
+
+          {/* Solar panel right */}
+          <g transform="translate(20, 0)">
+            <rect x="0" y="-6" width="35" height="12" fill="url(#lnkbSolarPanel)" rx="1" />
+            <line x1="7" y1="-6" x2="7" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="14" y1="-6" x2="14" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="21" y1="-6" x2="21" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="28" y1="-6" x2="28" y2="6" stroke="#1e3a8a" strokeWidth="0.5" />
+            <line x1="0" y1="0" x2="35" y2="0" stroke="#1e3a8a" strokeWidth="0.5" />
+          </g>
+
+          {/* Transmit antenna dish */}
+          <g transform="translate(0, 18)" filter="url(#lnkbAntennaGlow)">
+            <ellipse cx="0" cy="0" rx="12" ry="5" fill="url(#lnkbDishGradTx)" />
+            <ellipse cx="0" cy="-2" rx="8" ry="3" fill="#fcd34d" opacity="0.5" />
+            {/* Feed horn */}
+            <line x1="0" y1="0" x2="0" y2="-8" stroke="#fbbf24" strokeWidth="1.5" />
+            <circle cx="0" cy="-8" r="2" fill="#fcd34d" />
+          </g>
+
+          {/* Labels */}
+          <text x="0" y="-22" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">SATELLITE TX</text>
+          <text x="0" y="42" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="500">{txPower} dBW | {txGain} dBi</text>
         </g>
 
-        {/* Signal waves */}
-        {[0, 1, 2, 3, 4].map(i => (
-          <path
-            key={i}
-            d={`M ${100 + i * 60 + (waveOffset % 60)} 95 Q ${130 + i * 60 + (waveOffset % 60)} 80 ${160 + i * 60 + (waveOffset % 60)} 95`}
-            stroke="#22d3ee"
-            strokeWidth="2"
-            fill="none"
-            opacity={1 - i * 0.2}
+        {/* ==================== SIGNAL PATH WITH ATTENUATION ==================== */}
+        <g>
+          {/* Signal path line (dashed) */}
+          <line x1="90" y1="95" x2="400" y2="205" stroke="#475569" strokeWidth="1" strokeDasharray="6,4" opacity="0.5" />
+
+          {/* Animated signal waves showing attenuation */}
+          {[0, 1, 2, 3, 4, 5].map(i => {
+            const progress = ((waveOffset / 60) + i * 0.18) % 1;
+            const x = 90 + progress * 310;
+            const y = 95 + progress * 110;
+            const opacity = 0.9 - progress * 0.7; // Fade as signal travels
+            const scale = 1 - progress * 0.3; // Shrink as signal attenuates
+
+            return (
+              <g key={i} transform={`translate(${x}, ${y})`} filter="url(#lnkbSignalGlow)">
+                {/* Wave arc */}
+                <path
+                  d={`M -${15 * scale} 0 Q 0 -${12 * scale} ${15 * scale} 0`}
+                  stroke="#22d3ee"
+                  strokeWidth={2 * scale}
+                  fill="none"
+                  opacity={opacity}
+                />
+                {/* Inner wave arc */}
+                <path
+                  d={`M -${10 * scale} 0 Q 0 -${8 * scale} ${10 * scale} 0`}
+                  stroke="#67e8f9"
+                  strokeWidth={1.5 * scale}
+                  fill="none"
+                  opacity={opacity * 0.7}
+                />
+              </g>
+            );
+          })}
+
+          {/* Distance label with background */}
+          <g transform="translate(245, 130)">
+            <rect x="-45" y="-12" width="90" height="24" fill="#0f172a" rx="6" stroke="#334155" strokeWidth="1" />
+            <text x="0" y="5" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="700">
+              {distance.toLocaleString()} km
+            </text>
+          </g>
+
+          {/* FSPL indicator along path */}
+          <g transform="translate(180, 175)">
+            <rect x="-50" y="-10" width="100" height="20" fill="rgba(239,68,68,0.15)" rx="4" stroke="#ef4444" strokeWidth="0.5" strokeOpacity="0.5" />
+            <text x="0" y="5" textAnchor="middle" fill="#f87171" fontSize="10" fontWeight="500">
+              FSPL: -{budget.fspl} dB
+            </text>
+          </g>
+        </g>
+
+        {/* ==================== GROUND STATION (RECEIVER) ==================== */}
+        <g transform="translate(410, 220)">
+          {/* Receiver glow effect */}
+          <ellipse cx="0" cy="-50" rx="25" ry="15" fill="url(#lnkbRxGlow)" opacity={0.4 + 0.2 * Math.sin(animPhase * 0.08)} />
+
+          {/* Building structure */}
+          <rect x="-25" y="0" width="50" height="35" fill="url(#lnkbBuildingGrad)" rx="3" stroke="#475569" strokeWidth="0.5" />
+          {/* Building windows */}
+          <rect x="-18" y="8" width="8" height="6" fill="#fbbf24" opacity="0.6" rx="1" />
+          <rect x="-5" y="8" width="8" height="6" fill="#fbbf24" opacity="0.4" rx="1" />
+          <rect x="8" y="8" width="8" height="6" fill="#fbbf24" opacity="0.5" rx="1" />
+          <rect x="-18" y="20" width="8" height="6" fill="#fbbf24" opacity="0.3" rx="1" />
+          <rect x="8" y="20" width="8" height="6" fill="#fbbf24" opacity="0.5" rx="1" />
+
+          {/* Antenna support structure */}
+          <path d="M0 0 L-35 -45 L35 -45 Z" fill="url(#lnkbBuildingGrad)" stroke="#64748b" strokeWidth="0.5" />
+
+          {/* Receiver dish with premium gradient */}
+          <g transform="translate(0, -55)" filter="url(#lnkbAntennaGlow)">
+            <ellipse cx="0" cy="0" rx="30" ry="12" fill="url(#lnkbDishGradRx)" stroke="#93c5fd" strokeWidth="1" />
+            <ellipse cx="0" cy="-3" rx="20" ry="7" fill="#bfdbfe" opacity="0.3" />
+            {/* Dish ribs */}
+            <line x1="0" y1="-12" x2="0" y2="12" stroke="#1e40af" strokeWidth="0.5" opacity="0.5" />
+            <line x1="-25" y1="0" x2="25" y2="0" stroke="#1e40af" strokeWidth="0.5" opacity="0.5" />
+            {/* Feed assembly */}
+            <line x1="0" y1="0" x2="0" y2="-18" stroke="#60a5fa" strokeWidth="2" />
+            <circle cx="0" cy="-18" r="3" fill="#93c5fd" />
+            <circle cx="0" cy="-18" r="1.5" fill="#ffffff" opacity="0.5" />
+          </g>
+
+          {/* Labels */}
+          <text x="0" y="52" textAnchor="middle" fill="#e2e8f0" fontSize="11" fontWeight="600">GROUND STATION RX</text>
+          <text x="0" y="66" textAnchor="middle" fill="#22d3ee" fontSize="9" fontWeight="500">{rxGain} dBi Gain</text>
+        </g>
+
+        {/* ==================== SIGNAL STRENGTH INDICATOR ==================== */}
+        <g transform="translate(400, 50)">
+          {/* Background panel */}
+          <rect x="0" y="0" width="150" height="45" fill="url(#lnkbPanelGrad)" rx="8" stroke="#334155" strokeWidth="1" />
+
+          {/* Title */}
+          <text x="75" y="15" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600" letterSpacing="0.5">SIGNAL STRENGTH</text>
+
+          {/* Signal bar background */}
+          <rect x="10" y="22" width="130" height="14" fill="#1e293b" rx="4" stroke="#475569" strokeWidth="0.5" />
+
+          {/* Signal bar fill with gradient */}
+          <rect
+            x="12"
+            y="24"
+            width={Math.max(0, (signalStrength / 100) * 126)}
+            height="10"
+            fill={marginValue > 0 ? "url(#lnkbStrengthGood)" : "url(#lnkbStrengthMarginal)"}
+            rx="3"
+            filter="url(#lnkbStatusGlow)"
           />
-        ))}
 
-        {/* Distance indicator */}
-        <line x1="95" y1="120" x2="385" y2="200" stroke="#64748b" strokeWidth="1" strokeDasharray="4" />
-        <text x="240" y="145" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">
-          {distance} km
-        </text>
+          {/* Signal level markers */}
+          <line x1="45" y1="22" x2="45" y2="36" stroke="#475569" strokeWidth="0.5" />
+          <line x1="75" y1="22" x2="75" y2="36" stroke="#475569" strokeWidth="0.5" />
+          <line x1="105" y1="22" x2="105" y2="36" stroke="#475569" strokeWidth="0.5" />
+        </g>
 
-        {/* Link Budget Display */}
-        <g transform="translate(10, 160)">
-          <rect x="0" y="0" width="140" height="140" fill="rgba(0,0,0,0.6)" rx="8" stroke="#334155" />
-          <text x="70" y="20" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">LINK BUDGET</text>
+        {/* ==================== LINK BUDGET PANEL ==================== */}
+        <g transform="translate(10, 165)">
+          {/* Panel background */}
+          <rect x="0" y="0" width="155" height="190" fill="url(#lnkbPanelGrad)" rx="10" stroke="#334155" strokeWidth="1" />
 
-          <text x="10" y="40" fill="#94a3b8" fontSize="9">FSPL:</text>
-          <text x="130" y="40" textAnchor="end" fill="#ef4444" fontSize="9">-{budget.fspl} dB</text>
+          {/* Header */}
+          <rect x="0" y="0" width="155" height="28" fill="rgba(245,158,11,0.1)" rx="10" />
+          <rect x="0" y="14" width="155" height="14" fill="rgba(245,158,11,0.1)" />
+          <text x="77" y="19" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="700" letterSpacing="0.5">LINK BUDGET</text>
 
-          <text x="10" y="55" fill="#94a3b8" fontSize="9">EIRP:</text>
-          <text x="130" y="55" textAnchor="end" fill="#22c55e" fontSize="9">+{budget.eirp} dBW</text>
+          {/* Divider */}
+          <line x1="10" y1="32" x2="145" y2="32" stroke="#334155" strokeWidth="1" />
 
-          <text x="10" y="70" fill="#94a3b8" fontSize="9">Rx Gain:</text>
-          <text x="130" y="70" textAnchor="end" fill="#22c55e" fontSize="9">+{rxGain} dBi</text>
+          {/* EIRP */}
+          <text x="12" y="50" fill="#94a3b8" fontSize="10">EIRP:</text>
+          <text x="143" y="50" textAnchor="end" fill="#22c55e" fontSize="10" fontWeight="600">+{budget.eirp} dBW</text>
 
-          <line x1="10" y1="80" x2="130" y2="80" stroke="#475569" />
+          {/* FSPL */}
+          <text x="12" y="68" fill="#94a3b8" fontSize="10">Path Loss:</text>
+          <text x="143" y="68" textAnchor="end" fill="#ef4444" fontSize="10" fontWeight="600">-{budget.fspl} dB</text>
 
-          <text x="10" y="95" fill="#94a3b8" fontSize="9">Rx Power:</text>
-          <text x="130" y="95" textAnchor="end" fill="#3b82f6" fontSize="9">{budget.rxPower} dBm</text>
+          {/* Rx Gain */}
+          <text x="12" y="86" fill="#94a3b8" fontSize="10">Rx Gain:</text>
+          <text x="143" y="86" textAnchor="end" fill="#22c55e" fontSize="10" fontWeight="600">+{rxGain} dBi</text>
 
-          <text x="10" y="110" fill="#94a3b8" fontSize="9">Link Margin:</text>
-          <text x="130" y="110" textAnchor="end" fill={parseFloat(budget.margin) > 0 ? '#22c55e' : '#ef4444'} fontSize="9" fontWeight="bold">
-            {budget.margin} dB
+          {/* Calculation line */}
+          <line x1="12" y1="96" x2="143" y2="96" stroke="#475569" strokeWidth="1" strokeDasharray="3,2" />
+
+          {/* Rx Power */}
+          <text x="12" y="114" fill="#94a3b8" fontSize="10">Received Power:</text>
+          <text x="143" y="114" textAnchor="end" fill="#60a5fa" fontSize="10" fontWeight="600">{budget.rxPower} dBm</text>
+
+          {/* SNR */}
+          <text x="12" y="132" fill="#94a3b8" fontSize="10">SNR:</text>
+          <text x="143" y="132" textAnchor="end" fill="#a78bfa" fontSize="10" fontWeight="600">{budget.snr} dB</text>
+
+          {/* Link Margin */}
+          <text x="12" y="150" fill="#94a3b8" fontSize="10">Link Margin:</text>
+          <text x="143" y="150" textAnchor="end" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} fontSize="11" fontWeight="700">
+            {marginValue > 0 ? '+' : ''}{budget.margin} dB
           </text>
 
-          <rect x="10" y="118" width="120" height="16" fill={parseFloat(budget.margin) > 0 ? '#22c55e' : '#ef4444'} rx="3" opacity="0.3" />
-          <text x="70" y="130" textAnchor="middle" fill={parseFloat(budget.margin) > 0 ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="bold">
+          {/* Status indicator */}
+          <rect x="12" y="160" width="131" height="22" fill={marginValue > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'} rx="6" stroke={marginValue > 0 ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+          <circle cx="26" cy="171" r="5" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} filter="url(#lnkbStatusGlow)" opacity={0.7 + 0.3 * Math.sin(animPhase * 0.15)} />
+          <text x="85" y="175" textAnchor="middle" fill={marginValue > 0 ? '#22c55e' : '#ef4444'} fontSize="11" fontWeight="700">
             {budget.linkStatus}
           </text>
         </g>
 
-        {/* Frequency display */}
-        <text x="250" y="310" textAnchor="middle" fill="#a855f7" fontSize="10">
-          Frequency: {frequency} GHz
-        </text>
+        {/* ==================== FREQUENCY INFO ==================== */}
+        <g transform="translate(180, 350)">
+          <rect x="-70" y="-12" width="140" height="24" fill="url(#lnkbPanelGrad)" rx="6" stroke="#334155" strokeWidth="1" />
+          <text x="0" y="5" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="600">
+            Frequency: {frequency} GHz
+          </text>
+        </g>
+
+        {/* ==================== LEGEND ==================== */}
+        <g transform="translate(10, 10)">
+          <rect x="0" y="0" width="140" height="55" fill="url(#lnkbPanelGrad)" rx="6" stroke="#334155" strokeWidth="1" opacity="0.9" />
+          <text x="10" y="16" fill="#94a3b8" fontSize="9" fontWeight="600">LINK COMPONENTS</text>
+          <circle cx="18" cy="28" r="4" fill="#fbbf24" />
+          <text x="28" y="31" fill="#e2e8f0" fontSize="9">Transmitter (Tx)</text>
+          <circle cx="18" cy="43" r="4" fill="#22d3ee" />
+          <text x="28" y="46" fill="#e2e8f0" fontSize="9">Receiver (Rx)</text>
+        </g>
       </svg>
     );
   };

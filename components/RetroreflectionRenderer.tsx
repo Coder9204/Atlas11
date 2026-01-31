@@ -230,31 +230,36 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
+    const width = 700;
     const height = 400;
     const centerY = height / 2;
 
     // Calculate mirror reflection (angle in = angle out)
     const mirrorReflectAngle = -sourceAngle;
 
-    // Calculate light source and viewer positions
+    // Calculate angles in radians
     const sourceRad = (sourceAngle * Math.PI) / 180;
-    const viewerRad = (viewerAngle * Math.PI) / 180;
     const mirrorReflectRad = (mirrorReflectAngle * Math.PI) / 180;
 
-    const lightSourceX = 80;
-    const lightSourceY = centerY - 80;
-    const viewerX = 80;
-    const viewerY = centerY + 80;
+    // Positions
+    const lightSourceX = 100;
+    const lightSourceY = centerY - 20;
+    const viewerX = 100;
+    const viewerY = centerY + 60;
 
-    const mirrorX = 180;
-    const mirrorY = centerY - 60;
+    const mirrorX = 320;
+    const mirrorY = centerY - 70;
 
-    const retroX = 180;
-    const retroY = centerY + 80;
+    const retroX = 320;
+    const retroY = centerY + 100;
 
-    // Ray endpoints
-    const rayLength = 150;
+    // Mirror hit point
+    const mirrorHitX = mirrorX + 60;
+    const mirrorHitY = mirrorY;
+
+    // Retro hit point
+    const retroHitX = retroX + 70;
+    const retroHitY = retroY;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -263,161 +268,473 @@ const RetroreflectionRenderer: React.FC<RetroreflectionRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#0a0a14', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(135deg, #030712 0%, #0a0f1a 50%, #030712 100%)', borderRadius: '12px', maxWidth: '700px' }}
         >
-          {/* Light source */}
-          <g>
-            <circle cx={lightSourceX} cy={lightSourceY} r={20} fill={colors.lightBeam} opacity={0.8} />
-            <text x={lightSourceX} y={lightSourceY - 30} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Light Source</text>
-            <text x={lightSourceX} y={lightSourceY + 35} fill={colors.textMuted} fontSize={10} textAnchor="middle">{sourceAngle} deg</text>
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium light source gradient - sun/lamp effect */}
+            <radialGradient id="retroLightSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Light source housing gradient */}
+            <linearGradient id="retroLightHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Flat mirror surface gradient - reflective metal */}
+            <linearGradient id="retroMirrorSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="20%" stopColor="#3b82f6" />
+              <stop offset="40%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#93c5fd" />
+              <stop offset="80%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Mirror frame gradient */}
+            <linearGradient id="retroMirrorFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Corner cube retroreflector gradient - glass prism effect */}
+            <linearGradient id="retroCornerCubeGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#34d399" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#6ee7b7" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#34d399" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Corner cube face gradients for 3D effect */}
+            <linearGradient id="retroCubeFace1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#059669" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0.3" />
+            </linearGradient>
+
+            <linearGradient id="retroCubeFace2" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.3" />
+            </linearGradient>
+
+            <linearGradient id="retroCubeFace3" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#34d399" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Retroreflector housing gradient */}
+            <linearGradient id="retroHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#065f46" />
+              <stop offset="30%" stopColor="#047857" />
+              <stop offset="70%" stopColor="#065f46" />
+              <stop offset="100%" stopColor="#064e3b" />
+            </linearGradient>
+
+            {/* Light beam gradient - incoming */}
+            <linearGradient id="retroBeamIncoming" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Light beam gradient - returned (green) */}
+            <linearGradient id="retroBeamReturned" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#34d399" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#6ee7b7" stopOpacity="1" />
+              <stop offset="70%" stopColor="#34d399" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Light beam gradient - reflected away (dimmer yellow) */}
+            <linearGradient id="retroBeamReflectedAway" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Eye/viewer gradient */}
+            <radialGradient id="retroEyeGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#dbeafe" />
+              <stop offset="50%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </radialGradient>
+
+            {/* Eye sclera gradient */}
+            <radialGradient id="retroEyeSclera" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="70%" stopColor="#f1f5f9" />
+              <stop offset="100%" stopColor="#e2e8f0" />
+            </radialGradient>
+
+            {/* Lab background gradient */}
+            <linearGradient id="retroLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Glow filter for light source */}
+            <filter id="retroLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for light beams */}
+            <filter id="retroBeamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for returned beam */}
+            <filter id="retroReturnGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glass reflection effect */}
+            <filter id="retroGlassShine" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Mirror shine effect */}
+            <filter id="retroMirrorShine" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="0.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers */}
+            <marker id="retroArrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#fbbf24" />
+            </marker>
+            <marker id="retroArrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+              <path d="M0,0 L0,6 L9,3 z" fill="#10b981" />
+            </marker>
+
+            {/* Grid pattern for lab background */}
+            <pattern id="retroLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#retroLabBg)" />
+          <rect width={width} height={height} fill="url(#retroLabGrid)" />
+
+          {/* Optical table base */}
+          <rect x="10" y={height - 40} width={width - 20} height="35" rx="4" fill="#111827" />
+          <rect x="10" y={height - 40} width={width - 20} height="4" fill="#1f2937" />
+
+          {/* === PREMIUM LIGHT SOURCE === */}
+          <g transform={`translate(${lightSourceX}, ${lightSourceY})`}>
+            {/* Housing */}
+            <rect x="-35" y="-30" width="70" height="60" rx="8" fill="url(#retroLightHousing)" stroke="#475569" strokeWidth="1.5" />
+            <rect x="-30" y="-25" width="60" height="50" rx="6" fill="#1e293b" opacity="0.3" />
+
+            {/* Lens/emitter */}
+            <circle cx="20" cy="0" r="18" fill="url(#retroLightSourceGlow)" filter="url(#retroLightGlow)">
+              <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="20" cy="0" r="12" fill="#fef3c7" opacity="0.9" />
+            <circle cx="20" cy="0" r="6" fill="#ffffff" />
+
+            {/* Power indicator */}
+            <circle cx="-20" cy="20" r="4" fill="#22c55e">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Label */}
+            <text x="0" y="-42" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">LIGHT SOURCE</text>
+            <text x="0" y="50" textAnchor="middle" fill="#64748b" fontSize="9">Angle: {sourceAngle}</text>
           </g>
 
-          {/* Viewer / Eye */}
-          <g>
-            <ellipse cx={viewerX} cy={viewerY} rx={15} ry={10} fill="#fff" />
-            <circle cx={viewerX} cy={viewerY} r={6} fill="#3b82f6" />
-            <circle cx={viewerX + 2} cy={viewerY - 1} r={2} fill="#fff" />
-            <text x={viewerX} y={viewerY + 25} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Viewer</text>
+          {/* === PREMIUM VIEWER/OBSERVER === */}
+          <g transform={`translate(${viewerX}, ${viewerY})`}>
+            {/* Eye sclera (white) */}
+            <ellipse cx="0" cy="0" rx="22" ry="14" fill="url(#retroEyeSclera)" stroke="#cbd5e1" strokeWidth="1" />
+
+            {/* Iris */}
+            <circle cx="3" cy="0" r="10" fill="url(#retroEyeGradient)" />
+
+            {/* Pupil */}
+            <circle cx="3" cy="0" r="5" fill="#1e293b" />
+
+            {/* Eye highlight */}
+            <circle cx="6" cy="-3" r="2.5" fill="#ffffff" opacity="0.9" />
+            <circle cx="1" cy="2" r="1" fill="#ffffff" opacity="0.5" />
+
+            {/* Eyelids hint */}
+            <path d="M -22 0 Q 0 -18 22 0" fill="none" stroke="#94a3b8" strokeWidth="1" />
+            <path d="M -22 0 Q 0 18 22 0" fill="none" stroke="#94a3b8" strokeWidth="1" />
+
+            {/* Label */}
+            <text x="0" y="30" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">OBSERVER</text>
+            <text x="0" y="42" textAnchor="middle" fill="#64748b" fontSize="8">(Near light source)</text>
           </g>
 
-          {/* Mirror section */}
+          {/* === FLAT MIRROR SECTION === */}
           {showMirror && (
             <g>
-              <text x={mirrorX + 60} y={mirrorY - 50} fill={colors.mirror} fontSize={12} textAnchor="middle">Flat Mirror</text>
+              {/* Section label */}
+              <rect x={mirrorX - 20} y="25" width="120" height="20" rx="4" fill="rgba(59, 130, 246, 0.2)" />
+              <text x={mirrorX + 40} y="39" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">FLAT MIRROR</text>
+
+              {/* Mirror frame */}
+              <rect x={mirrorX + 45} y={mirrorY - 55} width="35" height="110" rx="6" fill="url(#retroMirrorFrame)" stroke="#4b5563" strokeWidth="1" />
 
               {/* Mirror surface */}
-              <rect x={mirrorX + 40} y={mirrorY - 40} width={8} height={80} fill={colors.mirror} rx={2} />
+              <rect x={mirrorX + 52} y={mirrorY - 48} width="12" height="96" fill="url(#retroMirrorSurface)" filter="url(#retroMirrorShine)" rx="2" />
+
+              {/* Reflection lines on mirror */}
+              <line x1={mirrorX + 54} y1={mirrorY - 40} x2={mirrorX + 62} y2={mirrorY - 35} stroke="#bfdbfe" strokeWidth="0.5" opacity="0.6" />
+              <line x1={mirrorX + 54} y1={mirrorY - 20} x2={mirrorX + 62} y2={mirrorY - 15} stroke="#bfdbfe" strokeWidth="0.5" opacity="0.4" />
+              <line x1={mirrorX + 54} y1={mirrorY + 10} x2={mirrorX + 62} y2={mirrorY + 15} stroke="#bfdbfe" strokeWidth="0.5" opacity="0.5" />
+
+              {/* Normal line (perpendicular to mirror) */}
+              <line
+                x1={mirrorX + 58} y1={mirrorY - 60}
+                x2={mirrorX + 58} y2={mirrorY + 60}
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth="1"
+                strokeDasharray="6,4"
+              />
+              <text x={mirrorX + 75} y={mirrorY - 50} fill="#64748b" fontSize="8">Normal</text>
 
               {/* Incident ray to mirror */}
               <line
-                x1={lightSourceX + 15}
+                x1={lightSourceX + 40}
                 y1={lightSourceY}
-                x2={mirrorX + 44}
-                y2={mirrorY}
-                stroke={colors.lightBeam}
-                strokeWidth={3}
-                markerEnd="url(#arrowYellow)"
+                x2={mirrorHitX}
+                y2={mirrorHitY}
+                stroke="#fbbf24"
+                strokeWidth="4"
+                filter="url(#retroBeamGlow)"
+                markerEnd="url(#retroArrowYellow)"
               />
 
-              {/* Reflected ray from mirror (goes away from viewer) */}
+              {/* Reflected ray from mirror (goes AWAY from viewer) */}
               <line
-                x1={mirrorX + 44}
-                y1={mirrorY}
-                x2={mirrorX + 44 + 80 * Math.cos(mirrorReflectRad)}
-                y2={mirrorY - 80 * Math.sin(mirrorReflectRad)}
-                stroke={colors.lightBeam}
-                strokeWidth={3}
-                opacity={0.6}
-                strokeDasharray="8,4"
-                markerEnd="url(#arrowYellow)"
+                x1={mirrorHitX}
+                y1={mirrorHitY}
+                x2={mirrorHitX + 120 * Math.cos(mirrorReflectRad)}
+                y2={mirrorHitY - 120 * Math.sin(mirrorReflectRad)}
+                stroke="#fbbf24"
+                strokeWidth="3"
+                opacity="0.5"
+                strokeDasharray="10,5"
+                filter="url(#retroBeamGlow)"
+                markerEnd="url(#retroArrowYellow)"
               />
 
-              {/* Normal line */}
-              <line x1={mirrorX + 44} y1={mirrorY - 35} x2={mirrorX + 44} y2={mirrorY + 35} stroke="rgba(255,255,255,0.3)" strokeWidth={1} strokeDasharray="4,4" />
-
-              {/* Angle arc */}
+              {/* Angle indicators */}
               <path
-                d={`M ${mirrorX + 54} ${mirrorY} A 10 10 0 0 0 ${mirrorX + 44 + 10 * Math.cos(sourceRad)} ${mirrorY - 10 * Math.sin(sourceRad)}`}
+                d={`M ${mirrorHitX + 20} ${mirrorHitY} A 20 20 0 0 0 ${mirrorHitX} ${mirrorHitY - 20}`}
                 fill="none"
-                stroke={colors.lightBeam}
-                strokeWidth={1}
+                stroke="#fbbf24"
+                strokeWidth="1.5"
+                opacity="0.7"
               />
+              <text x={mirrorHitX + 25} y={mirrorHitY - 15} fill="#fbbf24" fontSize="8">i</text>
 
-              {/* Miss indicator for viewer */}
-              <text x={mirrorX + 100} y={mirrorY - 60} fill={colors.error} fontSize={10} textAnchor="middle">
-                Light misses viewer!
-              </text>
+              <path
+                d={`M ${mirrorHitX + 20 * Math.cos(mirrorReflectRad)} ${mirrorHitY - 20 * Math.sin(mirrorReflectRad)} A 20 20 0 0 0 ${mirrorHitX} ${mirrorHitY - 20}`}
+                fill="none"
+                stroke="#f59e0b"
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+              <text x={mirrorHitX - 5} y={mirrorHitY - 25} fill="#f59e0b" fontSize="8">r</text>
+
+              {/* Miss indicator */}
+              <g transform={`translate(${mirrorHitX + 80 * Math.cos(mirrorReflectRad)}, ${mirrorHitY - 80 * Math.sin(mirrorReflectRad) - 15})`}>
+                <rect x="-45" y="-10" width="90" height="20" rx="4" fill="rgba(239, 68, 68, 0.2)" stroke="#ef4444" strokeWidth="1" />
+                <text x="0" y="4" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">MISSES OBSERVER</text>
+              </g>
+
+              {/* Physics note */}
+              <text x={mirrorX + 40} y={mirrorY + 70} textAnchor="middle" fill="#64748b" fontSize="8">angle in = angle out</text>
             </g>
           )}
 
-          {/* Retroreflector section */}
+          {/* === RETROREFLECTOR SECTION === */}
           {showRetro && (
             <g>
-              <text x={retroX + 60} y={retroY - 60} fill={colors.retroreflector} fontSize={12} textAnchor="middle">Retroreflector</text>
+              {/* Section label */}
+              <rect x={retroX - 20} y={retroY - 90} width="140" height="20" rx="4" fill="rgba(16, 185, 129, 0.2)" />
+              <text x={retroX + 50} y={retroY - 76} textAnchor="middle" fill="#10b981" fontSize="11" fontWeight="bold">CORNER CUBE RETROREFLECTOR</text>
 
-              {/* Corner cube visualization */}
-              <g transform={`translate(${retroX + 40}, ${retroY - 20})`}>
-                {/* Three perpendicular surfaces */}
-                <polygon points="0,0 30,-20 30,20" fill="rgba(16, 185, 129, 0.3)" stroke={colors.retroreflector} strokeWidth={2} />
-                <polygon points="0,0 30,20 0,40" fill="rgba(16, 185, 129, 0.2)" stroke={colors.retroreflector} strokeWidth={2} />
-                <line x1={0} y1={0} x2={0} y2={40} stroke={colors.retroreflector} strokeWidth={2} />
+              {/* Retroreflector housing */}
+              <rect x={retroX + 40} y={retroY - 50} width="80" height="100" rx="8" fill="url(#retroHousing)" stroke="#059669" strokeWidth="1.5" />
+
+              {/* Corner cube prism visualization - 3D effect */}
+              <g transform={`translate(${retroX + 55}, ${retroY - 30})`}>
+                {/* Back face */}
+                <polygon points="0,0 50,0 50,60 0,60" fill="url(#retroCubeFace3)" stroke="#10b981" strokeWidth="1" />
+
+                {/* Left face */}
+                <polygon points="0,0 0,60 -15,45 -15,-15" fill="url(#retroCubeFace1)" stroke="#10b981" strokeWidth="1" filter="url(#retroGlassShine)" />
+
+                {/* Top face */}
+                <polygon points="0,0 50,0 35,-15 -15,-15" fill="url(#retroCubeFace2)" stroke="#10b981" strokeWidth="1" filter="url(#retroGlassShine)" />
+
+                {/* Corner edges - the key geometry */}
+                <line x1="0" y1="0" x2="-15" y2="-15" stroke="#34d399" strokeWidth="2" />
+                <line x1="0" y1="0" x2="0" y2="60" stroke="#34d399" strokeWidth="2" />
+                <line x1="0" y1="0" x2="50" y2="0" stroke="#34d399" strokeWidth="2" />
+
+                {/* Corner vertex highlight */}
+                <circle cx="0" cy="0" r="4" fill="#6ee7b7" opacity="0.8" />
+
+                {/* Glass microbeads visualization (array of small spheres) */}
+                {[10, 25, 40].map((x, i) => (
+                  [15, 35].map((y, j) => (
+                    <circle key={`bead-${i}-${j}`} cx={x} cy={y} r="6" fill="url(#retroCornerCubeGlass)" stroke="#34d399" strokeWidth="0.5" opacity="0.7" />
+                  ))
+                ))}
               </g>
 
               {/* Incident ray to retroreflector */}
               <line
-                x1={lightSourceX + 15}
-                y1={lightSourceY + 40}
-                x2={retroX + 50}
-                y2={retroY}
-                stroke={colors.lightBeam}
-                strokeWidth={3}
-                markerEnd="url(#arrowYellow)"
+                x1={lightSourceX + 40}
+                y1={lightSourceY + 30}
+                x2={retroHitX}
+                y2={retroHitY}
+                stroke="#fbbf24"
+                strokeWidth="4"
+                filter="url(#retroBeamGlow)"
+                markerEnd="url(#retroArrowYellow)"
               />
 
-              {/* Internal bounces (simplified) */}
-              <polyline
-                points={`${retroX + 50},${retroY} ${retroX + 65},${retroY - 10} ${retroX + 60},${retroY + 5} ${retroX + 50},${retroY}`}
-                fill="none"
-                stroke={colors.lightBeam}
-                strokeWidth={2}
-                opacity={0.7}
-              />
+              {/* Internal reflection path visualization */}
+              <g opacity="0.8">
+                <polyline
+                  points={`${retroHitX},${retroHitY} ${retroHitX + 25},${retroHitY - 15} ${retroHitX + 35},${retroHitY + 10} ${retroHitX + 20},${retroHitY + 5}`}
+                  fill="none"
+                  stroke="#fcd34d"
+                  strokeWidth="2"
+                  strokeDasharray="4,2"
+                />
+                {/* Bounce points */}
+                <circle cx={retroHitX + 25} cy={retroHitY - 15} r="3" fill="#fbbf24" opacity="0.8" />
+                <circle cx={retroHitX + 35} cy={retroHitY + 10} r="3" fill="#fbbf24" opacity="0.8" />
+              </g>
 
-              {/* Returned ray - parallel to incident, going back to source */}
+              {/* Returned ray - PARALLEL to incident, going back to source */}
               <line
-                x1={retroX + 50}
-                y1={retroY}
-                x2={lightSourceX + 20}
-                y2={lightSourceY + 35}
-                stroke={colors.retroreflector}
-                strokeWidth={3}
-                markerEnd="url(#arrowGreen)"
+                x1={retroHitX}
+                y1={retroHitY}
+                x2={lightSourceX + 35}
+                y2={lightSourceY + 25}
+                stroke="#10b981"
+                strokeWidth="4"
+                filter="url(#retroReturnGlow)"
+                markerEnd="url(#retroArrowGreen)"
               />
 
               {/* Success indicator */}
-              <text x={retroX - 20} y={retroY + 50} fill={colors.success} fontSize={10} textAnchor="middle">
-                Returns to source!
-              </text>
+              <g transform={`translate(${(retroHitX + lightSourceX + 35) / 2}, ${(retroHitY + lightSourceY + 25) / 2 - 20})`}>
+                <rect x="-55" y="-12" width="110" height="24" rx="6" fill="rgba(16, 185, 129, 0.3)" stroke="#10b981" strokeWidth="1" />
+                <text x="0" y="4" textAnchor="middle" fill="#10b981" fontSize="10" fontWeight="bold">RETURNS TO SOURCE</text>
+              </g>
+
+              {/* Physics note */}
+              <text x={retroX + 60} y={retroY + 65} textAnchor="middle" fill="#64748b" fontSize="8">3 perpendicular reflections</text>
+              <text x={retroX + 60} y={retroY + 77} textAnchor="middle" fill="#64748b" fontSize="8">reverse all direction components</text>
             </g>
           )}
 
-          {/* Arrow markers */}
-          <defs>
-            <marker id="arrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.lightBeam} />
-            </marker>
-            <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.retroreflector} />
-            </marker>
-          </defs>
+          {/* === LEGEND === */}
+          <g transform={`translate(20, ${height - 70})`}>
+            <rect x="-5" y="-5" width="280" height="30" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
 
-          {/* Legend */}
-          <g transform={`translate(20, ${height - 60})`}>
-            <rect x={0} y={0} width={15} height={15} fill={colors.lightBeam} rx={2} />
-            <text x={20} y={12} fill={colors.textMuted} fontSize={10}>Incoming light</text>
-            <rect x={100} y={0} width={15} height={15} fill={colors.retroreflector} rx={2} />
-            <text x={120} y={12} fill={colors.textMuted} fontSize={10}>Returned light</text>
+            <rect x="5" y="3" width="16" height="16" rx="3" fill="#fbbf24" />
+            <text x="28" y="15" fill="#94a3b8" fontSize="10">Incoming light</text>
+
+            <rect x="120" y="3" width="16" height="16" rx="3" fill="#10b981" />
+            <text x="143" y="15" fill="#94a3b8" fontSize="10">Returned light</text>
           </g>
 
-          {/* Info */}
-          <text x={width / 2} y={height - 15} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            Source angle: {sourceAngle} deg | Mirror reflects away, Retroreflector returns to source
-          </text>
+          {/* === INFO BAR === */}
+          <g transform={`translate(${width / 2}, ${height - 15})`}>
+            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10">
+              Source angle: {sourceAngle} | Mirror: angle in = angle out | Retroreflector: always returns to source
+            </text>
+          </g>
+
+          {/* Comparison arrows/indicators */}
+          {showMirror && showRetro && (
+            <g>
+              <line x1={width / 2} y1="60" x2={width / 2} y2={height - 90} stroke="#334155" strokeWidth="1" strokeDasharray="8,4" />
+              <text x={width / 2} y="55" textAnchor="middle" fill="#475569" fontSize="9" fontWeight="bold">COMPARISON</text>
+            </g>
+          )}
         </svg>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <button
               onClick={() => setIsAnimating(!isAnimating)}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: isAnimating ? colors.error : colors.success, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+                boxShadow: isAnimating ? '0 4px 15px rgba(239, 68, 68, 0.3)' : '0 4px 15px rgba(16, 185, 129, 0.3)'
+              }}
             >
-              {isAnimating ? 'Stop' : 'Animate Angle'}
+              {isAnimating ? 'Stop Animation' : 'Animate Angle'}
             </button>
             <button
               onClick={() => { setSourceAngle(30); setIsAnimating(false); setShowMirror(true); setShowRetro(true); }}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
             >
-              Reset
+              Reset View
             </button>
           </div>
         )}

@@ -354,6 +354,219 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────────────────
+  // PREMIUM SVG DEFS - Gradients, Filters, and Effects
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const renderPremiumDefs = () => (
+    <defs>
+      {/* Premium Steel Column Gradient - Metallic brushed finish */}
+      <linearGradient id="buckSteelColumn" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#64748b" />
+        <stop offset="15%" stopColor="#94a3b8" />
+        <stop offset="35%" stopColor="#cbd5e1" />
+        <stop offset="50%" stopColor="#94a3b8" />
+        <stop offset="65%" stopColor="#64748b" />
+        <stop offset="85%" stopColor="#475569" />
+        <stop offset="100%" stopColor="#334155" />
+      </linearGradient>
+
+      {/* Aluminum Column Gradient - Lighter metallic */}
+      <linearGradient id="buckAluminumColumn" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="20%" stopColor="#cbd5e1" />
+        <stop offset="40%" stopColor="#e2e8f0" />
+        <stop offset="60%" stopColor="#cbd5e1" />
+        <stop offset="80%" stopColor="#94a3b8" />
+        <stop offset="100%" stopColor="#64748b" />
+      </linearGradient>
+
+      {/* Wood Column Gradient - Natural grain effect */}
+      <linearGradient id="buckWoodColumn" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#a16207" />
+        <stop offset="20%" stopColor="#ca8a04" />
+        <stop offset="40%" stopColor="#a16207" />
+        <stop offset="60%" stopColor="#854d0e" />
+        <stop offset="80%" stopColor="#a16207" />
+        <stop offset="100%" stopColor="#713f12" />
+      </linearGradient>
+
+      {/* Stress Gradient - Low to High stress visualization */}
+      <linearGradient id="buckStressLow" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#10b981" />
+        <stop offset="50%" stopColor="#34d399" />
+        <stop offset="100%" stopColor="#10b981" />
+      </linearGradient>
+
+      <linearGradient id="buckStressMedium" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="30%" stopColor="#fbbf24" />
+        <stop offset="70%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+
+      <linearGradient id="buckStressHigh" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#dc2626" />
+        <stop offset="25%" stopColor="#ef4444" />
+        <stop offset="50%" stopColor="#f87171" />
+        <stop offset="75%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#dc2626" />
+      </linearGradient>
+
+      {/* Buckled Column Gradient - Damaged/failed state */}
+      <linearGradient id="buckFailedColumn" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#991b1b" />
+        <stop offset="30%" stopColor="#dc2626" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="70%" stopColor="#dc2626" />
+        <stop offset="100%" stopColor="#7f1d1d" />
+      </linearGradient>
+
+      {/* Force Arrow Gradient - 3D depth effect */}
+      <linearGradient id="buckForceArrow" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#3b82f6" />
+        <stop offset="30%" stopColor="#60a5fa" />
+        <stop offset="70%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#1d4ed8" />
+      </linearGradient>
+
+      {/* Ground/Base Gradient - Concrete foundation */}
+      <linearGradient id="buckFoundation" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#64748b" />
+        <stop offset="30%" stopColor="#475569" />
+        <stop offset="70%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </linearGradient>
+
+      {/* 3D Column Effect - Radial gradient for cylindrical appearance */}
+      <radialGradient id="buckColumnCylinder" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.9" />
+        <stop offset="40%" stopColor="#94a3b8" stopOpacity="0.7" />
+        <stop offset="100%" stopColor="#334155" stopOpacity="0.5" />
+      </radialGradient>
+
+      {/* Stressed Column 3D - Red warning glow */}
+      <radialGradient id="buckStressedGlow" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#ef4444" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#dc2626" stopOpacity="0.2" />
+      </radialGradient>
+
+      {/* Safe indicator glow */}
+      <radialGradient id="buckSafeGlow" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#10b981" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#059669" stopOpacity="0.2" />
+      </radialGradient>
+
+      {/* Warning indicator glow */}
+      <radialGradient id="buckWarningGlow" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#d97706" stopOpacity="0.2" />
+      </radialGradient>
+
+      {/* Premium glow filter for column stress visualization */}
+      <filter id="buckColumnGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Stress pulse glow for critical state */}
+      <filter id="buckStressPulse" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="6" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Force arrow glow */}
+      <filter id="buckForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Buckle deformation shadow */}
+      <filter id="buckDeformShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="2" result="shadow" />
+        <feOffset dx="3" dy="3" in="shadow" result="offsetShadow" />
+        <feMerge>
+          <feMergeNode in="offsetShadow" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Status badge inner glow */}
+      <filter id="buckBadgeGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Lab background gradient */}
+      <linearGradient id="buckLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0f172a" />
+        <stop offset="50%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Grid pattern for lab floor */}
+      <pattern id="buckLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+      </pattern>
+
+      {/* I-Beam cross-section gradient */}
+      <linearGradient id="buckIBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="25%" stopColor="#64748b" />
+        <stop offset="50%" stopColor="#94a3b8" />
+        <stop offset="75%" stopColor="#64748b" />
+        <stop offset="100%" stopColor="#475569" />
+      </linearGradient>
+
+      {/* Hollow tube gradient */}
+      <radialGradient id="buckHollowTube" cx="40%" cy="40%" r="60%">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="60%" stopColor="#64748b" />
+        <stop offset="100%" stopColor="#475569" />
+      </radialGradient>
+    </defs>
+  );
+
+  // Helper function to get column gradient based on material and stress
+  const getColumnGradient = (
+    material: string,
+    stressRatio: number,
+    isBuckled: boolean
+  ): string => {
+    if (isBuckled) return 'url(#buckFailedColumn)';
+    if (stressRatio > 0.8) return 'url(#buckStressHigh)';
+    if (stressRatio > 0.5) return 'url(#buckStressMedium)';
+
+    switch (material) {
+      case 'aluminum': return 'url(#buckAluminumColumn)';
+      case 'wood': return 'url(#buckWoodColumn)';
+      default: return 'url(#buckSteelColumn)';
+    }
+  };
+
+  // Get glow filter based on stress state
+  const getStressFilter = (stressRatio: number, isBuckled: boolean): string => {
+    if (isBuckled) return 'url(#buckStressPulse)';
+    if (stressRatio > 0.8) return 'url(#buckColumnGlow)';
+    return '';
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────
   // COLUMN VISUALIZATION
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -369,88 +582,158 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     const criticalLoad = getCriticalLoad(length, section);
     const buckleOffset = buckleAmt * 30;
     const stressRatio = load / criticalLoad;
-    const columnColor = buckled ? colors.buckled :
-                        stressRatio > 0.8 ? colors.stressed :
-                        stressRatio > 0.5 ? colors.accent : colors.column;
+    const columnGradient = getColumnGradient('steel', stressRatio, buckled);
+    const stressFilter = getStressFilter(stressRatio, buckled);
 
     return (
       <svg viewBox="0 0 200 280" className="w-full h-56 md:h-64">
-        <rect x="0" y="0" width="200" height="280" fill="#1e293b" rx="10" />
-        <rect x="0" y="250" width="200" height="30" fill={colors.steel} />
-        <line x1="80" y1="250" x2="120" y2="250" stroke={colors.column} strokeWidth="3" />
+        {renderPremiumDefs()}
 
-        <g transform={`translate(100, ${60 - height / 2})`}>
-          <rect x="-30" y="-20" width="60" height="20" fill={colors.load} rx="3" />
-          <text x="0" y="-5" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
+        {/* Premium lab background */}
+        <rect x="0" y="0" width="200" height="280" fill="url(#buckLabBg)" rx="10" />
+        <rect x="0" y="0" width="200" height="280" fill="url(#buckLabGrid)" rx="10" />
+
+        {/* Foundation base with 3D effect */}
+        <rect x="0" y="250" width="200" height="30" fill="url(#buckFoundation)" />
+        <line x1="0" y1="250" x2="200" y2="250" stroke="#64748b" strokeWidth="2" />
+        <line x1="80" y1="250" x2="120" y2="250" stroke="#94a3b8" strokeWidth="4" />
+
+        {/* Force arrow with glow effect */}
+        <g transform={`translate(100, ${60 - height / 2})`} filter="url(#buckForceGlow)">
+          <rect x="-35" y="-22" width="70" height="22" fill="url(#buckForceArrow)" rx="4" />
+          <text x="0" y="-7" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
             {load}N
           </text>
-          <polygon points="0,5 -8,-5 8,-5" fill={colors.load} />
+          {/* Animated force arrows */}
+          <polygon points="0,8 -10,-4 10,-4" fill="url(#buckForceArrow)" />
+          <polygon points="-15,4 -22,-4 -8,-4" fill="url(#buckForceArrow)" opacity="0.7" />
+          <polygon points="15,4 8,-4 22,-4" fill="url(#buckForceArrow)" opacity="0.7" />
         </g>
 
-        <g transform={`translate(100, ${250 - height})`}>
+        {/* Column with premium gradients and stress visualization */}
+        <g transform={`translate(100, ${250 - height})`} filter={stressFilter}>
           {buckled || buckleAmt > 0 ? (
-            <path
-              d={`M 0,0
-                  Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${height * 0.25}
-                    ${buckleOffset},${height * 0.5}
-                  Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${height * 0.75}
-                    0,${height}`}
-              stroke={columnColor}
-              strokeWidth={section === 'i-beam' ? 16 : section === 'hollow' ? 14 : 12}
-              fill="none"
-              strokeLinecap="round"
-            />
+            <>
+              {/* Shadow for buckled column */}
+              <path
+                d={`M 0,0
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${height * 0.25}
+                      ${buckleOffset},${height * 0.5}
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${height * 0.75}
+                      0,${height}`}
+                stroke="rgba(0,0,0,0.3)"
+                strokeWidth={section === 'i-beam' ? 18 : section === 'hollow' ? 16 : 14}
+                fill="none"
+                strokeLinecap="round"
+                transform="translate(3, 3)"
+              />
+              {/* Main buckled column */}
+              <path
+                d={`M 0,0
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${height * 0.25}
+                      ${buckleOffset},${height * 0.5}
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${height * 0.75}
+                      0,${height}`}
+                stroke={columnGradient}
+                strokeWidth={section === 'i-beam' ? 16 : section === 'hollow' ? 14 : 12}
+                fill="none"
+                strokeLinecap="round"
+              />
+              {/* Stress concentration markers */}
+              <circle cx={buckleOffset} cy={height * 0.5} r="4" fill="#ef4444" opacity="0.8">
+                <animate attributeName="r" values="4;6;4" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+            </>
           ) : (
-            <rect
-              x={section === 'i-beam' ? -8 : section === 'hollow' ? -7 : -6}
-              y="0"
-              width={section === 'i-beam' ? 16 : section === 'hollow' ? 14 : 12}
-              height={height}
-              fill={columnColor}
-              rx="2"
-            />
+            <>
+              {/* Shadow for straight column */}
+              <rect
+                x={section === 'i-beam' ? -6 : section === 'hollow' ? -5 : -4}
+                y="2"
+                width={section === 'i-beam' ? 16 : section === 'hollow' ? 14 : 12}
+                height={height}
+                fill="rgba(0,0,0,0.2)"
+                rx="2"
+                transform="translate(3, 0)"
+              />
+              {/* Main column with gradient */}
+              <rect
+                x={section === 'i-beam' ? -8 : section === 'hollow' ? -7 : -6}
+                y="0"
+                width={section === 'i-beam' ? 16 : section === 'hollow' ? 14 : 12}
+                height={height}
+                fill={columnGradient}
+                rx="2"
+              />
+              {/* Highlight stripe for 3D effect */}
+              <rect
+                x={section === 'i-beam' ? -6 : section === 'hollow' ? -5 : -4}
+                y="0"
+                width="2"
+                height={height}
+                fill="rgba(255,255,255,0.2)"
+                rx="1"
+              />
+            </>
           )}
 
+          {/* Cross-section visualization with premium gradients */}
           {section && (
-            <g transform={`translate(50, ${height / 2})`}>
-              <text x="0" y="-20" textAnchor="middle" fill={colors.neutral} fontSize="9">Cross-section:</text>
+            <g transform={`translate(55, ${height / 2})`}>
+              <text x="0" y="-25" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">Cross-section</text>
               {section === 'solid' && (
-                <circle cx="0" cy="0" r="10" fill={columnColor} />
+                <>
+                  <circle cx="0" cy="0" r="12" fill="url(#buckHollowTube)" />
+                  <circle cx="-3" cy="-3" r="3" fill="rgba(255,255,255,0.3)" />
+                </>
               )}
               {section === 'hollow' && (
                 <>
-                  <circle cx="0" cy="0" r="12" fill={columnColor} />
-                  <circle cx="0" cy="0" r="6" fill="#1e293b" />
+                  <circle cx="0" cy="0" r="14" fill="url(#buckHollowTube)" />
+                  <circle cx="0" cy="0" r="8" fill="#1e293b" />
+                  <circle cx="-4" cy="-4" r="2" fill="rgba(255,255,255,0.2)" />
                 </>
               )}
               {section === 'i-beam' && (
                 <g>
-                  <rect x="-12" y="-10" width="24" height="4" fill={columnColor} />
-                  <rect x="-12" y="6" width="24" height="4" fill={columnColor} />
-                  <rect x="-3" y="-10" width="6" height="20" fill={columnColor} />
+                  <rect x="-14" y="-12" width="28" height="5" fill="url(#buckIBeam)" rx="1" />
+                  <rect x="-14" y="7" width="28" height="5" fill="url(#buckIBeam)" rx="1" />
+                  <rect x="-4" y="-12" width="8" height="24" fill="url(#buckIBeam)" rx="1" />
                 </g>
               )}
             </g>
           )}
         </g>
 
-        <g transform="translate(100, 25)">
+        {/* Status badge with glow effect */}
+        <g transform="translate(100, 25)" filter="url(#buckBadgeGlow)">
           <rect
-            x="-45"
-            y="-15"
-            width="90"
-            height="25"
-            fill={buckled ? colors.buckled : stressRatio > 0.8 ? colors.stressed : colors.success}
+            x="-50"
+            y="-16"
+            width="100"
+            height="28"
+            fill={buckled ? 'url(#buckStressedGlow)' : stressRatio > 0.8 ? 'url(#buckWarningGlow)' : 'url(#buckSafeGlow)'}
+            rx="14"
+          />
+          <rect
+            x="-48"
+            y="-14"
+            width="96"
+            height="24"
+            fill={buckled ? '#dc2626' : stressRatio > 0.8 ? '#f59e0b' : '#10b981'}
             rx="12"
           />
-          <text x="0" y="5" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+          <text x="0" y="4" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
             {buckled ? 'BUCKLED!' : stressRatio > 0.8 ? 'CRITICAL' : 'STABLE'}
           </text>
         </g>
 
-        <text x="100" y="270" textAnchor="middle" fill={colors.neutral} fontSize="10">
-          Critical: {criticalLoad}N | Length: {length}
-        </text>
+        {/* Info text with enhanced styling */}
+        <g transform="translate(100, 268)">
+          <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="500">
+            Critical: <tspan fill="#ef4444" fontWeight="bold">{criticalLoad}N</tspan> | Length: <tspan fill="#6366f1">{length}</tspan>
+          </text>
+        </g>
       </svg>
     );
   };
@@ -479,30 +762,76 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
         <div className="relative">
           <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
-            <rect x="0" y="0" width="300" height="180" fill="#1e293b" rx="10" />
-            <rect x="0" y="160" width="300" height="20" fill={colors.steel} />
+            {renderPremiumDefs()}
 
+            {/* Premium lab background */}
+            <rect x="0" y="0" width="300" height="180" fill="url(#buckLabBg)" rx="10" />
+            <rect x="0" y="0" width="300" height="180" fill="url(#buckLabGrid)" rx="10" />
+
+            {/* Foundation with gradient */}
+            <rect x="0" y="160" width="300" height="20" fill="url(#buckFoundation)" />
+            <line x1="0" y1="160" x2="300" y2="160" stroke="#64748b" strokeWidth="1" />
+
+            {/* Before column - stable with metallic gradient */}
             <g transform="translate(80, 160)">
-              <rect x="-5" y="-100" width="10" height="100" fill={colors.column} rx="2" />
-              <text x="0" y="-110" textAnchor="middle" fill={colors.neutral} fontSize="10">Before</text>
+              {/* Shadow */}
+              <rect x="-3" y="-98" width="10" height="100" fill="rgba(0,0,0,0.2)" rx="2" transform="translate(3, 2)" />
+              {/* Column with gradient */}
+              <rect x="-5" y="-100" width="10" height="100" fill="url(#buckSteelColumn)" rx="2" />
+              {/* Highlight */}
+              <rect x="-3" y="-100" width="2" height="100" fill="rgba(255,255,255,0.2)" rx="1" />
+              {/* Label with glow */}
+              <rect x="-22" y="-124" width="44" height="18" fill="url(#buckSafeGlow)" rx="9" />
+              <rect x="-20" y="-122" width="40" height="14" fill="#10b981" rx="7" />
+              <text x="0" y="-112" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">STABLE</text>
             </g>
 
-            <text x="150" y="90" textAnchor="middle" fill={colors.primary} fontSize="16" fontWeight="bold">→</text>
+            {/* Arrow with glow effect */}
+            <g transform="translate(150, 90)" filter="url(#buckForceGlow)">
+              <rect x="-20" y="-12" width="40" height="24" fill="url(#buckForceArrow)" rx="12" opacity="0.8" />
+              <text x="0" y="5" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">→</text>
+            </g>
 
+            {/* After column - buckled with stress visualization */}
             <g transform="translate(220, 160)">
+              {/* Shadow for buckled column */}
+              <path
+                d="M 0,0 Q 35,-50 0,-100"
+                stroke="rgba(0,0,0,0.25)"
+                strokeWidth="12"
+                fill="none"
+                strokeLinecap="round"
+                transform="translate(3, 3)"
+              />
+              {/* Buckled column with failure gradient */}
               <path
                 d="M 0,0 Q 30,-50 0,-100"
-                stroke={colors.buckled}
+                stroke="url(#buckFailedColumn)"
                 strokeWidth="10"
                 fill="none"
                 strokeLinecap="round"
+                filter="url(#buckStressPulse)"
               />
-              <text x="0" y="-110" textAnchor="middle" fill={colors.buckled} fontSize="10">BUCKLED!</text>
-              <polygon points="0,-100 -8,-85 8,-85" fill={colors.load} />
-              <rect x="-10" y="-120" width="20" height="15" fill={colors.load} rx="2" />
+              {/* Stress concentration point */}
+              <circle cx="18" cy="-50" r="4" fill="#ef4444">
+                <animate attributeName="r" values="4;6;4" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+              {/* Force arrow with glow */}
+              <g filter="url(#buckForceGlow)">
+                <rect x="-15" y="-125" width="30" height="20" fill="url(#buckForceArrow)" rx="4" />
+                <polygon points="0,-100 -10,-108 10,-108" fill="url(#buckForceArrow)" />
+                <text x="0" y="-112" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">LOAD</text>
+              </g>
+              {/* Buckled label with warning glow */}
+              <g transform="translate(35, -75)">
+                <rect x="-28" y="-10" width="56" height="20" fill="url(#buckStressedGlow)" rx="10" />
+                <rect x="-26" y="-8" width="52" height="16" fill="#dc2626" rx="8" />
+                <text x="0" y="4" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">BUCKLED!</text>
+              </g>
             </g>
 
-            <text x="150" y="25" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">
+            {/* Title text with glow */}
+            <text x="150" y="22" textAnchor="middle" fill="#6366f1" fontSize="12" fontWeight="bold" style={{ textShadow: '0 0 10px rgba(99,102,241,0.5)' }}>
               Push down on a yardstick...
             </text>
           </svg>
@@ -613,106 +942,182 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       return colors.column;
     };
 
-    // Interactive column SVG
+    // Interactive column SVG with premium graphics
     const renderInteractiveColumn = () => {
-      const svgHeight = 300;
       const columnVisualHeight = 50 + (columnLengthContinuous - 0.5) * 80; // Scale length visually
       const columnWidth = 8 + (columnRadius - 0.01) * 400; // Scale radius visually
       const buckleOffset = buckleDeflection * 40;
+      const columnGradient = getColumnGradient('steel', loadRatio, isBuckled);
+      const stressFilter = getStressFilter(loadRatio, isBuckled);
 
       return (
         <svg viewBox="0 0 300 320" className="w-full h-72 md:h-80">
-          {/* Background */}
-          <rect x="0" y="0" width="300" height="320" fill="#1e293b" rx="12" />
+          {renderPremiumDefs()}
 
-          {/* Ground/Base */}
-          <rect x="0" y="280" width="300" height="40" fill={colors.steel} />
-          <line x1="100" y1="280" x2="200" y2="280" stroke={colors.column} strokeWidth="4" />
+          {/* Premium lab background with grid */}
+          <rect x="0" y="0" width="300" height="320" fill="url(#buckLabBg)" rx="12" />
+          <rect x="0" y="0" width="300" height="320" fill="url(#buckLabGrid)" rx="12" />
 
-          {/* Applied Force Arrow */}
-          <g transform={`translate(150, ${40})`}>
-            <rect x="-40" y="-25" width="80" height="25" fill={colors.load} rx="4" />
-            <text x="0" y="-8" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+          {/* Foundation base with 3D gradient effect */}
+          <rect x="0" y="280" width="300" height="40" fill="url(#buckFoundation)" />
+          <line x1="0" y1="280" x2="300" y2="280" stroke="#64748b" strokeWidth="2" />
+          <line x1="100" y1="280" x2="200" y2="280" stroke="#94a3b8" strokeWidth="4" />
+
+          {/* Applied Force Arrow with glow effect */}
+          <g transform={`translate(150, ${40})`} filter="url(#buckForceGlow)">
+            <rect x="-45" y="-28" width="90" height="28" fill="url(#buckForceArrow)" rx="5" />
+            <text x="0" y="-10" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
               {appliedForce >= 1000 ? `${(appliedForce / 1000).toFixed(1)} kN` : `${appliedForce.toFixed(0)} N`}
             </text>
-            <polygon points="0,5 -12,-8 12,-8" fill={colors.load} />
-            {/* Force direction arrows */}
-            <line x1="0" y1="5" x2="0" y2="25" stroke={colors.load} strokeWidth="3" markerEnd="url(#arrowhead)" />
+            {/* Multiple force arrows for depth */}
+            <polygon points="0,8 -12,-4 12,-4" fill="url(#buckForceArrow)" />
+            <polygon points="-18,4 -25,-6 -11,-6" fill="url(#buckForceArrow)" opacity="0.7" />
+            <polygon points="18,4 11,-6 25,-6" fill="url(#buckForceArrow)" opacity="0.7" />
+            {/* Force direction lines */}
+            <line x1="0" y1="8" x2="0" y2="20" stroke="#60a5fa" strokeWidth="3" />
+            <line x1="-18" y1="4" x2="-18" y2="14" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
+            <line x1="18" y1="4" x2="18" y2="14" stroke="#60a5fa" strokeWidth="2" opacity="0.6" />
           </g>
 
-          {/* Column */}
-          <g transform={`translate(150, ${280 - columnVisualHeight})`}>
+          {/* Column with premium gradients and stress visualization */}
+          <g transform={`translate(150, ${280 - columnVisualHeight})`} filter={stressFilter}>
             {isBuckled || buckleDeflection > 0 ? (
-              <path
-                d={`M 0,0
-                    Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${columnVisualHeight * 0.25}
-                      ${buckleOffset},${columnVisualHeight * 0.5}
-                    Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${columnVisualHeight * 0.75}
-                      0,${columnVisualHeight}`}
-                stroke={getColumnColor()}
-                strokeWidth={columnWidth}
-                fill="none"
-                strokeLinecap="round"
-              />
+              <>
+                {/* Shadow for buckled column */}
+                <path
+                  d={`M 0,0
+                      Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${columnVisualHeight * 0.25}
+                        ${buckleOffset},${columnVisualHeight * 0.5}
+                      Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${columnVisualHeight * 0.75}
+                        0,${columnVisualHeight}`}
+                  stroke="rgba(0,0,0,0.3)"
+                  strokeWidth={columnWidth + 4}
+                  fill="none"
+                  strokeLinecap="round"
+                  transform="translate(4, 4)"
+                />
+                {/* Main buckled column with gradient */}
+                <path
+                  d={`M 0,0
+                      Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${columnVisualHeight * 0.25}
+                        ${buckleOffset},${columnVisualHeight * 0.5}
+                      Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${columnVisualHeight * 0.75}
+                        0,${columnVisualHeight}`}
+                  stroke={columnGradient}
+                  strokeWidth={columnWidth}
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                {/* Stress concentration point with animated pulse */}
+                <circle cx={buckleOffset} cy={columnVisualHeight * 0.5} r="5" fill="#ef4444">
+                  <animate attributeName="r" values="5;8;5" dur="0.6s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="1;0.6;1" dur="0.6s" repeatCount="indefinite" />
+                </circle>
+                {/* Stress lines radiating from buckle point */}
+                <line x1={buckleOffset} y1={columnVisualHeight * 0.5} x2={buckleOffset + 20} y2={columnVisualHeight * 0.45} stroke="#ef4444" strokeWidth="1" opacity="0.5" />
+                <line x1={buckleOffset} y1={columnVisualHeight * 0.5} x2={buckleOffset + 18} y2={columnVisualHeight * 0.55} stroke="#ef4444" strokeWidth="1" opacity="0.5" />
+              </>
             ) : (
-              <rect
-                x={-columnWidth / 2}
-                y="0"
-                width={columnWidth}
-                height={columnVisualHeight}
-                fill={getColumnColor()}
-                rx="2"
-              />
+              <>
+                {/* Shadow for straight column */}
+                <rect
+                  x={-columnWidth / 2 + 3}
+                  y="3"
+                  width={columnWidth}
+                  height={columnVisualHeight}
+                  fill="rgba(0,0,0,0.25)"
+                  rx="3"
+                />
+                {/* Main column with metallic gradient */}
+                <rect
+                  x={-columnWidth / 2}
+                  y="0"
+                  width={columnWidth}
+                  height={columnVisualHeight}
+                  fill={columnGradient}
+                  rx="2"
+                />
+                {/* 3D highlight stripe */}
+                <rect
+                  x={-columnWidth / 2 + 2}
+                  y="0"
+                  width="3"
+                  height={columnVisualHeight}
+                  fill="rgba(255,255,255,0.25)"
+                  rx="1"
+                />
+                {/* Stress bands visualization */}
+                {loadRatio > 0.3 && (
+                  <>
+                    <line x1={-columnWidth / 2 - 5} y1={columnVisualHeight * 0.3} x2={columnWidth / 2 + 5} y2={columnVisualHeight * 0.3} stroke={loadRatio > 0.8 ? '#ef4444' : '#f59e0b'} strokeWidth="1" strokeDasharray="3,2" opacity="0.6" />
+                    <line x1={-columnWidth / 2 - 5} y1={columnVisualHeight * 0.5} x2={columnWidth / 2 + 5} y2={columnVisualHeight * 0.5} stroke={loadRatio > 0.8 ? '#ef4444' : '#f59e0b'} strokeWidth="1" strokeDasharray="3,2" opacity="0.6" />
+                    <line x1={-columnWidth / 2 - 5} y1={columnVisualHeight * 0.7} x2={columnWidth / 2 + 5} y2={columnVisualHeight * 0.7} stroke={loadRatio > 0.8 ? '#ef4444' : '#f59e0b'} strokeWidth="1" strokeDasharray="3,2" opacity="0.6" />
+                  </>
+                )}
+              </>
             )}
           </g>
 
-          {/* Status Badge */}
-          <g transform="translate(150, 20)">
+          {/* Status Badge with glow effect */}
+          <g transform="translate(150, 20)" filter="url(#buckBadgeGlow)">
             <rect
-              x="-55"
+              x="-60"
+              y="-14"
+              width="120"
+              height="28"
+              fill={isBuckled ? 'url(#buckStressedGlow)' : loadRatio > 0.8 ? 'url(#buckWarningGlow)' : 'url(#buckSafeGlow)'}
+              rx="14"
+            />
+            <rect
+              x="-58"
               y="-12"
-              width="110"
+              width="116"
               height="24"
-              fill={isBuckled ? colors.buckled : loadRatio > 0.8 ? colors.stressed : colors.success}
+              fill={isBuckled ? '#dc2626' : loadRatio > 0.8 ? '#f59e0b' : '#10b981'}
               rx="12"
             />
-            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
               {isBuckled ? 'BUCKLED!' : loadRatio > 0.8 ? 'NEAR CRITICAL!' : 'STABLE'}
             </text>
           </g>
 
-          {/* Critical Load Indicator Line */}
-          <g transform={`translate(250, ${280 - columnVisualHeight})`}>
-            <line x1="0" y1="0" x2="0" y2={columnVisualHeight} stroke={colors.danger} strokeWidth="2" strokeDasharray="4,4" />
-            <text x="5" y={columnVisualHeight / 2} fill={colors.danger} fontSize="9" transform={`rotate(90, 5, ${columnVisualHeight / 2})`}>
-              P_cr = {criticalLoadKN.toFixed(1)} kN
+          {/* Critical Load Indicator Line with enhanced styling */}
+          <g transform={`translate(255, ${280 - columnVisualHeight})`}>
+            <line x1="0" y1="0" x2="0" y2={columnVisualHeight} stroke="#ef4444" strokeWidth="2" strokeDasharray="5,3" opacity="0.8" />
+            <circle cx="0" cy="0" r="3" fill="#ef4444" />
+            <circle cx="0" cy={columnVisualHeight} r="3" fill="#ef4444" />
+            <rect x="5" y={columnVisualHeight / 2 - 12} width="40" height="24" fill="rgba(239,68,68,0.2)" rx="4" />
+            <text x="25" y={columnVisualHeight / 2 + 3} textAnchor="middle" fill="#ef4444" fontSize="8" fontWeight="bold">
+              P_cr
             </text>
           </g>
 
-          {/* Safety Factor Display */}
-          <g transform="translate(40, 60)">
-            <rect x="-30" y="-15" width="60" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
-            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">Safety</text>
-            <text x="0" y="15" textAnchor="middle" fill={safetyFactor > 2 ? colors.success : safetyFactor > 1 ? colors.accent : colors.danger} fontSize="14" fontWeight="bold">
+          {/* Safety Factor Display with premium styling */}
+          <g transform="translate(40, 65)">
+            <rect x="-32" y="-18" width="64" height="56" fill="rgba(0,0,0,0.4)" rx="10" stroke="#334155" strokeWidth="1" />
+            <text x="0" y="-2" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">SAFETY</text>
+            <text x="0" y="18" textAnchor="middle" fill={safetyFactor > 2 ? '#10b981' : safetyFactor > 1 ? '#f59e0b' : '#ef4444'} fontSize="18" fontWeight="bold">
               {safetyFactor === Infinity ? '∞' : safetyFactor.toFixed(1)}
             </text>
-            <text x="0" y="28" textAnchor="middle" fill={colors.neutral} fontSize="8">factor</text>
+            <text x="0" y="32" textAnchor="middle" fill="#64748b" fontSize="8">FACTOR</text>
           </g>
 
-          {/* Moment of Inertia Display */}
-          <g transform="translate(260, 60)">
-            <rect x="-30" y="-15" width="60" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
-            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">I (inertia)</text>
-            <text x="0" y="15" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
+          {/* Moment of Inertia Display with premium styling */}
+          <g transform="translate(260, 65)">
+            <rect x="-32" y="-18" width="64" height="56" fill="rgba(0,0,0,0.4)" rx="10" stroke="#334155" strokeWidth="1" />
+            <text x="0" y="-2" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">INERTIA</text>
+            <text x="0" y="18" textAnchor="middle" fill="#6366f1" fontSize="14" fontWeight="bold">
               {(getMomentOfInertia(columnRadius) * 1e9).toFixed(2)}
             </text>
-            <text x="0" y="28" textAnchor="middle" fill={colors.neutral} fontSize="8">×10⁻⁹ m⁴</text>
+            <text x="0" y="32" textAnchor="middle" fill="#64748b" fontSize="8">×10⁻⁹ m⁴</text>
           </g>
 
-          {/* Info text */}
-          <text x="150" y="305" textAnchor="middle" fill={colors.neutral} fontSize="10">
-            L = {columnLengthContinuous.toFixed(2)}m | r = {(columnRadius * 100).toFixed(1)}cm | P_cr = {criticalLoadKN.toFixed(1)} kN
-          </text>
+          {/* Enhanced info text */}
+          <g transform="translate(150, 305)">
+            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10" fontWeight="500">
+              L = <tspan fill="#6366f1" fontWeight="bold">{columnLengthContinuous.toFixed(2)}m</tspan> | r = <tspan fill="#8b5cf6" fontWeight="bold">{(columnRadius * 100).toFixed(1)}cm</tspan> | P_cr = <tspan fill="#ef4444" fontWeight="bold">{criticalLoadKN.toFixed(1)} kN</tspan>
+            </text>
+          </g>
         </svg>
       );
     };
@@ -892,32 +1297,66 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         </div>
 
         <svg viewBox="0 0 300 140" className="w-full h-32 mb-4">
-          <rect x="0" y="0" width="300" height="140" fill="#1e293b" rx="10" />
+          {renderPremiumDefs()}
 
-          <text x="150" y="20" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">
-            Buckling Load vs Length
+          {/* Premium background */}
+          <rect x="0" y="0" width="300" height="140" fill="url(#buckLabBg)" rx="10" />
+          <rect x="0" y="0" width="300" height="140" fill="url(#buckLabGrid)" rx="10" />
+
+          {/* Title with glow */}
+          <text x="150" y="20" textAnchor="middle" fill="#6366f1" fontSize="11" fontWeight="bold" style={{ textShadow: '0 0 8px rgba(99,102,241,0.4)' }}>
+            Buckling Load vs Length (1/L² Relationship)
           </text>
 
-          <line x1="40" y1="110" x2="280" y2="110" stroke={colors.neutral} strokeWidth="2" />
-          <line x1="40" y1="110" x2="40" y2="30" stroke={colors.neutral} strokeWidth="2" />
+          {/* Axis lines with enhanced styling */}
+          <line x1="40" y1="110" x2="280" y2="110" stroke="#64748b" strokeWidth="2" />
+          <line x1="40" y1="110" x2="40" y2="30" stroke="#64748b" strokeWidth="2" />
+          {/* Axis arrows */}
+          <polygon points="280,110 272,106 272,114" fill="#64748b" />
+          <polygon points="40,30 36,38 44,38" fill="#64748b" />
 
-          <text x="160" y="130" textAnchor="middle" fill={colors.neutral} fontSize="10">Length →</text>
+          <text x="160" y="128" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Length (L) →</text>
+          <text x="25" y="70" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="500" transform="rotate(-90, 25, 70)">Load →</text>
 
+          {/* Curve with gradient stroke effect using multiple paths */}
           <path
             d="M 50,35 Q 100,50 140,70 Q 180,85 220,95 Q 260,102 280,105"
-            stroke={colors.primary}
+            stroke="url(#buckForceArrow)"
+            strokeWidth="4"
+            fill="none"
+            opacity="0.3"
+          />
+          <path
+            d="M 50,35 Q 100,50 140,70 Q 180,85 220,95 Q 260,102 280,105"
+            stroke="#6366f1"
             strokeWidth="3"
             fill="none"
           />
 
-          <circle cx="60" cy="38" r="6" fill={colors.success} />
-          <text x="60" y="55" textAnchor="middle" fill={colors.success} fontSize="9">200N</text>
+          {/* Data points with glow effects */}
+          <g filter="url(#buckBadgeGlow)">
+            {/* Short column - high strength */}
+            <circle cx="60" cy="38" r="8" fill="url(#buckSafeGlow)" />
+            <circle cx="60" cy="38" r="6" fill="#10b981" />
+            <text x="60" y="41" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">L</text>
+          </g>
+          <text x="60" y="55" textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">200N</text>
 
-          <circle cx="140" cy="70" r="6" fill={colors.accent} />
-          <text x="140" y="87" textAnchor="middle" fill={colors.accent} fontSize="9">50N</text>
+          <g filter="url(#buckBadgeGlow)">
+            {/* Medium column - medium strength */}
+            <circle cx="140" cy="70" r="8" fill="url(#buckWarningGlow)" />
+            <circle cx="140" cy="70" r="6" fill="#f59e0b" />
+            <text x="140" y="73" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">2L</text>
+          </g>
+          <text x="140" y="87" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="bold">50N</text>
 
-          <circle cx="260" cy="100" r="6" fill={colors.danger} />
-          <text x="260" y="117" textAnchor="middle" fill={colors.danger} fontSize="9">12N</text>
+          <g filter="url(#buckBadgeGlow)">
+            {/* Long column - low strength */}
+            <circle cx="260" cy="100" r="8" fill="url(#buckStressedGlow)" />
+            <circle cx="260" cy="100" r="6" fill="#ef4444" />
+            <text x="260" y="103" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">4L</text>
+          </g>
+          <text x="260" y="117" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">12N</text>
         </svg>
 
         <div className="grid grid-cols-3 gap-2 text-center">
@@ -973,26 +1412,48 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         </div>
 
         <div className="flex justify-center gap-6 mb-6">
+          {/* Solid cross-section with premium gradient */}
           <div className="text-center">
-            <svg width="50" height="50" viewBox="0 0 50 50">
-              <circle cx="25" cy="25" r="15" fill={colors.column} />
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              {renderPremiumDefs()}
+              {/* Background */}
+              <circle cx="30" cy="30" r="28" fill="url(#buckLabBg)" stroke="#334155" strokeWidth="1" />
+              {/* Solid section with metallic gradient */}
+              <circle cx="30" cy="30" r="18" fill="url(#buckHollowTube)" />
+              {/* 3D highlight */}
+              <circle cx="24" cy="24" r="5" fill="rgba(255,255,255,0.25)" />
             </svg>
-            <p className="text-sm text-slate-400">Solid</p>
+            <p className="text-sm text-slate-300 font-medium mt-1">Solid</p>
           </div>
+          {/* Hollow cross-section with premium gradient */}
           <div className="text-center">
-            <svg width="50" height="50" viewBox="0 0 50 50">
-              <circle cx="25" cy="25" r="18" fill={colors.column} />
-              <circle cx="25" cy="25" r="10" fill="#1e293b" />
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              {renderPremiumDefs()}
+              {/* Background */}
+              <circle cx="30" cy="30" r="28" fill="url(#buckLabBg)" stroke="#334155" strokeWidth="1" />
+              {/* Outer ring with gradient */}
+              <circle cx="30" cy="30" r="20" fill="url(#buckHollowTube)" />
+              {/* Inner hole */}
+              <circle cx="30" cy="30" r="12" fill="#0f172a" />
+              {/* 3D highlight */}
+              <ellipse cx="24" cy="24" rx="4" ry="3" fill="rgba(255,255,255,0.2)" />
             </svg>
-            <p className="text-sm text-slate-400">Hollow</p>
+            <p className="text-sm text-slate-300 font-medium mt-1">Hollow</p>
           </div>
+          {/* I-Beam cross-section with premium gradient */}
           <div className="text-center">
-            <svg width="50" height="50" viewBox="0 0 50 50">
-              <rect x="7" y="10" width="36" height="6" fill={colors.column} />
-              <rect x="7" y="34" width="36" height="6" fill={colors.column} />
-              <rect x="20" y="10" width="10" height="30" fill={colors.column} />
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              {renderPremiumDefs()}
+              {/* Background */}
+              <rect x="2" y="2" width="56" height="56" rx="5" fill="url(#buckLabBg)" stroke="#334155" strokeWidth="1" />
+              {/* I-Beam with gradient */}
+              <rect x="10" y="12" width="40" height="7" fill="url(#buckIBeam)" rx="1" />
+              <rect x="10" y="41" width="40" height="7" fill="url(#buckIBeam)" rx="1" />
+              <rect x="24" y="12" width="12" height="36" fill="url(#buckIBeam)" rx="1" />
+              {/* 3D highlights */}
+              <rect x="12" y="14" width="36" height="2" fill="rgba(255,255,255,0.15)" rx="1" />
             </svg>
-            <p className="text-sm text-slate-400">I-Beam</p>
+            <p className="text-sm text-slate-300 font-medium mt-1">I-Beam</p>
           </div>
         </div>
 
@@ -1411,31 +1872,69 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       <h2 className="text-2xl font-bold text-purple-400 mb-6">Shape Optimization</h2>
 
       <div className="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 rounded-2xl p-6 max-w-xl mb-6">
-        <svg viewBox="0 0 300 120" className="w-full h-28 mb-4">
-          <rect x="0" y="0" width="300" height="120" fill="#1e293b" rx="10" />
+        <svg viewBox="0 0 300 130" className="w-full h-32 mb-4">
+          {renderPremiumDefs()}
 
+          {/* Premium background with grid */}
+          <rect x="0" y="0" width="300" height="130" fill="url(#buckLabBg)" rx="10" />
+          <rect x="0" y="0" width="300" height="130" fill="url(#buckLabGrid)" rx="10" />
+
+          {/* Title with glow effect */}
+          <text x="150" y="18" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="bold" style={{ textShadow: '0 0 10px rgba(139,92,246,0.5)' }}>
+            SAME MATERIAL, DIFFERENT SHAPES
+          </text>
+
+          {/* Solid section - least efficient */}
           <g transform="translate(50, 60)">
-            <circle cx="0" cy="0" r="20" fill={colors.column} />
-            <text x="0" y="40" textAnchor="middle" fill={colors.neutral} fontSize="10">Solid</text>
-            <text x="0" y="55" textAnchor="middle" fill={colors.danger} fontSize="11" fontWeight="bold">50N</text>
+            {/* Background circle */}
+            <circle cx="0" cy="0" r="28" fill="rgba(0,0,0,0.3)" stroke="#334155" strokeWidth="1" />
+            {/* Solid with gradient */}
+            <circle cx="0" cy="0" r="22" fill="url(#buckHollowTube)" filter="url(#buckDeformShadow)" />
+            {/* 3D highlight */}
+            <circle cx="-6" cy="-6" r="5" fill="rgba(255,255,255,0.2)" />
+            {/* Label */}
+            <text x="0" y="42" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Solid</text>
+            {/* Value badge */}
+            <rect x="-22" y="48" width="44" height="18" fill="url(#buckStressedGlow)" rx="9" />
+            <rect x="-20" y="50" width="40" height="14" fill="#dc2626" rx="7" />
+            <text x="0" y="60" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">50N</text>
           </g>
 
+          {/* Hollow section - medium efficient */}
           <g transform="translate(150, 60)">
-            <circle cx="0" cy="0" r="25" fill={colors.column} />
-            <circle cx="0" cy="0" r="14" fill="#1e293b" />
-            <text x="0" y="45" textAnchor="middle" fill={colors.neutral} fontSize="10">Hollow</text>
-            <text x="0" y="60" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">75N (1.5x)</text>
+            {/* Background circle */}
+            <circle cx="0" cy="0" r="32" fill="rgba(0,0,0,0.3)" stroke="#334155" strokeWidth="1" />
+            {/* Outer ring with gradient */}
+            <circle cx="0" cy="0" r="26" fill="url(#buckHollowTube)" filter="url(#buckDeformShadow)" />
+            {/* Inner hole */}
+            <circle cx="0" cy="0" r="15" fill="#0f172a" />
+            {/* 3D highlight */}
+            <ellipse cx="-8" cy="-8" rx="4" ry="3" fill="rgba(255,255,255,0.15)" />
+            {/* Label */}
+            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Hollow</text>
+            {/* Value badge */}
+            <rect x="-32" y="54" width="64" height="18" fill="url(#buckWarningGlow)" rx="9" />
+            <rect x="-30" y="56" width="60" height="14" fill="#f59e0b" rx="7" />
+            <text x="0" y="66" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">75N (1.5x)</text>
           </g>
 
+          {/* I-Beam section - most efficient */}
           <g transform="translate(250, 60)">
-            <rect x="-20" y="-20" width="40" height="6" fill={colors.column} />
-            <rect x="-20" y="14" width="40" height="6" fill={colors.column} />
-            <rect x="-4" y="-20" width="8" height="40" fill={colors.column} />
-            <text x="0" y="45" textAnchor="middle" fill={colors.neutral} fontSize="10">I-Beam</text>
-            <text x="0" y="60" textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="bold">125N (2.5x)</text>
+            {/* Background rect */}
+            <rect x="-30" y="-28" width="60" height="56" fill="rgba(0,0,0,0.3)" rx="5" stroke="#334155" strokeWidth="1" />
+            {/* I-Beam with gradient */}
+            <rect x="-24" y="-22" width="48" height="8" fill="url(#buckIBeam)" rx="1" filter="url(#buckDeformShadow)" />
+            <rect x="-24" y="14" width="48" height="8" fill="url(#buckIBeam)" rx="1" />
+            <rect x="-5" y="-22" width="10" height="44" fill="url(#buckIBeam)" rx="1" />
+            {/* 3D highlights */}
+            <rect x="-22" y="-20" width="44" height="2" fill="rgba(255,255,255,0.15)" rx="1" />
+            {/* Label */}
+            <text x="0" y="48" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">I-Beam</text>
+            {/* Value badge */}
+            <rect x="-32" y="54" width="64" height="18" fill="url(#buckSafeGlow)" rx="9" />
+            <rect x="-30" y="56" width="60" height="14" fill="#10b981" rx="7" />
+            <text x="0" y="66" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">125N (2.5x)</text>
           </g>
-
-          <text x="150" y="20" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">SAME MATERIAL, DIFFERENT SHAPES</text>
         </svg>
       </div>
 

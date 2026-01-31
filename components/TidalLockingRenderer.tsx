@@ -298,95 +298,479 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
   const renderMoonSystem = (locked: boolean, showBulge: boolean, orbAngle: number, moonRot: number, size: number = 300) => {
     const centerX = size / 2;
     const centerY = size / 2;
-    const orbitRadius = 100;
+    const orbitRadius = size * 0.33;
+    const earthRadius = size * 0.12;
+    const moonRadius = size * 0.08;
     const moonX = centerX + Math.cos(orbAngle * Math.PI / 180) * orbitRadius;
     const moonY = centerY + Math.sin(orbAngle * Math.PI / 180) * orbitRadius;
 
     // Angle from Moon to Earth (for tidal bulge direction)
     const angleToEarth = Math.atan2(centerY - moonY, centerX - moonX);
 
+    // Calculate which side of moon faces Earth (for near/far side visualization)
+    const moonFacingAngle = locked ? orbAngle : moonRot;
+    const nearSideVisible = Math.cos((moonFacingAngle - orbAngle) * Math.PI / 180);
+
     return (
-      <svg width={size} height={size} className="overflow-visible">
-        {/* Stars background */}
-        {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => (
-          <circle key={i} cx={(i * 31) % size} cy={(i * 23) % size} r="1" fill="white" opacity="0.4" />
-        ))}
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
+        <defs>
+          {/* === PREMIUM EARTH GRADIENTS === */}
+          {/* Earth atmosphere glow */}
+          <radialGradient id="tidlEarthAtmosphere" cx="50%" cy="50%" r="55%">
+            <stop offset="70%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="85%" stopColor="#60a5fa" stopOpacity="0.3" />
+            <stop offset="95%" stopColor="#93c5fd" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#bfdbfe" stopOpacity="0" />
+          </radialGradient>
 
-        {/* Orbit path */}
-        <circle cx={centerX} cy={centerY} r={orbitRadius} fill="none" stroke="rgba(100, 116, 139, 0.3)" strokeWidth="1" strokeDasharray="4 2" />
+          {/* Earth surface with 3D depth */}
+          <radialGradient id="tidlEarthSurface" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="25%" stopColor="#60a5fa" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="75%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </radialGradient>
 
-        {/* Earth */}
-        <circle cx={centerX} cy={centerY} r="35" fill="url(#earthGrad)" />
-        <ellipse cx={centerX} cy={centerY} rx="35" ry="10" fill="none" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
-        {/* Earth continents hint */}
-        <ellipse cx={centerX - 10} cy={centerY - 5} rx="12" ry="8" fill="#22c55e" opacity="0.5" />
-        <ellipse cx={centerX + 8} cy={centerY + 8} rx="8" ry="5" fill="#22c55e" opacity="0.4" />
+          {/* Earth ocean shimmer */}
+          <linearGradient id="tidlEarthOcean" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.4" />
+            <stop offset="30%" stopColor="#0284c7" stopOpacity="0.2" />
+            <stop offset="70%" stopColor="#0369a1" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#075985" stopOpacity="0.4" />
+          </linearGradient>
 
-        {/* Moon */}
+          {/* Earth continent green */}
+          <linearGradient id="tidlEarthLand" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="40%" stopColor="#22c55e" />
+            <stop offset="70%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#15803d" />
+          </linearGradient>
+
+          {/* === PREMIUM MOON GRADIENTS === */}
+          {/* Moon near side (visible from Earth) - lighter, more detailed */}
+          <radialGradient id="tidlMoonNearSide" cx="40%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#e5e7eb" />
+            <stop offset="25%" stopColor="#d1d5db" />
+            <stop offset="50%" stopColor="#9ca3af" />
+            <stop offset="75%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </radialGradient>
+
+          {/* Moon far side (darker, more cratered appearance) */}
+          <radialGradient id="tidlMoonFarSide" cx="60%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#9ca3af" />
+            <stop offset="25%" stopColor="#6b7280" />
+            <stop offset="50%" stopColor="#4b5563" />
+            <stop offset="75%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </radialGradient>
+
+          {/* Moon glow effect */}
+          <radialGradient id="tidlMoonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="70%" stopColor="#9ca3af" stopOpacity="0" />
+            <stop offset="85%" stopColor="#d1d5db" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#e5e7eb" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Moon crater shadows */}
+          <radialGradient id="tidlCrater" cx="40%" cy="40%" r="50%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="60%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </radialGradient>
+
+          {/* === ORBITAL PATH GRADIENTS === */}
+          <linearGradient id="tidlOrbitPath" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.1" />
+            <stop offset="25%" stopColor="#22d3ee" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.6" />
+            <stop offset="75%" stopColor="#22d3ee" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Synchronous rotation indicator */}
+          <linearGradient id="tidlSyncArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="1" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Tidal force arrow gradient */}
+          <linearGradient id="tidlTidalForce" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#f97316" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="70%" stopColor="#f97316" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* === STAR FIELD GRADIENT === */}
+          <radialGradient id="tidlStarGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === GLOW FILTERS === */}
+          {/* Earth atmospheric glow filter */}
+          <filter id="tidlEarthGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Moon soft glow filter */}
+          <filter id="tidlMoonGlowFilter" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Star twinkle filter */}
+          <filter id="tidlStarFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Tidal bulge glow */}
+          <filter id="tidlBulgeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Arrow marker for tidal force */}
+          <marker id="tidlArrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="url(#tidlTidalForce)" />
+          </marker>
+
+          {/* Arrow marker for rotation */}
+          <marker id="tidlArrowSync" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L7,3 z" fill="#f59e0b" />
+          </marker>
+        </defs>
+
+        {/* === PREMIUM STARFIELD BACKGROUND === */}
+        {[...Array(20)].map((_, i) => {
+          const starX = ((i * 47 + 13) % size);
+          const starY = ((i * 31 + 7) % size);
+          const starSize = (i % 3) * 0.5 + 0.5;
+          const opacity = 0.3 + (i % 5) * 0.1;
+          return (
+            <circle
+              key={`star-${i}`}
+              cx={starX}
+              cy={starY}
+              r={starSize}
+              fill="url(#tidlStarGlow)"
+              opacity={opacity}
+              filter="url(#tidlStarFilter)"
+            />
+          );
+        })}
+
+        {/* === PREMIUM ORBITAL PATH === */}
+        {/* Outer glow ring */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={orbitRadius + 2}
+          fill="none"
+          stroke="#22d3ee"
+          strokeWidth="4"
+          strokeOpacity="0.1"
+        />
+        {/* Main orbit path */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={orbitRadius}
+          fill="none"
+          stroke="url(#tidlOrbitPath)"
+          strokeWidth="1.5"
+          strokeDasharray="8 4"
+        />
+        {/* Orbital direction markers */}
+        {[0, 90, 180, 270].map((angle) => {
+          const markerX = centerX + Math.cos(angle * Math.PI / 180) * orbitRadius;
+          const markerY = centerY + Math.sin(angle * Math.PI / 180) * orbitRadius;
+          return (
+            <circle
+              key={`orbit-mark-${angle}`}
+              cx={markerX}
+              cy={markerY}
+              r="2"
+              fill="#67e8f9"
+              opacity="0.5"
+            />
+          );
+        })}
+
+        {/* Orbit direction arrow */}
+        <path
+          d={`M ${centerX + orbitRadius - 15} ${centerY - 8}
+              Q ${centerX + orbitRadius} ${centerY - 12} ${centerX + orbitRadius + 5} ${centerY - 5}`}
+          fill="none"
+          stroke="#67e8f9"
+          strokeWidth="1.5"
+          markerEnd="url(#tidlArrowSync)"
+          opacity="0.6"
+        />
+
+        {/* === PREMIUM EARTH === */}
+        {/* Earth atmosphere glow */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={earthRadius * 1.3}
+          fill="url(#tidlEarthAtmosphere)"
+          filter="url(#tidlEarthGlowFilter)"
+        />
+
+        {/* Earth main body */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={earthRadius}
+          fill="url(#tidlEarthSurface)"
+        />
+
+        {/* Earth ocean shimmer overlay */}
+        <circle
+          cx={centerX}
+          cy={centerY}
+          r={earthRadius}
+          fill="url(#tidlEarthOcean)"
+        />
+
+        {/* Earth continents */}
+        <ellipse
+          cx={centerX - earthRadius * 0.3}
+          cy={centerY - earthRadius * 0.15}
+          rx={earthRadius * 0.35}
+          ry={earthRadius * 0.25}
+          fill="url(#tidlEarthLand)"
+          opacity="0.8"
+        />
+        <ellipse
+          cx={centerX + earthRadius * 0.25}
+          cy={centerY + earthRadius * 0.25}
+          rx={earthRadius * 0.25}
+          ry={earthRadius * 0.15}
+          fill="url(#tidlEarthLand)"
+          opacity="0.7"
+        />
+        <ellipse
+          cx={centerX + earthRadius * 0.1}
+          cy={centerY - earthRadius * 0.4}
+          rx={earthRadius * 0.15}
+          ry={earthRadius * 0.1}
+          fill="url(#tidlEarthLand)"
+          opacity="0.6"
+        />
+
+        {/* Earth highlight */}
+        <ellipse
+          cx={centerX - earthRadius * 0.3}
+          cy={centerY - earthRadius * 0.3}
+          rx={earthRadius * 0.15}
+          ry={earthRadius * 0.1}
+          fill="white"
+          opacity="0.15"
+        />
+
+        {/* Earth label */}
+        <text
+          x={centerX}
+          y={centerY + earthRadius + 12}
+          textAnchor="middle"
+          fill="#94a3b8"
+          fontSize={size * 0.035}
+          fontWeight="500"
+        >
+          Earth
+        </text>
+
+        {/* === PREMIUM MOON === */}
         <g transform={`translate(${moonX}, ${moonY})`}>
+          {/* Moon glow aura */}
+          <circle
+            cx="0"
+            cy="0"
+            r={moonRadius * 1.4}
+            fill="url(#tidlMoonGlow)"
+            filter="url(#tidlMoonGlowFilter)"
+          />
+
           {/* Tidal bulge - elongated toward Earth */}
-          {showBulge && (
+          {showBulge ? (
             <ellipse
               cx="0" cy="0"
-              rx="28" ry="22"
-              fill="url(#moonGrad)"
+              rx={moonRadius * 1.15}
+              ry={moonRadius * 0.9}
+              fill={nearSideVisible > 0 ? "url(#tidlMoonNearSide)" : "url(#tidlMoonFarSide)"}
               transform={`rotate(${angleToEarth * 180 / Math.PI})`}
+              filter="url(#tidlBulgeGlow)"
             />
-          )}
-          {!showBulge && (
-            <circle cx="0" cy="0" r="25" fill="url(#moonGrad)" />
+          ) : (
+            <circle
+              cx="0"
+              cy="0"
+              r={moonRadius}
+              fill={nearSideVisible > 0 ? "url(#tidlMoonNearSide)" : "url(#tidlMoonFarSide)"}
+            />
           )}
 
           {/* Moon surface features (rotate with moon) */}
           <g transform={`rotate(${locked ? moonRot : moonRot})`}>
-            {/* Face marker - always toward Earth if locked */}
-            <circle cx="-8" cy="-5" r="4" fill="#4b5563" opacity="0.6" />
-            <circle cx="6" cy="-3" r="3" fill="#4b5563" opacity="0.5" />
-            <circle cx="0" cy="8" r="5" fill="#4b5563" opacity="0.6" />
-            {/* "Near side" indicator */}
-            <circle cx="0" cy="-12" r="3" fill="#fbbf24" />
+            {/* Mare (dark regions) - near side features */}
+            <ellipse cx={-moonRadius * 0.3} cy={-moonRadius * 0.2} rx={moonRadius * 0.2} ry={moonRadius * 0.15} fill="url(#tidlCrater)" opacity="0.6" />
+            <ellipse cx={moonRadius * 0.2} cy={-moonRadius * 0.1} rx={moonRadius * 0.15} ry={moonRadius * 0.12} fill="url(#tidlCrater)" opacity="0.5" />
+            <ellipse cx={0} cy={moonRadius * 0.3} rx={moonRadius * 0.22} ry={moonRadius * 0.18} fill="url(#tidlCrater)" opacity="0.55" />
+
+            {/* Small craters */}
+            <circle cx={-moonRadius * 0.5} cy={moonRadius * 0.1} r={moonRadius * 0.08} fill="url(#tidlCrater)" opacity="0.4" />
+            <circle cx={moonRadius * 0.4} cy={moonRadius * 0.35} r={moonRadius * 0.06} fill="url(#tidlCrater)" opacity="0.35" />
+
+            {/* Near side indicator (yellow marker) */}
+            <circle cx="0" cy={-moonRadius * 0.6} r={moonRadius * 0.12} fill="#fbbf24" filter="url(#tidlStarFilter)" />
+            <circle cx="0" cy={-moonRadius * 0.6} r={moonRadius * 0.06} fill="#fef3c7" />
           </g>
+
+          {/* Moon highlight */}
+          <ellipse
+            cx={-moonRadius * 0.25}
+            cy={-moonRadius * 0.25}
+            rx={moonRadius * 0.12}
+            ry={moonRadius * 0.08}
+            fill="white"
+            opacity="0.2"
+          />
         </g>
 
-        {/* Arrow from Moon to Earth showing tidal force direction */}
-        {showBulge && (
-          <line
-            x1={moonX + Math.cos(angleToEarth) * 30}
-            y1={moonY + Math.sin(angleToEarth) * 30}
-            x2={moonX + Math.cos(angleToEarth) * 50}
-            y2={moonY + Math.sin(angleToEarth) * 50}
-            stroke="#f59e0b"
-            strokeWidth="2"
-            markerEnd="url(#arrowOrange)"
-            opacity="0.7"
-          />
+        {/* Moon label */}
+        <text
+          x={moonX}
+          y={moonY + moonRadius + 12}
+          textAnchor="middle"
+          fill="#94a3b8"
+          fontSize={size * 0.03}
+          fontWeight="500"
+        >
+          Moon
+        </text>
+
+        {/* === SYNCHRONOUS ROTATION INDICATOR === */}
+        {locked && (
+          <g>
+            {/* Curved arrow around Moon showing rotation direction */}
+            <path
+              d={`M ${moonX - moonRadius * 1.5} ${moonY - moonRadius * 0.3}
+                  A ${moonRadius * 1.5} ${moonRadius * 1.2} 0 0 1 ${moonX - moonRadius * 0.3} ${moonY - moonRadius * 1.5}`}
+              fill="none"
+              stroke="url(#tidlSyncArrow)"
+              strokeWidth="2"
+              markerEnd="url(#tidlArrowSync)"
+              opacity="0.8"
+            />
+            {/* Sync indicator label */}
+            <text
+              x={moonX - moonRadius * 1.8}
+              y={moonY - moonRadius * 0.8}
+              textAnchor="end"
+              fill="#f59e0b"
+              fontSize={size * 0.028}
+              fontWeight="600"
+            >
+              1 rotation
+            </text>
+            <text
+              x={moonX - moonRadius * 1.8}
+              y={moonY - moonRadius * 0.5}
+              textAnchor="end"
+              fill="#fbbf24"
+              fontSize={size * 0.025}
+              opacity="0.8"
+            >
+              = 1 orbit
+            </text>
+          </g>
         )}
 
-        {/* Observer on Earth */}
-        <circle cx={centerX + 25} cy={centerY - 20} r="4" fill="#fcd9b6" />
-        <line
-          x1={centerX + 25} y1={centerY - 24}
-          x2={moonX - (moonX - centerX - 25) * 0.3}
-          y2={moonY - (moonY - centerY + 20) * 0.3}
-          stroke="#94a3b8"
-          strokeWidth="1"
-          strokeDasharray="3 2"
-          opacity="0.5"
-        />
+        {/* === TIDAL FORCE ARROW === */}
+        {showBulge && (
+          <g>
+            <line
+              x1={moonX + Math.cos(angleToEarth) * (moonRadius * 1.3)}
+              y1={moonY + Math.sin(angleToEarth) * (moonRadius * 1.3)}
+              x2={moonX + Math.cos(angleToEarth) * (moonRadius * 2.2)}
+              y2={moonY + Math.sin(angleToEarth) * (moonRadius * 2.2)}
+              stroke="url(#tidlTidalForce)"
+              strokeWidth="3"
+              markerEnd="url(#tidlArrowOrange)"
+              filter="url(#tidlBulgeGlow)"
+            />
+            <text
+              x={moonX + Math.cos(angleToEarth) * (moonRadius * 2.8)}
+              y={moonY + Math.sin(angleToEarth) * (moonRadius * 2.8)}
+              textAnchor="middle"
+              fill="#f59e0b"
+              fontSize={size * 0.028}
+              fontWeight="500"
+            >
+              Tidal Force
+            </text>
+          </g>
+        )}
 
-        <defs>
-          <radialGradient id="earthGrad" cx="40%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor="#1e40af" />
-          </radialGradient>
-          <radialGradient id="moonGrad" cx="40%" cy="40%" r="60%">
-            <stop offset="0%" stopColor="#d1d5db" />
-            <stop offset="100%" stopColor="#6b7280" />
-          </radialGradient>
-          <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" />
-          </marker>
-        </defs>
+        {/* === OBSERVER ON EARTH === */}
+        <g>
+          {/* Observer figure */}
+          <circle
+            cx={centerX + earthRadius * 0.7}
+            cy={centerY - earthRadius * 0.5}
+            r={earthRadius * 0.12}
+            fill="#fcd9b6"
+          />
+          {/* Line of sight to Moon */}
+          <line
+            x1={centerX + earthRadius * 0.7}
+            y1={centerY - earthRadius * 0.6}
+            x2={moonX}
+            y2={moonY}
+            stroke="#94a3b8"
+            strokeWidth="1"
+            strokeDasharray="4 3"
+            opacity="0.4"
+          />
+          {/* Observer label */}
+          <text
+            x={centerX + earthRadius * 0.7}
+            y={centerY - earthRadius * 0.8}
+            textAnchor="middle"
+            fill="#64748b"
+            fontSize={size * 0.025}
+          >
+            Observer
+          </text>
+        </g>
+
+        {/* === NEAR SIDE INDICATOR LEGEND === */}
+        <g transform={`translate(${size * 0.05}, ${size * 0.9})`}>
+          <circle cx="0" cy="0" r="4" fill="#fbbf24" />
+          <text x="8" y="4" fill="#94a3b8" fontSize={size * 0.028}>= Near side marker</text>
+        </g>
       </svg>
     );
   };
@@ -705,19 +1089,47 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
         {/* Our Moon */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Our Moon</h3>
-          <svg width="180" height="120" className="mx-auto">
-            <circle cx="60" cy="60" r="25" fill="url(#earthGrad)" />
-            <ellipse cx="60" cy="60" rx="50" ry="15" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
-            <g transform={`translate(${60 + Math.cos(orbitalAngle * Math.PI / 180) * 50}, ${60 + Math.sin(orbitalAngle * Math.PI / 180) * 15})`}>
-              <circle cx="0" cy="0" r="8" fill="#9ca3af" />
-              <circle cx="-2" cy="-2" r="2" fill="#6b7280" />
-            </g>
+          <svg width="180" height="120" viewBox="0 0 180 120" className="mx-auto">
             <defs>
-              <radialGradient id="earthGrad" cx="40%" cy="40%" r="60%">
-                <stop offset="0%" stopColor="#60a5fa" />
+              <radialGradient id="tidlMiniEarth" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stopColor="#93c5fd" />
+                <stop offset="50%" stopColor="#3b82f6" />
                 <stop offset="100%" stopColor="#1e40af" />
               </radialGradient>
+              <radialGradient id="tidlMiniMoon" cx="40%" cy="35%" r="60%">
+                <stop offset="0%" stopColor="#e5e7eb" />
+                <stop offset="50%" stopColor="#9ca3af" />
+                <stop offset="100%" stopColor="#4b5563" />
+              </radialGradient>
+              <linearGradient id="tidlMiniOrbit" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+              </linearGradient>
+              <filter id="tidlMiniGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
             </defs>
+            {/* Stars */}
+            {[1,2,3,4,5].map(i => (
+              <circle key={i} cx={(i * 37) % 180} cy={(i * 23) % 120} r="0.8" fill="white" opacity="0.4" />
+            ))}
+            {/* Earth with glow */}
+            <circle cx="60" cy="60" r="28" fill="#3b82f6" opacity="0.2" filter="url(#tidlMiniGlow)" />
+            <circle cx="60" cy="60" r="25" fill="url(#tidlMiniEarth)" />
+            <ellipse cx="52" cy="55" rx="8" ry="5" fill="#22c55e" opacity="0.6" />
+            {/* Orbit path */}
+            <ellipse cx="60" cy="60" rx="50" ry="15" fill="none" stroke="url(#tidlMiniOrbit)" strokeWidth="1.5" strokeDasharray="4 2" />
+            {/* Moon */}
+            <g transform={`translate(${60 + Math.cos(orbitalAngle * Math.PI / 180) * 50}, ${60 + Math.sin(orbitalAngle * Math.PI / 180) * 15})`}>
+              <circle cx="0" cy="0" r="10" fill="#9ca3af" opacity="0.3" filter="url(#tidlMiniGlow)" />
+              <circle cx="0" cy="0" r="8" fill="url(#tidlMiniMoon)" />
+              <circle cx="-2" cy="-2" r="2" fill="#6b7280" opacity="0.6" />
+              <circle cx="2" cy="1" r="1.5" fill="#6b7280" opacity="0.4" />
+              {/* Near side marker */}
+              <circle cx="0" cy="-5" r="1.5" fill="#fbbf24" />
+            </g>
           </svg>
           <div className="text-center mt-2">
             <p className="text-sm text-emerald-400 font-medium">Tidally Locked</p>
@@ -728,14 +1140,51 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
         {/* Io */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-amber-400 mb-2 text-center">Io (Jupiter)</h3>
-          <svg width="180" height="120" className="mx-auto">
-            <circle cx="50" cy="60" r="30" fill="#c2956e" />
-            <ellipse cx="50" cy="60" rx="30" ry="8" fill="none" stroke="#f59e0b" strokeWidth="2" opacity="0.5" />
-            <ellipse cx="100" cy="60" rx="45" ry="15" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
+          <svg width="180" height="120" viewBox="0 0 180 120" className="mx-auto">
+            <defs>
+              <radialGradient id="tidlJupiter" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#f5d0a9" />
+                <stop offset="30%" stopColor="#d4a574" />
+                <stop offset="60%" stopColor="#b8824a" />
+                <stop offset="100%" stopColor="#8b5a2b" />
+              </radialGradient>
+              <radialGradient id="tidlIo" cx="35%" cy="35%" r="60%">
+                <stop offset="0%" stopColor="#fef08a" />
+                <stop offset="40%" stopColor="#fde047" />
+                <stop offset="70%" stopColor="#facc15" />
+                <stop offset="100%" stopColor="#ca8a04" />
+              </radialGradient>
+              <radialGradient id="tidlVolcanoGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+                <stop offset="50%" stopColor="#f97316" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+              </radialGradient>
+              <filter id="tidlVolcanoFilter" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+            {/* Jupiter */}
+            <circle cx="45" cy="60" r="33" fill="#d4a574" opacity="0.15" />
+            <circle cx="45" cy="60" r="30" fill="url(#tidlJupiter)" />
+            {/* Jupiter bands */}
+            <ellipse cx="45" cy="52" rx="28" ry="4" fill="#c2956e" opacity="0.4" />
+            <ellipse cx="45" cy="60" rx="30" ry="3" fill="#e8cdb5" opacity="0.3" />
+            <ellipse cx="45" cy="68" rx="28" ry="4" fill="#c2956e" opacity="0.4" />
+            {/* Great Red Spot hint */}
+            <ellipse cx="55" cy="58" rx="5" ry="3" fill="#dc6547" opacity="0.6" />
+            {/* Orbit */}
+            <ellipse cx="100" cy="60" rx="45" ry="15" fill="none" stroke="#f59e0b" strokeWidth="1" strokeDasharray="3 2" opacity="0.5" />
+            {/* Io */}
             <g transform={`translate(${100 + Math.cos(orbitalAngle * 2 * Math.PI / 180) * 45}, ${60 + Math.sin(orbitalAngle * 2 * Math.PI / 180) * 15})`}>
-              <circle cx="0" cy="0" r="8" fill="#fde047" />
-              <circle cx="-2" cy="-2" r="2" fill="#ef4444" />
-              <path d="M-2,-4 L-3,-10 L-1,-8 L-2,-4" fill="#ef4444" opacity="0.8" />
+              <circle cx="0" cy="0" r="8" fill="url(#tidlIo)" />
+              {/* Volcanic spots */}
+              <circle cx="-3" cy="-2" r="1.5" fill="#ef4444" />
+              <circle cx="2" cy="1" r="1" fill="#f97316" />
+              {/* Volcanic plume */}
+              <g filter="url(#tidlVolcanoFilter)">
+                <path d="M-3,-3 Q-4,-10 -2,-8 Q-3,-12 -1,-7 L-3,-3" fill="url(#tidlVolcanoGlow)" />
+              </g>
             </g>
           </svg>
           <div className="text-center mt-2">
@@ -747,13 +1196,36 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
         {/* Europa */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-blue-400 mb-2 text-center">Europa (Jupiter)</h3>
-          <svg width="180" height="120" className="mx-auto">
-            <circle cx="50" cy="60" r="30" fill="#c2956e" />
-            <ellipse cx="100" cy="60" rx="50" ry="18" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
+          <svg width="180" height="120" viewBox="0 0 180 120" className="mx-auto">
+            <defs>
+              <radialGradient id="tidlEuropa" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stopColor="#e0f2fe" />
+                <stop offset="30%" stopColor="#bae6fd" />
+                <stop offset="60%" stopColor="#7dd3fc" />
+                <stop offset="100%" stopColor="#38bdf8" />
+              </radialGradient>
+              <linearGradient id="tidlEuropaCracks" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.4" />
+                <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.4" />
+              </linearGradient>
+            </defs>
+            {/* Jupiter (same as Io) */}
+            <circle cx="45" cy="60" r="30" fill="url(#tidlJupiter)" />
+            <ellipse cx="45" cy="52" rx="28" ry="4" fill="#c2956e" opacity="0.4" />
+            <ellipse cx="45" cy="68" rx="28" ry="4" fill="#c2956e" opacity="0.4" />
+            {/* Orbit */}
+            <ellipse cx="100" cy="60" rx="50" ry="18" fill="none" stroke="#38bdf8" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
+            {/* Europa */}
             <g transform={`translate(${100 + Math.cos((orbitalAngle * 1.5) * Math.PI / 180) * 50}, ${60 + Math.sin((orbitalAngle * 1.5) * Math.PI / 180) * 18})`}>
-              <circle cx="0" cy="0" r="7" fill="#a5c4d4" />
-              <line x1="-5" y1="-3" x2="5" y2="3" stroke="#6b7280" strokeWidth="0.5" />
-              <line x1="-4" y1="2" x2="4" y2="-4" stroke="#6b7280" strokeWidth="0.5" />
+              <circle cx="0" cy="0" r="9" fill="#7dd3fc" opacity="0.3" />
+              <circle cx="0" cy="0" r="7" fill="url(#tidlEuropa)" />
+              {/* Ice cracks */}
+              <line x1="-5" y1="-3" x2="5" y2="3" stroke="url(#tidlEuropaCracks)" strokeWidth="0.8" />
+              <line x1="-4" y1="2" x2="4" y2="-4" stroke="url(#tidlEuropaCracks)" strokeWidth="0.6" />
+              <line x1="-2" y1="-5" x2="3" y2="5" stroke="url(#tidlEuropaCracks)" strokeWidth="0.5" />
+              {/* Highlight */}
+              <ellipse cx="-2" cy="-2" rx="1.5" ry="1" fill="white" opacity="0.4" />
             </g>
           </svg>
           <div className="text-center mt-2">
@@ -765,13 +1237,49 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
         {/* Titan */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-orange-400 mb-2 text-center">Titan (Saturn)</h3>
-          <svg width="180" height="120" className="mx-auto">
-            <circle cx="50" cy="60" r="25" fill="#e8d5b7" />
-            <ellipse cx="50" cy="60" rx="35" ry="5" fill="none" stroke="#fbbf24" strokeWidth="2" />
-            <ellipse cx="100" cy="60" rx="45" ry="15" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
+          <svg width="180" height="120" viewBox="0 0 180 120" className="mx-auto">
+            <defs>
+              <radialGradient id="tidlSaturn" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="40%" stopColor="#fde68a" />
+                <stop offset="70%" stopColor="#fcd34d" />
+                <stop offset="100%" stopColor="#d4a574" />
+              </radialGradient>
+              <linearGradient id="tidlSaturnRing" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.1" />
+                <stop offset="20%" stopColor="#fcd34d" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#fef3c7" stopOpacity="0.8" />
+                <stop offset="80%" stopColor="#fcd34d" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.1" />
+              </linearGradient>
+              <radialGradient id="tidlTitan" cx="35%" cy="35%" r="65%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="40%" stopColor="#f97316" />
+                <stop offset="70%" stopColor="#ea580c" />
+                <stop offset="100%" stopColor="#c2410c" />
+              </radialGradient>
+              <radialGradient id="tidlTitanAtmo" cx="50%" cy="50%" r="50%">
+                <stop offset="60%" stopColor="#f97316" stopOpacity="0" />
+                <stop offset="85%" stopColor="#fdba74" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#fed7aa" stopOpacity="0.2" />
+              </radialGradient>
+            </defs>
+            {/* Saturn */}
+            <circle cx="45" cy="60" r="25" fill="url(#tidlSaturn)" />
+            {/* Saturn rings */}
+            <ellipse cx="45" cy="60" rx="38" ry="6" fill="none" stroke="url(#tidlSaturnRing)" strokeWidth="4" />
+            <ellipse cx="45" cy="60" rx="33" ry="5" fill="none" stroke="#fef3c7" strokeWidth="1" opacity="0.4" />
+            {/* Orbit */}
+            <ellipse cx="100" cy="60" rx="45" ry="15" fill="none" stroke="#f97316" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
+            {/* Titan */}
             <g transform={`translate(${100 + Math.cos(orbitalAngle * Math.PI / 180) * 45}, ${60 + Math.sin(orbitalAngle * Math.PI / 180) * 15})`}>
-              <circle cx="0" cy="0" r="10" fill="#f59e0b" opacity="0.8" />
-              <circle cx="0" cy="0" r="8" fill="#d97706" />
+              {/* Atmosphere haze */}
+              <circle cx="0" cy="0" r="12" fill="url(#tidlTitanAtmo)" />
+              <circle cx="0" cy="0" r="8" fill="url(#tidlTitan)" />
+              {/* Surface features hint */}
+              <ellipse cx="-2" cy="1" rx="2" ry="1.5" fill="#7c2d12" opacity="0.4" />
+              {/* Highlight through atmosphere */}
+              <ellipse cx="-2" cy="-2" rx="1.5" ry="1" fill="#fed7aa" opacity="0.3" />
             </g>
           </svg>
           <div className="text-center mt-2">
@@ -849,27 +1357,57 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
       description: "The Moon is tidally locked to Earth, always showing the same face. Earth's rotation is also gradually slowing.",
       details: "The 'far side' of the Moon was a complete mystery until Luna 3 photographed it in 1959. It looks surprisingly different - more craters, fewer dark 'mare' regions.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Stars */}
-          {[1,2,3,4,5,6,7,8].map(i => (
-            <circle key={i} cx={15 + (i * 23)} cy={10 + (i % 4) * 15} r="1" fill="white" opacity="0.5" />
-          ))}
-          {/* Earth */}
-          <circle cx="70" cy="75" r="30" fill="url(#earthGradApp)" />
-          {/* Moon orbit */}
-          <ellipse cx="70" cy="75" rx="60" ry="20" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
-          {/* Moon */}
-          <g transform={`translate(${70 + Math.cos(orbitalAngle * Math.PI / 180) * 60}, ${75 + Math.sin(orbitalAngle * Math.PI / 180) * 20})`}>
-            <circle cx="0" cy="0" r="10" fill="#9ca3af" />
-            <circle cx="-3" cy="-2" r="2" fill="#6b7280" />
-          </g>
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Same face always visible</text>
+        <svg width="200" height="150" viewBox="0 0 200 150" className="mx-auto">
           <defs>
-            <radialGradient id="earthGradApp" cx="40%" cy="40%" r="60%">
-              <stop offset="0%" stopColor="#60a5fa" />
+            <radialGradient id="tidlAppEarth" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
               <stop offset="100%" stopColor="#1e40af" />
             </radialGradient>
+            <radialGradient id="tidlAppEarthGlow" cx="50%" cy="50%" r="55%">
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="90%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#93c5fd" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="tidlAppMoon" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#e5e7eb" />
+              <stop offset="40%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </radialGradient>
+            <linearGradient id="tidlAppOrbit" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+            </linearGradient>
+            <filter id="tidlAppGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
           </defs>
+          {/* Stars */}
+          {[1,2,3,4,5,6,7,8].map(i => (
+            <circle key={i} cx={15 + (i * 23)} cy={10 + (i % 4) * 15} r="1" fill="white" opacity={0.3 + (i % 3) * 0.2} />
+          ))}
+          {/* Earth glow */}
+          <circle cx="70" cy="70" r="35" fill="url(#tidlAppEarthGlow)" filter="url(#tidlAppGlow)" />
+          {/* Earth */}
+          <circle cx="70" cy="70" r="30" fill="url(#tidlAppEarth)" />
+          {/* Earth continents */}
+          <ellipse cx="60" cy="65" rx="10" ry="7" fill="#22c55e" opacity="0.6" />
+          <ellipse cx="78" cy="75" rx="6" ry="4" fill="#22c55e" opacity="0.5" />
+          {/* Moon orbit */}
+          <ellipse cx="70" cy="70" rx="60" ry="20" fill="none" stroke="url(#tidlAppOrbit)" strokeWidth="1.5" strokeDasharray="4 3" />
+          {/* Moon */}
+          <g transform={`translate(${70 + Math.cos(orbitalAngle * Math.PI / 180) * 60}, ${70 + Math.sin(orbitalAngle * Math.PI / 180) * 20})`}>
+            <circle cx="0" cy="0" r="12" fill="#9ca3af" opacity="0.2" filter="url(#tidlAppGlow)" />
+            <circle cx="0" cy="0" r="10" fill="url(#tidlAppMoon)" />
+            <circle cx="-3" cy="-2" r="2.5" fill="#6b7280" opacity="0.6" />
+            <circle cx="2" cy="2" r="2" fill="#6b7280" opacity="0.5" />
+            {/* Near side marker */}
+            <circle cx="0" cy="-6" r="2" fill="#fbbf24" />
+          </g>
+          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Same face always visible</text>
         </svg>
       )
     },
@@ -879,18 +1417,53 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
       description: "Mercury isn't fully tidally locked - it's in a 3:2 spin-orbit resonance with the Sun.",
       details: "Mercury rotates 3 times for every 2 orbits around the Sun. This unusual resonance was caused by Mercury's eccentric orbit preventing full tidal locking.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
+        <svg width="200" height="150" viewBox="0 0 200 150" className="mx-auto">
+          <defs>
+            <radialGradient id="tidlAppSun" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
+            <radialGradient id="tidlAppSunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="tidlAppMercury" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="40%" stopColor="#9ca3af" />
+              <stop offset="70%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </radialGradient>
+            <linearGradient id="tidlAppMercuryOrbit" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.1" />
+            </linearGradient>
+            <filter id="tidlAppSunFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          {/* Sun glow */}
+          <circle cx="45" cy="75" r="40" fill="url(#tidlAppSunGlow)" filter="url(#tidlAppSunFilter)" />
           {/* Sun */}
-          <circle cx="50" cy="75" r="30" fill="#fbbf24" />
-          <circle cx="50" cy="75" r="35" fill="#fbbf24" opacity="0.3" />
+          <circle cx="45" cy="75" r="28" fill="url(#tidlAppSun)" />
+          {/* Sun surface details */}
+          <circle cx="35" cy="68" r="4" fill="#fef08a" opacity="0.5" />
+          <circle cx="50" cy="80" r="3" fill="#fcd34d" opacity="0.4" />
           {/* Mercury orbit (eccentric) */}
-          <ellipse cx="100" cy="75" rx="70" ry="40" fill="none" stroke="#64748b" strokeWidth="1" strokeDasharray="3 2" />
+          <ellipse cx="100" cy="75" rx="70" ry="38" fill="none" stroke="url(#tidlAppMercuryOrbit)" strokeWidth="1.5" strokeDasharray="5 3" />
           {/* Mercury */}
-          <g transform={`translate(${100 + Math.cos(orbitalAngle * Math.PI / 180) * 70}, ${75 + Math.sin(orbitalAngle * Math.PI / 180) * 40})`}>
-            <circle cx="0" cy="0" r="8" fill="#9ca3af" />
-            <circle cx="-2" cy="-2" r="2" fill="#6b7280" />
+          <g transform={`translate(${100 + Math.cos(orbitalAngle * Math.PI / 180) * 70}, ${75 + Math.sin(orbitalAngle * Math.PI / 180) * 38})`}>
+            <circle cx="0" cy="0" r="8" fill="url(#tidlAppMercury)" />
+            <circle cx="-2" cy="-2" r="2" fill="#4b5563" opacity="0.6" />
+            <circle cx="1" cy="1" r="1.5" fill="#4b5563" opacity="0.5" />
+            {/* Rotation indicator */}
+            <circle cx="0" cy="-5" r="1.5" fill="#ef4444" />
           </g>
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">3:2 spin-orbit resonance</text>
+          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">3:2 spin-orbit resonance</text>
         </svg>
       )
     },
@@ -900,21 +1473,65 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
       description: "Many exoplanets orbiting red dwarf stars may be tidally locked, creating 'eyeball worlds'.",
       details: "With a permanent day side and night side, these worlds could have habitable zones in the 'terminator ring' between extreme heat and cold.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
+        <svg width="200" height="150" viewBox="0 0 200 150" className="mx-auto">
+          <defs>
+            <radialGradient id="tidlAppRedDwarf" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+            <radialGradient id="tidlAppRedDwarfGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="80%" stopColor="#f87171" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#fca5a5" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="tidlAppEyeballNight" cx="70%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </radialGradient>
+            <radialGradient id="tidlAppEyeballDay" cx="20%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="30%" stopColor="#f97316" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+            <linearGradient id="tidlAppTerminator" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="1" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.9" />
+            </linearGradient>
+            <linearGradient id="tidlAppHeatRays" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.1" />
+            </linearGradient>
+            <filter id="tidlAppStarFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          {/* Red dwarf glow */}
+          <circle cx="30" cy="75" r="35" fill="url(#tidlAppRedDwarfGlow)" filter="url(#tidlAppStarFilter)" />
           {/* Red dwarf star */}
-          <circle cx="30" cy="75" r="25" fill="#ef4444" opacity="0.8" />
+          <circle cx="30" cy="75" r="25" fill="url(#tidlAppRedDwarf)" />
           {/* Heat rays */}
-          {[0, 1, 2].map(i => (
-            <line key={i} x1="55" y1={65 + i * 10} x2="90" y2={65 + i * 10} stroke="#fbbf24" strokeWidth="2" opacity="0.4" />
+          {[0, 1, 2, 3, 4].map(i => (
+            <line key={i} x1="55" y1={55 + i * 10} x2="95" y2={55 + i * 10} stroke="url(#tidlAppHeatRays)" strokeWidth="2" opacity={0.5 - i * 0.05} />
           ))}
-          {/* Eyeball planet */}
-          <circle cx="130" cy="75" r="35" fill="#1e3a5f" />
+          {/* Eyeball planet - night side base */}
+          <circle cx="130" cy="75" r="35" fill="url(#tidlAppEyeballNight)" />
           {/* Day side (hot) */}
-          <path d="M130,40 A35,35 0 0 0 130,110" fill="#ef4444" opacity="0.6" />
-          {/* Eye/habitable zone */}
-          <ellipse cx="115" cy="75" rx="8" ry="20" fill="#22c55e" opacity="0.7" />
-          <circle cx="115" cy="75" r="5" fill="#3b82f6" />
-          <text x="130" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Habitable terminator ring</text>
+          <path d="M130,40 A35,35 0 0 0 130,110" fill="url(#tidlAppEyeballDay)" opacity="0.85" />
+          {/* Terminator/habitable zone */}
+          <ellipse cx="112" cy="75" rx="7" ry="22" fill="url(#tidlAppTerminator)" opacity="0.8" />
+          {/* Water in habitable zone */}
+          <ellipse cx="112" cy="75" rx="4" ry="15" fill="#3b82f6" opacity="0.7" />
+          {/* Ice cap on night side */}
+          <ellipse cx="155" cy="55" rx="8" ry="5" fill="#e0f2fe" opacity="0.5" />
+          <ellipse cx="155" cy="95" rx="8" ry="5" fill="#e0f2fe" opacity="0.5" />
+          <text x="130" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Habitable terminator ring</text>
         </svg>
       )
     },
@@ -924,19 +1541,68 @@ const TidalLockingRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
       description: "Close binary star systems can become mutually tidally locked, like Pluto and Charon.",
       details: "In these systems, both stars always show the same face to each other. The orbital period equals both rotation periods, creating a cosmic dance.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Barycenter */}
-          <circle cx="100" cy="75" r="2" fill="#f59e0b" />
+        <svg width="200" height="150" viewBox="0 0 200 150" className="mx-auto">
+          <defs>
+            <radialGradient id="tidlAppStar1" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
+            <radialGradient id="tidlAppStar1Glow" cx="50%" cy="50%" r="50%">
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#fde047" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#fef08a" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="tidlAppStar2" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="30%" stopColor="#fb923c" />
+              <stop offset="60%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ea580c" />
+            </radialGradient>
+            <radialGradient id="tidlAppStar2Glow" cx="50%" cy="50%" r="50%">
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#fb923c" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#fdba74" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="tidlAppBarycenter" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.5" />
+            </radialGradient>
+            <filter id="tidlAppBinaryFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+          {/* Stars background */}
+          {[1,2,3,4,5].map(i => (
+            <circle key={i} cx={(i * 43) % 200} cy={(i * 29) % 130} r="0.8" fill="white" opacity={0.3 + (i % 3) * 0.15} />
+          ))}
+          {/* Barycenter with glow */}
+          <circle cx="100" cy="75" r="4" fill="url(#tidlAppBarycenter)" filter="url(#tidlAppBinaryFilter)" />
+          <circle cx="100" cy="75" r="2" fill="#fef08a" />
           {/* Binary stars */}
           <g transform={`rotate(${orbitalAngle}, 100, 75)`}>
+            {/* Star 1 glow */}
+            <circle cx="55" cy="75" r="28" fill="url(#tidlAppStar1Glow)" filter="url(#tidlAppBinaryFilter)" />
             {/* Star 1 */}
-            <circle cx="55" cy="75" r="20" fill="#fbbf24" />
-            <circle cx="55" cy="75" r="25" fill="#fbbf24" opacity="0.2" />
+            <circle cx="55" cy="75" r="20" fill="url(#tidlAppStar1)" />
+            {/* Star 1 surface */}
+            <circle cx="48" cy="70" r="4" fill="#fef08a" opacity="0.4" />
+            {/* Facing marker */}
+            <circle cx="70" cy="75" r="2" fill="#ef4444" />
+
+            {/* Star 2 glow */}
+            <circle cx="145" cy="75" r="23" fill="url(#tidlAppStar2Glow)" filter="url(#tidlAppBinaryFilter)" />
             {/* Star 2 */}
-            <circle cx="145" cy="75" r="15" fill="#f97316" />
-            <circle cx="145" cy="75" r="20" fill="#f97316" opacity="0.2" />
+            <circle cx="145" cy="75" r="15" fill="url(#tidlAppStar2)" />
+            {/* Facing marker */}
+            <circle cx="132" cy="75" r="1.5" fill="#ef4444" />
           </g>
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Mutually tidally locked</text>
+          {/* Orbital path hint */}
+          <ellipse cx="100" cy="75" rx="45" ry="45" fill="none" stroke="#64748b" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3" />
+          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">Mutually tidally locked</text>
         </svg>
       )
     }

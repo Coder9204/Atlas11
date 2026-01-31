@@ -387,298 +387,1004 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
     }
   ];
 
-  // Render phase diagram
+  // Render phase diagram with premium SVG graphics
   const renderPhaseDiagram = () => {
     const tempX = (temperature + 50) / 150 * 220 + 50; // Map -50 to 100C to x position
 
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px' }}>
-        {/* Background */}
-        <rect width="300" height="200" fill="#1e293b" rx="8" />
+      <svg viewBox="0 0 320 220" style={{ width: '100%', maxWidth: '320px' }}>
+        <defs>
+          {/* Premium diagram background */}
+          <linearGradient id="scoolDiagramBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
 
-        {/* Axes */}
-        <line x1="50" y1="170" x2="280" y2="170" stroke="#64748b" strokeWidth="2" />
-        <line x1="50" y1="30" x2="50" y2="170" stroke="#64748b" strokeWidth="2" />
+          {/* Solid phase gradient - ice blue */}
+          <linearGradient id="scoolSolidPhase" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#7dd3fc" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.3" />
+          </linearGradient>
 
-        {/* Labels */}
-        <text x="165" y="195" fontSize="10" fill="#94a3b8" textAnchor="middle">Temperature (C)</text>
-        <text x="15" y="100" fontSize="10" fill="#94a3b8" textAnchor="middle" transform="rotate(-90, 15, 100)">Pressure</text>
+          {/* Liquid phase gradient - deep blue */}
+          <linearGradient id="scoolLiquidPhase" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
+          </linearGradient>
 
-        {/* Phase regions */}
+          {/* Gas phase gradient - green */}
+          <linearGradient id="scoolGasPhase" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="0.35" />
+            <stop offset="50%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0.25" />
+          </linearGradient>
+
+          {/* Supercooled metastable region - cyan highlight */}
+          <linearGradient id="scoolMetastableRegion" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.45" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.4" />
+          </linearGradient>
+
+          {/* State indicator glow */}
+          <radialGradient id="scoolStateIndicator" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Phase boundary gradient */}
+          <linearGradient id="scoolPhaseBoundary" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#fb923c" stopOpacity="1" />
+            <stop offset="100%" stopColor="#f97316" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* Axis gradient */}
+          <linearGradient id="scoolAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+
+          {/* Indicator glow filter */}
+          <filter id="scoolIndicatorGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Metastable region glow */}
+          <filter id="scoolMetastableGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Premium background */}
+        <rect width="320" height="220" fill="url(#scoolDiagramBg)" rx="12" />
+
+        {/* Subtle grid */}
+        <pattern id="scoolDiagramGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.4" />
+        </pattern>
+        <rect x="50" y="30" width="240" height="150" fill="url(#scoolDiagramGrid)" />
+
+        {/* === PHASE REGIONS === */}
         {/* Solid region */}
-        <path d="M 50 30 L 50 170 L 110 170 L 110 80 L 50 30" fill="rgba(147, 197, 253, 0.3)" />
-        <text x="70" y="120" fontSize="11" fill="#93c5fd" fontWeight="bold">SOLID</text>
+        <path d="M 55 35 L 55 175 L 115 175 L 115 85 L 55 35" fill="url(#scoolSolidPhase)" />
+        <text x="75" y="125" fontSize="12" fill="#7dd3fc" fontWeight="bold" opacity="0.9">SOLID</text>
+        <text x="75" y="138" fontSize="8" fill="#7dd3fc" opacity="0.6">(Ice)</text>
 
         {/* Liquid region */}
-        <path d="M 110 80 L 110 170 L 200 170 L 200 50 L 110 80" fill="rgba(59, 130, 246, 0.3)" />
-        <text x="150" y="100" fontSize="11" fill="#3b82f6" fontWeight="bold">LIQUID</text>
+        <path d="M 115 85 L 115 175 L 205 175 L 205 55 L 115 85" fill="url(#scoolLiquidPhase)" />
+        <text x="155" y="105" fontSize="12" fill="#60a5fa" fontWeight="bold" opacity="0.9">LIQUID</text>
+        <text x="155" y="118" fontSize="8" fill="#60a5fa" opacity="0.6">(Water)</text>
 
         {/* Gas region */}
-        <path d="M 200 50 L 200 170 L 280 170 L 280 30 L 200 50" fill="rgba(34, 197, 94, 0.3)" />
-        <text x="240" y="100" fontSize="11" fill="#22c55e" fontWeight="bold">GAS</text>
+        <path d="M 205 55 L 205 175 L 290 175 L 290 35 L 205 55" fill="url(#scoolGasPhase)" />
+        <text x="245" y="105" fontSize="12" fill="#4ade80" fontWeight="bold" opacity="0.9">GAS</text>
+        <text x="245" y="118" fontSize="8" fill="#4ade80" opacity="0.6">(Vapor)</text>
 
-        {/* Metastable supercooled region (highlighted) */}
-        <path d="M 50 170 L 110 170 L 110 130 L 70 130 L 50 170" fill="rgba(6, 182, 212, 0.4)" stroke="#06b6d4" strokeWidth="2" strokeDasharray="4" />
-        <text x="80" y="155" fontSize="8" fill="#06b6d4" fontWeight="bold">SUPERCOOLED</text>
+        {/* Metastable supercooled region with highlight */}
+        <g filter="url(#scoolMetastableGlow)">
+          <path
+            d="M 55 175 L 115 175 L 115 135 L 75 135 L 55 175"
+            fill="url(#scoolMetastableRegion)"
+            stroke="#22d3ee"
+            strokeWidth="2"
+            strokeDasharray="6,3"
+          />
+        </g>
+        <text x="85" y="162" fontSize="8" fill="#22d3ee" fontWeight="bold">SUPERCOOLED</text>
+        <text x="85" y="172" fontSize="7" fill="#06b6d4" opacity="0.8">(Metastable)</text>
 
-        {/* Phase boundaries */}
-        <line x1="110" y1="80" x2="110" y2="170" stroke="#f97316" strokeWidth="2" />
-        <line x1="110" y1="80" x2="200" y2="50" stroke="#f97316" strokeWidth="2" />
+        {/* === PHASE BOUNDARIES === */}
+        {/* Solid-Liquid boundary (melting/freezing line) */}
+        <line x1="115" y1="85" x2="115" y2="175" stroke="url(#scoolPhaseBoundary)" strokeWidth="3" />
 
-        {/* Freezing point marker */}
-        <line x1="110" y1="165" x2="110" y2="175" stroke="#ef4444" strokeWidth="2" />
-        <text x="110" y="185" fontSize="9" fill="#ef4444" textAnchor="middle">0C</text>
+        {/* Liquid-Gas boundary (vaporization line) */}
+        <line x1="115" y1="85" x2="205" y2="55" stroke="url(#scoolPhaseBoundary)" strokeWidth="3" />
 
-        {/* Current state indicator */}
-        <circle cx={Math.min(Math.max(tempX, 55), 275)} cy={130} r="6" fill="#fbbf24" stroke="white" strokeWidth="2">
-          <animate attributeName="r" values="6;8;6" dur="1s" repeatCount="indefinite" />
-        </circle>
-        <text x={Math.min(Math.max(tempX, 55), 275)} y={118} fontSize="9" fill="#fbbf24" textAnchor="middle" fontWeight="bold">
-          {temperature}C
+        {/* Triple point indicator */}
+        <circle cx="115" cy="85" r="5" fill="#f97316" stroke="#fbbf24" strokeWidth="2" />
+        <text x="130" y="82" fontSize="8" fill="#f97316" fontWeight="bold">Triple Point</text>
+
+        {/* === AXES === */}
+        {/* X-axis (Temperature) */}
+        <line x1="50" y1="180" x2="295" y2="180" stroke="url(#scoolAxisGrad)" strokeWidth="2" />
+        <polygon points="295,180 288,176 288,184" fill="#64748b" />
+        <text x="175" y="205" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="500">Temperature (°C)</text>
+
+        {/* Y-axis (Pressure) */}
+        <line x1="50" y1="185" x2="50" y2="30" stroke="url(#scoolAxisGrad)" strokeWidth="2" />
+        <polygon points="50,30 46,37 54,37" fill="#64748b" />
+        <text x="20" y="110" fontSize="10" fill="#94a3b8" textAnchor="middle" fontWeight="500" transform="rotate(-90, 20, 110)">Pressure</text>
+
+        {/* Temperature scale markers */}
+        {[-40, 0, 50, 100].map((temp, i) => {
+          const x = 55 + ((temp + 50) / 150) * 235;
+          return (
+            <g key={temp}>
+              <line x1={x} y1="180" x2={x} y2="185" stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
+              <text x={x} y="195" fontSize="8" fill={temp === 0 ? '#ef4444' : '#94a3b8'} textAnchor="middle">
+                {temp}°C
+              </text>
+            </g>
+          );
+        })}
+
+        {/* Freezing point emphasis line */}
+        <line x1="115" y1="30" x2="115" y2="175" stroke="#ef4444" strokeWidth="1" strokeDasharray="4,4" strokeOpacity="0.5" />
+
+        {/* === CURRENT STATE INDICATOR === */}
+        <g filter="url(#scoolIndicatorGlow)">
+          <circle
+            cx={Math.min(Math.max(tempX, 60), 285)}
+            cy={135}
+            r="10"
+            fill="url(#scoolStateIndicator)"
+          >
+            <animate attributeName="r" values="10;12;10" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <circle
+            cx={Math.min(Math.max(tempX, 60), 285)}
+            cy={135}
+            r="5"
+            fill="#fbbf24"
+            stroke="#fef3c7"
+            strokeWidth="2"
+          />
+        </g>
+
+        {/* Current temperature label */}
+        <rect
+          x={Math.min(Math.max(tempX, 60), 285) - 22}
+          y={105}
+          width="44"
+          height="18"
+          rx="9"
+          fill="rgba(251, 191, 36, 0.2)"
+          stroke="#fbbf24"
+          strokeWidth="1"
+        />
+        <text
+          x={Math.min(Math.max(tempX, 60), 285)}
+          y={118}
+          fontSize="10"
+          fill="#fbbf24"
+          textAnchor="middle"
+          fontWeight="bold"
+        >
+          {temperature}°C
         </text>
 
-        {/* Legend */}
-        <rect x="205" y="75" width="8" height="8" fill="rgba(6, 182, 212, 0.4)" stroke="#06b6d4" />
-        <text x="218" y="82" fontSize="8" fill="#94a3b8">Metastable</text>
+        {/* === LEGEND === */}
+        <g transform="translate(220, 30)">
+          <rect x="0" y="0" width="90" height="55" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+          <text x="45" y="14" fontSize="8" fill="#94a3b8" textAnchor="middle" fontWeight="bold">LEGEND</text>
+
+          <rect x="8" y="22" width="10" height="10" rx="2" fill="url(#scoolMetastableRegion)" stroke="#22d3ee" strokeWidth="1" />
+          <text x="22" y="30" fontSize="7" fill="#94a3b8">Metastable Zone</text>
+
+          <circle cx="13" cy="42" r="5" fill="#fbbf24" />
+          <text x="22" y="45" fontSize="7" fill="#94a3b8">Current State</text>
+        </g>
       </svg>
     );
   };
 
-  // Render water container
+  // Render water container with premium SVG graphics
   const renderWaterContainer = () => {
-    const waterColor = getWaterColor(waterState);
-
     return (
-      <svg viewBox="0 0 300 250" style={{ width: '100%', maxWidth: '300px' }}>
-        {/* Background */}
-        <rect width="300" height="250" fill="#0f172a" rx="8" />
+      <svg viewBox="0 0 340 280" style={{ width: '100%', maxWidth: '340px' }}>
+        <defs>
+          {/* Premium lab background gradient */}
+          <linearGradient id="scoolLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* Container */}
-        <path
-          d="M 70 50 L 70 180 Q 70 200 90 200 L 210 200 Q 230 200 230 180 L 230 50"
-          fill="none"
-          stroke="#64748b"
-          strokeWidth="4"
-        />
+          {/* Glass bottle gradient with depth */}
+          <linearGradient id="scoolGlassBottle" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#64748b" stopOpacity="0.4" />
+            <stop offset="15%" stopColor="#94a3b8" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#cbd5e1" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#f1f5f9" stopOpacity="0.15" />
+            <stop offset="70%" stopColor="#94a3b8" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#64748b" stopOpacity="0.4" />
+          </linearGradient>
 
-        {/* Water - different appearance based on state */}
-        <rect
-          x="74"
-          y="70"
-          width="152"
-          height="126"
-          fill={waterColor}
-          opacity={waterState === 'frozen' ? 0.9 : 0.6}
-          rx="2"
-        />
+          {/* Liquid water gradient - warm state */}
+          <linearGradient id="scoolWaterWarm" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.85" />
+            <stop offset="25%" stopColor="#2563eb" stopOpacity="0.75" />
+            <stop offset="50%" stopColor="#1d4ed8" stopOpacity="0.7" />
+            <stop offset="75%" stopColor="#1e40af" stopOpacity="0.75" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.85" />
+          </linearGradient>
 
-        {/* Liquid shimmer for liquid/supercooled states */}
-        {(waterState === 'liquid' || waterState === 'supercooled') && (
-          <>
-            <ellipse
-              cx={150 + Math.sin(animationFrame / 15) * 20}
-              cy={110}
-              rx={40}
-              ry={15}
-              fill="rgba(255,255,255,0.15)"
-            />
-            <ellipse
-              cx={140}
-              cy={150 + Math.cos(animationFrame / 20) * 10}
-              rx={30}
-              ry={10}
-              fill="rgba(255,255,255,0.1)"
-            />
-          </>
-        )}
+          {/* Supercooled water gradient - cyan metastable */}
+          <linearGradient id="scoolWaterSupercooled" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+            <stop offset="20%" stopColor="#0891b2" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#0e7490" stopOpacity="0.75" />
+            <stop offset="60%" stopColor="#155e75" stopOpacity="0.7" />
+            <stop offset="80%" stopColor="#164e63" stopOpacity="0.75" />
+            <stop offset="100%" stopColor="#083344" stopOpacity="0.85" />
+          </linearGradient>
 
-        {/* Crystal growth during crystallization */}
-        {(waterState === 'crystallizing' || waterState === 'frozen') && (
-          <g>
-            {crystalPoints.map(cp => (
-              <polygon
-                key={cp.id}
-                points={`${cp.x},${cp.y - cp.size} ${cp.x + cp.size * 0.866},${cp.y - cp.size / 2} ${cp.x + cp.size * 0.866},${cp.y + cp.size / 2} ${cp.x},${cp.y + cp.size} ${cp.x - cp.size * 0.866},${cp.y + cp.size / 2} ${cp.x - cp.size * 0.866},${cp.y - cp.size / 2}`}
-                fill="rgba(255,255,255,0.8)"
-                stroke="#bfdbfe"
-                strokeWidth="0.5"
+          {/* Crystallizing water gradient */}
+          <linearGradient id="scoolWaterCrystallizing" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#38bdf8" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#0ea5e9" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#0284c7" stopOpacity="0.85" />
+          </linearGradient>
+
+          {/* Frozen ice gradient */}
+          <linearGradient id="scoolIceFrozen" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f0f9ff" stopOpacity="0.95" />
+            <stop offset="20%" stopColor="#e0f2fe" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#bae6fd" stopOpacity="0.85" />
+            <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.8" />
+            <stop offset="80%" stopColor="#38bdf8" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.9" />
+          </linearGradient>
+
+          {/* Ice crystal radial glow */}
+          <radialGradient id="scoolCrystalGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="30%" stopColor="#e0f2fe" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#bae6fd" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Seed crystal glow */}
+          <radialGradient id="scoolSeedGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="#d97706" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Crystallization front glow */}
+          <radialGradient id="scoolCrystallizationFront" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="60%" stopColor="#e0f2fe" stopOpacity="0.3" />
+            <stop offset="80%" stopColor="#bae6fd" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.8" />
+          </radialGradient>
+
+          {/* Water surface shimmer */}
+          <linearGradient id="scoolWaterSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="30%" stopColor="#ffffff" stopOpacity="0.15" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.25" />
+            <stop offset="70%" stopColor="#ffffff" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Thermometer gradient - cold */}
+          <linearGradient id="scoolThermoCold" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#0891b2" />
+            <stop offset="30%" stopColor="#06b6d4" />
+            <stop offset="60%" stopColor="#22d3ee" />
+            <stop offset="100%" stopColor="#67e8f9" />
+          </linearGradient>
+
+          {/* Thermometer gradient - warm */}
+          <linearGradient id="scoolThermoWarm" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#dc2626" />
+            <stop offset="30%" stopColor="#ef4444" />
+            <stop offset="60%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#fca5a5" />
+          </linearGradient>
+
+          {/* Thermometer bulb gradient */}
+          <radialGradient id="scoolThermoBulb" cx="50%" cy="70%" r="60%">
+            <stop offset="0%" stopColor={temperature < 0 ? '#67e8f9' : '#fca5a5'} />
+            <stop offset="50%" stopColor={temperature < 0 ? '#06b6d4' : '#ef4444'} />
+            <stop offset="100%" stopColor={temperature < 0 ? '#0891b2' : '#dc2626'} />
+          </radialGradient>
+
+          {/* Glow filters */}
+          <filter id="scoolCrystalBlur" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
+
+          <filter id="scoolCrystalGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="scoolSeedGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="scoolWaterShimmer" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          <filter id="scoolFrostEffect" x="-10%" y="-10%" width="120%" height="120%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+
+        {/* Premium dark lab background */}
+        <rect width="340" height="280" fill="url(#scoolLabBg)" rx="12" />
+
+        {/* Subtle grid pattern */}
+        <pattern id="scoolLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="340" height="280" fill="url(#scoolLabGrid)" rx="12" />
+
+        {/* Lab table surface */}
+        <rect x="10" y="220" width="230" height="50" rx="4" fill="#111827" />
+        <rect x="10" y="220" width="230" height="3" fill="#1f2937" />
+
+        {/* === GLASS BOTTLE === */}
+        <g transform="translate(50, 30)">
+          {/* Bottle neck */}
+          <path
+            d="M 55 0 L 55 25 Q 55 35 45 40 L 45 40 L 105 40 Q 95 35 95 25 L 95 0"
+            fill="url(#scoolGlassBottle)"
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            strokeOpacity="0.6"
+          />
+
+          {/* Bottle body outline */}
+          <path
+            d="M 20 40 L 20 165 Q 20 185 40 185 L 110 185 Q 130 185 130 165 L 130 40"
+            fill="url(#scoolGlassBottle)"
+            stroke="#94a3b8"
+            strokeWidth="2"
+            strokeOpacity="0.7"
+          />
+
+          {/* Glass reflection highlight */}
+          <path
+            d="M 25 50 L 25 160 Q 25 175 35 175"
+            fill="none"
+            stroke="rgba(255,255,255,0.25)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Water fill based on state */}
+          <rect
+            x="24"
+            y="55"
+            width="102"
+            height="126"
+            rx="3"
+            fill={
+              waterState === 'liquid' ? 'url(#scoolWaterWarm)' :
+              waterState === 'supercooled' ? 'url(#scoolWaterSupercooled)' :
+              waterState === 'crystallizing' ? 'url(#scoolWaterCrystallizing)' :
+              'url(#scoolIceFrozen)'
+            }
+          />
+
+          {/* Water surface with shimmer effect */}
+          {(waterState === 'liquid' || waterState === 'supercooled') && (
+            <g filter="url(#scoolWaterShimmer)">
+              <ellipse
+                cx={75 + Math.sin(animationFrame / 12) * 15}
+                cy={70}
+                rx={35}
+                ry={8}
+                fill="url(#scoolWaterSurface)"
               />
-            ))}
+              <ellipse
+                cx={75 - Math.sin(animationFrame / 18) * 12}
+                cy={100 + Math.cos(animationFrame / 15) * 8}
+                rx={25}
+                ry={6}
+                fill="url(#scoolWaterSurface)"
+                opacity="0.7"
+              />
+              <ellipse
+                cx={75 + Math.cos(animationFrame / 20) * 10}
+                cy={140}
+                rx={30}
+                ry={7}
+                fill="url(#scoolWaterSurface)"
+                opacity="0.5"
+              />
+            </g>
+          )}
 
-            {/* Crystallization front */}
-            {waterState === 'crystallizing' && (
-              <circle
-                cx={seedPosition.x}
-                cy={seedPosition.y}
-                r={crystalProgress * 1.5}
+          {/* Supercooled state - add metastable shimmer */}
+          {waterState === 'supercooled' && (
+            <g>
+              <rect
+                x="24"
+                y="55"
+                width="102"
+                height="126"
+                rx="3"
                 fill="none"
-                stroke="rgba(255,255,255,0.5)"
-                strokeWidth="3"
+                stroke="#22d3ee"
+                strokeWidth="1"
+                strokeOpacity={0.3 + Math.sin(animationFrame / 10) * 0.2}
+              />
+              {/* Pulsing metastable indicator */}
+              <circle
+                cx="75"
+                cy="120"
+                r={15 + Math.sin(animationFrame / 8) * 3}
+                fill="none"
+                stroke="#67e8f9"
+                strokeWidth="1"
+                strokeOpacity={0.2 + Math.sin(animationFrame / 6) * 0.15}
+                strokeDasharray="4,4"
+              />
+            </g>
+          )}
+
+          {/* Crystal growth during crystallization */}
+          {(waterState === 'crystallizing' || waterState === 'frozen') && (
+            <g filter="url(#scoolCrystalGlowFilter)">
+              {crystalPoints.map(cp => {
+                // Constrain crystal points to bottle interior
+                const constrainedX = Math.max(30, Math.min(120, cp.x - 50));
+                const constrainedY = Math.max(60, Math.min(175, cp.y));
+                return (
+                  <g key={cp.id} transform={`translate(${constrainedX}, ${constrainedY})`}>
+                    {/* Hexagonal ice crystal */}
+                    <polygon
+                      points={`0,${-cp.size} ${cp.size * 0.866},${-cp.size / 2} ${cp.size * 0.866},${cp.size / 2} 0,${cp.size} ${-cp.size * 0.866},${cp.size / 2} ${-cp.size * 0.866},${-cp.size / 2}`}
+                      fill="url(#scoolCrystalGlow)"
+                      stroke="#bae6fd"
+                      strokeWidth="0.5"
+                    />
+                    {/* Crystal inner detail */}
+                    <polygon
+                      points={`0,${-cp.size * 0.5} ${cp.size * 0.433},${-cp.size * 0.25} ${cp.size * 0.433},${cp.size * 0.25} 0,${cp.size * 0.5} ${-cp.size * 0.433},${cp.size * 0.25} ${-cp.size * 0.433},${-cp.size * 0.25}`}
+                      fill="none"
+                      stroke="#e0f2fe"
+                      strokeWidth="0.3"
+                      strokeOpacity="0.6"
+                    />
+                  </g>
+                );
+              })}
+
+              {/* Crystallization front wave */}
+              {waterState === 'crystallizing' && (
+                <circle
+                  cx={seedPosition.x - 50 + 75}
+                  cy={seedPosition.y}
+                  r={crystalProgress * 1.2}
+                  fill="url(#scoolCrystallizationFront)"
+                  stroke="#7dd3fc"
+                  strokeWidth="2"
+                  strokeOpacity={0.6}
+                />
+              )}
+            </g>
+          )}
+
+          {/* Frozen ice texture overlay */}
+          {waterState === 'frozen' && (
+            <g opacity="0.4" filter="url(#scoolFrostEffect)">
+              {/* Ice fracture lines */}
+              {[...Array(5)].map((_, i) => (
+                <path
+                  key={`h${i}`}
+                  d={`M 30 ${70 + i * 22} Q ${55 + i * 5} ${75 + i * 22} 120 ${68 + i * 22}`}
+                  stroke="#e0f2fe"
+                  strokeWidth="0.8"
+                  fill="none"
+                />
+              ))}
+              {[...Array(4)].map((_, i) => (
+                <path
+                  key={`v${i}`}
+                  d={`M ${40 + i * 25} 60 Q ${45 + i * 25} 120 ${38 + i * 25} 175`}
+                  stroke="#e0f2fe"
+                  strokeWidth="0.8"
+                  fill="none"
+                />
+              ))}
+            </g>
+          )}
+
+          {/* Seed crystal with glow */}
+          {seedAdded && waterState !== 'liquid' && (
+            <g filter="url(#scoolSeedGlowFilter)">
+              <circle
+                cx={seedPosition.x - 50 + 75}
+                cy={seedPosition.y}
+                r="8"
+                fill="url(#scoolSeedGlow)"
+              />
+              <circle
+                cx={seedPosition.x - 50 + 75}
+                cy={seedPosition.y}
+                r="4"
+                fill="#fbbf24"
+                stroke="#fcd34d"
+                strokeWidth="1"
+              />
+              <text
+                x={seedPosition.x - 50 + 75}
+                y={seedPosition.y - 15}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#fbbf24"
+                fontWeight="bold"
+              >
+                SEED
+              </text>
+            </g>
+          )}
+        </g>
+
+        {/* === PREMIUM THERMOMETER === */}
+        <g transform="translate(270, 35)">
+          {/* Thermometer background tube */}
+          <rect x="-12" y="0" width="24" height="130" rx="12" fill="#1f2937" stroke="#374151" strokeWidth="1.5" />
+
+          {/* Temperature scale markings */}
+          {[-40, -20, 0, 20].map((temp, i) => {
+            const y = 115 - ((temp + 50) / 150) * 100;
+            return (
+              <g key={temp}>
+                <line x1="-18" y1={y} x2="-12" y2={y} stroke={temp === 0 ? '#ef4444' : '#64748b'} strokeWidth={temp === 0 ? 2 : 1} />
+                <text x="-22" y={y + 3} textAnchor="end" fontSize="8" fill={temp === 0 ? '#ef4444' : '#94a3b8'}>
+                  {temp}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Freezing point indicator line */}
+          <line x1="-12" y1={115 - (50 / 150) * 100} x2="12" y2={115 - (50 / 150) * 100} stroke="#ef4444" strokeWidth="2" strokeDasharray="3,2" />
+
+          {/* Mercury/liquid column */}
+          <rect
+            x="-6"
+            y={115 - Math.max(0, (temperature + 50) / 150) * 100}
+            width="12"
+            height={Math.max(8, (temperature + 50) / 150 * 100)}
+            rx="6"
+            fill={temperature < 0 ? 'url(#scoolThermoCold)' : 'url(#scoolThermoWarm)'}
+          />
+
+          {/* Thermometer bulb */}
+          <circle cx="0" cy="125" r="15" fill="url(#scoolThermoBulb)" />
+          <circle cx="-4" cy="121" r="4" fill="rgba(255,255,255,0.3)" />
+
+          {/* Current temperature display */}
+          <rect x="-25" y="-25" width="50" height="22" rx="6" fill="#0f172a" stroke={temperature < 0 ? '#06b6d4' : '#ef4444'} strokeWidth="1.5" />
+          <text x="0" y="-9" textAnchor="middle" fontSize="14" fill={temperature < 0 ? '#22d3ee' : '#f87171'} fontWeight="bold">
+            {temperature}°C
+          </text>
+        </g>
+
+        {/* === STATE LABELS === */}
+        <g transform="translate(125, 248)">
+          {/* State indicator badge */}
+          <rect
+            x="-80"
+            y="-12"
+            width="160"
+            height="24"
+            rx="12"
+            fill={
+              waterState === 'liquid' ? 'rgba(59, 130, 246, 0.2)' :
+              waterState === 'supercooled' ? 'rgba(6, 182, 212, 0.3)' :
+              waterState === 'crystallizing' ? 'rgba(251, 191, 36, 0.3)' :
+              'rgba(224, 242, 254, 0.2)'
+            }
+            stroke={
+              waterState === 'liquid' ? '#3b82f6' :
+              waterState === 'supercooled' ? '#06b6d4' :
+              waterState === 'crystallizing' ? '#fbbf24' :
+              '#bae6fd'
+            }
+            strokeWidth="1.5"
+          />
+          <text x="0" y="4" textAnchor="middle" fontSize="11" fontWeight="bold" fill={
+            waterState === 'liquid' ? '#60a5fa' :
+            waterState === 'supercooled' ? '#22d3ee' :
+            waterState === 'crystallizing' ? '#fbbf24' :
+            '#bae6fd'
+          }>
+            {waterState === 'liquid' ? 'LIQUID WATER' :
+              waterState === 'supercooled' ? 'SUPERCOOLED (Metastable!)' :
+              waterState === 'crystallizing' ? `CRYSTALLIZING ${crystalProgress.toFixed(0)}%` :
+              'FROZEN SOLID'}
+          </text>
+        </g>
+
+        {/* Instruction text for supercooled state */}
+        {waterState === 'supercooled' && (
+          <text x="125" y="268" textAnchor="middle" fontSize="10" fill="#f59e0b" fontWeight="500">
+            Add a seed crystal to trigger instant freezing!
+          </text>
+        )}
+      </svg>
+    );
+  };
+
+  // Render sodium acetate hand warmer for twist with premium SVG graphics
+  const renderSodiumAcetateWarmer = () => {
+    return (
+      <svg viewBox="0 0 340 220" style={{ width: '100%', maxWidth: '340px' }}>
+        <defs>
+          {/* Premium background gradient */}
+          <linearGradient id="scoolWarmerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="25%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Solution state gradient - clear blue liquid */}
+          <radialGradient id="scoolSolutionGrad" cx="40%" cy="35%" r="70%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+            <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.85" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="75%" stopColor="#2563eb" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.9" />
+          </radialGradient>
+
+          {/* Triggered state gradient - warming orange */}
+          <radialGradient id="scoolTriggeredGrad" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.95" />
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0.9" />
+          </radialGradient>
+
+          {/* Crystallized state gradient - white/grey solid */}
+          <radialGradient id="scoolCrystallizedGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#f1f5f9" stopOpacity="0.95" />
+            <stop offset="25%" stopColor="#e2e8f0" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#cbd5e1" stopOpacity="0.85" />
+            <stop offset="75%" stopColor="#94a3b8" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#64748b" stopOpacity="0.95" />
+          </radialGradient>
+
+          {/* Pouch plastic edge gradient */}
+          <linearGradient id="scoolPouchEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="30%" stopColor="#475569" />
+            <stop offset="70%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Metal disc gradient */}
+          <radialGradient id="scoolMetalDisc" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="40%" stopColor="#64748b" />
+            <stop offset="70%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#334155" />
+          </radialGradient>
+
+          {/* Heat wave gradient */}
+          <linearGradient id="scoolHeatWave" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#fb923c" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#fdba74" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Crystal glow for triggered state */}
+          <radialGradient id="scoolWarmerCrystalGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#fef3c7" stopOpacity="0.7" />
+            <stop offset="70%" stopColor="#fde68a" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#fcd34d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Temperature display background */}
+          <linearGradient id="scoolTempDisplayBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#111827" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Solution shimmer effect */}
+          <linearGradient id="scoolSolutionShimmer" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="40%" stopColor="#ffffff" stopOpacity="0.2" />
+            <stop offset="60%" stopColor="#ffffff" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Glow filters */}
+          <filter id="scoolDiscGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="scoolHeatGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="scoolCrystalSparkle" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Premium background */}
+        <rect width="340" height="220" fill="url(#scoolWarmerBg)" rx="12" />
+
+        {/* Subtle pattern */}
+        <pattern id="scoolWarmerGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+          <rect width="15" height="15" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="340" height="220" fill="url(#scoolWarmerGrid)" rx="12" />
+
+        {/* === HAND WARMER POUCH === */}
+        <g transform="translate(130, 95)">
+          {/* Pouch shadow */}
+          <ellipse cx="5" cy="8" rx="95" ry="58" fill="rgba(0,0,0,0.3)" />
+
+          {/* Main pouch body */}
+          <ellipse
+            cx="0"
+            cy="0"
+            rx="95"
+            ry="55"
+            fill={
+              twistState === 'solution' ? 'url(#scoolSolutionGrad)' :
+              twistState === 'triggered' ? 'url(#scoolTriggeredGrad)' :
+              'url(#scoolCrystallizedGrad)'
+            }
+            stroke="url(#scoolPouchEdge)"
+            strokeWidth="4"
+          />
+
+          {/* Pouch highlight */}
+          <ellipse
+            cx="-30"
+            cy="-25"
+            rx="50"
+            ry="25"
+            fill="url(#scoolSolutionShimmer)"
+            opacity={twistState === 'solution' ? 0.6 : 0.3}
+          />
+
+          {/* Solution shimmer animation */}
+          {twistState === 'solution' && (
+            <g>
+              <ellipse
+                cx={-20 + Math.sin(animationFrame / 12) * 15}
+                cy={-15 + Math.cos(animationFrame / 18) * 8}
+                rx={45}
+                ry={20}
+                fill="url(#scoolSolutionShimmer)"
+                opacity={0.4 + Math.sin(animationFrame / 10) * 0.2}
+              />
+              <ellipse
+                cx={15 + Math.cos(animationFrame / 15) * 12}
+                cy={10}
+                rx={30}
+                ry={15}
+                fill="url(#scoolSolutionShimmer)"
+                opacity={0.3 + Math.cos(animationFrame / 12) * 0.15}
+              />
+            </g>
+          )}
+
+          {/* Crystal growth during trigger and after crystallization */}
+          {(twistState === 'triggered' || twistState === 'crystallized') && (
+            <g filter="url(#scoolCrystalSparkle)">
+              {[...Array(Math.floor(twistCrystalProgress / 4))].map((_, i) => {
+                const angle = (i / 25) * Math.PI * 2 + i * 0.3;
+                const dist = 8 + i * 2.5;
+                const x = Math.cos(angle) * dist * (1 + Math.sin(i) * 0.3);
+                const y = Math.sin(angle) * dist * 0.55 * (1 + Math.cos(i) * 0.2);
+                const size = 3 + (i % 3);
+                return (
+                  <g key={i} transform={`translate(${x}, ${y})`}>
+                    {/* Hexagonal crystal */}
+                    <polygon
+                      points={`0,${-size} ${size * 0.866},${-size / 2} ${size * 0.866},${size / 2} 0,${size} ${-size * 0.866},${size / 2} ${-size * 0.866},${-size / 2}`}
+                      fill="url(#scoolWarmerCrystalGlow)"
+                      stroke={twistState === 'triggered' ? '#fef3c7' : '#e2e8f0'}
+                      strokeWidth="0.5"
+                    />
+                  </g>
+                );
+              })}
+            </g>
+          )}
+
+          {/* Metal disc trigger */}
+          <g
+            filter={twistState === 'solution' ? 'url(#scoolDiscGlow)' : undefined}
+            style={{ cursor: twistState === 'solution' ? 'pointer' : 'default' }}
+            onMouseDown={twistState === 'solution' ? triggerTwist : undefined}
+          >
+            {/* Outer ring */}
+            <circle
+              cx="0"
+              cy="0"
+              r="18"
+              fill="url(#scoolMetalDisc)"
+              stroke="#94a3b8"
+              strokeWidth="2"
+            />
+            {/* Middle ring */}
+            <circle
+              cx="0"
+              cy="0"
+              r="12"
+              fill="none"
+              stroke="#64748b"
+              strokeWidth="1.5"
+            />
+            {/* Inner disc */}
+            <circle
+              cx="0"
+              cy="0"
+              r="6"
+              fill="#94a3b8"
+            />
+            {/* Highlight */}
+            <circle
+              cx="-4"
+              cy="-4"
+              r="3"
+              fill="rgba(255,255,255,0.4)"
+            />
+
+            {/* Click indicator for solution state */}
+            {twistState === 'solution' && (
+              <circle
+                cx="0"
+                cy="0"
+                r={20 + Math.sin(animationFrame / 8) * 3}
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth="2"
+                strokeOpacity={0.4 + Math.sin(animationFrame / 6) * 0.3}
+                strokeDasharray="6,4"
               />
             )}
           </g>
-        )}
-
-        {/* Seed crystal indicator */}
-        {seedAdded && waterState !== 'liquid' && (
-          <g transform={`translate(${seedPosition.x}, ${seedPosition.y})`}>
-            <circle r="4" fill="#fbbf24" />
-            <text y="-10" textAnchor="middle" fontSize="8" fill="#fbbf24">SEED</text>
-          </g>
-        )}
-
-        {/* Ice pattern overlay for frozen state */}
-        {waterState === 'frozen' && (
-          <g opacity="0.3">
-            {[...Array(6)].map((_, i) => (
-              <path
-                key={i}
-                d={`M ${90 + i * 25} 80 L ${90 + i * 25} 190`}
-                stroke="white"
-                strokeWidth="1"
-              />
-            ))}
-            {[...Array(5)].map((_, i) => (
-              <path
-                key={i}
-                d={`M 80 ${90 + i * 25} L 220 ${90 + i * 25}`}
-                stroke="white"
-                strokeWidth="1"
-              />
-            ))}
-          </g>
-        )}
-
-        {/* Temperature display */}
-        <g transform="translate(255, 80)">
-          <rect x="-20" y="0" width="40" height="100" fill="#1f2937" stroke="#374151" rx="4" />
-          <rect
-            x="-15"
-            y={100 - Math.max(0, (temperature + 50) / 150) * 90}
-            width="30"
-            height={Math.max(5, (temperature + 50) / 150 * 90)}
-            fill={temperature < 0 ? '#06b6d4' : '#ef4444'}
-            rx="2"
-          />
-          <text x="0" y="-10" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
-            {temperature}C
-          </text>
-          <line x1="-20" y1={100 - (50 / 150) * 90} x2="20" y2={100 - (50 / 150) * 90} stroke="#ef4444" strokeWidth="2" strokeDasharray="2" />
-          <text x="0" y={105 - (50 / 150) * 90} fontSize="8" fill="#ef4444" textAnchor="middle">0C</text>
         </g>
 
-        {/* State label */}
-        <text x="150" y="225" textAnchor="middle" fontSize="12" fill="#e2e8f0" fontWeight="bold">
-          {waterState === 'liquid' ? 'LIQUID WATER' :
-            waterState === 'supercooled' ? 'SUPERCOOLED (Metastable!)' :
-              waterState === 'crystallizing' ? `CRYSTALLIZING... ${crystalProgress.toFixed(0)}%` :
-                'FROZEN SOLID'}
-        </text>
-        <text x="150" y="240" textAnchor="middle" fontSize="10" fill={waterState === 'supercooled' ? '#f59e0b' : '#94a3b8'}>
-          {waterState === 'supercooled' ? 'Add a seed to trigger freezing!' : ''}
-        </text>
-      </svg>
-    );
-  };
-
-  // Render sodium acetate hand warmer for twist
-  const renderSodiumAcetateWarmer = () => {
-    return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px' }}>
-        {/* Background */}
-        <rect width="300" height="200" fill="#1e293b" rx="8" />
-
-        {/* Hand warmer pouch */}
-        <ellipse
-          cx="150"
-          cy="100"
-          rx="100"
-          ry="60"
-          fill={twistState === 'solution' ? '#60a5fa' : twistState === 'triggered' ? '#fbbf24' : '#94a3b8'}
-          opacity="0.8"
-          stroke="#64748b"
-          strokeWidth="3"
-        />
-
-        {/* Solution shimmer */}
-        {twistState === 'solution' && (
-          <>
-            <ellipse
-              cx={130 + Math.sin(animationFrame / 15) * 10}
-              cy={90}
-              rx={40}
-              ry={20}
-              fill="rgba(255,255,255,0.2)"
-            />
-          </>
-        )}
-
-        {/* Crystal growth */}
-        {(twistState === 'triggered' || twistState === 'crystallized') && (
-          <g>
-            {[...Array(Math.floor(twistCrystalProgress / 5))].map((_, i) => {
-              const angle = (i / 20) * Math.PI * 2;
-              const dist = 10 + i * 2;
-              const x = 150 + Math.cos(angle) * dist;
-              const y = 100 + Math.sin(angle) * dist * 0.6;
-              return (
-                <polygon
-                  key={i}
-                  points={`${x},${y - 4} ${x + 3.5},${y - 2} ${x + 3.5},${y + 2} ${x},${y + 4} ${x - 3.5},${y + 2} ${x - 3.5},${y - 2}`}
-                  fill="rgba(255,255,255,0.7)"
-                />
-              );
-            })}
-          </g>
-        )}
-
-        {/* Metal disc trigger */}
-        <g transform="translate(150, 100)">
-          <circle
-            r="15"
-            fill={twistState === 'solution' ? '#475569' : '#64748b'}
-            stroke="#94a3b8"
-            strokeWidth="2"
-            style={{ cursor: twistState === 'solution' ? 'pointer' : 'default' }}
-            onMouseDown={twistState === 'solution' ? triggerTwist : undefined}
-          />
-          <circle r="10" fill="none" stroke="#94a3b8" strokeWidth="1" />
-          <circle r="5" fill="#94a3b8" />
-        </g>
-
-        {/* Temperature display */}
-        <text x="255" y="90" textAnchor="middle" fontSize="20" fill="#e2e8f0" fontWeight="bold">
-          {twistTemp.toFixed(0)}C
-        </text>
-        <text x="255" y="110" textAnchor="middle" fontSize="10" fill="#94a3b8">
-          Temperature
-        </text>
-
-        {/* Heat waves if heating */}
+        {/* Heat waves rising during crystallization */}
         {twistState === 'triggered' && (
-          <g>
-            {[0, 1, 2].map(i => {
-              const y = 30 - (animationFrame + i * 15) % 30;
+          <g filter="url(#scoolHeatGlow)">
+            {[0, 1, 2, 3, 4].map(i => {
+              const phase = (animationFrame + i * 18) % 60;
+              const y = 35 - phase;
+              const opacity = Math.max(0, 1 - phase / 50);
               return (
                 <path
                   key={i}
-                  d={`M ${130 + i * 20} ${40 - y} Q ${140 + i * 20} ${35 - y} ${130 + i * 20} ${30 - y}`}
+                  d={`M ${95 + i * 18} ${y + 35} Q ${100 + i * 18} ${y + 25} ${95 + i * 18} ${y + 15} Q ${90 + i * 18} ${y + 5} ${95 + i * 18} ${y - 5}`}
                   fill="none"
-                  stroke="#f97316"
-                  strokeWidth="2"
-                  opacity={1 - y / 30}
+                  stroke="url(#scoolHeatWave)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  opacity={opacity}
                 />
               );
             })}
           </g>
         )}
 
-        {/* State label */}
-        <text x="150" y="175" textAnchor="middle" fontSize="11" fill="#e2e8f0" fontWeight="bold">
-          {twistState === 'solution' ? 'Supersaturated Solution (Click disc!)' :
-            twistState === 'triggered' ? `Crystallizing... ${twistCrystalProgress.toFixed(0)}%` :
-              'Crystallized (54C) - Releasing Heat!'}
-        </text>
+        {/* === TEMPERATURE DISPLAY === */}
+        <g transform="translate(285, 50)">
+          {/* Display background */}
+          <rect x="-35" y="-5" width="70" height="60" rx="8" fill="url(#scoolTempDisplayBg)" stroke="#374151" strokeWidth="1.5" />
+
+          {/* Temperature value */}
+          <text x="0" y="25" textAnchor="middle" fontSize="24" fontWeight="bold" fill={
+            twistState === 'triggered' ? '#fbbf24' :
+            twistState === 'crystallized' ? '#f97316' :
+            '#60a5fa'
+          }>
+            {twistTemp.toFixed(0)}°C
+          </text>
+
+          {/* Label */}
+          <text x="0" y="45" textAnchor="middle" fontSize="10" fill="#94a3b8">
+            Temperature
+          </text>
+
+          {/* Heat indicator */}
+          {(twistState === 'triggered' || twistState === 'crystallized') && (
+            <g transform="translate(0, -15)">
+              <text x="0" y="0" textAnchor="middle" fontSize="12" fill="#f97316">
+                {twistState === 'triggered' ? 'HEATING' : 'HOT'}
+              </text>
+            </g>
+          )}
+        </g>
+
+        {/* === STATE LABEL === */}
+        <g transform="translate(170, 190)">
+          <rect
+            x="-120"
+            y="-12"
+            width="240"
+            height="24"
+            rx="12"
+            fill={
+              twistState === 'solution' ? 'rgba(59, 130, 246, 0.2)' :
+              twistState === 'triggered' ? 'rgba(251, 191, 36, 0.3)' :
+              'rgba(249, 115, 22, 0.3)'
+            }
+            stroke={
+              twistState === 'solution' ? '#3b82f6' :
+              twistState === 'triggered' ? '#fbbf24' :
+              '#f97316'
+            }
+            strokeWidth="1.5"
+          />
+          <text x="0" y="4" textAnchor="middle" fontSize="11" fontWeight="bold" fill={
+            twistState === 'solution' ? '#60a5fa' :
+            twistState === 'triggered' ? '#fbbf24' :
+            '#fb923c'
+          }>
+            {twistState === 'solution' ? 'Supersaturated Solution - Click the disc!' :
+              twistState === 'triggered' ? `Crystallizing... ${twistCrystalProgress.toFixed(0)}% - Releasing Heat!` :
+              'Crystallized at 54°C - Reusable Hand Warmer!'}
+          </text>
+        </g>
       </svg>
     );
   };

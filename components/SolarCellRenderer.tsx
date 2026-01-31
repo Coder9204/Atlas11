@@ -271,43 +271,62 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showMagnifier: boolean = false) => {
-    const width = 400;
-    const height = 350;
+    const width = 700;
+    const height = 400;
     const output = calculateOutput();
 
     // Light source position based on distance
-    const lightX = 80 + (100 - lightDistance) * 2;
-    const lightY = 80;
+    const lightX = 60 + (100 - lightDistance) * 1.5;
+    const lightY = 60;
 
-    // Panel center
-    const panelCenterX = 280;
-    const panelCenterY = 200;
-    const panelWidth = 100;
-    const panelHeight = 60;
+    // Solar cell cross-section position
+    const cellX = 320;
+    const cellY = 180;
+    const cellWidth = 280;
+    const cellHeight = 160;
 
-    // Calculate panel corners with rotation
-    const angleRad = (panelAngle * Math.PI) / 180;
-
-    // Light rays
-    const numRays = 8;
+    // Calculate photon rays
+    const numRays = 6;
     const rays = [];
+    const photonPositions: { x: number; y: number; progress: number }[] = [];
+
     for (let i = 0; i < numRays; i++) {
-      const targetY = panelCenterY - panelHeight/2 + (i * panelHeight) / (numRays - 1);
-      const opacity = Math.max(0.1, output.effectiveIntensity * 0.4);
+      const targetY = cellY - 20 + (i * 50);
+      const opacity = Math.max(0.2, output.effectiveIntensity * 0.5);
+      const rayEndX = cellX - 10;
+
+      // Calculate animated photon position along ray
+      const animPhase = ((Date.now() / 800) + i * 0.15) % 1;
+      const photonX = lightX + (rayEndX - lightX) * animPhase;
+      const photonY = lightY + (targetY - lightY) * animPhase;
+
+      if (animPhase > 0.1 && animPhase < 0.95) {
+        photonPositions.push({ x: photonX, y: photonY, progress: animPhase });
+      }
+
       rays.push(
         <line
-          key={`ray${i}`}
+          key={`solcRay${i}`}
           x1={lightX}
           y1={lightY}
-          x2={panelCenterX - panelWidth/2}
+          x2={rayEndX}
           y2={targetY}
-          stroke={colors.light}
-          strokeWidth={2}
+          stroke="url(#solcPhotonBeam)"
+          strokeWidth={showMagnifier && useMagnifier ? 3 : 2}
           opacity={opacity}
-          strokeDasharray={showMagnifier && useMagnifier ? "none" : "5,5"}
+          strokeDasharray={showMagnifier && useMagnifier ? "none" : "8,4"}
         />
       );
     }
+
+    // Electron-hole pair generation positions (where photons hit the cell)
+    const ehPairs = [
+      { x: cellX + 30, y: cellY + 25, delay: 0 },
+      { x: cellX + 80, y: cellY + 35, delay: 0.3 },
+      { x: cellX + 130, y: cellY + 20, delay: 0.6 },
+      { x: cellX + 180, y: cellY + 40, delay: 0.15 },
+      { x: cellX + 220, y: cellY + 30, delay: 0.45 },
+    ];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -316,131 +335,389 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
-          {/* Light source (sun/lamp) */}
+          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
-            <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.light} stopOpacity={lightIntensity / 100} />
-              <stop offset="100%" stopColor={colors.light} stopOpacity="0" />
-            </radialGradient>
-            <linearGradient id="panelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#1e40af" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="solcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a1628" />
+              <stop offset="70%" stopColor="#071320" />
+              <stop offset="100%" stopColor="#020617" />
             </linearGradient>
+
+            {/* Sun/Light source radial gradient with depth */}
+            <radialGradient id="solcSunCore" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fffbeb" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fef3c7" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.3" />
+            </radialGradient>
+
+            {/* Sun outer glow */}
+            <radialGradient id="solcSunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity={0.4 * (lightIntensity / 100)} />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity={0.25 * (lightIntensity / 100)} />
+              <stop offset="70%" stopColor="#d97706" stopOpacity={0.1 * (lightIntensity / 100)} />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Photon beam gradient */}
+            <linearGradient id="solcPhotonBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Photon particle glow */}
+            <radialGradient id="solcPhotonGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef9c3" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#facc15" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+            </radialGradient>
+
+            {/* N-type silicon gradient (phosphorus doped - electron rich) */}
+            <linearGradient id="solcNType" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="20%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="80%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* P-type silicon gradient (boron doped - hole rich) */}
+            <linearGradient id="solcPType" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#7c2d12" />
+              <stop offset="20%" stopColor="#9a3412" />
+              <stop offset="50%" stopColor="#c2410c" />
+              <stop offset="80%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+
+            {/* Depletion region gradient */}
+            <linearGradient id="solcDepletion" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#c084fc" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#e879f9" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Anti-reflective coating gradient */}
+            <linearGradient id="solcARCoating" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#14b8a6" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Metal contact gradient */}
+            <linearGradient id="solcMetalContact" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e5e7eb" />
+              <stop offset="20%" stopColor="#d1d5db" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="80%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Electron glow (blue - negative) */}
+            <radialGradient id="solcElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Hole glow (orange/red - positive) */}
+            <radialGradient id="solcHoleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fed7aa" stopOpacity="1" />
+              <stop offset="40%" stopColor="#fb923c" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Magnifier lens gradient */}
+            <radialGradient id="solcLensGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#bae6fd" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.15" />
+            </radialGradient>
+
+            {/* Electric field arrows gradient */}
+            <linearGradient id="solcEField" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
+
+            {/* Output panel gradient */}
+            <linearGradient id="solcOutputPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            {/* Sun glow filter */}
+            <filter id="solcSunBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Photon glow filter */}
+            <filter id="solcPhotonBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Electron/hole glow filter */}
+            <filter id="solcParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Depletion region glow */}
+            <filter id="solcDepletionGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner shadow for depth */}
+            <filter id="solcInnerShadow">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="shadow" />
+              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            </filter>
+
+            {/* Grid pattern for lab background */}
+            <pattern id="solcLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {/* Light glow */}
-          <circle cx={lightX} cy={lightY} r={40} fill="url(#lightGlow)" />
-          <circle cx={lightX} cy={lightY} r={20} fill={colors.light} opacity={0.9} />
-          <circle cx={lightX} cy={lightY} r={12} fill="#fff" opacity={0.8} />
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#solcLabBg)" />
+          <rect width={width} height={height} fill="url(#solcLabGrid)" />
 
-          {/* Light rays */}
-          {rays}
-
-          {/* Magnifier lens (if enabled) */}
-          {showMagnifier && useMagnifier && (
-            <>
-              <ellipse
-                cx={(lightX + panelCenterX) / 2}
-                cy={(lightY + panelCenterY) / 2}
-                rx={25}
-                ry={35}
-                fill="rgba(200, 230, 255, 0.3)"
-                stroke={colors.solar}
-                strokeWidth={3}
-              />
-              <text
-                x={(lightX + panelCenterX) / 2}
-                y={(lightY + panelCenterY) / 2 + 50}
-                fill={colors.accent}
-                fontSize={10}
-                textAnchor="middle"
-              >
-                2.5x Magnifier
-              </text>
-            </>
-          )}
-
-          {/* Solar panel */}
-          <g transform={`rotate(${panelAngle}, ${panelCenterX}, ${panelCenterY})`}>
-            {/* Panel frame */}
-            <rect
-              x={panelCenterX - panelWidth/2 - 5}
-              y={panelCenterY - panelHeight/2 - 5}
-              width={panelWidth + 10}
-              height={panelHeight + 10}
-              fill="#374151"
-              rx={4}
-            />
-            {/* Solar cells grid */}
-            <rect
-              x={panelCenterX - panelWidth/2}
-              y={panelCenterY - panelHeight/2}
-              width={panelWidth}
-              height={panelHeight}
-              fill="url(#panelGradient)"
-              rx={2}
-            />
-            {/* Cell grid lines */}
-            {[1, 2, 3].map(i => (
-              <line
-                key={`hline${i}`}
-                x1={panelCenterX - panelWidth/2}
-                y1={panelCenterY - panelHeight/2 + (i * panelHeight) / 4}
-                x2={panelCenterX + panelWidth/2}
-                y2={panelCenterY - panelHeight/2 + (i * panelHeight) / 4}
-                stroke="#1e3a8a"
-                strokeWidth={1}
-              />
-            ))}
-            {[1, 2, 3, 4, 5].map(i => (
-              <line
-                key={`vline${i}`}
-                x1={panelCenterX - panelWidth/2 + (i * panelWidth) / 6}
-                y1={panelCenterY - panelHeight/2}
-                x2={panelCenterX - panelWidth/2 + (i * panelWidth) / 6}
-                y2={panelCenterY + panelHeight/2}
-                stroke="#1e3a8a"
-                strokeWidth={1}
-              />
-            ))}
+          {/* === LIGHT SOURCE (SUN/LAMP) === */}
+          <g transform={`translate(${lightX}, ${lightY})`}>
+            {/* Outer glow */}
+            <circle r={50 * (lightIntensity / 100)} fill="url(#solcSunGlow)" filter="url(#solcSunBlur)" />
+            {/* Main sun body */}
+            <circle r={25} fill="url(#solcSunCore)" filter="url(#solcSunBlur)">
+              <animate attributeName="r" values="24;26;24" dur="2s" repeatCount="indefinite" />
+            </circle>
+            {/* Hot core */}
+            <circle r={12} fill="#fffbeb" opacity="0.9">
+              <animate attributeName="opacity" values="0.85;1;0.85" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Label */}
+            <text y={-40} textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">
+              LIGHT SOURCE
+            </text>
+            <text y={45} textAnchor="middle" fill="#94a3b8" fontSize="9">
+              {lightIntensity}% intensity
+            </text>
           </g>
 
-          {/* Panel stand */}
-          <line
-            x1={panelCenterX}
-            y1={panelCenterY + panelHeight/2 + 5}
-            x2={panelCenterX}
-            y2={300}
-            stroke="#4b5563"
-            strokeWidth={4}
-          />
-          <rect x={panelCenterX - 20} y={295} width={40} height={10} fill="#4b5563" rx={2} />
+          {/* === PHOTON RAYS === */}
+          {rays}
 
-          {/* Output display panel */}
-          <rect x={10} y={250} width={150} height={90} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={20} y={270} fill={colors.textSecondary} fontSize={11}>OUTPUT READINGS</text>
+          {/* === ANIMATED PHOTONS === */}
+          {photonPositions.map((photon, i) => (
+            <g key={`solcPhoton${i}`} filter="url(#solcPhotonBlur)">
+              <circle cx={photon.x} cy={photon.y} r={8} fill="url(#solcPhotonGlow)" opacity={0.8} />
+              <circle cx={photon.x} cy={photon.y} r={4} fill="#fef9c3" />
+              {/* Photon wave visualization */}
+              <path
+                d={`M ${photon.x - 12} ${photon.y} Q ${photon.x - 6} ${photon.y - 4}, ${photon.x} ${photon.y} Q ${photon.x + 6} ${photon.y + 4}, ${photon.x + 12} ${photon.y}`}
+                stroke="#fde047"
+                strokeWidth="1.5"
+                fill="none"
+                opacity="0.6"
+              />
+            </g>
+          ))}
 
-          <text x={20} y={290} fill={colors.textPrimary} fontSize={12}>
-            Voltage: {output.voltage.toFixed(2)} V
-          </text>
-          <text x={20} y={308} fill={colors.textPrimary} fontSize={12}>
-            Current: {output.current.toFixed(1)} mA
-          </text>
-          <text x={20} y={326} fill={colors.success} fontSize={12} fontWeight="bold">
-            Power: {output.power.toFixed(1)} mW
-          </text>
+          {/* === MAGNIFIER LENS (if enabled) === */}
+          {showMagnifier && useMagnifier && (
+            <g transform={`translate(${(lightX + cellX) / 2}, ${(lightY + cellY) / 2})`}>
+              {/* Lens body */}
+              <ellipse rx={30} ry={50} fill="url(#solcLensGradient)" stroke="#0ea5e9" strokeWidth={3} />
+              {/* Lens highlight */}
+              <ellipse rx={20} ry={35} fill="none" stroke="#bae6fd" strokeWidth={1} opacity="0.5" />
+              {/* Focus lines */}
+              <line x1={-25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity="0.4" />
+              <line x1={25} y1={-40} x2={0} y2={0} stroke="#fcd34d" strokeWidth="1" strokeDasharray="4,2" opacity="0.4" />
+              {/* Label */}
+              <text y={70} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">
+                2.5x CONCENTRATOR
+              </text>
+            </g>
+          )}
 
-          {/* Distance indicator */}
-          <text x={lightX} y={140} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Distance: {lightDistance} cm
-          </text>
+          {/* === SOLAR CELL CROSS-SECTION === */}
+          <g transform={`translate(${cellX}, ${cellY})`}>
+            {/* Cell frame/housing */}
+            <rect x={-10} y={-30} width={cellWidth + 20} height={cellHeight + 50} rx={6} fill="#111827" stroke="#1f2937" strokeWidth={1.5} />
 
-          {/* Angle indicator */}
-          <text x={panelCenterX} y={320} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Angle: {panelAngle}deg
-          </text>
+            {/* Anti-reflective coating (top layer) */}
+            <rect x={0} y={0} width={cellWidth} height={8} rx={2} fill="url(#solcARCoating)" filter="url(#solcInnerShadow)" />
+            <text x={cellWidth + 15} y={6} fill="#06b6d4" fontSize="8" fontWeight="bold">AR Coating</text>
+
+            {/* Top metal contacts (finger electrodes) */}
+            {[0, 1, 2, 3, 4, 5, 6].map(i => (
+              <rect
+                key={`solcTopContact${i}`}
+                x={20 + i * 40}
+                y={-5}
+                width={8}
+                height={20}
+                rx={1}
+                fill="url(#solcMetalContact)"
+              />
+            ))}
+
+            {/* N-Type Silicon Layer (top - electron rich) */}
+            <rect x={0} y={8} width={cellWidth} height={45} fill="url(#solcNType)" />
+            <text x={-8} y={32} fill="#60a5fa" fontSize="9" fontWeight="bold" textAnchor="end">N-type</text>
+            <text x={-8} y={42} fill="#94a3b8" fontSize="7" textAnchor="end">(e- rich)</text>
+
+            {/* P-N Junction / Depletion Region */}
+            <rect x={0} y={53} width={cellWidth} height={20} fill="url(#solcDepletion)" filter="url(#solcDepletionGlow)" opacity="0.9" />
+            {/* Electric field arrows in depletion region */}
+            {[40, 100, 160, 220].map((xPos, i) => (
+              <g key={`solcEFieldArrow${i}`} transform={`translate(${xPos}, 63)`}>
+                <line x1={0} y1={-6} x2={0} y2={6} stroke="url(#solcEField)" strokeWidth={2} />
+                <polygon points="0,8 -4,2 4,2" fill="#a855f7" />
+                <text y={-10} textAnchor="middle" fill="#c4b5fd" fontSize="6">E</text>
+              </g>
+            ))}
+            <text x={cellWidth + 15} y={65} fill="#c084fc" fontSize="8" fontWeight="bold">Depletion</text>
+            <text x={cellWidth + 15} y={75} fill="#94a3b8" fontSize="7">Region</text>
+
+            {/* P-Type Silicon Layer (bottom - hole rich) */}
+            <rect x={0} y={73} width={cellWidth} height={60} fill="url(#solcPType)" />
+            <text x={-8} y={100} fill="#fb923c" fontSize="9" fontWeight="bold" textAnchor="end">P-type</text>
+            <text x={-8} y={110} fill="#94a3b8" fontSize="7" textAnchor="end">(h+ rich)</text>
+
+            {/* Bottom metal contact (back electrode) */}
+            <rect x={0} y={133} width={cellWidth} height={10} rx={2} fill="url(#solcMetalContact)" />
+            <text x={cellWidth + 15} y={140} fill="#9ca3af" fontSize="8">Back Contact</text>
+
+            {/* === ELECTRON-HOLE PAIR GENERATION ANIMATION === */}
+            {ehPairs.map((pair, i) => {
+              const animTime = ((Date.now() / 1000) + pair.delay) % 2;
+              const showPair = animTime < 1.5 && output.effectiveIntensity > 0.2;
+              const electronY = pair.y - Math.min(animTime * 30, 35);
+              const holeY = pair.y + Math.min(animTime * 25, 30);
+
+              if (!showPair) return null;
+
+              return (
+                <g key={`solcEHPair${i}`} opacity={Math.max(0, 1 - animTime / 1.5)}>
+                  {/* Photon absorption flash */}
+                  {animTime < 0.3 && (
+                    <circle cx={pair.x - cellX} cy={pair.y - cellY} r={10 * (1 - animTime / 0.3)} fill="#fef9c3" opacity={0.8} filter="url(#solcPhotonBlur)" />
+                  )}
+
+                  {/* Electron (moves up toward N-type) */}
+                  <g filter="url(#solcParticleGlow)">
+                    <circle cx={pair.x - cellX} cy={electronY - cellY} r={6} fill="url(#solcElectronGlow)" />
+                    <circle cx={pair.x - cellX} cy={electronY - cellY} r={3} fill="#93c5fd" />
+                    <text x={pair.x - cellX} y={electronY - cellY + 2} textAnchor="middle" fill="#1e3a8a" fontSize="6" fontWeight="bold">e-</text>
+                  </g>
+
+                  {/* Hole (moves down toward P-type) */}
+                  <g filter="url(#solcParticleGlow)">
+                    <circle cx={pair.x - cellX} cy={holeY - cellY} r={6} fill="url(#solcHoleGlow)" />
+                    <circle cx={pair.x - cellX} cy={holeY - cellY} r={3} fill="#fed7aa" stroke="#ea580c" strokeWidth={1} fill-opacity="0.3" />
+                    <text x={pair.x - cellX} y={holeY - cellY + 2} textAnchor="middle" fill="#7c2d12" fontSize="6" fontWeight="bold">h+</text>
+                  </g>
+                </g>
+              );
+            })}
+
+            {/* Current flow indicators */}
+            <g transform={`translate(${cellWidth + 5}, 0)`}>
+              <line x1={5} y1={10} x2={5} y2={130} stroke="#22c55e" strokeWidth={2} strokeDasharray="6,3">
+                <animate attributeName="stroke-dashoffset" values="0;-18" dur="0.8s" repeatCount="indefinite" />
+              </line>
+              <polygon points="5,-5 0,5 10,5" fill="#22c55e" />
+              <text x={15} y={70} fill="#22c55e" fontSize="8" fontWeight="bold">I</text>
+            </g>
+          </g>
+
+          {/* === DISTANCE INDICATOR === */}
+          <g transform={`translate(${(lightX + cellX) / 2}, ${height - 50})`}>
+            <line x1={-80} y1={0} x2={80} y2={0} stroke="#475569" strokeWidth={1} />
+            <line x1={-80} y1={-5} x2={-80} y2={5} stroke="#475569" strokeWidth={2} />
+            <line x1={80} y1={-5} x2={80} y2={5} stroke="#475569" strokeWidth={2} />
+            <text y={-10} textAnchor="middle" fill="#94a3b8" fontSize="10">
+              Distance: {lightDistance} cm
+            </text>
+          </g>
+
+          {/* === OUTPUT DISPLAY PANEL === */}
+          <g transform="translate(10, 260)">
+            <rect width={145} height={130} rx={8} fill="url(#solcOutputPanel)" stroke="#f59e0b" strokeWidth={1.5} />
+            <text x={72} y={20} textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">OUTPUT READINGS</text>
+
+            <line x1={10} y1={28} x2={135} y2={28} stroke="#334155" strokeWidth={1} />
+
+            <text x={15} y={48} fill="#94a3b8" fontSize="9">Voltage:</text>
+            <text x={130} y={48} textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="bold">{output.voltage.toFixed(2)} V</text>
+
+            <text x={15} y={68} fill="#94a3b8" fontSize="9">Current:</text>
+            <text x={130} y={68} textAnchor="end" fill="#f8fafc" fontSize="11" fontWeight="bold">{output.current.toFixed(1)} mA</text>
+
+            <text x={15} y={88} fill="#94a3b8" fontSize="9">Power:</text>
+            <text x={130} y={88} textAnchor="end" fill="#10b981" fontSize="12" fontWeight="bold">{output.power.toFixed(1)} mW</text>
+
+            <line x1={10} y1={96} x2={135} y2={96} stroke="#334155" strokeWidth={1} />
+
+            <text x={15} y={114} fill="#94a3b8" fontSize="8">Efficiency:</text>
+            <text x={130} y={114} textAnchor="end" fill="#06b6d4" fontSize="10" fontWeight="bold">{output.efficiency.toFixed(1)}%</text>
+          </g>
+
+          {/* === LEGEND === */}
+          <g transform={`translate(${width - 120}, 15)`}>
+            <rect x={-10} y={-10} width={125} height={85} rx={6} fill="rgba(15,23,42,0.9)" stroke="#334155" />
+            <text x={52} y={8} textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">LEGEND</text>
+
+            <circle cx={10} cy={28} r={5} fill="url(#solcElectronGlow)" />
+            <text x={22} y={31} fill="#60a5fa" fontSize="8">Electron (e-)</text>
+
+            <circle cx={10} cy={48} r={5} fill="url(#solcHoleGlow)" />
+            <text x={22} y={51} fill="#fb923c" fontSize="8">Hole (h+)</text>
+
+            <circle cx={10} cy={68} r={5} fill="url(#solcPhotonGlow)" />
+            <text x={22} y={71} fill="#fcd34d" fontSize="8">Photon</text>
+          </g>
+
+          {/* === PANEL ANGLE INDICATOR === */}
+          <g transform={`translate(${cellX + 140}, ${cellY + cellHeight + 35})`}>
+            <text textAnchor="middle" fill="#94a3b8" fontSize="9">
+              Panel Angle: {panelAngle}deg from perpendicular
+            </text>
+          </g>
         </svg>
 
         {interactive && (
@@ -451,21 +728,22 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)` : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating ? '0 4px 15px rgba(239,68,68,0.4)' : '0 4px 15px rgba(16,185,129,0.4)',
               }}
             >
-              {isAnimating ? 'Stop' : 'Animate Distance'}
+              {isAnimating ? 'Stop Animation' : 'Animate Distance'}
             </button>
             <button
               onClick={() => { setLightDistance(50); setPanelAngle(0); setLightIntensity(100); setUseMagnifier(false); }}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
@@ -473,7 +751,7 @@ const SolarCellRenderer: React.FC<SolarCellRendererProps> = ({
                 fontSize: '14px',
               }}
             >
-              Reset
+              Reset All
             </button>
           </div>
         )}

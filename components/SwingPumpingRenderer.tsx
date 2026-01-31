@@ -338,10 +338,10 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
-    const pivotY = 50;
-    const scale = 100;
+    const width = 500;
+    const height = 420;
+    const pivotY = 70;
+    const scale = 110;
 
     // Calculate swing position
     const swingLength = swing.length * scale;
@@ -350,12 +350,16 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
 
     // Person dimensions based on pump phase
     const isStanding = swing.pumpPhase === 'up';
-    const personHeight = isStanding ? 50 : 35;
-    const personWidth = 20;
+    const personHeight = isStanding ? 55 : 38;
 
     // Energy display
     const energy = getEnergy();
     const maxPossibleEnergy = energy.total * 3; // Scale for display
+    const energyPercent = Math.min(100, 100 * energy.total / maxPossibleEnergy);
+
+    // Calculate swing angle for visual feedback
+    const angleInDegrees = swing.theta * 180 / Math.PI;
+    const maxAngleDegrees = maxAmplitude * 180 / Math.PI;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -364,88 +368,428 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '550px' }}
         >
-          {/* Sky gradient */}
+          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
-            <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
-              <stop offset="100%" stopColor="#0f172a" />
+            {/* Premium sky gradient with 6 color stops for depth */}
+            <linearGradient id="swpmpSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="20%" stopColor="#122136" />
+              <stop offset="40%" stopColor="#1a2f4a" />
+              <stop offset="60%" stopColor="#162842" />
+              <stop offset="80%" stopColor="#0f1f35" />
+              <stop offset="100%" stopColor="#0a1628" />
             </linearGradient>
+
+            {/* Premium metal frame gradient with depth */}
+            <linearGradient id="swpmpFrameMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#5a6a7d" />
+              <stop offset="75%" stopColor="#3d4c5e" />
+              <stop offset="100%" stopColor="#2d3a4a" />
+            </linearGradient>
+
+            {/* Frame highlight gradient */}
+            <linearGradient id="swpmpFrameHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Chain metal gradient */}
+            <linearGradient id="swpmpChainMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#71717a" />
+              <stop offset="30%" stopColor="#a1a1aa" />
+              <stop offset="50%" stopColor="#d4d4d8" />
+              <stop offset="70%" stopColor="#a1a1aa" />
+              <stop offset="100%" stopColor="#71717a" />
+            </linearGradient>
+
+            {/* Premium swing seat gradient with wood effect */}
+            <linearGradient id="swpmpSeatWood" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="25%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
+
+            {/* Seat edge highlight */}
+            <linearGradient id="swpmpSeatHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Person body gradient - shirt */}
+            <linearGradient id="swpmpShirtGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="70%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Person pants gradient */}
+            <linearGradient id="swpmpPantsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Skin tone radial gradient for head */}
+            <radialGradient id="swpmpSkinHead" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="40%" stopColor="#fcd34d" />
+              <stop offset="80%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
+
+            {/* Skin tone for hands */}
+            <radialGradient id="swpmpSkinHand" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="60%" stopColor="#fcd34d" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </radialGradient>
+
+            {/* Energy bar gradient */}
+            <linearGradient id="swpmpEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="40%" stopColor="#34d399" />
+              <stop offset="60%" stopColor="#6ee7b7" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+
+            {/* Amplitude indicator gradient */}
+            <linearGradient id="swpmpAmplitudeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ec4899" />
+              <stop offset="50%" stopColor="#f472b6" />
+              <stop offset="100%" stopColor="#ec4899" />
+            </linearGradient>
+
+            {/* Ground gradient with depth */}
+            <linearGradient id="swpmpGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="30%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Shadow beneath swing */}
+            <radialGradient id="swpmpSwingShadow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#000000" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Pump indicator glow (stand - green) */}
+            <radialGradient id="swpmpStandGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="40%" stopColor="#10b981" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Pump indicator glow (squat - orange) */}
+            <radialGradient id="swpmpSquatGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+            {/* Soft glow filter for energy effects */}
+            <filter id="swpmpSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Strong glow filter for indicators */}
+            <filter id="swpmpStrongGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle shadow filter */}
+            <filter id="swpmpDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="shadow" />
+              <feOffset dx="2" dy="2" in="shadow" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Metal shine filter */}
+            <filter id="swpmpMetalShine" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
-          <rect width={width} height={height} fill="url(#sky)" />
 
-          {/* Support frame */}
-          <line x1={width / 2 - 60} y1={pivotY + 20} x2={width / 2} y2={pivotY} stroke="#475569" strokeWidth={6} />
-          <line x1={width / 2 + 60} y1={pivotY + 20} x2={width / 2} y2={pivotY} stroke="#475569" strokeWidth={6} />
-          <line x1={width / 2 - 70} y1={pivotY + 20} x2={width / 2 + 70} y2={pivotY + 20} stroke="#475569" strokeWidth={4} />
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#swpmpSkyGradient)" />
 
-          {/* Pivot */}
-          <circle cx={width / 2} cy={pivotY} r={5} fill="#64748b" />
+          {/* Subtle grid pattern for depth */}
+          <pattern id="swpmpGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height - 50} fill="url(#swpmpGrid)" />
 
-          {/* Swing chains */}
-          <line x1={width / 2 - 15} y1={pivotY} x2={seatX - 8} y2={seatY - 5} stroke="#94a3b8" strokeWidth={2} />
-          <line x1={width / 2 + 15} y1={pivotY} x2={seatX + 8} y2={seatY - 5} stroke="#94a3b8" strokeWidth={2} />
+          {/* === SWING FRAME STRUCTURE === */}
+          <g filter="url(#swpmpDropShadow)">
+            {/* Left A-frame leg */}
+            <polygon
+              points={`${width/2 - 8},${pivotY - 5} ${width/2 - 75},${pivotY + 45} ${width/2 - 65},${pivotY + 45}`}
+              fill="url(#swpmpFrameMetal)"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            {/* Right A-frame leg */}
+            <polygon
+              points={`${width/2 + 8},${pivotY - 5} ${width/2 + 75},${pivotY + 45} ${width/2 + 65},${pivotY + 45}`}
+              fill="url(#swpmpFrameMetal)"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
 
-          {/* Swing seat */}
-          <rect
-            x={seatX - 15}
-            y={seatY - 5}
-            width={30}
-            height={8}
-            rx={2}
-            fill={colors.swing}
-          />
+            {/* Cross beam (top bar) */}
+            <rect x={width/2 - 85} y={pivotY + 38} width={170} height={10} rx={3} fill="url(#swpmpFrameHighlight)" stroke="#475569" strokeWidth="1" />
 
-          {/* Person on swing */}
-          <g transform={`translate(${seatX}, ${seatY})`}>
-            {/* Legs */}
-            <rect x={-8} y={-personHeight + 15} width={6} height={personHeight - 15} rx={2} fill="#64748b" />
-            <rect x={2} y={-personHeight + 15} width={6} height={personHeight - 15} rx={2} fill="#64748b" />
+            {/* Frame feet (stabilizers) */}
+            <rect x={width/2 - 80} y={pivotY + 45} width={25} height={6} rx={2} fill="#475569" />
+            <rect x={width/2 + 55} y={pivotY + 45} width={25} height={6} rx={2} fill="#475569" />
 
-            {/* Body */}
-            <rect x={-10} y={-personHeight - 10} width={20} height={25} rx={4} fill={colors.person} />
-
-            {/* Head */}
-            <circle cx={0} cy={-personHeight - 20} r={10} fill="#fbbf24" />
-
-            {/* Arms holding chains */}
-            <line x1={-8} y1={-personHeight - 5} x2={-12} y2={-personHeight - 30} stroke="#fbbf24" strokeWidth={3} />
-            <line x1={8} y1={-personHeight - 5} x2={12} y2={-personHeight - 30} stroke="#fbbf24" strokeWidth={3} />
+            {/* Top pivot assembly */}
+            <rect x={width/2 - 25} y={pivotY - 15} width={50} height={20} rx={5} fill="url(#swpmpFrameMetal)" stroke="#64748b" strokeWidth="1" />
+            <ellipse cx={width/2} cy={pivotY} rx={12} ry={8} fill="#334155" stroke="#475569" strokeWidth="1.5" />
+            <circle cx={width/2} cy={pivotY} r={5} fill="#1e293b" stroke="#64748b" strokeWidth="1" />
           </g>
 
-          {/* Pump indicator */}
+          {/* === SWING CHAINS === */}
+          <g filter="url(#swpmpMetalShine)">
+            {/* Left chain */}
+            <line
+              x1={width/2 - 12} y1={pivotY + 2}
+              x2={seatX - 12} y2={seatY - 3}
+              stroke="url(#swpmpChainMetal)"
+              strokeWidth={4}
+              strokeLinecap="round"
+            />
+            <line
+              x1={width/2 - 12} y1={pivotY + 2}
+              x2={seatX - 12} y2={seatY - 3}
+              stroke="#d4d4d8"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeDasharray="8 6"
+            />
+
+            {/* Right chain */}
+            <line
+              x1={width/2 + 12} y1={pivotY + 2}
+              x2={seatX + 12} y2={seatY - 3}
+              stroke="url(#swpmpChainMetal)"
+              strokeWidth={4}
+              strokeLinecap="round"
+            />
+            <line
+              x1={width/2 + 12} y1={pivotY + 2}
+              x2={seatX + 12} y2={seatY - 3}
+              stroke="#d4d4d8"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeDasharray="8 6"
+            />
+          </g>
+
+          {/* === SWING SEAT === */}
+          <g transform={`translate(${seatX}, ${seatY})`}>
+            {/* Seat shadow */}
+            <ellipse cx={0} cy={8} rx={22} ry={5} fill="rgba(0,0,0,0.3)" />
+
+            {/* Main seat */}
+            <rect x={-20} y={-5} width={40} height={10} rx={3} fill="url(#swpmpSeatWood)" stroke="#92400e" strokeWidth="1" />
+
+            {/* Seat highlight */}
+            <rect x={-18} y={-4} width={36} height={4} rx={2} fill="url(#swpmpSeatHighlight)" />
+
+            {/* Seat texture lines */}
+            <line x1={-15} y1={-3} x2={-15} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
+            <line x1={-5} y1={-3} x2={-5} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
+            <line x1={5} y1={-3} x2={5} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
+            <line x1={15} y1={-3} x2={15} y2={4} stroke="#92400e" strokeWidth="0.5" strokeOpacity="0.5" />
+          </g>
+
+          {/* === PERSON ON SWING === */}
+          <g transform={`translate(${seatX}, ${seatY})`}>
+            {/* Person shadow on ground */}
+            <ellipse
+              cx={0}
+              cy={height - seatY - 35}
+              rx={25 + Math.abs(swing.theta) * 10}
+              ry={8}
+              fill="url(#swpmpSwingShadow)"
+            />
+
+            {/* Legs */}
+            <rect x={-10} y={-personHeight + 18} width={8} height={personHeight - 16} rx={3} fill="url(#swpmpPantsGradient)" />
+            <rect x={2} y={-personHeight + 18} width={8} height={personHeight - 16} rx={3} fill="url(#swpmpPantsGradient)" />
+
+            {/* Shoes */}
+            <ellipse cx={-6} cy={2} rx={6} ry={4} fill="#1e293b" />
+            <ellipse cx={6} cy={2} rx={6} ry={4} fill="#1e293b" />
+
+            {/* Body/Torso */}
+            <rect x={-12} y={-personHeight - 8} width={24} height={28} rx={5} fill="url(#swpmpShirtGradient)" stroke="#1d4ed8" strokeWidth="0.5" />
+
+            {/* Shirt collar detail */}
+            <path
+              d={`M -6 ${-personHeight - 8} Q 0 ${-personHeight - 3} 6 ${-personHeight - 8}`}
+              fill="none"
+              stroke="#1e40af"
+              strokeWidth="2"
+            />
+
+            {/* Arms holding chains */}
+            <line x1={-10} y1={-personHeight - 2} x2={-14} y2={-personHeight - 25} stroke="url(#swpmpSkinHand)" strokeWidth={5} strokeLinecap="round" />
+            <line x1={10} y1={-personHeight - 2} x2={14} y2={-personHeight - 25} stroke="url(#swpmpSkinHand)" strokeWidth={5} strokeLinecap="round" />
+
+            {/* Hands */}
+            <circle cx={-14} cy={-personHeight - 27} r={4} fill="url(#swpmpSkinHand)" />
+            <circle cx={14} cy={-personHeight - 27} r={4} fill="url(#swpmpSkinHand)" />
+
+            {/* Head */}
+            <circle cx={0} cy={-personHeight - 20} r={12} fill="url(#swpmpSkinHead)" stroke="#f59e0b" strokeWidth="0.5" />
+
+            {/* Hair */}
+            <ellipse cx={0} cy={-personHeight - 28} rx={10} ry={6} fill="#451a03" />
+
+            {/* Face details */}
+            <circle cx={-4} cy={-personHeight - 22} r={1.5} fill="#1e293b" /> {/* Left eye */}
+            <circle cx={4} cy={-personHeight - 22} r={1.5} fill="#1e293b" /> {/* Right eye */}
+            <path
+              d={`M -3 ${-personHeight - 16} Q 0 ${-personHeight - 14} 3 ${-personHeight - 16}`}
+              fill="none"
+              stroke="#92400e"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            /> {/* Smile */}
+          </g>
+
+          {/* === PUMP INDICATOR === */}
           {swing.isPumping && (
-            <text
-              x={seatX + 40}
-              y={seatY - personHeight}
-              fill={swing.pumpPhase === 'up' ? colors.success : colors.warning}
-              fontSize={12}
-              fontWeight="bold"
-            >
-              {swing.pumpPhase === 'up' ? '↑ STAND' : '↓ SQUAT'}
-            </text>
+            <g transform={`translate(${seatX + 55}, ${seatY - personHeight - 10})`}>
+              {/* Glow background */}
+              <circle
+                cx={0} cy={0} r={25}
+                fill={swing.pumpPhase === 'up' ? 'url(#swpmpStandGlow)' : 'url(#swpmpSquatGlow)'}
+                filter="url(#swpmpStrongGlow)"
+              />
+
+              {/* Indicator box */}
+              <rect
+                x={-35} y={-12}
+                width={70} height={24}
+                rx={6}
+                fill={swing.pumpPhase === 'up' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(245, 158, 11, 0.9)'}
+                stroke={swing.pumpPhase === 'up' ? '#34d399' : '#fbbf24'}
+                strokeWidth="2"
+              />
+
+              {/* Arrow and text */}
+              <text
+                x={0}
+                y={5}
+                textAnchor="middle"
+                fill="white"
+                fontSize={14}
+                fontWeight="bold"
+                fontFamily="system-ui, sans-serif"
+              >
+                {swing.pumpPhase === 'up' ? '↑ STAND' : '↓ SQUAT'}
+              </text>
+            </g>
           )}
 
-          {/* Ground */}
-          <rect x={0} y={height - 40} width={width} height={40} fill="#1e293b" />
-          <ellipse cx={width / 2} cy={height - 40} rx={80} ry={10} fill="#334155" />
+          {/* === GROUND === */}
+          <rect x={0} y={height - 50} width={width} height={50} fill="url(#swpmpGroundGradient)" />
 
-          {/* Energy bar */}
-          <rect x={20} y={height - 30} width={100} height={15} rx={4} fill="rgba(255,255,255,0.1)" />
-          <rect
-            x={20}
-            y={height - 30}
-            width={Math.min(100, 100 * energy.total / maxPossibleEnergy)}
-            height={15}
-            rx={4}
-            fill={colors.energy}
-          />
-          <text x={20} y={height - 35} fill={colors.textMuted} fontSize={10}>Energy</text>
+          {/* Ground texture */}
+          <ellipse cx={width/2} cy={height - 50} rx={120} ry={15} fill="#334155" />
+          <ellipse cx={width/2} cy={height - 48} rx={100} ry={10} fill="#3d4c5e" />
 
-          {/* Amplitude indicator */}
-          <text x={width - 80} y={height - 20} fill={colors.textSecondary} fontSize={12}>
-            Amp: {(maxAmplitude * 180 / Math.PI).toFixed(0)}°
+          {/* Grass tufts */}
+          {[80, 150, 200, 300, 350, 420].map((x, i) => (
+            <g key={i} transform={`translate(${x}, ${height - 50})`}>
+              <path d="M0,0 Q-3,-8 -1,-12 M0,0 Q0,-10 1,-14 M0,0 Q3,-8 2,-11" stroke="#166534" strokeWidth="1.5" fill="none" />
+            </g>
+          ))}
+
+          {/* === ENERGY/AMPLITUDE INDICATOR PANEL === */}
+          <g transform={`translate(15, ${height - 45})`}>
+            {/* Panel background */}
+            <rect x={0} y={0} width={180} height={40} rx={8} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+
+            {/* Energy section */}
+            <text x={10} y={14} fill={colors.textMuted} fontSize={10} fontWeight="bold" fontFamily="system-ui, sans-serif">ENERGY</text>
+            <rect x={10} y={18} width={75} height={12} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect
+              x={10} y={18}
+              width={Math.max(5, 75 * energyPercent / 100)}
+              height={12}
+              rx={4}
+              fill="url(#swpmpEnergyGradient)"
+              filter="url(#swpmpSoftGlow)"
+            />
+
+            {/* Amplitude section */}
+            <text x={95} y={14} fill={colors.textMuted} fontSize={10} fontWeight="bold" fontFamily="system-ui, sans-serif">AMPLITUDE</text>
+            <rect x={95} y={18} width={75} height={12} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect
+              x={95} y={18}
+              width={Math.max(5, Math.min(75, maxAngleDegrees * 1.5))}
+              height={12}
+              rx={4}
+              fill="url(#swpmpAmplitudeGradient)"
+              filter="url(#swpmpSoftGlow)"
+            />
+          </g>
+
+          {/* === ANGLE/STATS DISPLAY === */}
+          <g transform={`translate(${width - 120}, ${height - 45})`}>
+            <rect x={0} y={0} width={105} height={40} rx={8} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+
+            <text x={10} y={16} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+              Angle: <tspan fill={colors.textPrimary} fontWeight="bold">{angleInDegrees.toFixed(1)}°</tspan>
+            </text>
+            <text x={10} y={32} fill={colors.textSecondary} fontSize={11} fontFamily="system-ui, sans-serif">
+              Max: <tspan fill="#f472b6" fontWeight="bold">{maxAngleDegrees.toFixed(0)}°</tspan>
+            </text>
+          </g>
+
+          {/* === TITLE LABEL === */}
+          <text
+            x={width/2} y={25}
+            textAnchor="middle"
+            fill={colors.textPrimary}
+            fontSize={16}
+            fontWeight="bold"
+            fontFamily="system-ui, sans-serif"
+            opacity={0.9}
+          >
+            Swing Pumping Simulation
           </text>
         </svg>
 
@@ -464,7 +808,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
                 fontSize: '14px',
               }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play'}
+              {isPlaying ? 'Pause' : 'Play'}
             </button>
             <button
               onClick={resetSimulation}
@@ -479,7 +823,7 @@ const SwingPumpingRenderer: React.FC<SwingPumpingRendererProps> = ({
                 fontSize: '14px',
               }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}

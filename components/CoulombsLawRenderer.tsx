@@ -176,6 +176,9 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     negativeCharge: '#3b82f6', // blue-500
     fieldLines: '#a78bfa',     // violet-400
     force: '#22c55e',          // green-500
+    // Aliases for cleaner code
+    positive: '#ef4444',       // red-500
+    negative: '#3b82f6',       // blue-500
   };
 
   const typo = {
@@ -190,6 +193,226 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     sectionGap: isMobile ? '16px' : '20px',
     elementGap: isMobile ? '8px' : '12px',
   };
+
+  // Premium SVG Defs - Comprehensive gradients and filters for realistic 3D charged particles
+  const renderPremiumSVGDefs = () => (
+    <defs>
+      {/* === LINEAR GRADIENTS FOR DEPTH === */}
+
+      {/* Premium positive charge sphere gradient - 3D red metallic */}
+      <linearGradient id="coulPositiveSphere" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fca5a5" />
+        <stop offset="25%" stopColor="#f87171" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="75%" stopColor="#dc2626" />
+        <stop offset="100%" stopColor="#991b1b" />
+      </linearGradient>
+
+      {/* Premium negative charge sphere gradient - 3D blue metallic */}
+      <linearGradient id="coulNegativeSphere" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#93c5fd" />
+        <stop offset="25%" stopColor="#60a5fa" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="75%" stopColor="#2563eb" />
+        <stop offset="100%" stopColor="#1d4ed8" />
+      </linearGradient>
+
+      {/* Electric field line gradient - animated flow effect */}
+      <linearGradient id="coulFieldLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.2" />
+        <stop offset="25%" stopColor="#c4b5fd" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#ddd6fe" stopOpacity="0.9" />
+        <stop offset="75%" stopColor="#c4b5fd" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Force arrow gradient - directional green */}
+      <linearGradient id="coulForceArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#86efac" />
+        <stop offset="30%" stopColor="#4ade80" />
+        <stop offset="60%" stopColor="#22c55e" />
+        <stop offset="100%" stopColor="#16a34a" />
+      </linearGradient>
+
+      {/* Attraction force arrow - pulling gradient */}
+      <linearGradient id="coulAttractionArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#34d399" />
+        <stop offset="50%" stopColor="#10b981" />
+        <stop offset="100%" stopColor="#059669" />
+      </linearGradient>
+
+      {/* Repulsion force arrow - pushing gradient */}
+      <linearGradient id="coulRepulsionArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="50%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#d97706" />
+      </linearGradient>
+
+      {/* Lab background gradient */}
+      <linearGradient id="coulLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#030712" />
+        <stop offset="30%" stopColor="#0f172a" />
+        <stop offset="70%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Neutral object gradient - gray metallic */}
+      <linearGradient id="coulNeutralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#9ca3af" />
+        <stop offset="25%" stopColor="#6b7280" />
+        <stop offset="50%" stopColor="#4b5563" />
+        <stop offset="75%" stopColor="#374151" />
+        <stop offset="100%" stopColor="#1f2937" />
+      </linearGradient>
+
+      {/* Balloon gradient - deep blue rubber */}
+      <linearGradient id="coulBalloonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="30%" stopColor="#3b82f6" />
+        <stop offset="60%" stopColor="#2563eb" />
+        <stop offset="100%" stopColor="#1e40af" />
+      </linearGradient>
+
+      {/* === RADIAL GRADIENTS FOR 3D SPHERE EFFECTS === */}
+
+      {/* Positive charge 3D sphere with highlight */}
+      <radialGradient id="coulPositive3D" cx="35%" cy="35%" r="60%" fx="25%" fy="25%">
+        <stop offset="0%" stopColor="#fecaca" />
+        <stop offset="20%" stopColor="#fca5a5" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="80%" stopColor="#dc2626" />
+        <stop offset="100%" stopColor="#7f1d1d" />
+      </radialGradient>
+
+      {/* Negative charge 3D sphere with highlight */}
+      <radialGradient id="coulNegative3D" cx="35%" cy="35%" r="60%" fx="25%" fy="25%">
+        <stop offset="0%" stopColor="#dbeafe" />
+        <stop offset="20%" stopColor="#93c5fd" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="80%" stopColor="#2563eb" />
+        <stop offset="100%" stopColor="#1e3a8a" />
+      </radialGradient>
+
+      {/* Positive charge outer glow */}
+      <radialGradient id="coulPositiveGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+        <stop offset="40%" stopColor="#ef4444" stopOpacity="0.4" />
+        <stop offset="70%" stopColor="#f87171" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#fca5a5" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Negative charge outer glow */}
+      <radialGradient id="coulNegativeGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+        <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.4" />
+        <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#93c5fd" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Positive charge inner highlight */}
+      <radialGradient id="coulPositiveHighlight" cx="30%" cy="30%" r="40%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#fecaca" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Negative charge inner highlight */}
+      <radialGradient id="coulNegativeHighlight" cx="30%" cy="30%" r="40%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#dbeafe" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Force field energy glow */}
+      <radialGradient id="coulFieldEnergy" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+      </radialGradient>
+
+      {/* === GLOW FILTERS === */}
+
+      {/* Positive charge glow filter */}
+      <filter id="coulPositiveGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
+        <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Negative charge glow filter */}
+      <filter id="coulNegativeGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feFlood floodColor="#3b82f6" floodOpacity="0.6" result="color" />
+        <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Force arrow glow filter */}
+      <filter id="coulForceGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feFlood floodColor="#22c55e" floodOpacity="0.5" result="color" />
+        <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Field line glow filter */}
+      <filter id="coulFieldGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Soft glow for general use */}
+      <filter id="coulSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* === MARKERS FOR ARROWS === */}
+
+      {/* Force arrow marker - premium gradient */}
+      <marker id="coulForceArrowHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+        <path d="M0,0 L12,6 L0,12 L3,6 Z" fill="url(#coulForceArrowGrad)" />
+      </marker>
+
+      {/* Attraction arrow marker */}
+      <marker id="coulAttractionHead" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+        <path d="M0,0 L12,6 L0,12 L3,6 Z" fill="url(#coulAttractionArrow)" />
+      </marker>
+
+      {/* Field line flow marker */}
+      <marker id="coulFieldFlowMarker" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <circle cx="4" cy="4" r="2" fill="#c4b5fd" />
+      </marker>
+
+      {/* === PATTERNS === */}
+
+      {/* Lab grid pattern */}
+      <pattern id="coulLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+        <rect width="25" height="25" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+      </pattern>
+
+      {/* Electric field pattern - dotted */}
+      <pattern id="coulFieldPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+        <circle cx="5" cy="5" r="1" fill="#a78bfa" fillOpacity="0.4" />
+      </pattern>
+    </defs>
+  );
 
   // Animation loop
   useEffect(() => {
@@ -793,7 +1016,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           The invisible force between electric charges that holds atoms together and powers lightning
         </p>
 
-        {/* Animated visualization */}
+        {/* Animated visualization - Premium SVG */}
         <div style={{
           width: '100%',
           maxWidth: '400px',
@@ -806,57 +1029,131 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           position: 'relative'
         }}>
           <svg viewBox="0 0 400 300" style={{ width: '100%', height: '100%' }}>
-            <defs>
-              <radialGradient id="posGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={colors.positive} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={colors.positive} stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="negGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={colors.negative} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={colors.negative} stopOpacity="0" />
-              </radialGradient>
-              <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 Z" fill={colors.success} />
-              </marker>
-            </defs>
+            {renderPremiumSVGDefs()}
 
-            {/* Field lines */}
-            {[0, 1, 2, 3, 4, 5].map(i => {
-              const angle = (i * 60) * Math.PI / 180;
-              const offset = Math.sin(animationTime * 2 + i) * 5;
+            {/* Premium dark lab background */}
+            <rect width="400" height="300" fill="url(#coulLabBg)" />
+            <rect width="400" height="300" fill="url(#coulLabGrid)" />
+
+            {/* Animated electric field lines with flow effect */}
+            {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
+              const angle = (i * 45) * Math.PI / 180;
+              const flowOffset = (animationTime * 30 + i * 20) % 140;
+              const pulseOpacity = 0.3 + Math.sin(animationTime * 2 + i * 0.5) * 0.2;
               return (
-                <path
-                  key={`line-${i}`}
-                  d={`M ${130 + Math.cos(angle) * 35} ${150 + Math.sin(angle) * 35}
-                      Q 200 ${150 + offset}
-                      ${270 + Math.cos(angle + Math.PI) * 35} ${150 + Math.sin(angle + Math.PI) * 35}`}
-                  stroke={colors.success}
-                  strokeWidth="2"
-                  fill="none"
-                  opacity="0.4"
-                />
+                <g key={`field-${i}`}>
+                  {/* Main field line */}
+                  <path
+                    d={`M ${130 + Math.cos(angle) * 35} ${140 + Math.sin(angle) * 35}
+                        Q 200 ${140 + Math.sin(animationTime * 2 + i) * 8}
+                        ${270 + Math.cos(angle + Math.PI) * 35} ${140 + Math.sin(angle + Math.PI) * 35}`}
+                    stroke="url(#coulFieldLineGrad)"
+                    strokeWidth="2.5"
+                    fill="none"
+                    opacity={pulseOpacity}
+                    filter="url(#coulFieldGlowFilter)"
+                  />
+                  {/* Animated flow particles along field lines */}
+                  <circle
+                    cx={130 + flowOffset}
+                    cy={140 + Math.sin((130 + flowOffset - 130) * 0.02 + angle) * 10}
+                    r="3"
+                    fill="#c4b5fd"
+                    opacity={0.8}
+                  >
+                    <animate
+                      attributeName="opacity"
+                      values="0.8;0.3;0.8"
+                      dur="1s"
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                  </circle>
+                </g>
               );
             })}
 
-            {/* Positive charge glow */}
-            <circle cx="130" cy="150" r={50 + Math.sin(animationTime * 3) * 5} fill="url(#posGlow)" />
-            {/* Negative charge glow */}
-            <circle cx="270" cy="150" r={50 + Math.sin(animationTime * 3 + 1) * 5} fill="url(#negGlow)" />
+            {/* Positive charge outer glow - pulsing */}
+            <circle
+              cx="130"
+              cy="140"
+              r={55 + Math.sin(animationTime * 3) * 8}
+              fill="url(#coulPositiveGlow)"
+            />
+            {/* Positive charge - 3D sphere */}
+            <circle
+              cx="130"
+              cy="140"
+              r="32"
+              fill="url(#coulPositive3D)"
+              filter="url(#coulPositiveGlowFilter)"
+            />
+            {/* Positive charge highlight */}
+            <circle cx="122" cy="132" r="10" fill="url(#coulPositiveHighlight)" />
+            {/* Positive charge symbol */}
+            <text x="130" y="148" textAnchor="middle" fill="white" fontSize="26" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
+            {/* Label */}
+            <text x="130" y="190" textAnchor="middle" fill={colors.positive} fontSize="11" fontWeight="600">q₁ = +5 μC</text>
 
-            {/* Positive charge */}
-            <circle cx="130" cy="150" r="30" fill={colors.positive} />
-            <text x="130" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">+</text>
+            {/* Negative charge outer glow - pulsing */}
+            <circle
+              cx="270"
+              cy="140"
+              r={55 + Math.sin(animationTime * 3 + 1) * 8}
+              fill="url(#coulNegativeGlow)"
+            />
+            {/* Negative charge - 3D sphere */}
+            <circle
+              cx="270"
+              cy="140"
+              r="32"
+              fill="url(#coulNegative3D)"
+              filter="url(#coulNegativeGlowFilter)"
+            />
+            {/* Negative charge highlight */}
+            <circle cx="262" cy="132" r="10" fill="url(#coulNegativeHighlight)" />
+            {/* Negative charge symbol */}
+            <text x="270" y="148" textAnchor="middle" fill="white" fontSize="26" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>−</text>
+            {/* Label */}
+            <text x="270" y="190" textAnchor="middle" fill={colors.negative} fontSize="11" fontWeight="600">q₂ = −5 μC</text>
 
-            {/* Negative charge */}
-            <circle cx="270" cy="150" r="30" fill={colors.negative} />
-            <text x="270" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">−</text>
+            {/* Force arrows with gradient and glow */}
+            <g filter="url(#coulForceGlowFilter)">
+              {/* Arrow from positive toward negative */}
+              <line
+                x1="168"
+                y1="140"
+                x2="198"
+                y2="140"
+                stroke="url(#coulAttractionArrow)"
+                strokeWidth="5"
+                strokeLinecap="round"
+                markerEnd="url(#coulAttractionHead)"
+              />
+              {/* Arrow from negative toward positive */}
+              <line
+                x1="232"
+                y1="140"
+                x2="202"
+                y2="140"
+                stroke="url(#coulAttractionArrow)"
+                strokeWidth="5"
+                strokeLinecap="round"
+                markerEnd="url(#coulAttractionHead)"
+              />
+            </g>
+            {/* Force label */}
+            <text x="200" y="125" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="600">ATTRACTIVE FORCE</text>
 
-            {/* Force arrows */}
-            <line x1="165" y1="150" x2="195" y2="150" stroke={colors.success} strokeWidth="4" markerEnd="url(#arrowGreen)" />
-            <line x1="235" y1="150" x2="205" y2="150" stroke={colors.success} strokeWidth="4" markerEnd="url(#arrowGreen)" />
+            {/* Distance indicator */}
+            <line x1="130" y1="210" x2="270" y2="210" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" />
+            <line x1="130" y1="205" x2="130" y2="215" stroke={colors.textMuted} strokeWidth="1" />
+            <line x1="270" y1="205" x2="270" y2="215" stroke={colors.textMuted} strokeWidth="1" />
+            <text x="200" y="225" textAnchor="middle" fill={colors.textMuted} fontSize="10">r = 10 cm</text>
 
-            {/* Equation */}
-            <text x="200" y="260" textAnchor="middle" fill={colors.textSecondary} fontSize="18" fontFamily="monospace">
+            {/* Equation with glow */}
+            <rect x="100" y="248" width="200" height="32" rx="6" fill={colors.bgCard} fillOpacity="0.8" />
+            <text x="200" y="270" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontFamily="monospace" fontWeight="600">
               F = k × q₁ × q₂ / r²
             </text>
           </svg>
@@ -933,7 +1230,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 1 • Make Your Prediction', 'What Forces Will They Feel?', 'Two charges are placed near each other. What happens?')}
 
-        {/* Setup diagram */}
+        {/* Setup diagram - Premium SVG */}
         <div style={{
           backgroundColor: colors.bgCard,
           borderRadius: '12px',
@@ -941,24 +1238,47 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 150" style={{ width: '100%' }}>
-            <rect x="0" y="0" width="400" height="150" fill={colors.bgCardLight} rx="8" />
+          <svg viewBox="0 0 400 170" style={{ width: '100%' }}>
+            {renderPremiumSVGDefs()}
 
-            {/* Positive charge */}
-            <circle cx="120" cy="75" r="25" fill={colors.positive} />
-            <text x="120" y="83" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
-            <text x="120" y="115" textAnchor="middle" fill={colors.positive} fontSize="12">+4 μC</text>
+            {/* Premium background */}
+            <rect x="0" y="0" width="400" height="170" fill="url(#coulLabBg)" rx="8" />
+            <rect x="0" y="0" width="400" height="170" fill="url(#coulLabGrid)" rx="8" />
 
-            {/* Negative charge */}
-            <circle cx="280" cy="75" r="25" fill={colors.negative} />
-            <text x="280" y="83" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">−</text>
-            <text x="280" y="115" textAnchor="middle" fill={colors.negative} fontSize="12">-2 μC</text>
+            {/* Question mark in center with glow */}
+            <text x="200" y="80" textAnchor="middle" fill={colors.warning} fontSize="48" fontWeight="bold" opacity="0.3">?</text>
 
-            {/* Distance */}
-            <line x1="145" y1="35" x2="255" y2="35" stroke={colors.textMuted} strokeWidth="2" />
-            <line x1="145" y1="30" x2="145" y2="40" stroke={colors.textMuted} strokeWidth="2" />
-            <line x1="255" y1="30" x2="255" y2="40" stroke={colors.textMuted} strokeWidth="2" />
-            <text x="200" y="28" textAnchor="middle" fill={colors.textMuted} fontSize="12">10 cm</text>
+            {/* Positive charge glow */}
+            <circle cx="110" cy="75" r={40 + Math.sin(animationTime * 2) * 3} fill="url(#coulPositiveGlow)" />
+            {/* Positive charge - 3D sphere */}
+            <circle cx="110" cy="75" r="28" fill="url(#coulPositive3D)" filter="url(#coulPositiveGlowFilter)" />
+            {/* Highlight */}
+            <circle cx="102" cy="67" r="8" fill="url(#coulPositiveHighlight)" />
+            {/* Symbol */}
+            <text x="110" y="83" textAnchor="middle" fill="white" fontSize="22" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
+            {/* Label */}
+            <text x="110" y="130" textAnchor="middle" fill={colors.positive} fontSize="12" fontWeight="600">+4 μC</text>
+
+            {/* Negative charge glow */}
+            <circle cx="290" cy="75" r={40 + Math.sin(animationTime * 2 + 1) * 3} fill="url(#coulNegativeGlow)" />
+            {/* Negative charge - 3D sphere */}
+            <circle cx="290" cy="75" r="28" fill="url(#coulNegative3D)" filter="url(#coulNegativeGlowFilter)" />
+            {/* Highlight */}
+            <circle cx="282" cy="67" r="8" fill="url(#coulNegativeHighlight)" />
+            {/* Symbol */}
+            <text x="290" y="83" textAnchor="middle" fill="white" fontSize="22" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>−</text>
+            {/* Label */}
+            <text x="290" y="130" textAnchor="middle" fill={colors.negative} fontSize="12" fontWeight="600">−2 μC</text>
+
+            {/* Distance indicator with styled line */}
+            <line x1="138" y1="30" x2="262" y2="30" stroke={colors.fieldLines} strokeWidth="2" strokeDasharray="6,3" />
+            <line x1="138" y1="24" x2="138" y2="36" stroke={colors.fieldLines} strokeWidth="2" />
+            <line x1="262" y1="24" x2="262" y2="36" stroke={colors.fieldLines} strokeWidth="2" />
+            <rect x="170" y="15" width="60" height="20" rx="4" fill={colors.bgCard} />
+            <text x="200" y="29" textAnchor="middle" fill={colors.fieldLines} fontSize="12" fontWeight="600">10 cm</text>
+
+            {/* Scenario label */}
+            <text x="200" y="160" textAnchor="middle" fill={colors.textMuted} fontSize="10">What force will these charges experience?</text>
           </svg>
         </div>
 
@@ -1038,7 +1358,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 2 • Experiment', "Coulomb's Law Lab", 'Adjust charges and distance to see how force changes')}
 
-        {/* Simulation */}
+        {/* Simulation - Premium SVG */}
         <div style={{
           backgroundColor: colors.bgCard,
           borderRadius: '12px',
@@ -1046,84 +1366,106 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 300" style={{ width: '100%', backgroundColor: colors.bgCardLight, borderRadius: '8px' }}>
-            <defs>
-              <radialGradient id="pglow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={colors.positive} stopOpacity="0.4" />
-                <stop offset="100%" stopColor={colors.positive} stopOpacity="0" />
-              </radialGradient>
-              <radialGradient id="nglow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor={colors.negative} stopOpacity="0.4" />
-                <stop offset="100%" stopColor={colors.negative} stopOpacity="0" />
-              </radialGradient>
-              <marker id="forceArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 Z" fill={colors.success} />
-              </marker>
-            </defs>
+          <svg viewBox="0 0 400 300" style={{ width: '100%', borderRadius: '8px' }}>
+            {renderPremiumSVGDefs()}
 
-            {/* Grid */}
-            {[1,2,3,4,5,6,7].map(i => (
-              <g key={i}>
-                <line x1={i*50} y1="0" x2={i*50} y2="300" stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
-                <line x1="0" y1={i*50} x2="400" y2={i*50} stroke={colors.border} strokeWidth="0.5" opacity="0.3" />
-              </g>
-            ))}
+            {/* Premium lab background */}
+            <rect width="400" height="300" fill="url(#coulLabBg)" rx="8" />
+            <rect width="400" height="300" fill="url(#coulLabGrid)" rx="8" />
 
-            {/* Field lines */}
-            {showFieldLines && [0,1,2,3,4,5].map(i => {
-              const angle = (i * 60) * Math.PI / 180;
+            {/* Electric field lines with animated flow */}
+            {showFieldLines && (() => {
               const c1x = 200 - separation/2;
               const c2x = 200 + separation/2;
               const isOppSigns = charge1 * charge2 < 0;
+              const chargeRadius1 = 20 + Math.abs(charge1) * 1.5;
+              const chargeRadius2 = 20 + Math.abs(charge2) * 1.5;
 
-              if (isOppSigns) {
-                return (
-                  <path
-                    key={`fl-${i}`}
-                    d={`M ${c1x + Math.cos(angle) * 25} ${150 + Math.sin(angle) * 25}
-                        Q 200 ${150 + Math.sin(animationTime + i) * 10}
-                        ${c2x + Math.cos(angle + Math.PI) * 25} ${150 + Math.sin(angle + Math.PI) * 25}`}
-                    stroke={colors.success}
-                    strokeWidth="1.5"
-                    fill="none"
-                    opacity="0.4"
-                  />
-                );
-              } else {
-                return (
-                  <g key={`fl-${i}`}>
-                    <line
-                      x1={c1x + Math.cos(angle) * 25}
-                      y1={150 + Math.sin(angle) * 25}
-                      x2={c1x + Math.cos(angle) * 60}
-                      y2={150 + Math.sin(angle) * 60}
-                      stroke={charge1 > 0 ? colors.positive : colors.negative}
-                      strokeWidth="1.5"
-                      opacity="0.4"
-                    />
-                    <line
-                      x1={c2x + Math.cos(angle) * 25}
-                      y1={150 + Math.sin(angle) * 25}
-                      x2={c2x + Math.cos(angle) * 60}
-                      y2={150 + Math.sin(angle) * 60}
-                      stroke={charge2 > 0 ? colors.positive : colors.negative}
-                      strokeWidth="1.5"
-                      opacity="0.4"
-                    />
-                  </g>
-                );
-              }
-            })}
+              return [0,1,2,3,4,5,6,7].map(i => {
+                const angle = (i * 45) * Math.PI / 180;
+                const pulseOpacity = 0.25 + Math.sin(animationTime * 2 + i * 0.5) * 0.15;
+                const flowOffset = (animationTime * 40 + i * 15) % (separation);
 
-            {/* Charge 1 glow */}
-            <circle cx={200 - separation/2} cy="150" r={40 + Math.sin(animationTime * 3) * 3} fill="url(#pglow)" />
-            {/* Charge 1 */}
+                if (isOppSigns) {
+                  // Attractive field lines - curved from + to -
+                  return (
+                    <g key={`fl-${i}`}>
+                      <path
+                        d={`M ${c1x + Math.cos(angle) * chargeRadius1} ${150 + Math.sin(angle) * chargeRadius1}
+                            Q 200 ${150 + Math.sin(animationTime * 1.5 + i) * 15}
+                            ${c2x + Math.cos(angle + Math.PI) * chargeRadius2} ${150 + Math.sin(angle + Math.PI) * chargeRadius2}`}
+                        stroke="url(#coulFieldLineGrad)"
+                        strokeWidth="2.5"
+                        fill="none"
+                        opacity={pulseOpacity}
+                        filter="url(#coulFieldGlowFilter)"
+                      />
+                      {/* Animated flow particle */}
+                      <circle
+                        cx={c1x + flowOffset}
+                        cy={150 + Math.sin((flowOffset / separation) * Math.PI + angle) * 15}
+                        r="2.5"
+                        fill="#c4b5fd"
+                        opacity={0.7}
+                      />
+                    </g>
+                  );
+                } else {
+                  // Repulsive field lines - radiate outward
+                  const lineLength = 50 + Math.abs(charge1) * 3;
+                  return (
+                    <g key={`fl-${i}`}>
+                      {/* Field lines from charge 1 */}
+                      <line
+                        x1={c1x + Math.cos(angle) * chargeRadius1}
+                        y1={150 + Math.sin(angle) * chargeRadius1}
+                        x2={c1x + Math.cos(angle) * lineLength}
+                        y2={150 + Math.sin(angle) * lineLength}
+                        stroke={charge1 > 0 ? '#fca5a5' : '#93c5fd'}
+                        strokeWidth="2"
+                        opacity={pulseOpacity}
+                        filter="url(#coulFieldGlowFilter)"
+                      />
+                      {/* Field lines from charge 2 */}
+                      <line
+                        x1={c2x + Math.cos(angle) * chargeRadius2}
+                        y1={150 + Math.sin(angle) * chargeRadius2}
+                        x2={c2x + Math.cos(angle) * (50 + Math.abs(charge2) * 3)}
+                        y2={150 + Math.sin(angle) * (50 + Math.abs(charge2) * 3)}
+                        stroke={charge2 > 0 ? '#fca5a5' : '#93c5fd'}
+                        strokeWidth="2"
+                        opacity={pulseOpacity}
+                        filter="url(#coulFieldGlowFilter)"
+                      />
+                    </g>
+                  );
+                }
+              });
+            })()}
+
+            {/* Charge 1 outer glow - pulsing */}
+            <circle
+              cx={200 - separation/2}
+              cy="150"
+              r={50 + Math.abs(charge1) * 2 + Math.sin(animationTime * 3) * 5}
+              fill={charge1 > 0 ? 'url(#coulPositiveGlow)' : 'url(#coulNegativeGlow)'}
+            />
+            {/* Charge 1 - 3D sphere */}
             <circle
               cx={200 - separation/2}
               cy="150"
               r={20 + Math.abs(charge1) * 1.5}
-              fill={charge1 > 0 ? colors.positive : colors.negative}
+              fill={charge1 > 0 ? 'url(#coulPositive3D)' : 'url(#coulNegative3D)'}
+              filter={charge1 > 0 ? 'url(#coulPositiveGlowFilter)' : 'url(#coulNegativeGlowFilter)'}
             />
+            {/* Charge 1 highlight */}
+            <circle
+              cx={200 - separation/2 - 8}
+              cy="142"
+              r={6 + Math.abs(charge1) * 0.5}
+              fill={charge1 > 0 ? 'url(#coulPositiveHighlight)' : 'url(#coulNegativeHighlight)'}
+            />
+            {/* Charge 1 symbol */}
             <text
               x={200 - separation/2}
               y="158"
@@ -1131,24 +1473,41 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
               fill="white"
               fontSize="24"
               fontWeight="bold"
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
             >{charge1 > 0 ? '+' : '−'}</text>
+            {/* Charge 1 label */}
             <text
               x={200 - separation/2}
-              y="200"
+              y="205"
               textAnchor="middle"
               fill={charge1 > 0 ? colors.positive : colors.negative}
               fontSize="11"
+              fontWeight="600"
             >q₁ = {charge1 > 0 ? '+' : ''}{charge1} μC</text>
 
-            {/* Charge 2 glow */}
-            <circle cx={200 + separation/2} cy="150" r={40 + Math.sin(animationTime * 3 + 1) * 3} fill="url(#nglow)" />
-            {/* Charge 2 */}
+            {/* Charge 2 outer glow - pulsing */}
+            <circle
+              cx={200 + separation/2}
+              cy="150"
+              r={50 + Math.abs(charge2) * 2 + Math.sin(animationTime * 3 + 1) * 5}
+              fill={charge2 > 0 ? 'url(#coulPositiveGlow)' : 'url(#coulNegativeGlow)'}
+            />
+            {/* Charge 2 - 3D sphere */}
             <circle
               cx={200 + separation/2}
               cy="150"
               r={20 + Math.abs(charge2) * 1.5}
-              fill={charge2 > 0 ? colors.positive : colors.negative}
+              fill={charge2 > 0 ? 'url(#coulPositive3D)' : 'url(#coulNegative3D)'}
+              filter={charge2 > 0 ? 'url(#coulPositiveGlowFilter)' : 'url(#coulNegativeGlowFilter)'}
             />
+            {/* Charge 2 highlight */}
+            <circle
+              cx={200 + separation/2 - 8}
+              cy="142"
+              r={6 + Math.abs(charge2) * 0.5}
+              fill={charge2 > 0 ? 'url(#coulPositiveHighlight)' : 'url(#coulNegativeHighlight)'}
+            />
+            {/* Charge 2 symbol */}
             <text
               x={200 + separation/2}
               y="158"
@@ -1156,52 +1515,77 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
               fill="white"
               fontSize="24"
               fontWeight="bold"
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
             >{charge2 > 0 ? '+' : '−'}</text>
+            {/* Charge 2 label */}
             <text
               x={200 + separation/2}
-              y="200"
+              y="205"
               textAnchor="middle"
               fill={charge2 > 0 ? colors.positive : colors.negative}
               fontSize="11"
+              fontWeight="600"
             >q₂ = {charge2 > 0 ? '+' : ''}{charge2} μC</text>
 
-            {/* Force vectors */}
+            {/* Force vectors with premium gradients */}
             {showForceVectors && Math.abs(force) > 0.001 && (
-              <>
+              <g filter="url(#coulForceGlowFilter)">
+                {/* Force arrow on charge 1 */}
                 <line
-                  x1={200 - separation/2 + (isAttractive ? 30 : -30)}
+                  x1={200 - separation/2 + (isAttractive ? 35 : -35)}
                   y1="150"
-                  x2={200 - separation/2 + (isAttractive ? 60 : -60)}
+                  x2={200 - separation/2 + (isAttractive ? 65 : -65)}
                   y2="150"
-                  stroke={colors.success}
-                  strokeWidth="4"
-                  markerEnd="url(#forceArrow)"
+                  stroke={isAttractive ? 'url(#coulAttractionArrow)' : 'url(#coulRepulsionArrow)'}
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  markerEnd={isAttractive ? 'url(#coulAttractionHead)' : 'url(#coulForceArrowHead)'}
                 />
+                {/* Force arrow on charge 2 */}
                 <line
-                  x1={200 + separation/2 + (isAttractive ? -30 : 30)}
+                  x1={200 + separation/2 + (isAttractive ? -35 : 35)}
                   y1="150"
-                  x2={200 + separation/2 + (isAttractive ? -60 : 60)}
+                  x2={200 + separation/2 + (isAttractive ? -65 : 65)}
                   y2="150"
-                  stroke={colors.success}
-                  strokeWidth="4"
-                  markerEnd="url(#forceArrow)"
+                  stroke={isAttractive ? 'url(#coulAttractionArrow)' : 'url(#coulRepulsionArrow)'}
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  markerEnd={isAttractive ? 'url(#coulAttractionHead)' : 'url(#coulForceArrowHead)'}
                 />
-              </>
+                {/* Force type label */}
+                <text
+                  x="200"
+                  y="130"
+                  textAnchor="middle"
+                  fill={isAttractive ? colors.success : colors.warning}
+                  fontSize="10"
+                  fontWeight="700"
+                >
+                  {isAttractive ? 'ATTRACTIVE' : 'REPULSIVE'}
+                </text>
+              </g>
             )}
 
-            {/* Distance line */}
+            {/* Distance measurement with styled line */}
             <line
               x1={200 - separation/2}
-              y1="230"
+              y1="235"
               x2={200 + separation/2}
-              y2="230"
-              stroke={colors.textMuted}
+              y2="235"
+              stroke={colors.fieldLines}
               strokeWidth="2"
-              strokeDasharray="4,4"
+              strokeDasharray="6,3"
             />
-            <text x="200" y="255" textAnchor="middle" fill={colors.textMuted} fontSize="12">
+            <line x1={200 - separation/2} y1="230" x2={200 - separation/2} y2="240" stroke={colors.fieldLines} strokeWidth="2" />
+            <line x1={200 + separation/2} y1="230" x2={200 + separation/2} y2="240" stroke={colors.fieldLines} strokeWidth="2" />
+            {/* Distance label background */}
+            <rect x="160" y="248" width="80" height="20" rx="4" fill={colors.bgCard} fillOpacity="0.9" />
+            <text x="200" y="262" textAnchor="middle" fill={colors.fieldLines} fontSize="11" fontWeight="600">
               r = {(separation * 0.001).toFixed(3)} m
             </text>
+
+            {/* Scale indicator */}
+            <text x="20" y="285" fill={colors.textMuted} fontSize="9" opacity="0.6">1 px = 1 mm</text>
           </svg>
         </div>
 
@@ -1454,7 +1838,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 4 • New Variable', 'The Polarization Puzzle', 'What happens with a NEUTRAL object?')}
 
-        {/* Setup diagram */}
+        {/* Setup diagram - Premium SVG */}
         <div style={{
           backgroundColor: colors.bgCard,
           borderRadius: '12px',
@@ -1462,22 +1846,45 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 400 200" style={{ width: '100%' }}>
-            <rect x="0" y="0" width="400" height="200" fill={colors.bgCardLight} rx="8" />
+          <svg viewBox="0 0 400 220" style={{ width: '100%' }}>
+            {renderPremiumSVGDefs()}
 
-            {/* Balloon */}
-            <ellipse cx="100" cy="90" rx="45" ry="55" fill={colors.negative} />
-            <path d="M100,145 L90,175 L110,175 Z" fill={colors.negative} />
-            <text x="100" y="80" textAnchor="middle" fill="white" fontSize="18">− − −</text>
-            <text x="100" y="105" textAnchor="middle" fill="white" fontSize="12">-2 μC</text>
+            {/* Premium background */}
+            <rect x="0" y="0" width="400" height="220" fill="url(#coulLabBg)" rx="8" />
+            <rect x="0" y="0" width="400" height="220" fill="url(#coulLabGrid)" rx="8" />
 
-            {/* Wall */}
-            <rect x="260" y="40" width="25" height="120" fill={colors.textMuted} rx="4" />
-            <text x="330" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="14">Neutral</text>
-            <text x="330" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="14">Wall</text>
+            {/* Balloon glow */}
+            <ellipse cx="100" cy="95" rx={60 + Math.sin(animationTime * 2) * 4} ry={70 + Math.sin(animationTime * 2) * 4} fill="url(#coulNegativeGlow)" />
 
-            {/* Question */}
-            <text x="190" y="100" textAnchor="middle" fill={colors.success} fontSize="32">?</text>
+            {/* Balloon - 3D gradient */}
+            <ellipse cx="100" cy="95" rx="48" ry="58" fill="url(#coulBalloonGrad)" filter="url(#coulNegativeGlowFilter)" />
+            {/* Balloon highlight */}
+            <ellipse cx="85" cy="75" rx="15" ry="20" fill="url(#coulNegativeHighlight)" />
+            {/* Balloon knot/string */}
+            <path d="M100,153 L95,160 L100,165 L105,160 Z" fill="#1e40af" />
+            <line x1="100" y1="165" x2="100" y2="190" stroke="#374151" strokeWidth="2" />
+
+            {/* Charge symbols on balloon */}
+            <text x="100" y="80" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>− − −</text>
+            <text x="100" y="105" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>− − −</text>
+
+            {/* Balloon label */}
+            <text x="100" y="210" textAnchor="middle" fill={colors.negative} fontSize="11" fontWeight="600">Charged: −2 μC</text>
+
+            {/* Wall - 3D gradient */}
+            <rect x="255" y="35" width="35" height="140" rx="4" fill="url(#coulNeutralGrad)" />
+            {/* Wall highlight */}
+            <rect x="255" y="35" width="8" height="140" rx="2" fill="rgba(255,255,255,0.1)" />
+            {/* Wall label */}
+            <text x="330" y="95" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="600">Neutral</text>
+            <text x="330" y="115" textAnchor="middle" fill={colors.textSecondary} fontSize="13" fontWeight="600">Wall</text>
+            <text x="330" y="135" textAnchor="middle" fill={colors.textMuted} fontSize="10">(net charge = 0)</text>
+
+            {/* Question mark with glow */}
+            <text x="185" y="110" textAnchor="middle" fill={colors.warning} fontSize="48" fontWeight="bold" filter="url(#coulSoftGlow)" opacity="0.9">?</text>
+
+            {/* Arrow indicating approach */}
+            <line x1="150" y1="95" x2="220" y2="95" stroke={colors.textMuted} strokeWidth="2" strokeDasharray="8,4" opacity="0.5" />
           </svg>
           <p style={{ fontSize: typo.body, color: colors.textSecondary, textAlign: 'center', margin: '12px 0 0' }}>
             A charged balloon approaches a wall with NO net charge
@@ -1532,7 +1939,7 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
       <div style={{ padding: typo.pagePadding }}>
         {renderSectionHeader('Step 5 • Polarization', 'Electrostatic Induction', 'See how charges redistribute in neutral objects')}
 
-        {/* Animation */}
+        {/* Animation - Premium SVG */}
         <div style={{
           backgroundColor: colors.bgCard,
           borderRadius: '12px',
@@ -1540,70 +1947,148 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
           marginBottom: typo.sectionGap,
           border: `1px solid ${colors.border}`
         }}>
-          <svg viewBox="0 0 500 300" style={{ width: '100%' }}>
-            <rect x="0" y="0" width="500" height="300" fill={colors.bgCardLight} rx="8" />
+          <svg viewBox="0 0 500 320" style={{ width: '100%' }}>
+            {renderPremiumSVGDefs()}
 
-            {/* Balloon approaching */}
-            <g transform={`translate(${80 + Math.sin(animationTime) * 20}, 0)`}>
-              <ellipse cx="100" cy="150" rx="50" ry="60" fill={colors.negative} />
-              <path d="M100,210 L85,250 L115,250 Z" fill={colors.negative} />
-              <text x="100" y="140" textAnchor="middle" fill="white" fontSize="18">− − −</text>
-              <text x="100" y="165" textAnchor="middle" fill="white" fontSize="18">− − −</text>
+            {/* Premium lab background */}
+            <rect x="0" y="0" width="500" height="320" fill="url(#coulLabBg)" rx="8" />
+            <rect x="0" y="0" width="500" height="320" fill="url(#coulLabGrid)" rx="8" />
+
+            {/* Electric field lines from balloon to wall */}
+            {[0, 1, 2, 3, 4].map(i => {
+              const balloonOffset = 80 + Math.sin(animationTime) * 25;
+              const yPos = 80 + i * 40;
+              const flowOffset = (animationTime * 50) % 180;
+              return (
+                <g key={`field-${i}`}>
+                  <path
+                    d={`M ${balloonOffset + 145} ${yPos} Q ${balloonOffset + 200} ${yPos + Math.sin(animationTime * 2 + i) * 8} 285 ${yPos}`}
+                    stroke="url(#coulFieldLineGrad)"
+                    strokeWidth="2"
+                    fill="none"
+                    opacity={0.4 + Math.sin(animationTime + i) * 0.15}
+                    filter="url(#coulFieldGlowFilter)"
+                  />
+                  {/* Flow particle */}
+                  <circle
+                    cx={balloonOffset + 145 + (flowOffset % 140)}
+                    cy={yPos + Math.sin((flowOffset / 140) * Math.PI + i) * 8}
+                    r="2"
+                    fill="#c4b5fd"
+                    opacity={0.6}
+                  />
+                </g>
+              );
+            })}
+
+            {/* Balloon approaching - with oscillation */}
+            <g transform={`translate(${80 + Math.sin(animationTime) * 25}, 0)`}>
+              {/* Balloon glow */}
+              <ellipse cx="100" cy="150" rx={70 + Math.sin(animationTime * 2) * 5} ry={80 + Math.sin(animationTime * 2) * 5} fill="url(#coulNegativeGlow)" />
+
+              {/* Balloon - 3D gradient */}
+              <ellipse cx="100" cy="150" rx="55" ry="65" fill="url(#coulBalloonGrad)" filter="url(#coulNegativeGlowFilter)" />
+              {/* Balloon highlight */}
+              <ellipse cx="80" cy="125" rx="18" ry="22" fill="url(#coulNegativeHighlight)" />
+
+              {/* Charge symbols */}
+              <text x="100" y="135" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>− − −</text>
+              <text x="100" y="160" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>− − −</text>
+              <text x="100" y="185" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>− − −</text>
+
+              {/* Balloon knot */}
+              <path d="M100,215 L93,225 L100,232 L107,225 Z" fill="#1e40af" />
+              <line x1="100" y1="232" x2="100" y2="260" stroke="#374151" strokeWidth="2" />
             </g>
 
-            {/* Wall */}
-            <rect x="280" y="50" width="100" height="200" fill={colors.textMuted} rx="4" />
+            {/* Wall - 3D gradient with depth */}
+            <rect x="280" y="45" width="110" height="210" rx="6" fill="url(#coulNeutralGrad)" />
+            {/* Wall side highlight */}
+            <rect x="280" y="45" width="12" height="210" rx="3" fill="rgba(255,255,255,0.08)" />
 
-            {/* Polarized charges */}
-            {[0, 1, 2, 3, 4].map(i => (
-              <g key={i}>
-                {/* Positive (attracted to balloon) */}
-                <circle
-                  cx={295 + Math.sin(animationTime * 2) * 5}
-                  cy={80 + i * 40}
-                  r="10"
-                  fill={colors.positive}
-                  opacity="0.9"
-                />
-                <text
-                  x={295 + Math.sin(animationTime * 2) * 5}
-                  y={85 + i * 40}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="14"
-                >+</text>
+            {/* Polarized charges in wall - animated separation */}
+            {[0, 1, 2, 3, 4].map(i => {
+              const chargeShift = Math.sin(animationTime * 2) * 8;
+              const yPos = 80 + i * 40;
+              return (
+                <g key={`polarized-${i}`}>
+                  {/* Positive (attracted to balloon - moves left) */}
+                  <circle
+                    cx={300 + chargeShift}
+                    cy={yPos}
+                    r="12"
+                    fill="url(#coulPositive3D)"
+                    filter="url(#coulPositiveGlowFilter)"
+                  />
+                  <circle cx={296 + chargeShift} cy={yPos - 4} r="4" fill="url(#coulPositiveHighlight)" />
+                  <text
+                    x={300 + chargeShift}
+                    y={yPos + 5}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="14"
+                    fontWeight="bold"
+                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  >+</text>
 
-                {/* Negative (repelled from balloon) */}
-                <circle
-                  cx={365 - Math.sin(animationTime * 2) * 5}
-                  cy={80 + i * 40}
-                  r="10"
-                  fill={colors.negative}
-                  opacity="0.9"
-                />
-                <text
-                  x={365 - Math.sin(animationTime * 2) * 5}
-                  y={85 + i * 40}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="14"
-                >−</text>
-              </g>
-            ))}
+                  {/* Negative (repelled from balloon - moves right) */}
+                  <circle
+                    cx={370 - chargeShift}
+                    cy={yPos}
+                    r="12"
+                    fill="url(#coulNegative3D)"
+                    filter="url(#coulNegativeGlowFilter)"
+                  />
+                  <circle cx={366 - chargeShift} cy={yPos - 4} r="4" fill="url(#coulNegativeHighlight)" />
+                  <text
+                    x={370 - chargeShift}
+                    y={yPos + 5}
+                    textAnchor="middle"
+                    fill="white"
+                    fontSize="14"
+                    fontWeight="bold"
+                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  >−</text>
 
-            {/* Force arrow */}
-            <path d="M180,150 L250,150" stroke={colors.success} strokeWidth="4" markerEnd="url(#arrowGreen)" />
-            <text x="215" y="140" textAnchor="middle" fill={colors.success} fontSize="12">Attraction!</text>
+                  {/* Connection line showing separation */}
+                  <line
+                    x1={312 + chargeShift}
+                    y1={yPos}
+                    x2={358 - chargeShift}
+                    y2={yPos}
+                    stroke={colors.textMuted}
+                    strokeWidth="1"
+                    strokeDasharray="3,3"
+                    opacity="0.4"
+                  />
+                </g>
+              );
+            })}
 
-            <defs>
-              <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 Z" fill={colors.success} />
-              </marker>
-            </defs>
+            {/* Force arrow with glow */}
+            <g filter="url(#coulForceGlowFilter)">
+              <line
+                x1={80 + Math.sin(animationTime) * 25 + 160}
+                y1="150"
+                x2="260"
+                y2="150"
+                stroke="url(#coulAttractionArrow)"
+                strokeWidth="6"
+                strokeLinecap="round"
+                markerEnd="url(#coulAttractionHead)"
+              />
+            </g>
+            {/* Force label */}
+            <rect x="185" y="120" width="80" height="22" rx="4" fill={colors.bgCard} fillOpacity="0.9" />
+            <text x="225" y="136" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="700">ATTRACTION!</text>
 
             {/* Labels */}
-            <text x="100" y="280" textAnchor="middle" fill={colors.textMuted} fontSize="11">Charged Balloon</text>
-            <text x="330" y="280" textAnchor="middle" fill={colors.textMuted} fontSize="11">Neutral Wall (Polarized)</text>
+            <text x={80 + Math.sin(animationTime) * 25 + 100} y="300" textAnchor="middle" fill={colors.negative} fontSize="11" fontWeight="600">Charged Balloon (−2 μC)</text>
+            <text x="335" y="300" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="600">Neutral Wall (Polarized)</text>
+
+            {/* Diagram annotations */}
+            <text x="300" y="38" textAnchor="start" fill={colors.positive} fontSize="9" opacity="0.8">+ attracted</text>
+            <text x="355" y="38" textAnchor="end" fill={colors.negative} fontSize="9" opacity="0.8">− repelled</text>
           </svg>
         </div>
 

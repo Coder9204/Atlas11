@@ -408,14 +408,8 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
   };
 
   const renderVisualization = (interactive: boolean, showTempControl: boolean = false) => {
-    const width = 400;
-    const height = 400;
-
-    // Battery visual
-    const batteryX = 50;
-    const batteryY = 30;
-    const batteryWidth = 80;
-    const batteryHeight = 120;
+    const width = 700;
+    const height = 450;
 
     // Color based on SOC
     const getBatteryColor = () => {
@@ -424,6 +418,13 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
       return colors.batteryLow;
     };
 
+    // Generate electron positions for current flow animation
+    const electronCount = Math.floor(loadCurrent * 3);
+    const electrons = Array.from({ length: electronCount }, (_, i) => ({
+      id: i,
+      offset: (i * 100 / electronCount) % 100,
+    }));
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
@@ -431,171 +432,543 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
           <defs>
-            <linearGradient id="batteryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={getBatteryColor()} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={getBatteryColor()} stopOpacity="0.4" />
+            {/* === PREMIUM GRADIENTS FOR BATTERY VISUALIZATION === */}
+
+            {/* Lab background gradient */}
+            <linearGradient id="birLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+
+            {/* Premium battery casing - metallic effect */}
+            <linearGradient id="birBatteryCasing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="20%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Battery terminal positive - gold/brass */}
+            <linearGradient id="birTerminalPositive" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Battery terminal negative - silver/nickel */}
+            <linearGradient id="birTerminalNegative" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+
+            {/* Battery electrolyte fill - dynamic based on SOC */}
+            <linearGradient id="birElectrolyteFull" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#16a34a" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#15803d" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#166534" stopOpacity="0.75" />
+            </linearGradient>
+
+            <linearGradient id="birElectrolyteMid" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#d97706" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#b45309" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0.75" />
+            </linearGradient>
+
+            <linearGradient id="birElectrolyteLow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#dc2626" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#991b1b" stopOpacity="0.75" />
+            </linearGradient>
+
+            {/* Internal resistance heat glow */}
+            <radialGradient id="birResistanceHeat" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#dc2626" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Electron glow - cyan energy */}
+            <radialGradient id="birElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Voltage source glow - blue */}
+            <radialGradient id="birVoltageGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Wire conductor gradient */}
+            <linearGradient id="birWireCopper" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c2410c" />
+              <stop offset="25%" stopColor="#ea580c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+
+            {/* Resistor component gradient */}
+            <linearGradient id="birResistorBody" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#78350f" />
+              <stop offset="20%" stopColor="#92400e" />
+              <stop offset="50%" stopColor="#a16207" />
+              <stop offset="80%" stopColor="#92400e" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
+
+            {/* Temperature gauge gradient - cold to hot */}
+            <linearGradient id="birTempGaugeCold" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" />
+              <stop offset="50%" stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#7dd3fc" />
+            </linearGradient>
+
+            <linearGradient id="birTempGaugeWarm" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            <linearGradient id="birTempGaugeHot" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* 3D battery inner shadow */}
+            <radialGradient id="birBatteryInnerShadow" cx="50%" cy="0%" r="100%">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Power bar gradients */}
+            <linearGradient id="birPowerDelivered" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            <linearGradient id="birPowerWasted" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Circuit board pattern */}
+            <pattern id="birCircuitPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" />
+              <path d="M0,10 L5,10 M10,0 L10,5 M15,10 L20,10 M10,15 L10,20" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
+              <circle cx="10" cy="10" r="1.5" fill="#334155" fillOpacity="0.3" />
+            </pattern>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+
+            {/* Electron blur/glow effect */}
+            <filter id="birElectronBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Strong glow for terminals */}
+            <filter id="birTerminalGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat shimmer effect */}
+            <filter id="birHeatShimmer" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Voltage drop indicator glow */}
+            <filter id="birVoltageDropGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow filter */}
+            <filter id="birInnerShadow">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="offset-blur" />
+              <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+              <feFlood floodColor="black" floodOpacity="0.3" result="color" />
+              <feComposite operator="in" in="color" in2="inverse" result="shadow" />
+              <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+            </filter>
+
+            {/* Subtle outer glow */}
+            <filter id="birSubtleGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {/* Battery Cell */}
-          <g transform={`translate(${batteryX}, ${batteryY})`}>
-            <rect x="25" y="-8" width="30" height="8" fill="#475569" rx="2" />
-            <rect x="0" y="0" width={batteryWidth} height={batteryHeight} fill="#1e293b" rx="6" stroke="#475569" strokeWidth="3" />
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#birLabBg)" />
+          <rect width={width} height={height} fill="url(#birCircuitPattern)" opacity="0.3" />
+
+          {/* === PREMIUM 3D BATTERY CELL === */}
+          <g transform="translate(30, 40)">
+            {/* Battery outer casing with metallic effect */}
+            <rect x="0" y="0" width="120" height="180" rx="12" fill="url(#birBatteryCasing)" stroke="#64748b" strokeWidth="2" />
+
+            {/* Inner shadow for depth */}
+            <rect x="6" y="6" width="108" height="168" rx="8" fill="#0f172a" />
+            <rect x="6" y="6" width="108" height="168" rx="8" fill="url(#birBatteryInnerShadow)" />
+
+            {/* Positive terminal (top) */}
+            <rect x="40" y="-15" width="40" height="20" rx="4" fill="url(#birTerminalPositive)" filter="url(#birTerminalGlow)" />
+            <text x="60" y="-2" fill="#78350f" fontSize="10" fontWeight="bold" textAnchor="middle">+</text>
+
+            {/* Negative terminal (bottom) */}
+            <rect x="40" y="175" width="40" height="15" rx="4" fill="url(#birTerminalNegative)" />
+            <text x="60" y="186" fill="#334155" fontSize="10" fontWeight="bold" textAnchor="middle">-</text>
+
+            {/* Electrolyte fill with dynamic color based on SOC */}
             <rect
-              x="4"
-              y={4 + batteryHeight * (1 - stateOfCharge / 100) * 0.92}
-              width={batteryWidth - 8}
-              height={(batteryHeight - 8) * (stateOfCharge / 100) * 0.92}
-              fill="url(#batteryGrad)"
-              rx="3"
-            />
-            <text x={batteryWidth / 2} y={batteryHeight / 2} fill={colors.textPrimary} fontSize="16" fontWeight="bold" textAnchor="middle" dominantBaseline="middle">
-              {stateOfCharge}%
-            </text>
-            <text x={batteryWidth / 2} y={batteryHeight + 15} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-              State of Charge
-            </text>
+              x="12"
+              y={12 + 156 * (1 - stateOfCharge / 100)}
+              width="96"
+              height={156 * (stateOfCharge / 100)}
+              rx="6"
+              fill={stateOfCharge > 60 ? 'url(#birElectrolyteFull)' : stateOfCharge > 30 ? 'url(#birElectrolyteMid)' : 'url(#birElectrolyteLow)'}
+            >
+              {/* Subtle animation for electrolyte */}
+              <animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite" />
+            </rect>
+
+            {/* Battery level markers */}
+            {[25, 50, 75].map((level) => (
+              <line key={level} x1="8" y1={12 + 156 * (1 - level / 100)} x2="112" y2={12 + 156 * (1 - level / 100)} stroke="#475569" strokeWidth="0.5" strokeDasharray="4 2" />
+            ))}
+
+            {/* SOC percentage display */}
+            <rect x="30" y="75" width="60" height="30" rx="6" fill="rgba(0,0,0,0.7)" />
+            <text x="60" y="95" fill={getBatteryColor()} fontSize="18" fontWeight="bold" textAnchor="middle">{stateOfCharge}%</text>
+
+            {/* Internal resistance visualization - heat glow when resistance is high */}
+            {values.internalResistance > 0.08 && (
+              <ellipse cx="60" cy="90" rx={30 + values.internalResistance * 200} ry={20 + values.internalResistance * 100} fill="url(#birResistanceHeat)" filter="url(#birHeatShimmer)">
+                <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1s" repeatCount="indefinite" />
+              </ellipse>
+            )}
+
+            {/* Battery label */}
+            <text x="60" y="220" fill={colors.textSecondary} fontSize="11" textAnchor="middle" fontWeight="600">Li-ion Cell</text>
+            <text x="60" y="235" fill={colors.textMuted} fontSize="9" textAnchor="middle">Nominal 3.7V</text>
           </g>
 
-          {/* Temperature indicator */}
-          <g transform="translate(160, 30)">
-            <rect x="0" y="0" width="30" height="80" fill="#1e293b" rx="15" stroke="#475569" strokeWidth="2" />
+          {/* === TEMPERATURE GAUGE === */}
+          <g transform="translate(170, 50)">
+            {/* Gauge housing */}
+            <rect x="-5" y="-10" width="45" height="130" rx="8" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+            {/* Thermometer tube */}
+            <rect x="10" y="0" width="15" height="90" rx="7" fill="#0f172a" stroke="#475569" strokeWidth="1" />
+
+            {/* Mercury/fill */}
             <rect
-              x="5"
-              y={5 + 60 * (1 - (temperature + 20) / 80)}
-              width="20"
-              height={60 * ((temperature + 20) / 80)}
-              fill={temperature < 10 ? colors.voltage : temperature > 35 ? colors.error : colors.warning}
-              rx="10"
+              x="12"
+              y={2 + 76 * (1 - (temperature + 20) / 80)}
+              width="11"
+              height={76 * ((temperature + 20) / 80)}
+              rx="5"
+              fill={temperature < 10 ? 'url(#birTempGaugeCold)' : temperature > 35 ? 'url(#birTempGaugeHot)' : 'url(#birTempGaugeWarm)'}
             />
-            <circle cx="15" cy="70" r="10" fill={temperature < 10 ? colors.voltage : temperature > 35 ? colors.error : colors.warning} />
-            <text x="15" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
-              {temperature}C
-            </text>
+
+            {/* Bulb at bottom */}
+            <circle cx="17.5" cy="95" r="12" fill={temperature < 10 ? '#0ea5e9' : temperature > 35 ? '#ef4444' : '#f59e0b'} filter="url(#birSubtleGlow)" />
+
+            {/* Temperature markings */}
+            <text x="32" y="8" fill={colors.textMuted} fontSize="8">50C</text>
+            <text x="32" y="35" fill={colors.textMuted} fontSize="8">25C</text>
+            <text x="32" y="62" fill={colors.textMuted} fontSize="8">0C</text>
+            <text x="32" y="88" fill={colors.textMuted} fontSize="8">-20C</text>
+
+            {/* Current temperature display */}
+            <rect x="0" y="112" width="35" height="18" rx="4" fill="rgba(0,0,0,0.6)" />
+            <text x="17.5" y="125" fill={temperature < 10 ? '#38bdf8' : temperature > 35 ? '#f87171' : '#fbbf24'} fontSize="12" fontWeight="bold" textAnchor="middle">{temperature}C</text>
           </g>
 
-          {/* Circuit representation */}
-          <g transform="translate(200, 40)">
-            {/* Internal resistance symbol */}
-            <text x="0" y="0" fill={colors.textMuted} fontSize="10">Internal Circuit:</text>
+          {/* === INTERNAL CIRCUIT DIAGRAM === */}
+          <g transform="translate(240, 30)">
+            <text x="0" y="0" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Internal Circuit Model</text>
 
-            {/* OCV source */}
-            <circle cx="30" cy="35" r="15" fill="none" stroke={colors.voltage} strokeWidth="2" />
-            <text x="30" y="39" fill={colors.voltage} fontSize="10" textAnchor="middle">OCV</text>
-            <text x="30" y="60" fill={colors.textSecondary} fontSize="9" textAnchor="middle">
-              {values.openCircuitVoltage.toFixed(2)}V
+            {/* OCV (Open Circuit Voltage) source */}
+            <g transform="translate(30, 30)">
+              <circle cx="0" cy="30" r="25" fill="none" stroke="url(#birVoltageGlow)" strokeWidth="3" filter="url(#birSubtleGlow)" />
+              <circle cx="0" cy="30" r="22" fill="#1e293b" />
+              <text x="0" y="25" fill={colors.voltage} fontSize="9" textAnchor="middle" fontWeight="bold">OCV</text>
+              <text x="0" y="38" fill={colors.voltage} fontSize="11" textAnchor="middle" fontWeight="bold">
+                {values.openCircuitVoltage.toFixed(2)}V
+              </text>
+              <line x1="-10" y1="15" x2="10" y2="15" stroke={colors.voltage} strokeWidth="2" />
+              <line x1="0" y1="10" x2="0" y2="20" stroke={colors.voltage} strokeWidth="2" />
+            </g>
+
+            {/* Wire from OCV to resistor */}
+            <line x1="55" y1="60" x2="90" y2="60" stroke="url(#birWireCopper)" strokeWidth="4" />
+
+            {/* Current flow electrons on wire */}
+            {loadCurrent > 0 && electrons.slice(0, Math.min(3, electrons.length)).map((e) => (
+              <circle
+                key={`wire1-${e.id}`}
+                cx={55 + (35 * ((e.offset + (Date.now() / 50)) % 100) / 100)}
+                cy="60"
+                r="3"
+                fill="url(#birElectronGlow)"
+                filter="url(#birElectronBlur)"
+              >
+                <animate attributeName="cx" from="55" to="90" dur={`${0.5 / Math.max(0.1, loadCurrent)}s`} repeatCount="indefinite" />
+              </circle>
+            ))}
+
+            {/* Internal Resistance (R_int) */}
+            <g transform="translate(90, 45)">
+              <rect x="0" y="0" width="80" height="30" rx="4" fill="url(#birResistorBody)" stroke="#92400e" strokeWidth="1" />
+
+              {/* Zigzag resistor symbol */}
+              <path d="M5,15 l8,-10 l12,20 l12,-20 l12,20 l12,-20 l12,20 l7,-10" fill="none" stroke="#fcd34d" strokeWidth="2" />
+
+              {/* Heat glow based on power loss */}
+              {values.powerWasted > 0.1 && (
+                <ellipse cx="40" cy="15" rx={20 + values.powerWasted * 10} ry={10 + values.powerWasted * 5} fill="url(#birResistanceHeat)" opacity={Math.min(0.8, values.powerWasted / 2)}>
+                  <animate attributeName="opacity" values={`${Math.min(0.3, values.powerWasted / 4)};${Math.min(0.6, values.powerWasted / 2)};${Math.min(0.3, values.powerWasted / 4)}`} dur="0.8s" repeatCount="indefinite" />
+                </ellipse>
+              )}
+            </g>
+
+            {/* R_int label and value */}
+            <text x="130" y="95" fill={colors.resistance} fontSize="10" textAnchor="middle" fontWeight="bold">R_int</text>
+            <text x="130" y="110" fill={colors.resistance} fontSize="12" textAnchor="middle" fontWeight="bold">
+              {(values.internalResistance * 1000).toFixed(0)} mΩ
             </text>
 
-            {/* Wire */}
-            <line x1="45" y1="35" x2="60" y2="35" stroke={colors.textMuted} strokeWidth="2" />
+            {/* Wire from resistor to terminal */}
+            <line x1="170" y1="60" x2="210" y2="60" stroke="url(#birWireCopper)" strokeWidth="4" />
 
-            {/* Resistor symbol */}
-            <path d="M60,35 l5,-8 l10,16 l10,-16 l10,16 l10,-16 l5,8" fill="none" stroke={colors.resistance} strokeWidth="2" />
-            <text x="85" y="60" fill={colors.resistance} fontSize="9" textAnchor="middle">
-              R_int: {(values.internalResistance * 1000).toFixed(0)}mOhm
-            </text>
+            {/* Current flow electrons */}
+            {loadCurrent > 0 && electrons.slice(0, Math.min(3, electrons.length)).map((e) => (
+              <circle
+                key={`wire2-${e.id}`}
+                cx="190"
+                cy="60"
+                r="3"
+                fill="url(#birElectronGlow)"
+                filter="url(#birElectronBlur)"
+              >
+                <animate attributeName="cx" from="170" to="210" dur={`${0.5 / Math.max(0.1, loadCurrent)}s`} repeatCount="indefinite" begin={`${e.offset / 100}s`} />
+              </circle>
+            ))}
 
-            {/* Wire to terminal */}
-            <line x1="110" y1="35" x2="140" y2="35" stroke={colors.textMuted} strokeWidth="2" />
+            {/* Terminal Voltage output */}
+            <g transform="translate(210, 35)">
+              <rect x="0" y="0" width="80" height="50" rx="8" fill="rgba(34, 197, 94, 0.15)" stroke={colors.battery} strokeWidth="2" filter="url(#birSubtleGlow)" />
+              <text x="40" y="18" fill={colors.battery} fontSize="10" textAnchor="middle" fontWeight="bold">V_terminal</text>
+              <text x="40" y="38" fill={colors.battery} fontSize="16" textAnchor="middle" fontWeight="bold">
+                {values.terminalVoltage.toFixed(2)}V
+              </text>
+            </g>
 
-            {/* Terminal voltage */}
-            <rect x="140" y="20" width="50" height="30" fill="rgba(34, 197, 94, 0.2)" rx="4" stroke={colors.battery} strokeWidth="2" />
-            <text x="165" y="39" fill={colors.battery} fontSize="10" textAnchor="middle">V_term</text>
-            <text x="165" y="65" fill={colors.battery} fontSize="11" textAnchor="middle" fontWeight="bold">
-              {values.terminalVoltage.toFixed(2)}V
-            </text>
+            {/* === VOLTAGE DROP VISUALIZATION === */}
+            <g transform="translate(30, 130)">
+              <text x="0" y="0" fill={colors.textSecondary} fontSize="10" fontWeight="600">Voltage Drop Visualization</text>
+
+              {/* Voltage bar background */}
+              <rect x="0" y="10" width="260" height="25" rx="4" fill="rgba(0,0,0,0.4)" />
+
+              {/* OCV section (full voltage) */}
+              <rect x="0" y="10" width={260 * (values.terminalVoltage / values.openCircuitVoltage)} height="25" rx="4" fill={colors.battery} />
+
+              {/* Voltage drop section (lost voltage) */}
+              <rect x={260 * (values.terminalVoltage / values.openCircuitVoltage)} y="10" width={260 * (values.voltageDrop / values.openCircuitVoltage)} height="25" rx="0" fill={colors.error} filter="url(#birVoltageDropGlow)">
+                <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
+              </rect>
+
+              {/* Labels */}
+              <text x="5" y="27" fill={colors.textPrimary} fontSize="9" fontWeight="bold">V_term: {values.terminalVoltage.toFixed(2)}V</text>
+              <text x={Math.max(260 * (values.terminalVoltage / values.openCircuitVoltage) + 5, 180)} y="27" fill={colors.textPrimary} fontSize="8">
+                Drop: {values.voltageDrop.toFixed(3)}V
+              </text>
+
+              {/* Percentage indicator */}
+              <text x="130" y="50" fill={colors.error} fontSize="11" textAnchor="middle" fontWeight="bold">
+                {((values.voltageDrop / values.openCircuitVoltage) * 100).toFixed(1)}% voltage lost to internal resistance
+              </text>
+            </g>
           </g>
 
-          {/* Load current display */}
-          <g transform="translate(200, 120)">
-            <rect x="0" y="0" width="190" height="50" fill="rgba(0,0,0,0.4)" rx="6" />
-            <text x="95" y="18" fill={colors.current} fontSize="12" textAnchor="middle" fontWeight="bold">
-              Load Current: {loadCurrent.toFixed(1)} A
+          {/* === CURRENT FLOW INDICATOR === */}
+          <g transform="translate(240, 220)">
+            <rect x="0" y="0" width="200" height="55" rx="8" fill="rgba(0,0,0,0.5)" stroke={colors.current} strokeWidth="1" />
+            <text x="100" y="18" fill={colors.current} fontSize="12" textAnchor="middle" fontWeight="bold">
+              Load Current
             </text>
-            <text x="95" y="38" fill={colors.textSecondary} fontSize="11" textAnchor="middle">
-              Voltage Drop: {values.voltageDrop.toFixed(3)}V ({((values.voltageDrop / values.openCircuitVoltage) * 100).toFixed(1)}%)
+            <text x="100" y="42" fill={colors.current} fontSize="20" textAnchor="middle" fontWeight="bold">
+              {loadCurrent.toFixed(1)} A
             </text>
+
+            {/* Animated electron flow indicator */}
+            <g transform="translate(160, 28)">
+              {[0, 1, 2].map((i) => (
+                <circle
+                  key={`indicator-${i}`}
+                  cx={i * 12}
+                  cy="0"
+                  r="4"
+                  fill="url(#birElectronGlow)"
+                  filter="url(#birElectronBlur)"
+                >
+                  <animate attributeName="opacity" values="0.3;1;0.3" dur="0.6s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
+                </circle>
+              ))}
+            </g>
           </g>
 
-          {/* Power bars */}
-          <g transform="translate(30, 200)">
-            <text x="0" y="0" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Power Analysis:</text>
+          {/* === POWER ANALYSIS BARS === */}
+          <g transform="translate(30, 290)">
+            <text x="0" y="0" fill={colors.textPrimary} fontSize="12" fontWeight="bold">Power Analysis</text>
 
             {/* Power delivered bar */}
-            <rect x="0" y="15" width="340" height="25" fill="rgba(0,0,0,0.3)" rx="4" />
+            <rect x="0" y="15" width="300" height="28" rx="6" fill="rgba(0,0,0,0.4)" />
             <rect
               x="0"
               y="15"
-              width={Math.min(340, 340 * (values.powerDelivered / (values.powerDelivered + values.powerWasted + 0.01)))}
-              height="25"
-              fill={colors.success}
-              rx="4"
+              width={Math.min(300, 300 * (values.powerDelivered / (values.powerDelivered + values.powerWasted + 0.01)))}
+              height="28"
+              rx="6"
+              fill="url(#birPowerDelivered)"
             />
-            <text x="10" y="32" fill={colors.textPrimary} fontSize="10">
-              Delivered: {values.powerDelivered.toFixed(2)}W
+            <text x="10" y="34" fill={colors.textPrimary} fontSize="11" fontWeight="600">
+              Delivered to Load: {values.powerDelivered.toFixed(2)}W
             </text>
 
             {/* Power wasted bar */}
-            <rect x="0" y="50" width="340" height="25" fill="rgba(0,0,0,0.3)" rx="4" />
+            <rect x="0" y="50" width="300" height="28" rx="6" fill="rgba(0,0,0,0.4)" />
             <rect
               x="0"
               y="50"
-              width={Math.min(340, 340 * (values.powerWasted / (values.powerDelivered + values.powerWasted + 0.01)))}
-              height="25"
-              fill={colors.error}
-              rx="4"
-            />
-            <text x="10" y="67" fill={colors.textPrimary} fontSize="10">
-              Lost in R_int: {values.powerWasted.toFixed(3)}W (I^2R heat)
+              width={Math.min(300, 300 * (values.powerWasted / (values.powerDelivered + values.powerWasted + 0.01)))}
+              height="28"
+              rx="6"
+              fill="url(#birPowerWasted)"
+            >
+              {values.powerWasted > 0.1 && (
+                <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />
+              )}
+            </rect>
+            <text x="10" y="69" fill={colors.textPrimary} fontSize="11" fontWeight="600">
+              Lost as Heat (I²R): {values.powerWasted.toFixed(3)}W
             </text>
 
-            {/* Efficiency */}
-            <text x="170" y="95" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="bold">
-              Efficiency: {values.efficiency.toFixed(1)}%
+            {/* Efficiency display */}
+            <rect x="310" y="15" width="80" height="63" rx="8" fill="rgba(245, 158, 11, 0.15)" stroke={colors.accent} strokeWidth="1" />
+            <text x="350" y="38" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Efficiency</text>
+            <text x="350" y="60" fill={colors.accent} fontSize="18" textAnchor="middle" fontWeight="bold">
+              {values.efficiency.toFixed(1)}%
             </text>
           </g>
 
-          {/* Voltage vs Current graph */}
-          <g transform="translate(30, 310)">
-            <rect x="0" y="0" width="340" height="80" fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x="170" y="15" fill={colors.textPrimary} fontSize="10" textAnchor="middle">Terminal Voltage vs Load Current</text>
+          {/* === VOLTAGE VS CURRENT GRAPH === */}
+          <g transform="translate(420, 290)">
+            <rect x="0" y="0" width="260" height="140" rx="8" fill="rgba(0,0,0,0.4)" stroke="#334155" strokeWidth="1" />
+            <text x="130" y="18" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="bold">Terminal Voltage vs Load Current</text>
 
-            {/* Axes */}
-            <line x1="30" y1="70" x2="320" y2="70" stroke={colors.textMuted} strokeWidth="1" />
-            <line x1="30" y1="25" x2="30" y2="70" stroke={colors.textMuted} strokeWidth="1" />
+            {/* Graph area */}
+            <g transform="translate(35, 30)">
+              {/* Grid lines */}
+              {[0, 1, 2, 3, 4].map((i) => (
+                <line key={`hgrid-${i}`} x1="0" y1={i * 22} x2="200" y2={i * 22} stroke="#334155" strokeWidth="0.5" strokeDasharray="4 2" />
+              ))}
+              {[0, 1, 2, 3, 4].map((i) => (
+                <line key={`vgrid-${i}`} x1={i * 50} y1="0" x2={i * 50} y2="88" stroke="#334155" strokeWidth="0.5" strokeDasharray="4 2" />
+              ))}
 
-            {/* Voltage line (drops with current) */}
-            <path
-              d={`M30,${25 + 45 * (1 - values.openCircuitVoltage / 4.5)} L320,${25 + 45 * (1 - (values.openCircuitVoltage - 10 * values.internalResistance) / 4.5)}`}
-              fill="none"
-              stroke={colors.voltage}
-              strokeWidth="2"
-            />
+              {/* Axes */}
+              <line x1="0" y1="88" x2="200" y2="88" stroke={colors.textMuted} strokeWidth="1.5" />
+              <line x1="0" y1="0" x2="0" y2="88" stroke={colors.textMuted} strokeWidth="1.5" />
 
-            {/* Current operating point */}
-            <circle
-              cx={30 + 290 * (loadCurrent / 10)}
-              cy={25 + 45 * (1 - values.terminalVoltage / 4.5)}
-              r="6"
-              fill={colors.accent}
-              stroke="white"
-              strokeWidth="2"
-              filter="url(#glow)"
-            />
+              {/* Voltage line (drops with current) */}
+              <path
+                d={`M0,${88 - 88 * (values.openCircuitVoltage / 4.5)} L200,${88 - 88 * ((values.openCircuitVoltage - 10 * values.internalResistance) / 4.5)}`}
+                fill="none"
+                stroke={colors.voltage}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
 
-            <text x="30" y="78" fill={colors.textMuted} fontSize="8">0A</text>
-            <text x="320" y="78" fill={colors.textMuted} fontSize="8">10A</text>
-            <text x="20" y="30" fill={colors.textMuted} fontSize="8">V</text>
+              {/* Current operating point */}
+              <circle
+                cx={200 * (loadCurrent / 10)}
+                cy={88 - 88 * (values.terminalVoltage / 4.5)}
+                r="8"
+                fill={colors.accent}
+                stroke="white"
+                strokeWidth="2"
+                filter="url(#birTerminalGlow)"
+              >
+                <animate attributeName="r" values="7;9;7" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Axis labels */}
+              <text x="100" y="105" fill={colors.textMuted} fontSize="9" textAnchor="middle">Current (A)</text>
+              <text x="-12" y="44" fill={colors.textMuted} fontSize="9" textAnchor="middle" transform="rotate(-90, -12, 44)">Voltage (V)</text>
+
+              {/* Scale labels */}
+              <text x="0" y="100" fill={colors.textMuted} fontSize="8" textAnchor="middle">0</text>
+              <text x="100" y="100" fill={colors.textMuted} fontSize="8" textAnchor="middle">5</text>
+              <text x="200" y="100" fill={colors.textMuted} fontSize="8" textAnchor="middle">10</text>
+              <text x="-8" y="88" fill={colors.textMuted} fontSize="8" textAnchor="end">0</text>
+              <text x="-8" y="44" fill={colors.textMuted} fontSize="8" textAnchor="end">2.25</text>
+              <text x="-8" y="4" fill={colors.textMuted} fontSize="8" textAnchor="end">4.5</text>
+            </g>
+          </g>
+
+          {/* Formula reference */}
+          <g transform="translate(450, 230)">
+            <rect x="0" y="0" width="230" height="50" rx="6" fill="rgba(168, 85, 247, 0.1)" stroke={colors.current} strokeWidth="1" />
+            <text x="115" y="18" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Key Equations:</text>
+            <text x="115" y="35" fill={colors.current} fontSize="11" textAnchor="middle" fontWeight="bold">
+              V_term = OCV - (I × R_int)  |  P_loss = I²R
+            </text>
           </g>
         </svg>
 
@@ -604,34 +977,37 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             <button
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
+                padding: '12px 24px',
+                borderRadius: '10px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: '14px',
+                boxShadow: isAnimating ? '0 4px 15px rgba(239,68,68,0.3)' : '0 4px 15px rgba(34,197,94,0.3)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {isAnimating ? 'Stop Sweep' : 'Sweep Current'}
+              {isAnimating ? 'Stop Current Sweep' : 'Sweep Current (0-10A)'}
             </button>
             <button
-              onClick={() => { setStateOfCharge(100); setTemperature(25); setLoadCurrent(1); }}
+              onClick={() => { setStateOfCharge(100); setTemperature(25); setLoadCurrent(1); setIsAnimating(false); }}
               style={{
-                padding: '10px 20px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Reset
+              Reset All
             </button>
           </div>
         )}

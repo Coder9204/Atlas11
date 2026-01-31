@@ -319,11 +319,11 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 400;
-    const groundY = height - 50;
-    const buildingWidth = 80;
-    const buildingHeight = 250;
+    const width = 500;
+    const height = 450;
+    const groundY = height - 60;
+    const buildingWidth = 100;
+    const buildingHeight = 280;
     const buildingBaseX = width / 2 - buildingWidth / 2;
 
     // Scale displacement for visualization
@@ -334,6 +334,12 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
     // Earthquake indicator
     const groundShake = Math.sin(2 * Math.PI * earthquakeFreq * time) * earthquakeAmplitude * 20;
 
+    // Calculate oscillation trail positions for visualization
+    const trailPositions = Array.from({ length: 8 }, (_, i) => {
+      const t = time - i * 0.05;
+      return Math.sin(2 * Math.PI * earthquakeFreq * Math.max(0, t)) * earthquakeAmplitude * visualScale * 0.3;
+    });
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
@@ -341,188 +347,794 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: '#020617', borderRadius: '12px', maxWidth: '550px' }}
         >
-          {/* Sky */}
+          {/* ============================================= */}
+          {/* COMPREHENSIVE DEFS SECTION - Premium Graphics */}
+          {/* ============================================= */}
           <defs>
-            <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
+            {/* === LINEAR GRADIENTS WITH 4-6 COLOR STOPS === */}
+
+            {/* Premium night sky gradient with atmospheric depth */}
+            <linearGradient id="tmdSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="25%" stopColor="#0f2744" />
+              <stop offset="50%" stopColor="#1a365d" />
+              <stop offset="75%" stopColor="#1e3a5f" />
               <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
+
+            {/* Premium building steel/glass gradient */}
+            <linearGradient id="tmdBuildingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="20%" stopColor="#2563eb" />
+              <stop offset="40%" stopColor="#1d4ed8" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="80%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* Building highlight for glass effect */}
+            <linearGradient id="tmdBuildingHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.4" />
+              <stop offset="15%" stopColor="#60a5fa" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.1" />
+              <stop offset="85%" stopColor="#1d4ed8" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Ground/foundation gradient with depth */}
+            <linearGradient id="tmdGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* TMD mass metallic gradient */}
+            <linearGradient id="tmdMassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Spring gradient */}
+            <linearGradient id="tmdSpringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="25%" stopColor="#facc15" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#ca8a04" />
+              <stop offset="100%" stopColor="#a16207" />
+            </linearGradient>
+
+            {/* Earthquake wave gradient */}
+            <linearGradient id="tmdEarthquakeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0" />
+              <stop offset="25%" stopColor="#fb923c" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#fdba74" stopOpacity="1" />
+              <stop offset="75%" stopColor="#fb923c" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Amplitude indicator gradient */}
+            <linearGradient id="tmdAmplitudeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="33%" stopColor="#22c55e" />
+              <stop offset="66%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Window glow gradient */}
+            <linearGradient id="tmdWindowGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#fde68a" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* === RADIAL GRADIENTS FOR MASS/DEPTH EFFECTS === */}
+
+            {/* TMD mass radial depth */}
+            <radialGradient id="tmdMassRadial" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </radialGradient>
+
+            {/* Building ambient glow */}
+            <radialGradient id="tmdBuildingAmbient" cx="50%" cy="0%" r="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#1d4ed8" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Earthquake epicenter radial */}
+            <radialGradient id="tmdEpicenterGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#ea580c" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#c2410c" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#9a3412" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Star/city light glow */}
+            <radialGradient id="tmdStarGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fef3c7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS USING feGaussianBlur + feMerge === */}
+
+            {/* TMD Mass glow filter */}
+            <filter id="tmdMassGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Building glow filter */}
+            <filter id="tmdBuildingGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Earthquake wave glow */}
+            <filter id="tmdQuakeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#f97316" floodOpacity="0.7" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Window inner glow */}
+            <filter id="tmdWindowInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feFlood floodColor="#fbbf24" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Spring metallic shine */}
+            <filter id="tmdSpringShine" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feFlood floodColor="#fde047" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Displacement indicator glow */}
+            <filter id="tmdIndicatorGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow for depth */}
+            <filter id="tmdSoftShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="3" dy="3" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
           </defs>
-          <rect width={width} height={height} fill="url(#skyGrad)" />
 
-          {/* Ground with earthquake shake */}
+          {/* ============================================= */}
+          {/* BACKGROUND AND ATMOSPHERE                    */}
+          {/* ============================================= */}
+
+          {/* Night sky with gradient */}
+          <rect width={width} height={height} fill="url(#tmdSkyGradient)" />
+
+          {/* Stars for atmosphere */}
+          {[...Array(15)].map((_, i) => (
+            <circle
+              key={`star-${i}`}
+              cx={30 + (i * 31) % (width - 60)}
+              cy={15 + (i * 17) % 60}
+              r={0.5 + (i % 3) * 0.3}
+              fill="url(#tmdStarGlow)"
+              opacity={0.4 + (i % 4) * 0.15}
+            >
+              <animate
+                attributeName="opacity"
+                values={`${0.3 + (i % 3) * 0.2};${0.6 + (i % 3) * 0.2};${0.3 + (i % 3) * 0.2}`}
+                dur={`${2 + (i % 3)}s`}
+                repeatCount="indefinite"
+              />
+            </circle>
+          ))}
+
+          {/* Distant city silhouette */}
+          <g opacity="0.3">
+            {[20, 70, 110, 150, 320, 370, 420, 460].map((x, i) => (
+              <rect
+                key={`city-${i}`}
+                x={x}
+                y={groundY - 30 - (i % 4) * 15}
+                width={25 + (i % 3) * 10}
+                height={30 + (i % 4) * 15}
+                fill="#1e293b"
+                rx={2}
+              />
+            ))}
+          </g>
+
+          {/* ============================================= */}
+          {/* GROUND WITH EARTHQUAKE EFFECTS               */}
+          {/* ============================================= */}
           <g transform={`translate(${isPlaying ? groundShake : 0}, 0)`}>
-            <rect x={0} y={groundY} width={width} height={50} fill={colors.ground} />
+            {/* Main ground layer */}
+            <rect x={0} y={groundY} width={width} height={60} fill="url(#tmdGroundGradient)" />
 
-            {/* Earthquake waves */}
+            {/* Ground surface line */}
+            <line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#64748b" strokeWidth={2} />
+
+            {/* Soil texture lines */}
+            {[...Array(8)].map((_, i) => (
+              <line
+                key={`soil-${i}`}
+                x1={i * 65}
+                y1={groundY + 15}
+                x2={i * 65 + 40}
+                y2={groundY + 25}
+                stroke="#475569"
+                strokeWidth={1}
+                opacity={0.5}
+              />
+            ))}
+
+            {/* Earthquake waves animation */}
             {isPlaying && (
-              <>
-                <path
-                  d={`M 0 ${groundY + 10} Q 50 ${groundY + 10 + Math.sin(time * 10) * 5} 100 ${groundY + 10}`}
-                  stroke={colors.warning}
-                  strokeWidth={2}
-                  fill="none"
-                  opacity={0.5}
-                />
-                <path
-                  d={`M 100 ${groundY + 10} Q 150 ${groundY + 10 - Math.sin(time * 10) * 5} 200 ${groundY + 10}`}
-                  stroke={colors.warning}
-                  strokeWidth={2}
-                  fill="none"
-                  opacity={0.5}
-                />
-              </>
+              <g filter="url(#tmdQuakeGlow)">
+                {[...Array(5)].map((_, i) => {
+                  const waveOffset = (time * 3 + i * 0.4) % 2;
+                  const waveX = width / 2 + (waveOffset - 1) * width;
+                  return (
+                    <ellipse
+                      key={`wave-${i}`}
+                      cx={waveX}
+                      cy={groundY + 10}
+                      rx={30 + waveOffset * 60}
+                      ry={5 + waveOffset * 3}
+                      fill="none"
+                      stroke="url(#tmdEarthquakeGradient)"
+                      strokeWidth={2}
+                      opacity={1 - waveOffset * 0.5}
+                    />
+                  );
+                })}
+
+                {/* Epicenter indicator */}
+                <circle
+                  cx={width / 2}
+                  cy={groundY + 30}
+                  r={15}
+                  fill="url(#tmdEpicenterGlow)"
+                >
+                  <animate
+                    attributeName="r"
+                    values="10;20;10"
+                    dur="0.5s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              </g>
             )}
           </g>
 
-          {/* Building */}
-          <g transform={`translate(${buildingOffset}, 0)`}>
-            {/* Building body */}
+          {/* ============================================= */}
+          {/* BUILDING WITH PREMIUM GRAPHICS               */}
+          {/* ============================================= */}
+          <g transform={`translate(${buildingOffset}, 0)`} filter="url(#tmdSoftShadow)">
+            {/* Building ambient glow */}
+            <ellipse
+              cx={buildingBaseX + buildingWidth / 2}
+              cy={groundY - buildingHeight / 2}
+              rx={buildingWidth * 1.2}
+              ry={buildingHeight * 0.6}
+              fill="url(#tmdBuildingAmbient)"
+            />
+
+            {/* Main building structure */}
             <rect
               x={buildingBaseX}
               y={groundY - buildingHeight}
               width={buildingWidth}
               height={buildingHeight}
-              fill={colors.building}
+              fill="url(#tmdBuildingGradient)"
               stroke="#60a5fa"
               strokeWidth={2}
               rx={4}
+              filter="url(#tmdBuildingGlow)"
             />
 
-            {/* Windows */}
-            {[0, 1, 2, 3, 4, 5].map((floor) => (
+            {/* Glass highlight overlay */}
+            <rect
+              x={buildingBaseX}
+              y={groundY - buildingHeight}
+              width={buildingWidth}
+              height={buildingHeight}
+              fill="url(#tmdBuildingHighlight)"
+              rx={4}
+            />
+
+            {/* Building edge highlights */}
+            <line
+              x1={buildingBaseX + 2}
+              y1={groundY - buildingHeight + 4}
+              x2={buildingBaseX + 2}
+              y2={groundY - 4}
+              stroke="#93c5fd"
+              strokeWidth={1}
+              opacity={0.5}
+            />
+
+            {/* Windows with glow effect */}
+            {[0, 1, 2, 3, 4, 5, 6].map((floor) => (
               <g key={floor}>
+                {/* Left window */}
                 <rect
-                  x={buildingBaseX + 10}
-                  y={groundY - buildingHeight + 20 + floor * 38}
-                  width={15}
-                  height={25}
-                  fill="#1e3a5f"
+                  x={buildingBaseX + 12}
+                  y={groundY - buildingHeight + 45 + floor * 34}
+                  width={18}
+                  height={24}
+                  fill="#0c4a6e"
                   rx={2}
                 />
                 <rect
-                  x={buildingBaseX + buildingWidth - 25}
-                  y={groundY - buildingHeight + 20 + floor * 38}
-                  width={15}
-                  height={25}
-                  fill="#1e3a5f"
+                  x={buildingBaseX + 14}
+                  y={groundY - buildingHeight + 47 + floor * 34}
+                  width={14}
+                  height={20}
+                  fill={floor % 3 === 0 ? "url(#tmdWindowGlow)" : "#1e3a5f"}
+                  rx={1}
+                  filter={floor % 3 === 0 ? "url(#tmdWindowInnerGlow)" : undefined}
+                />
+
+                {/* Right window */}
+                <rect
+                  x={buildingBaseX + buildingWidth - 30}
+                  y={groundY - buildingHeight + 45 + floor * 34}
+                  width={18}
+                  height={24}
+                  fill="#0c4a6e"
                   rx={2}
+                />
+                <rect
+                  x={buildingBaseX + buildingWidth - 28}
+                  y={groundY - buildingHeight + 47 + floor * 34}
+                  width={14}
+                  height={20}
+                  fill={floor % 2 === 1 ? "url(#tmdWindowGlow)" : "#1e3a5f"}
+                  rx={1}
+                  filter={floor % 2 === 1 ? "url(#tmdWindowInnerGlow)" : undefined}
+                />
+
+                {/* Floor divider line */}
+                <line
+                  x1={buildingBaseX + 5}
+                  y1={groundY - buildingHeight + 40 + floor * 34}
+                  x2={buildingBaseX + buildingWidth - 5}
+                  y2={groundY - buildingHeight + 40 + floor * 34}
+                  stroke="#1e40af"
+                  strokeWidth={1}
+                  opacity={0.5}
                 />
               </g>
             ))}
 
-            {/* Damper on top floor */}
+            {/* Roof detail */}
+            <rect
+              x={buildingBaseX - 3}
+              y={groundY - buildingHeight - 8}
+              width={buildingWidth + 6}
+              height={12}
+              fill="#1e3a8a"
+              rx={3}
+            />
+            <rect
+              x={buildingBaseX + buildingWidth / 2 - 8}
+              y={groundY - buildingHeight - 20}
+              width={16}
+              height={15}
+              fill="#334155"
+              rx={2}
+            />
+
+            {/* ============================================= */}
+            {/* TMD (TUNED MASS DAMPER) SYSTEM               */}
+            {/* ============================================= */}
             {damperEnabled && (
               <g transform={`translate(${damperOffset}, 0)`}>
-                {/* Damper housing */}
+                {/* TMD housing/frame */}
                 <rect
-                  x={buildingBaseX + 10}
-                  y={groundY - buildingHeight + 5}
-                  width={buildingWidth - 20}
-                  height={30}
-                  fill="rgba(0,0,0,0.3)"
+                  x={buildingBaseX + 8}
+                  y={groundY - buildingHeight + 8}
+                  width={buildingWidth - 16}
+                  height={35}
+                  fill="rgba(15, 23, 42, 0.8)"
+                  stroke="#475569"
+                  strokeWidth={1}
                   rx={4}
                 />
 
-                {/* Damper mass */}
+                {/* Track/rail system */}
                 <rect
-                  x={buildingBaseX + buildingWidth / 2 - 15}
-                  y={groundY - buildingHeight + 10}
-                  width={30}
-                  height={20}
-                  fill={colors.damper}
-                  rx={4}
-                  filter="url(#damperGlow)"
+                  x={buildingBaseX + 12}
+                  y={groundY - buildingHeight + 30}
+                  width={buildingWidth - 24}
+                  height={4}
+                  fill="#334155"
+                  rx={2}
+                />
+                <line
+                  x1={buildingBaseX + 14}
+                  y1={groundY - buildingHeight + 32}
+                  x2={buildingBaseX + buildingWidth - 14}
+                  y2={groundY - buildingHeight + 32}
+                  stroke="#64748b"
+                  strokeWidth={1}
                 />
 
-                {/* Springs */}
-                <line
-                  x1={buildingBaseX + 15}
-                  y1={groundY - buildingHeight + 20}
-                  x2={buildingBaseX + buildingWidth / 2 - 15}
-                  y2={groundY - buildingHeight + 20}
-                  stroke="#fbbf24"
-                  strokeWidth={3}
-                  strokeDasharray="4,2"
+                {/* Left spring with coil visualization */}
+                <g filter="url(#tmdSpringShine)">
+                  {[...Array(6)].map((_, i) => (
+                    <line
+                      key={`spring-l-${i}`}
+                      x1={buildingBaseX + 15 + i * 5}
+                      y1={groundY - buildingHeight + 22 + (i % 2) * 6}
+                      x2={buildingBaseX + 20 + i * 5}
+                      y2={groundY - buildingHeight + 22 + ((i + 1) % 2) * 6}
+                      stroke="url(#tmdSpringGradient)"
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                    />
+                  ))}
+                </g>
+
+                {/* Right spring with coil visualization */}
+                <g filter="url(#tmdSpringShine)">
+                  {[...Array(6)].map((_, i) => (
+                    <line
+                      key={`spring-r-${i}`}
+                      x1={buildingBaseX + buildingWidth - 45 + i * 5}
+                      y1={groundY - buildingHeight + 22 + (i % 2) * 6}
+                      x2={buildingBaseX + buildingWidth - 40 + i * 5}
+                      y2={groundY - buildingHeight + 22 + ((i + 1) % 2) * 6}
+                      stroke="url(#tmdSpringGradient)"
+                      strokeWidth={3}
+                      strokeLinecap="round"
+                    />
+                  ))}
+                </g>
+
+                {/* TMD Mass block */}
+                <rect
+                  x={buildingBaseX + buildingWidth / 2 - 18}
+                  y={groundY - buildingHeight + 12}
+                  width={36}
+                  height={22}
+                  fill="url(#tmdMassRadial)"
+                  stroke="#fca5a5"
+                  strokeWidth={1.5}
+                  rx={4}
+                  filter="url(#tmdMassGlow)"
                 />
-                <line
-                  x1={buildingBaseX + buildingWidth / 2 + 15}
-                  y1={groundY - buildingHeight + 20}
-                  x2={buildingBaseX + buildingWidth - 15}
-                  y2={groundY - buildingHeight + 20}
-                  stroke="#fbbf24"
-                  strokeWidth={3}
-                  strokeDasharray="4,2"
+
+                {/* Mass label */}
+                <text
+                  x={buildingBaseX + buildingWidth / 2}
+                  y={groundY - buildingHeight + 27}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize={10}
+                  fontWeight="bold"
+                >
+                  TMD
+                </text>
+
+                {/* Mass indicator dots (wheel bearings) */}
+                <circle
+                  cx={buildingBaseX + buildingWidth / 2 - 10}
+                  cy={groundY - buildingHeight + 32}
+                  r={3}
+                  fill="#64748b"
+                  stroke="#94a3b8"
+                  strokeWidth={1}
+                />
+                <circle
+                  cx={buildingBaseX + buildingWidth / 2 + 10}
+                  cy={groundY - buildingHeight + 32}
+                  r={3}
+                  fill="#64748b"
+                  stroke="#94a3b8"
+                  strokeWidth={1}
                 />
               </g>
             )}
-
-            {/* Glow filter */}
-            <defs>
-              <filter id="damperGlow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feFlood floodColor={colors.damper} floodOpacity="0.5" />
-                <feComposite in2="blur" operator="in" />
-                <feMerge>
-                  <feMergeNode />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
           </g>
 
-          {/* Displacement indicator */}
+          {/* ============================================= */}
+          {/* OSCILLATION VISUALIZATION                    */}
+          {/* ============================================= */}
+          {isPlaying && (
+            <g opacity={0.6}>
+              {/* Building oscillation trail */}
+              {trailPositions.map((pos, i) => (
+                <line
+                  key={`trail-${i}`}
+                  x1={width / 2 + pos}
+                  y1={groundY - buildingHeight - 35 + i * 3}
+                  x2={width / 2 + (trailPositions[i + 1] || pos)}
+                  y2={groundY - buildingHeight - 35 + (i + 1) * 3}
+                  stroke={colors.warning}
+                  strokeWidth={2 - i * 0.2}
+                  opacity={1 - i * 0.1}
+                />
+              ))}
+
+              {/* Current position indicator */}
+              <circle
+                cx={width / 2 + buildingOffset}
+                cy={groundY - buildingHeight - 35}
+                r={6}
+                fill={colors.warning}
+                filter="url(#tmdIndicatorGlow)"
+              >
+                <animate
+                  attributeName="r"
+                  values="5;7;5"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </g>
+          )}
+
+          {/* ============================================= */}
+          {/* DISPLACEMENT INDICATOR                       */}
+          {/* ============================================= */}
           <g>
+            {/* Reference center line */}
             <line
               x1={width / 2}
-              y1={groundY - buildingHeight - 20}
+              y1={groundY - buildingHeight - 50}
+              x2={width / 2}
+              y2={groundY - buildingHeight - 25}
+              stroke={colors.textMuted}
+              strokeWidth={1}
+              strokeDasharray="3,3"
+            />
+
+            {/* Displacement arrow */}
+            <line
+              x1={width / 2}
+              y1={groundY - buildingHeight - 40}
               x2={width / 2 + buildingOffset}
-              y2={groundY - buildingHeight - 20}
+              y2={groundY - buildingHeight - 40}
               stroke={colors.warning}
-              strokeWidth={2}
+              strokeWidth={3}
+              filter="url(#tmdIndicatorGlow)"
             />
-            <circle
-              cx={width / 2 + buildingOffset}
-              cy={groundY - buildingHeight - 20}
-              r={5}
-              fill={colors.warning}
-            />
+
+            {/* Arrow head */}
+            {Math.abs(buildingOffset) > 2 && (
+              <polygon
+                points={`${width / 2 + buildingOffset},${groundY - buildingHeight - 40} ${width / 2 + buildingOffset - (buildingOffset > 0 ? 8 : -8)},${groundY - buildingHeight - 45} ${width / 2 + buildingOffset - (buildingOffset > 0 ? 8 : -8)},${groundY - buildingHeight - 35}`}
+                fill={colors.warning}
+              />
+            )}
+
+            {/* Displacement label */}
             <text
               x={width / 2}
-              y={groundY - buildingHeight - 30}
+              y={groundY - buildingHeight - 55}
               textAnchor="middle"
               fill={colors.textMuted}
               fontSize={10}
+              fontWeight="bold"
             >
-              Displacement
+              Building Displacement
             </text>
           </g>
 
-          {/* Legend */}
-          <g transform={`translate(20, 20)`}>
-            <rect x={0} y={0} width={12} height={12} fill={colors.building} rx={2} />
-            <text x={18} y={10} fill={colors.textMuted} fontSize={10}>Building</text>
+          {/* ============================================= */}
+          {/* AMPLITUDE COMPARISON INDICATORS              */}
+          {/* ============================================= */}
+          <g transform={`translate(${width - 80}, 80)`}>
+            {/* Background panel */}
+            <rect
+              x={-10}
+              y={-15}
+              width={85}
+              height={120}
+              fill="rgba(15, 23, 42, 0.9)"
+              stroke="#334155"
+              strokeWidth={1}
+              rx={6}
+            />
 
+            {/* Title */}
+            <text
+              x={32}
+              y={0}
+              textAnchor="middle"
+              fill={colors.textSecondary}
+              fontSize={9}
+              fontWeight="bold"
+            >
+              AMPLITUDE
+            </text>
+
+            {/* Amplitude bar background */}
+            <rect
+              x={0}
+              y={10}
+              width={65}
+              height={12}
+              fill="#1e293b"
+              rx={3}
+            />
+
+            {/* Amplitude bar fill */}
+            <rect
+              x={0}
+              y={10}
+              width={Math.min(65, maxBuildingAmplitude * 650)}
+              height={12}
+              fill="url(#tmdAmplitudeGradient)"
+              rx={3}
+            />
+
+            {/* Amplitude value */}
+            <text
+              x={32}
+              y={38}
+              textAnchor="middle"
+              fill={colors.textPrimary}
+              fontSize={14}
+              fontWeight="bold"
+            >
+              {(maxBuildingAmplitude * 100).toFixed(1)}
+            </text>
+            <text
+              x={32}
+              y={50}
+              textAnchor="middle"
+              fill={colors.textMuted}
+              fontSize={8}
+            >
+              max displacement
+            </text>
+
+            {/* Status indicator */}
+            <circle
+              cx={10}
+              cy={70}
+              r={5}
+              fill={damperEnabled ? colors.success : colors.error}
+            >
+              {isPlaying && (
+                <animate
+                  attributeName="opacity"
+                  values="0.5;1;0.5"
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+              )}
+            </circle>
+            <text
+              x={20}
+              y={73}
+              fill={colors.textSecondary}
+              fontSize={9}
+            >
+              TMD: {damperEnabled ? 'ON' : 'OFF'}
+            </text>
+
+            {/* Tuning indicator */}
+            <text
+              x={0}
+              y={90}
+              fill={colors.textMuted}
+              fontSize={8}
+            >
+              Tuning: {(damperTuning * 100).toFixed(0)}%
+            </text>
+            <rect
+              x={0}
+              y={94}
+              width={65}
+              height={4}
+              fill="#1e293b"
+              rx={2}
+            />
+            <rect
+              x={0}
+              y={94}
+              width={65 * damperTuning / 1.5}
+              height={4}
+              fill={damperTuning === 1.0 ? colors.success : colors.warning}
+              rx={2}
+            />
+          </g>
+
+          {/* ============================================= */}
+          {/* LEGEND                                       */}
+          {/* ============================================= */}
+          <g transform={`translate(15, 20)`}>
+            {/* Legend background */}
+            <rect
+              x={-5}
+              y={-5}
+              width={95}
+              height={damperEnabled ? 55 : 35}
+              fill="rgba(15, 23, 42, 0.9)"
+              stroke="#334155"
+              strokeWidth={1}
+              rx={6}
+            />
+
+            {/* Building legend */}
+            <rect x={0} y={2} width={14} height={14} fill="url(#tmdBuildingGradient)" rx={2} />
+            <text x={20} y={13} fill={colors.textSecondary} fontSize={10}>Building</text>
+
+            {/* TMD legend */}
             {damperEnabled && (
               <>
-                <rect x={0} y={18} width={12} height={12} fill={colors.damper} rx={2} />
-                <text x={18} y={28} fill={colors.textMuted} fontSize={10}>TMD Mass</text>
+                <rect x={0} y={22} width={14} height={14} fill="url(#tmdMassRadial)" rx={2} />
+                <text x={20} y={33} fill={colors.textSecondary} fontSize={10}>TMD Mass</text>
               </>
+            )}
+
+            {/* Earthquake indicator in legend */}
+            {isPlaying && (
+              <g transform={`translate(0, ${damperEnabled ? 40 : 20})`}>
+                <circle cx={7} cy={7} r={5} fill="url(#tmdEpicenterGlow)">
+                  <animate
+                    attributeName="r"
+                    values="4;6;4"
+                    dur="0.5s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+                <text x={20} y={10} fill={colors.warning} fontSize={9}>Earthquake Active</text>
+              </g>
             )}
           </g>
 
-          {/* Max amplitude display */}
-          <text
-            x={width - 20}
-            y={25}
-            textAnchor="end"
-            fill={colors.textSecondary}
-            fontSize={12}
-          >
-            Max Amp: {(maxBuildingAmplitude * 100).toFixed(1)}
-          </text>
+          {/* Frequency display */}
+          {isPlaying && (
+            <text
+              x={15}
+              y={height - 15}
+              fill={colors.textMuted}
+              fontSize={10}
+            >
+              Earthquake Freq: {earthquakeFreq.toFixed(1)} Hz
+            </text>
+          )}
         </svg>
 
         {interactive && (
@@ -533,14 +1145,20 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isPlaying ? colors.error : colors.success,
+                background: isPlaying
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isPlaying
+                  ? '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 15px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
-              {isPlaying ? '⏹ Stop Earthquake' : '🌋 Start Earthquake'}
+              {isPlaying ? 'Stop Earthquake' : 'Start Earthquake'}
             </button>
             <button
               onClick={resetSimulation}
@@ -553,9 +1171,10 @@ const TunedMassDamperRenderer: React.FC<TunedMassDamperRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}

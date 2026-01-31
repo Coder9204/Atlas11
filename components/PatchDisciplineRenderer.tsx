@@ -506,23 +506,58 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showRefactor: boolean = false) => {
-    const width = 450;
-    const height = 350;
+    const width = 700;
+    const height = 400;
     const stats = calculateRisk();
 
-    // Risk curve points
+    // Risk curve points for the graph
     const curvePoints: string[] = [];
-    for (let x = 0; x <= 100; x += 5) {
+    for (let x = 0; x <= 100; x += 2) {
       const risk = Math.pow(x / 100, 1.5) * 100 * (showRefactor && includesRefactor ? 2.5 : 1);
       const clampedRisk = Math.min(100, risk);
-      const px = 50 + (x / 100) * 300;
-      const py = 280 - (clampedRisk / 100) * 200;
+      const px = 380 + (x / 100) * 280;
+      const py = 320 - (clampedRisk / 100) * 200;
       curvePoints.push(`${px},${py}`);
     }
 
-    // Current point
-    const currentX = 50 + (diffSize / 100) * 300;
-    const currentY = 280 - (stats.regressionRisk / 100) * 200;
+    // Current point on the risk curve
+    const currentX = 380 + (diffSize / 100) * 280;
+    const currentY = 320 - (stats.regressionRisk / 100) * 200;
+
+    // Generate diff lines for visualization
+    const generateDiffLines = () => {
+      const lines = [];
+      const totalLines = Math.min(12, Math.ceil(diffSize / 8));
+      const addedRatio = includesRefactor ? 0.3 : 0.5;
+      const removedRatio = includesRefactor ? 0.3 : 0.3;
+
+      for (let i = 0; i < totalLines; i++) {
+        const rand = Math.random();
+        let type: 'added' | 'removed' | 'context' | 'refactor';
+        if (includesRefactor && rand > 0.7) {
+          type = 'refactor';
+        } else if (rand < addedRatio) {
+          type = 'added';
+        } else if (rand < addedRatio + removedRatio) {
+          type = 'removed';
+        } else {
+          type = 'context';
+        }
+        lines.push({ y: 75 + i * 22, type });
+      }
+      return lines;
+    };
+
+    const diffLines = generateDiffLines();
+
+    // Workflow timeline steps
+    const workflowSteps = [
+      { x: 45, label: 'Write', status: 'complete' as const },
+      { x: 105, label: 'Review', status: diffSize > 50 ? 'warning' as const : 'complete' as const },
+      { x: 165, label: 'Test', status: diffSize > 70 ? 'danger' as const : diffSize > 40 ? 'warning' as const : 'complete' as const },
+      { x: 225, label: 'Deploy', status: stats.regressionRisk > 60 ? 'danger' as const : stats.regressionRisk > 30 ? 'warning' as const : 'complete' as const },
+      { x: 285, label: 'Monitor', status: 'pending' as const },
+    ];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -531,82 +566,402 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
           <defs>
-            <linearGradient id="riskGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor={colors.success} stopOpacity="0.3" />
-              <stop offset="50%" stopColor={colors.warning} stopOpacity="0.3" />
-              <stop offset="100%" stopColor={colors.error} stopOpacity="0.3" />
+            {/* === PREMIUM BACKGROUND GRADIENTS === */}
+            <linearGradient id="ptchLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
+
+            {/* === CODE EDITOR GRADIENTS === */}
+            <linearGradient id="ptchEditorFrame" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="15%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="85%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            <linearGradient id="ptchEditorBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            <linearGradient id="ptchTitleBar" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* === DIFF LINE GRADIENTS === */}
+            <linearGradient id="ptchAddedLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#166534" />
+              <stop offset="10%" stopColor="#15803d" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="90%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#166534" />
+            </linearGradient>
+
+            <linearGradient id="ptchRemovedLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#991b1b" />
+              <stop offset="10%" stopColor="#b91c1c" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="90%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            <linearGradient id="ptchContextLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#475569" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            <linearGradient id="ptchRefactorLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="10%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.3" />
+              <stop offset="90%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            {/* === RISK GRAPH GRADIENTS === */}
+            <linearGradient id="ptchRiskGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="75%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.4" />
+            </linearGradient>
+
+            <linearGradient id="ptchRiskCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            <linearGradient id="ptchRiskCurveRefactor" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* === STATUS INDICATOR RADIAL GRADIENTS === */}
+            <radialGradient id="ptchStatusComplete" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="40%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.8" />
+            </radialGradient>
+
+            <radialGradient id="ptchStatusWarning" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="40%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0.8" />
+            </radialGradient>
+
+            <radialGradient id="ptchStatusDanger" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="40%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.8" />
+            </radialGradient>
+
+            <radialGradient id="ptchStatusPending" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0.8" />
+            </radialGradient>
+
+            <radialGradient id="ptchMarkerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={stats.regressionRisk > 50 ? "#fca5a5" : "#86efac"} />
+              <stop offset="30%" stopColor={stats.regressionRisk > 50 ? "#ef4444" : "#22c55e"} />
+              <stop offset="60%" stopColor={stats.regressionRisk > 50 ? "#dc2626" : "#16a34a"} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={stats.regressionRisk > 50 ? "#b91c1c" : "#15803d"} stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+            <filter id="ptchGlowGreen" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="ptchGlowRed" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="ptchGlowAmber" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="ptchGlowPurple" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="ptchMarkerBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
+
+            <filter id="ptchSoftGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="ptchGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Diff Size vs Regression Risk
-          </text>
+          {/* Premium dark background */}
+          <rect width={width} height={height} fill="url(#ptchLabBg)" />
+          <rect width={width} height={height} fill="url(#ptchGrid)" />
 
-          {/* Background grid */}
-          {[0, 25, 50, 75, 100].map(v => (
-            <g key={v}>
-              <line
-                x1={50}
-                y1={280 - (v / 100) * 200}
-                x2={350}
-                y2={280 - (v / 100) * 200}
-                stroke="rgba(255,255,255,0.1)"
-                strokeDasharray="4,4"
-              />
-              <text x={40} y={285 - (v / 100) * 200} fill={colors.textMuted} fontSize={10} textAnchor="end">
-                {v}%
+          {/* === LEFT PANEL: CODE EDITOR / DIFF VIEW === */}
+          <g transform="translate(15, 30)">
+            {/* Editor outer frame with depth */}
+            <rect x="0" y="0" width="330" height="340" rx="10" fill="url(#ptchEditorFrame)" stroke="#475569" strokeWidth="1" />
+            <rect x="4" y="4" width="322" height="332" rx="8" fill="url(#ptchEditorBg)" />
+
+            {/* Title bar */}
+            <rect x="4" y="4" width="322" height="28" rx="8" fill="url(#ptchTitleBar)" />
+            <rect x="4" y="24" width="322" height="8" fill="url(#ptchTitleBar)" />
+
+            {/* Window controls */}
+            <circle cx="20" cy="18" r="5" fill="#ef4444" />
+            <circle cx="38" cy="18" r="5" fill="#f59e0b" />
+            <circle cx="56" cy="18" r="5" fill="#22c55e" />
+
+            {/* File name */}
+            <text x="165" y="22" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold" fontFamily="monospace">
+              feature.tsx - {stats.linesChanged} lines changed
+            </text>
+
+            {/* Line numbers column */}
+            <rect x="8" y="36" width="30" height="260" fill="#0f172a" />
+            {diffLines.map((_, i) => (
+              <text key={i} x="28" y={80 + i * 22} textAnchor="end" fill="#475569" fontSize="9" fontFamily="monospace">
+                {i + 1}
+              </text>
+            ))}
+
+            {/* Diff lines with gradients */}
+            {diffLines.map((line, i) => {
+              const fillId = line.type === 'added' ? 'url(#ptchAddedLine)' :
+                            line.type === 'removed' ? 'url(#ptchRemovedLine)' :
+                            line.type === 'refactor' ? 'url(#ptchRefactorLine)' :
+                            'url(#ptchContextLine)';
+              const prefix = line.type === 'added' ? '+' :
+                            line.type === 'removed' ? '-' :
+                            line.type === 'refactor' ? '~' : ' ';
+              const prefixColor = line.type === 'added' ? '#22c55e' :
+                                  line.type === 'removed' ? '#ef4444' :
+                                  line.type === 'refactor' ? '#a78bfa' : '#64748b';
+              const filter = line.type === 'added' ? 'url(#ptchGlowGreen)' :
+                            line.type === 'removed' ? 'url(#ptchGlowRed)' :
+                            line.type === 'refactor' ? 'url(#ptchGlowPurple)' : '';
+
+              return (
+                <g key={i}>
+                  <rect x="42" y={line.y - 12} width="278" height="18" rx="2" fill={fillId} filter={filter} opacity="0.8" />
+                  <text x="48" y={line.y} fill={prefixColor} fontSize="11" fontWeight="bold" fontFamily="monospace">{prefix}</text>
+                  <rect x="58" y={line.y - 8} width={50 + Math.random() * 150} height="8" rx="2" fill={prefixColor} opacity="0.4" />
+                </g>
+              );
+            })}
+
+            {/* Diff stats summary */}
+            <rect x="8" y="300" width="314" height="32" rx="4" fill="#111827" />
+            <text x="20" y="320" fill="#22c55e" fontSize="10" fontWeight="bold">+{Math.ceil(stats.linesChanged * 0.5)}</text>
+            <text x="60" y="320" fill="#ef4444" fontSize="10" fontWeight="bold">-{Math.ceil(stats.linesChanged * 0.3)}</text>
+            {includesRefactor && (
+              <text x="100" y="320" fill="#a78bfa" fontSize="10" fontWeight="bold">~{Math.ceil(stats.linesChanged * 0.2)} refactor</text>
+            )}
+            <text x="220" y="320" fill="#64748b" fontSize="9">
+              {stats.filesAffected} file{stats.filesAffected > 1 ? 's' : ''} changed
+            </text>
+          </g>
+
+          {/* === WORKFLOW TIMELINE === */}
+          <g transform="translate(15, 0)">
+            <rect x="0" y="2" width="330" height="24" rx="4" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+            <text x="165" y="15" textAnchor="middle" fill="#64748b" fontSize="8" fontWeight="bold" letterSpacing="0.5">DEPLOYMENT PIPELINE</text>
+
+            {/* Timeline connector line */}
+            <line x1="45" y1="18" x2="285" y2="18" stroke="#334155" strokeWidth="2" />
+
+            {/* Workflow steps with status indicators */}
+            {workflowSteps.map((step, i) => {
+              const gradientId = step.status === 'complete' ? 'url(#ptchStatusComplete)' :
+                                step.status === 'warning' ? 'url(#ptchStatusWarning)' :
+                                step.status === 'danger' ? 'url(#ptchStatusDanger)' :
+                                'url(#ptchStatusPending)';
+              const glowFilter = step.status === 'complete' ? 'url(#ptchGlowGreen)' :
+                                step.status === 'warning' ? 'url(#ptchGlowAmber)' :
+                                step.status === 'danger' ? 'url(#ptchGlowRed)' : '';
+              return (
+                <g key={i}>
+                  <circle cx={step.x} cy="18" r="6" fill={gradientId} filter={glowFilter} />
+                  {step.status !== 'pending' && (
+                    <text x={step.x} y="21" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
+                      {step.status === 'complete' ? '\u2713' : step.status === 'warning' ? '!' : '\u2717'}
+                    </text>
+                  )}
+                </g>
+              );
+            })}
+          </g>
+
+          {/* === RIGHT PANEL: RISK ANALYSIS GRAPH === */}
+          <g transform="translate(360, 30)">
+            {/* Graph frame */}
+            <rect x="0" y="0" width="320" height="260" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+
+            {/* Graph title */}
+            <text x="160" y="20" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">
+              Diff Size vs Regression Risk
+            </text>
+
+            {/* Risk gradient background */}
+            <rect x="20" y="35" width="280" height="185" fill="url(#ptchRiskGradient)" opacity="0.3" rx="4" />
+
+            {/* Grid lines */}
+            {[0, 25, 50, 75, 100].map(v => (
+              <g key={v}>
+                <line
+                  x1={20}
+                  y1={220 - (v / 100) * 180}
+                  x2={300}
+                  y2={220 - (v / 100) * 180}
+                  stroke="#334155"
+                  strokeWidth={v === 50 ? "1" : "0.5"}
+                  strokeDasharray={v === 50 ? "none" : "4,4"}
+                />
+                <text x={15} y={224 - (v / 100) * 180} fill="#64748b" fontSize="8" textAnchor="end">
+                  {v}%
+                </text>
+              </g>
+            ))}
+
+            {/* X-axis labels */}
+            {[0, 50, 100].map(v => (
+              <text key={v} x={20 + (v / 100) * 280} y={238} fill="#64748b" fontSize="8" textAnchor="middle">
+                {v * 5}
+              </text>
+            ))}
+
+            {/* Axes */}
+            <line x1={20} y1={220} x2={300} y2={220} stroke="#475569" strokeWidth="2" />
+            <line x1={20} y1={40} x2={20} y2={220} stroke="#475569" strokeWidth="2" />
+
+            {/* Risk curve with gradient stroke */}
+            <polyline
+              points={curvePoints.map(p => {
+                const [px, py] = p.split(',').map(Number);
+                return `${px - 360},${py - 100}`;
+              }).join(' ')}
+              fill="none"
+              stroke={showRefactor && includesRefactor ? 'url(#ptchRiskCurveRefactor)' : 'url(#ptchRiskCurve)'}
+              strokeWidth={3}
+              strokeLinecap="round"
+              filter="url(#ptchSoftGlow)"
+            />
+
+            {/* Danger zone indicator */}
+            <rect x={200} y={40} width={100} height={60} fill="rgba(239, 68, 68, 0.15)" rx="4" stroke="#ef4444" strokeWidth="0.5" strokeDasharray="3,3" />
+            <text x={250} y={55} fill="#f87171" fontSize="8" textAnchor="middle" fontWeight="bold">DANGER</text>
+            <text x={250} y={67} fill="#f87171" fontSize="7" textAnchor="middle">ZONE</text>
+
+            {/* Safe zone indicator */}
+            <rect x={20} y={170} width={80} height={50} fill="rgba(16, 185, 129, 0.15)" rx="4" stroke="#22c55e" strokeWidth="0.5" strokeDasharray="3,3" />
+            <text x={60} y={195} fill="#4ade80" fontSize="8" textAnchor="middle" fontWeight="bold">SAFE</text>
+
+            {/* Current position marker with glow */}
+            <circle cx={currentX - 360} cy={currentY - 100} r="16" fill="url(#ptchMarkerGlow)" filter="url(#ptchMarkerBlur)" />
+            <circle cx={currentX - 360} cy={currentY - 100} r="10" fill="url(#ptchMarkerGlow)" filter="url(#ptchSoftGlow)" />
+            <circle cx={currentX - 360} cy={currentY - 100} r="5" fill="#0f172a" stroke={stats.regressionRisk > 50 ? "#ef4444" : "#22c55e"} strokeWidth="2" />
+
+            {/* Axis labels */}
+            <text x={160} y={252} fill="#94a3b8" fontSize="9" textAnchor="middle">Lines Changed</text>
+            <text x={8} y={130} fill="#94a3b8" fontSize="9" textAnchor="middle" transform="rotate(-90, 8, 130)">Risk %</text>
+          </g>
+
+          {/* === METRICS PANEL === */}
+          <g transform="translate(360, 300)">
+            <rect x="0" y="0" width="320" height="70" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+            <text x="160" y="16" textAnchor="middle" fill="#64748b" fontSize="9" fontWeight="bold" letterSpacing="0.5">RISK METRICS</text>
+
+            {/* Risk meter */}
+            <g transform="translate(20, 28)">
+              <rect x="0" y="0" width="85" height="35" rx="4" fill={stats.regressionRisk > 50 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'} />
+              <text x="42" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8">RISK</text>
+              <text x="42" y="30" textAnchor="middle" fill={stats.regressionRisk > 50 ? '#f87171' : '#4ade80'} fontSize="14" fontWeight="bold" filter={stats.regressionRisk > 50 ? 'url(#ptchGlowRed)' : 'url(#ptchGlowGreen)'}>
+                {stats.regressionRisk.toFixed(0)}%
               </text>
             </g>
-          ))}
 
-          {/* Axes */}
-          <line x1={50} y1={280} x2={350} y2={280} stroke={colors.textMuted} strokeWidth={2} />
-          <line x1={50} y1={80} x2={50} y2={280} stroke={colors.textMuted} strokeWidth={2} />
+            {/* Review difficulty meter */}
+            <g transform="translate(117, 28)">
+              <rect x="0" y="0" width="85" height="35" rx="4" fill={stats.reviewDifficulty > 60 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'} />
+              <text x="42" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8">REVIEW</text>
+              <text x="42" y="30" textAnchor="middle" fill={stats.reviewDifficulty > 60 ? '#fbbf24' : '#4ade80'} fontSize="14" fontWeight="bold" filter={stats.reviewDifficulty > 60 ? 'url(#ptchGlowAmber)' : 'url(#ptchGlowGreen)'}>
+                {stats.reviewDifficulty.toFixed(0)}%
+              </text>
+            </g>
 
-          {/* Risk curve */}
-          <polyline
-            points={curvePoints.join(' ')}
-            fill="none"
-            stroke={showRefactor && includesRefactor ? colors.error : colors.warning}
-            strokeWidth={3}
-          />
+            {/* Rollback ease meter */}
+            <g transform="translate(214, 28)">
+              <rect x="0" y="0" width="85" height="35" rx="4" fill={stats.rollbackEase > 50 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'} />
+              <text x="42" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8">ROLLBACK</text>
+              <text x="42" y="30" textAnchor="middle" fill={stats.rollbackEase > 50 ? '#4ade80' : '#f87171'} fontSize="14" fontWeight="bold" filter={stats.rollbackEase > 50 ? 'url(#ptchGlowGreen)' : 'url(#ptchGlowRed)'}>
+                {stats.rollbackEase.toFixed(0)}%
+              </text>
+            </g>
+          </g>
 
-          {/* Danger zone */}
-          <rect x={250} y={80} width={100} height={100} fill="rgba(239, 68, 68, 0.1)" />
-          <text x={300} y={100} fill={colors.error} fontSize={10} textAnchor="middle">DANGER ZONE</text>
-
-          {/* Safe zone */}
-          <rect x={50} y={230} width={100} height={50} fill="rgba(16, 185, 129, 0.1)" />
-          <text x={100} y={250} fill={colors.success} fontSize={10} textAnchor="middle">SAFE ZONE</text>
-
-          {/* Current position marker */}
-          <circle cx={currentX} cy={currentY} r={10} fill={stats.regressionRisk > 50 ? colors.error : colors.success} />
-          <circle cx={currentX} cy={currentY} r={6} fill={colors.bgPrimary} />
-
-          {/* Axis labels */}
-          <text x={200} y={310} fill={colors.textSecondary} fontSize={12} textAnchor="middle">
-            Lines Changed: {stats.linesChanged} | Files: {stats.filesAffected}
-          </text>
-          <text x={30} y={180} fill={colors.textSecondary} fontSize={11} textAnchor="middle" transform="rotate(-90, 30, 180)">
-            Risk %
-          </text>
-
-          {/* Stats panel */}
-          <rect x={360} y={80} width={80} height={120} fill="rgba(0,0,0,0.5)" rx={8} />
-          <text x={400} y={100} fill={colors.textSecondary} fontSize={9} textAnchor="middle">METRICS</text>
-          <text x={400} y={125} fill={stats.regressionRisk > 50 ? colors.error : colors.success} fontSize={11} textAnchor="middle">
-            Risk: {stats.regressionRisk.toFixed(0)}%
-          </text>
-          <text x={400} y={150} fill={stats.reviewDifficulty > 60 ? colors.warning : colors.textPrimary} fontSize={11} textAnchor="middle">
-            Review: {stats.reviewDifficulty.toFixed(0)}%
-          </text>
-          <text x={400} y={175} fill={stats.rollbackEase > 50 ? colors.success : colors.error} fontSize={11} textAnchor="middle">
-            Rollback: {stats.rollbackEase.toFixed(0)}%
-          </text>
+          {/* Legend */}
+          <g transform="translate(370, 378)">
+            <rect x="-5" y="-8" width="300" height="20" rx="4" fill="#111827" opacity="0.8" />
+            <circle cx="8" cy="2" r="4" fill="#22c55e" />
+            <text x="18" y="5" fill="#94a3b8" fontSize="8">Added</text>
+            <circle cx="68" cy="2" r="4" fill="#ef4444" />
+            <text x="78" y="5" fill="#94a3b8" fontSize="8">Removed</text>
+            <circle cx="138" cy="2" r="4" fill="#64748b" />
+            <text x="148" y="5" fill="#94a3b8" fontSize="8">Context</text>
+            {includesRefactor && (
+              <>
+                <circle cx="208" cy="2" r="4" fill="#a78bfa" />
+                <text x="218" y="5" fill="#94a3b8" fontSize="8">Refactor</text>
+              </>
+            )}
+          </g>
         </svg>
 
         {interactive && (
@@ -617,11 +972,12 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.success,
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.3)',
               }}
             >
               Small Patch (10 lines)
@@ -632,11 +988,12 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.warning,
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: '0 4px 15px rgba(245, 158, 11, 0.3)',
               }}
             >
               Medium Patch
@@ -647,11 +1004,12 @@ const PatchDisciplineRenderer: React.FC<PatchDisciplineRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.error,
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.3)',
               }}
             >
               Big Refactor

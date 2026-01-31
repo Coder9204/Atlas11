@@ -353,7 +353,7 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
 
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
-    const height = 480;
+    const height = 520;
     const metrics = calculateMetrics();
 
     return (
@@ -363,93 +363,301 @@ const TestFirstPromptingRenderer: React.FC<TestFirstPromptingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            Test Timeline - Iteration {iteration}
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="tfpLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Test panel card gradient with depth */}
+            <linearGradient id="tfpCardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#1a2332" />
+              <stop offset="70%" stopColor="#151d2b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* TDD workflow cycle gradient - test first (green to blue) */}
+            <linearGradient id="tfpTestFirstFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="25%" stopColor="#14b8a6" />
+              <stop offset="50%" stopColor="#06b6d4" />
+              <stop offset="75%" stopColor="#0ea5e9" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Code first workflow gradient (amber to red warning) */}
+            <linearGradient id="tfpCodeFirstFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Coverage bar gradient (purple spectrum) */}
+            <linearGradient id="tfpCoverageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6366f1" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="75%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#d8b4fe" />
+            </linearGradient>
+
+            {/* Pass status radial glow */}
+            <radialGradient id="tfpPassGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+              <stop offset="40%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#059669" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Fail status radial glow */}
+            <radialGradient id="tfpFailGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Pending status radial glow */}
+            <radialGradient id="tfpPendingGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#9ca3af" stopOpacity="1" />
+              <stop offset="40%" stopColor="#6b7280" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#4b5563" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#374151" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Running/animating test glow */}
+            <radialGradient id="tfpRunningGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Iteration progress gradient */}
+            <linearGradient id="tfpIterationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="30%" stopColor="#14b8a6" />
+              <stop offset="60%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Metrics panel brushed metal effect */}
+            <linearGradient id="tfpBrushedMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="40%" stopColor="#374151" />
+              <stop offset="60%" stopColor="#4b5563" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Header title gradient */}
+            <linearGradient id="tfpTitleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f8fafc" />
+              <stop offset="50%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#cbd5e1" />
+            </linearGradient>
+
+            {/* Pass status glow filter */}
+            <filter id="tfpPassGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Fail status glow filter */}
+            <filter id="tfpFailGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow for panels */}
+            <filter id="tfpPanelGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Running test pulse filter */}
+            <filter id="tfpPulseFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern for lab background */}
+            <pattern id="tfpLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Test case row highlight gradient */}
+            <linearGradient id="tfpRowHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="10%" stopColor="#1e293b" stopOpacity="0.5" />
+              <stop offset="90%" stopColor="#1e293b" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#tfpLabBg)" />
+          <rect width={width} height={height} fill="url(#tfpLabGrid)" />
+
+          {/* Title Section with gradient text effect */}
+          <rect x={10} y={10} width={width - 20} height={50} rx={8} fill="url(#tfpCardGradient)" opacity="0.8" />
+          <text x={width/2} y={32} fill="url(#tfpTitleGradient)" fontSize={15} textAnchor="middle" fontWeight="bold">
+            TDD Workflow - Iteration {iteration}
           </text>
-          <text x={width/2} y={45} fill={testMode === 'test_first' ? colors.success : colors.warning} fontSize={12} textAnchor="middle">
+          <text x={width/2} y={50} fill={testMode === 'test_first' ? '#10b981' : '#f59e0b'} fontSize={12} textAnchor="middle" fontWeight="600">
             {testMode === 'test_first' ? 'Test-First Approach' : 'Code-First Approach'}
           </text>
+          {/* Approach indicator bar */}
+          <rect x={120} y={54} width={width - 240} height={3} rx={1.5} fill={testMode === 'test_first' ? 'url(#tfpTestFirstFlow)' : 'url(#tfpCodeFirstFlow)'} />
 
-          {/* Test results grid */}
-          <rect x={20} y={60} width={width - 40} height={200} fill={colors.bgCard} rx={8} />
-          <text x={30} y={80} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Unit Tests:</text>
+          {/* Test Results Panel */}
+          <rect x={15} y={70} width={width - 30} height={210} rx={10} fill="url(#tfpCardGradient)" filter="url(#tfpPanelGlow)" />
+          <rect x={15} y={70} width={width - 30} height={3} rx={1.5} fill="url(#tfpBrushedMetal)" opacity="0.5" />
+          <text x={25} y={92} fill={colors.textSecondary} fontSize={11} fontWeight="bold" letterSpacing="0.5">UNIT TESTS</text>
 
           {unitTests.map((test, i) => {
-            const y = 95 + i * 20;
+            const y = 110 + i * 21;
             const result = testResults[i];
+            const isRunning = isAnimating && result === 'pending';
             return (
               <g key={i}>
+                {/* Row highlight on hover area */}
+                <rect x={20} y={y - 10} width={width - 40} height={20} rx={4} fill="url(#tfpRowHighlight)" opacity="0.3" />
+
+                {/* Status indicator with premium glow */}
                 <circle
                   cx={35}
                   cy={y}
-                  r={6}
+                  r={8}
                   fill={
-                    result === 'pass' ? colors.testPass :
-                    result === 'fail' ? colors.testFail :
-                    colors.testPending
+                    result === 'pass' ? 'url(#tfpPassGlow)' :
+                    result === 'fail' ? 'url(#tfpFailGlow)' :
+                    isRunning ? 'url(#tfpRunningGlow)' :
+                    'url(#tfpPendingGlow)'
+                  }
+                  filter={
+                    result === 'pass' ? 'url(#tfpPassGlowFilter)' :
+                    result === 'fail' ? 'url(#tfpFailGlowFilter)' :
+                    isRunning ? 'url(#tfpPulseFilter)' :
+                    undefined
                   }
                 />
-                <text x={50} y={y + 4} fill={colors.textPrimary} fontSize={10}>
+                {/* Inner circle for depth */}
+                <circle
+                  cx={35}
+                  cy={y}
+                  r={4}
+                  fill={
+                    result === 'pass' ? '#10b981' :
+                    result === 'fail' ? '#ef4444' :
+                    isRunning ? '#f59e0b' :
+                    '#6b7280'
+                  }
+                />
+                {/* Check/X icon */}
+                {result === 'pass' && (
+                  <path d="M32 0 L34 2 L38 -2" transform={`translate(0, ${y})`} stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+                )}
+                {result === 'fail' && (
+                  <g transform={`translate(35, ${y})`}>
+                    <line x1="-2" y1="-2" x2="2" y2="2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+                    <line x1="2" y1="-2" x2="-2" y2="2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+                  </g>
+                )}
+
+                <text x={52} y={y + 4} fill={colors.textPrimary} fontSize={10} fontFamily="monospace">
                   {test.name}
                 </text>
-                <text x={width - 80} y={y + 4} fill={colors.textMuted} fontSize={9}>
+                <rect x={width - 75} y={y - 8} width={55} height={16} rx={4}
+                  fill={result === 'pass' ? 'rgba(16, 185, 129, 0.2)' : result === 'fail' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(107, 114, 128, 0.2)'}
+                />
+                <text x={width - 48} y={y + 4} fill={result === 'pass' ? '#10b981' : result === 'fail' ? '#ef4444' : colors.textMuted} fontSize={9} textAnchor="middle" fontWeight="600">
                   {result.toUpperCase()}
                 </text>
               </g>
             );
           })}
 
-          {/* Coverage bar */}
-          <text x={20} y={280} fill={colors.textSecondary} fontSize={11}>Coverage:</text>
-          <rect x={80} y={268} width={200} height={16} fill="#374151" rx={4} />
-          <rect x={80} y={268} width={metrics.coverage * 2} height={16} fill={colors.coverage} rx={4} />
-          <text x={290} y={280} fill={colors.textPrimary} fontSize={11}>{metrics.coverage.toFixed(0)}%</text>
+          {/* Coverage Section */}
+          <rect x={15} y={290} width={width - 30} height={45} rx={8} fill="url(#tfpCardGradient)" />
+          <text x={25} y={310} fill={colors.textSecondary} fontSize={11} fontWeight="bold" letterSpacing="0.5">COVERAGE</text>
+          <rect x={25} y={318} width={width - 100} height={12} rx={6} fill="#1f2937" />
+          <rect x={25} y={318} width={(width - 100) * (metrics.coverage / 100)} height={12} rx={6} fill="url(#tfpCoverageGradient)" />
+          <text x={width - 40} y={328} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold">{metrics.coverage.toFixed(0)}%</text>
 
-          {/* Iteration timeline */}
-          <text x={20} y={315} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Convergence Timeline:</text>
-          <rect x={20} y={325} width={width - 40} height={40} fill={colors.bgCard} rx={6} />
+          {/* Convergence Timeline */}
+          <rect x={15} y={345} width={width - 30} height={55} rx={8} fill="url(#tfpCardGradient)" />
+          <text x={25} y={362} fill={colors.textSecondary} fontSize={10} fontWeight="bold" letterSpacing="0.5">CONVERGENCE TIMELINE</text>
 
           {[1, 2, 3, 4, 5].map((iter, i) => {
-            const x = 40 + i * 70;
+            const x = 35 + i * 72;
             const isComplete = iter <= iteration;
             const passRatio = testMode === 'test_first' ? Math.min(1, iter * 0.25) : Math.min(1, iter * 0.15);
             return (
               <g key={i}>
                 <rect
                   x={x}
-                  y={335}
-                  width={50}
-                  height={20}
-                  fill={isComplete ? (passRatio > 0.7 ? colors.success : colors.warning) : '#374151'}
-                  rx={4}
-                  opacity={isComplete ? 1 : 0.3}
+                  y={372}
+                  width={60}
+                  height={22}
+                  rx={6}
+                  fill={isComplete ? (passRatio > 0.7 ? 'url(#tfpTestFirstFlow)' : 'url(#tfpCodeFirstFlow)') : '#1f2937'}
+                  opacity={isComplete ? 1 : 0.4}
+                  filter={isComplete && passRatio > 0.7 ? 'url(#tfpPassGlowFilter)' : undefined}
                 />
-                <text x={x + 25} y={349} fill={colors.textPrimary} fontSize={10} textAnchor="middle">
+                <text x={x + 30} y={387} fill={isComplete ? '#fff' : colors.textMuted} fontSize={11} textAnchor="middle" fontWeight="bold">
                   {isComplete ? `${(passRatio * 100).toFixed(0)}%` : '-'}
                 </text>
               </g>
             );
           })}
 
-          {/* Metrics comparison */}
-          <rect x={20} y={380} width={width - 40} height={90} fill={colors.bgCard} rx={8} />
-          <text x={30} y={400} fill={colors.textSecondary} fontSize={11}>Pass/Fail: </text>
-          <text x={100} y={400} fill={colors.testPass} fontSize={11}>{metrics.passCount} passed</text>
-          <text x={170} y={400} fill={colors.testFail} fontSize={11}>{metrics.failCount} failed</text>
+          {/* Metrics Panel */}
+          <rect x={15} y={410} width={width - 30} height={100} rx={10} fill="url(#tfpCardGradient)" filter="url(#tfpPanelGlow)" />
+          <rect x={15} y={410} width={width - 30} height={3} rx={1.5} fill="url(#tfpBrushedMetal)" opacity="0.5" />
+          <text x={25} y={430} fill={colors.textSecondary} fontSize={10} fontWeight="bold" letterSpacing="0.5">METRICS</text>
 
-          <text x={30} y={420} fill={colors.textSecondary} fontSize={11}>Est. iterations to 100%: </text>
-          <text x={180} y={420} fill={metrics.iterationsToPass <= 2 ? colors.success : colors.warning} fontSize={11}>{metrics.iterationsToPass}</text>
+          {/* Pass/Fail counts */}
+          <circle cx={35} cy={448} r={6} fill="url(#tfpPassGlow)" />
+          <text x={48} y={452} fill={colors.testPass} fontSize={11} fontWeight="600">{metrics.passCount} passed</text>
+          <circle cx={130} cy={448} r={6} fill="url(#tfpFailGlow)" />
+          <text x={143} y={452} fill={colors.testFail} fontSize={11} fontWeight="600">{metrics.failCount} failed</text>
 
-          <text x={30} y={440} fill={colors.textSecondary} fontSize={11}>Regression Risk: </text>
-          <rect x={130} y={430} width={100} height={12} fill="#374151" rx={4} />
-          <rect x={130} y={430} width={metrics.regressionRisk} height={12} fill={metrics.regressionRisk < 30 ? colors.success : colors.error} rx={4} />
-          <text x={240} y={441} fill={colors.textPrimary} fontSize={10}>{metrics.regressionRisk}%</text>
+          {/* Est. iterations */}
+          <text x={25} y={472} fill={colors.textSecondary} fontSize={10}>Est. iterations to 100%:</text>
+          <rect x={150} y={462} width={30} height={16} rx={4} fill={metrics.iterationsToPass <= 2 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'} />
+          <text x={165} y={474} fill={metrics.iterationsToPass <= 2 ? colors.success : colors.warning} fontSize={12} textAnchor="middle" fontWeight="bold">{metrics.iterationsToPass}</text>
 
-          <text x={30} y={460} fill={colors.textSecondary} fontSize={11}>Bugs Found Early: </text>
-          <text x={140} y={460} fill={colors.success} fontSize={11}>{metrics.bugsFound}</text>
+          {/* Regression Risk bar */}
+          <text x={25} y={495} fill={colors.textSecondary} fontSize={10}>Regression Risk:</text>
+          <rect x={115} y={485} width={120} height={14} rx={4} fill="#1f2937" />
+          <rect x={115} y={485} width={metrics.regressionRisk * 1.2} height={14} rx={4} fill={metrics.regressionRisk < 30 ? 'url(#tfpTestFirstFlow)' : 'url(#tfpCodeFirstFlow)'} />
+          <text x={245} y={496} fill={colors.textPrimary} fontSize={11} fontWeight="600">{metrics.regressionRisk}%</text>
+
+          {/* Bugs Found */}
+          <text x={280} y={472} fill={colors.textSecondary} fontSize={10}>Bugs Found:</text>
+          <circle cx={360} cy={468} r={12} fill="url(#tfpPassGlow)" filter="url(#tfpPassGlowFilter)" />
+          <text x={360} y={472} fill="#fff" fontSize={11} textAnchor="middle" fontWeight="bold">{metrics.bugsFound}</text>
         </svg>
 
         {interactive && (

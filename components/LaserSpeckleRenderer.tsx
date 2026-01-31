@@ -445,61 +445,579 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   };
 
   const renderSpeckleVisualization = () => {
-    const baseColor = useLaser ? '#22c55e' : '#fbbf24';
     const effectiveCoherence = useLaser ? coherenceLength / 100 : 0.1;
 
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '400px', height: 'auto', background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '12px' }}>
+      <svg viewBox="0 0 700 400" style={{ width: '100%', maxWidth: '700px', height: 'auto', borderRadius: '16px' }}>
         <defs>
-          <filter id="speckleGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="glow" />
+          {/* ========== PREMIUM BACKGROUND GRADIENTS ========== */}
+          {/* Lab background with deep space feel */}
+          <linearGradient id="lspkLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* ========== LASER HOUSING GRADIENTS ========== */}
+          {/* Premium metallic laser housing */}
+          <linearGradient id="lspkLaserHousingMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="15%" stopColor="#9ca3af" />
+            <stop offset="30%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="70%" stopColor="#4b5563" />
+            <stop offset="85%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Laser aperture ring with chrome effect */}
+          <linearGradient id="lspkApertureRing" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="20%" stopColor="#4b5563" />
+            <stop offset="40%" stopColor="#9ca3af" />
+            <stop offset="60%" stopColor="#4b5563" />
+            <stop offset="80%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Laser lens glass effect */}
+          <radialGradient id="lspkLensGlass" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#22c55e" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#166534" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#14532d" stopOpacity="0.3" />
+          </radialGradient>
+
+          {/* LED lens (warm yellow) */}
+          <radialGradient id="lspkLEDLens" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#d97706" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#92400e" stopOpacity="0.3" />
+          </radialGradient>
+
+          {/* Heat sink fins gradient */}
+          <linearGradient id="lspkHeatSink" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* ========== COHERENT BEAM GRADIENTS ========== */}
+          {/* Main laser beam core */}
+          <linearGradient id="lspkBeamCore" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.95" />
+            <stop offset="20%" stopColor="#4ade80" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#86efac" stopOpacity="0.85" />
+            <stop offset="80%" stopColor="#4ade80" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.7" />
+          </linearGradient>
+
+          {/* Laser beam outer glow */}
+          <linearGradient id="lspkBeamGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.15" />
+          </linearGradient>
+
+          {/* LED diffuse beam */}
+          <linearGradient id="lspkLEDBeam" x1="0%" y1="50%" x2="100%" y2="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#fde68a" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#fef3c7" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* ========== ROUGH SURFACE GRADIENTS ========== */}
+          {/* Surface material with texture appearance */}
+          <linearGradient id="lspkSurfaceMaterial" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="20%" stopColor="#94a3b8" />
+            <stop offset="40%" stopColor="#64748b" />
+            <stop offset="60%" stopColor="#475569" />
+            <stop offset="80%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+
+          {/* Surface edge highlight */}
+          <linearGradient id="lspkSurfaceEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="50%" stopColor="#cbd5e1" />
+            <stop offset="100%" stopColor="#94a3b8" />
+          </linearGradient>
+
+          {/* ========== SCREEN/DETECTOR GRADIENTS ========== */}
+          {/* Detector screen with phosphor appearance */}
+          <linearGradient id="lspkScreenBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="15%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="85%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Screen border frame */}
+          <linearGradient id="lspkScreenFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="25%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="75%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#475569" />
+          </linearGradient>
+
+          {/* ========== SPECKLE EFFECT GRADIENTS ========== */}
+          {/* Bright speckle spot */}
+          <radialGradient id="lspkSpeckleBright" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+            <stop offset="30%" stopColor="#4ade80" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Medium intensity speckle */}
+          <radialGradient id="lspkSpeckleMedium" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#22c55e" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Dim speckle spot */}
+          <radialGradient id="lspkSpeckleDim" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" />
+            <stop offset="60%" stopColor="#166534" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#14532d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* LED uniform illumination spots */}
+          <radialGradient id="lspkLEDSpot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* ========== GLOW AND BLUR FILTERS ========== */}
+          {/* Laser aperture glow */}
+          <filter id="lspkApertureGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
-              <feMergeNode in="glow" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <radialGradient id="lightSource" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={baseColor} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={baseColor} stopOpacity="0" />
-          </radialGradient>
+
+          {/* Beam glow filter */}
+          <filter id="lspkBeamGlowFilter" x="-50%" y="-100%" width="200%" height="300%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Intense speckle glow */}
+          <filter id="lspkSpeckleGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Soft ambient glow */}
+          <filter id="lspkSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Inner shadow for depth */}
+          <filter id="lspkInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* Surface texture noise pattern */}
+          <pattern id="lspkSurfaceNoise" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="4" fill="#475569" />
+            <rect x="0" y="0" width="2" height="2" fill="#64748b" opacity="0.5" />
+            <rect x="2" y="2" width="2" height="2" fill="#64748b" opacity="0.3" />
+          </pattern>
+
+          {/* Lab grid pattern */}
+          <pattern id="lspkLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+          </pattern>
         </defs>
 
-        {/* Background grid */}
-        {[...Array(10)].map((_, i) => (
-          <line key={`v${i}`} x1={30 * i} y1={0} x2={30 * i} y2={200} stroke="#334155" strokeWidth="0.5" />
-        ))}
-        {[...Array(7)].map((_, i) => (
-          <line key={`h${i}`} x1={0} y1={30 * i} x2={300} y2={30 * i} stroke="#334155" strokeWidth="0.5" />
-        ))}
+        {/* ========== BACKGROUND ========== */}
+        <rect width="700" height="400" fill="url(#lspkLabBg)" />
+        <rect width="700" height="400" fill="url(#lspkLabGrid)" />
 
-        {/* Speckle pattern */}
-        {specklePattern.map((point, i) => {
-          const size = 3 + point.intensity * 5 * effectiveCoherence;
-          const opacity = 0.3 + point.intensity * 0.7 * effectiveCoherence;
-
-          return (
-            <circle
-              key={i}
-              cx={point.x}
-              cy={point.y}
-              r={size}
-              fill={baseColor}
-              opacity={opacity}
-              filter={point.intensity > 0.7 && useLaser ? "url(#speckleGlow)" : undefined}
+        {/* ========== LASER SOURCE ASSEMBLY ========== */}
+        <g transform="translate(30, 160)">
+          {/* Heat sink fins */}
+          {[...Array(8)].map((_, i) => (
+            <rect
+              key={`fin-${i}`}
+              x={i * 8}
+              y={-30}
+              width="6"
+              height="140"
+              fill="url(#lspkHeatSink)"
+              rx="1"
             />
-          );
-        })}
+          ))}
 
-        {/* Light source indicator */}
-        <g transform="translate(20, 20)">
-          <circle cx="0" cy="0" r="15" fill="url(#lightSource)" />
-          <text x="20" y="5" fontSize="10" fill="#94a3b8">{useLaser ? 'LASER' : 'LED'}</text>
+          {/* Main laser housing body */}
+          <rect
+            x="65"
+            y="-20"
+            width="80"
+            height="120"
+            rx="6"
+            fill="url(#lspkLaserHousingMetal)"
+            stroke="#1f2937"
+            strokeWidth="2"
+          />
+
+          {/* Housing detail lines */}
+          <line x1="70" y1="10" x2="140" y2="10" stroke="#1f2937" strokeWidth="1" />
+          <line x1="70" y1="70" x2="140" y2="70" stroke="#1f2937" strokeWidth="1" />
+
+          {/* Indicator LED on housing */}
+          <circle cx="85" cy="90" r="4" fill={useLaser ? "#22c55e" : "#fbbf24"} filter="url(#lspkSoftGlow)" />
+
+          {/* Aperture tube */}
+          <rect
+            x="145"
+            y="25"
+            width="30"
+            height="30"
+            rx="4"
+            fill="url(#lspkApertureRing)"
+            stroke="#1f2937"
+            strokeWidth="1"
+          />
+
+          {/* Aperture lens */}
+          <circle
+            cx="160"
+            cy="40"
+            r="12"
+            fill={useLaser ? "url(#lspkLensGlass)" : "url(#lspkLEDLens)"}
+            filter="url(#lspkApertureGlow)"
+          />
+
+          {/* Lens center reflection */}
+          <ellipse
+            cx="156"
+            cy="36"
+            rx="4"
+            ry="3"
+            fill="white"
+            opacity="0.4"
+          />
+
+          {/* Label */}
+          <text x="72" y="-30" fontSize="11" fontWeight="700" fill="#94a3b8" fontFamily="monospace">
+            {useLaser ? 'LASER' : 'LED'}
+          </text>
+          <text x="72" y="-18" fontSize="8" fill="#64748b" fontFamily="monospace">
+            {useLaser ? '532nm Coherent' : 'Broadband Incoherent'}
+          </text>
         </g>
 
-        {/* Coherence indicator */}
-        <g transform="translate(150, 185)">
-          <text x="0" y="0" fontSize="10" fill="#94a3b8" textAnchor="middle">
-            Coherence: {useLaser ? `${coherenceLength}%` : 'Low'}
+        {/* ========== COHERENT LIGHT BEAM ========== */}
+        {useLaser ? (
+          <g>
+            {/* Outer beam glow */}
+            <rect
+              x="205"
+              y="185"
+              width="150"
+              height="30"
+              fill="url(#lspkBeamGlow)"
+              filter="url(#lspkBeamGlowFilter)"
+              opacity={0.5 + effectiveCoherence * 0.5}
+            />
+
+            {/* Main coherent beam - parallel edges showing coherence */}
+            <rect
+              x="205"
+              y="193"
+              width="150"
+              height="14"
+              fill="url(#lspkBeamCore)"
+              opacity={0.7 + effectiveCoherence * 0.3}
+            />
+
+            {/* Beam wave pattern overlay */}
+            {[...Array(15)].map((_, i) => (
+              <line
+                key={`wave-${i}`}
+                x1={210 + i * 10}
+                y1="193"
+                x2={210 + i * 10}
+                y2="207"
+                stroke="#86efac"
+                strokeWidth="1"
+                opacity={0.3 + Math.sin(animationFrame * 0.2 + i * 0.5) * 0.2}
+              />
+            ))}
+
+            {/* Coherent wave annotation */}
+            <text x="250" y="175" fontSize="9" fill="#4ade80" fontFamily="monospace" textAnchor="middle">
+              Coherent waves (fixed phase)
+            </text>
+          </g>
+        ) : (
+          <g>
+            {/* LED diffuse beam - cone shape showing incoherence */}
+            <polygon
+              points="205,190 355,140 355,260 205,210"
+              fill="url(#lspkLEDBeam)"
+              opacity="0.5"
+            />
+
+            {/* Random phase indicators */}
+            {[...Array(8)].map((_, i) => (
+              <line
+                key={`led-ray-${i}`}
+                x1="205"
+                y1="200"
+                x2={355}
+                y2={150 + i * 15 + Math.sin(animationFrame * 0.3 + i) * 5}
+                stroke="#fcd34d"
+                strokeWidth="1"
+                strokeDasharray="4,4"
+                opacity="0.3"
+              />
+            ))}
+
+            {/* Incoherent annotation */}
+            <text x="270" y="130" fontSize="9" fill="#fbbf24" fontFamily="monospace" textAnchor="middle">
+              Incoherent (random phases)
+            </text>
+          </g>
+        )}
+
+        {/* ========== ROUGH SURFACE / DIFFUSER ========== */}
+        <g transform="translate(355, 120)">
+          {/* Surface frame */}
+          <rect
+            x="-5"
+            y="-10"
+            width="25"
+            height="180"
+            fill="url(#lspkSurfaceEdge)"
+            rx="3"
+          />
+
+          {/* Main rough surface */}
+          <rect
+            x="0"
+            y="0"
+            width="15"
+            height="160"
+            fill="url(#lspkSurfaceMaterial)"
+          />
+
+          {/* Surface texture overlay */}
+          <rect
+            x="0"
+            y="0"
+            width="15"
+            height="160"
+            fill="url(#lspkSurfaceNoise)"
+            opacity="0.5"
+          />
+
+          {/* Random scatter points on surface */}
+          {[...Array(20)].map((_, i) => (
+            <circle
+              key={`scatter-${i}`}
+              cx={3 + Math.random() * 9}
+              cy={10 + i * 8 + Math.random() * 4}
+              r={1 + Math.random()}
+              fill="#94a3b8"
+              opacity="0.6"
+            />
+          ))}
+
+          {/* Scatter arrows showing diffuse reflection */}
+          {useLaser && [...Array(6)].map((_, i) => {
+            const baseY = 20 + i * 25;
+            const angle = -60 + Math.random() * 120;
+            const length = 25 + Math.random() * 15;
+            const endX = 15 + Math.cos(angle * Math.PI / 180) * length;
+            const endY = baseY + Math.sin(angle * Math.PI / 180) * length;
+            return (
+              <g key={`scatter-arrow-${i}`} opacity={0.4 + effectiveCoherence * 0.4}>
+                <line
+                  x1="15"
+                  y1={baseY}
+                  x2={endX}
+                  y2={endY}
+                  stroke="#4ade80"
+                  strokeWidth="1"
+                  strokeDasharray="3,2"
+                />
+                <circle cx={endX} cy={endY} r="2" fill="#4ade80" />
+              </g>
+            );
+          })}
+
+          {/* Label */}
+          <text x="7" y={175} fontSize="9" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+            Rough
+          </text>
+          <text x="7" y={185} fontSize="9" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+            Surface
+          </text>
+        </g>
+
+        {/* ========== DETECTOR SCREEN WITH SPECKLE ========== */}
+        <g transform="translate(450, 40)">
+          {/* Screen outer frame */}
+          <rect
+            x="-8"
+            y="-8"
+            width="236"
+            height="336"
+            rx="8"
+            fill="url(#lspkScreenFrame)"
+          />
+
+          {/* Screen inner bezel */}
+          <rect
+            x="-4"
+            y="-4"
+            width="228"
+            height="328"
+            rx="6"
+            fill="#0f172a"
+          />
+
+          {/* Main screen area */}
+          <rect
+            x="0"
+            y="0"
+            width="220"
+            height="320"
+            rx="4"
+            fill="url(#lspkScreenBg)"
+            filter="url(#lspkInnerShadow)"
+          />
+
+          {/* Screen scan lines for CRT effect */}
+          {[...Array(40)].map((_, i) => (
+            <line
+              key={`scan-${i}`}
+              x1="0"
+              y1={i * 8}
+              x2="220"
+              y2={i * 8}
+              stroke="#1e3a5f"
+              strokeWidth="1"
+              opacity="0.15"
+            />
+          ))}
+
+          {/* ========== SPECKLE PATTERN ========== */}
+          {specklePattern.map((point, i) => {
+            // Scale points to fit screen
+            const scaledX = (point.x / 300) * 220;
+            const scaledY = (point.y / 200) * 320;
+
+            if (useLaser) {
+              // Coherent light: strong interference pattern with high contrast
+              const size = 3 + point.intensity * 8 * effectiveCoherence;
+              const gradientId =
+                point.intensity > 0.7 ? 'url(#lspkSpeckleBright)' :
+                point.intensity > 0.4 ? 'url(#lspkSpeckleMedium)' : 'url(#lspkSpeckleDim)';
+
+              return (
+                <circle
+                  key={`speckle-${i}`}
+                  cx={scaledX}
+                  cy={scaledY}
+                  r={size}
+                  fill={gradientId}
+                  filter={point.intensity > 0.7 ? "url(#lspkSpeckleGlow)" : undefined}
+                  opacity={0.4 + point.intensity * 0.6 * effectiveCoherence}
+                />
+              );
+            } else {
+              // Incoherent light: uniform illumination, no speckle
+              const size = 4 + Math.random() * 2;
+              return (
+                <circle
+                  key={`led-spot-${i}`}
+                  cx={scaledX}
+                  cy={scaledY}
+                  r={size}
+                  fill="url(#lspkLEDSpot)"
+                  opacity="0.35"
+                />
+              );
+            }
+          })}
+
+          {/* Interference pattern label for laser */}
+          {useLaser && (
+            <g>
+              <text x="110" y="-18" fontSize="10" fill="#4ade80" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+                SPECKLE PATTERN
+              </text>
+              <text x="110" y="-6" fontSize="8" fill="#22c55e" textAnchor="middle" fontFamily="monospace">
+                Coherent Interference
+              </text>
+            </g>
+          )}
+
+          {/* Uniform illumination label for LED */}
+          {!useLaser && (
+            <g>
+              <text x="110" y="-18" fontSize="10" fill="#fbbf24" textAnchor="middle" fontWeight="600" fontFamily="monospace">
+                UNIFORM ILLUMINATION
+              </text>
+              <text x="110" y="-6" fontSize="8" fill="#f59e0b" textAnchor="middle" fontFamily="monospace">
+                No Speckle (Averaging)
+              </text>
+            </g>
+          )}
+        </g>
+
+        {/* ========== LABELS AND ANNOTATIONS ========== */}
+        {/* Title */}
+        <text x="350" y="385" fontSize="12" fill="#94a3b8" textAnchor="middle" fontFamily="monospace">
+          Coherence: {useLaser ? `${coherenceLength}%` : 'N/A (Incoherent)'} | Surface Roughness: {surfaceRoughness}% | Viewpoint: {viewpointOffset}
+        </text>
+
+        {/* Physics explanation callout */}
+        <g transform="translate(30, 340)">
+          <rect
+            x="0"
+            y="0"
+            width="180"
+            height="45"
+            rx="6"
+            fill="rgba(34, 197, 94, 0.1)"
+            stroke={useLaser ? "#22c55e" : "#fbbf24"}
+            strokeWidth="1"
+            opacity="0.8"
+          />
+          <text x="10" y="18" fontSize="9" fill={useLaser ? "#4ade80" : "#fcd34d"} fontWeight="600" fontFamily="monospace">
+            {useLaser ? "Random path lengths" : "Phases uncorrelated"}
+          </text>
+          <text x="10" y="32" fontSize="8" fill="#94a3b8" fontFamily="monospace">
+            {useLaser ? "create interference spots" : "interference averages out"}
           </text>
         </g>
       </svg>

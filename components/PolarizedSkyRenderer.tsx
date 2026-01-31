@@ -483,118 +483,565 @@ export default function PolarizedSkyRenderer({
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: defined.spacing.md }}>
         <svg width={width} height={height} style={{ overflow: 'visible' }}>
           <defs>
-            <radialGradient id="skyGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={defined.colors.sky.zenith} />
-              <stop offset="100%" stopColor={defined.colors.sky.horizon} />
+            {/* =================================================================== */}
+            {/* PREMIUM LINEAR GRADIENTS - Sky depth and atmospheric layers        */}
+            {/* =================================================================== */}
+
+            {/* Sky dome gradient - deep zenith to light horizon with atmosphere layers */}
+            <linearGradient id="pskySkyDome" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c1445" />
+              <stop offset="25%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#60a5fa" />
+              <stop offset="90%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#bfdbfe" />
+            </linearGradient>
+
+            {/* Horizon glow gradient - warm atmospheric scattering near horizon */}
+            <linearGradient id="pskyHorizonGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0" />
+              <stop offset="60%" stopColor="#fde68a" stopOpacity="0.2" />
+              <stop offset="80%" stopColor="#fcd34d" stopOpacity="0.4" />
+              <stop offset="95%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Polarization band gradient - shows maximum polarization zone */}
+            <linearGradient id="pskyPolarBand" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Haze overlay gradient - simulates atmospheric particles */}
+            <linearGradient id="pskyHazeOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.1" />
+              <stop offset="40%" stopColor="#cbd5e1" stopOpacity="0.2" />
+              <stop offset="70%" stopColor="#94a3b8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Polarizer glass gradient - realistic optical filter look */}
+            <linearGradient id="pskyPolarizerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* =================================================================== */}
+            {/* PREMIUM RADIAL GRADIENTS - Sun, glow effects, polarization patterns */}
+            {/* =================================================================== */}
+
+            {/* Sun core gradient - bright center with corona layers */}
+            <radialGradient id="pskySunCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="15%" stopColor="#fffbeb" />
+              <stop offset="35%" stopColor="#fef3c7" />
+              <stop offset="55%" stopColor="#fde68a" />
+              <stop offset="75%" stopColor="#fcd34d" />
+              <stop offset="100%" stopColor="#f59e0b" />
             </radialGradient>
-            <filter id="sunGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="8" result="glow" />
+
+            {/* Sun corona gradient - outer atmospheric glow */}
+            <radialGradient id="pskySunCorona" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Atmospheric scattering gradient - Rayleigh scattering rings around sun */}
+            <radialGradient id="pskyScatterRing" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.5" />
+              <stop offset="25%" stopColor="#fde68a" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.2" />
+              <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Polarization vector glow - for highlighting E-field oscillation */}
+            <radialGradient id="pskyVectorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Zenith glow - deepest blue at top of dome */}
+            <radialGradient id="pskyZenithGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#1e3a8a" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#172554" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0c1445" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Neutral point marker gradient - for Arago/Babinet/Brewster points */}
+            <radialGradient id="pskyNeutralPoint" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#475569" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
+            </radialGradient>
+
+            {/* =================================================================== */}
+            {/* PREMIUM GLOW FILTERS - Using feGaussianBlur + feMerge pattern      */}
+            {/* =================================================================== */}
+
+            {/* Sun glow filter - intense radial bloom effect */}
+            <filter id="pskySunGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
               <feMerge>
-                <feMergeNode in="glow" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <filter id="hazeFilter">
-              <feGaussianBlur stdDeviation={hazeLevel / 10} />
+
+            {/* Soft atmospheric glow for corona */}
+            <filter id="pskyCoronaGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="12" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Polarization vector glow filter */}
+            <filter id="pskyVectorFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Haze blur filter - adjustable atmospheric scattering */}
+            <filter id="pskyHazeFilter" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation={hazeLevel / 8} result="haze" />
+              <feMerge>
+                <feMergeNode in="haze" />
+              </feMerge>
+            </filter>
+
+            {/* Label background glow */}
+            <filter id="pskyLabelGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Horizon haze effect */}
+            <filter id="pskyHorizonHaze" x="0%" y="0%" width="100%" height="100%">
+              <feGaussianBlur stdDeviation="1.5" />
             </filter>
           </defs>
 
-          {/* Sky dome background */}
-          <circle cx={centerX} cy={centerY} r={radius} fill="url(#skyGradient)" filter={hazeLevel > 20 ? "url(#hazeFilter)" : undefined} />
+          {/* =================================================================== */}
+          {/* SKY DOME - Layered atmosphere visualization                         */}
+          {/* =================================================================== */}
 
-          {/* Haze overlay */}
+          {/* Base sky gradient - zenith to horizon color transition */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={radius}
+            fill="url(#pskySkyDome)"
+          />
+
+          {/* Zenith deep blue overlay */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={radius * 0.5}
+            fill="url(#pskyZenithGlow)"
+          />
+
+          {/* Horizon warm glow - atmospheric scattering at low angles */}
+          <ellipse
+            cx={centerX}
+            cy={centerY + radius * 0.3}
+            rx={radius}
+            ry={radius * 0.7}
+            fill="url(#pskyHorizonGlow)"
+            opacity={0.6 - hazeLevel / 200}
+          />
+
+          {/* Haze overlay - increases with haze level */}
           {hazeLevel > 0 && (
-            <circle cx={centerX} cy={centerY} r={radius} fill="white" opacity={hazeLevel / 200} />
+            <circle
+              cx={centerX}
+              cy={centerY}
+              r={radius}
+              fill="url(#pskyHazeOverlay)"
+              opacity={hazeLevel / 80}
+              filter={hazeLevel > 30 ? "url(#pskyHazeFilter)" : undefined}
+            />
           )}
 
-          {/* Horizon line */}
-          <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke={defined.colors.text.muted} strokeWidth="2" />
+          {/* =================================================================== */}
+          {/* SUN WITH ATMOSPHERIC SCATTERING                                     */}
+          {/* =================================================================== */}
 
-          {/* Cardinal directions */}
-          {['N', 'E', 'S', 'W'].map((dir, i) => {
-            const angle = (i * Math.PI) / 2 - Math.PI / 2;
-            const x = centerX + (radius + 20) * Math.cos(angle);
-            const y = centerY + (radius + 20) * Math.sin(angle);
-            return (
-              <text key={dir} x={x} y={y} fill={defined.colors.text.secondary} fontSize="12" textAnchor="middle" dominantBaseline="middle">
-                {dir}
-              </text>
-            );
-          })}
+          {/* Outer scattering ring - Rayleigh scattering visible around sun */}
+          <circle
+            cx={sunX}
+            cy={sunY}
+            r={45}
+            fill="url(#pskyScatterRing)"
+            filter="url(#pskyCoronaGlow)"
+            opacity={0.8 - hazeLevel / 150}
+          />
 
-          {/* Polarization vectors */}
+          {/* Sun corona - outer atmospheric glow */}
+          <circle
+            cx={sunX}
+            cy={sunY}
+            r={32}
+            fill="url(#pskySunCorona)"
+            filter="url(#pskyCoronaGlow)"
+          />
+
+          {/* Sun main body */}
+          <circle
+            cx={sunX}
+            cy={sunY}
+            r={20}
+            fill="url(#pskySunCore)"
+            filter="url(#pskySunGlow)"
+          />
+
+          {/* Sun bright center highlight */}
+          <circle
+            cx={sunX - 4}
+            cy={sunY - 4}
+            r={8}
+            fill="#ffffff"
+            opacity="0.9"
+          />
+
+          {/* Sun position label */}
+          <text
+            x={sunX}
+            y={sunY + 35}
+            fill="#fcd34d"
+            fontSize="9"
+            fontWeight="600"
+            textAnchor="middle"
+            filter="url(#pskyLabelGlow)"
+          >
+            SUN
+          </text>
+
+          {/* =================================================================== */}
+          {/* POLARIZATION PATTERN VISUALIZATION                                  */}
+          {/* =================================================================== */}
+
+          {/* 90-degree arc from sun - maximum polarization zone */}
+          <circle
+            cx={sunX}
+            cy={sunY}
+            r={radius * 0.7}
+            fill="none"
+            stroke="url(#pskyPolarBand)"
+            strokeWidth="8"
+            strokeDasharray="12,6"
+            opacity={0.7 - hazeLevel / 150}
+          />
+
+          {/* Inner guide circle at 45 degrees */}
+          <circle
+            cx={sunX}
+            cy={sunY}
+            r={radius * 0.4}
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth="1"
+            strokeDasharray="4,8"
+            opacity={0.3}
+          />
+
+          {/* Outer guide circle at 135 degrees */}
+          <circle
+            cx={sunX}
+            cy={sunY}
+            r={radius * 0.9}
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth="1"
+            strokeDasharray="4,8"
+            opacity={0.2}
+          />
+
+          {/* Polarization vectors - E-field oscillation direction */}
           {showVectors && vectors.map((v, i) => {
-            const length = 12 * v.strength;
-            const opacity = 0.3 + v.strength * 0.7;
+            const length = 14 * v.strength;
+            const baseOpacity = 0.3 + v.strength * 0.7;
 
             // Calculate transmission through polarizer
             const angleDiff = v.angle - polarizerRad;
             const transmission = Math.pow(Math.cos(angleDiff), 2);
-            const color = `rgba(96, 165, 250, ${opacity * transmission})`;
+            const finalOpacity = baseOpacity * transmission * (1 - hazeLevel / 150);
+
+            // Color intensity based on polarization strength
+            const colorIntensity = Math.floor(150 + 105 * v.strength);
+            const color = `rgba(${96}, ${colorIntensity}, 250, ${finalOpacity})`;
 
             return (
-              <g key={i}>
+              <g key={i} filter={v.strength > 0.5 ? "url(#pskyVectorFilter)" : undefined}>
+                {/* Vector line showing polarization direction */}
                 <line
                   x1={v.x - length * Math.cos(v.angle)}
                   y1={v.y - length * Math.sin(v.angle)}
                   x2={v.x + length * Math.cos(v.angle)}
                   y2={v.y + length * Math.sin(v.angle)}
                   stroke={color}
-                  strokeWidth="2"
+                  strokeWidth={2 + v.strength}
                   strokeLinecap="round"
                 />
+                {/* Endpoint dots for strong polarization */}
+                {v.strength > 0.4 && (
+                  <>
+                    <circle
+                      cx={v.x - length * Math.cos(v.angle)}
+                      cy={v.y - length * Math.sin(v.angle)}
+                      r={1.5}
+                      fill={color}
+                    />
+                    <circle
+                      cx={v.x + length * Math.cos(v.angle)}
+                      cy={v.y + length * Math.sin(v.angle)}
+                      r={1.5}
+                      fill={color}
+                    />
+                  </>
+                )}
               </g>
             );
           })}
 
-          {/* Sun */}
-          <circle cx={sunX} cy={sunY} r="20" fill={defined.colors.sky.sun} filter="url(#sunGlow)" />
-          <circle cx={sunX} cy={sunY} r="12" fill="#FFF" opacity="0.8" />
+          {/* =================================================================== */}
+          {/* HORIZON AND CARDINAL DIRECTIONS                                     */}
+          {/* =================================================================== */}
 
-          {/* 90-degree arc from sun (maximum polarization) */}
+          {/* Horizon circle - atmospheric boundary */}
           <circle
-            cx={sunX}
-            cy={sunY}
-            r={radius * 0.7}
+            cx={centerX}
+            cy={centerY}
+            r={radius}
             fill="none"
-            stroke={defined.colors.primary}
-            strokeWidth="2"
-            strokeDasharray="8,4"
+            stroke="#475569"
+            strokeWidth="2.5"
+            opacity="0.8"
+          />
+
+          {/* Ground/terrain hint below horizon */}
+          <ellipse
+            cx={centerX}
+            cy={centerY + radius + 10}
+            rx={radius * 1.1}
+            ry={15}
+            fill="#1e293b"
             opacity="0.5"
           />
+
+          {/* Cardinal directions with premium styling */}
+          {['N', 'E', 'S', 'W'].map((dir, i) => {
+            const angle = (i * Math.PI) / 2 - Math.PI / 2;
+            const x = centerX + (radius + 22) * Math.cos(angle);
+            const y = centerY + (radius + 22) * Math.sin(angle);
+            const isNorth = dir === 'N';
+            return (
+              <g key={dir}>
+                <text
+                  x={x}
+                  y={y}
+                  fill={isNorth ? '#f59e0b' : '#94a3b8'}
+                  fontSize={isNorth ? "14" : "12"}
+                  fontWeight={isNorth ? "700" : "500"}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                >
+                  {dir}
+                </text>
+              </g>
+            );
+          })}
+
+          {/* =================================================================== */}
+          {/* 90-DEGREE MAX POLARIZATION LABEL                                    */}
+          {/* =================================================================== */}
+
+          {/* Label background */}
+          <rect
+            x={sunX + radius * 0.7 + 5}
+            y={sunY - 20}
+            width={isMobile ? 70 : 85}
+            height={40}
+            rx="6"
+            fill="rgba(15, 23, 42, 0.85)"
+            stroke="#3b82f6"
+            strokeWidth="1"
+          />
           <text
-            x={sunX + radius * 0.7 + 10}
-            y={sunY}
-            fill={defined.colors.primary}
-            fontSize="10"
+            x={sunX + radius * 0.7 + (isMobile ? 40 : 48)}
+            y={sunY - 5}
+            fill="#60a5fa"
+            fontSize="9"
+            fontWeight="600"
+            textAnchor="middle"
           >
-            90 deg (max polarization)
+            90 deg from sun
+          </text>
+          <text
+            x={sunX + radius * 0.7 + (isMobile ? 40 : 48)}
+            y={sunY + 10}
+            fill="#93c5fd"
+            fontSize="8"
+            textAnchor="middle"
+          >
+            MAX POLARIZATION
           </text>
 
-          {/* Polarizer indicator */}
-          <g transform={`translate(${width - 60}, 30)`}>
-            <rect x="-25" y="-15" width="50" height="30" fill={defined.colors.background.card} rx="4" />
+          {/* =================================================================== */}
+          {/* POLARIZER INDICATOR - Premium optical filter visualization          */}
+          {/* =================================================================== */}
+
+          <g transform={`translate(${width - 65}, 35)`}>
+            {/* Polarizer housing */}
+            <rect
+              x="-30"
+              y="-20"
+              width="60"
+              height="40"
+              fill="url(#pskyPolarizerGlass)"
+              rx="8"
+              stroke="#475569"
+              strokeWidth="1"
+            />
+            {/* Polarizer glass */}
+            <rect
+              x="-22"
+              y="-12"
+              width="44"
+              height="24"
+              fill="rgba(59, 130, 246, 0.2)"
+              rx="4"
+            />
+            {/* Polarization axis line */}
             <line
-              x1={-15 * Math.cos(polarizerRad)}
-              y1={-15 * Math.sin(polarizerRad)}
-              x2={15 * Math.cos(polarizerRad)}
-              y2={15 * Math.sin(polarizerRad)}
-              stroke={defined.colors.accent}
+              x1={-18 * Math.cos(polarizerRad)}
+              y1={-18 * Math.sin(polarizerRad)}
+              x2={18 * Math.cos(polarizerRad)}
+              y2={18 * Math.sin(polarizerRad)}
+              stroke="#f59e0b"
               strokeWidth="3"
               strokeLinecap="round"
+              filter="url(#pskyVectorFilter)"
             />
-            <text x="0" y="25" fill={defined.colors.text.secondary} fontSize="9" textAnchor="middle">
-              Polarizer
+            {/* Arrow heads to show transmission axis */}
+            <circle
+              cx={16 * Math.cos(polarizerRad)}
+              cy={16 * Math.sin(polarizerRad)}
+              r="3"
+              fill="#f59e0b"
+            />
+            <circle
+              cx={-16 * Math.cos(polarizerRad)}
+              cy={-16 * Math.sin(polarizerRad)}
+              r="3"
+              fill="#f59e0b"
+            />
+            {/* Label */}
+            <text
+              x="0"
+              y="32"
+              fill="#94a3b8"
+              fontSize="9"
+              fontWeight="600"
+              textAnchor="middle"
+            >
+              POLARIZER
+            </text>
+            <text
+              x="0"
+              y="42"
+              fill="#64748b"
+              fontSize="8"
+              textAnchor="middle"
+            >
+              {polarizerAngle}deg
             </text>
           </g>
 
-          {/* Legend */}
-          <g transform={`translate(20, ${height - 60})`}>
-            <rect x="-10" y="-10" width="120" height="50" fill={defined.colors.background.card} rx="4" />
-            <line x1="0" y1="5" x2="20" y2="5" stroke={defined.colors.sky.polarized} strokeWidth="2" />
-            <text x="25" y="9" fill={defined.colors.text.secondary} fontSize="10">Polarization</text>
-            <circle cx="10" cy="25" r="6" fill={defined.colors.sky.sun} />
-            <text x="25" y="29" fill={defined.colors.text.secondary} fontSize="10">Sun position</text>
+          {/* =================================================================== */}
+          {/* LEGEND - Premium information panel                                  */}
+          {/* =================================================================== */}
+
+          <g transform={`translate(15, ${height - 75})`}>
+            {/* Legend background */}
+            <rect
+              x="0"
+              y="0"
+              width={isMobile ? 130 : 150}
+              height="70"
+              fill="rgba(15, 23, 42, 0.9)"
+              rx="8"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+
+            {/* Legend title */}
+            <text x="10" y="15" fill="#94a3b8" fontSize="8" fontWeight="600">
+              LEGEND
+            </text>
+
+            {/* Polarization vector */}
+            <line x1="10" y1="30" x2="30" y2="30" stroke="#60a5fa" strokeWidth="2.5" strokeLinecap="round" />
+            <text x="38" y="33" fill="#cbd5e1" fontSize="9">E-field polarization</text>
+
+            {/* Sun indicator */}
+            <circle cx="20" cy="48" r="6" fill="url(#pskySunCore)" />
+            <text x="38" y="51" fill="#cbd5e1" fontSize="9">Sun position</text>
+
+            {/* Max zone indicator */}
+            <line x1="10" y1="62" x2="30" y2="62" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4,2" />
+            <text x="38" y="65" fill="#cbd5e1" fontSize="9">90deg zone</text>
+          </g>
+
+          {/* =================================================================== */}
+          {/* ATMOSPHERIC CONDITIONS INDICATOR                                    */}
+          {/* =================================================================== */}
+
+          <g transform={`translate(15, 15)`}>
+            <rect
+              x="0"
+              y="0"
+              width={isMobile ? 85 : 100}
+              height="32"
+              fill="rgba(15, 23, 42, 0.9)"
+              rx="6"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            <text x="10" y="13" fill="#64748b" fontSize="8">
+              CLARITY
+            </text>
+            <text
+              x="10"
+              y="25"
+              fill={hazeLevel < 30 ? '#10b981' : hazeLevel < 60 ? '#f59e0b' : '#ef4444'}
+              fontSize="10"
+              fontWeight="600"
+            >
+              {hazeLevel < 30 ? 'CLEAR' : hazeLevel < 60 ? 'HAZY' : 'POLLUTED'}
+            </text>
           </g>
         </svg>
 

@@ -251,51 +251,267 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     const apparentTemp = props.emissivity * props.actualTemp + (1 - props.emissivity) * ambientTemp;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill={infrared ? '#0a1628' : '#1e293b'} />
+      <svg viewBox="0 0 500 320" className="w-full h-64">
+        {/* === COMPREHENSIVE DEFS SECTION === */}
+        <defs>
+          {/* Premium temperature scale gradient (6 color stops for depth) */}
+          <linearGradient id="ireTempScale" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="20%" stopColor="#6366f1" />
+            <stop offset="40%" stopColor="#22d3ee" />
+            <stop offset="60%" stopColor="#facc15" />
+            <stop offset="80%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
 
+          {/* Lab background gradient */}
+          <linearGradient id="ireLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a1628" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* IR view dark background */}
+          <linearGradient id="ireIRViewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="50%" stopColor="#0c1222" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* Radial gradient for heat radiation effect - hot center */}
+          <radialGradient id="ireHeatRadiation" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#f97316" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#dc2626" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Radial gradient for cold objects */}
+          <radialGradient id="ireColdRadiation" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.8" />
+            <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#1d4ed8" stopOpacity="0.4" />
+            <stop offset="70%" stopColor="#1e3a8a" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#172554" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Warm body temperature gradient */}
+          <radialGradient id="ireBodyHeat" cx="50%" cy="40%" r="70%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+            <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.7" />
+            <stop offset="75%" stopColor="#ea580c" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#9a3412" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Metallic surface gradient for shiny cup */}
+          <linearGradient id="ireMetalSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#9ca3af" />
+            <stop offset="20%" stopColor="#d1d5db" />
+            <stop offset="40%" stopColor="#e5e7eb" />
+            <stop offset="60%" stopColor="#d1d5db" />
+            <stop offset="80%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+
+          {/* Matte black surface gradient */}
+          <linearGradient id="ireMatteBlack" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="30%" stopColor="#1f2937" />
+            <stop offset="70%" stopColor="#111827" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Skin tone gradient */}
+          <linearGradient id="ireSkinTone" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fcd5ce" />
+            <stop offset="25%" stopColor="#f5cac3" />
+            <stop offset="50%" stopColor="#e8b4a0" />
+            <stop offset="75%" stopColor="#d4a292" />
+            <stop offset="100%" stopColor="#c99a88" />
+          </linearGradient>
+
+          {/* Ice crystal gradient */}
+          <linearGradient id="ireIceCrystal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f0f9ff" />
+            <stop offset="25%" stopColor="#e0f2fe" />
+            <stop offset="50%" stopColor="#bae6fd" />
+            <stop offset="75%" stopColor="#93c5fd" />
+            <stop offset="100%" stopColor="#60a5fa" />
+          </linearGradient>
+
+          {/* IR wave emission glow filter */}
+          <filter id="ireWaveGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Heat emission glow */}
+          <filter id="ireHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Soft inner glow for objects */}
+          <filter id="ireInnerGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* Cold object glow */}
+          <filter id="ireColdGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Temperature indicator gradient for display */}
+          <linearGradient id="ireTempIndicator" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1e40af" />
+            <stop offset="25%" stopColor="#7c3aed" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="75%" stopColor="#ea580c" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Reflection gradient for shiny surfaces */}
+          <radialGradient id="ireReflection" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#ffffff" stopOpacity="0.3" />
+            <stop offset="60%" stopColor="#ffffff" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* === PREMIUM BACKGROUND === */}
+        <rect width="500" height="320" fill={infrared ? 'url(#ireIRViewBg)' : 'url(#ireLabBg)'} />
+
+        {/* Subtle grid pattern for lab feel */}
+        <pattern id="ireLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke={infrared ? '#1e293b' : '#1e293b'} strokeWidth="0.3" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="500" height="320" fill="url(#ireLabGrid)" />
+
+        {/* === HEADER SECTION === */}
+        <g transform="translate(0, 0)">
+          <rect x="0" y="0" width="500" height="32" fill={infrared ? '#0f172a' : '#111827'} fillOpacity="0.8" />
+          <text x="250" y="21" textAnchor="middle" className="text-sm font-bold" fill={infrared ? '#f97316' : '#e2e8f0'}>
+            {infrared ? 'THERMAL IMAGING VIEW' : 'VISIBLE LIGHT VIEW'} - {props.name}
+          </text>
+          {infrared && (
+            <circle cx="35" cy="16" r="5" fill="#ef4444">
+              <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
+            </circle>
+          )}
+          {infrared && (
+            <text x="50" y="20" className="text-xs font-medium" fill="#ef4444">REC</text>
+          )}
+        </g>
+
+        {/* === TEMPERATURE SCALE (IR View) === */}
         {infrared && (
-          <g transform="translate(350, 40)">
-            <defs>
-              <linearGradient id="irScale" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" stopColor="rgb(0, 0, 150)" />
-                <stop offset="25%" stopColor="rgb(100, 50, 255)" />
-                <stop offset="50%" stopColor="rgb(255, 250, 100)" />
-                <stop offset="75%" stopColor="rgb(255, 150, 0)" />
-                <stop offset="100%" stopColor="rgb(255, 0, 0)" />
-              </linearGradient>
-            </defs>
-            <rect x="0" y="0" width="20" height="150" fill="url(#irScale)" />
-            <text x="25" y="10" className="fill-gray-400 text-xs">50C</text>
-            <text x="25" y="80" className="fill-gray-400 text-xs">20C</text>
-            <text x="25" y="150" className="fill-gray-400 text-xs">-10C</text>
+          <g transform="translate(440, 45)">
+            <rect x="-5" y="-10" width="55" height="220" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
+            <text x="22" y="5" textAnchor="middle" className="text-xs font-bold" fill="#94a3b8">TEMP</text>
+
+            {/* Temperature gradient bar */}
+            <rect x="5" y="15" width="18" height="170" rx="2" fill="url(#ireTempScale)" />
+            <rect x="5" y="15" width="18" height="170" rx="2" fill="none" stroke="#475569" strokeWidth="1" />
+
+            {/* Temperature labels */}
+            <text x="28" y="25" className="text-xs" fill="#fca5a5">60C</text>
+            <text x="28" y="58" className="text-xs" fill="#fdba74">45C</text>
+            <text x="28" y="91" className="text-xs" fill="#fde047">30C</text>
+            <text x="28" y="124" className="text-xs" fill="#67e8f9">15C</text>
+            <text x="28" y="157" className="text-xs" fill="#818cf8">0C</text>
+            <text x="28" y="190" className="text-xs" fill="#6366f1">-15C</text>
+
+            {/* Tick marks */}
+            {[15, 48, 82, 116, 150, 185].map((y, i) => (
+              <line key={i} x1="23" y1={y} x2="26" y2={y} stroke="#64748b" strokeWidth="1" />
+            ))}
           </g>
         )}
 
-        <g transform="translate(120, 60)">
+        {/* === MAIN VISUALIZATION AREA === */}
+        <g transform="translate(100, 50)">
+          {/* Object visualization */}
           {object === 'hand' && (
             <g>
-              <ellipse cx="80" cy="100" rx="50" ry="70" fill={infrared ? irColor : props.color} />
-              <ellipse cx="80" cy="40" rx="8" ry="30" fill={infrared ? irColor : props.color} />
-              <ellipse cx="95" cy="35" rx="7" ry="35" fill={infrared ? irColor : props.color} />
-              <ellipse cx="110" cy="40" rx="6" ry="32" fill={infrared ? irColor : props.color} />
-              <ellipse cx="122" cy="50" rx="5" ry="25" fill={infrared ? irColor : props.color} />
-              <ellipse cx="50" cy="75" rx="20" ry="10" fill={infrared ? irColor : props.color} transform="rotate(-30, 50, 75)" />
+              {/* Hand shape with premium gradients */}
+              <g filter={infrared ? 'url(#ireHeatGlow)' : undefined}>
+                {/* Palm */}
+                <ellipse cx="100" cy="120" rx="55" ry="75"
+                  fill={infrared ? irColor : 'url(#ireSkinTone)'}
+                  filter={infrared ? 'url(#ireInnerGlow)' : undefined}
+                />
+                {/* Thumb */}
+                <ellipse cx="45" cy="90" rx="22" ry="12"
+                  fill={infrared ? irColor : 'url(#ireSkinTone)'}
+                  transform="rotate(-35, 45, 90)"
+                />
+                {/* Fingers */}
+                <ellipse cx="75" cy="40" rx="10" ry="35" fill={infrared ? irColor : 'url(#ireSkinTone)'} />
+                <ellipse cx="100" cy="32" rx="9" ry="40" fill={infrared ? irColor : 'url(#ireSkinTone)'} />
+                <ellipse cx="125" cy="38" rx="8" ry="36" fill={infrared ? irColor : 'url(#ireSkinTone)'} />
+                <ellipse cx="147" cy="52" rx="7" ry="28" fill={infrared ? irColor : 'url(#ireSkinTone)'} />
+              </g>
 
+              {/* IR radiation waves emanating from hand */}
               {infrared && (
-                <g className="animate-pulse">
-                  {[...Array(8)].map((_, i) => (
-                    <line
-                      key={i}
-                      x1={80}
-                      y1={80}
-                      x2={80 + Math.cos(i * Math.PI / 4 + animPhase) * (60 + Math.sin(animPhase + i) * 10)}
-                      y2={80 + Math.sin(i * Math.PI / 4 + animPhase) * (60 + Math.sin(animPhase + i) * 10)}
-                      stroke={irColor}
-                      strokeWidth="2"
-                      opacity="0.5"
-                    />
-                  ))}
+                <g filter="url(#ireWaveGlow)">
+                  {[...Array(12)].map((_, i) => {
+                    const angle = (i * Math.PI / 6) + animPhase;
+                    const baseRadius = 70;
+                    const waveAmplitude = 15 + Math.sin(animPhase * 2 + i) * 8;
+                    return (
+                      <g key={i}>
+                        {/* Wavy IR radiation lines */}
+                        <path
+                          d={`M ${100 + Math.cos(angle) * baseRadius} ${100 + Math.sin(angle) * baseRadius}
+                              Q ${100 + Math.cos(angle) * (baseRadius + waveAmplitude)} ${100 + Math.sin(angle) * (baseRadius + waveAmplitude)}
+                              ${100 + Math.cos(angle) * (baseRadius + waveAmplitude * 2)} ${100 + Math.sin(angle) * (baseRadius + waveAmplitude * 2)}`}
+                          stroke={irColor}
+                          strokeWidth="2"
+                          fill="none"
+                          opacity={0.4 + Math.sin(animPhase + i) * 0.2}
+                        />
+                        {/* Small heat particles */}
+                        <circle
+                          cx={100 + Math.cos(angle) * (baseRadius + waveAmplitude * 1.5 + Math.sin(animPhase * 3 + i) * 10)}
+                          cy={100 + Math.sin(angle) * (baseRadius + waveAmplitude * 1.5 + Math.sin(animPhase * 3 + i) * 10)}
+                          r="2"
+                          fill={irColor}
+                          opacity={0.6}
+                        />
+                      </g>
+                    );
+                  })}
+                  {/* Central heat glow */}
+                  <ellipse cx="100" cy="100" rx="45" ry="60" fill="url(#ireBodyHeat)" opacity="0.4" />
+                </g>
+              )}
+
+              {/* Visible light details */}
+              {!infrared && (
+                <g>
+                  <ellipse cx="85" cy="100" rx="8" ry="20" fill="rgba(255,255,255,0.15)" />
+                  {/* Subtle lines for fingers */}
+                  <line x1="75" y1="50" x2="75" y2="75" stroke="#c99a88" strokeWidth="0.5" opacity="0.5" />
+                  <line x1="100" y1="45" x2="100" y2="72" stroke="#c99a88" strokeWidth="0.5" opacity="0.5" />
+                  <line x1="125" y1="50" x2="125" y2="74" stroke="#c99a88" strokeWidth="0.5" opacity="0.5" />
                 </g>
               )}
             </g>
@@ -303,38 +519,85 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
           {(object === 'cup_matte' || object === 'cup_shiny') && (
             <g>
-              <path
-                d={`M 50 40 L 60 160 L 100 160 L 110 40 Z`}
-                fill={infrared ? irColor : props.color}
-                stroke={object === 'cup_shiny' ? '#d1d5db' : 'none'}
-                strokeWidth="2"
-              />
-              <ellipse cx="80" cy="40" rx="30" ry="10" fill={infrared ? irColor : (object === 'cup_shiny' ? '#6b7280' : '#374151')} />
-              <path
-                d="M 110 60 Q 140 70 140 100 Q 140 130 110 140"
-                fill="none"
-                stroke={infrared ? irColor : (object === 'cup_shiny' ? '#9ca3af' : '#1f2937')}
-                strokeWidth="8"
-              />
+              {/* Cup body with premium gradients */}
+              <g filter={infrared && props.emissivity > 0.5 ? 'url(#ireHeatGlow)' : undefined}>
+                <path
+                  d="M 55 45 L 65 175 L 135 175 L 145 45 Z"
+                  fill={infrared ? irColor : (object === 'cup_shiny' ? 'url(#ireMetalSurface)' : 'url(#ireMatteBlack)')}
+                  stroke={object === 'cup_shiny' ? '#e5e7eb' : 'none'}
+                  strokeWidth="2"
+                />
+                {/* Cup rim */}
+                <ellipse cx="100" cy="45" rx="45" ry="14"
+                  fill={infrared ? irColor : (object === 'cup_shiny' ? '#9ca3af' : '#374151')}
+                />
+                {/* Cup handle */}
+                <path
+                  d="M 145 70 Q 185 85 185 120 Q 185 155 145 165"
+                  fill="none"
+                  stroke={infrared ? irColor : (object === 'cup_shiny' ? 'url(#ireMetalSurface)' : 'url(#ireMatteBlack)')}
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                />
+              </g>
 
+              {/* Shiny cup reflections in visible mode */}
               {object === 'cup_shiny' && !infrared && (
-                <ellipse cx="75" cy="90" rx="10" ry="25" fill="white" opacity="0.3" />
+                <g>
+                  <ellipse cx="85" cy="100" rx="12" ry="35" fill="url(#ireReflection)" />
+                  <ellipse cx="120" cy="90" rx="6" ry="20" fill="rgba(255,255,255,0.2)" />
+                </g>
               )}
 
-              {infrared && props.emissivity > 0.5 && (
-                <g className="animate-pulse">
-                  {[...Array(6)].map((_, i) => (
-                    <line
+              {/* Steam/heat visualization in visible mode */}
+              {!infrared && objectTemp > 40 && (
+                <g opacity="0.5">
+                  {[...Array(4)].map((_, i) => (
+                    <path
                       key={i}
-                      x1={80}
-                      y1={100}
-                      x2={80 + Math.cos(i * Math.PI / 3 + animPhase) * 50}
-                      y2={100 + Math.sin(i * Math.PI / 3 + animPhase) * 50}
-                      stroke={irColor}
+                      d={`M ${75 + i * 15} 35 Q ${78 + i * 15} ${20 - Math.sin(animPhase + i) * 8} ${75 + i * 15} ${5 - Math.sin(animPhase + i) * 5}`}
+                      fill="none"
+                      stroke="#94a3b8"
                       strokeWidth="2"
-                      opacity="0.5"
+                      strokeLinecap="round"
                     />
                   ))}
+                </g>
+              )}
+
+              {/* IR radiation for high emissivity objects */}
+              {infrared && props.emissivity > 0.5 && (
+                <g filter="url(#ireWaveGlow)">
+                  {[...Array(10)].map((_, i) => {
+                    const angle = (i * Math.PI / 5) + animPhase;
+                    const baseRadius = 60;
+                    const waveAmplitude = 12 + Math.sin(animPhase * 2 + i) * 6;
+                    return (
+                      <path
+                        key={i}
+                        d={`M ${100 + Math.cos(angle) * baseRadius} ${110 + Math.sin(angle) * baseRadius * 0.8}
+                            Q ${100 + Math.cos(angle) * (baseRadius + waveAmplitude)} ${110 + Math.sin(angle) * (baseRadius + waveAmplitude) * 0.8}
+                            ${100 + Math.cos(angle) * (baseRadius + waveAmplitude * 2)} ${110 + Math.sin(angle) * (baseRadius + waveAmplitude * 2) * 0.8}`}
+                        stroke={irColor}
+                        strokeWidth="2"
+                        fill="none"
+                        opacity={0.5 + Math.sin(animPhase + i) * 0.2}
+                      />
+                    );
+                  })}
+                  {/* Heat glow overlay */}
+                  <ellipse cx="100" cy="110" rx="50" ry="65" fill="url(#ireHeatRadiation)" opacity="0.3" />
+                </g>
+              )}
+
+              {/* Low emissivity - show reflected environment */}
+              {infrared && props.emissivity < 0.5 && (
+                <g>
+                  {/* Show reflected room temperature (cooler appearance) */}
+                  <ellipse cx="100" cy="110" rx="35" ry="50" fill="url(#ireColdRadiation)" opacity="0.4" />
+                  <text x="100" y="225" textAnchor="middle" className="text-xs" fill="#60a5fa" opacity="0.8">
+                    Reflecting ~{ambientTemp}C environment
+                  </text>
                 </g>
               )}
             </g>
@@ -342,42 +605,107 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
           {object === 'ice' && (
             <g>
-              <polygon
-                points="50,60 100,40 130,80 130,140 80,160 30,140 30,80"
-                fill={infrared ? irColor : props.color}
-                stroke={infrared ? 'none' : '#93c5fd'}
-                strokeWidth="2"
-              />
-              <polygon
-                points="50,60 100,40 130,80 80,100"
-                fill={infrared ? irColor : '#bfdbfe'}
-                opacity="0.7"
-              />
+              {/* Ice cube with crystal gradient */}
+              <g filter={infrared ? 'url(#ireColdGlow)' : undefined}>
+                <polygon
+                  points="55,70 115,45 155,90 155,160 100,185 35,160 35,90"
+                  fill={infrared ? irColor : 'url(#ireIceCrystal)'}
+                  stroke={infrared ? 'none' : '#60a5fa'}
+                  strokeWidth="2"
+                />
+                {/* Top face highlight */}
+                <polygon
+                  points="55,70 115,45 155,90 95,115"
+                  fill={infrared ? irColor : '#e0f2fe'}
+                  opacity="0.7"
+                />
+              </g>
 
+              {/* Ice crystal patterns in visible mode */}
               {!infrared && (
-                <>
-                  <line x1="60" y1="90" x2="70" y2="120" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
-                  <line x1="90" y1="80" x2="100" y2="130" stroke="#ffffff" strokeWidth="1" opacity="0.5" />
-                </>
+                <g opacity="0.4">
+                  <line x1="70" y1="100" x2="85" y2="140" stroke="#ffffff" strokeWidth="1" />
+                  <line x1="110" y1="90" x2="125" y2="145" stroke="#ffffff" strokeWidth="1" />
+                  <line x1="90" y1="110" x2="90" y2="155" stroke="#ffffff" strokeWidth="0.5" />
+                  {/* Frost sparkles */}
+                  {[...Array(5)].map((_, i) => (
+                    <circle key={i} cx={60 + i * 20} cy={100 + (i % 3) * 25} r="2" fill="#ffffff" opacity={0.3 + Math.sin(animPhase + i) * 0.3} />
+                  ))}
+                </g>
+              )}
+
+              {/* Cold radiation visualization */}
+              {infrared && (
+                <g filter="url(#ireWaveGlow)">
+                  {[...Array(6)].map((_, i) => {
+                    const angle = (i * Math.PI / 3) + animPhase * 0.5;
+                    return (
+                      <circle
+                        key={i}
+                        cx={95 + Math.cos(angle) * (55 + Math.sin(animPhase + i) * 10)}
+                        cy={115 + Math.sin(angle) * (55 + Math.sin(animPhase + i) * 10)}
+                        r="3"
+                        fill={irColor}
+                        opacity={0.4 + Math.sin(animPhase + i) * 0.2}
+                      />
+                    );
+                  })}
+                  {/* Cold glow overlay */}
+                  <ellipse cx="95" cy="115" rx="50" ry="60" fill="url(#ireColdRadiation)" opacity="0.3" />
+                </g>
               )}
             </g>
           )}
         </g>
 
-        <g transform="translate(20, 240)">
-          <text className="fill-gray-400 text-sm">
-            {infrared ? `Apparent: ${apparentTemp.toFixed(1)}C` : `Actual: ${props.actualTemp}C`}
-          </text>
-          {infrared && props.emissivity < 0.5 && (
-            <text x="0" y="20" className="fill-yellow-400 text-xs">
-              Warning: Low emissivity - reflects surroundings!
+        {/* === INFORMATION PANEL === */}
+        <g transform="translate(15, 260)">
+          <rect x="0" y="0" width="410" height="55" rx="6" fill="#111827" stroke="#334155" strokeWidth="1" />
+
+          {/* Temperature display */}
+          <g transform="translate(15, 12)">
+            <text className="text-xs font-bold" fill="#94a3b8">
+              {infrared ? 'APPARENT TEMP' : 'ACTUAL TEMP'}
             </text>
+            <text y="22" className="text-lg font-bold" fill={infrared ? '#f97316' : '#22d3ee'}>
+              {infrared ? `${apparentTemp.toFixed(1)}` : `${props.actualTemp}`}C
+            </text>
+          </g>
+
+          {/* Emissivity display */}
+          <g transform="translate(130, 12)">
+            <text className="text-xs font-bold" fill="#94a3b8">EMISSIVITY</text>
+            <text y="22" className="text-lg font-bold" fill="#a855f7">
+              e = {props.emissivity.toFixed(2)}
+            </text>
+          </g>
+
+          {/* Status indicator */}
+          <g transform="translate(240, 12)">
+            <text className="text-xs font-bold" fill="#94a3b8">STATUS</text>
+            <text y="22" className="text-sm font-medium" fill={props.emissivity > 0.5 ? '#10b981' : '#eab308'}>
+              {props.emissivity > 0.5 ? 'High IR Emission' : 'Low Emission / Reflective'}
+            </text>
+          </g>
+
+          {/* Warning for low emissivity */}
+          {infrared && props.emissivity < 0.5 && (
+            <g transform="translate(15, 42)">
+              <text className="text-xs font-medium" fill="#fbbf24">
+                Warning: Reading may not reflect true temperature
+              </text>
+            </g>
           )}
         </g>
 
-        <text x="200" y="25" textAnchor="middle" className="fill-gray-300 text-sm font-medium">
-          {infrared ? 'IR Camera View' : 'Normal View'} - {props.name}
-        </text>
+        {/* === IR RADIATION WAVELENGTH INDICATOR === */}
+        {infrared && (
+          <g transform="translate(15, 45)">
+            <rect x="0" y="0" width="70" height="40" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
+            <text x="35" y="15" textAnchor="middle" className="text-xs font-bold" fill="#94a3b8">IR BAND</text>
+            <text x="35" y="32" textAnchor="middle" className="text-xs font-medium" fill="#f97316">8-14 um</text>
+          </g>
+        )}
       </svg>
     );
   };
@@ -388,108 +716,323 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     const shinyApparent = 0.1 * 60 + 0.9 * ambientTemp;
 
     return (
-      <svg viewBox="0 0 400 250" className="w-full h-48">
-        <rect width="400" height="250" fill={infrared ? '#0a1628' : '#1e293b'} />
+      <svg viewBox="0 0 500 300" className="w-full h-56">
+        {/* === COMPREHENSIVE DEFS SECTION === */}
+        <defs>
+          {/* Lab background gradient */}
+          <linearGradient id="ireTwistLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a1628" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        <text x="200" y="25" textAnchor="middle" className="fill-gray-300 text-sm">
-          Both cups contain 60C hot water
-        </text>
+          {/* IR view dark background */}
+          <linearGradient id="ireTwistIRBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="50%" stopColor="#0c1222" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
 
-        <g transform="translate(60, 50)">
-          <path
-            d="M 30 30 L 40 150 L 100 150 L 110 30 Z"
-            fill={infrared ? matteIRColor : '#1f2937'}
-          />
-          <ellipse cx="70" cy="30" rx="40" ry="12" fill={infrared ? matteIRColor : '#374151'} />
-          <path
-            d="M 110 50 Q 145 60 145 90 Q 145 120 110 130"
-            fill="none"
-            stroke={infrared ? matteIRColor : '#1f2937'}
-            strokeWidth="10"
-          />
+          {/* Hot radiation glow for matte cup */}
+          <radialGradient id="ireTwistHotGlow" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fef08a" stopOpacity="0.8" />
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#f97316" stopOpacity="0.4" />
+            <stop offset="70%" stopColor="#dc2626" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+          </radialGradient>
 
+          {/* Cold reflection for shiny cup */}
+          <radialGradient id="ireTwistColdReflect" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#172554" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Matte black surface gradient */}
+          <linearGradient id="ireTwistMatte" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="30%" stopColor="#1f2937" />
+            <stop offset="70%" stopColor="#111827" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Metallic surface gradient */}
+          <linearGradient id="ireTwistMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#9ca3af" />
+            <stop offset="20%" stopColor="#d1d5db" />
+            <stop offset="40%" stopColor="#e5e7eb" />
+            <stop offset="60%" stopColor="#d1d5db" />
+            <stop offset="80%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+
+          {/* Heat wave glow filter */}
+          <filter id="ireTwistWaveGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Heat emission glow */}
+          <filter id="ireTwistHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Cold glow filter */}
+          <filter id="ireTwistColdGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Reflection gradient */}
+          <radialGradient id="ireTwistReflection" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+            <stop offset="40%" stopColor="#ffffff" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Comparison temperature scale */}
+          <linearGradient id="ireTwistTempScale" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="25%" stopColor="#6366f1" />
+            <stop offset="50%" stopColor="#22d3ee" />
+            <stop offset="75%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+        </defs>
+
+        {/* === BACKGROUND === */}
+        <rect width="500" height="300" fill={infrared ? 'url(#ireTwistIRBg)' : 'url(#ireTwistLabBg)'} />
+
+        {/* Grid pattern */}
+        <pattern id="ireTwistGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="500" height="300" fill="url(#ireTwistGrid)" />
+
+        {/* === HEADER === */}
+        <g transform="translate(0, 0)">
+          <rect x="0" y="0" width="500" height="35" fill={infrared ? '#0f172a' : '#111827'} fillOpacity="0.9" />
+          <text x="250" y="14" textAnchor="middle" className="text-xs font-bold" fill="#94a3b8">EMISSIVITY COMPARISON</text>
+          <text x="250" y="28" textAnchor="middle" className="text-sm font-bold" fill={infrared ? '#f97316' : '#22d3ee'}>
+            Both cups contain 60C hot water
+          </text>
+          {infrared && (
+            <>
+              <circle cx="25" cy="18" r="4" fill="#ef4444">
+                <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <text x="38" y="22" className="text-xs font-medium" fill="#ef4444">IR</text>
+            </>
+          )}
+        </g>
+
+        {/* === MATTE BLACK CUP (LEFT) === */}
+        <g transform="translate(50, 55)">
+          {/* Cup body */}
+          <g filter={infrared ? 'url(#ireTwistHeatGlow)' : undefined}>
+            <path
+              d="M 35 35 L 45 155 L 115 155 L 125 35 Z"
+              fill={infrared ? matteIRColor : 'url(#ireTwistMatte)'}
+            />
+            <ellipse cx="80" cy="35" rx="45" ry="14"
+              fill={infrared ? matteIRColor : '#374151'}
+            />
+            <path
+              d="M 125 55 Q 165 70 165 100 Q 165 130 125 140"
+              fill="none"
+              stroke={infrared ? matteIRColor : 'url(#ireTwistMatte)'}
+              strokeWidth="10"
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Steam in visible mode */}
           {!infrared && (
-            <g className="animate-pulse">
-              {[...Array(3)].map((_, i) => (
+            <g>
+              {[...Array(4)].map((_, i) => (
                 <path
                   key={i}
-                  d={`M ${55 + i * 15} 20 Q ${60 + i * 15} ${10 - Math.sin(animPhase + i) * 5} ${55 + i * 15} 0`}
+                  d={`M ${60 + i * 15} 28 Q ${64 + i * 15} ${12 - Math.sin(animPhase + i) * 6} ${60 + i * 15} ${-5 - Math.sin(animPhase + i) * 5}`}
                   fill="none"
-                  stroke="#9ca3af"
+                  stroke="#94a3b8"
                   strokeWidth="2"
-                  opacity="0.5"
-                />
-              ))}
-            </g>
-          )}
-
-          {infrared && (
-            <g className="animate-pulse">
-              {[...Array(5)].map((_, i) => (
-                <line
-                  key={i}
-                  x1={70}
-                  y1={90}
-                  x2={70 + Math.cos(i * Math.PI / 2.5 + animPhase) * 40}
-                  y2={90 + Math.sin(i * Math.PI / 2.5 + animPhase) * 40}
-                  stroke={matteIRColor}
-                  strokeWidth="2"
+                  strokeLinecap="round"
                   opacity="0.6"
                 />
               ))}
             </g>
           )}
 
-          <text x="70" y="180" textAnchor="middle" className="fill-gray-400 text-xs">Matte Black</text>
-          <text x="70" y="195" textAnchor="middle" className={infrared ? 'fill-orange-400 text-xs' : 'fill-gray-500 text-xs'}>
-            {infrared ? '~58C' : 'e = 0.95'}
+          {/* IR radiation waves for matte cup */}
+          {infrared && (
+            <g filter="url(#ireTwistWaveGlow)">
+              {[...Array(8)].map((_, i) => {
+                const angle = (i * Math.PI / 4) + animPhase;
+                const baseRadius = 50;
+                const waveAmplitude = 12 + Math.sin(animPhase * 2 + i) * 6;
+                return (
+                  <path
+                    key={i}
+                    d={`M ${80 + Math.cos(angle) * baseRadius} ${95 + Math.sin(angle) * baseRadius * 0.7}
+                        Q ${80 + Math.cos(angle) * (baseRadius + waveAmplitude)} ${95 + Math.sin(angle) * (baseRadius + waveAmplitude) * 0.7}
+                        ${80 + Math.cos(angle) * (baseRadius + waveAmplitude * 2)} ${95 + Math.sin(angle) * (baseRadius + waveAmplitude * 2) * 0.7}`}
+                    stroke={matteIRColor}
+                    strokeWidth="2"
+                    fill="none"
+                    opacity={0.5 + Math.sin(animPhase + i) * 0.2}
+                  />
+                );
+              })}
+              {/* Heat glow overlay */}
+              <ellipse cx="80" cy="95" rx="45" ry="55" fill="url(#ireTwistHotGlow)" opacity="0.4" />
+            </g>
+          )}
+
+          {/* Labels */}
+          <rect x="25" y="170" width="110" height="40" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
+          <text x="80" y="187" textAnchor="middle" className="text-xs font-bold" fill="#e2e8f0">Matte Black</text>
+          <text x="80" y="203" textAnchor="middle" className="text-xs font-medium" fill={infrared ? '#f97316' : '#a855f7'}>
+            {infrared ? '~58C apparent' : 'Emissivity: 0.95'}
           </text>
         </g>
 
-        <g transform="translate(220, 50)">
-          <path
-            d="M 30 30 L 40 150 L 100 150 L 110 30 Z"
-            fill={infrared ? shinyIRColor : '#9ca3af'}
-            stroke="#d1d5db"
-            strokeWidth="2"
-          />
-          <ellipse cx="70" cy="30" rx="40" ry="12" fill={infrared ? shinyIRColor : '#6b7280'} />
-          <path
-            d="M 110 50 Q 145 60 145 90 Q 145 120 110 130"
-            fill="none"
-            stroke={infrared ? shinyIRColor : '#9ca3af'}
-            strokeWidth="10"
-          />
+        {/* === POLISHED METAL CUP (RIGHT) === */}
+        <g transform="translate(280, 55)">
+          {/* Cup body */}
+          <g filter={infrared ? 'url(#ireTwistColdGlow)' : undefined}>
+            <path
+              d="M 35 35 L 45 155 L 115 155 L 125 35 Z"
+              fill={infrared ? shinyIRColor : 'url(#ireTwistMetal)'}
+              stroke="#e5e7eb"
+              strokeWidth="2"
+            />
+            <ellipse cx="80" cy="35" rx="45" ry="14"
+              fill={infrared ? shinyIRColor : '#9ca3af'}
+            />
+            <path
+              d="M 125 55 Q 165 70 165 100 Q 165 130 125 140"
+              fill="none"
+              stroke={infrared ? shinyIRColor : 'url(#ireTwistMetal)'}
+              strokeWidth="10"
+              strokeLinecap="round"
+            />
+          </g>
 
+          {/* Reflections in visible mode */}
           {!infrared && (
-            <ellipse cx="60" cy="80" rx="8" ry="25" fill="white" opacity="0.3" />
+            <g>
+              <ellipse cx="65" cy="90" rx="10" ry="30" fill="url(#ireTwistReflection)" />
+              <ellipse cx="100" cy="80" rx="5" ry="18" fill="rgba(255,255,255,0.2)" />
+            </g>
           )}
 
+          {/* Steam in visible mode */}
           {!infrared && (
-            <g className="animate-pulse">
-              {[...Array(3)].map((_, i) => (
+            <g>
+              {[...Array(4)].map((_, i) => (
                 <path
                   key={i}
-                  d={`M ${55 + i * 15} 20 Q ${60 + i * 15} ${10 - Math.sin(animPhase + i) * 5} ${55 + i * 15} 0`}
+                  d={`M ${60 + i * 15} 28 Q ${64 + i * 15} ${12 - Math.sin(animPhase + i) * 6} ${60 + i * 15} ${-5 - Math.sin(animPhase + i) * 5}`}
                   fill="none"
-                  stroke="#9ca3af"
+                  stroke="#94a3b8"
                   strokeWidth="2"
-                  opacity="0.5"
+                  strokeLinecap="round"
+                  opacity="0.6"
                 />
               ))}
             </g>
           )}
 
-          <text x="70" y="180" textAnchor="middle" className="fill-gray-400 text-xs">Polished Metal</text>
-          <text x="70" y="195" textAnchor="middle" className={infrared ? 'fill-blue-400 text-xs' : 'fill-gray-500 text-xs'}>
-            {infrared ? `~${shinyApparent.toFixed(0)}C` : 'e = 0.1'}
+          {/* Cold reflection visualization in IR mode */}
+          {infrared && (
+            <g>
+              {/* Show it's reflecting the cold room */}
+              <ellipse cx="80" cy="95" rx="40" ry="50" fill="url(#ireTwistColdReflect)" opacity="0.5" />
+              {/* Reflection arrows showing environment */}
+              {[...Array(5)].map((_, i) => {
+                const angle = (i * Math.PI / 2.5) - Math.PI / 2;
+                return (
+                  <line
+                    key={i}
+                    x1={80 + Math.cos(angle) * 60}
+                    y1={95 + Math.sin(angle) * 45}
+                    x2={80 + Math.cos(angle) * 45}
+                    y2={95 + Math.sin(angle) * 35}
+                    stroke="#60a5fa"
+                    strokeWidth="2"
+                    markerEnd="url(#arrowhead)"
+                    opacity={0.4 + Math.sin(animPhase + i) * 0.2}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Labels */}
+          <rect x="25" y="170" width="110" height="40" rx="4" fill="#111827" stroke="#334155" strokeWidth="1" />
+          <text x="80" y="187" textAnchor="middle" className="text-xs font-bold" fill="#e2e8f0">Polished Metal</text>
+          <text x="80" y="203" textAnchor="middle" className="text-xs font-medium" fill={infrared ? '#60a5fa' : '#a855f7'}>
+            {infrared ? `~${shinyApparent.toFixed(0)}C apparent` : 'Emissivity: 0.10'}
           </text>
         </g>
 
+        {/* === COMPARISON INDICATOR === */}
         {infrared && (
-          <text x="200" y="230" textAnchor="middle" className="fill-yellow-400 text-sm">
-            Same temperature, different IR readings! Shiny surface reflects cold room.
-          </text>
+          <g transform="translate(215, 100)">
+            <text x="35" y="0" textAnchor="middle" className="text-2xl font-bold" fill="#fbbf24">VS</text>
+            {/* Arrow showing temperature difference */}
+            <path d="M 15 20 L 55 20" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4 2" />
+          </g>
+        )}
+
+        {/* === BOTTOM EXPLANATION PANEL === */}
+        <g transform="translate(15, 255)">
+          <rect x="0" y="0" width="470" height="40" rx="6" fill="#111827" stroke={infrared ? '#f97316' : '#334155'} strokeWidth="1" />
+          {infrared ? (
+            <g>
+              <text x="235" y="17" textAnchor="middle" className="text-xs font-bold" fill="#fbbf24">
+                SAME ACTUAL TEMPERATURE - DIFFERENT IR READINGS!
+              </text>
+              <text x="235" y="32" textAnchor="middle" className="text-xs" fill="#94a3b8">
+                Shiny surface reflects the cold room (~{ambientTemp}C) instead of emitting its true 60C
+              </text>
+            </g>
+          ) : (
+            <g>
+              <text x="235" y="17" textAnchor="middle" className="text-xs font-bold" fill="#22d3ee">
+                Both cups at 60C - Steam rising from both
+              </text>
+              <text x="235" y="32" textAnchor="middle" className="text-xs" fill="#94a3b8">
+                Switch to IR view to see how emissivity affects thermal camera readings
+              </text>
+            </g>
+          )}
+        </g>
+
+        {/* === MINI TEMPERATURE SCALE (IR mode only) === */}
+        {infrared && (
+          <g transform="translate(460, 50)">
+            <rect x="-5" y="-5" width="35" height="145" rx="3" fill="#111827" stroke="#334155" strokeWidth="1" />
+            <rect x="3" y="5" width="12" height="115" rx="2" fill="url(#ireTwistTempScale)" />
+            <text x="20" y="15" className="text-xs" fill="#fca5a5">60C</text>
+            <text x="20" y="65" className="text-xs" fill="#67e8f9">30C</text>
+            <text x="20" y="115" className="text-xs" fill="#818cf8">0C</text>
+          </g>
         )}
       </svg>
     );

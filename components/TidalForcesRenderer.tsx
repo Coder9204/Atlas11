@@ -347,214 +347,481 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
     // Calculate bulge direction (toward and away from Moon)
     const bulgeAngle = moonAngle;
 
+    // Generate stable stars based on index (avoiding Math.random in render)
+    const stars = Array.from({ length: 40 }, (_, i) => ({
+      x: (i * 47 + 13) % 400,
+      y: (i * 31 + 7) % 280,
+      r: 0.4 + (i % 5) * 0.15,
+      opacity: 0.2 + (i % 4) * 0.15
+    }));
+
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#0a0a1a" />
+        <defs>
+          {/* ═══════════════════════════════════════════════════════════════════════════
+              PREMIUM GRADIENTS & FILTERS FOR TIDAL FORCES VISUALIZATION
+              ═══════════════════════════════════════════════════════════════════════════ */}
 
-        {/* Stars */}
-        {[...Array(30)].map((_, i) => (
+          {/* Deep space background gradient */}
+          <linearGradient id="tidfSpaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0c1929" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* Earth 3D sphere gradient - realistic blue marble */}
+          <radialGradient id="tidfEarthSphere" cx="35%" cy="35%" r="65%" fx="30%" fy="30%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="25%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="75%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e3a5f" />
+          </radialGradient>
+
+          {/* Earth atmosphere glow */}
+          <radialGradient id="tidfEarthAtmosphere" cx="50%" cy="50%" r="50%">
+            <stop offset="70%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="85%" stopColor="#60a5fa" stopOpacity="0.15" />
+            <stop offset="95%" stopColor="#93c5fd" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#bfdbfe" stopOpacity="0.1" />
+          </radialGradient>
+
+          {/* Earth continents gradient */}
+          <linearGradient id="tidfContinents" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="30%" stopColor="#16a34a" />
+            <stop offset="60%" stopColor="#15803d" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* Ocean tidal bulge gradient - dynamic water effect */}
+          <linearGradient id="tidfOceanBulge" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
+            <stop offset="25%" stopColor="#38bdf8" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#7dd3fc" stopOpacity="0.4" />
+            <stop offset="75%" stopColor="#38bdf8" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.8" />
+          </linearGradient>
+
+          {/* Moon 3D sphere gradient - realistic lunar surface */}
+          <radialGradient id="tidfMoonSphere" cx="30%" cy="30%" r="70%" fx="25%" fy="25%">
+            <stop offset="0%" stopColor="#e5e7eb" />
+            <stop offset="20%" stopColor="#d1d5db" />
+            <stop offset="45%" stopColor="#9ca3af" />
+            <stop offset="70%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </radialGradient>
+
+          {/* Moon crater shadows */}
+          <radialGradient id="tidfCrater" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="60%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </radialGradient>
+
+          {/* Force vector gradients */}
+          <linearGradient id="tidfForceStrong" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#fca5a5" />
+          </linearGradient>
+
+          <linearGradient id="tidfForceMedium" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#fcd34d" />
+          </linearGradient>
+
+          <linearGradient id="tidfForceWeak" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#86efac" />
+          </linearGradient>
+
+          <linearGradient id="tidfForceTidal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#93c5fd" />
+          </linearGradient>
+
+          {/* Orbital path gradient */}
+          <linearGradient id="tidfOrbitPath" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════
+              GLOW FILTERS
+              ═══════════════════════════════════════════════════════════════════════════ */}
+
+          {/* Earth glow filter */}
+          <filter id="tidfEarthGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Moon glow filter */}
+          <filter id="tidfMoonGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Tidal bulge glow */}
+          <filter id="tidfBulgeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Star twinkle filter */}
+          <filter id="tidfStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Force arrow glow */}
+          <filter id="tidfArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Legend panel shadow */}
+          <filter id="tidfLegendShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="2" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
+          </filter>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════
+              ARROW MARKERS
+              ═══════════════════════════════════════════════════════════════════════════ */}
+          <marker id="tidfArrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+          </marker>
+          <marker id="tidfArrowYellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+          </marker>
+          <marker id="tidfArrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+          </marker>
+          <marker id="tidfArrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+          </marker>
+          <marker id="tidfArrowPink" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#f472b6" />
+          </marker>
+        </defs>
+
+        {/* Premium deep space background */}
+        <rect width="400" height="280" fill="url(#tidfSpaceBg)" />
+
+        {/* Stars with subtle glow */}
+        {stars.map((star, i) => (
           <circle
             key={i}
-            cx={(i * 41) % 400}
-            cy={(i * 23) % 280}
-            r={0.5 + Math.random() * 0.5}
+            cx={star.x}
+            cy={star.y}
+            r={star.r}
             fill="#ffffff"
-            opacity={0.3 + Math.random() * 0.4}
+            opacity={star.opacity}
+            filter={i % 5 === 0 ? "url(#tidfStarGlow)" : undefined}
           />
         ))}
 
-        {/* Orbital path hint */}
+        {/* Distant galaxy hint */}
+        <ellipse cx="350" cy="40" rx="15" ry="4" fill="#6366f1" opacity="0.1" />
+        <ellipse cx="60" cy="250" rx="10" ry="3" fill="#8b5cf6" opacity="0.08" />
+
+        {/* Orbital path with gradient */}
         <ellipse
           cx={earthCenterX}
           cy={earthCenterY}
           rx={moonDistance}
           ry={moonDistance * 0.3}
           fill="none"
-          stroke="#1e3a5f"
-          strokeWidth="1"
-          strokeDasharray="5,5"
+          stroke="url(#tidfOrbitPath)"
+          strokeWidth="1.5"
+          strokeDasharray="8,4"
         />
 
-        {/* Earth with tidal bulges */}
+        {/* Earth with premium 3D effects and tidal bulges */}
         <g transform={`translate(${earthCenterX}, ${earthCenterY})`}>
-          {/* Ocean layer with bulges */}
+          {/* Atmosphere glow layer */}
+          <circle cx={0} cy={0} r={earthRadius + 8} fill="url(#tidfEarthAtmosphere)" />
+
+          {/* Tidal bulge - ocean water layer with glow */}
           <ellipse
             cx={0}
             cy={0}
-            rx={earthRadius + 8}
-            ry={earthRadius + 8}
-            fill="#1e40af"
-            opacity="0.5"
+            rx={earthRadius + 12}
+            ry={earthRadius - 3}
+            fill="url(#tidfOceanBulge)"
+            filter="url(#tidfBulgeGlow)"
             transform={`rotate(${bulgeAngle * 180 / Math.PI})`}
-            style={{
-              transform: `rotate(${bulgeAngle * 180 / Math.PI}deg) scale(1.15, 0.9)`
-            }}
-          />
+            opacity="0.7"
+          >
+            <animate attributeName="opacity" values="0.6;0.8;0.6" dur="2s" repeatCount="indefinite" />
+          </ellipse>
 
-          {/* Earth solid */}
-          <circle cx={0} cy={0} r={earthRadius} fill="#22c55e" />
+          {/* Earth solid sphere with 3D gradient */}
+          <circle cx={0} cy={0} r={earthRadius} fill="url(#tidfEarthSphere)" filter="url(#tidfEarthGlow)" />
 
-          {/* Continents (simplified) */}
-          <ellipse cx={-15} cy={-10} rx={20} ry={15} fill="#16a34a" />
-          <ellipse cx={15} cy={10} rx={15} ry={12} fill="#16a34a" />
-          <ellipse cx={-10} cy={20} rx={8} ry={10} fill="#16a34a" />
+          {/* Continents with gradient */}
+          <ellipse cx={-12} cy={-8} rx={18} ry={13} fill="url(#tidfContinents)" opacity="0.9" />
+          <ellipse cx={14} cy={8} rx={14} ry={10} fill="url(#tidfContinents)" opacity="0.85" />
+          <ellipse cx={-8} cy={18} rx={7} ry={9} fill="url(#tidfContinents)" opacity="0.8" />
+          <ellipse cx={20} cy={-15} rx={6} ry={5} fill="url(#tidfContinents)" opacity="0.75" />
 
-          {/* Water overlay */}
-          <circle cx={0} cy={0} r={earthRadius} fill="#3b82f6" opacity="0.3" />
+          {/* Specular highlight for 3D effect */}
+          <ellipse cx={-18} cy={-18} rx={12} ry={8} fill="#ffffff" opacity="0.15" />
 
-          {/* Tidal bulge visualization */}
+          {/* Tidal bulge outline - premium glowing effect */}
           <ellipse
             cx={0}
             cy={0}
             rx={earthRadius + 10}
             ry={earthRadius - 5}
             fill="none"
-            stroke="#60a5fa"
-            strokeWidth="3"
+            stroke="#7dd3fc"
+            strokeWidth="2.5"
             transform={`rotate(${bulgeAngle * 180 / Math.PI})`}
-            className="animate-pulse"
-          />
+            filter="url(#tidfBulgeGlow)"
+            opacity="0.9"
+          >
+            <animate attributeName="strokeWidth" values="2;3;2" dur="1.5s" repeatCount="indefinite" />
+          </ellipse>
 
-          {/* Near side bulge label */}
+          {/* Tidal bulge labels with better styling */}
           <g transform={`rotate(${bulgeAngle * 180 / Math.PI})`}>
-            <text
-              x={earthRadius + 20}
-              y={5}
-              className="fill-cyan-300 text-xs font-bold"
-              textAnchor="start"
-            >
-              Bulge
-            </text>
-            <text
-              x={-earthRadius - 20}
-              y={5}
-              className="fill-cyan-300 text-xs font-bold"
-              textAnchor="end"
-            >
-              Bulge
-            </text>
+            {/* Near side bulge indicator */}
+            <g transform={`translate(${earthRadius + 18}, 0)`}>
+              <rect x="-2" y="-10" width="32" height="16" rx="4" fill="#0c4a6e" opacity="0.8" />
+              <text
+                x="14"
+                y="2"
+                className="fill-cyan-300 font-bold"
+                textAnchor="middle"
+                style={{ fontSize: '9px' }}
+              >
+                HIGH
+              </text>
+            </g>
+            {/* Far side bulge indicator */}
+            <g transform={`translate(${-earthRadius - 18}, 0)`}>
+              <rect x="-30" y="-10" width="32" height="16" rx="4" fill="#0c4a6e" opacity="0.8" />
+              <text
+                x="-14"
+                y="2"
+                className="fill-cyan-300 font-bold"
+                textAnchor="middle"
+                style={{ fontSize: '9px' }}
+              >
+                HIGH
+              </text>
+            </g>
           </g>
+
+          {/* Earth label */}
+          <text x={0} y={earthRadius + 22} textAnchor="middle" className="fill-blue-300 font-semibold" style={{ fontSize: '10px' }}>
+            Earth
+          </text>
         </g>
 
-        {/* Gravity vectors */}
+        {/* Gravity vectors with premium styling */}
         {showVectors && (
-          <g>
+          <g filter="url(#tidfArrowGlow)">
             {/* Near side - strongest pull */}
             <line
               x1={earthCenterX + Math.cos(bulgeAngle) * (earthRadius - 10)}
               y1={earthCenterY + Math.sin(bulgeAngle) * (earthRadius - 10) * 0.3}
-              x2={earthCenterX + Math.cos(bulgeAngle) * (earthRadius + 30)}
-              y2={earthCenterY + Math.sin(bulgeAngle) * (earthRadius + 30) * 0.3}
-              stroke="#ef4444"
-              strokeWidth="3"
-              markerEnd="url(#arrowRed)"
+              x2={earthCenterX + Math.cos(bulgeAngle) * (earthRadius + 35)}
+              y2={earthCenterY + Math.sin(bulgeAngle) * (earthRadius + 35) * 0.3}
+              stroke="url(#tidfForceStrong)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowRed)"
             />
             {/* Center pull */}
             <line
               x1={earthCenterX}
               y1={earthCenterY}
-              x2={earthCenterX + Math.cos(bulgeAngle) * 25}
-              y2={earthCenterY + Math.sin(bulgeAngle) * 25 * 0.3}
-              stroke="#fbbf24"
-              strokeWidth="3"
-              markerEnd="url(#arrowYellow)"
+              x2={earthCenterX + Math.cos(bulgeAngle) * 28}
+              y2={earthCenterY + Math.sin(bulgeAngle) * 28 * 0.3}
+              stroke="url(#tidfForceMedium)"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowYellow)"
             />
             {/* Far side - weakest pull */}
             <line
               x1={earthCenterX - Math.cos(bulgeAngle) * (earthRadius - 10)}
               y1={earthCenterY - Math.sin(bulgeAngle) * (earthRadius - 10) * 0.3}
-              x2={earthCenterX - Math.cos(bulgeAngle) * (earthRadius - 25)}
-              y2={earthCenterY - Math.sin(bulgeAngle) * (earthRadius - 25) * 0.3}
-              stroke="#22c55e"
+              x2={earthCenterX - Math.cos(bulgeAngle) * (earthRadius - 28)}
+              y2={earthCenterY - Math.sin(bulgeAngle) * (earthRadius - 28) * 0.3}
+              stroke="url(#tidfForceWeak)"
               strokeWidth="3"
-              markerEnd="url(#arrowGreen)"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowGreen)"
             />
+
+            {/* Force magnitude labels */}
+            <g transform={`translate(${earthCenterX + Math.cos(bulgeAngle) * (earthRadius + 45)}, ${earthCenterY + Math.sin(bulgeAngle) * (earthRadius + 45) * 0.3})`}>
+              <text className="fill-red-300 font-bold" style={{ fontSize: '8px' }} textAnchor="middle">F+</text>
+            </g>
+            <g transform={`translate(${earthCenterX - Math.cos(bulgeAngle) * (earthRadius - 35)}, ${earthCenterY - Math.sin(bulgeAngle) * (earthRadius - 35) * 0.3})`}>
+              <text className="fill-green-300 font-bold" style={{ fontSize: '8px' }} textAnchor="middle">F-</text>
+            </g>
           </g>
         )}
 
-        {/* Differential vectors */}
+        {/* Differential (tidal) vectors with premium styling */}
         {showDifferential && (
-          <g>
+          <g filter="url(#tidfArrowGlow)">
             {/* Net outward on near side */}
             <line
               x1={earthCenterX + Math.cos(bulgeAngle) * earthRadius}
               y1={earthCenterY + Math.sin(bulgeAngle) * earthRadius * 0.3}
-              x2={earthCenterX + Math.cos(bulgeAngle) * (earthRadius + 20)}
-              y2={earthCenterY + Math.sin(bulgeAngle) * (earthRadius + 20) * 0.3}
-              stroke="#60a5fa"
-              strokeWidth="3"
-              markerEnd="url(#arrowBlue)"
+              x2={earthCenterX + Math.cos(bulgeAngle) * (earthRadius + 25)}
+              y2={earthCenterY + Math.sin(bulgeAngle) * (earthRadius + 25) * 0.3}
+              stroke="url(#tidfForceTidal)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowBlue)"
             />
             {/* Net outward on far side (opposite direction!) */}
             <line
               x1={earthCenterX - Math.cos(bulgeAngle) * earthRadius}
               y1={earthCenterY - Math.sin(bulgeAngle) * earthRadius * 0.3}
-              x2={earthCenterX - Math.cos(bulgeAngle) * (earthRadius + 20)}
-              y2={earthCenterY - Math.sin(bulgeAngle) * (earthRadius + 20) * 0.3}
-              stroke="#60a5fa"
-              strokeWidth="3"
-              markerEnd="url(#arrowBlue)"
+              x2={earthCenterX - Math.cos(bulgeAngle) * (earthRadius + 25)}
+              y2={earthCenterY - Math.sin(bulgeAngle) * (earthRadius + 25) * 0.3}
+              stroke="url(#tidfForceTidal)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowBlue)"
             />
-            {/* Inward at perpendicular */}
+            {/* Inward compression at perpendicular points */}
             <line
-              x1={earthCenterX + Math.sin(bulgeAngle) * earthRadius * 0.5}
+              x1={earthCenterX + Math.sin(bulgeAngle) * earthRadius * 0.6}
               y1={earthCenterY - Math.cos(bulgeAngle) * earthRadius}
-              x2={earthCenterX + Math.sin(bulgeAngle) * earthRadius * 0.3}
-              y2={earthCenterY - Math.cos(bulgeAngle) * (earthRadius - 15)}
+              x2={earthCenterX + Math.sin(bulgeAngle) * earthRadius * 0.35}
+              y2={earthCenterY - Math.cos(bulgeAngle) * (earthRadius - 18)}
               stroke="#f472b6"
-              strokeWidth="2"
-              markerEnd="url(#arrowPink)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowPink)"
             />
+            <line
+              x1={earthCenterX - Math.sin(bulgeAngle) * earthRadius * 0.6}
+              y1={earthCenterY + Math.cos(bulgeAngle) * earthRadius}
+              x2={earthCenterX - Math.sin(bulgeAngle) * earthRadius * 0.35}
+              y2={earthCenterY + Math.cos(bulgeAngle) * (earthRadius - 18)}
+              stroke="#f472b6"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              markerEnd="url(#tidfArrowPink)"
+            />
+
+            {/* Tidal force direction labels */}
+            <g transform={`translate(${earthCenterX + Math.cos(bulgeAngle) * (earthRadius + 35)}, ${earthCenterY + Math.sin(bulgeAngle) * (earthRadius + 35) * 0.3})`}>
+              <text className="fill-blue-300 font-bold" style={{ fontSize: '7px' }} textAnchor="middle">STRETCH</text>
+            </g>
+            <g transform={`translate(${earthCenterX - Math.cos(bulgeAngle) * (earthRadius + 35)}, ${earthCenterY - Math.sin(bulgeAngle) * (earthRadius + 35) * 0.3})`}>
+              <text className="fill-blue-300 font-bold" style={{ fontSize: '7px' }} textAnchor="middle">STRETCH</text>
+            </g>
           </g>
         )}
 
-        {/* Moon */}
-        <g transform={`translate(${moonX}, ${moonY})`}>
-          <circle cx={0} cy={0} r={15} fill="#9ca3af" />
-          {/* Craters */}
-          <circle cx={-3} cy={-4} r={3} fill="#6b7280" />
-          <circle cx={5} cy={2} r={2} fill="#6b7280" />
-          <circle cx={-2} cy={5} r={2} fill="#6b7280" />
-          <text x={0} y={30} textAnchor="middle" className="fill-gray-400 text-xs">Moon</text>
+        {/* Moon with premium 3D effects */}
+        <g transform={`translate(${moonX}, ${moonY})`} filter="url(#tidfMoonGlow)">
+          {/* Moon shadow for depth */}
+          <ellipse cx={3} cy={3} rx={15} ry={15} fill="#1f2937" opacity="0.5" />
+
+          {/* Moon sphere with 3D gradient */}
+          <circle cx={0} cy={0} r={15} fill="url(#tidfMoonSphere)" />
+
+          {/* Craters with depth */}
+          <ellipse cx={-4} cy={-5} rx={4} ry={3.5} fill="url(#tidfCrater)" />
+          <ellipse cx={5} cy={1} rx={3} ry={2.5} fill="url(#tidfCrater)" />
+          <ellipse cx={-2} cy={6} rx={2.5} ry={2} fill="url(#tidfCrater)" />
+          <circle cx={7} cy={-6} r={1.5} fill="url(#tidfCrater)" />
+
+          {/* Specular highlight */}
+          <ellipse cx={-5} cy={-6} rx={4} ry={3} fill="#ffffff" opacity="0.2" />
+
+          {/* Moon label */}
+          <text x={0} y={28} textAnchor="middle" className="fill-gray-300 font-semibold" style={{ fontSize: '10px' }}>
+            Moon
+          </text>
+
+          {/* Gravitational pull indicator line to Earth */}
+          <line
+            x1={0}
+            y1={0}
+            x2={earthCenterX - moonX}
+            y2={(earthCenterY - moonY) * 0.3}
+            stroke="#6366f1"
+            strokeWidth="1"
+            strokeDasharray="4,3"
+            opacity="0.4"
+          />
         </g>
 
-        {/* Arrow markers */}
-        <defs>
-          <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
-          </marker>
-          <marker id="arrowYellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
-          </marker>
-          <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
-          </marker>
-          <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
-          </marker>
-          <marker id="arrowPink" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#f472b6" />
-          </marker>
-        </defs>
-
-        {/* Legend */}
+        {/* Premium Legend panels */}
         {showVectors && (
-          <g transform="translate(10, 230)">
-            <rect x="0" y="0" width="150" height="50" fill="#1f2937" rx="5" opacity="0.9" />
-            <line x1="10" y1="15" x2="30" y2="15" stroke="#ef4444" strokeWidth="2" />
-            <text x="35" y="18" className="fill-gray-300 text-xs">Strong (near side)</text>
-            <line x1="10" y1="30" x2="30" y2="30" stroke="#fbbf24" strokeWidth="2" />
-            <text x="35" y="33" className="fill-gray-300 text-xs">Medium (center)</text>
-            <line x1="10" y1="45" x2="30" y2="45" stroke="#22c55e" strokeWidth="2" />
-            <text x="35" y="48" className="fill-gray-300 text-xs">Weak (far side)</text>
+          <g transform="translate(8, 218)" filter="url(#tidfLegendShadow)">
+            <rect x="0" y="0" width="155" height="58" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <rect x="0" y="0" width="155" height="18" rx="8" fill="#1e293b" />
+            <rect x="0" y="10" width="155" height="8" fill="#1e293b" />
+            <text x="77" y="13" textAnchor="middle" className="fill-slate-300 font-bold" style={{ fontSize: '9px' }}>GRAVITY VECTORS</text>
+
+            <line x1="12" y1="30" x2="35" y2="30" stroke="url(#tidfForceStrong)" strokeWidth="3" strokeLinecap="round" />
+            <text x="42" y="33" className="fill-gray-300" style={{ fontSize: '9px' }}>Strong (near side)</text>
+
+            <line x1="12" y1="43" x2="35" y2="43" stroke="url(#tidfForceMedium)" strokeWidth="3" strokeLinecap="round" />
+            <text x="42" y="46" className="fill-gray-300" style={{ fontSize: '9px' }}>Medium (center)</text>
+
+            <line x1="100" y1="30" x2="123" y2="30" stroke="url(#tidfForceWeak)" strokeWidth="3" strokeLinecap="round" />
+            <text x="126" y="33" className="fill-gray-300" style={{ fontSize: '8px' }}>Weak</text>
           </g>
         )}
 
         {showDifferential && (
-          <g transform="translate(230, 230)">
-            <rect x="0" y="0" width="160" height="35" fill="#1f2937" rx="5" opacity="0.9" />
-            <line x1="10" y1="18" x2="30" y2="18" stroke="#60a5fa" strokeWidth="2" />
-            <text x="35" y="21" className="fill-gray-300 text-xs">Net tidal force (outward)</text>
+          <g transform="translate(170, 218)" filter="url(#tidfLegendShadow)">
+            <rect x="0" y="0" width="165" height="58" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <rect x="0" y="0" width="165" height="18" rx="8" fill="#1e3a5f" />
+            <rect x="0" y="10" width="165" height="8" fill="#1e3a5f" />
+            <text x="82" y="13" textAnchor="middle" className="fill-cyan-300 font-bold" style={{ fontSize: '9px' }}>NET TIDAL FORCES</text>
+
+            <line x1="12" y1="32" x2="35" y2="32" stroke="url(#tidfForceTidal)" strokeWidth="3" strokeLinecap="round" />
+            <text x="42" y="35" className="fill-blue-200" style={{ fontSize: '9px' }}>Outward (creates bulge)</text>
+
+            <line x1="12" y1="47" x2="35" y2="47" stroke="#f472b6" strokeWidth="2" strokeLinecap="round" />
+            <text x="42" y="50" className="fill-pink-200" style={{ fontSize: '9px' }}>Inward (compression)</text>
+          </g>
+        )}
+
+        {/* Title badge when no controls active */}
+        {!showVectors && !showDifferential && (
+          <g transform="translate(200, 12)">
+            <rect x="-60" y="0" width="120" height="20" rx="10" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <text x="0" y="14" textAnchor="middle" className="fill-cyan-400 font-bold" style={{ fontSize: '10px' }}>
+              TIDAL FORCES
+            </text>
           </g>
         )}
       </svg>
@@ -572,88 +839,323 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
     // The side of moon facing Earth
     const moonFacingAngle = isTidallyLocked ? moonAngle + Math.PI : moonRotation;
 
+    // Generate stable stars based on index
+    const stars = Array.from({ length: 30 }, (_, i) => ({
+      x: (i * 43 + 11) % 400,
+      y: (i * 29 + 5) % 260,
+      r: 0.4 + (i % 4) * 0.12,
+      opacity: 0.2 + (i % 5) * 0.12
+    }));
+
     return (
       <svg viewBox="0 0 400 260" className="w-full h-52">
-        <rect width="400" height="260" fill="#0a0a1a" />
+        <defs>
+          {/* ═══════════════════════════════════════════════════════════════════════════
+              PREMIUM GRADIENTS & FILTERS FOR TIDAL LOCKING VISUALIZATION
+              ═══════════════════════════════════════════════════════════════════════════ */}
 
-        {/* Stars */}
-        {[...Array(25)].map((_, i) => (
+          {/* Deep space background gradient */}
+          <linearGradient id="tidfTwistSpaceBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="30%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="70%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* Earth 3D sphere gradient */}
+          <radialGradient id="tidfTwistEarthSphere" cx="35%" cy="35%" r="65%" fx="30%" fy="30%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="30%" stopColor="#3b82f6" />
+            <stop offset="60%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1e3a5f" />
+          </radialGradient>
+
+          {/* Earth atmosphere */}
+          <radialGradient id="tidfTwistEarthAtmo" cx="50%" cy="50%" r="50%">
+            <stop offset="75%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="90%" stopColor="#60a5fa" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.1" />
+          </radialGradient>
+
+          {/* Continents */}
+          <linearGradient id="tidfTwistContinents" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* Moon 3D sphere gradient */}
+          <radialGradient id="tidfTwistMoonSphere" cx="30%" cy="30%" r="70%" fx="25%" fy="25%">
+            <stop offset="0%" stopColor="#e5e7eb" />
+            <stop offset="25%" stopColor="#d1d5db" />
+            <stop offset="50%" stopColor="#9ca3af" />
+            <stop offset="80%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </radialGradient>
+
+          {/* Moon near side (face) - slightly different shade */}
+          <radialGradient id="tidfTwistMoonFace" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f3f4f6" />
+            <stop offset="50%" stopColor="#d1d5db" />
+            <stop offset="100%" stopColor="#9ca3af" />
+          </radialGradient>
+
+          {/* Moon crater */}
+          <radialGradient id="tidfTwistCrater" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="70%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#374151" />
+          </radialGradient>
+
+          {/* Orbital path gradient */}
+          <linearGradient id="tidfTwistOrbitPath" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#818cf8" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Reference line gradient */}
+          <linearGradient id="tidfTwistRefLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Marker line for moon front */}
+          <linearGradient id="tidfTwistMarkerLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#fca5a5" />
+          </linearGradient>
+
+          {/* Panel background gradient */}
+          <linearGradient id="tidfTwistPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#0a0f1a" />
+          </linearGradient>
+
+          {/* Locked status gradient */}
+          <linearGradient id="tidfTwistLockedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#16a34a" />
+          </linearGradient>
+
+          {/* Unlocked status gradient */}
+          <linearGradient id="tidfTwistUnlockedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* ═══════════════════════════════════════════════════════════════════════════
+              GLOW FILTERS
+              ═══════════════════════════════════════════════════════════════════════════ */}
+
+          <filter id="tidfTwistEarthGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="tidfTwistMoonGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="tidfTwistStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="0.8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="tidfTwistPanelShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feDropShadow dx="2" dy="2" stdDeviation="4" floodColor="#000000" floodOpacity="0.6" />
+          </filter>
+
+          <filter id="tidfTwistMarkerGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Premium deep space background */}
+        <rect width="400" height="260" fill="url(#tidfTwistSpaceBg)" />
+
+        {/* Stars with subtle glow */}
+        {stars.map((star, i) => (
           <circle
             key={i}
-            cx={(i * 37) % 400}
-            cy={(i * 19) % 260}
-            r={0.5 + Math.random() * 0.5}
+            cx={star.x}
+            cy={star.y}
+            r={star.r}
             fill="#ffffff"
-            opacity={0.3}
+            opacity={star.opacity}
+            filter={i % 6 === 0 ? "url(#tidfTwistStarGlow)" : undefined}
           />
         ))}
 
-        {/* Orbital path */}
+        {/* Distant nebula hints */}
+        <ellipse cx="380" cy="30" rx="12" ry="5" fill="#8b5cf6" opacity="0.08" />
+
+        {/* Orbital path with gradient */}
         <ellipse
           cx={earthCenterX}
           cy={earthCenterY}
           rx={moonOrbitRadius}
           ry={moonOrbitRadius * 0.4}
           fill="none"
-          stroke="#1e3a5f"
-          strokeWidth="1"
-          strokeDasharray="4,4"
+          stroke="url(#tidfTwistOrbitPath)"
+          strokeWidth="1.5"
+          strokeDasharray="6,4"
         />
 
-        {/* Earth */}
-        <circle cx={earthCenterX} cy={earthCenterY} r={30} fill="#3b82f6" />
-        <ellipse cx={earthCenterX - 5} cy={earthCenterY - 5} rx={12} ry={8} fill="#22c55e" />
-        <ellipse cx={earthCenterX + 8} cy={earthCenterY + 8} rx={8} ry={6} fill="#22c55e" />
+        {/* Earth with premium 3D effects */}
+        <g>
+          {/* Atmosphere glow */}
+          <circle cx={earthCenterX} cy={earthCenterY} r={35} fill="url(#tidfTwistEarthAtmo)" />
+
+          {/* Earth sphere */}
+          <circle cx={earthCenterX} cy={earthCenterY} r={30} fill="url(#tidfTwistEarthSphere)" filter="url(#tidfTwistEarthGlow)" />
+
+          {/* Continents */}
+          <ellipse cx={earthCenterX - 5} cy={earthCenterY - 5} rx={12} ry={8} fill="url(#tidfTwistContinents)" opacity="0.9" />
+          <ellipse cx={earthCenterX + 8} cy={earthCenterY + 8} rx={8} ry={6} fill="url(#tidfTwistContinents)" opacity="0.85" />
+          <ellipse cx={earthCenterX - 8} cy={earthCenterY + 12} rx={5} ry={4} fill="url(#tidfTwistContinents)" opacity="0.8" />
+
+          {/* Specular highlight */}
+          <ellipse cx={earthCenterX - 10} cy={earthCenterY - 10} rx={8} ry={5} fill="#ffffff" opacity="0.15" />
+
+          {/* Earth label */}
+          <text x={earthCenterX} y={earthCenterY + 45} textAnchor="middle" className="fill-blue-300 font-semibold" style={{ fontSize: '9px' }}>
+            Earth
+          </text>
+        </g>
 
         {/* Observer on Earth */}
-        <g transform={`translate(${earthCenterX}, ${earthCenterY - 30})`}>
-          <text x={0} y={-5} textAnchor="middle" className="text-lg">👁️</text>
-          <text x={0} y={10} textAnchor="middle" className="fill-gray-400 text-xs">Observer</text>
+        <g transform={`translate(${earthCenterX}, ${earthCenterY - 32})`}>
+          <circle cx={0} cy={-2} r={8} fill="#1e293b" stroke="#60a5fa" strokeWidth="1" />
+          <text x={0} y={1} textAnchor="middle" style={{ fontSize: '10px' }}>👁️</text>
+          <text x={0} y={14} textAnchor="middle" className="fill-slate-400 font-medium" style={{ fontSize: '8px' }}>Observer</text>
         </g>
 
-        {/* Moon with visible marking */}
-        <g transform={`translate(${moonX}, ${moonY})`}>
-          <circle cx={0} cy={0} r={18} fill="#9ca3af" />
-
-          {/* Moon's "face" - crater pattern that shows which side faces us */}
-          <g transform={`rotate(${moonFacingAngle * 180 / Math.PI})`}>
-            {/* This pattern shows "the face" we see or don't see */}
-            <circle cx={-5} cy={-3} r={4} fill="#6b7280" />
-            <circle cx={5} cy={-3} r={4} fill="#6b7280" />
-            <ellipse cx={0} cy={6} rx={8} ry={3} fill="#6b7280" />
-            {/* Marker line showing "front" of moon */}
-            <line x1={0} y1={0} x2={18} y2={0} stroke="#ef4444" strokeWidth="2" />
-          </g>
-        </g>
-
-        {/* Explanation panel */}
-        <g transform="translate(250, 30)">
-          <rect x="0" y="0" width="140" height="90" fill="#1f2937" rx="8" opacity="0.95" />
-          <text x="70" y="20" textAnchor="middle" className="fill-gray-300 text-xs font-semibold">
-            {isTidallyLocked ? 'Tidally Locked' : 'NOT Locked'}
-          </text>
-          <text x="70" y="40" textAnchor="middle" className="fill-gray-500 text-xs">
-            Orbital: {(moonAngle * 180 / Math.PI).toFixed(0)}°
-          </text>
-          <text x="70" y="55" textAnchor="middle" className="fill-gray-500 text-xs">
-            Rotation: {(moonRotation * 180 / Math.PI).toFixed(0)}°
-          </text>
-          <text x="70" y="75" textAnchor="middle" className={`text-xs ${isTidallyLocked ? 'fill-green-400' : 'fill-red-400'}`}>
-            {isTidallyLocked ? '✓ Same side always faces Earth' : '✗ Different sides face Earth'}
-          </text>
-        </g>
-
-        {/* Red line showing direction to Earth (for reference) */}
+        {/* Reference line from Moon to Earth */}
         <line
           x1={moonX}
           y1={moonY}
           x2={earthCenterX}
           y2={earthCenterY}
-          stroke="#60a5fa"
-          strokeWidth="1"
-          strokeDasharray="3,3"
-          opacity="0.5"
+          stroke="url(#tidfTwistRefLine)"
+          strokeWidth="1.5"
+          strokeDasharray="4,3"
         />
+
+        {/* Moon with premium 3D effects and rotation marker */}
+        <g transform={`translate(${moonX}, ${moonY})`} filter="url(#tidfTwistMoonGlow)">
+          {/* Moon shadow for depth */}
+          <ellipse cx={2} cy={2} rx={18} ry={18} fill="#1f2937" opacity="0.4" />
+
+          {/* Moon sphere */}
+          <circle cx={0} cy={0} r={18} fill="url(#tidfTwistMoonSphere)" />
+
+          {/* Moon's "face" - crater pattern that shows which side faces us */}
+          <g transform={`rotate(${moonFacingAngle * 180 / Math.PI})`}>
+            {/* Near side feature pattern (maria - the "face") */}
+            <ellipse cx={-5} cy={-3} rx={4} ry={3.5} fill="url(#tidfTwistCrater)" />
+            <ellipse cx={5} cy={-3} rx={4} ry={3.5} fill="url(#tidfTwistCrater)" />
+            <ellipse cx={0} cy={6} rx={8} ry={3} fill="url(#tidfTwistCrater)" />
+
+            {/* Marker line showing "front" of moon with glow */}
+            <line
+              x1={0}
+              y1={0}
+              x2={20}
+              y2={0}
+              stroke="url(#tidfTwistMarkerLine)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              filter="url(#tidfTwistMarkerGlow)"
+            />
+
+            {/* Arrow tip for direction */}
+            <polygon points="18,-3 24,0 18,3" fill="#ef4444" />
+          </g>
+
+          {/* Specular highlight */}
+          <ellipse cx={-6} cy={-7} rx={5} ry={4} fill="#ffffff" opacity="0.2" />
+
+          {/* Moon label */}
+          <text x={0} y={32} textAnchor="middle" className="fill-gray-300 font-semibold" style={{ fontSize: '9px' }}>
+            Moon
+          </text>
+        </g>
+
+        {/* Premium Explanation panel */}
+        <g transform="translate(248, 25)" filter="url(#tidfTwistPanelShadow)">
+          <rect x="0" y="0" width="145" height="105" rx="10" fill="url(#tidfTwistPanelBg)" stroke="#334155" strokeWidth="1" />
+
+          {/* Status header */}
+          <rect
+            x="0"
+            y="0"
+            width="145"
+            height="28"
+            rx="10"
+            fill={isTidallyLocked ? "url(#tidfTwistLockedGrad)" : "url(#tidfTwistUnlockedGrad)"}
+            opacity="0.2"
+          />
+          <rect x="0" y="18" width="145" height="10" fill={isTidallyLocked ? "#22c55e" : "#ef4444"} opacity="0.1" />
+
+          {/* Status icon and text */}
+          <text x="20" y="19" className="fill-white font-bold" style={{ fontSize: '14px' }}>
+            {isTidallyLocked ? '🔒' : '🔓'}
+          </text>
+          <text x="40" y="18" className={`font-bold ${isTidallyLocked ? 'fill-emerald-300' : 'fill-red-300'}`} style={{ fontSize: '11px' }}>
+            {isTidallyLocked ? 'Tidally Locked' : 'NOT Locked'}
+          </text>
+
+          {/* Data display */}
+          <g transform="translate(12, 40)">
+            <rect x="0" y="0" width="120" height="22" rx="4" fill="#0f172a" />
+            <text x="8" y="14" className="fill-slate-400" style={{ fontSize: '9px' }}>Orbital:</text>
+            <text x="55" y="14" className="fill-cyan-300 font-mono font-bold" style={{ fontSize: '10px' }}>
+              {(moonAngle * 180 / Math.PI).toFixed(0)}°
+            </text>
+            <text x="80" y="14" className="fill-slate-400" style={{ fontSize: '9px' }}>Rot:</text>
+            <text x="100" y="14" className="fill-amber-300 font-mono font-bold" style={{ fontSize: '10px' }}>
+              {(moonRotation * 180 / Math.PI).toFixed(0)}°
+            </text>
+          </g>
+
+          {/* Status message */}
+          <g transform="translate(12, 70)">
+            <rect x="0" y="0" width="120" height="26" rx="4" fill={isTidallyLocked ? "#052e16" : "#450a0a"} opacity="0.5" />
+            <text x="60" y="11" textAnchor="middle" className={`font-semibold ${isTidallyLocked ? 'fill-emerald-300' : 'fill-red-300'}`} style={{ fontSize: '8px' }}>
+              {isTidallyLocked ? '✓ Same side always' : '✗ Different sides'}
+            </text>
+            <text x="60" y="22" textAnchor="middle" className={`font-medium ${isTidallyLocked ? 'fill-emerald-400' : 'fill-red-400'}`} style={{ fontSize: '8px' }}>
+              {isTidallyLocked ? 'faces Earth' : 'face Earth'}
+            </text>
+          </g>
+        </g>
+
+        {/* Title badge */}
+        <g transform="translate(120, 8)">
+          <rect x="-55" y="0" width="110" height="18" rx="9" fill="#1e293b" stroke="#6366f1" strokeWidth="1" opacity="0.9" />
+          <text x="0" y="12" textAnchor="middle" className="fill-indigo-300 font-bold" style={{ fontSize: '9px' }}>
+            TIDAL LOCKING
+          </text>
+        </g>
       </svg>
     );
   };

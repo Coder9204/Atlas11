@@ -429,19 +429,111 @@ export default function WaterHammerRenderer({
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
 
               <div className="relative">
-                <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 400, margin: '0 auto', display: 'block' }}>
-                  <rect x="50" y="70" width="300" height="60" fill="#334155" stroke="#475569" strokeWidth="3" rx="5" />
-                  <rect x="50" y="80" width="300" height="40" fill="#475569" />
+                <svg viewBox="0 0 420 220" style={{ width: '100%', maxWidth: 420, margin: '0 auto', display: 'block' }}>
+                  {/* Premium defs for hook visualization */}
+                  <defs>
+                    {/* Metallic pipe gradient */}
+                    <linearGradient id="whamHookPipe" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#64748b" />
+                      <stop offset="20%" stopColor="#94a3b8" />
+                      <stop offset="40%" stopColor="#475569" />
+                      <stop offset="60%" stopColor="#334155" />
+                      <stop offset="80%" stopColor="#475569" />
+                      <stop offset="100%" stopColor="#1e293b" />
+                    </linearGradient>
+                    {/* Pipe inner darkness */}
+                    <linearGradient id="whamHookPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#1e293b" />
+                      <stop offset="50%" stopColor="#0f172a" />
+                      <stop offset="100%" stopColor="#1e293b" />
+                    </linearGradient>
+                    {/* Water gradient */}
+                    <linearGradient id="whamHookWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#60a5fa" />
+                      <stop offset="50%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#60a5fa" />
+                    </linearGradient>
+                    {/* Valve closed gradient */}
+                    <linearGradient id="whamHookValve" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fca5a5" />
+                      <stop offset="50%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#b91c1c" />
+                    </linearGradient>
+                    {/* Shock wave radial */}
+                    <radialGradient id="whamHookShock" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+                      <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.8" />
+                      <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                    </radialGradient>
+                    {/* Water particle glow */}
+                    <radialGradient id="whamHookParticle" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                      <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                    </radialGradient>
+                    {/* Glow filter */}
+                    <filter id="whamHookGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                      <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
+                      <feComposite in="color" in2="blur" operator="in" result="glow" />
+                      <feMerge>
+                        <feMergeNode in="glow" />
+                        <feMergeNode in="glow" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    {/* Particle glow filter */}
+                    <filter id="whamHookParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                      <feFlood floodColor="#60a5fa" floodOpacity="0.5" result="color" />
+                      <feComposite in="color" in2="blur" operator="in" result="glow" />
+                      <feMerge>
+                        <feMergeNode in="glow" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Background */}
+                  <rect width="420" height="220" fill="#0a1628" rx="8" />
+
+                  {/* Pipe outer shell */}
+                  <rect x="40" y="70" width="300" height="70" rx="6" fill="url(#whamHookPipe)" stroke="#475569" strokeWidth="2" />
+                  {/* Pipe inner */}
+                  <rect x="48" y="78" width="284" height="54" rx="3" fill="url(#whamHookPipeInner)" />
+                  {/* Water */}
+                  <rect x="52" y="82" width="276" height="46" rx="2" fill="url(#whamHookWater)" opacity="0.8" />
+
+                  {/* Animated water particles */}
                   <g>
                     {[0, 1, 2, 3, 4, 5].map(i => (
-                      <circle key={i} cx={80 + i * 45} cy="100" r="10" fill="#3b82f6" opacity="0.8">
-                        <animate attributeName="cx" values={`${80 + i * 45};${125 + i * 45}`} dur="0.5s" repeatCount="indefinite" />
+                      <circle key={i} cx={70 + i * 45} cy="105" r="9" fill="url(#whamHookParticle)" filter="url(#whamHookParticleGlow)">
+                        <animate attributeName="cx" values={`${70 + i * 45};${115 + i * 45}`} dur="0.5s" repeatCount="indefinite" />
                       </circle>
                     ))}
                   </g>
-                  <rect x="330" y="50" width="20" height="100" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" rx="3" />
-                  <rect x="320" y="40" width="40" height="15" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" rx="3" />
-                  <text x="200" y="170" textAnchor="middle" fill="#f87171" fontSize="14" fontWeight="bold">💥 BANG! 💥</text>
+
+                  {/* Valve body */}
+                  <rect x="340" y="55" width="30" height="100" rx="4" fill="url(#whamHookValve)" stroke="#b91c1c" strokeWidth="2" />
+                  {/* Valve handle */}
+                  <rect x="335" y="42" width="40" height="18" rx="3" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
+                  <rect x="350" y="28" width="10" height="16" rx="2" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
+                  <ellipse cx="355" cy="22" rx="12" ry="5" fill="#9ca3af" />
+
+                  {/* Shock wave effect at valve */}
+                  <ellipse cx="340" cy="105" rx="15" ry="25" fill="url(#whamHookShock)" filter="url(#whamHookGlow)">
+                    <animate attributeName="rx" values="10;20;10" dur="0.4s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8;0.4;0.8" dur="0.4s" repeatCount="indefinite" />
+                  </ellipse>
+
+                  {/* BANG text with glow */}
+                  <text x="210" y="185" textAnchor="middle" fill="#fbbf24" fontSize="16" fontWeight="bold" filter="url(#whamHookGlow)">
+                    BANG!
+                  </text>
+                  <text x="210" y="205" textAnchor="middle" fill="#94a3b8" fontSize="11">
+                    Pressure wave traveling at 1400 m/s
+                  </text>
                 </svg>
 
                 <div className="mt-6 space-y-4">
@@ -494,42 +586,131 @@ export default function WaterHammerRenderer({
       case 'predict':
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#f8fafc' }}>
               Make Your Prediction
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
               Water is flowing through a pipe at 3 m/s. If you instantly close a valve,
               what happens to the pressure at the valve?
             </p>
 
-            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Pipe diagram */}
-              <rect x="30" y="50" width="340" height="50" fill="#64748b" stroke="#475569" strokeWidth="2" rx="5" />
+            <svg viewBox="0 0 420 180" style={{ width: '100%', maxWidth: 420, marginBottom: '1.5rem' }}>
+              {/* Premium defs */}
+              <defs>
+                {/* Pipe gradient */}
+                <linearGradient id="whamPredictPipe" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="20%" stopColor="#94a3b8" />
+                  <stop offset="40%" stopColor="#475569" />
+                  <stop offset="60%" stopColor="#334155" />
+                  <stop offset="80%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+                <linearGradient id="whamPredictPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="50%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+                <linearGradient id="whamPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#60a5fa" />
+                </linearGradient>
+                <linearGradient id="whamPredictValve" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
+                <radialGradient id="whamPredictParticle" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                </radialGradient>
+                <filter id="whamPredictGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                  <feFlood floodColor="#60a5fa" floodOpacity="0.5" result="color" />
+                  <feComposite in="color" in2="blur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="whamPredictValveGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                  <feFlood floodColor="#ef4444" floodOpacity="0.4" result="color" />
+                  <feComposite in="color" in2="blur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
 
-              {/* Water */}
-              <rect x="35" y="55" width="290" height="40" fill="#3b82f6" opacity="0.5" />
-
-              {/* Flow arrows */}
-              {[0, 1, 2, 3].map(i => (
-                <path
-                  key={i}
-                  d={`M${80 + i * 60},75 L${110 + i * 60},75 L${105 + i * 60},65 M${110 + i * 60},75 L${105 + i * 60},85`}
-                  fill="none"
-                  stroke="#1d4ed8"
-                  strokeWidth="3"
-                />
-              ))}
-
-              {/* Valve */}
-              <rect x="330" y="40" width="30" height="70" fill="#ef4444" stroke="#b91c1c" strokeWidth="2" />
-              <text x="345" y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">VALVE</text>
+              {/* Background */}
+              <rect width="420" height="180" fill="#0a1628" rx="8" />
 
               {/* Labels */}
-              <text x="200" y="35" textAnchor="middle" fill="#1e293b" fontSize="12" fontWeight="bold">
-                Water flowing at 3 m/s →
+              <text x="210" y="25" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="600">
+                Water flowing at 3 m/s
               </text>
-              <text x="200" y="130" textAnchor="middle" fill="#dc2626" fontSize="12">
+
+              {/* Pipe outer shell */}
+              <rect x="30" y="55" width="300" height="65" rx="6" fill="url(#whamPredictPipe)" stroke="#475569" strokeWidth="2" />
+              {/* Pipe inner */}
+              <rect x="38" y="63" width="284" height="49" rx="3" fill="url(#whamPredictPipeInner)" />
+              {/* Water */}
+              <rect x="42" y="67" width="276" height="41" rx="2" fill="url(#whamPredictWater)" opacity="0.8" />
+
+              {/* Flow arrows with animation */}
+              {[0, 1, 2, 3].map(i => (
+                <g key={i}>
+                  <path
+                    d={`M${70 + i * 60},87 L${100 + i * 60},87`}
+                    fill="none"
+                    stroke="#bfdbfe"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
+                  </path>
+                  <path
+                    d={`M${95 + i * 60},82 L${100 + i * 60},87 L${95 + i * 60},92`}
+                    fill="none"
+                    stroke="#bfdbfe"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
+                  </path>
+                </g>
+              ))}
+
+              {/* Animated particles */}
+              {[0, 1, 2, 3, 4].map(i => (
+                <circle key={i} cx={60 + i * 50} cy="87" r="6" fill="url(#whamPredictParticle)" filter="url(#whamPredictGlow)">
+                  <animate attributeName="cx" values={`${60 + i * 50};${110 + i * 50}`} dur="0.6s" repeatCount="indefinite" />
+                </circle>
+              ))}
+
+              {/* Valve with glow */}
+              <g filter="url(#whamPredictValveGlow)">
+                <rect x="330" y="45" width="35" height="85" rx="4" fill="url(#whamPredictValve)" stroke="#b91c1c" strokeWidth="2" />
+                {/* Valve handle */}
+                <rect x="325" y="32" width="45" height="18" rx="3" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
+                <rect x="342" y="18" width="11" height="16" rx="2" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
+                <ellipse cx="347.5" cy="12" rx="12" ry="5" fill="#9ca3af" />
+              </g>
+
+              {/* Question mark */}
+              <text x="347" y="95" textAnchor="middle" fill="#fef2f2" fontSize="24" fontWeight="bold">?</text>
+
+              {/* Warning label */}
+              <text x="210" y="155" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="600">
                 Valve closes instantly!
+              </text>
+              <text x="210" y="172" textAnchor="middle" fill="#64748b" fontSize="10">
+                What happens to the pressure?
               </text>
             </svg>
 
@@ -544,13 +725,14 @@ export default function WaterHammerRenderer({
                   onMouseDown={() => handlePrediction(opt.id)}
                   style={{
                     padding: '1rem',
-                    background: prediction === opt.id ? '#3b82f6' : 'white',
-                    color: prediction === opt.id ? 'white' : '#1e293b',
-                    border: `2px solid ${prediction === opt.id ? '#3b82f6' : '#e2e8f0'}`,
+                    background: prediction === opt.id ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : '#1e293b',
+                    color: prediction === opt.id ? 'white' : '#f8fafc',
+                    border: `2px solid ${prediction === opt.id ? '#3b82f6' : '#334155'}`,
                     borderRadius: 10,
                     cursor: 'pointer',
                     fontWeight: 500,
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s',
+                    boxShadow: prediction === opt.id ? '0 4px 15px rgba(59, 130, 246, 0.3)' : 'none'
                   }}
                 >
                   {opt.text}
@@ -589,147 +771,467 @@ export default function WaterHammerRenderer({
 
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#f8fafc' }}>
               Water Hammer Simulator
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1rem', textAlign: 'center' }}>
+            <p style={{ color: '#94a3b8', marginBottom: '1rem', textAlign: 'center' }}>
               Close the valve to see what happens!
             </p>
 
-            <svg viewBox="0 0 400 280" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
-              {/* Pipe system */}
-              <rect x="20" y="80" width="300" height="50" fill="#475569" stroke="#1e293b" strokeWidth="2" rx="3" />
-              <rect x="25" y="85" width="290" height="40" fill={valveOpen ? '#3b82f6' : '#1e40af'} opacity="0.6" />
+            <svg viewBox="0 0 500 380" style={{ width: '100%', maxWidth: 550, marginBottom: '1rem' }}>
+              {/* ========== COMPREHENSIVE DEFS SECTION ========== */}
+              <defs>
+                {/* Premium pipe outer gradient - metallic steel with depth */}
+                <linearGradient id="whamPipeOuter" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="15%" stopColor="#94a3b8" />
+                  <stop offset="35%" stopColor="#475569" />
+                  <stop offset="65%" stopColor="#334155" />
+                  <stop offset="85%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
 
-              {/* Pressure wave visualization */}
+                {/* Pipe inner wall gradient - darker interior */}
+                <linearGradient id="whamPipeInner" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="20%" stopColor="#0f172a" />
+                  <stop offset="50%" stopColor="#020617" />
+                  <stop offset="80%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#1e293b" />
+                </linearGradient>
+
+                {/* Water gradient - flowing blue with depth */}
+                <linearGradient id="whamWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="25%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#2563eb" />
+                  <stop offset="75%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#60a5fa" />
+                </linearGradient>
+
+                {/* High pressure water gradient - red danger */}
+                <linearGradient id="whamHighPressure" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="25%" stopColor="#ef4444" />
+                  <stop offset="50%" stopColor="#dc2626" />
+                  <stop offset="75%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#fca5a5" />
+                </linearGradient>
+
+                {/* Pressure wave radial gradient - shock wave effect */}
+                <radialGradient id="whamShockWave" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+                  <stop offset="25%" stopColor="#fbbf24" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.7" />
+                  <stop offset="75%" stopColor="#ef4444" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Pressure propagation gradient - traveling wave */}
+                <radialGradient id="whamPressureRing" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+                  <stop offset="40%" stopColor="#ef4444" stopOpacity="0.2" />
+                  <stop offset="60%" stopColor="#f87171" stopOpacity="0.8" />
+                  <stop offset="80%" stopColor="#fca5a5" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#fef2f2" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Valve gradient - open state (green) */}
+                <linearGradient id="whamValveOpen" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#86efac" />
+                  <stop offset="25%" stopColor="#4ade80" />
+                  <stop offset="50%" stopColor="#22c55e" />
+                  <stop offset="75%" stopColor="#16a34a" />
+                  <stop offset="100%" stopColor="#15803d" />
+                </linearGradient>
+
+                {/* Valve gradient - closed state (red) */}
+                <linearGradient id="whamValveClosed" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="25%" stopColor="#f87171" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="75%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
+
+                {/* Valve handle metallic gradient */}
+                <linearGradient id="whamValveHandle" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#9ca3af" />
+                  <stop offset="30%" stopColor="#6b7280" />
+                  <stop offset="70%" stopColor="#4b5563" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Gauge face gradient - dark instrument look */}
+                <radialGradient id="whamGaugeFace" cx="50%" cy="50%" r="60%">
+                  <stop offset="0%" stopColor="#1e293b" />
+                  <stop offset="60%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#020617" />
+                </radialGradient>
+
+                {/* Gauge bezel gradient - chrome ring */}
+                <linearGradient id="whamGaugeBezel" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#94a3b8" />
+                  <stop offset="25%" stopColor="#64748b" />
+                  <stop offset="50%" stopColor="#475569" />
+                  <stop offset="75%" stopColor="#64748b" />
+                  <stop offset="100%" stopColor="#94a3b8" />
+                </linearGradient>
+
+                {/* Needle gradient */}
+                <linearGradient id="whamNeedle" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#fef2f2" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
+
+                {/* Lab background gradient */}
+                <linearGradient id="whamLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="50%" stopColor="#0a1628" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
+
+                {/* Water particle radial glow */}
+                <radialGradient id="whamWaterParticle" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Glow filter for pressure wave */}
+                <filter id="whamPressureGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+                  <feFlood floodColor="#ef4444" floodOpacity="0.8" result="color" />
+                  <feComposite in="color" in2="blur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Glow filter for water particles */}
+                <filter id="whamParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                  <feFlood floodColor="#60a5fa" floodOpacity="0.6" result="color" />
+                  <feComposite in="color" in2="blur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Glow filter for valve */}
+                <filter id="whamValveGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+                  <feFlood floodColor={valveOpen ? "#22c55e" : "#ef4444"} floodOpacity="0.5" result="color" />
+                  <feComposite in="color" in2="blur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Gauge needle glow */}
+                <filter id="whamNeedleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+                  <feFlood floodColor="#ef4444" floodOpacity="0.7" result="color" />
+                  <feComposite in="color" in2="blur" operator="in" result="glow" />
+                  <feMerge>
+                    <feMergeNode in="glow" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Inner shadow for pipe */}
+                <filter id="whamInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feOffset dx="0" dy="2" />
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Subtle grid pattern */}
+                <pattern id="whamGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+                </pattern>
+              </defs>
+
+              {/* ========== BACKGROUND ========== */}
+              <rect width="500" height="380" fill="url(#whamLabBg)" />
+              <rect width="500" height="380" fill="url(#whamGrid)" />
+
+              {/* Title and readings */}
+              <text x="250" y="28" textAnchor="middle" fill="#f8fafc" fontSize="13" fontWeight="600">
+                Flow velocity: {flowVelocity} m/s | Pipe length: {pipeLength}m
+              </text>
+              {maxPressure > 0 && (
+                <text x="250" y="48" textAnchor="middle" fill="#f87171" fontSize="12" fontWeight="bold" filter="url(#whamPressureGlow)">
+                  Peak pressure: {pressureInBars(maxPressure).toFixed(1)} bar!
+                </text>
+              )}
+
+              {/* ========== PREMIUM PIPE SYSTEM ========== */}
+              {/* Pipe outer shell with metallic gradient */}
+              <rect x="30" y="90" width="350" height="70" rx="6" fill="url(#whamPipeOuter)" stroke="#475569" strokeWidth="2" />
+
+              {/* Pipe inner wall shadow */}
+              <rect x="38" y="98" width="334" height="54" rx="3" fill="url(#whamPipeInner)" />
+
+              {/* Water inside pipe */}
+              <rect x="42" y="102" width="326" height="46" rx="2" fill={!valveOpen && wavePosition > 0 ? "url(#whamHighPressure)" : "url(#whamWater)"} opacity="0.85" />
+
+              {/* Pipe flanges for realism */}
+              <rect x="22" y="85" width="16" height="80" rx="2" fill="url(#whamPipeOuter)" stroke="#64748b" strokeWidth="1" />
+              <rect x="372" y="85" width="16" height="80" rx="2" fill="url(#whamPipeOuter)" stroke="#64748b" strokeWidth="1" />
+
+              {/* Pipe bolts */}
+              {[92, 110, 130, 148].map(y => (
+                <g key={y}>
+                  <circle cx="30" cy={y} r="3" fill="#374151" stroke="#1e293b" strokeWidth="1" />
+                  <circle cx="380" cy={y} r="3" fill="#374151" stroke="#1e293b" strokeWidth="1" />
+                </g>
+              ))}
+
+              {/* ========== PRESSURE WAVE VISUALIZATION ========== */}
               {!valveOpen && wavePosition > 0 && (
                 <g>
-                  {/* Shock wave moving backward */}
-                  <rect
-                    x={315 - wavePosition * 2.9}
-                    y="85"
-                    width="20"
-                    height="40"
-                    fill="#ef4444"
-                    opacity={0.8 - wavePosition / 200}
+                  {/* Animated shock wave rings */}
+                  {[0, 1, 2].map(i => {
+                    const ringX = 360 - wavePosition * 3.2 + i * 15;
+                    return ringX > 40 && ringX < 370 ? (
+                      <ellipse
+                        key={i}
+                        cx={ringX}
+                        cy="125"
+                        rx="8"
+                        ry="20"
+                        fill="url(#whamPressureRing)"
+                        opacity={0.9 - wavePosition / 150 - i * 0.2}
+                        filter="url(#whamPressureGlow)"
+                      >
+                        <animate attributeName="rx" values="6;12;6" dur="0.3s" repeatCount="indefinite" />
+                      </ellipse>
+                    ) : null;
+                  })}
+
+                  {/* Central shock wave */}
+                  <ellipse
+                    cx={365 - wavePosition * 3.2}
+                    cy="125"
+                    rx="12"
+                    ry="22"
+                    fill="url(#whamShockWave)"
+                    opacity={0.95 - wavePosition / 120}
+                    filter="url(#whamPressureGlow)"
                   />
-                  {/* Pressure colors */}
-                  <defs>
-                    <linearGradient id="pressureGrad" x1="100%" y1="0%" x2="0%" y2="0%">
-                      <stop offset="0%" stopColor="#ef4444" />
-                      <stop offset={`${wavePosition}%`} stopColor="#ef4444" />
-                      <stop offset={`${wavePosition + 5}%`} stopColor="#3b82f6" />
-                    </linearGradient>
-                  </defs>
-                  <rect x="25" y="85" width="290" height="40" fill="url(#pressureGrad)" opacity="0.5" />
                 </g>
               )}
 
-              {/* Flow particles */}
+              {/* ========== ANIMATED WATER PARTICLES ========== */}
               {valveOpen && (
                 <g>
-                  {[0, 1, 2, 3, 4].map(i => (
+                  {[0, 1, 2, 3, 4, 5].map(i => (
                     <circle
                       key={i}
-                      cx={50 + i * 55}
-                      cy="105"
-                      r="8"
-                      fill="#60a5fa"
+                      cx={60 + i * 50}
+                      cy="125"
+                      r="7"
+                      fill="url(#whamWaterParticle)"
+                      filter="url(#whamParticleGlow)"
                     >
                       <animate
                         attributeName="cx"
-                        values={`${50 + i * 55};${100 + i * 55}`}
-                        dur="0.6s"
+                        values={`${60 + i * 50};${110 + i * 50}`}
+                        dur="0.5s"
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="1;0.6;1"
+                        dur="0.5s"
                         repeatCount="indefinite"
                       />
                     </circle>
                   ))}
+                  {/* Flow direction arrows */}
+                  {[80, 180, 280].map(x => (
+                    <path
+                      key={x}
+                      d={`M${x},125 L${x + 20},125 L${x + 15},120 M${x + 20},125 L${x + 15},130`}
+                      fill="none"
+                      stroke="#bfdbfe"
+                      strokeWidth="2"
+                      opacity="0.6"
+                    >
+                      <animate
+                        attributeName="opacity"
+                        values="0.3;0.8;0.3"
+                        dur="0.8s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
+                  ))}
                 </g>
               )}
 
-              {/* Valve */}
-              <rect
-                x="320"
-                y={valveOpen ? 70 : 85}
-                width="25"
-                height={valveOpen ? 70 : 40}
-                fill={valveOpen ? '#22c55e' : '#ef4444'}
-                stroke="#1e293b"
-                strokeWidth="2"
-                style={{ transition: 'all 0.1s' }}
-              />
-              <rect x="320" y="60" width="25" height="15" fill="#94a3b8" stroke="#1e293b" strokeWidth="2" />
+              {/* ========== PREMIUM VALVE ========== */}
+              <g transform="translate(388, 75)" filter="url(#whamValveGlow)">
+                {/* Valve body */}
+                <rect
+                  x="0"
+                  y={valveOpen ? -5 : 20}
+                  width="35"
+                  height={valveOpen ? 110 : 60}
+                  rx="4"
+                  fill={valveOpen ? "url(#whamValveOpen)" : "url(#whamValveClosed)"}
+                  stroke={valveOpen ? "#16a34a" : "#b91c1c"}
+                  strokeWidth="2"
+                  style={{ transition: 'all 0.15s ease-out' }}
+                />
 
-              {/* Status */}
-              <text x="332" y="150" textAnchor="middle" fill={valveOpen ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="bold">
+                {/* Valve gate lines */}
+                {valveOpen && [15, 35, 55, 75].map(y => (
+                  <line key={y} x1="5" y1={y} x2="30" y2={y} stroke={valveOpen ? "#15803d" : "#991b1b"} strokeWidth="1" opacity="0.5" />
+                ))}
+
+                {/* Valve handle */}
+                <rect x="-5" y="-20" width="45" height="20" rx="3" fill="url(#whamValveHandle)" stroke="#4b5563" strokeWidth="1" />
+                <rect x="12" y="-35" width="11" height="18" rx="2" fill="url(#whamValveHandle)" stroke="#4b5563" strokeWidth="1" />
+
+                {/* Handle grip */}
+                <ellipse cx="17.5" cy="-42" rx="14" ry="6" fill="#6b7280" stroke="#4b5563" strokeWidth="1" />
+                <ellipse cx="17.5" cy="-42" rx="10" ry="4" fill="#9ca3af" />
+              </g>
+
+              {/* Valve status label */}
+              <text x="405" y="200" textAnchor="middle" fill={valveOpen ? '#4ade80' : '#f87171'} fontSize="11" fontWeight="bold">
                 {valveOpen ? 'OPEN' : 'CLOSED'}
               </text>
 
-              {/* Pressure gauge */}
-              <g transform="translate(200, 200)">
-                <circle cx="0" cy="0" r="50" fill="#1e293b" stroke="#475569" strokeWidth="3" />
-                <circle cx="0" cy="0" r="42" fill="#0f172a" />
+              {/* ========== PREMIUM PRESSURE GAUGE ========== */}
+              <g transform="translate(120, 285)">
+                {/* Gauge outer bezel */}
+                <circle cx="0" cy="0" r="60" fill="url(#whamGaugeBezel)" />
+                <circle cx="0" cy="0" r="55" fill="url(#whamGaugeFace)" />
 
-                {/* Gauge markings */}
+                {/* Gauge markings and numbers */}
                 {[0, 1, 2, 3, 4, 5].map(i => {
                   const angle = -135 + i * 54;
                   const rad = angle * Math.PI / 180;
                   return (
                     <g key={i}>
+                      {/* Major tick marks */}
                       <line
-                        x1={Math.cos(rad) * 32}
-                        y1={Math.sin(rad) * 32}
-                        x2={Math.cos(rad) * 38}
-                        y2={Math.sin(rad) * 38}
-                        stroke="white"
+                        x1={Math.cos(rad) * 40}
+                        y1={Math.sin(rad) * 40}
+                        x2={Math.cos(rad) * 48}
+                        y2={Math.sin(rad) * 48}
+                        stroke="#f8fafc"
                         strokeWidth="2"
                       />
+                      {/* Numbers */}
                       <text
-                        x={Math.cos(rad) * 24}
-                        y={Math.sin(rad) * 24 + 3}
-                        fill="white"
-                        fontSize="8"
+                        x={Math.cos(rad) * 30}
+                        y={Math.sin(rad) * 30 + 4}
+                        fill="#f8fafc"
+                        fontSize="10"
+                        fontWeight="600"
                         textAnchor="middle"
                       >
                         {i * 10}
                       </text>
+                      {/* Minor tick marks */}
+                      {i < 5 && [1, 2, 3, 4].map(j => {
+                        const minorAngle = angle + j * 10.8;
+                        const minorRad = minorAngle * Math.PI / 180;
+                        return (
+                          <line
+                            key={j}
+                            x1={Math.cos(minorRad) * 44}
+                            y1={Math.sin(minorRad) * 44}
+                            x2={Math.cos(minorRad) * 48}
+                            y2={Math.sin(minorRad) * 48}
+                            stroke="#94a3b8"
+                            strokeWidth="1"
+                          />
+                        );
+                      })}
                     </g>
                   );
                 })}
 
-                {/* Needle */}
+                {/* Danger zone arc */}
+                <path
+                  d="M 28.28 28.28 A 40 40 0 0 1 40 0"
+                  fill="none"
+                  stroke="#ef4444"
+                  strokeWidth="4"
+                  opacity="0.5"
+                />
+
+                {/* Animated needle */}
                 {(() => {
                   const pressureBars = Math.abs(pressureInBars(currentPressure));
                   const needleAngle = -135 + Math.min(pressureBars, 50) * 5.4;
                   const needleRad = needleAngle * Math.PI / 180;
                   return (
-                    <line
-                      x1="0"
-                      y1="0"
-                      x2={Math.cos(needleRad) * 30}
-                      y2={Math.sin(needleRad) * 30}
-                      stroke="#ef4444"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
+                    <g filter="url(#whamNeedleGlow)">
+                      <line
+                        x1={-Math.cos(needleRad) * 8}
+                        y1={-Math.sin(needleRad) * 8}
+                        x2={Math.cos(needleRad) * 38}
+                        y2={Math.sin(needleRad) * 38}
+                        stroke="url(#whamNeedle)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        style={{ transition: 'all 0.1s ease-out' }}
+                      />
+                    </g>
                   );
                 })()}
-                <circle cx="0" cy="0" r="5" fill="#ef4444" />
 
-                <text x="0" y="65" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">
+                {/* Center cap */}
+                <circle cx="0" cy="0" r="8" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
+                <circle cx="0" cy="0" r="4" fill="#fca5a5" />
+
+                {/* Label */}
+                <text x="0" y="72" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="600">
                   PRESSURE (bar)
                 </text>
               </g>
 
-              {/* Readings */}
-              <text x="200" y="35" textAnchor="middle" fill="#1e293b" fontSize="14" fontWeight="bold">
-                Flow velocity: {flowVelocity} m/s | Pipe: {pipeLength}m
-              </text>
-
-              {maxPressure > 0 && (
-                <text x="200" y="55" textAnchor="middle" fill="#dc2626" fontSize="12" fontWeight="bold">
-                  Peak pressure: {pressureInBars(maxPressure).toFixed(1)} bar!
+              {/* ========== PRESSURE INDICATOR BAR ========== */}
+              <g transform="translate(250, 230)">
+                <text x="0" y="0" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="500">
+                  Current Pressure
                 </text>
+                {/* Background bar */}
+                <rect x="-100" y="8" width="200" height="16" rx="8" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+                {/* Pressure fill */}
+                <rect
+                  x="-98"
+                  y="10"
+                  width={Math.min(Math.abs(pressureInBars(currentPressure)) * 3.9, 196)}
+                  height="12"
+                  rx="6"
+                  fill={Math.abs(pressureInBars(currentPressure)) > 30 ? "#ef4444" : Math.abs(pressureInBars(currentPressure)) > 15 ? "#f59e0b" : "#22c55e"}
+                  style={{ transition: 'all 0.1s' }}
+                />
+                {/* Pressure value */}
+                <text x="0" y="38" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">
+                  {Math.abs(pressureInBars(currentPressure)).toFixed(1)} bar
+                </text>
+              </g>
+
+              {/* Warning indicators */}
+              {!valveOpen && wavePosition > 0 && wavePosition < 50 && (
+                <g>
+                  <text x="250" y="70" textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold" opacity={1 - wavePosition / 60}>
+                    PRESSURE SURGE DETECTED
+                  </text>
+                </g>
               )}
             </svg>
 

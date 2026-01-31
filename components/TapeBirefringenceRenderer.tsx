@@ -238,16 +238,22 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
-    const tapeWidth = 200;
-    const tapeHeight = 30;
-    const startY = 100;
+    const width = 500;
+    const height = 480;
+    const tapeWidth = 240;
+    const tapeHeight = 28;
+    const startY = 120;
 
     const tapeColors = [];
     for (let i = 0; i < tapeLayers; i++) {
       tapeColors.push(getTapeColor(i + 1, polarizerAngle, isHeated));
     }
+
+    // Calculate tape area end for positioning elements below
+    const tapeAreaEnd = startY + tapeLayers * (tapeHeight + 6) + 10;
+    const resultY = tapeAreaEnd + 15;
+    const spectrumY = resultY + 70;
+    const analyzerY = height - 75;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -256,108 +262,562 @@ const TapeBirefringenceRenderer: React.FC<TapeBirefringenceRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#000000', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
-          {/* Top polarizer */}
-          <g>
-            <rect x={width / 2 - 100} y={20} width={200} height={40} fill="rgba(59, 130, 246, 0.3)" stroke={colors.accent} strokeWidth={2} />
-            <text x={width / 2} y={45} fill={colors.accent} fontSize={12} textAnchor="middle">Polarizer</text>
-            {/* Polarization lines */}
-            {[-60, -30, 0, 30, 60].map((offset, i) => (
-              <line key={i} x1={width / 2 + offset - 20} y1={30} x2={width / 2 + offset + 20} y2={30} stroke={colors.accent} strokeWidth={2} />
-            ))}
+          {/* ============ COMPREHENSIVE DEFS SECTION ============ */}
+          <defs>
+            {/* === LINEAR GRADIENTS === */}
+
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="tbireBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Polarizer glass gradient with depth */}
+            <linearGradient id="tbirePolarizer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#0c4a6e" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#0369a1" stopOpacity="0.7" />
+              <stop offset="80%" stopColor="#0c4a6e" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Polarizer frame metallic gradient */}
+            <linearGradient id="tbirePolarizerFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Light beam gradient - white to yellow */}
+            <linearGradient id="tbireLightBeam" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Tape layer gradient - creates 3D effect */}
+            <linearGradient id="tbireTapeBase" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+              <stop offset="15%" stopColor="rgba(255,255,255,0.1)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+              <stop offset="85%" stopColor="rgba(0,0,0,0.1)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0.2)" />
+            </linearGradient>
+
+            {/* Tape adhesive layer gradient */}
+            <linearGradient id="tbireTapeAdhesive" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="rgba(251,191,36,0.15)" />
+              <stop offset="50%" stopColor="rgba(251,191,36,0.05)" />
+              <stop offset="100%" stopColor="rgba(251,191,36,0)" />
+            </linearGradient>
+
+            {/* Interference spectrum gradient - rainbow effect */}
+            <linearGradient id="tbireSpectrum" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="16%" stopColor="#3b82f6" />
+              <stop offset="33%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="66%" stopColor="#fbbf24" />
+              <stop offset="83%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Heat gradient for thermal indicator */}
+            <linearGradient id="tbireHeatGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Result display gradient */}
+            <linearGradient id="tbireResultFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* === RADIAL GRADIENTS === */}
+
+            {/* Light source glow effect */}
+            <radialGradient id="tbireLightGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Polarizer center highlight */}
+            <radialGradient id="tbirePolarizerHighlight" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#0369a1" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Heat wave effect */}
+            <radialGradient id="tbireHeatWave" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Color result glow */}
+            <radialGradient id="tbireResultGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="white" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* Soft glow filter for light beam */}
+            <filter id="tbireLightGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Polarizer edge glow */}
+            <filter id="tbirePolarizerGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Tape color glow effect */}
+            <filter id="tbireTapeGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat shimmer effect */}
+            <filter id="tbireHeatShimmer" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur1" />
+              <feGaussianBlur stdDeviation="5" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Result color glow */}
+            <filter id="tbireResultGlowFilter" x="-40%" y="-40%" width="180%" height="180%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="tbireInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* === PATTERNS === */}
+
+            {/* Subtle grid pattern for background */}
+            <pattern id="tbireLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Polarization line pattern */}
+            <pattern id="tbirePolarLines" width="8" height="8" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="4" x2="8" y2="4" stroke="#38bdf8" strokeWidth="1" strokeOpacity="0.6" />
+            </pattern>
+          </defs>
+
+          {/* ============ BACKGROUND ============ */}
+          <rect width={width} height={height} fill="url(#tbireBgGradient)" />
+          <rect width={width} height={height} fill="url(#tbireLabGrid)" />
+
+          {/* ============ LIGHT SOURCE ============ */}
+          <g transform={`translate(${width / 2}, 25)`}>
+            {/* Light source housing */}
+            <rect x="-30" y="-12" width="60" height="24" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <rect x="-26" y="-8" width="52" height="16" rx="2" fill="#0f172a" />
+
+            {/* Light bulb glow */}
+            <ellipse cx="0" cy="0" rx="15" ry="8" fill="url(#tbireLightGlow)" filter="url(#tbireLightGlowFilter)">
+              <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite" />
+            </ellipse>
+
+            {/* Label */}
+            <text x="0" y="22" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600">LIGHT SOURCE</text>
           </g>
 
-          {/* Light beam indication */}
-          <line x1={width / 2} y1={60} x2={width / 2} y2={startY - 10} stroke="#fbbf24" strokeWidth={4} strokeDasharray="8,4" />
-          <polygon points={`${width / 2 - 8},${startY - 10} ${width / 2 + 8},${startY - 10} ${width / 2},${startY + 5}`} fill="#fbbf24" />
+          {/* ============ TOP POLARIZER ============ */}
+          <g transform={`translate(${width / 2}, 65)`}>
+            {/* Outer frame with metallic look */}
+            <rect x="-115" y="-18" width="230" height="36" rx="4" fill="url(#tbirePolarizerFrame)" stroke="#475569" strokeWidth="1" />
 
-          {/* Tape layers */}
-          {Array.from({ length: tapeLayers }).map((_, i) => {
-            const y = startY + i * (tapeHeight + 5);
-            return (
+            {/* Polarizer glass */}
+            <rect x="-105" y="-12" width="210" height="24" rx="2" fill="url(#tbirePolarizer)" filter="url(#tbirePolarizerGlow)" />
+
+            {/* Highlight effect */}
+            <rect x="-105" y="-12" width="210" height="24" rx="2" fill="url(#tbirePolarizerHighlight)" />
+
+            {/* Polarization direction lines - horizontal (0 degrees) */}
+            {[-80, -50, -20, 10, 40, 70].map((offset, i) => (
               <g key={i}>
-                <rect
-                  x={width / 2 - tapeWidth / 2}
-                  y={y}
-                  width={tapeWidth}
-                  height={tapeHeight}
-                  fill={tapeColors[i]}
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth={1}
-                  rx={4}
-                />
-                <text x={width / 2 - tapeWidth / 2 - 10} y={y + tapeHeight / 2 + 4} fill={colors.textMuted} fontSize={11} textAnchor="end">
-                  {i + 1}
-                </text>
+                <line x1={offset - 12} y1="0" x2={offset + 12} y2="0" stroke="#38bdf8" strokeWidth="2" strokeOpacity="0.8" />
+                <line x1={offset - 10} y1="0" x2={offset + 10} y2="0" stroke="#67e8f9" strokeWidth="1" strokeOpacity="0.6" />
               </g>
-            );
-          })}
+            ))}
 
-          {/* Combined color result */}
-          <g>
-            <rect
-              x={width / 2 - 60}
-              y={startY + tapeLayers * (tapeHeight + 5) + 20}
-              width={120}
-              height={40}
-              fill={getTapeColor(tapeLayers, polarizerAngle, isHeated)}
-              stroke="rgba(255,255,255,0.5)"
-              strokeWidth={2}
-              rx={8}
+            {/* Label with background */}
+            <rect x="-35" y="20" width="70" height="16" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+            <text x="0" y="31" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">POLARIZER</text>
+
+            {/* Direction indicator */}
+            <text x="115" y="4" fill="#64748b" fontSize="8" textAnchor="start">0 deg</text>
+          </g>
+
+          {/* ============ POLARIZED LIGHT BEAM ============ */}
+          <g filter="url(#tbireLightGlowFilter)">
+            <rect x={width / 2 - 4} y={90} width={8} height={startY - 100} fill="url(#tbireLightBeam)" rx="2" />
+            {/* Light wave visualization */}
+            <path
+              d={`M ${width / 2} 95 Q ${width / 2 + 8} ${95 + (startY - 100) / 4} ${width / 2} ${95 + (startY - 100) / 2} Q ${width / 2 - 8} ${95 + (startY - 100) * 3 / 4} ${width / 2} ${startY - 8}`}
+              fill="none"
+              stroke="#fef3c7"
+              strokeWidth="1.5"
+              strokeOpacity="0.5"
             />
-            <text x={width / 2} y={startY + tapeLayers * (tapeHeight + 5) + 75} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-              Combined result
+          </g>
+
+          {/* Arrow indicator */}
+          <polygon
+            points={`${width / 2 - 10},${startY - 8} ${width / 2 + 10},${startY - 8} ${width / 2},${startY + 8}`}
+            fill="url(#tbireLightBeam)"
+            filter="url(#tbireLightGlowFilter)"
+          />
+
+          {/* ============ TAPE LAYERS ============ */}
+          <g>
+            {/* Tape stack container */}
+            <rect
+              x={width / 2 - tapeWidth / 2 - 15}
+              y={startY - 10}
+              width={tapeWidth + 30}
+              height={tapeLayers * (tapeHeight + 6) + 20}
+              rx="8"
+              fill="rgba(15, 23, 42, 0.6)"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+
+            {/* Individual tape layers */}
+            {Array.from({ length: tapeLayers }).map((_, i) => {
+              const y = startY + i * (tapeHeight + 6);
+              const layerColor = tapeColors[i];
+
+              return (
+                <g key={i}>
+                  {/* Tape shadow */}
+                  <rect
+                    x={width / 2 - tapeWidth / 2 + 3}
+                    y={y + 3}
+                    width={tapeWidth}
+                    height={tapeHeight}
+                    rx="4"
+                    fill="rgba(0,0,0,0.3)"
+                  />
+
+                  {/* Main tape layer with birefringence color */}
+                  <rect
+                    x={width / 2 - tapeWidth / 2}
+                    y={y}
+                    width={tapeWidth}
+                    height={tapeHeight}
+                    rx="4"
+                    fill={layerColor}
+                    filter="url(#tbireTapeGlow)"
+                  />
+
+                  {/* Tape 3D effect overlay */}
+                  <rect
+                    x={width / 2 - tapeWidth / 2}
+                    y={y}
+                    width={tapeWidth}
+                    height={tapeHeight}
+                    rx="4"
+                    fill="url(#tbireTapeBase)"
+                  />
+
+                  {/* Adhesive layer hint at bottom */}
+                  <rect
+                    x={width / 2 - tapeWidth / 2}
+                    y={y + tapeHeight - 4}
+                    width={tapeWidth}
+                    height={4}
+                    rx="0 0 4 4"
+                    fill="url(#tbireTapeAdhesive)"
+                  />
+
+                  {/* Tape edge highlight */}
+                  <line
+                    x1={width / 2 - tapeWidth / 2}
+                    y1={y + 1}
+                    x2={width / 2 + tapeWidth / 2}
+                    y2={y + 1}
+                    stroke="rgba(255,255,255,0.3)"
+                    strokeWidth="1"
+                  />
+
+                  {/* Layer number label */}
+                  <g transform={`translate(${width / 2 - tapeWidth / 2 - 25}, ${y + tapeHeight / 2})`}>
+                    <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+                    <text x="0" y="4" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="bold">
+                      {i + 1}
+                    </text>
+                  </g>
+
+                  {/* Thickness indicator on right */}
+                  <text
+                    x={width / 2 + tapeWidth / 2 + 10}
+                    y={y + tapeHeight / 2 + 4}
+                    fill="#64748b"
+                    fontSize="8"
+                    textAnchor="start"
+                  >
+                    {(i + 1) * 50}um
+                  </text>
+                </g>
+              );
+            })}
+
+            {/* Stack label */}
+            <text x={width / 2} y={startY - 18} fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600">
+              BIREFRINGENT TAPE LAYERS
             </text>
           </g>
 
-          {/* Bottom polarizer (analyzer) */}
-          <g transform={`translate(${width / 2}, ${height - 60})`}>
-            <rect x={-100} y={0} width={200} height={40} fill="rgba(59, 130, 246, 0.3)" stroke={colors.accent} strokeWidth={2} />
-            <text x={0} y={25} fill={colors.accent} fontSize={12} textAnchor="middle">Analyzer ({polarizerAngle}deg)</text>
-            {/* Rotated polarization lines */}
-            {[-60, -30, 0, 30, 60].map((offset, i) => {
-              const rad = (polarizerAngle * Math.PI) / 180;
-              const len = 20;
-              return (
-                <line
-                  key={i}
-                  x1={offset - len * Math.cos(rad)}
-                  y1={10 - len * Math.sin(rad)}
-                  x2={offset + len * Math.cos(rad)}
-                  y2={10 + len * Math.sin(rad)}
-                  stroke={colors.accent}
-                  strokeWidth={2}
-                />
-              );
-            })}
+          {/* ============ COMBINED COLOR RESULT ============ */}
+          <g transform={`translate(${width / 2}, ${resultY})`}>
+            {/* Result frame */}
+            <rect x="-75" y="-5" width="150" height="55" rx="8" fill="url(#tbireResultFrame)" stroke="#475569" strokeWidth="1" />
+
+            {/* Glow behind result */}
+            <ellipse cx="0" cy="20" rx="50" ry="18" fill={getTapeColor(tapeLayers, polarizerAngle, isHeated)} filter="url(#tbireResultGlowFilter)" opacity="0.5" />
+
+            {/* Main color display */}
+            <rect
+              x="-55"
+              y="5"
+              width="110"
+              height="35"
+              rx="6"
+              fill={getTapeColor(tapeLayers, polarizerAngle, isHeated)}
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth="2"
+              filter="url(#tbireResultGlowFilter)"
+            />
+
+            {/* Inner highlight */}
+            <rect x="-55" y="5" width="110" height="35" rx="6" fill="url(#tbireResultGlow)" />
+
+            {/* Label */}
+            <text x="0" y="58" fill={colors.textSecondary} fontSize="10" textAnchor="middle" fontWeight="600">
+              OBSERVED COLOR
+            </text>
           </g>
 
-          {/* Heat indicator */}
+          {/* ============ INTERFERENCE COLOR SPECTRUM ============ */}
+          <g transform={`translate(${width / 2}, ${spectrumY})`}>
+            {/* Spectrum background */}
+            <rect x="-120" y="-5" width="240" height="35" rx="4" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+
+            {/* Rainbow spectrum bar */}
+            <rect x="-110" y="2" width="220" height="14" rx="2" fill="url(#tbireSpectrum)" />
+
+            {/* Current position indicator */}
+            {(() => {
+              const hue = (tapeLayers * 30 * (isHeated ? 0.5 : 1) + polarizerAngle * 2) % 360;
+              const indicatorX = -110 + (hue / 360) * 220;
+              return (
+                <g transform={`translate(${indicatorX}, 9)`}>
+                  <polygon points="-6,-12 6,-12 0,-4" fill="#f8fafc" />
+                  <polygon points="-6,18 6,18 0,10" fill="#f8fafc" />
+                  <line x1="0" y1="-4" x2="0" y2="10" stroke="#f8fafc" strokeWidth="2" />
+                </g>
+              );
+            })()}
+
+            {/* Spectrum labels */}
+            <text x="-110" y="28" fill="#a855f7" fontSize="7" textAnchor="start">Violet</text>
+            <text x="-55" y="28" fill="#3b82f6" fontSize="7" textAnchor="middle">Blue</text>
+            <text x="0" y="28" fill="#10b981" fontSize="7" textAnchor="middle">Green</text>
+            <text x="55" y="28" fill="#fbbf24" fontSize="7" textAnchor="middle">Yellow</text>
+            <text x="110" y="28" fill="#ef4444" fontSize="7" textAnchor="end">Red</text>
+
+            {/* Title */}
+            <text x="0" y="-12" fill="#94a3b8" fontSize="8" textAnchor="middle" fontWeight="600">
+              INTERFERENCE COLOR SPECTRUM
+            </text>
+          </g>
+
+          {/* ============ BOTTOM POLARIZER (ANALYZER) ============ */}
+          <g transform={`translate(${width / 2}, ${analyzerY})`}>
+            {/* Outer frame */}
+            <rect x="-115" y="-18" width="230" height="36" rx="4" fill="url(#tbirePolarizerFrame)" stroke="#475569" strokeWidth="1" />
+
+            {/* Analyzer glass */}
+            <rect x="-105" y="-12" width="210" height="24" rx="2" fill="url(#tbirePolarizer)" filter="url(#tbirePolarizerGlow)" />
+
+            {/* Highlight */}
+            <rect x="-105" y="-12" width="210" height="24" rx="2" fill="url(#tbirePolarizerHighlight)" />
+
+            {/* Rotated polarization lines */}
+            {[-80, -50, -20, 10, 40, 70].map((offset, i) => {
+              const rad = (polarizerAngle * Math.PI) / 180;
+              const len = 12;
+              return (
+                <g key={i}>
+                  <line
+                    x1={offset - len * Math.cos(rad)}
+                    y1={-len * Math.sin(rad)}
+                    x2={offset + len * Math.cos(rad)}
+                    y2={len * Math.sin(rad)}
+                    stroke="#38bdf8"
+                    strokeWidth="2"
+                    strokeOpacity="0.8"
+                  />
+                  <line
+                    x1={offset - (len - 2) * Math.cos(rad)}
+                    y1={-(len - 2) * Math.sin(rad)}
+                    x2={offset + (len - 2) * Math.cos(rad)}
+                    y2={(len - 2) * Math.sin(rad)}
+                    stroke="#67e8f9"
+                    strokeWidth="1"
+                    strokeOpacity="0.6"
+                  />
+                </g>
+              );
+            })}
+
+            {/* Label */}
+            <rect x="-45" y="20" width="90" height="16" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+            <text x="0" y="31" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">
+              ANALYZER
+            </text>
+
+            {/* Angle indicator */}
+            <rect x="115" y="-8" width="35" height="16" rx="3" fill="#0f172a" stroke={colors.accent} strokeWidth="1" />
+            <text x="132" y="4" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">
+              {polarizerAngle}°
+            </text>
+
+            {/* Rotation arrow indicator */}
+            <g transform="translate(-130, 0)">
+              <path
+                d="M 0 -8 A 8 8 0 1 1 0 8"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="1.5"
+              />
+              <polygon points="-3,8 3,8 0,12" fill="#64748b" />
+            </g>
+          </g>
+
+          {/* ============ HEAT INDICATOR ============ */}
           {isHeated && (
-            <g>
-              <text x={width - 20} y={30} fill={colors.warning} fontSize={24}>Heat</text>
-              <text x={width - 60} y={55} fill={colors.warning} fontSize={12}>Applied</text>
+            <g transform={`translate(${width - 60}, 60)`} filter="url(#tbireHeatShimmer)">
+              {/* Heat waves */}
+              <ellipse cx="0" cy="0" rx="35" ry="35" fill="url(#tbireHeatWave)">
+                <animate attributeName="rx" values="30;40;30" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="ry" values="30;40;30" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6;0.3;0.6" dur="1s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Heat icon */}
+              <rect x="-20" y="-20" width="40" height="40" rx="8" fill="rgba(239, 68, 68, 0.3)" stroke="#ef4444" strokeWidth="2" />
+              <path
+                d="M 0 -8 Q -6 -2 0 4 Q 6 10 0 15"
+                fill="none"
+                stroke="#fbbf24"
+                strokeWidth="3"
+                strokeLinecap="round"
+              >
+                <animate attributeName="d"
+                  values="M 0 -8 Q -6 -2 0 4 Q 6 10 0 15;M 0 -10 Q -8 -4 0 2 Q 8 8 0 13;M 0 -8 Q -6 -2 0 4 Q 6 10 0 15"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              </path>
+
+              {/* Label */}
+              <text x="0" y="35" fill="#ef4444" fontSize="10" textAnchor="middle" fontWeight="bold">HEAT</text>
+              <text x="0" y="46" fill="#f97316" fontSize="8" textAnchor="middle">APPLIED</text>
             </g>
           )}
 
-          {/* Labels */}
-          <text x={20} y={height - 10} fill={colors.textMuted} fontSize={11}>
-            Layers: {tapeLayers} | Angle: {polarizerAngle}deg {isHeated ? '| Heated' : ''}
-          </text>
+          {/* ============ INFO PANEL ============ */}
+          <g transform={`translate(15, ${height - 30})`}>
+            <rect x="-5" y="-12" width={width - 20} height="24" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+            <text fill="#94a3b8" fontSize="10">
+              <tspan x="5" y="2" fontWeight="600">Layers:</tspan>
+              <tspan fill="#06b6d4" fontWeight="bold"> {tapeLayers}</tspan>
+              <tspan x="80" y="2" fontWeight="600">Analyzer Angle:</tspan>
+              <tspan fill="#06b6d4" fontWeight="bold"> {polarizerAngle}°</tspan>
+              <tspan x="220" y="2" fontWeight="600">Retardation:</tspan>
+              <tspan fill="#a855f7" fontWeight="bold"> {tapeLayers * 50 * (isHeated ? 0.5 : 1)}nm</tspan>
+              {isHeated && <tspan x="370" y="2" fill="#ef4444" fontWeight="bold">HEATED</tspan>}
+            </text>
+          </g>
         </svg>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <button
               onClick={() => setIsAnimating(!isAnimating)}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: isAnimating ? colors.error : colors.success, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+                boxShadow: isAnimating ? '0 4px 20px rgba(239, 68, 68, 0.4)' : '0 4px 20px rgba(16, 185, 129, 0.4)'
+              }}
             >
-              {isAnimating ? 'Stop' : 'Rotate Analyzer'}
+              {isAnimating ? 'Stop Rotation' : 'Rotate Analyzer'}
             </button>
             <button
               onClick={() => { setTapeLayers(3); setPolarizerAngle(45); setIsHeated(false); setIsAnimating(false); }}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(6, 182, 212, 0.1)',
+                color: colors.accent,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
             >
               Reset
             </button>

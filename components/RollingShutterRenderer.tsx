@@ -7,19 +7,27 @@ interface RollingShutterRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+// Premium color palette matching design system
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
-  bgPrimary: '#0f172a',
-  bgCard: 'rgba(30, 41, 59, 0.9)',
-  bgDark: 'rgba(15, 23, 42, 0.95)',
-  accent: '#ec4899',
-  success: '#10b981',
-  warning: '#f59e0b',
-  error: '#ef4444',
-  propeller: '#3b82f6',
-  scanline: '#10b981',
+  primary: '#10b981', // emerald-500 for scan line
+  primaryDark: '#059669', // emerald-600
+  accent: '#ec4899', // pink-500
+  accentDark: '#db2777', // pink-600
+  warning: '#f59e0b', // amber-500
+  success: '#10b981', // emerald-500
+  danger: '#ef4444', // red-500
+  bgDark: '#020617', // slate-950
+  bgCard: '#0f172a', // slate-900
+  bgCardLight: '#1e293b', // slate-800
+  border: '#334155', // slate-700
+  textPrimary: '#f8fafc', // slate-50
+  textSecondary: '#94a3b8', // slate-400
+  textMuted: '#64748b', // slate-500
+  propeller: '#3b82f6', // blue-500
+  propellerLight: '#60a5fa', // blue-400
+  scanline: '#10b981', // emerald-500
+  sensor: '#06b6d4', // cyan-500
+  sensorDark: '#0891b2', // cyan-600
 };
 
 const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
@@ -223,103 +231,511 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  // Render premium SVG defs with gradients and filters
+  const renderSVGDefs = () => (
+    <defs>
+      {/* === LINEAR GRADIENTS === */}
+
+      {/* Camera body metallic gradient */}
+      <linearGradient id="rshutCameraMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="25%" stopColor="#334155" />
+        <stop offset="50%" stopColor="#1e293b" />
+        <stop offset="75%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Sensor chip gradient with depth */}
+      <linearGradient id="rshutSensorChip" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0891b2" />
+        <stop offset="20%" stopColor="#06b6d4" />
+        <stop offset="50%" stopColor="#22d3ee" />
+        <stop offset="80%" stopColor="#06b6d4" />
+        <stop offset="100%" stopColor="#0891b2" />
+      </linearGradient>
+
+      {/* Propeller blade gradient for metallic sheen */}
+      <linearGradient id="rshutBladeMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#1e40af" />
+        <stop offset="20%" stopColor="#3b82f6" />
+        <stop offset="50%" stopColor="#60a5fa" />
+        <stop offset="80%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#1e40af" />
+      </linearGradient>
+
+      {/* Scan line active gradient */}
+      <linearGradient id="rshutScanActive" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#10b981" stopOpacity="0" />
+        <stop offset="15%" stopColor="#34d399" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#6ee7b7" stopOpacity="1" />
+        <stop offset="85%" stopColor="#34d399" stopOpacity="0.8" />
+        <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+      </linearGradient>
+
+      {/* Background lab gradient */}
+      <linearGradient id="rshutLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#020617" />
+        <stop offset="30%" stopColor="#0f172a" />
+        <stop offset="70%" stopColor="#0a0f1a" />
+        <stop offset="100%" stopColor="#020617" />
+      </linearGradient>
+
+      {/* Distortion comparison gradient - normal side */}
+      <linearGradient id="rshutNormalBg" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#064e3b" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#022c22" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#064e3b" stopOpacity="0.3" />
+      </linearGradient>
+
+      {/* Distortion comparison gradient - distorted side */}
+      <linearGradient id="rshutDistortedBg" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#7f1d1d" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#450a0a" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0.3" />
+      </linearGradient>
+
+      {/* === RADIAL GRADIENTS === */}
+
+      {/* Propeller hub metallic radial */}
+      <radialGradient id="rshutHubMetal" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="40%" stopColor="#64748b" />
+        <stop offset="70%" stopColor="#475569" />
+        <stop offset="100%" stopColor="#334155" />
+      </radialGradient>
+
+      {/* Sensor pixel glow effect */}
+      <radialGradient id="rshutPixelGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+        <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.8" />
+        <stop offset="60%" stopColor="#0891b2" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Active scan row highlight */}
+      <radialGradient id="rshutRowActive" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
+        <stop offset="50%" stopColor="#34d399" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#6ee7b7" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Lens glass effect */}
+      <radialGradient id="rshutLensGlass" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.2" />
+        <stop offset="40%" stopColor="#7dd3fc" stopOpacity="0.1" />
+        <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.15" />
+      </radialGradient>
+
+      {/* === GLOW FILTERS === */}
+
+      {/* Scan line glow filter */}
+      <filter id="rshutScanGlow" x="-50%" y="-200%" width="200%" height="500%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Propeller motion blur */}
+      <filter id="rshutBladeGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Hub center glow */}
+      <filter id="rshutHubGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Pixel hit glow */}
+      <filter id="rshutPixelHitGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Soft inner glow for sensor */}
+      <filter id="rshutSensorInnerGlow">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      {/* Text shadow filter */}
+      <filter id="rshutTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.5" />
+      </filter>
+
+      {/* === PATTERNS === */}
+
+      {/* Sensor pixel grid pattern */}
+      <pattern id="rshutPixelGrid" width="8" height="8" patternUnits="userSpaceOnUse">
+        <rect width="8" height="8" fill="none" />
+        <rect x="0.5" y="0.5" width="7" height="7" fill="#0e7490" stroke="#155e75" strokeWidth="0.5" rx="0.5" />
+      </pattern>
+
+      {/* Lab background grid */}
+      <pattern id="rshutLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+      </pattern>
+    </defs>
+  );
+
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
-    const propRadius = 80;
+    const width = 700;
+    const height = 400;
+    const propRadius = 70;
     const numBlades = 3;
-    const scanY = showScanline ? (time * scanSpeed * 10) % height : -1;
+    const scanY = showScanline ? (time * scanSpeed * 8) % 200 : -1;
+
+    // Sensor area dimensions
+    const sensorX = 480;
+    const sensorY = 80;
+    const sensorWidth = 180;
+    const sensorHeight = 200;
 
     // Calculate blade positions with rolling shutter distortion
-    const renderDistortedPropeller = () => {
+    const renderDistortedPropeller = (centerX: number, centerY: number, distorted: boolean = true) => {
       const blades = [];
       for (let b = 0; b < numBlades; b++) {
-        const baseAngle = (b * 360 / numBlades) + (time * rotationSpeed * 360);
         const points = [];
 
-        // Create blade with distortion based on scan position
-        for (let y = 0; y <= propRadius; y += 2) {
-          // Calculate what angle this row "sees"
-          const rowTime = time - (y / (scanSpeed * 10)) * 0.1;
-          const distortedAngle = (b * 360 / numBlades) + (rowTime * rotationSpeed * 360);
-          const rad = (distortedAngle * Math.PI) / 180;
-
-          const x = width / 2 + y * Math.sin(rad);
-          const yPos = height / 2 - 30 + y * Math.cos(rad);
-          points.push(`${x},${yPos}`);
+        for (let r = 0; r <= propRadius; r += 2) {
+          let angle;
+          if (distorted) {
+            // Each radius point captured at different time
+            const rowTime = time - (r / (scanSpeed * 6)) * 0.08;
+            angle = (b * 360 / numBlades) + (rowTime * rotationSpeed * 360);
+          } else {
+            // No distortion - all points at same time
+            angle = (b * 360 / numBlades) + (time * rotationSpeed * 360);
+          }
+          const rad = (angle * Math.PI) / 180;
+          const x = centerX + r * Math.sin(rad);
+          const y = centerY - r * Math.cos(rad);
+          points.push(`${x},${y}`);
         }
 
         blades.push(
           <polyline
-            key={b}
+            key={`blade-${b}-${distorted ? 'dist' : 'norm'}`}
             points={points.join(' ')}
             fill="none"
-            stroke={colors.propeller}
-            strokeWidth={8}
+            stroke="url(#rshutBladeMetal)"
+            strokeWidth={10}
             strokeLinecap="round"
+            filter="url(#rshutBladeGlow)"
           />
         );
       }
       return blades;
     };
 
+    // Render sensor grid with active scan row
+    const renderSensorGrid = () => {
+      const rows = [];
+      const rowCount = 25;
+      const rowHeight = sensorHeight / rowCount;
+      const activeRow = Math.floor((scanY / 200) * rowCount);
+
+      for (let i = 0; i < rowCount; i++) {
+        const isActive = showScanline && i === activeRow;
+        const isScanned = showScanline && i < activeRow;
+
+        rows.push(
+          <rect
+            key={`sensor-row-${i}`}
+            x={sensorX + 2}
+            y={sensorY + i * rowHeight + 2}
+            width={sensorWidth - 4}
+            height={rowHeight - 1}
+            fill={isActive ? 'url(#rshutRowActive)' : isScanned ? 'rgba(6,182,212,0.3)' : 'rgba(14,116,144,0.15)'}
+            stroke={isActive ? '#10b981' : '#155e75'}
+            strokeWidth={isActive ? 1.5 : 0.3}
+            rx={1}
+          />
+        );
+      }
+      return rows;
+    };
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          style={{
+            background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%)',
+            borderRadius: '16px',
+            maxWidth: '800px',
+            border: `1px solid ${colors.border}`
+          }}
         >
-          {/* Scanline visualization */}
-          {showScanline && scanY >= 0 && scanY < height && (
-            <line
-              x1={0}
-              y1={scanY}
-              x2={width}
-              y2={scanY}
-              stroke={colors.scanline}
+          {/* Premium SVG definitions */}
+          {renderSVGDefs()}
+
+          {/* Background with grid pattern */}
+          <rect width={width} height={height} fill="url(#rshutLabBg)" />
+          <rect width={width} height={height} fill="url(#rshutLabGrid)" />
+
+          {/* === LEFT SIDE: SPINNING PROPELLER === */}
+          <g>
+            {/* Section label */}
+            <text
+              x={180} y={35}
+              fill={colors.textPrimary}
+              fontSize={14}
+              fontWeight="700"
+              textAnchor="middle"
+              filter="url(#rshutTextShadow)"
+            >
+              Spinning Propeller
+            </text>
+            <text
+              x={180} y={52}
+              fill={colors.textMuted}
+              fontSize={10}
+              textAnchor="middle"
+            >
+              3-blade at {rotationSpeed} rotations/sec
+            </text>
+
+            {/* Propeller mount/stand */}
+            <rect x={170} y={280} width={20} height={60} rx={3} fill="url(#rshutCameraMetal)" />
+            <rect x={160} y={330} width={40} height={12} rx={3} fill="#1e293b" />
+
+            {/* Propeller hub with metallic effect */}
+            <circle
+              cx={180} cy={180} r={20}
+              fill="url(#rshutHubMetal)"
+              stroke="#64748b"
               strokeWidth={2}
-              opacity={0.7}
+              filter="url(#rshutHubGlow)"
             />
-          )}
+            <circle cx={180} cy={180} r={8} fill="#1e293b" />
+            <circle cx={180} cy={180} r={4} fill="#475569" />
 
-          {/* Hub */}
-          <circle cx={width / 2} cy={height / 2 - 30} r={15} fill="#64748b" />
+            {/* Distorted propeller blades */}
+            {renderDistortedPropeller(180, 180, true)}
 
-          {/* Distorted propeller blades */}
-          {renderDistortedPropeller()}
+            {/* Motion indicator arcs */}
+            <path
+              d={`M 180 ${180 - propRadius - 20} A ${propRadius + 20} ${propRadius + 20} 0 0 1 ${180 + propRadius + 20} 180`}
+              fill="none"
+              stroke={colors.accent}
+              strokeWidth={1.5}
+              strokeDasharray="4 6"
+              opacity={0.4}
+            />
+          </g>
 
-          {/* Labels */}
-          <text x={20} y={25} fill={colors.textSecondary} fontSize={12}>
-            Rolling Shutter Effect
-          </text>
-          <text x={20} y={height - 20} fill={colors.textMuted} fontSize={11}>
-            Rotation: {rotationSpeed} rot/s | Scan: {scanSpeed}%
-          </text>
+          {/* === ARROW SHOWING LIGHT PATH === */}
+          <g>
+            <defs>
+              <marker id="rshutArrowHead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill={colors.sensor} />
+              </marker>
+            </defs>
+            <line
+              x1={280} y1={180}
+              x2={460} y2={180}
+              stroke={colors.sensor}
+              strokeWidth={2}
+              strokeDasharray="8 4"
+              markerEnd="url(#rshutArrowHead)"
+              opacity={0.6}
+            />
+            <text x={370} y={170} fill={colors.sensor} fontSize={10} textAnchor="middle">Light rays</text>
+          </g>
 
-          {/* Scan direction indicator */}
-          <g transform={`translate(${width - 30}, ${height / 2 - 30})`}>
-            <line x1={0} y1={-40} x2={0} y2={40} stroke={colors.scanline} strokeWidth={2} />
-            <polygon points="0,40 -5,30 5,30" fill={colors.scanline} />
-            <text x={-25} y={55} fill={colors.scanline} fontSize={10}>scan</text>
+          {/* === CENTER: CAMERA SENSOR VISUALIZATION === */}
+          <g>
+            {/* Section label */}
+            <text
+              x={sensorX + sensorWidth/2} y={35}
+              fill={colors.textPrimary}
+              fontSize={14}
+              fontWeight="700"
+              textAnchor="middle"
+              filter="url(#rshutTextShadow)"
+            >
+              CMOS Sensor
+            </text>
+            <text
+              x={sensorX + sensorWidth/2} y={52}
+              fill={colors.textMuted}
+              fontSize={10}
+              textAnchor="middle"
+            >
+              Row-by-row readout ({scanSpeed}% speed)
+            </text>
+
+            {/* Sensor housing/frame */}
+            <rect
+              x={sensorX - 15} y={sensorY - 15}
+              width={sensorWidth + 30} height={sensorHeight + 50}
+              rx={8}
+              fill="url(#rshutCameraMetal)"
+              stroke="#475569"
+              strokeWidth={2}
+            />
+
+            {/* Sensor chip base */}
+            <rect
+              x={sensorX - 5} y={sensorY - 5}
+              width={sensorWidth + 10} height={sensorHeight + 10}
+              rx={4}
+              fill="#0c4a6e"
+              stroke="url(#rshutSensorChip)"
+              strokeWidth={2}
+            />
+
+            {/* Sensor active area with pixel grid */}
+            <rect
+              x={sensorX} y={sensorY}
+              width={sensorWidth} height={sensorHeight}
+              rx={2}
+              fill="url(#rshutPixelGrid)"
+              filter="url(#rshutSensorInnerGlow)"
+            />
+
+            {/* Sensor rows with scan animation */}
+            {renderSensorGrid()}
+
+            {/* Active scan line with glow */}
+            {showScanline && scanY >= 0 && scanY < 200 && (
+              <g>
+                <rect
+                  x={sensorX - 10}
+                  y={sensorY + scanY - 2}
+                  width={sensorWidth + 20}
+                  height={4}
+                  fill="url(#rshutScanActive)"
+                  filter="url(#rshutScanGlow)"
+                />
+                {/* Scan line bright center */}
+                <line
+                  x1={sensorX}
+                  y1={sensorY + scanY}
+                  x2={sensorX + sensorWidth}
+                  y2={sensorY + scanY}
+                  stroke="#6ee7b7"
+                  strokeWidth={2}
+                  filter="url(#rshutScanGlow)"
+                />
+              </g>
+            )}
+
+            {/* Scan direction indicator */}
+            <g transform={`translate(${sensorX + sensorWidth + 25}, ${sensorY + sensorHeight/2})`}>
+              <line x1={0} y1={-60} x2={0} y2={60} stroke={colors.scanline} strokeWidth={2} />
+              <polygon points="0,60 -6,48 6,48" fill={colors.scanline} />
+              <text x={12} y={-45} fill={colors.scanline} fontSize={9} fontWeight="600">SCAN</text>
+              <text x={12} y={-32} fill={colors.textMuted} fontSize={8}>direction</text>
+              <text x={12} y={50} fill={colors.textMuted} fontSize={8}>Top→Bottom</text>
+            </g>
+
+            {/* Status indicators */}
+            <g transform={`translate(${sensorX + 10}, ${sensorY + sensorHeight + 22})`}>
+              <circle cx={0} cy={0} r={4} fill={isPlaying ? colors.success : colors.textMuted}>
+                {isPlaying && (
+                  <animate attributeName="opacity" values="1;0.4;1" dur="0.8s" repeatCount="indefinite" />
+                )}
+              </circle>
+              <text x={10} y={4} fill={isPlaying ? colors.success : colors.textMuted} fontSize={9}>
+                {isPlaying ? 'SCANNING' : 'PAUSED'}
+              </text>
+            </g>
+          </g>
+
+          {/* === BOTTOM INFO BAR === */}
+          <g transform={`translate(20, ${height - 45})`}>
+            <rect
+              x={0} y={0}
+              width={width - 40} height={35}
+              rx={8}
+              fill="rgba(30,41,59,0.8)"
+              stroke={colors.border}
+              strokeWidth={1}
+            />
+
+            {/* Info items */}
+            <text x={20} y={22} fill={colors.accent} fontSize={11} fontWeight="700">
+              Rolling Shutter Effect
+            </text>
+            <text x={200} y={22} fill={colors.textSecondary} fontSize={10}>
+              Rotation: {rotationSpeed} rot/s
+            </text>
+            <text x={340} y={22} fill={colors.textSecondary} fontSize={10}>
+              Scan Speed: {scanSpeed}%
+            </text>
+            <text x={480} y={22} fill={colors.textMuted} fontSize={10}>
+              Slower scan + faster rotation = more distortion
+            </text>
           </g>
         </svg>
 
+        {/* Interactive controls */}
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            padding: '12px',
+            background: colors.bgCard,
+            borderRadius: '12px',
+            border: `1px solid ${colors.border}`
+          }}>
             <button
               onClick={() => setIsPlaying(!isPlaying)}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: isPlaying ? colors.error : colors.success, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 28px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isPlaying
+                  ? `linear-gradient(135deg, ${colors.danger} 0%, #dc2626 100%)`
+                  : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+                color: 'white',
+                fontWeight: '700',
+                cursor: 'pointer',
+                fontSize: '14px',
+                boxShadow: isPlaying
+                  ? `0 4px 20px ${colors.danger}40`
+                  : `0 4px 20px ${colors.success}40`,
+                transition: 'all 0.2s ease'
+              }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play'}
+              {isPlaying ? 'Pause' : 'Play'}
             </button>
             <button
               onClick={() => { setTime(0); setIsPlaying(false); }}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 28px',
+                borderRadius: '10px',
+                border: `2px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                fontWeight: '700',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.2s ease'
+              }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}
@@ -327,102 +743,584 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
     );
   };
 
+  // Render comparison visualization showing distorted vs non-distorted
+  const renderComparisonVisualization = () => {
+    const width = 700;
+    const height = 320;
+    const propRadius = 55;
+    const numBlades = 3;
+
+    const renderPropeller = (centerX: number, centerY: number, distorted: boolean) => {
+      const blades = [];
+      for (let b = 0; b < numBlades; b++) {
+        const points = [];
+
+        for (let r = 0; r <= propRadius; r += 2) {
+          let angle;
+          if (distorted) {
+            const rowTime = time - (r / (scanSpeed * 6)) * 0.08;
+            angle = (b * 360 / numBlades) + (rowTime * rotationSpeed * 360);
+          } else {
+            angle = (b * 360 / numBlades) + (time * rotationSpeed * 360);
+          }
+          const rad = (angle * Math.PI) / 180;
+          const x = centerX + r * Math.sin(rad);
+          const y = centerY - r * Math.cos(rad);
+          points.push(`${x},${y}`);
+        }
+
+        blades.push(
+          <polyline
+            key={`compare-blade-${b}-${distorted ? 'dist' : 'norm'}`}
+            points={points.join(' ')}
+            fill="none"
+            stroke={distorted ? '#ef4444' : '#10b981'}
+            strokeWidth={8}
+            strokeLinecap="round"
+            filter="url(#rshutBladeGlow)"
+          />
+        );
+      }
+      return blades;
+    };
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{
+            background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #020617 100%)',
+            borderRadius: '16px',
+            maxWidth: '800px',
+            border: `1px solid ${colors.border}`
+          }}
+        >
+          {renderSVGDefs()}
+
+          {/* Background */}
+          <rect width={width} height={height} fill="url(#rshutLabBg)" />
+
+          {/* Divider line */}
+          <line x1={width/2} y1={40} x2={width/2} y2={height - 20} stroke={colors.border} strokeWidth={2} strokeDasharray="8 4" />
+
+          {/* === LEFT: GLOBAL SHUTTER (Normal) === */}
+          <g>
+            {/* Background tint */}
+            <rect x={10} y={40} width={width/2 - 20} height={height - 60} rx={12} fill="url(#rshutNormalBg)" />
+
+            {/* Title */}
+            <text x={width/4} y={30} fill={colors.success} fontSize={14} fontWeight="700" textAnchor="middle">
+              Global Shutter (Actual)
+            </text>
+
+            {/* Hub */}
+            <circle cx={width/4} cy={170} r={16} fill="url(#rshutHubMetal)" stroke="#10b981" strokeWidth={2} filter="url(#rshutHubGlow)" />
+            <circle cx={width/4} cy={170} r={6} fill="#1e293b" />
+
+            {/* Propeller */}
+            {renderPropeller(width/4, 170, false)}
+
+            {/* Description */}
+            <text x={width/4} y={270} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+              All pixels captured at same instant
+            </text>
+            <text x={width/4} y={288} fill={colors.success} fontSize={10} textAnchor="middle" fontWeight="600">
+              Straight blades (reality)
+            </text>
+          </g>
+
+          {/* === RIGHT: ROLLING SHUTTER (Distorted) === */}
+          <g>
+            {/* Background tint */}
+            <rect x={width/2 + 10} y={40} width={width/2 - 20} height={height - 60} rx={12} fill="url(#rshutDistortedBg)" />
+
+            {/* Title */}
+            <text x={3*width/4} y={30} fill={colors.danger} fontSize={14} fontWeight="700" textAnchor="middle">
+              Rolling Shutter (Camera)
+            </text>
+
+            {/* Hub */}
+            <circle cx={3*width/4} cy={170} r={16} fill="url(#rshutHubMetal)" stroke="#ef4444" strokeWidth={2} filter="url(#rshutHubGlow)" />
+            <circle cx={3*width/4} cy={170} r={6} fill="#1e293b" />
+
+            {/* Distorted propeller */}
+            {renderPropeller(3*width/4, 170, true)}
+
+            {/* Scan line indicator */}
+            {showScanline && (
+              <g>
+                <line
+                  x1={width/2 + 30}
+                  y1={70 + ((time * scanSpeed * 8) % 180)}
+                  x2={width - 30}
+                  y2={70 + ((time * scanSpeed * 8) % 180)}
+                  stroke="url(#rshutScanActive)"
+                  strokeWidth={3}
+                  filter="url(#rshutScanGlow)"
+                />
+              </g>
+            )}
+
+            {/* Description */}
+            <text x={3*width/4} y={270} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
+              Rows captured at different times
+            </text>
+            <text x={3*width/4} y={288} fill={colors.danger} fontSize={10} textAnchor="middle" fontWeight="600">
+              Bent/curved blades (artifact)
+            </text>
+          </g>
+
+          {/* VS indicator */}
+          <circle cx={width/2} cy={170} r={20} fill={colors.bgCard} stroke={colors.border} strokeWidth={2} />
+          <text x={width/2} y={175} fill={colors.textPrimary} fontSize={12} fontWeight="700" textAnchor="middle">VS</text>
+        </svg>
+
+        {/* Play controls */}
+        <div style={{
+          display: 'flex',
+          gap: '16px',
+          justifyContent: 'center',
+          padding: '12px',
+          background: colors.bgCard,
+          borderRadius: '12px',
+          border: `1px solid ${colors.border}`
+        }}>
+          <button
+            onClick={() => setIsPlaying(!isPlaying)}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isPlaying
+                ? `linear-gradient(135deg, ${colors.danger} 0%, #dc2626 100%)`
+                : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+              color: 'white',
+              fontWeight: '700',
+              cursor: 'pointer',
+              fontSize: '13px'
+            }}
+          >
+            {isPlaying ? 'Pause' : 'Play Comparison'}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const renderControls = () => (
-    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div style={{
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px',
+      background: colors.bgCard,
+      borderRadius: '12px',
+      margin: '0 16px',
+      border: `1px solid ${colors.border}`
+    }}>
+      {/* Propeller Speed Control */}
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Propeller Speed: {rotationSpeed} rot/s
-        </label>
-        <input type="range" min="1" max="30" step="1" value={rotationSpeed} onChange={(e) => setRotationSpeed(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: '600' }}>
+            Propeller Rotation Speed
+          </label>
+          <span style={{
+            color: colors.propeller,
+            fontSize: '14px',
+            fontWeight: '700',
+            padding: '4px 10px',
+            background: 'rgba(59,130,246,0.15)',
+            borderRadius: '6px'
+          }}>
+            {rotationSpeed} rot/s
+          </span>
+        </div>
+        <input
+          type="range"
+          min="1"
+          max="30"
+          step="1"
+          value={rotationSpeed}
+          onChange={(e) => setRotationSpeed(parseInt(e.target.value))}
+          style={{
+            width: '100%',
+            height: '8px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            accentColor: colors.propeller
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Slow</span>
+          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Fast</span>
+        </div>
       </div>
+
+      {/* Scan Speed Control */}
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Scan Speed: {scanSpeed}%
-        </label>
-        <input type="range" min="10" max="100" step="10" value={scanSpeed} onChange={(e) => setScanSpeed(parseInt(e.target.value))} style={{ width: '100%' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <label style={{ color: colors.textSecondary, fontSize: '13px', fontWeight: '600' }}>
+            Sensor Scan Speed
+          </label>
+          <span style={{
+            color: colors.scanline,
+            fontSize: '14px',
+            fontWeight: '700',
+            padding: '4px 10px',
+            background: 'rgba(16,185,129,0.15)',
+            borderRadius: '6px'
+          }}>
+            {scanSpeed}%
+          </span>
+        </div>
+        <input
+          type="range"
+          min="10"
+          max="100"
+          step="10"
+          value={scanSpeed}
+          onChange={(e) => setScanSpeed(parseInt(e.target.value))}
+          style={{
+            width: '100%',
+            height: '8px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            accentColor: colors.scanline
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Slow (more distortion)</span>
+          <span style={{ color: colors.textMuted, fontSize: '10px' }}>Fast (less distortion)</span>
+        </div>
       </div>
-      <label style={{ color: colors.textSecondary }}>
-        <input type="checkbox" checked={showScanline} onChange={(e) => setShowScanline(e.target.checked)} style={{ marginRight: '8px' }} />
-        Show scanline
+
+      {/* Scanline Toggle */}
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        color: colors.textSecondary,
+        cursor: 'pointer',
+        padding: '10px 12px',
+        borderRadius: '8px',
+        background: showScanline ? 'rgba(16,185,129,0.1)' : 'transparent',
+        border: `1px solid ${showScanline ? colors.scanline : colors.border}`,
+        transition: 'all 0.2s ease'
+      }}>
+        <input
+          type="checkbox"
+          checked={showScanline}
+          onChange={(e) => setShowScanline(e.target.checked)}
+          style={{ marginRight: '10px', width: '18px', height: '18px', accentColor: colors.scanline }}
+        />
+        <span style={{ fontSize: '13px' }}>Show scan line animation</span>
       </label>
-      <div style={{ background: 'rgba(236, 72, 153, 0.2)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.accent}` }}>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          Slow scan + fast rotation = more distortion
+
+      {/* Tip box */}
+      <div style={{
+        background: `linear-gradient(135deg, rgba(236,72,153,0.15) 0%, rgba(168,85,247,0.1) 100%)`,
+        padding: '14px',
+        borderRadius: '10px',
+        borderLeft: `4px solid ${colors.accent}`
+      }}>
+        <div style={{ color: colors.accent, fontSize: '11px', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Pro Tip
+        </div>
+        <div style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: '1.5' }}>
+          Try setting rotation to <strong style={{ color: colors.propeller }}>25 rot/s</strong> and scan to <strong style={{ color: colors.scanline }}>20%</strong> to see extreme blade bending!
         </div>
       </div>
     </div>
   );
 
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 24px', background: colors.bgDark, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'flex-end', zIndex: 1000 }}>
-      <button onClick={onPhaseComplete} disabled={disabled && !canProceed} style={{ padding: '12px 32px', borderRadius: '8px', border: 'none', background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)', color: canProceed ? 'white' : colors.textMuted, fontWeight: 'bold', cursor: canProceed ? 'pointer' : 'not-allowed', fontSize: '16px' }}>{buttonText}</button>
+    <div style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: '16px 24px',
+      background: colors.bgDark,
+      borderTop: `1px solid ${colors.border}`,
+      display: 'flex',
+      justifyContent: 'flex-end',
+      zIndex: 1000,
+      backdropFilter: 'blur(8px)'
+    }}>
+      <button
+        onClick={onPhaseComplete}
+        disabled={disabled && !canProceed}
+        style={{
+          padding: '14px 36px',
+          borderRadius: '12px',
+          border: 'none',
+          background: canProceed
+            ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentDark} 100%)`
+            : colors.bgCardLight,
+          color: canProceed ? 'white' : colors.textMuted,
+          fontWeight: '700',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          fontSize: '15px',
+          boxShadow: canProceed ? `0 4px 20px ${colors.accent}40` : 'none',
+          transition: 'all 0.2s ease'
+        }}
+      >
+        {buttonText}
+      </button>
     </div>
   );
 
   if (phase === 'hook') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>📱 The Bendy Propeller</h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>Why do straight spinning blades look curved on phones?</p>
+          {/* Hero header */}
+          <div style={{ padding: '28px 24px 20px', textAlign: 'center' }}>
+            {/* Category badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              background: 'rgba(236,72,153,0.12)',
+              border: '1px solid rgba(236,72,153,0.25)',
+              marginBottom: '16px'
+            }}>
+              <span style={{ fontSize: '12px' }}>📷</span>
+              <span style={{ fontSize: '11px', fontWeight: '700', color: colors.accent, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                Digital Photography
+              </span>
+            </div>
+
+            {/* Main title with gradient */}
+            <h1 style={{
+              fontSize: isMobile ? '26px' : '34px',
+              fontWeight: '800',
+              color: colors.textPrimary,
+              marginBottom: '12px',
+              lineHeight: 1.15,
+              letterSpacing: '-0.02em'
+            }}>
+              The Bendy{' '}
+              <span style={{
+                background: 'linear-gradient(135deg, #ec4899 0%, #3b82f6 50%, #10b981 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>Propeller</span>
+            </h1>
+
+            <p style={{
+              color: colors.textSecondary,
+              fontSize: isMobile ? '15px' : '17px',
+              marginBottom: '6px',
+              lineHeight: 1.5
+            }}>
+              Why do straight spinning blades look curved on phones?
+            </p>
           </div>
-          {renderVisualization(true)}
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>Film a helicopter, propeller, or fan with your phone. The blades look bent, wobbly, even rubber-like!</p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>This is the rolling shutter effect - your camera reads pixels line by line, not all at once.</p>
+
+          {/* Main visualization */}
+          <div style={{ padding: '0 16px' }}>
+            {renderVisualization(true)}
+          </div>
+
+          {/* Info cards */}
+          <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+              padding: '18px',
+              borderRadius: '14px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.7, marginBottom: '12px' }}>
+                Film a <strong style={{ color: colors.propeller }}>helicopter</strong>, <strong style={{ color: colors.propeller }}>propeller</strong>, or <strong style={{ color: colors.propeller }}>fan</strong> with your phone. The blades look bent, wobbly, even rubber-like!
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+                This is the <strong style={{ color: colors.scanline }}>rolling shutter effect</strong> - your camera reads pixels line by line, not all at once.
+              </p>
+            </div>
+
+            {/* Quick facts */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '10px'
+            }}>
+              {[
+                { icon: '⚡', label: '5 min', desc: 'Quick learn' },
+                { icon: '🔬', label: 'Interactive', desc: 'Lab simulation' },
+                { icon: '📱', label: 'Real-world', desc: 'Phone cameras' }
+              ].map((item, i) => (
+                <div key={i} style={{
+                  padding: '12px 8px',
+                  background: colors.bgCardLight,
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '18px', marginBottom: '4px' }}>{item.icon}</div>
+                  <div style={{ color: colors.textPrimary, fontSize: '12px', fontWeight: '700' }}>{item.label}</div>
+                  <div style={{ color: colors.textMuted, fontSize: '10px' }}>{item.desc}</div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction →')}
+        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
     );
   }
 
   if (phase === 'predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>A 3-blade propeller spinning. The camera sensor scans from top to bottom (green line), capturing one row at a time. Each row "sees" the blade at a different moment.</p>
+          {/* Header */}
+          <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              background: 'rgba(168,85,247,0.15)',
+              color: '#a855f7',
+              fontSize: '11px',
+              fontWeight: '700',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Prediction Phase
+            </span>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700' }}>Make Your Prediction</h2>
           </div>
+
+          <div style={{ padding: '0 16px' }}>
+            {renderVisualization(false)}
+          </div>
+
+          {/* Info box */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>
+              What You're Looking At:
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+              A 3-blade propeller spinning. The camera sensor scans from top to bottom (<span style={{ color: colors.scanline, fontWeight: '600' }}>green line</span>), capturing one row at a time. Each row "sees" the blade at a different moment.
+            </p>
+          </div>
+
+          {/* Question and options */}
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>🤔 What happens to straight blades when filmed with a rolling shutter?</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '14px', fontSize: '15px', fontWeight: '600', lineHeight: 1.4 }}>
+              What happens to straight blades when filmed with a rolling shutter?
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {predictions.map((p) => (
-                <button key={p.id} onClick={() => setPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: prediction === p.id ? 'rgba(236, 72, 153, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{p.label}</button>
+                <button
+                  key={p.id}
+                  onClick={() => setPrediction(p.id)}
+                  style={{
+                    padding: '16px 18px',
+                    borderRadius: '12px',
+                    border: prediction === p.id ? `2px solid ${colors.accent}` : `1px solid ${colors.border}`,
+                    background: prediction === p.id
+                      ? 'linear-gradient(135deg, rgba(236,72,153,0.2) 0%, rgba(236,72,153,0.05) 100%)'
+                      : colors.bgCard,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    lineHeight: 1.4,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {p.label}
+                </button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
 
   if (phase === 'play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Rolling Shutter</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>See how scan speed and rotation affect distortion</p>
+          {/* Header */}
+          <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              background: 'rgba(16,185,129,0.15)',
+              color: colors.scanline,
+              fontSize: '11px',
+              fontWeight: '700',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Interactive Lab
+            </span>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>
+              Explore Rolling Shutter
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+              Adjust parameters to see how distortion changes
+            </p>
           </div>
-          {renderVisualization(true)}
+
+          <div style={{ padding: '0 16px' }}>
+            {renderVisualization(true)}
+          </div>
+
           {renderControls()}
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>🔬 Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>High rotation + slow scan = extreme bending</li>
-              <li>Fast scan = minimal distortion</li>
-              <li>Watch how the scanline captures different positions</li>
-            </ul>
+
+          {/* Experiments card */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+            margin: '16px',
+            padding: '18px',
+            borderRadius: '14px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: '12px', fontSize: '14px', fontWeight: '700' }}>
+              Try These Experiments:
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                { icon: '🔥', text: 'High rotation + slow scan = extreme bending', color: colors.danger },
+                { icon: '⚡', text: 'Fast scan = minimal distortion', color: colors.scanline },
+                { icon: '👁️', text: 'Watch how the scanline captures different positions', color: colors.sensor }
+              ].map((item, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  background: colors.bgCardLight,
+                  borderRadius: '8px'
+                }}>
+                  <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                  <span style={{ color: colors.textSecondary, fontSize: '13px' }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review →')}
+        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
     );
   }
@@ -430,69 +1328,236 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'curved';
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}` }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}</h3>
-            <p style={{ color: colors.textPrimary }}>Straight blades appear curved because each row captures a different blade position!</p>
+          {/* Result banner */}
+          <div style={{
+            background: wasCorrect
+              ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%)'
+              : 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.05) 100%)',
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '14px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.danger}`
+          }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.danger, marginBottom: '8px', fontSize: '18px', fontWeight: '700' }}>
+              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+            </h3>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>
+              Straight blades appear <strong style={{ color: colors.accent }}>curved</strong> because each row captures a different blade position!
+            </p>
           </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 How Rolling Shutter Works</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Sequential Scanning:</strong> CMOS sensors read pixels row by row, taking time to scan the full frame. During this time, fast objects move.</p>
-              <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Time Offset:</strong> The top of the image is captured before the bottom. A spinning blade is at different angles at different scan positions.</p>
-              <p><strong style={{ color: colors.textPrimary }}>Result:</strong> Each row "stitches together" a different moment, creating curved appearances from straight objects.</p>
+
+          {/* Comparison visualization */}
+          <div style={{ padding: '0 16px 16px' }}>
+            <h3 style={{ color: colors.textPrimary, fontSize: '14px', fontWeight: '700', marginBottom: '12px', textAlign: 'center' }}>
+              See the Difference
+            </h3>
+            {renderComparisonVisualization()}
+          </div>
+
+          {/* Explanation card */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '14px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <h3 style={{ color: colors.accent, marginBottom: '16px', fontSize: '16px', fontWeight: '700' }}>
+              How Rolling Shutter Works
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{
+                  width: '36px', height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(6,182,212,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: colors.sensor, fontSize: '16px' }}>1</span>
+                </div>
+                <div>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>Sequential Scanning</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>CMOS sensors read pixels row by row, taking time to scan the full frame. During this time, fast objects move.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{
+                  width: '36px', height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(16,185,129,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: colors.scanline, fontSize: '16px' }}>2</span>
+                </div>
+                <div>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>Time Offset</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>The top of the image is captured before the bottom. A spinning blade is at different angles at different scan positions.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{
+                  width: '36px', height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(236,72,153,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span style={{ color: colors.accent, fontSize: '16px' }}>3</span>
+                </div>
+                <div>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>The Result</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>Each row "stitches together" a different moment, creating curved appearances from straight objects.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist! →')}
+        {renderBottomBar(false, true, 'Next: A Twist!')}
       </div>
     );
   }
 
   if (phase === 'twist_predict') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>🔄 The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>What if you pan the camera quickly to the side?</p>
+          {/* Header */}
+          <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              background: 'rgba(245,158,11,0.15)',
+              color: colors.warning,
+              fontSize: '11px',
+              fontWeight: '700',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              The Twist
+            </span>
+            <h2 style={{ color: colors.warning, fontSize: '22px', fontWeight: '700', marginBottom: '8px' }}>
+              Camera Motion
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+              What if you pan the camera quickly to the side?
+            </p>
           </div>
-          {renderVisualization(false)}
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>📋 The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>Instead of filming a spinning object, you quickly pan (sweep) your camera to the right while filming stationary vertical objects like buildings or poles.</p>
+
+          <div style={{ padding: '0 16px' }}>
+            {renderVisualization(false)}
           </div>
+
+          {/* Setup info */}
+          <div style={{
+            background: `linear-gradient(135deg, rgba(245,158,11,0.1) 0%, ${colors.bgCard} 100%)`,
+            margin: '16px',
+            padding: '16px',
+            borderRadius: '12px',
+            border: `1px solid rgba(245,158,11,0.3)`
+          }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: '14px', fontWeight: '700' }}>
+              The Setup:
+            </h3>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+              Instead of filming a spinning object, you quickly <strong style={{ color: colors.warning }}>pan (sweep)</strong> your camera to the right while filming stationary vertical objects like <strong>buildings</strong> or <strong>poles</strong>.
+            </p>
+          </div>
+
+          {/* Prediction options */}
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>🤔 What happens to vertical objects when you pan quickly?</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '14px', fontSize: '15px', fontWeight: '600', lineHeight: 1.4 }}>
+              What happens to vertical objects when you pan quickly?
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {twistPredictions.map((p) => (
-                <button key={p.id} onClick={() => setTwistPrediction(p.id)} style={{ padding: '16px', borderRadius: '8px', border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)', background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{p.label}</button>
+                <button
+                  key={p.id}
+                  onClick={() => setTwistPrediction(p.id)}
+                  style={{
+                    padding: '16px 18px',
+                    borderRadius: '12px',
+                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : `1px solid ${colors.border}`,
+                    background: twistPrediction === p.id
+                      ? 'linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.05) 100%)'
+                      : colors.bgCard,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    lineHeight: 1.4,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {p.label}
+                </button>
               ))}
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction →')}
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
 
   if (phase === 'twist_play') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Camera Panning</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>Visualize how panning creates skew</p>
+          {/* Header */}
+          <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              background: 'rgba(245,158,11,0.15)',
+              color: colors.warning,
+              fontSize: '11px',
+              fontWeight: '700',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Experiment
+            </span>
+            <h2 style={{ color: colors.warning, fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>
+              Test Camera Panning
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+              Visualize how panning creates skew
+            </p>
           </div>
-          {renderVisualization(true)}
+
+          <div style={{ padding: '0 16px' }}>
+            {renderVisualization(true)}
+          </div>
+
           {renderControls()}
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `3px solid ${colors.warning}` }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>💡 Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>When panning, the scene moves across the sensor. Top rows capture the scene at one position, bottom rows at another - creating a slant or "skew" effect!</p>
+
+          {/* Key observation */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.15) 0%, rgba(245,158,11,0.05) 100%)',
+            margin: '16px',
+            padding: '18px',
+            borderRadius: '14px',
+            borderLeft: `4px solid ${colors.warning}`
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: '10px', fontSize: '14px', fontWeight: '700' }}>
+              Key Observation
+            </h4>
+            <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6 }}>
+              When panning, the scene moves across the sensor. <strong style={{ color: colors.textPrimary }}>Top rows</strong> capture the scene at one position, <strong style={{ color: colors.textPrimary }}>bottom rows</strong> at another - creating a slant or <strong style={{ color: colors.warning }}>"skew"</strong> effect!
+            </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation →')}
+        {renderBottomBar(false, true, 'See the Explanation')}
       </div>
     );
   }
@@ -500,54 +1565,212 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'tilt';
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px', borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}` }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>{wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}</h3>
-            <p style={{ color: colors.textPrimary }}>Vertical objects appear tilted when you pan the camera!</p>
+          {/* Result banner */}
+          <div style={{
+            background: wasCorrect
+              ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%)'
+              : 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.05) 100%)',
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '14px',
+            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.danger}`
+          }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.danger, marginBottom: '8px', fontSize: '18px', fontWeight: '700' }}>
+              {wasCorrect ? '✓ Correct!' : '✗ Not Quite!'}
+            </h3>
+            <p style={{ color: colors.textPrimary, fontSize: '14px', lineHeight: 1.6 }}>
+              Vertical objects appear <strong style={{ color: colors.warning }}>tilted</strong> when you pan the camera!
+            </p>
           </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>🔬 The Jello Effect</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}><strong style={{ color: colors.textPrimary }}>Skew from Panning:</strong> When the camera pans right, the scene appears to move left. Top rows capture the scene before it's moved as far as bottom rows.</p>
-              <p><strong style={{ color: colors.textPrimary }}>Jello Effect:</strong> With vibration or handheld shake, the scene appears to wobble like jello as the camera's position changes during scan time.</p>
+
+          {/* Jello effect explanation */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+            margin: '16px',
+            padding: '20px',
+            borderRadius: '14px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <h3 style={{ color: colors.warning, marginBottom: '16px', fontSize: '16px', fontWeight: '700' }}>
+              The Jello Effect
+            </h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{
+                  width: '36px', height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(245,158,11,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span style={{ fontSize: '18px' }}>↔️</span>
+                </div>
+                <div>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>Skew from Panning</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
+                    When the camera pans right, the scene appears to move left. Top rows capture the scene before it's moved as far as bottom rows.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{
+                  width: '36px', height: '36px',
+                  borderRadius: '10px',
+                  background: 'rgba(236,72,153,0.15)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <span style={{ fontSize: '18px' }}>🍮</span>
+                </div>
+                <div>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>Jello Effect</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
+                    With vibration or handheld shake, the scene appears to wobble like jello as the camera's position changes during scan time.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Visual comparison tip */}
+          <div style={{
+            background: 'rgba(6,182,212,0.1)',
+            margin: '16px',
+            padding: '14px',
+            borderRadius: '10px',
+            borderLeft: `3px solid ${colors.sensor}`
+          }}>
+            <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>
+              <strong style={{ color: colors.sensor }}>Pro Tip:</strong> Drone footage often shows the jello effect when vibrations reach the camera sensor during flight.
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge →')}
+        {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
     );
   }
 
   if (phase === 'transfer') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>🌍 Real-World Applications</h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>Rolling shutter affects all CMOS cameras</p>
+          {/* Header */}
+          <div style={{ padding: '20px 16px 12px', textAlign: 'center' }}>
+            <span style={{
+              display: 'inline-block',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              background: 'rgba(6,182,212,0.15)',
+              color: colors.sensor,
+              fontSize: '11px',
+              fontWeight: '700',
+              marginBottom: '8px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Real-World
+            </span>
+            <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>
+              Applications
+            </h2>
+            <p style={{ color: colors.textSecondary, fontSize: '13px' }}>
+              Rolling shutter affects all CMOS cameras
+            </p>
+            {/* Progress indicator */}
+            <div style={{
+              marginTop: '12px',
+              padding: '8px 16px',
+              background: colors.bgCard,
+              borderRadius: '8px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ color: colors.textMuted, fontSize: '12px' }}>Completed:</span>
+              <span style={{ color: colors.success, fontSize: '14px', fontWeight: '700' }}>
+                {transferCompleted.size} / 4
+              </span>
+            </div>
           </div>
+
+          {/* Application cards */}
           {transferApplications.map((app, index) => (
-            <div key={index} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>✓</span>}
+            <div
+              key={index}
+              style={{
+                background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+                margin: '12px 16px',
+                padding: '18px',
+                borderRadius: '14px',
+                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : `1px solid ${colors.border}`,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h3 style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: '700' }}>{app.title}</h3>
+                {transferCompleted.has(index) && (
+                  <span style={{
+                    padding: '4px 10px',
+                    background: 'rgba(16,185,129,0.15)',
+                    borderRadius: '12px',
+                    color: colors.success,
+                    fontSize: '11px',
+                    fontWeight: '700'
+                  }}>
+                    Completed
+                  </span>
+                )}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(236, 72, 153, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>💭 {app.question}</p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '14px', lineHeight: 1.5 }}>{app.description}</p>
+
+              {/* Question box */}
+              <div style={{
+                background: 'rgba(236,72,153,0.08)',
+                padding: '14px',
+                borderRadius: '10px',
+                marginBottom: '12px',
+                borderLeft: `3px solid ${colors.accent}`
+              }}>
+                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: '600', lineHeight: 1.4 }}>
+                  {app.question}
+                </p>
               </div>
+
               {!transferCompleted.has(index) ? (
-                <button onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))} style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}>Reveal Answer</button>
+                <button
+                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    border: `1px solid ${colors.accent}`,
+                    background: 'transparent',
+                    color: colors.accent,
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Reveal Answer
+                </button>
               ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                <div style={{
+                  background: 'rgba(16,185,129,0.08)',
+                  padding: '14px',
+                  borderRadius: '10px',
+                  borderLeft: `3px solid ${colors.success}`
+                }}>
+                  <p style={{ color: colors.textPrimary, fontSize: '13px', lineHeight: 1.6 }}>{app.answer}</p>
                 </div>
               )}
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test →')}
+        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -555,42 +1778,221 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{ background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', margin: '16px', padding: '24px', borderRadius: '12px', textAlign: 'center' }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error }}>{testScore >= 8 ? '🎉 Excellent!' : '📚 Keep Learning!'}</h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            {/* Score banner */}
+            <div style={{
+              background: testScore >= 8
+                ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%)'
+                : 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.05) 100%)',
+              margin: '16px',
+              padding: '28px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              border: `2px solid ${testScore >= 8 ? colors.success : colors.danger}`
+            }}>
+              <h2 style={{ color: testScore >= 8 ? colors.success : colors.danger, fontSize: '24px', marginBottom: '8px' }}>
+                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              </h2>
+              <p style={{ color: colors.textPrimary, fontSize: '36px', fontWeight: '800' }}>
+                {testScore} / 10
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', marginTop: '8px' }}>
+                {testScore >= 8 ? 'You have mastered rolling shutter!' : 'Review the material and try again.'}
+              </p>
             </div>
+
+            {/* Questions review */}
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                <div
+                  key={qIndex}
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+                    margin: '12px 16px',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    borderLeft: `4px solid ${isCorrect ? colors.success : colors.danger}`
+                  }}
+                >
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: '600', fontSize: '14px' }}>
+                    {qIndex + 1}. {q.question}
+                  </p>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>{opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}</div>
+                    <div
+                      key={oIndex}
+                      style={{
+                        padding: '10px 14px',
+                        marginBottom: '6px',
+                        borderRadius: '8px',
+                        background: opt.correct
+                          ? 'rgba(16,185,129,0.15)'
+                          : userAnswer === oIndex
+                            ? 'rgba(239,68,68,0.15)'
+                            : 'transparent',
+                        color: opt.correct
+                          ? colors.success
+                          : userAnswer === oIndex
+                            ? colors.danger
+                            : colors.textMuted,
+                        fontSize: '13px'
+                      }}
+                    >
+                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                    </div>
                   ))}
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery →' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
+
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}><h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2><span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / 10</span></div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>{testQuestions.map((_, i) => (<div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />))}</div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}><p style={{ color: colors.textPrimary, fontSize: '16px' }}>{currentQ.question}</p></div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>{currentQ.options.map((opt, oIndex) => (<button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(236, 72, 153, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>{opt.text}</button>))}</div>
+          <div style={{ padding: '20px 16px' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: colors.textPrimary, fontSize: '20px', fontWeight: '700' }}>Knowledge Test</h2>
+              <span style={{
+                padding: '6px 14px',
+                background: colors.bgCard,
+                borderRadius: '20px',
+                color: colors.textSecondary,
+                fontSize: '13px',
+                fontWeight: '600'
+              }}>
+                {currentTestQuestion + 1} / 10
+              </span>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+              {testQuestions.map((_, i) => (
+                <div
+                  key={i}
+                  onClick={() => setCurrentTestQuestion(i)}
+                  style={{
+                    flex: 1,
+                    height: '6px',
+                    borderRadius: '3px',
+                    background: testAnswers[i] !== null
+                      ? colors.accent
+                      : i === currentTestQuestion
+                        ? colors.textMuted
+                        : colors.bgCardLight,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                />
+              ))}
+            </div>
+
+            {/* Question card */}
+            <div style={{
+              background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+              padding: '20px',
+              borderRadius: '14px',
+              marginBottom: '18px',
+              border: `1px solid ${colors.border}`
+            }}>
+              <p style={{ color: colors.textPrimary, fontSize: '15px', lineHeight: 1.5, fontWeight: '500' }}>
+                {currentQ.question}
+              </p>
+            </div>
+
+            {/* Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {currentQ.options.map((opt, oIndex) => (
+                <button
+                  key={oIndex}
+                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  style={{
+                    padding: '16px 18px',
+                    borderRadius: '12px',
+                    border: testAnswers[currentTestQuestion] === oIndex
+                      ? `2px solid ${colors.accent}`
+                      : `1px solid ${colors.border}`,
+                    background: testAnswers[currentTestQuestion] === oIndex
+                      ? 'linear-gradient(135deg, rgba(236,72,153,0.2) 0%, rgba(236,72,153,0.05) 100%)'
+                      : colors.bgCard,
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    lineHeight: 1.4,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {opt.text}
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary }}>← Previous</button>
-            {currentTestQuestion < 9 ? <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', background: colors.accent, color: 'white' }}>Next →</button> : <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white' }}>Submit</button>}
+
+          {/* Navigation buttons */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 16px 16px', gap: '12px' }}>
+            <button
+              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+              disabled={currentTestQuestion === 0}
+              style={{
+                padding: '14px 24px',
+                borderRadius: '10px',
+                border: `1px solid ${colors.border}`,
+                background: 'transparent',
+                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                fontWeight: '600',
+                fontSize: '14px',
+                opacity: currentTestQuestion === 0 ? 0.5 : 1,
+                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              Previous
+            </button>
+            {currentTestQuestion < 9 ? (
+              <button
+                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  background: `linear-gradient(135deg, ${colors.accent} 0%, ${colors.accentDark} 100%)`,
+                  border: 'none',
+                  color: 'white',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  boxShadow: `0 4px 16px ${colors.accent}30`
+                }}
+              >
+                Next
+              </button>
+            ) : (
+              <button
+                onClick={submitTest}
+                disabled={testAnswers.includes(null)}
+                style={{
+                  padding: '14px 28px',
+                  borderRadius: '10px',
+                  background: testAnswers.includes(null)
+                    ? colors.bgCardLight
+                    : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
+                  border: 'none',
+                  color: testAnswers.includes(null) ? colors.textMuted : 'white',
+                  fontWeight: '700',
+                  fontSize: '14px',
+                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  boxShadow: testAnswers.includes(null) ? 'none' : `0 4px 16px ${colors.success}30`
+                }}
+              >
+                Submit Test
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -599,25 +2001,98 @@ const RollingShutterRenderer: React.FC<RollingShutterRendererProps> = ({
 
   if (phase === 'mastery') {
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgDark }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary }}>You've mastered rolling shutter effects</p>
+          {/* Hero celebration */}
+          <div style={{ padding: '32px 24px 24px', textAlign: 'center' }}>
+            {/* Trophy with glow effect */}
+            <div style={{
+              width: '100px',
+              height: '100px',
+              margin: '0 auto 20px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.05) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 40px rgba(16,185,129,0.3), 0 0 80px rgba(16,185,129,0.15)'
+            }}>
+              <span style={{ fontSize: '50px' }}>🏆</span>
+            </div>
+
+            <h1 style={{
+              color: colors.success,
+              fontSize: isMobile ? '26px' : '32px',
+              fontWeight: '800',
+              marginBottom: '10px'
+            }}>
+              Mastery Achieved!
+            </h1>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.5 }}>
+              You've mastered rolling shutter effects
+            </p>
           </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>🎓 Key Concepts:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Sequential row-by-row sensor scanning</li>
-              <li>Time offset creates spatial distortion</li>
-              <li>Jello effect from camera shake</li>
-              <li>Global shutter as the solution</li>
-            </ul>
+
+          {/* Key concepts card */}
+          <div style={{
+            background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgCardLight}40 100%)`,
+            margin: '0 16px 20px',
+            padding: '20px',
+            borderRadius: '16px',
+            border: `1px solid ${colors.border}`
+          }}>
+            <h3 style={{ color: colors.accent, marginBottom: '16px', fontSize: '16px', fontWeight: '700' }}>
+              Key Concepts Mastered
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                { icon: '📷', text: 'Sequential row-by-row sensor scanning', color: colors.sensor },
+                { icon: '⏱️', text: 'Time offset creates spatial distortion', color: colors.warning },
+                { icon: '🍮', text: 'Jello effect from camera shake', color: colors.accent },
+                { icon: '✅', text: 'Global shutter as the solution', color: colors.success }
+              ].map((item, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '12px 14px',
+                  background: colors.bgCardLight,
+                  borderRadius: '10px',
+                  borderLeft: `3px solid ${item.color}`
+                }}>
+                  <span style={{ fontSize: '20px' }}>{item.icon}</span>
+                  <span style={{ color: colors.textPrimary, fontSize: '14px' }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          {renderVisualization(true)}
+
+          {/* Final visualization */}
+          <div style={{ padding: '0 16px 16px' }}>
+            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '12px' }}>
+              Continue experimenting with the simulation below
+            </p>
+            {renderVisualization(true)}
+          </div>
+
+          {/* Achievement badge */}
+          <div style={{
+            margin: '0 16px',
+            padding: '16px',
+            background: 'linear-gradient(135deg, rgba(236,72,153,0.1) 0%, rgba(168,85,247,0.1) 100%)',
+            borderRadius: '12px',
+            border: `1px solid rgba(236,72,153,0.3)`,
+            textAlign: 'center'
+          }}>
+            <p style={{ color: colors.accent, fontSize: '12px', fontWeight: '700', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Achievement Unlocked
+            </p>
+            <p style={{ color: colors.textPrimary, fontSize: '15px', fontWeight: '600' }}>
+              Rolling Shutter Expert
+            </p>
+          </div>
         </div>
-        {renderBottomBar(false, true, 'Complete Game →')}
+        {renderBottomBar(false, true, 'Complete Game')}
       </div>
     );
   }

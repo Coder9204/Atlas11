@@ -261,9 +261,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showTwist: boolean = false) => {
-    const width = 400;
-    const height = 350;
-    const groundY = height - 50;
+    const width = 500;
+    const height = 400;
+    const groundY = height - 60;
     const centerX = width / 2;
 
     // Calculate object position with tilt
@@ -283,10 +283,14 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
     const comOverSupport = worldComX >= centerX - baseWidth / 2 && worldComX <= centerX + baseWidth / 2;
 
     // Tipping meter calculation
-    const meterWidth = 200;
+    const meterWidth = 220;
     const meterX = (width - meterWidth) / 2;
-    const meterY = 25;
+    const meterY = 20;
     const meterFill = Math.min(100, (Math.abs(tiltAngle) / criticalAngle) * 100);
+
+    // Stability zone visualization
+    const stabilityZoneRadius = 50;
+    const stabilityAngleRad = criticalAngle * Math.PI / 180;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -295,160 +299,615 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#f8fafc', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '16px', maxWidth: '550px' }}
         >
-          {/* Tipping Meter */}
-          <rect x={meterX} y={meterY} width={meterWidth} height={20} rx={4} fill="#e2e8f0" />
-          <rect
-            x={meterX}
-            y={meterY}
-            width={meterWidth * meterFill / 100}
-            height={20}
-            rx={4}
-            fill={meterFill < 50 ? colors.success : meterFill < 80 ? colors.warning : colors.error}
-          />
-          <text x={meterX + meterWidth / 2} y={meterY + 14} textAnchor="middle" fill={colors.bgPrimary} fontSize={11} fontWeight="bold">
-            Tipping: {meterFill.toFixed(0)}%
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="tippBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="25%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Ground surface gradient with depth */}
+            <linearGradient id="tippGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="20%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Stable object gradient (blue tones) */}
+            <linearGradient id="tippObjectStable" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Unstable object gradient (red tones) */}
+            <linearGradient id="tippObjectUnstable" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Object side shadow gradient */}
+            <linearGradient id="tippObjectShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(0,0,0,0.4)" />
+              <stop offset="50%" stopColor="rgba(0,0,0,0.1)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+            </linearGradient>
+
+            {/* Weight block gradient (gold/amber) */}
+            <linearGradient id="tippWeightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Support base gradient (green) */}
+            <linearGradient id="tippSupportGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="40%" stopColor="#10b981" />
+              <stop offset="70%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+
+            {/* Stability meter gradient */}
+            <linearGradient id="tippMeterBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Meter fill stable (green to yellow) */}
+            <linearGradient id="tippMeterStable" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#84cc16" />
+            </linearGradient>
+
+            {/* Meter fill warning (yellow to orange) */}
+            <linearGradient id="tippMeterWarning" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#eab308" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+
+            {/* Meter fill danger (orange to red) */}
+            <linearGradient id="tippMeterDanger" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Center of mass radial glow */}
+            <radialGradient id="tippComGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* COM inner glow */}
+            <radialGradient id="tippComInner" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fef9c3" />
+              <stop offset="50%" stopColor="#fde047" />
+              <stop offset="100%" stopColor="#eab308" />
+            </radialGradient>
+
+            {/* Push force arrow gradient */}
+            <linearGradient id="tippForceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Stability zone gradient */}
+            <radialGradient id="tippStabilityZone" cx="50%" cy="100%" r="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+              <stop offset="60%" stopColor="#10b981" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Danger zone gradient */}
+            <radialGradient id="tippDangerZone" cx="50%" cy="100%" r="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="60%" stopColor="#ef4444" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Angle arc gradient */}
+            <linearGradient id="tippAngleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            {/* COM glow filter */}
+            <filter id="tippComGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Object shadow filter */}
+            <filter id="tippObjectShadowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="4" dy="4" stdDeviation="6" floodColor="#000000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Support base glow filter */}
+            <filter id="tippSupportGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Weight glow filter */}
+            <filter id="tippWeightGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Force arrow glow */}
+            <filter id="tippForceGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text glow filter */}
+            <filter id="tippTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker for force */}
+            <marker id="tippArrowhead" markerWidth="12" markerHeight="9" refX="0" refY="4.5" orient="auto">
+              <polygon points="0 0, 12 4.5, 0 9" fill="url(#tippForceGradient)" />
+            </marker>
+
+            {/* Grid pattern */}
+            <pattern id="tippGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#tippBgGradient)" />
+          <rect width={width} height={height} fill="url(#tippGridPattern)" />
+
+          {/* === STABILITY METER === */}
+          <g>
+            {/* Meter background with premium styling */}
+            <rect
+              x={meterX - 5}
+              y={meterY - 5}
+              width={meterWidth + 10}
+              height={30}
+              rx={15}
+              fill="#0f172a"
+              stroke="#475569"
+              strokeWidth={1}
+            />
+            <rect
+              x={meterX}
+              y={meterY}
+              width={meterWidth}
+              height={20}
+              rx={10}
+              fill="url(#tippMeterBg)"
+            />
+
+            {/* Meter fill with dynamic gradient */}
+            <rect
+              x={meterX}
+              y={meterY}
+              width={meterWidth * meterFill / 100}
+              height={20}
+              rx={10}
+              fill={meterFill < 50 ? 'url(#tippMeterStable)' : meterFill < 80 ? 'url(#tippMeterWarning)' : 'url(#tippMeterDanger)'}
+            />
+
+            {/* Meter text */}
+            <text
+              x={meterX + meterWidth / 2}
+              y={meterY + 14}
+              textAnchor="middle"
+              fill="#f8fafc"
+              fontSize={11}
+              fontWeight="bold"
+              filter="url(#tippTextGlow)"
+            >
+              Tipping Risk: {meterFill.toFixed(0)}%
+            </text>
+
+            {/* Labels */}
+            <text x={meterX - 10} y={meterY + 14} textAnchor="end" fill="#10b981" fontSize={10} fontWeight="600">STABLE</text>
+            <text x={meterX + meterWidth + 10} y={meterY + 14} textAnchor="start" fill="#ef4444" fontSize={10} fontWeight="600">TIP!</text>
+          </g>
+
+          {/* === GROUND SURFACE === */}
+          <rect x={0} y={groundY} width={width} height={height - groundY} fill="url(#tippGroundGradient)" />
+          <line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#64748b" strokeWidth={2} />
+
+          {/* === SUPPORT BASE WITH GLOW === */}
+          <g filter="url(#tippSupportGlowFilter)">
+            <rect
+              x={centerX - baseWidth / 2}
+              y={groundY}
+              width={baseWidth}
+              height={8}
+              rx={2}
+              fill="url(#tippSupportGradient)"
+            />
+          </g>
+          <text
+            x={centerX}
+            y={groundY + 25}
+            textAnchor="middle"
+            fill="#10b981"
+            fontSize={11}
+            fontWeight="600"
+            filter="url(#tippTextGlow)"
+          >
+            Support Base ({baseWidth}px)
           </text>
-          <text x={meterX - 5} y={meterY + 14} textAnchor="end" fill={colors.bgPrimary} fontSize={10}>Stable</text>
-          <text x={meterX + meterWidth + 5} y={meterY + 14} textAnchor="start" fill={colors.bgPrimary} fontSize={10}>Tip!</text>
 
-          {/* Ground */}
-          <line x1={0} y1={groundY} x2={width} y2={groundY} stroke={colors.bgPrimary} strokeWidth={2} />
+          {/* === STABILITY ZONE VISUALIZATION === */}
+          <g opacity={0.6}>
+            {/* Safe zone arc */}
+            <path
+              d={`M ${centerX + baseWidth / 2} ${groundY}
+                  L ${centerX + baseWidth / 2 + stabilityZoneRadius} ${groundY}
+                  A ${stabilityZoneRadius} ${stabilityZoneRadius} 0 0 0 ${centerX + baseWidth / 2 + stabilityZoneRadius * Math.cos(stabilityAngleRad)} ${groundY - stabilityZoneRadius * Math.sin(stabilityAngleRad)}
+                  Z`}
+              fill="url(#tippStabilityZone)"
+            />
+            {/* Danger zone arc */}
+            <path
+              d={`M ${centerX + baseWidth / 2 + stabilityZoneRadius * Math.cos(stabilityAngleRad)} ${groundY - stabilityZoneRadius * Math.sin(stabilityAngleRad)}
+                  A ${stabilityZoneRadius} ${stabilityZoneRadius} 0 0 0 ${centerX + baseWidth / 2} ${groundY - stabilityZoneRadius}
+                  L ${centerX + baseWidth / 2} ${groundY}
+                  Z`}
+              fill="url(#tippDangerZone)"
+            />
+          </g>
 
-          {/* Support polygon indicator */}
-          <line
-            x1={centerX - baseWidth / 2}
-            y1={groundY}
-            x2={centerX + baseWidth / 2}
-            y2={groundY}
-            stroke={colors.support}
-            strokeWidth={6}
-          />
-          <text x={centerX} y={groundY + 20} textAnchor="middle" fill={colors.support} fontSize={10}>
-            Support Base
-          </text>
-
-          {/* Object (tilted rectangle) */}
-          <g transform={`rotate(${tiltAngle}, ${pivotX}, ${pivotY})`}>
-            {/* Main body */}
+          {/* === TIPPING OBJECT (DOMINO/BOX) === */}
+          <g transform={`rotate(${tiltAngle}, ${pivotX}, ${pivotY})`} filter="url(#tippObjectShadowFilter)">
+            {/* Main body with premium gradient */}
             <rect
               x={pivotX - baseWidth / 2}
               y={pivotY - objectHeight}
               width={baseWidth}
               height={objectHeight}
-              fill={isTipping ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}
-              stroke={isTipping ? colors.error : colors.stable}
+              fill={isTipping ? 'url(#tippObjectUnstable)' : 'url(#tippObjectStable)'}
+              stroke={isTipping ? '#991b1b' : '#1d4ed8'}
               strokeWidth={2}
-              rx={4}
+              rx={6}
             />
 
-            {/* Added weight at bottom (twist) */}
+            {/* 3D effect - side highlight */}
+            <rect
+              x={pivotX - baseWidth / 2 + 3}
+              y={pivotY - objectHeight + 3}
+              width={6}
+              height={objectHeight - 6}
+              fill="rgba(255,255,255,0.15)"
+              rx={2}
+            />
+
+            {/* Top edge highlight */}
+            <rect
+              x={pivotX - baseWidth / 2 + 3}
+              y={pivotY - objectHeight + 3}
+              width={baseWidth - 6}
+              height={4}
+              fill="rgba(255,255,255,0.2)"
+              rx={2}
+            />
+
+            {/* Object label */}
+            <text
+              x={pivotX}
+              y={pivotY - objectHeight / 2}
+              textAnchor="middle"
+              fill="#f8fafc"
+              fontSize={12}
+              fontWeight="bold"
+              transform={`rotate(${-tiltAngle}, ${pivotX}, ${pivotY - objectHeight / 2})`}
+            >
+              {objectHeight}px
+            </text>
+
+            {/* === ADDED WEIGHT AT BOTTOM (TWIST) === */}
             {(showTwist || hasAddedWeight) && (
-              <rect
-                x={pivotX - baseWidth / 2 + 5}
-                y={pivotY - 25}
-                width={baseWidth - 10}
-                height={20}
-                fill={colors.warning}
-                stroke="#b45309"
-                strokeWidth={1}
-                rx={2}
-              />
+              <g filter="url(#tippWeightGlowFilter)">
+                <rect
+                  x={pivotX - baseWidth / 2 + 5}
+                  y={pivotY - 28}
+                  width={baseWidth - 10}
+                  height={24}
+                  fill="url(#tippWeightGradient)"
+                  stroke="#b45309"
+                  strokeWidth={2}
+                  rx={4}
+                />
+                {/* Weight texture lines */}
+                <line
+                  x1={pivotX - baseWidth / 2 + 10}
+                  y1={pivotY - 20}
+                  x2={pivotX + baseWidth / 2 - 10}
+                  y2={pivotY - 20}
+                  stroke="#92400e"
+                  strokeWidth={1}
+                  strokeOpacity={0.5}
+                />
+                <line
+                  x1={pivotX - baseWidth / 2 + 10}
+                  y1={pivotY - 12}
+                  x2={pivotX + baseWidth / 2 - 10}
+                  y2={pivotY - 12}
+                  stroke="#92400e"
+                  strokeWidth={1}
+                  strokeOpacity={0.5}
+                />
+                <text
+                  x={pivotX}
+                  y={pivotY - 13}
+                  textAnchor="middle"
+                  fill="#78350f"
+                  fontSize={9}
+                  fontWeight="bold"
+                >
+                  WEIGHT
+                </text>
+              </g>
             )}
 
-            {/* Push force indicator */}
+            {/* === PUSH FORCE INDICATOR === */}
             {interactive && (
-              <g>
-                <line
-                  x1={pivotX + baseWidth / 2 + 30}
-                  y1={pivotY - pushHeight}
-                  x2={pivotX + baseWidth / 2 + 5}
-                  y2={pivotY - pushHeight}
-                  stroke={colors.error}
-                  strokeWidth={3}
-                  markerEnd="url(#arrowhead)"
-                />
+              <g filter="url(#tippForceGlowFilter)">
+                {/* Force application point */}
                 <circle
                   cx={pivotX + baseWidth / 2 + 5}
                   cy={pivotY - pushHeight}
-                  r={6}
-                  fill={colors.error}
-                  opacity={0.5}
+                  r={8}
+                  fill="url(#tippForceGradient)"
+                  stroke="#dc2626"
+                  strokeWidth={2}
+                >
+                  <animate attributeName="r" values="7;9;7" dur="0.8s" repeatCount="indefinite" />
+                </circle>
+
+                {/* Force arrow */}
+                <line
+                  x1={pivotX + baseWidth / 2 + 45}
+                  y1={pivotY - pushHeight}
+                  x2={pivotX + baseWidth / 2 + 15}
+                  y2={pivotY - pushHeight}
+                  stroke="url(#tippForceGradient)"
+                  strokeWidth={4}
+                  markerEnd="url(#tippArrowhead)"
                 />
+
+                {/* Force label */}
+                <text
+                  x={pivotX + baseWidth / 2 + 55}
+                  y={pivotY - pushHeight + 4}
+                  fill="#f87171"
+                  fontSize={10}
+                  fontWeight="bold"
+                >
+                  PUSH
+                </text>
               </g>
             )}
           </g>
 
-          {/* Center of mass marker (unrotated for visibility) */}
-          <circle
-            cx={worldComX}
-            cy={worldComY}
-            r={10}
-            fill={colors.com}
-            stroke="#92400e"
-            strokeWidth={2}
-          />
-          <text x={worldComX} y={worldComY + 4} textAnchor="middle" fill="#92400e" fontSize={10} fontWeight="bold">
-            CM
-          </text>
+          {/* === CENTER OF MASS MARKER === */}
+          <g filter="url(#tippComGlowFilter)">
+            {/* Outer glow */}
+            <circle
+              cx={worldComX}
+              cy={worldComY}
+              r={16}
+              fill="url(#tippComGlow)"
+            />
+            {/* Main COM circle */}
+            <circle
+              cx={worldComX}
+              cy={worldComY}
+              r={12}
+              fill="url(#tippComInner)"
+              stroke="#b45309"
+              strokeWidth={2}
+            />
+            {/* COM label */}
+            <text
+              x={worldComX}
+              y={worldComY + 4}
+              textAnchor="middle"
+              fill="#78350f"
+              fontSize={10}
+              fontWeight="bold"
+            >
+              CM
+            </text>
+          </g>
 
-          {/* Vertical line from COM to ground */}
+          {/* === VERTICAL PROJECTION LINE FROM COM === */}
           <line
             x1={worldComX}
-            y1={worldComY}
+            y1={worldComY + 12}
             x2={worldComX}
             y2={groundY}
-            stroke={comOverSupport ? colors.success : colors.error}
+            stroke={comOverSupport ? '#10b981' : '#ef4444'}
             strokeWidth={2}
-            strokeDasharray="5,5"
+            strokeDasharray="6,4"
+            strokeOpacity={0.8}
+          />
+          {/* Projection point indicator */}
+          <circle
+            cx={worldComX}
+            cy={groundY}
+            r={5}
+            fill={comOverSupport ? '#10b981' : '#ef4444'}
+            stroke={comOverSupport ? '#059669' : '#dc2626'}
+            strokeWidth={2}
           />
 
-          {/* Critical angle indicator */}
+          {/* === CRITICAL ANGLE INDICATOR === */}
           <g>
+            {/* Angle arc */}
             <path
-              d={`M ${centerX + baseWidth / 2} ${groundY}
-                  L ${centerX + baseWidth / 2 + 40} ${groundY}
-                  A 40 40 0 0 0 ${centerX + baseWidth / 2 + 40 * Math.cos(criticalAngle * Math.PI / 180)} ${groundY - 40 * Math.sin(criticalAngle * Math.PI / 180)}`}
+              d={`M ${centerX + baseWidth / 2 + 35} ${groundY}
+                  A 35 35 0 0 0 ${centerX + baseWidth / 2 + 35 * Math.cos(stabilityAngleRad)} ${groundY - 35 * Math.sin(stabilityAngleRad)}`}
               fill="none"
-              stroke={colors.accent}
-              strokeWidth={1}
+              stroke="url(#tippAngleGradient)"
+              strokeWidth={2}
+              strokeDasharray="4,2"
+            />
+            {/* Critical angle line */}
+            <line
+              x1={centerX + baseWidth / 2}
+              y1={groundY}
+              x2={centerX + baseWidth / 2 + 50 * Math.cos(stabilityAngleRad)}
+              y2={groundY - 50 * Math.sin(stabilityAngleRad)}
+              stroke="#a855f7"
+              strokeWidth={1.5}
               strokeDasharray="3,3"
+              strokeOpacity={0.7}
+            />
+            {/* Angle label with background */}
+            <rect
+              x={centerX + baseWidth / 2 + 42}
+              y={groundY - 35}
+              width={50}
+              height={18}
+              rx={4}
+              fill="#1e1b4b"
+              stroke="#7c3aed"
+              strokeWidth={1}
             />
             <text
-              x={centerX + baseWidth / 2 + 50}
-              y={groundY - 20}
-              fill={colors.accent}
+              x={centerX + baseWidth / 2 + 67}
+              y={groundY - 22}
+              textAnchor="middle"
+              fill="#c4b5fd"
               fontSize={10}
+              fontWeight="bold"
             >
               {criticalAngle.toFixed(1)}deg
             </text>
           </g>
 
-          {/* Arrow marker definition */}
-          <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={colors.error} />
-            </marker>
-          </defs>
+          {/* === CURRENT TILT ANGLE INDICATOR === */}
+          {Math.abs(tiltAngle) > 0.5 && (
+            <g>
+              <path
+                d={`M ${pivotX + 30} ${groundY}
+                    A 30 30 0 0 0 ${pivotX + 30 * Math.cos(tiltRad)} ${groundY - 30 * Math.sin(tiltRad)}`}
+                fill="none"
+                stroke={isTipping ? '#ef4444' : '#3b82f6'}
+                strokeWidth={2}
+              />
+              <text
+                x={pivotX + 45}
+                y={groundY - 15}
+                fill={isTipping ? '#f87171' : '#60a5fa'}
+                fontSize={9}
+                fontWeight="bold"
+              >
+                {tiltAngle.toFixed(1)}deg
+              </text>
+            </g>
+          )}
 
-          {/* Labels */}
-          <text x={20} y={70} fill={colors.bgPrimary} fontSize={11}>
-            Height: {objectHeight}px
-          </text>
-          <text x={20} y={85} fill={colors.bgPrimary} fontSize={11}>
-            Base: {baseWidth}px
-          </text>
-          <text x={20} y={100} fill={colors.bgPrimary} fontSize={11}>
-            COM Height: {comHeight.toFixed(0)}px
-          </text>
-          <text x={20} y={115} fill={colors.bgPrimary} fontSize={11}>
-            Critical Angle: {criticalAngle.toFixed(1)}deg
-          </text>
+          {/* === INFO PANEL === */}
+          <g>
+            <rect
+              x={12}
+              y={55}
+              width={120}
+              height={90}
+              rx={8}
+              fill="rgba(15, 23, 42, 0.9)"
+              stroke="#475569"
+              strokeWidth={1}
+            />
+            <text x={20} y={75} fill="#94a3b8" fontSize={10}>Height:</text>
+            <text x={100} y={75} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{objectHeight}px</text>
+
+            <text x={20} y={92} fill="#94a3b8" fontSize={10}>Base:</text>
+            <text x={100} y={92} fill="#f8fafc" fontSize={10} fontWeight="bold" textAnchor="end">{baseWidth}px</text>
+
+            <text x={20} y={109} fill="#94a3b8" fontSize={10}>COM Height:</text>
+            <text x={100} y={109} fill="#fbbf24" fontSize={10} fontWeight="bold" textAnchor="end">{comHeight.toFixed(0)}px</text>
+
+            <text x={20} y={126} fill="#94a3b8" fontSize={10}>Crit. Angle:</text>
+            <text x={100} y={126} fill="#a855f7" fontSize={10} fontWeight="bold" textAnchor="end">{criticalAngle.toFixed(1)}deg</text>
+          </g>
+
+          {/* === STABILITY STATUS BADGE === */}
+          <g>
+            <rect
+              x={width - 110}
+              y={55}
+              width={95}
+              height={30}
+              rx={15}
+              fill={isTipping ? 'rgba(239, 68, 68, 0.2)' : comOverSupport ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
+              stroke={isTipping ? '#ef4444' : comOverSupport ? '#10b981' : '#f59e0b'}
+              strokeWidth={2}
+            />
+            <text
+              x={width - 62}
+              y={74}
+              textAnchor="middle"
+              fill={isTipping ? '#f87171' : comOverSupport ? '#34d399' : '#fbbf24'}
+              fontSize={11}
+              fontWeight="bold"
+            >
+              {isTipping ? 'TIPPING!' : comOverSupport ? 'STABLE' : 'WARNING'}
+            </text>
+          </g>
         </svg>
 
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            padding: '12px',
+            background: 'rgba(15, 23, 42, 0.8)',
+            borderRadius: '12px',
+            border: '1px solid rgba(71, 85, 105, 0.5)'
+          }}>
             <button
               onMouseDown={() => setIsPushing(true)}
               onMouseUp={() => setIsPushing(false)}
@@ -456,14 +915,16 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
               onTouchStart={() => setIsPushing(true)}
               onTouchEnd={() => setIsPushing(false)}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 28px',
+                borderRadius: '10px',
                 border: 'none',
-                background: colors.error,
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '15px',
+                boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
               Hold to Push
@@ -471,14 +932,15 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             <button
               onClick={() => { setTiltAngle(0); setObjectHeight(150); setBaseWidth(60); setPushHeight(100); setHasAddedWeight(false); }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
-                color: colors.accent,
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: '2px solid #8b5cf6',
+                background: 'rgba(139, 92, 246, 0.1)',
+                color: '#a78bfa',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '15px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

@@ -266,46 +266,287 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  // Premium SVG Defs for realistic graphics
+  const renderSVGDefs = () => (
+    <defs>
+      {/* === LINEAR GRADIENTS FOR DEPTH === */}
+
+      {/* Premium water droplet gradient - vertical depth */}
+      <linearGradient id="shphobWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
+        <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.9" />
+        <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.85" />
+        <stop offset="75%" stopColor="#2563eb" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.95" />
+      </linearGradient>
+
+      {/* Sky/background gradient */}
+      <linearGradient id="shphobSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#1e3a5f" />
+        <stop offset="30%" stopColor="#0f2847" />
+        <stop offset="60%" stopColor="#0c1e36" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Lotus leaf surface gradient - organic green tones */}
+      <linearGradient id="shphobLotusSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#166534" />
+        <stop offset="25%" stopColor="#15803d" />
+        <stop offset="50%" stopColor="#16a34a" />
+        <stop offset="75%" stopColor="#15803d" />
+        <stop offset="100%" stopColor="#14532d" />
+      </linearGradient>
+
+      {/* Micro-pillar gradient for 3D pillars */}
+      <linearGradient id="shphobPillarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#22c55e" />
+        <stop offset="30%" stopColor="#16a34a" />
+        <stop offset="70%" stopColor="#15803d" />
+        <stop offset="100%" stopColor="#166534" />
+      </linearGradient>
+
+      {/* Air pocket gradient - ethereal blue */}
+      <linearGradient id="shphobAirPocket" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#bae6fd" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Contact angle arc gradient */}
+      <linearGradient id="shphobAngleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="50%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#f59e0b" />
+      </linearGradient>
+
+      {/* === RADIAL GRADIENTS FOR 3D EFFECTS === */}
+
+      {/* Water droplet 3D sphere effect */}
+      <radialGradient id="shphobDroplet3D" cx="35%" cy="25%" r="65%" fx="30%" fy="20%">
+        <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.95" />
+        <stop offset="20%" stopColor="#93c5fd" stopOpacity="0.9" />
+        <stop offset="45%" stopColor="#60a5fa" stopOpacity="0.85" />
+        <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="#1e40af" stopOpacity="0.95" />
+      </radialGradient>
+
+      {/* Droplet highlight - specular reflection */}
+      <radialGradient id="shphobHighlight" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+        <stop offset="50%" stopColor="#ffffff" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Secondary highlight for realism */}
+      <radialGradient id="shphobHighlight2" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+        <stop offset="70%" stopColor="#ffffff" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Pillar top glow */}
+      <radialGradient id="shphobPillarTop" cx="50%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#4ade80" />
+        <stop offset="60%" stopColor="#22c55e" />
+        <stop offset="100%" stopColor="#16a34a" />
+      </radialGradient>
+
+      {/* Detergent effect - spreading water */}
+      <radialGradient id="shphobDetergentWater" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.7" />
+        <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
+      </radialGradient>
+
+      {/* === GLOW FILTERS === */}
+
+      {/* Water droplet glow filter */}
+      <filter id="shphobDropletGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+        <feFlood floodColor="#3b82f6" floodOpacity="0.5" />
+        <feComposite in2="blur" operator="in" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Highlight glow for specular reflections */}
+      <filter id="shphobHighlightGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Air pocket shimmer */}
+      <filter id="shphobAirShimmer" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur" />
+        <feFlood floodColor="#e0f2fe" floodOpacity="0.3" />
+        <feComposite in2="blur" operator="in" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Contact angle indicator glow */}
+      <filter id="shphobAngleGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+        <feFlood floodColor="#fbbf24" floodOpacity="0.6" />
+        <feComposite in2="blur" operator="in" result="coloredBlur" />
+        <feMerge>
+          <feMergeNode in="coloredBlur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Surface texture shadow */}
+      <filter id="shphobSurfaceShadow" x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3" />
+      </filter>
+
+      {/* Label background blur */}
+      <filter id="shphobLabelBg" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="1" />
+      </filter>
+    </defs>
+  );
+
   const renderDroplet = (cx: number, cy: number, radius: number, angle: number, showMicrostructure: boolean = false) => {
     // Calculate droplet shape based on contact angle
     const angleRad = (angle * Math.PI) / 180;
-    const flatness = Math.cos(angleRad);
 
     // For high contact angles, droplet is more spherical
+    // Contact angle > 150 = nearly perfect sphere (superhydrophobic)
+    // Contact angle < 90 = flat spreading (hydrophilic)
     const heightRatio = angle > 90 ? 1 - (180 - angle) / 180 : 0.3 + angle / 300;
     const width = radius;
     const height = radius * heightRatio * 1.5;
 
+    // Droplet base position (where it touches surface)
+    const dropletBaseY = cy;
+    const dropletCenterY = cy - height / 2;
+
     return (
       <g>
-        {/* Droplet shape */}
+        {/* Droplet shadow on surface */}
         <ellipse
           cx={cx}
-          cy={cy - height / 2}
+          cy={dropletBaseY + 2}
+          rx={width * 0.8}
+          ry={4}
+          fill="rgba(0, 0, 0, 0.3)"
+          filter="url(#shphobLabelBg)"
+        />
+
+        {/* Main droplet body with 3D radial gradient */}
+        <ellipse
+          cx={cx}
+          cy={dropletCenterY}
           rx={width}
           ry={height}
-          fill={`url(#waterGradient)`}
-          stroke={colors.waterLight}
-          strokeWidth={1}
+          fill="url(#shphobDroplet3D)"
+          filter="url(#shphobDropletGlow)"
         />
-        {/* Highlight */}
+
+        {/* Internal refraction effect */}
         <ellipse
-          cx={cx - width * 0.3}
-          cy={cy - height * 0.7}
-          rx={width * 0.2}
-          ry={height * 0.15}
-          fill="rgba(255, 255, 255, 0.6)"
+          cx={cx + width * 0.1}
+          cy={dropletCenterY + height * 0.2}
+          rx={width * 0.6}
+          ry={height * 0.5}
+          fill="url(#shphobWaterGradient)"
+          opacity="0.3"
         />
-        {/* Contact angle indicator */}
-        <path
-          d={`M ${cx - 25} ${cy} L ${cx} ${cy} L ${cx + 25 * Math.cos(angleRad - Math.PI)} ${cy + 25 * Math.sin(angleRad - Math.PI)}`}
-          stroke={colors.warning}
-          strokeWidth={2}
+
+        {/* Primary specular highlight (top-left) */}
+        <ellipse
+          cx={cx - width * 0.35}
+          cy={dropletCenterY - height * 0.4}
+          rx={width * 0.25}
+          ry={height * 0.2}
+          fill="url(#shphobHighlight)"
+          filter="url(#shphobHighlightGlow)"
+        />
+
+        {/* Secondary highlight (smaller, more intense) */}
+        <ellipse
+          cx={cx - width * 0.25}
+          cy={dropletCenterY - height * 0.5}
+          rx={width * 0.12}
+          ry={height * 0.08}
+          fill="url(#shphobHighlight2)"
+          opacity="0.9"
+        />
+
+        {/* Rim light effect (edge highlight) */}
+        <ellipse
+          cx={cx + width * 0.3}
+          cy={dropletCenterY + height * 0.1}
+          rx={width * 0.15}
+          ry={height * 0.3}
           fill="none"
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth="1"
         />
-        <text x={cx + 30} y={cy - 10} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-          {angle.toFixed(0)}
-        </text>
+
+        {/* Contact angle visualization */}
+        <g filter="url(#shphobAngleGlow)">
+          {/* Surface line (reference) */}
+          <line
+            x1={cx - 35}
+            y1={dropletBaseY}
+            x2={cx + 35}
+            y2={dropletBaseY}
+            stroke="rgba(255, 255, 255, 0.6)"
+            strokeWidth="1.5"
+            strokeDasharray="4,2"
+          />
+
+          {/* Contact angle arc */}
+          <path
+            d={`M ${cx + 25} ${dropletBaseY} A 25 25 0 0 0 ${cx + 25 * Math.cos(Math.PI - angleRad)} ${dropletBaseY - 25 * Math.sin(Math.PI - angleRad)}`}
+            stroke="url(#shphobAngleGradient)"
+            strokeWidth="2.5"
+            fill="none"
+            strokeLinecap="round"
+          />
+
+          {/* Angle indicator line along droplet tangent */}
+          <line
+            x1={cx}
+            y1={dropletBaseY}
+            x2={cx + 30 * Math.cos(Math.PI - angleRad)}
+            y2={dropletBaseY - 30 * Math.sin(Math.PI - angleRad)}
+            stroke={colors.warning}
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </g>
+
+        {/* Contact angle value label with background */}
+        <g transform={`translate(${cx + 40}, ${dropletBaseY - 25})`}>
+          <rect
+            x="-5"
+            y="-12"
+            width="40"
+            height="18"
+            rx="4"
+            fill="rgba(0, 0, 0, 0.6)"
+          />
+          <text
+            x="15"
+            y="2"
+            fill={angle > 150 ? colors.success : angle > 90 ? colors.warning : colors.error}
+            fontSize="13"
+            fontWeight="bold"
+            textAnchor="middle"
+          >
+            {angle.toFixed(0)}°
+          </text>
+        </g>
       </g>
     );
   };
@@ -313,72 +554,237 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
   const renderSurface = (showMicrostructure: boolean, roughness: number) => {
     const width = 400;
     const surfaceY = 200;
-    const bumps = [];
+    const elements: JSX.Element[] = [];
+
+    // Base substrate with gradient
+    elements.push(
+      <rect
+        key="substrate"
+        x={0}
+        y={surfaceY}
+        width={width}
+        height={60}
+        fill="url(#shphobLotusSurface)"
+        filter="url(#shphobSurfaceShadow)"
+      />
+    );
+
+    // Add subtle texture pattern to base
+    for (let i = 0; i < 20; i++) {
+      elements.push(
+        <line
+          key={`texture-${i}`}
+          x1={i * 20}
+          y1={surfaceY + 5}
+          x2={i * 20 + 10}
+          y2={surfaceY + 55}
+          stroke="rgba(0, 0, 0, 0.1)"
+          strokeWidth="1"
+        />
+      );
+    }
 
     if (showMicrostructure && roughness > 0.3) {
-      // Render micro-pillars
-      const numPillars = Math.floor(20 + roughness * 30);
-      const pillarWidth = 6 - roughness * 2;
-      const pillarHeight = 8 + roughness * 15;
-      const spacing = width / numPillars;
+      // Render premium micro-pillars with 3D effect
+      const numPillars = Math.floor(25 + roughness * 25);
+      const basePillarWidth = 7 - roughness * 2;
+      const basePillarHeight = 10 + roughness * 18;
+      const spacing = (width - 40) / numPillars;
 
+      // Air pockets layer (behind pillars)
+      if (surfaceChemistry === 'superhydrophobic' && !hasDetergent) {
+        for (let i = 1; i < numPillars; i++) {
+          const x = 20 + i * spacing;
+          const h = basePillarHeight * (0.85 + Math.random() * 0.3);
+
+          elements.push(
+            <rect
+              key={`air-${i}`}
+              x={x - spacing + basePillarWidth / 2 + 1}
+              y={surfaceY - h + 3}
+              width={spacing - basePillarWidth - 2}
+              height={h - 5}
+              fill="url(#shphobAirPocket)"
+              filter="url(#shphobAirShimmer)"
+              rx="1"
+            />
+          );
+        }
+
+        // Add shimmer particles in air pockets
+        for (let i = 0; i < 15; i++) {
+          const x = 30 + Math.random() * (width - 60);
+          const y = surfaceY - basePillarHeight * 0.5 + Math.random() * basePillarHeight * 0.3;
+          elements.push(
+            <circle
+              key={`shimmer-${i}`}
+              cx={x}
+              cy={y}
+              r={0.8}
+              fill="rgba(255, 255, 255, 0.6)"
+            />
+          );
+        }
+      }
+
+      // Wetted state (detergent added) - water fills the texture
+      if (hasDetergent) {
+        elements.push(
+          <rect
+            key="wetted-water"
+            x={10}
+            y={surfaceY - basePillarHeight - 5}
+            width={width - 20}
+            height={basePillarHeight + 5}
+            fill="url(#shphobDetergentWater)"
+            rx="2"
+          />
+        );
+      }
+
+      // Render micro-pillars with 3D gradient
       for (let i = 0; i < numPillars; i++) {
         const x = 20 + i * spacing;
-        const h = pillarHeight * (0.8 + Math.random() * 0.4);
+        const h = basePillarHeight * (0.85 + Math.random() * 0.3);
+        const w = basePillarWidth * (0.9 + Math.random() * 0.2);
 
-        bumps.push(
+        // Pillar shadow
+        elements.push(
           <rect
-            key={`pillar-${i}`}
-            x={x - pillarWidth / 2}
-            y={surfaceY - h}
-            width={pillarWidth}
+            key={`pillar-shadow-${i}`}
+            x={x - w / 2 + 1}
+            y={surfaceY - h + 1}
+            width={w}
             height={h}
-            fill={colors.surface}
-            stroke="#475569"
-            strokeWidth={0.5}
+            fill="rgba(0, 0, 0, 0.3)"
+            rx="1"
           />
         );
 
-        // Air pockets (shown between pillars for superhydrophobic)
-        if (surfaceChemistry === 'superhydrophobic' && !hasDetergent && i > 0) {
-          bumps.push(
-            <rect
-              key={`air-${i}`}
-              x={x - spacing + pillarWidth / 2}
-              y={surfaceY - h + 2}
-              width={spacing - pillarWidth}
-              height={h - 4}
-              fill={colors.air}
-              opacity={0.5}
+        // Main pillar body with gradient
+        elements.push(
+          <rect
+            key={`pillar-${i}`}
+            x={x - w / 2}
+            y={surfaceY - h}
+            width={w}
+            height={h}
+            fill="url(#shphobPillarGradient)"
+            stroke="#15803d"
+            strokeWidth={0.5}
+            rx="1"
+          />
+        );
+
+        // Pillar top highlight
+        elements.push(
+          <ellipse
+            key={`pillar-top-${i}`}
+            cx={x}
+            cy={surfaceY - h + 1}
+            rx={w / 2 - 0.5}
+            ry={1.5}
+            fill="url(#shphobPillarTop)"
+          />
+        );
+
+        // Side highlight for 3D effect
+        elements.push(
+          <rect
+            key={`pillar-highlight-${i}`}
+            x={x - w / 2}
+            y={surfaceY - h}
+            width={w * 0.3}
+            height={h}
+            fill="rgba(255, 255, 255, 0.15)"
+            rx="1"
+          />
+        );
+      }
+
+      // Nano-scale bumps on pillar tops (hierarchical structure)
+      if (roughness > 0.5) {
+        for (let i = 0; i < numPillars * 2; i++) {
+          const pillarIdx = Math.floor(i / 2);
+          const x = 20 + pillarIdx * spacing + (i % 2 === 0 ? -1.5 : 1.5);
+          const h = basePillarHeight * (0.85 + (pillarIdx % 3) * 0.1);
+
+          elements.push(
+            <circle
+              key={`nano-${i}`}
+              cx={x}
+              cy={surfaceY - h - 1}
+              r={1}
+              fill="#4ade80"
+              opacity="0.7"
             />
           );
         }
       }
     }
 
-    return (
-      <g>
-        {/* Base surface */}
+    // Surface state label with premium styling
+    const stateText = showMicrostructure
+      ? `Lotus-like Surface (roughness: ${roughness.toFixed(1)})`
+      : surfaceChemistry.charAt(0).toUpperCase() + surfaceChemistry.slice(1);
+
+    elements.push(
+      <g key="label" transform={`translate(200, ${surfaceY + 35})`}>
         <rect
-          x={0}
-          y={surfaceY}
-          width={width}
-          height={60}
-          fill={colors.surface}
+          x="-90"
+          y="-12"
+          width="180"
+          height="20"
+          rx="6"
+          fill="rgba(0, 0, 0, 0.5)"
         />
-        {/* Micro-pillars and air pockets */}
-        {bumps}
-        {/* Surface label */}
-        <text x={200} y={surfaceY + 40} fill={colors.textPrimary} fontSize={11} textAnchor="middle">
-          {showMicrostructure ? `Microstructured Surface (roughness: ${roughness.toFixed(1)})` : surfaceChemistry.charAt(0).toUpperCase() + surfaceChemistry.slice(1)}
+        <text
+          x="0"
+          y="4"
+          fill={colors.textPrimary}
+          fontSize="11"
+          textAnchor="middle"
+          fontWeight="500"
+        >
+          {stateText}
         </text>
       </g>
     );
+
+    // Add hierarchical structure indicator
+    if (showMicrostructure && roughness > 0.5) {
+      elements.push(
+        <g key="hierarchical-label" transform="translate(200, 270)">
+          <text
+            x="0"
+            y="0"
+            fill={colors.textMuted}
+            fontSize="9"
+            textAnchor="middle"
+            fontStyle="italic"
+          >
+            Hierarchical micro + nano texture (like lotus leaf)
+          </text>
+        </g>
+      );
+    }
+
+    return <g>{elements}</g>;
   };
 
   const renderVisualization = (interactive: boolean, showMicrostructure: boolean = false) => {
     const width = 400;
     const height = 300;
+
+    // Determine state color and text
+    const getStateInfo = () => {
+      if (hasDetergent) return { color: colors.error, text: 'Wenzel (Wetted)', icon: '💧' };
+      if (contactAngle > 150) return { color: colors.success, text: 'Cassie-Baxter', icon: '🌿' };
+      if (contactAngle > 90) return { color: colors.warning, text: 'Hydrophobic', icon: '💦' };
+      return { color: colors.error, text: 'Wenzel', icon: '🌊' };
+    };
+
+    const stateInfo = getStateInfo();
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -387,14 +793,25 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{
+            background: 'linear-gradient(180deg, #1e3a5f 0%, #0f2847 40%, #0f172a 100%)',
+            borderRadius: '12px',
+            maxWidth: '500px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
+          }}
         >
-          <defs>
-            <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#2563eb" />
-            </linearGradient>
-          </defs>
+          {/* Premium SVG Definitions */}
+          {renderSVGDefs()}
+
+          {/* Ambient light effect at top */}
+          <ellipse
+            cx={200}
+            cy={-50}
+            rx={250}
+            ry={100}
+            fill="url(#shphobSkyGradient)"
+            opacity="0.3"
+          />
 
           {/* Surface */}
           {renderSurface(showMicrostructure, surfaceRoughness)}
@@ -408,28 +825,90 @@ const SuperhydrophobicRenderer: React.FC<SuperhydrophobicRendererProps> = ({
             showMicrostructure
           )}
 
-          {/* Contact angle meter */}
-          <g transform="translate(320, 30)">
-            <rect x={0} y={0} width={70} height={50} rx={8} fill="rgba(0,0,0,0.5)" />
-            <text x={35} y={18} fill={colors.textMuted} fontSize={10} textAnchor="middle">Contact Angle</text>
-            <text x={35} y={40} fill={contactAngle > 150 ? colors.success : contactAngle > 90 ? colors.warning : colors.error} fontSize={18} fontWeight="bold" textAnchor="middle">
-              {contactAngle.toFixed(0)}
+          {/* Premium Contact Angle Meter */}
+          <g transform="translate(315, 20)">
+            {/* Meter background with gradient border */}
+            <rect
+              x={0}
+              y={0}
+              width={78}
+              height={60}
+              rx={10}
+              fill="rgba(0, 0, 0, 0.7)"
+              stroke={contactAngle > 150 ? colors.success : contactAngle > 90 ? colors.warning : colors.error}
+              strokeWidth="1.5"
+            />
+            {/* Label */}
+            <text x={39} y={16} fill={colors.textMuted} fontSize={9} textAnchor="middle" fontWeight="500">
+              CONTACT ANGLE
+            </text>
+            {/* Value */}
+            <text
+              x={39}
+              y={40}
+              fill={contactAngle > 150 ? colors.success : contactAngle > 90 ? colors.warning : colors.error}
+              fontSize={22}
+              fontWeight="bold"
+              textAnchor="middle"
+            >
+              {contactAngle.toFixed(0)}°
+            </text>
+            {/* Classification */}
+            <text x={39} y={54} fill={colors.textMuted} fontSize={8} textAnchor="middle">
+              {contactAngle > 150 ? 'Superhydrophobic' : contactAngle > 90 ? 'Hydrophobic' : 'Hydrophilic'}
             </text>
           </g>
 
-          {/* State indicator */}
-          <g transform="translate(10, 30)">
-            <rect x={0} y={0} width={100} height={35} rx={8} fill="rgba(0,0,0,0.5)" />
-            <text x={50} y={15} fill={colors.textMuted} fontSize={9} textAnchor="middle">Surface State</text>
-            <text x={50} y={28} fill={colors.accent} fontSize={10} fontWeight="bold" textAnchor="middle">
-              {hasDetergent ? 'Wetted' : contactAngle > 150 ? 'Cassie-Baxter' : contactAngle > 90 ? 'Hydrophobic' : 'Wenzel'}
+          {/* Premium State Indicator */}
+          <g transform="translate(8, 20)">
+            <rect
+              x={0}
+              y={0}
+              width={110}
+              height={48}
+              rx={10}
+              fill="rgba(0, 0, 0, 0.7)"
+              stroke={stateInfo.color}
+              strokeWidth="1.5"
+            />
+            <text x={55} y={14} fill={colors.textMuted} fontSize={8} textAnchor="middle" fontWeight="500">
+              SURFACE STATE
+            </text>
+            <text x={55} y={30} fill={stateInfo.color} fontSize={11} fontWeight="bold" textAnchor="middle">
+              {stateInfo.text}
+            </text>
+            <text x={55} y={43} fill={colors.textMuted} fontSize={8} textAnchor="middle">
+              {hasDetergent ? 'Air pockets collapsed' : contactAngle > 150 ? 'Air pockets trapped' : 'Partial wetting'}
             </text>
           </g>
 
-          {/* Labels */}
-          <text x={20} y={height - 10} fill={colors.textSecondary} fontSize={11}>
-            {hasDetergent ? 'Detergent added - surface tension reduced!' : `Chemistry: ${surfaceChemistry}`}
-          </text>
+          {/* Water behavior indicator */}
+          {interactive && contactAngle > 150 && !hasDetergent && (
+            <g transform="translate(140, 20)">
+              <rect x={0} y={0} width={75} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth="1" />
+              <text x={38} y={11} fill={colors.success} fontSize={8} textAnchor="middle" fontWeight="600">ROLLING</text>
+              <text x={38} y={22} fill={colors.textMuted} fontSize={7} textAnchor="middle">Low adhesion</text>
+            </g>
+          )}
+
+          {/* Chemistry label with icon */}
+          <g transform={`translate(20, ${height - 25})`}>
+            <rect x={0} y={0} width={width - 40} height={20} rx={6} fill="rgba(0, 0, 0, 0.5)" />
+            <text x={10} y={14} fill={colors.textSecondary} fontSize={10}>
+              {hasDetergent
+                ? '⚠️ Detergent added - surface tension reduced, air pockets collapsed!'
+                : `🧪 Surface chemistry: ${surfaceChemistry.charAt(0).toUpperCase() + surfaceChemistry.slice(1)}`}
+            </text>
+          </g>
+
+          {/* Legend for Cassie-Baxter state */}
+          {showMicrostructure && contactAngle > 150 && !hasDetergent && (
+            <g transform="translate(130, 75)">
+              <rect x={0} y={0} width={140} height={18} rx={4} fill="rgba(224, 242, 254, 0.15)" stroke="rgba(224, 242, 254, 0.3)" strokeWidth="0.5" />
+              <circle cx={12} cy={9} r={4} fill="url(#shphobAirPocket)" />
+              <text x={22} y={13} fill="#bae6fd" fontSize={9}>= trapped air pockets</text>
+            </g>
+          )}
         </svg>
 
         {interactive && (

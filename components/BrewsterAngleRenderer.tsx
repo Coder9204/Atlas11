@@ -270,13 +270,13 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 350;
-    const surfaceY = height * 0.6;
+    const width = 500;
+    const height = 400;
+    const surfaceY = height * 0.55;
     const hitPoint = { x: width / 2, y: surfaceY };
 
     // Calculate ray endpoints
-    const rayLength = 120;
+    const rayLength = 140;
     const incidentRad = (incidentAngle * Math.PI) / 180;
     const incidentStart = {
       x: hitPoint.x - rayLength * Math.sin(incidentRad),
@@ -287,16 +287,23 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
       y: hitPoint.y - rayLength * Math.cos(incidentRad),
     };
     const refractedEnd = {
-      x: hitPoint.x + rayLength * 0.8 * Math.sin(refractedAngleRad),
-      y: hitPoint.y + rayLength * 0.8 * Math.cos(refractedAngleRad),
+      x: hitPoint.x + rayLength * 0.85 * Math.sin(refractedAngleRad),
+      y: hitPoint.y + rayLength * 0.85 * Math.cos(refractedAngleRad),
     };
 
-    // Glare meter
-    const glareWidth = 100;
-    const glareHeight = 20;
+    // Glare meter dimensions
+    const glareWidth = 110;
+    const glareHeight = 22;
 
     // Polarization indicator
     const nearBrewster = Math.abs(incidentAngle - brewsterAngle) < 5;
+
+    // Calculate polarization wave positions for animation
+    const waveOffset = (Date.now() / 50) % 360;
+
+    // Light source position
+    const lightSourceX = incidentStart.x - 30;
+    const lightSourceY = incidentStart.y - 30;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -305,168 +312,664 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '16px', maxWidth: '550px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
         >
-          {/* Surface */}
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium sky/air gradient with atmospheric depth */}
+            <linearGradient id="brewSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="25%" stopColor="#0f2744" />
+              <stop offset="50%" stopColor="#162d50" />
+              <stop offset="75%" stopColor="#1a3a5c" />
+              <stop offset="100%" stopColor="#1e4268" />
+            </linearGradient>
+
+            {/* Glass/dielectric surface gradient with realistic refraction look */}
+            <linearGradient id="brewGlassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6b8cae" stopOpacity="0.85" />
+              <stop offset="15%" stopColor="#5a7a9c" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#4a6a8c" stopOpacity="0.92" />
+              <stop offset="70%" stopColor="#3a5a7c" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#2a4a6c" stopOpacity="0.98" />
+            </linearGradient>
+
+            {/* Water surface gradient with deep blue tones */}
+            <linearGradient id="brewWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="20%" stopColor="#2563eb" stopOpacity="0.75" />
+              <stop offset="45%" stopColor="#1d4ed8" stopOpacity="0.82" />
+              <stop offset="70%" stopColor="#1e40af" stopOpacity="0.88" />
+              <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Plastic/acrylic surface gradient */}
+            <linearGradient id="brewPlasticGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a8a29e" stopOpacity="0.75" />
+              <stop offset="25%" stopColor="#8a8580" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#78716c" stopOpacity="0.85" />
+              <stop offset="75%" stopColor="#686460" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#57534e" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Light source radial glow */}
+            <radialGradient id="brewLightSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fde68a" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Incident beam gradient (golden light) */}
+            <linearGradient id="brewIncidentBeam" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="30%" stopColor="#fde68a" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Reflected beam gradient (orange tones) */}
+            <linearGradient id="brewReflectedBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fb923c" />
+              <stop offset="35%" stopColor="#f97316" />
+              <stop offset="65%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+
+            {/* Refracted beam gradient (blue tones for inside medium) */}
+            <linearGradient id="brewRefractedBeam" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* Polarization indicator gradient (green success) */}
+            <linearGradient id="brewPolarizedGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="0" />
+              <stop offset="50%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="100%" stopColor="#34d399" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Polarizer filter gradient */}
+            <linearGradient id="brewPolarizerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.55" />
+              <stop offset="75%" stopColor="#8b5cf6" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#a78bfa" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Glare meter background */}
+            <linearGradient id="brewGlareBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Glare meter fill - high (red/danger) */}
+            <linearGradient id="brewGlareHigh" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Glare meter fill - medium (amber/warning) */}
+            <linearGradient id="brewGlareMedium" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Glare meter fill - low (green/success) */}
+            <linearGradient id="brewGlareLow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Surface interface highlight */}
+            <linearGradient id="brewSurfaceHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+              <stop offset="30%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.5)" />
+              <stop offset="70%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            {/* Light source glow filter */}
+            <filter id="brewLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Beam glow filter */}
+            <filter id="brewBeamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Hit point glow filter */}
+            <filter id="brewHitGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Polarizer glow filter */}
+            <filter id="brewPolarizerGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow filter */}
+            <filter id="brewSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Text shadow filter */}
+            <filter id="brewTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* S-polarization wave pattern */}
+            <pattern id="brewSPolarPattern" x="0" y="0" width="20" height="10" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="5" r="2" fill="#10b981" opacity="0.8" />
+            </pattern>
+
+            {/* P-polarization wave pattern */}
+            <pattern id="brewPPolarPattern" x="0" y="0" width="20" height="10" patternUnits="userSpaceOnUse">
+              <line x1="5" y1="0" x2="15" y2="10" stroke="#f59e0b" strokeWidth="1.5" opacity="0.8" />
+            </pattern>
+          </defs>
+
+          {/* === BACKGROUND === */}
+          {/* Sky/air region above surface */}
+          <rect x="0" y="0" width={width} height={surfaceY} fill="url(#brewSkyGradient)" />
+
+          {/* Subtle grid pattern for depth */}
+          <pattern id="brewGridPattern" width="25" height="25" patternUnits="userSpaceOnUse">
+            <rect width="25" height="25" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+          <rect x="0" y="0" width={width} height={surfaceY} fill="url(#brewGridPattern)" opacity="0.5" />
+
+          {/* === DIELECTRIC SURFACE (Glass/Water/Plastic) === */}
           <rect
             x={0}
             y={surfaceY}
             width={width}
             height={height - surfaceY}
-            fill={material === 'water' ? 'rgba(59, 130, 246, 0.5)' : material === 'glass' ? 'rgba(148, 163, 184, 0.6)' : 'rgba(168, 162, 158, 0.5)'}
+            fill={material === 'water' ? 'url(#brewWaterGradient)' : material === 'glass' ? 'url(#brewGlassGradient)' : 'url(#brewPlasticGradient)'}
           />
+
+          {/* Surface interface line with highlight */}
           <line
             x1={0}
             y1={surfaceY}
             x2={width}
             y2={surfaceY}
-            stroke={colors.surface}
-            strokeWidth={3}
-          />
-
-          {/* Normal line (dashed) */}
-          <line
-            x1={hitPoint.x}
-            y1={surfaceY - 100}
-            x2={hitPoint.x}
-            y2={surfaceY + 60}
-            stroke="rgba(255,255,255,0.3)"
-            strokeWidth={1}
-            strokeDasharray="5,5"
-          />
-
-          {/* Incident ray */}
-          <line
-            x1={incidentStart.x}
-            y1={incidentStart.y}
-            x2={hitPoint.x}
-            y2={hitPoint.y}
-            stroke={colors.lightRay}
+            stroke="url(#brewSurfaceHighlight)"
             strokeWidth={4}
           />
+          <line
+            x1={0}
+            y1={surfaceY + 2}
+            x2={width}
+            y2={surfaceY + 2}
+            stroke="rgba(0,0,0,0.3)"
+            strokeWidth={1}
+          />
+
+          {/* Internal refraction lines (subtle caustics effect) */}
+          {[1, 2, 3].map((i) => (
+            <line
+              key={`caustic-${i}`}
+              x1={hitPoint.x + (i * 15)}
+              y1={surfaceY + 10}
+              x2={hitPoint.x + (i * 25) + 40 * Math.sin(refractedAngleRad)}
+              y2={height - 20}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth={1}
+              strokeDasharray="4,8"
+            />
+          ))}
+
+          {/* === NORMAL LINE (dashed) === */}
+          <line
+            x1={hitPoint.x}
+            y1={surfaceY - 120}
+            x2={hitPoint.x}
+            y2={surfaceY + 80}
+            stroke="rgba(255,255,255,0.25)"
+            strokeWidth={1.5}
+            strokeDasharray="6,4"
+          />
+          <text
+            x={hitPoint.x + 8}
+            y={surfaceY - 105}
+            fill="rgba(255,255,255,0.5)"
+            fontSize={10}
+            fontStyle="italic"
+          >
+            normal
+          </text>
+
+          {/* === LIGHT SOURCE === */}
+          <g filter="url(#brewLightGlow)">
+            <circle
+              cx={lightSourceX}
+              cy={lightSourceY}
+              r={18}
+              fill="url(#brewLightSourceGlow)"
+            />
+            <circle
+              cx={lightSourceX}
+              cy={lightSourceY}
+              r={8}
+              fill="#fef3c7"
+            />
+          </g>
+          {/* Light source rays (emanating) */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+            <line
+              key={`ray-${angle}`}
+              x1={lightSourceX + 20 * Math.cos((angle * Math.PI) / 180)}
+              y1={lightSourceY + 20 * Math.sin((angle * Math.PI) / 180)}
+              x2={lightSourceX + 28 * Math.cos((angle * Math.PI) / 180)}
+              y2={lightSourceY + 28 * Math.sin((angle * Math.PI) / 180)}
+              stroke="#fbbf24"
+              strokeWidth={2}
+              strokeLinecap="round"
+              opacity={0.6}
+            />
+          ))}
+
+          {/* === INCIDENT RAY === */}
+          <g filter="url(#brewBeamGlow)">
+            {/* Main beam */}
+            <line
+              x1={incidentStart.x}
+              y1={incidentStart.y}
+              x2={hitPoint.x}
+              y2={hitPoint.y}
+              stroke="url(#brewIncidentBeam)"
+              strokeWidth={6}
+              strokeLinecap="round"
+            />
+            {/* Beam highlight */}
+            <line
+              x1={incidentStart.x + 1}
+              y1={incidentStart.y + 1}
+              x2={hitPoint.x}
+              y2={hitPoint.y}
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth={2}
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Incident ray arrowhead */}
           <polygon
-            points={`${hitPoint.x},${hitPoint.y} ${hitPoint.x - 8},${hitPoint.y - 16} ${hitPoint.x + 8},${hitPoint.y - 16}`}
-            fill={colors.lightRay}
+            points={`${hitPoint.x},${hitPoint.y} ${hitPoint.x - 10},${hitPoint.y - 20} ${hitPoint.x + 10},${hitPoint.y - 20}`}
+            fill="#fbbf24"
+            filter="url(#brewBeamGlow)"
             transform={`rotate(${incidentAngle}, ${hitPoint.x}, ${hitPoint.y})`}
           />
 
-          {/* Reflected ray with intensity based on glare */}
-          <line
-            x1={hitPoint.x}
-            y1={hitPoint.y}
-            x2={reflectedEnd.x}
-            y2={reflectedEnd.y}
-            stroke={colors.reflectedRay}
-            strokeWidth={4}
+          {/* Polarization waves on incident beam (unpolarized - both S and P) */}
+          {[0.25, 0.5, 0.75].map((t, i) => {
+            const wx = incidentStart.x + t * (hitPoint.x - incidentStart.x);
+            const wy = incidentStart.y + t * (hitPoint.y - incidentStart.y);
+            const offset = Math.sin((waveOffset + i * 120) * Math.PI / 180) * 4;
+            return (
+              <g key={`inc-wave-${i}`} transform={`rotate(${incidentAngle}, ${wx}, ${wy})`}>
+                {/* S-polarization (perpendicular - circles) */}
+                <circle
+                  cx={wx + offset}
+                  cy={wy}
+                  r={3}
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth={1.5}
+                  opacity={0.7}
+                />
+                {/* P-polarization (parallel - lines) */}
+                <line
+                  x1={wx - 4}
+                  y1={wy + offset}
+                  x2={wx + 4}
+                  y2={wy + offset}
+                  stroke="#f59e0b"
+                  strokeWidth={1.5}
+                  opacity={0.7}
+                />
+              </g>
+            );
+          })}
+
+          {/* === HIT POINT GLOW === */}
+          <g filter="url(#brewHitGlow)">
+            <circle
+              cx={hitPoint.x}
+              cy={hitPoint.y}
+              r={10}
+              fill={nearBrewster ? '#10b981' : '#fbbf24'}
+              opacity={0.6}
+            />
+            <circle
+              cx={hitPoint.x}
+              cy={hitPoint.y}
+              r={5}
+              fill="#fff"
+              opacity={0.8}
+            />
+          </g>
+
+          {/* === REFLECTED RAY === */}
+          <g filter="url(#brewBeamGlow)" opacity={0.3 + glareIntensity * 0.7}>
+            {/* Main beam */}
+            <line
+              x1={hitPoint.x}
+              y1={hitPoint.y}
+              x2={reflectedEnd.x}
+              y2={reflectedEnd.y}
+              stroke="url(#brewReflectedBeam)"
+              strokeWidth={5}
+              strokeLinecap="round"
+            />
+            {/* Beam highlight */}
+            <line
+              x1={hitPoint.x}
+              y1={hitPoint.y}
+              x2={reflectedEnd.x - 1}
+              y2={reflectedEnd.y + 1}
+              stroke="rgba(255,255,255,0.3)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Polarization indicator on reflected ray (S-polarized at Brewster) */}
+          {[0.3, 0.55, 0.8].map((t, i) => {
+            const wx = hitPoint.x + t * (reflectedEnd.x - hitPoint.x);
+            const wy = hitPoint.y + t * (reflectedEnd.y - hitPoint.y);
+            const offset = Math.sin((waveOffset + i * 120) * Math.PI / 180) * 4;
+            // Show mostly S-polarization when near Brewster (p-polarized is transmitted)
+            const sPolarIntensity = nearBrewster ? 1 : 0.5;
+            const pPolarIntensity = nearBrewster ? 0.1 : 0.5;
+            return (
+              <g key={`ref-wave-${i}`} transform={`rotate(${-incidentAngle}, ${wx}, ${wy})`} opacity={0.3 + glareIntensity * 0.7}>
+                {/* S-polarization (perpendicular - circles) - dominant at Brewster */}
+                <circle
+                  cx={wx + offset}
+                  cy={wy}
+                  r={3}
+                  fill="none"
+                  stroke="#10b981"
+                  strokeWidth={1.5}
+                  opacity={sPolarIntensity * 0.8}
+                />
+                {/* P-polarization (parallel - lines) - minimal at Brewster */}
+                <line
+                  x1={wx - 4}
+                  y1={wy + offset}
+                  x2={wx + 4}
+                  y2={wy + offset}
+                  stroke="#f59e0b"
+                  strokeWidth={1.5}
+                  opacity={pPolarIntensity * 0.6}
+                />
+              </g>
+            );
+          })}
+
+          {/* Reflected ray arrowhead */}
+          <polygon
+            points={`${reflectedEnd.x},${reflectedEnd.y} ${reflectedEnd.x - 10},${reflectedEnd.y + 8} ${reflectedEnd.x + 4},${reflectedEnd.y + 14}`}
+            fill="#f97316"
             opacity={0.3 + glareIntensity * 0.7}
+            filter="url(#brewBeamGlow)"
+            transform={`rotate(${-incidentAngle + 90}, ${reflectedEnd.x}, ${reflectedEnd.y})`}
           />
 
-          {/* Refracted ray */}
-          <line
-            x1={hitPoint.x}
-            y1={hitPoint.y}
-            x2={refractedEnd.x}
-            y2={refractedEnd.y}
-            stroke={colors.refractedRay}
-            strokeWidth={4}
+          {/* === REFRACTED RAY === */}
+          <g filter="url(#brewBeamGlow)" opacity={0.85}>
+            {/* Main beam */}
+            <line
+              x1={hitPoint.x}
+              y1={hitPoint.y}
+              x2={refractedEnd.x}
+              y2={refractedEnd.y}
+              stroke="url(#brewRefractedBeam)"
+              strokeWidth={5}
+              strokeLinecap="round"
+            />
+            {/* Beam highlight */}
+            <line
+              x1={hitPoint.x + 1}
+              y1={hitPoint.y + 1}
+              x2={refractedEnd.x}
+              y2={refractedEnd.y}
+              stroke="rgba(255,255,255,0.25)"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+            />
+          </g>
+
+          {/* Refracted ray arrowhead */}
+          <polygon
+            points={`${refractedEnd.x},${refractedEnd.y} ${refractedEnd.x - 8},${refractedEnd.y - 10} ${refractedEnd.x + 8},${refractedEnd.y - 10}`}
+            fill="#3b82f6"
+            filter="url(#brewBeamGlow)"
+            transform={`rotate(${refractedAngle}, ${refractedEnd.x}, ${refractedEnd.y})`}
+          />
+
+          {/* === BREWSTER ANGLE MARKER === */}
+          <g opacity={0.8}>
+            <line
+              x1={hitPoint.x}
+              y1={hitPoint.y}
+              x2={hitPoint.x + 60 * Math.sin((brewsterAngle * Math.PI) / 180)}
+              y2={hitPoint.y - 60 * Math.cos((brewsterAngle * Math.PI) / 180)}
+              stroke={colors.success}
+              strokeWidth={2.5}
+              strokeDasharray="4,4"
+            />
+            <circle
+              cx={hitPoint.x + 65 * Math.sin((brewsterAngle * Math.PI) / 180)}
+              cy={hitPoint.y - 65 * Math.cos((brewsterAngle * Math.PI) / 180)}
+              r={4}
+              fill={colors.success}
+            />
+            <text
+              x={hitPoint.x + 78 * Math.sin((brewsterAngle * Math.PI) / 180)}
+              y={hitPoint.y - 72 * Math.cos((brewsterAngle * Math.PI) / 180)}
+              fill={colors.success}
+              fontSize={11}
+              fontWeight="bold"
+              filter="url(#brewTextGlow)"
+            >
+              Brewster {brewsterAngle.toFixed(1)}°
+            </text>
+          </g>
+
+          {/* === ANGLE ARC === */}
+          <path
+            d={`M ${hitPoint.x} ${hitPoint.y - 50} A 50 50 0 0 1 ${hitPoint.x + 50 * Math.sin(incidentRad)} ${hitPoint.y - 50 * Math.cos(incidentRad)}`}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth={2.5}
             opacity={0.8}
           />
+          <text
+            x={hitPoint.x + 62 * Math.sin(incidentRad / 2)}
+            y={hitPoint.y - 60 * Math.cos(incidentRad / 2)}
+            fill="#fbbf24"
+            fontSize={14}
+            fontWeight="bold"
+            filter="url(#brewTextGlow)"
+          >
+            {incidentAngle.toFixed(0)}°
+          </text>
 
-          {/* Polarization indicators on reflected ray */}
-          {nearBrewster && (
-            <g>
-              <circle cx={reflectedEnd.x - 20} cy={reflectedEnd.y - 20} r={8} fill="none" stroke={colors.polarized} strokeWidth={2} />
-              <line x1={reflectedEnd.x - 28} y1={reflectedEnd.y - 20} x2={reflectedEnd.x - 12} y2={reflectedEnd.y - 20} stroke={colors.polarized} strokeWidth={2} />
-            </g>
-          )}
-
-          {/* Polarizer filter (if enabled) */}
+          {/* === POLARIZER FILTER (if enabled) === */}
           {showPolarizer && (
-            <g transform={`translate(${reflectedEnd.x + 20}, ${reflectedEnd.y - 40})`}>
+            <g transform={`translate(${reflectedEnd.x + 25}, ${reflectedEnd.y - 35})`} filter="url(#brewPolarizerGlow)">
+              {/* Filter frame */}
+              <rect
+                x={-25}
+                y={-35}
+                width={50}
+                height={70}
+                fill="url(#brewPolarizerGradient)"
+                stroke={colors.accent}
+                strokeWidth={2}
+                rx={6}
+              />
+              {/* Glass/filter interior */}
               <rect
                 x={-20}
                 y={-30}
                 width={40}
                 height={60}
-                fill="rgba(139, 92, 246, 0.3)"
-                stroke={colors.accent}
-                strokeWidth={2}
+                fill="rgba(139, 92, 246, 0.15)"
                 rx={4}
               />
+              {/* Polarization axis line */}
               <line
                 x1={0}
-                y1={-25}
+                y1={-26}
                 x2={0}
-                y2={25}
+                y2={26}
                 stroke={colors.accent}
-                strokeWidth={3}
+                strokeWidth={4}
+                strokeLinecap="round"
                 transform={`rotate(${polarizerAngle}, 0, 0)`}
               />
-              <text x={0} y={45} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Polarizer</text>
+              {/* Polarization grid lines */}
+              {[-15, -8, 0, 8, 15].map((offset) => (
+                <line
+                  key={`grid-${offset}`}
+                  x1={offset}
+                  y1={-26}
+                  x2={offset}
+                  y2={26}
+                  stroke={colors.accent}
+                  strokeWidth={1}
+                  opacity={0.3}
+                  transform={`rotate(${polarizerAngle}, 0, 0)`}
+                />
+              ))}
+              {/* Label */}
+              <text x={0} y={50} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">
+                Polarizer
+              </text>
+              <text x={0} y={62} fill={colors.textMuted} fontSize={9} textAnchor="middle">
+                {polarizerAngle}°
+              </text>
             </g>
           )}
 
-          {/* Brewster angle marker */}
-          <g>
-            <line
-              x1={hitPoint.x}
-              y1={hitPoint.y}
-              x2={hitPoint.x + 50 * Math.sin((brewsterAngle * Math.PI) / 180)}
-              y2={hitPoint.y - 50 * Math.cos((brewsterAngle * Math.PI) / 180)}
-              stroke={colors.success}
-              strokeWidth={2}
-              strokeDasharray="3,3"
-              opacity={0.7}
-            />
-            <text
-              x={hitPoint.x + 55 * Math.sin((brewsterAngle * Math.PI) / 180)}
-              y={hitPoint.y - 55 * Math.cos((brewsterAngle * Math.PI) / 180)}
-              fill={colors.success}
-              fontSize={10}
-            >
-              Brewster
+          {/* === LABELS PANEL === */}
+          <g filter="url(#brewSoftShadow)">
+            <rect x={12} y={12} width={165} height={55} rx={8} fill="rgba(15, 23, 42, 0.85)" />
+            <text x={22} y={32} fill={colors.textPrimary} fontSize={13} fontWeight="bold">
+              {currentMaterial.name}
+            </text>
+            <text x={22} y={48} fill={colors.textSecondary} fontSize={11}>
+              n = {n.toFixed(2)} | Brewster: {brewsterAngle.toFixed(1)}°
             </text>
           </g>
 
-          {/* Angle arc */}
-          <path
-            d={`M ${hitPoint.x} ${hitPoint.y - 40} A 40 40 0 0 1 ${hitPoint.x + 40 * Math.sin(incidentRad)} ${hitPoint.y - 40 * Math.cos(incidentRad)}`}
-            fill="none"
-            stroke={colors.lightRay}
-            strokeWidth={2}
-          />
-          <text
-            x={hitPoint.x + 50 * Math.sin(incidentRad / 2)}
-            y={hitPoint.y - 50 * Math.cos(incidentRad / 2)}
-            fill={colors.lightRay}
-            fontSize={12}
-          >
-            {incidentAngle.toFixed(0)}°
-          </text>
-
-          {/* Labels */}
-          <text x={20} y={25} fill={colors.textPrimary} fontSize={12}>
-            Material: {currentMaterial.name} (n = {n})
-          </text>
-          <text x={20} y={42} fill={colors.textSecondary} fontSize={11}>
-            Brewster angle: {brewsterAngle.toFixed(1)}°
-          </text>
-
-          {/* Glare intensity meter */}
-          <g transform={`translate(${width - glareWidth - 20}, 20)`}>
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={11}>Glare Intensity</text>
-            <rect x={0} y={8} width={glareWidth} height={glareHeight} fill="rgba(255,255,255,0.1)" rx={4} />
-            <rect x={0} y={8} width={glareWidth * glareIntensity} height={glareHeight} fill={glareIntensity > 0.5 ? colors.error : glareIntensity > 0.2 ? colors.warning : colors.success} rx={4} />
-            <text x={glareWidth / 2} y={23} fill={colors.textPrimary} fontSize={10} textAnchor="middle">
+          {/* === GLARE INTENSITY METER === */}
+          <g transform={`translate(${width - glareWidth - 22}, 14)`} filter="url(#brewSoftShadow)">
+            <rect x={-8} y={-6} width={glareWidth + 16} height={50} rx={8} fill="rgba(15, 23, 42, 0.85)" />
+            <text x={glareWidth / 2} y={8} fill={colors.textSecondary} fontSize={11} textAnchor="middle" fontWeight="600">
+              Glare Intensity
+            </text>
+            <rect x={0} y={16} width={glareWidth} height={glareHeight} fill="url(#brewGlareBg)" rx={6} />
+            <rect
+              x={0}
+              y={16}
+              width={glareWidth * glareIntensity}
+              height={glareHeight}
+              fill={glareIntensity > 0.5 ? 'url(#brewGlareHigh)' : glareIntensity > 0.2 ? 'url(#brewGlareMedium)' : 'url(#brewGlareLow)'}
+              rx={6}
+            />
+            <text x={glareWidth / 2} y={32} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
               {(glareIntensity * 100).toFixed(0)}%
             </text>
           </g>
 
-          {/* Status indicator */}
+          {/* === RAY LABELS === */}
+          <text
+            x={incidentStart.x + 20}
+            y={incidentStart.y + 5}
+            fill="#fbbf24"
+            fontSize={10}
+            fontWeight="600"
+          >
+            Incident
+          </text>
+          <text
+            x={reflectedEnd.x - 50}
+            y={reflectedEnd.y + 5}
+            fill="#f97316"
+            fontSize={10}
+            fontWeight="600"
+            opacity={0.3 + glareIntensity * 0.7}
+          >
+            Reflected
+          </text>
+          <text
+            x={refractedEnd.x + 8}
+            y={refractedEnd.y - 5}
+            fill="#3b82f6"
+            fontSize={10}
+            fontWeight="600"
+          >
+            Refracted
+          </text>
+
+          {/* === POLARIZATION LEGEND === */}
+          <g transform={`translate(${width - 100}, ${height - 55})`}>
+            <rect x={-8} y={-8} width={96} height={52} rx={6} fill="rgba(15, 23, 42, 0.8)" />
+            <text x={0} y={6} fill={colors.textSecondary} fontSize={9} fontWeight="600">Polarization:</text>
+            <circle cx={8} cy={20} r={4} fill="none" stroke="#10b981" strokeWidth={1.5} />
+            <text x={18} y={24} fill="#10b981" fontSize={9}>S (perpendicular)</text>
+            <line x1={4} y1={35} x2={12} y2={35} stroke="#f59e0b" strokeWidth={1.5} />
+            <text x={18} y={38} fill="#f59e0b" fontSize={9}>P (parallel)</text>
+          </g>
+
+          {/* === STATUS INDICATOR (Near Brewster) === */}
           {nearBrewster && (
-            <g transform={`translate(${width / 2}, ${height - 30})`}>
-              <rect x={-80} y={-12} width={160} height={24} fill="rgba(16, 185, 129, 0.3)" rx={12} />
-              <text x={0} y={5} fill={colors.success} fontSize={12} textAnchor="middle">
+            <g transform={`translate(${width / 2}, ${height - 28})`}>
+              <rect x={-95} y={-14} width={190} height={28} fill="rgba(16, 185, 129, 0.25)" rx={14} stroke={colors.success} strokeWidth={1.5} />
+              <circle cx={-75} cy={0} r={5} fill={colors.success}>
+                <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <text x={0} y={5} fill={colors.success} fontSize={13} textAnchor="middle" fontWeight="bold">
                 Near Brewster Angle!
               </text>
             </g>
@@ -479,13 +982,19 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
                 padding: '12px 24px',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating
+                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
               {isAnimating ? 'Stop' : 'Sweep Angles'}
@@ -494,13 +1003,14 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => { setIncidentAngle(brewsterAngle); setIsAnimating(false); }}
               style={{
                 padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.success}`,
-                background: 'transparent',
+                borderRadius: '10px',
+                border: `2px solid ${colors.success}`,
+                background: 'rgba(16, 185, 129, 0.1)',
                 color: colors.success,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Go to Brewster
@@ -509,13 +1019,14 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
               onClick={() => { setIncidentAngle(45); setPolarizerAngle(0); setMaterial('glass'); }}
               style={{
                 padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                borderRadius: '10px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(139, 92, 246, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

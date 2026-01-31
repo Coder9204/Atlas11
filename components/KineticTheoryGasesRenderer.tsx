@@ -665,34 +665,148 @@ export default function KineticTheoryGasesRenderer({
 
             {/* Premium card */}
             <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-              {/* Animated molecular motion preview */}
-              <div className="relative h-48 bg-gray-900/50 rounded-xl overflow-hidden mb-4">
-                <svg className="w-full h-full">
-                  {/* Animated molecules */}
+              {/* Premium animated molecular motion preview */}
+              <div className="relative h-48 rounded-xl overflow-hidden mb-4" style={{ boxShadow: 'inset 0 0 40px rgba(0,0,0,0.6)' }}>
+                <svg className="w-full h-full" viewBox="0 0 400 192">
+                  <defs>
+                    {/* Premium background gradient */}
+                    <linearGradient id="ktgHookBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#030712" />
+                      <stop offset="30%" stopColor="#0a0f1a" />
+                      <stop offset="70%" stopColor="#111827" />
+                      <stop offset="100%" stopColor="#030712" />
+                    </linearGradient>
+
+                    {/* Container frame gradient */}
+                    <linearGradient id="ktgHookFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#f97316" stopOpacity="0.5" />
+                      <stop offset="25%" stopColor="#ea580c" stopOpacity="0.7" />
+                      <stop offset="50%" stopColor="#c2410c" stopOpacity="0.8" />
+                      <stop offset="75%" stopColor="#ea580c" stopOpacity="0.7" />
+                      <stop offset="100%" stopColor="#f97316" stopOpacity="0.5" />
+                    </linearGradient>
+
+                    {/* Glass reflection */}
+                    <linearGradient id="ktgHookGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.08" />
+                      <stop offset="50%" stopColor="#f97316" stopOpacity="0.02" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0.15" />
+                    </linearGradient>
+
+                    {/* 3D molecule gradients */}
+                    <radialGradient id="ktgHookBlue" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#93c5fd" />
+                      <stop offset="40%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.9" />
+                    </radialGradient>
+
+                    <radialGradient id="ktgHookGreen" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#86efac" />
+                      <stop offset="40%" stopColor="#22c55e" />
+                      <stop offset="100%" stopColor="#15803d" stopOpacity="0.9" />
+                    </radialGradient>
+
+                    <radialGradient id="ktgHookOrange" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fed7aa" />
+                      <stop offset="40%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#b45309" stopOpacity="0.9" />
+                    </radialGradient>
+
+                    <radialGradient id="ktgHookRed" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fecaca" />
+                      <stop offset="40%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.9" />
+                    </radialGradient>
+
+                    {/* Glow filter */}
+                    <filter id="ktgHookGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Hot glow filter */}
+                    <filter id="ktgHookHotGlow" x="-150%" y="-150%" width="400%" height="400%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Background */}
+                  <rect width="400" height="192" fill="url(#ktgHookBg)" />
+
+                  {/* Subtle grid */}
+                  <pattern id="ktgHookGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+                  </pattern>
+                  <rect x="8" y="8" width="384" height="176" fill="url(#ktgHookGrid)" />
+
+                  {/* Glass effect */}
+                  <rect x="8" y="8" width="384" height="176" fill="url(#ktgHookGlass)" rx="6" />
+
+                  {/* Container frame */}
+                  <rect x="4" y="4" width="392" height="184" fill="none" stroke="url(#ktgHookFrame)" strokeWidth="4" rx="8" />
+                  <rect x="6" y="6" width="388" height="180" fill="none" stroke="#fbbf24" strokeWidth="0.5" strokeOpacity="0.3" rx="7" />
+
+                  {/* Animated premium molecules */}
                   {[...Array(30)].map((_, i) => {
                     const duration = 2 + Math.random() * 2;
                     const delay = Math.random() * 2;
-                    const startX = 50 + Math.random() * 300;
-                    const startY = 20 + Math.random() * 150;
+                    const startX = 30 + Math.random() * 340;
+                    const startY = 25 + Math.random() * 140;
+                    const gradients = ['ktgHookBlue', 'ktgHookGreen', 'ktgHookOrange', 'ktgHookRed'];
+                    const gradientId = gradients[Math.floor(Math.random() * 4)];
+                    const isHot = gradientId === 'ktgHookRed';
+
                     return (
                       <g key={i}>
+                        {/* 3D molecule with glow */}
                         <circle
                           cx={startX}
                           cy={startY}
-                          r={4}
-                          fill={['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'][Math.floor(Math.random() * 4)]}
-                          opacity={0.8}
+                          r={5}
+                          fill={`url(#${gradientId})`}
+                          filter={isHot ? 'url(#ktgHookHotGlow)' : 'url(#ktgHookGlow)'}
                         >
                           <animate
                             attributeName="cx"
-                            values={`${startX};${50 + Math.random() * 300};${50 + Math.random() * 300}`}
+                            values={`${startX};${30 + Math.random() * 340};${30 + Math.random() * 340}`}
                             dur={`${duration}s`}
                             begin={`${delay}s`}
                             repeatCount="indefinite"
                           />
                           <animate
                             attributeName="cy"
-                            values={`${startY};${20 + Math.random() * 150};${20 + Math.random() * 150}`}
+                            values={`${startY};${25 + Math.random() * 140};${25 + Math.random() * 140}`}
+                            dur={`${duration}s`}
+                            begin={`${delay}s`}
+                            repeatCount="indefinite"
+                          />
+                        </circle>
+                        {/* Highlight reflection */}
+                        <circle
+                          cx={startX - 1.5}
+                          cy={startY - 1.5}
+                          r={1.8}
+                          fill="white"
+                          opacity="0.4"
+                        >
+                          <animate
+                            attributeName="cx"
+                            values={`${startX - 1.5};${28.5 + Math.random() * 340};${28.5 + Math.random() * 340}`}
+                            dur={`${duration}s`}
+                            begin={`${delay}s`}
+                            repeatCount="indefinite"
+                          />
+                          <animate
+                            attributeName="cy"
+                            values={`${startY - 1.5};${23.5 + Math.random() * 140};${23.5 + Math.random() * 140}`}
                             dur={`${duration}s`}
                             begin={`${delay}s`}
                             repeatCount="indefinite"
@@ -701,10 +815,14 @@ export default function KineticTheoryGasesRenderer({
                       </g>
                     );
                   })}
+
+                  {/* Temperature label */}
+                  <rect x="165" y="165" width="70" height="20" rx="4" fill="#111827" fillOpacity="0.9" />
+                  <text x="200" y="179" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold" fontFamily="monospace">300 K</text>
                 </svg>
 
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
-                  <p className="text-sm text-gray-400">Air molecules at room temperature</p>
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-center">
+                  <p className="text-xs text-gray-400 bg-gray-900/80 px-3 py-1 rounded-full backdrop-blur-sm">Air molecules at room temperature</p>
                 </div>
               </div>
 
@@ -744,31 +862,163 @@ export default function KineticTheoryGasesRenderer({
                 how will the <span className="text-blue-400 font-bold">average molecular speed</span> change?
               </p>
 
-              {/* Visualization */}
-              <div className="relative h-40 bg-gray-900/50 rounded-lg mb-4">
-                <svg className="w-full h-full" viewBox="0 0 400 160">
-                  {/* Before container */}
-                  <rect x="30" y="30" width="140" height="100" rx="8" fill="none" stroke="#3b82f6" strokeWidth="2"/>
-                  <text x="100" y="20" textAnchor="middle" fill="#9ca3af" fontSize="12">T = 300 K</text>
-                  {[...Array(15)].map((_, i) => (
-                    <circle key={i} cx={50 + (i % 5) * 25} cy={50 + Math.floor(i / 5) * 25} r="4" fill="#3b82f6" opacity="0.8">
-                      <animate attributeName="cx" values={`${50 + (i % 5) * 25};${55 + (i % 5) * 25};${50 + (i % 5) * 25}`} dur="0.5s" repeatCount="indefinite"/>
-                    </circle>
-                  ))}
-
-                  {/* Arrow */}
-                  <path d="M190 80 L210 80" stroke="#f59e0b" strokeWidth="3" markerEnd="url(#arrowhead)"/>
-                  <text x="200" y="70" textAnchor="middle" fill="#f59e0b" fontSize="12">2x Temp</text>
+              {/* Premium Visualization */}
+              <div className="relative h-44 rounded-xl overflow-hidden mb-4" style={{ boxShadow: 'inset 0 0 30px rgba(0,0,0,0.5)' }}>
+                <svg className="w-full h-full" viewBox="0 0 400 176">
                   <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+                    {/* Background gradient */}
+                    <linearGradient id="ktgPredictBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#030712" />
+                      <stop offset="50%" stopColor="#0a0f1a" />
+                      <stop offset="100%" stopColor="#030712" />
+                    </linearGradient>
+
+                    {/* Cold container frame (blue) */}
+                    <linearGradient id="ktgColdFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+                      <stop offset="30%" stopColor="#2563eb" stopOpacity="0.8" />
+                      <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
+                    </linearGradient>
+
+                    {/* Hot container frame (red) */}
+                    <linearGradient id="ktgHotFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+                      <stop offset="30%" stopColor="#dc2626" stopOpacity="0.8" />
+                      <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity="0.6" />
+                    </linearGradient>
+
+                    {/* Glass effect */}
+                    <linearGradient id="ktgPredictGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.06" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
+                    </linearGradient>
+
+                    {/* Cold molecule 3D */}
+                    <radialGradient id="ktgPredictColdMol" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#93c5fd" />
+                      <stop offset="50%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    {/* Arrow gradient */}
+                    <linearGradient id="ktgPredictArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f59e0b" />
+                      <stop offset="50%" stopColor="#fbbf24" />
+                      <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+
+                    {/* Glow filter */}
+                    <filter id="ktgPredictGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="1.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Question mark glow */}
+                    <filter id="ktgQuestionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Arrow marker */}
+                    <marker id="ktgPredictArrowhead" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+                      <polygon points="0 0, 12 4, 0 8" fill="#fbbf24" />
                     </marker>
                   </defs>
 
-                  {/* After container */}
-                  <rect x="230" y="30" width="140" height="100" rx="8" fill="none" stroke="#ef4444" strokeWidth="2"/>
-                  <text x="300" y="20" textAnchor="middle" fill="#9ca3af" fontSize="12">T = 600 K</text>
-                  <text x="300" y="85" textAnchor="middle" fill="#9ca3af" fontSize="24">?</text>
+                  {/* Background */}
+                  <rect width="400" height="176" fill="url(#ktgPredictBg)" />
+
+                  {/* Grid pattern */}
+                  <pattern id="ktgPredictGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+                  </pattern>
+                  <rect width="400" height="176" fill="url(#ktgPredictGrid)" />
+
+                  {/* Cold container (left) */}
+                  <g transform="translate(20, 30)">
+                    {/* Container background */}
+                    <rect x="0" y="0" width="150" height="110" rx="8" fill="#0a0f1a" />
+                    <rect x="0" y="0" width="150" height="110" rx="8" fill="url(#ktgPredictGlass)" />
+
+                    {/* Metallic frame */}
+                    <rect x="0" y="0" width="150" height="110" rx="8" fill="none" stroke="url(#ktgColdFrame)" strokeWidth="4" />
+                    <rect x="2" y="2" width="146" height="106" rx="6" fill="none" stroke="#60a5fa" strokeWidth="0.5" strokeOpacity="0.3" />
+
+                    {/* Temperature label */}
+                    <rect x="45" y="-18" width="60" height="18" rx="4" fill="#111827" stroke="#3b82f6" strokeWidth="1" />
+                    <text x="75" y="-5" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="bold" fontFamily="monospace">300 K</text>
+
+                    {/* Premium molecules with animation */}
+                    {[...Array(15)].map((_, i) => {
+                      const baseX = 20 + (i % 5) * 25;
+                      const baseY = 20 + Math.floor(i / 5) * 30;
+                      return (
+                        <g key={i}>
+                          <circle
+                            cx={baseX}
+                            cy={baseY}
+                            r="6"
+                            fill="url(#ktgPredictColdMol)"
+                            filter="url(#ktgPredictGlow)"
+                          >
+                            <animate attributeName="cx" values={`${baseX};${baseX + 4};${baseX}`} dur="0.5s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values={`${baseY};${baseY - 2};${baseY}`} dur="0.4s" repeatCount="indefinite" />
+                          </circle>
+                          <circle cx={baseX - 2} cy={baseY - 2} r="2" fill="white" opacity="0.35">
+                            <animate attributeName="cx" values={`${baseX - 2};${baseX + 2};${baseX - 2}`} dur="0.5s" repeatCount="indefinite" />
+                            <animate attributeName="cy" values={`${baseY - 2};${baseY - 4};${baseY - 2}`} dur="0.4s" repeatCount="indefinite" />
+                          </circle>
+                        </g>
+                      );
+                    })}
+                  </g>
+
+                  {/* Arrow section */}
+                  <g transform="translate(175, 70)">
+                    <rect x="0" y="-12" width="50" height="24" rx="4" fill="#111827" fillOpacity="0.8" />
+                    <text x="25" y="-1" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold">2x TEMP</text>
+
+                    <line x1="0" y1="25" x2="45" y2="25" stroke="url(#ktgPredictArrow)" strokeWidth="3" markerEnd="url(#ktgPredictArrowhead)" />
+
+                    <circle cx="25" cy="25" r="8" fill="none" stroke="#f59e0b" strokeWidth="2" strokeOpacity="0.3">
+                      <animate attributeName="r" values="8;12;8" dur="1.5s" repeatCount="indefinite" />
+                      <animate attributeName="stroke-opacity" values="0.3;0.1;0.3" dur="1.5s" repeatCount="indefinite" />
+                    </circle>
+                  </g>
+
+                  {/* Hot container (right) */}
+                  <g transform="translate(230, 30)">
+                    {/* Container background */}
+                    <rect x="0" y="0" width="150" height="110" rx="8" fill="#0a0f1a" />
+                    <rect x="0" y="0" width="150" height="110" rx="8" fill="url(#ktgPredictGlass)" />
+
+                    {/* Metallic frame with heat glow */}
+                    <rect x="0" y="0" width="150" height="110" rx="8" fill="none" stroke="url(#ktgHotFrame)" strokeWidth="4">
+                      <animate attributeName="stroke-opacity" values="0.8;1;0.8" dur="1s" repeatCount="indefinite" />
+                    </rect>
+                    <rect x="2" y="2" width="146" height="106" rx="6" fill="none" stroke="#f87171" strokeWidth="0.5" strokeOpacity="0.3" />
+
+                    {/* Temperature label */}
+                    <rect x="45" y="-18" width="60" height="18" rx="4" fill="#111827" stroke="#ef4444" strokeWidth="1" />
+                    <text x="75" y="-5" textAnchor="middle" fill="#f87171" fontSize="11" fontWeight="bold" fontFamily="monospace">600 K</text>
+
+                    {/* Mystery question mark */}
+                    <text x="75" y="70" textAnchor="middle" fill="#ef4444" fontSize="48" fontWeight="bold" filter="url(#ktgQuestionGlow)">
+                      ?
+                      <animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite" />
+                    </text>
+
+                    {/* Hint text */}
+                    <text x="75" y="95" textAnchor="middle" fill="#6b7280" fontSize="9">How fast do molecules move?</text>
+                  </g>
                 </svg>
               </div>
             </div>
@@ -849,41 +1099,340 @@ export default function KineticTheoryGasesRenderer({
                 </div>
               </div>
 
-              {/* Simulation container */}
+              {/* Premium Simulation Container */}
               <div
-                className="relative bg-gray-900 rounded-lg overflow-hidden mx-auto"
-                style={{ width: Math.min(volume * 3, 450), height: Math.min(volume * 3, 450) }}
+                className="relative rounded-xl overflow-hidden mx-auto"
+                style={{
+                  width: Math.min(volume * 3, 450),
+                  height: Math.min(volume * 3, 450),
+                  boxShadow: '0 0 40px rgba(249, 115, 22, 0.15), inset 0 0 60px rgba(0, 0, 0, 0.5)'
+                }}
               >
-                <svg width="100%" height="100%">
-                  {/* Container walls */}
+                <svg width="100%" height="100%" viewBox={`0 0 ${volume * 3} ${volume * 3}`}>
+                  <defs>
+                    {/* === PREMIUM GRADIENT DEFINITIONS === */}
+
+                    {/* Container background gradient - dark lab atmosphere */}
+                    <linearGradient id="ktgContainerBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#030712" />
+                      <stop offset="25%" stopColor="#0a0f1a" />
+                      <stop offset="50%" stopColor="#111827" />
+                      <stop offset="75%" stopColor="#0a0f1a" />
+                      <stop offset="100%" stopColor="#030712" />
+                    </linearGradient>
+
+                    {/* Glass container effect - premium metallic frame */}
+                    <linearGradient id="ktgContainerFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#6b7280" />
+                      <stop offset="15%" stopColor="#9ca3af" />
+                      <stop offset="30%" stopColor="#4b5563" />
+                      <stop offset="50%" stopColor="#374151" />
+                      <stop offset="70%" stopColor="#4b5563" />
+                      <stop offset="85%" stopColor="#6b7280" />
+                      <stop offset="100%" stopColor="#374151" />
+                    </linearGradient>
+
+                    {/* Inner glass reflection */}
+                    <linearGradient id="ktgGlassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
+                      <stop offset="20%" stopColor="#67e8f9" stopOpacity="0.05" />
+                      <stop offset="80%" stopColor="#0ea5e9" stopOpacity="0.02" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
+                    </linearGradient>
+
+                    {/* Slow molecule (blue) - 3D sphere effect */}
+                    <radialGradient id="ktgMoleculeSlow" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                      <stop offset="25%" stopColor="#60a5fa" stopOpacity="1" />
+                      <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.95" />
+                      <stop offset="75%" stopColor="#2563eb" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    {/* Medium molecule (green) - 3D sphere effect */}
+                    <radialGradient id="ktgMoleculeMedium" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+                      <stop offset="25%" stopColor="#4ade80" stopOpacity="1" />
+                      <stop offset="50%" stopColor="#22c55e" stopOpacity="0.95" />
+                      <stop offset="75%" stopColor="#16a34a" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#15803d" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    {/* Fast molecule (orange) - 3D sphere effect */}
+                    <radialGradient id="ktgMoleculeFast" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fed7aa" stopOpacity="1" />
+                      <stop offset="25%" stopColor="#fdba74" stopOpacity="1" />
+                      <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.95" />
+                      <stop offset="75%" stopColor="#d97706" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#b45309" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    {/* Very fast molecule (red) - 3D sphere effect */}
+                    <radialGradient id="ktgMoleculeHot" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fecaca" stopOpacity="1" />
+                      <stop offset="25%" stopColor="#f87171" stopOpacity="1" />
+                      <stop offset="50%" stopColor="#ef4444" stopOpacity="0.95" />
+                      <stop offset="75%" stopColor="#dc2626" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    {/* Collision flash effect */}
+                    <radialGradient id="ktgCollisionFlash" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+                      <stop offset="30%" stopColor="#fde047" stopOpacity="0.8" />
+                      <stop offset="60%" stopColor="#facc15" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+                    </radialGradient>
+
+                    {/* Wall collision glow */}
+                    <radialGradient id="ktgWallGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+                      <stop offset="50%" stopColor="#ea580c" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+                    </radialGradient>
+
+                    {/* Velocity vector gradient */}
+                    <linearGradient id="ktgVelocityVector" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+                      <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.2" />
+                    </linearGradient>
+
+                    {/* === PREMIUM FILTER DEFINITIONS === */}
+
+                    {/* Molecule glow filter */}
+                    <filter id="ktgMoleculeGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Hot molecule intense glow */}
+                    <filter id="ktgHotGlow" x="-150%" y="-150%" width="400%" height="400%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Collision flash filter */}
+                    <filter id="ktgCollisionGlow" x="-200%" y="-200%" width="500%" height="500%">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Inner shadow for container depth */}
+                    <filter id="ktgInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="8" result="blur" />
+                      <feOffset dx="2" dy="2" />
+                      <feComposite in2="SourceGraphic" operator="arithmetic" k2="-1" k3="1" />
+                    </filter>
+
+                    {/* Subtle noise texture */}
+                    <filter id="ktgNoise">
+                      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise" />
+                      <feColorMatrix type="saturate" values="0" />
+                      <feBlend in="SourceGraphic" in2="noise" mode="multiply" />
+                    </filter>
+
+                    {/* Arrow marker for velocity vectors */}
+                    <marker id="ktgArrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                      <polygon points="0 0, 8 3, 0 6" fill="#22d3ee" fillOpacity="0.8" />
+                    </marker>
+                  </defs>
+
+                  {/* === PREMIUM CONTAINER RENDERING === */}
+
+                  {/* Dark background */}
+                  <rect
+                    x="0" y="0"
+                    width={volume * 3}
+                    height={volume * 3}
+                    fill="url(#ktgContainerBg)"
+                  />
+
+                  {/* Subtle grid pattern for depth */}
+                  <pattern id="ktgGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+                  </pattern>
+                  <rect
+                    x="4" y="4"
+                    width={volume * 3 - 8}
+                    height={volume * 3 - 8}
+                    fill="url(#ktgGrid)"
+                    opacity="0.5"
+                  />
+
+                  {/* Glass container inner reflection */}
+                  <rect
+                    x="4" y="4"
+                    width={volume * 3 - 8}
+                    height={volume * 3 - 8}
+                    fill="url(#ktgGlassReflection)"
+                    rx="4"
+                  />
+
+                  {/* Container metallic frame - outer */}
                   <rect
                     x="0" y="0"
                     width={volume * 3}
                     height={volume * 3}
                     fill="none"
-                    stroke="#4b5563"
-                    strokeWidth="2"
+                    stroke="url(#ktgContainerFrame)"
+                    strokeWidth="6"
+                    rx="8"
                   />
 
-                  {/* Molecules */}
-                  {molecules.map(mol => (
-                    <circle
-                      key={mol.id}
-                      cx={mol.x}
-                      cy={mol.y}
-                      r={mol.radius}
-                      fill={mol.color}
-                      opacity={0.9}
-                    />
+                  {/* Container frame highlight */}
+                  <rect
+                    x="2" y="2"
+                    width={volume * 3 - 4}
+                    height={volume * 3 - 4}
+                    fill="none"
+                    stroke="#9ca3af"
+                    strokeWidth="1"
+                    strokeOpacity="0.3"
+                    rx="6"
+                  />
+
+                  {/* Container frame inner shadow line */}
+                  <rect
+                    x="6" y="6"
+                    width={volume * 3 - 12}
+                    height={volume * 3 - 12}
+                    fill="none"
+                    stroke="#000000"
+                    strokeWidth="1"
+                    strokeOpacity="0.4"
+                    rx="4"
+                  />
+
+                  {/* Pressure indicator corners */}
+                  {[
+                    { x: 12, y: 12 },
+                    { x: volume * 3 - 12, y: 12 },
+                    { x: 12, y: volume * 3 - 12 },
+                    { x: volume * 3 - 12, y: volume * 3 - 12 }
+                  ].map((corner, i) => (
+                    <g key={i}>
+                      <circle
+                        cx={corner.x}
+                        cy={corner.y}
+                        r="4"
+                        fill="#1f2937"
+                        stroke="#374151"
+                        strokeWidth="1"
+                      />
+                      <circle
+                        cx={corner.x}
+                        cy={corner.y}
+                        r="2"
+                        fill={pressure > 200 ? '#ef4444' : pressure > 100 ? '#f59e0b' : '#22c55e'}
+                      >
+                        <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                    </g>
                   ))}
+
+                  {/* === PREMIUM MOLECULES WITH 3D EFFECT === */}
+                  {molecules.map(mol => {
+                    // Determine gradient based on speed
+                    const speedFactor = mol.speed / (calculateRmsSpeed(temperature) * 0.00001);
+                    let gradientId = 'ktgMoleculeSlow';
+                    let filterId = 'ktgMoleculeGlow';
+
+                    if (speedFactor >= 1.3) {
+                      gradientId = 'ktgMoleculeHot';
+                      filterId = 'ktgHotGlow';
+                    } else if (speedFactor >= 1.0) {
+                      gradientId = 'ktgMoleculeFast';
+                      filterId = 'ktgMoleculeGlow';
+                    } else if (speedFactor >= 0.7) {
+                      gradientId = 'ktgMoleculeMedium';
+                      filterId = 'ktgMoleculeGlow';
+                    }
+
+                    // Calculate velocity vector endpoint
+                    const velocityScale = 8;
+                    const vxDisplay = mol.vx * velocityScale * 60;
+                    const vyDisplay = mol.vy * velocityScale * 60;
+
+                    return (
+                      <g key={mol.id}>
+                        {/* Velocity vector (subtle) */}
+                        <line
+                          x1={mol.x}
+                          y1={mol.y}
+                          x2={mol.x + vxDisplay}
+                          y2={mol.y + vyDisplay}
+                          stroke="url(#ktgVelocityVector)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          markerEnd="url(#ktgArrowhead)"
+                          opacity="0.6"
+                        />
+
+                        {/* Molecule with 3D gradient */}
+                        <circle
+                          cx={mol.x}
+                          cy={mol.y}
+                          r={mol.radius + 1}
+                          fill={`url(#${gradientId})`}
+                          filter={`url(#${filterId})`}
+                        />
+
+                        {/* Highlight reflection on molecule */}
+                        <circle
+                          cx={mol.x - mol.radius * 0.3}
+                          cy={mol.y - mol.radius * 0.3}
+                          r={mol.radius * 0.35}
+                          fill="white"
+                          opacity="0.4"
+                        />
+                      </g>
+                    );
+                  })}
+
+                  {/* Temperature indicator label */}
+                  <rect x="8" y={volume * 3 - 28} width="70" height="20" rx="4" fill="#111827" fillOpacity="0.9" />
+                  <text x="43" y={volume * 3 - 14} textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold" fontFamily="monospace">
+                    {temperature} K
+                  </text>
+
+                  {/* Pressure gauge */}
+                  <rect x={volume * 3 - 78} y={volume * 3 - 28} width="70" height="20" rx="4" fill="#111827" fillOpacity="0.9" />
+                  <text x={volume * 3 - 43} y={volume * 3 - 14} textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold" fontFamily="monospace">
+                    P: {pressure.toFixed(0)}
+                  </text>
                 </svg>
 
-                {/* Speed legend */}
-                <div className="absolute top-2 right-2 bg-gray-800/80 rounded p-2 text-xs">
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-500"></span> Slow</div>
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-green-500"></span> Medium</div>
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-500"></span> Fast</div>
-                  <div className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-500"></span> Very Fast</div>
+                {/* Premium Speed Legend */}
+                <div className="absolute top-2 right-2 backdrop-blur-md bg-gray-900/80 rounded-lg p-2 text-xs border border-gray-700/50 shadow-lg">
+                  <div className="text-gray-400 text-[10px] font-semibold mb-1 uppercase tracking-wider">Molecular Speed</div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-300 via-blue-500 to-blue-700 shadow-sm shadow-blue-500/50"></div>
+                    <span className="text-blue-300">Slow</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-green-300 via-green-500 to-green-700 shadow-sm shadow-green-500/50"></div>
+                    <span className="text-green-300">Medium</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 shadow-sm shadow-orange-500/50"></div>
+                    <span className="text-orange-300">Fast</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-3 h-3 rounded-full bg-gradient-to-br from-red-300 via-red-500 to-red-700 shadow-sm shadow-red-500/50 animate-pulse"></div>
+                    <span className="text-red-300">Very Fast</span>
+                  </div>
                 </div>
               </div>
 
@@ -921,16 +1470,106 @@ export default function KineticTheoryGasesRenderer({
             </button>
 
             {showDistribution && (
-              <div className="bg-gray-800/50 rounded-xl p-4">
+              <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20">
                 <h3 className="text-lg font-medium text-purple-400 mb-3">Speed Distribution</h3>
-                <svg viewBox="0 0 400 200" className="w-full h-48">
-                  {/* Axes */}
-                  <line x1="50" y1="170" x2="380" y2="170" stroke="#4b5563" strokeWidth="2"/>
-                  <line x1="50" y1="170" x2="50" y2="20" stroke="#4b5563" strokeWidth="2"/>
-                  <text x="215" y="195" textAnchor="middle" fill="#9ca3af" fontSize="12">Speed (m/s)</text>
-                  <text x="25" y="95" textAnchor="middle" fill="#9ca3af" fontSize="12" transform="rotate(-90, 25, 95)">Probability</text>
+                <svg viewBox="0 0 400 220" className="w-full h-56">
+                  <defs>
+                    {/* Background gradient */}
+                    <linearGradient id="ktgDistBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#1e1b4b" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#0f172a" stopOpacity="0.6" />
+                    </linearGradient>
 
-                  {/* Maxwell-Boltzmann curve */}
+                    {/* Curve gradient */}
+                    <linearGradient id="ktgDistCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="30%" stopColor="#8b5cf6" />
+                      <stop offset="60%" stopColor="#a855f7" />
+                      <stop offset="100%" stopColor="#ec4899" />
+                    </linearGradient>
+
+                    {/* Fill gradient under curve */}
+                    <linearGradient id="ktgDistFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
+                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.05" />
+                    </linearGradient>
+
+                    {/* RMS marker gradient */}
+                    <linearGradient id="ktgRmsMarker" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.1" />
+                    </linearGradient>
+
+                    {/* Glow filter for curve */}
+                    <filter id="ktgDistGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Axis glow */}
+                    <filter id="ktgAxisGlow" x="-10%" y="-10%" width="120%" height="120%">
+                      <feGaussianBlur stdDeviation="1" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  {/* Background */}
+                  <rect x="40" y="10" width="350" height="175" rx="8" fill="url(#ktgDistBg)" />
+
+                  {/* Grid lines */}
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <line key={`h${i}`} x1="50" y1={30 + i * 35} x2="380" y2={30 + i * 35} stroke="#374151" strokeWidth="0.5" strokeOpacity="0.5" />
+                  ))}
+                  {[0, 1, 2, 3, 4, 5].map(i => (
+                    <line key={`v${i}`} x1={50 + i * 66} y1="20" x2={50 + i * 66} y2="170" stroke="#374151" strokeWidth="0.5" strokeOpacity="0.5" />
+                  ))}
+
+                  {/* Axes with glow */}
+                  <line x1="50" y1="170" x2="385" y2="170" stroke="#6b7280" strokeWidth="2" filter="url(#ktgAxisGlow)" />
+                  <line x1="50" y1="170" x2="50" y2="15" stroke="#6b7280" strokeWidth="2" filter="url(#ktgAxisGlow)" />
+
+                  {/* Axis arrows */}
+                  <polygon points="385,170 378,166 378,174" fill="#6b7280" />
+                  <polygon points="50,15 46,22 54,22" fill="#6b7280" />
+
+                  {/* Axis labels */}
+                  <text x="215" y="200" textAnchor="middle" fill="#9ca3af" fontSize="11" fontWeight="500">Molecular Speed (m/s)</text>
+                  <text x="15" y="95" textAnchor="middle" fill="#9ca3af" fontSize="11" fontWeight="500" transform="rotate(-90, 15, 95)">Probability Density</text>
+
+                  {/* Speed tick marks */}
+                  {[0, 200, 400, 600, 800, 1000].map((v, i) => (
+                    <g key={v}>
+                      <line x1={50 + i * 55} y1="170" x2={50 + i * 55} y2="175" stroke="#6b7280" strokeWidth="1" />
+                      <text x={50 + i * 55} y="186" textAnchor="middle" fill="#6b7280" fontSize="9">{v}</text>
+                    </g>
+                  ))}
+
+                  {/* Fill under curve */}
+                  <path
+                    d={(() => {
+                      let path = 'M 50 170';
+                      const v_rms = calculateRmsSpeed(temperature);
+                      const v_max = v_rms * 2;
+                      for (let i = 0; i <= 100; i++) {
+                        const v = (i / 100) * v_max;
+                        const x = 50 + (v / 1000) * 330;
+                        const f = Math.pow(v / v_rms, 2) * Math.exp(-1.5 * Math.pow(v / v_rms, 2));
+                        const y = 170 - f * 180;
+                        path += ` L ${x} ${y}`;
+                      }
+                      path += ' L 380 170 Z';
+                      return path;
+                    })()}
+                    fill="url(#ktgDistFill)"
+                  />
+
+                  {/* Maxwell-Boltzmann curve with glow */}
                   <path
                     d={(() => {
                       const points: string[] = [];
@@ -938,26 +1577,44 @@ export default function KineticTheoryGasesRenderer({
                       const v_max = v_rms * 2;
                       for (let i = 0; i <= 100; i++) {
                         const v = (i / 100) * v_max;
-                        const x = 50 + (v / v_max) * 330;
-                        // Simplified Maxwell-Boltzmann shape
+                        const x = 50 + (v / 1000) * 330;
                         const f = Math.pow(v / v_rms, 2) * Math.exp(-1.5 * Math.pow(v / v_rms, 2));
-                        const y = 170 - f * 200;
+                        const y = 170 - f * 180;
                         points.push(`${i === 0 ? 'M' : 'L'} ${x} ${y}`);
                       }
                       return points.join(' ');
                     })()}
                     fill="none"
-                    stroke="#8b5cf6"
+                    stroke="url(#ktgDistCurve)"
                     strokeWidth="3"
+                    strokeLinecap="round"
+                    filter="url(#ktgDistGlow)"
                   />
 
-                  {/* Markers */}
-                  <line x1={50 + 165} y1="170" x2={50 + 165} y2="30" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4"/>
-                  <text x={50 + 165} y="15" textAnchor="middle" fill="#f59e0b" fontSize="10">v_rms</text>
+                  {/* RMS speed marker */}
+                  {(() => {
+                    const v_rms = calculateRmsSpeed(temperature);
+                    const xPos = 50 + (v_rms / 1000) * 330;
+                    return (
+                      <g>
+                        <line x1={xPos} y1="170" x2={xPos} y2="25" stroke="url(#ktgRmsMarker)" strokeWidth="2" strokeDasharray="6 3" />
+                        <rect x={xPos - 25} y="8" width="50" height="16" rx="3" fill="#111827" stroke="#f59e0b" strokeWidth="1" />
+                        <text x={xPos} y="20" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="bold">v_rms</text>
+                        <circle cx={xPos} cy="170" r="4" fill="#f59e0b">
+                          <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
+                          <animate attributeName="opacity" values="1;0.6;1" dur="1s" repeatCount="indefinite" />
+                        </circle>
+                      </g>
+                    );
+                  })()}
+
+                  {/* Current temperature indicator */}
+                  <rect x="300" y="25" width="75" height="24" rx="4" fill="#111827" stroke="#8b5cf6" strokeWidth="1" />
+                  <text x="337" y="41" textAnchor="middle" fill="#a855f7" fontSize="11" fontWeight="bold">{temperature} K</text>
                 </svg>
-                <p className="text-sm text-gray-400 mt-2">
+                <p className="text-sm text-gray-400 mt-2 leading-relaxed">
                   The Maxwell-Boltzmann distribution shows that molecules have a range of speeds.
-                  Most are near the peak, but some are much faster or slower.
+                  Most are near the peak, but some are much faster or slower. The distribution shifts right with higher temperature.
                 </p>
               </div>
             )}
@@ -1109,33 +1766,160 @@ export default function KineticTheoryGasesRenderer({
                 </div>
               </div>
 
-              {/* Simulation */}
+              {/* Premium Simulation - Exploration Mode */}
               <div
-                className="relative bg-gray-900 rounded-lg overflow-hidden mx-auto"
+                className="relative rounded-xl overflow-hidden mx-auto"
                 style={{
                   width: Math.min(volume * 3, isMobile ? 280 : 400),
-                  height: Math.min(volume * 3, isMobile ? 280 : 400)
+                  height: Math.min(volume * 3, isMobile ? 280 : 400),
+                  boxShadow: '0 0 40px rgba(6, 182, 212, 0.15), inset 0 0 60px rgba(0, 0, 0, 0.5)'
                 }}
               >
-                <svg width="100%" height="100%">
-                  <rect
-                    x="0" y="0"
-                    width={volume * 3}
-                    height={volume * 3}
-                    fill="none"
-                    stroke="#4b5563"
-                    strokeWidth="2"
-                  />
-                  {molecules.map(mol => (
-                    <circle
-                      key={mol.id}
-                      cx={mol.x}
-                      cy={mol.y}
-                      r={mol.radius}
-                      fill={mol.color}
-                      opacity={0.9}
-                    />
-                  ))}
+                <svg width="100%" height="100%" viewBox={`0 0 ${volume * 3} ${volume * 3}`}>
+                  <defs>
+                    {/* Container background gradient */}
+                    <linearGradient id="ktgExploreBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#030712" />
+                      <stop offset="25%" stopColor="#0a0f1a" />
+                      <stop offset="50%" stopColor="#111827" />
+                      <stop offset="75%" stopColor="#0a0f1a" />
+                      <stop offset="100%" stopColor="#030712" />
+                    </linearGradient>
+
+                    {/* Premium metallic frame */}
+                    <linearGradient id="ktgExploreFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
+                      <stop offset="20%" stopColor="#0891b2" stopOpacity="0.8" />
+                      <stop offset="50%" stopColor="#0e7490" stopOpacity="0.9" />
+                      <stop offset="80%" stopColor="#0891b2" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" />
+                    </linearGradient>
+
+                    {/* Glass reflection */}
+                    <linearGradient id="ktgExploreGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.08" />
+                      <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.03" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
+                    </linearGradient>
+
+                    {/* Molecule gradients (reusing same IDs works within this SVG scope) */}
+                    <radialGradient id="ktgExpMolSlow" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#93c5fd" />
+                      <stop offset="50%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    <radialGradient id="ktgExpMolMedium" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#86efac" />
+                      <stop offset="50%" stopColor="#22c55e" />
+                      <stop offset="100%" stopColor="#15803d" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    <radialGradient id="ktgExpMolFast" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fed7aa" />
+                      <stop offset="50%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#b45309" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    <radialGradient id="ktgExpMolHot" cx="35%" cy="35%" r="60%">
+                      <stop offset="0%" stopColor="#fecaca" />
+                      <stop offset="50%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.85" />
+                    </radialGradient>
+
+                    {/* Glow filters */}
+                    <filter id="ktgExpGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    <filter id="ktgExpHotGlow" x="-150%" y="-150%" width="400%" height="400%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Velocity arrow */}
+                    <marker id="ktgExpArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                      <polygon points="0 0, 8 3, 0 6" fill="#67e8f9" fillOpacity="0.7" />
+                    </marker>
+                  </defs>
+
+                  {/* Background */}
+                  <rect x="0" y="0" width={volume * 3} height={volume * 3} fill="url(#ktgExploreBg)" />
+
+                  {/* Grid */}
+                  <pattern id="ktgExpGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+                    <rect width="15" height="15" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.5" />
+                  </pattern>
+                  <rect x="4" y="4" width={volume * 3 - 8} height={volume * 3 - 8} fill="url(#ktgExpGrid)" opacity="0.6" />
+
+                  {/* Glass effect */}
+                  <rect x="4" y="4" width={volume * 3 - 8} height={volume * 3 - 8} fill="url(#ktgExploreGlass)" rx="4" />
+
+                  {/* Metallic frame */}
+                  <rect x="0" y="0" width={volume * 3} height={volume * 3} fill="none" stroke="url(#ktgExploreFrame)" strokeWidth="5" rx="8" />
+                  <rect x="2" y="2" width={volume * 3 - 4} height={volume * 3 - 4} fill="none" stroke="#22d3ee" strokeWidth="0.5" strokeOpacity="0.3" rx="6" />
+
+                  {/* Premium Molecules */}
+                  {molecules.map(mol => {
+                    const speedFactor = mol.speed / (calculateRmsSpeed(temperature) * 0.00001);
+                    let gradientId = 'ktgExpMolSlow';
+                    let filterId = 'ktgExpGlow';
+
+                    if (speedFactor >= 1.3) {
+                      gradientId = 'ktgExpMolHot';
+                      filterId = 'ktgExpHotGlow';
+                    } else if (speedFactor >= 1.0) {
+                      gradientId = 'ktgExpMolFast';
+                    } else if (speedFactor >= 0.7) {
+                      gradientId = 'ktgExpMolMedium';
+                    }
+
+                    const vScale = 6;
+                    const vxD = mol.vx * vScale * 60;
+                    const vyD = mol.vy * vScale * 60;
+
+                    return (
+                      <g key={mol.id}>
+                        {/* Velocity vector */}
+                        <line
+                          x1={mol.x}
+                          y1={mol.y}
+                          x2={mol.x + vxD}
+                          y2={mol.y + vyD}
+                          stroke="#67e8f9"
+                          strokeWidth="1"
+                          strokeOpacity="0.5"
+                          markerEnd="url(#ktgExpArrow)"
+                        />
+
+                        {/* 3D Molecule */}
+                        <circle
+                          cx={mol.x}
+                          cy={mol.y}
+                          r={mol.radius + 1}
+                          fill={`url(#${gradientId})`}
+                          filter={`url(#${filterId})`}
+                        />
+
+                        {/* Highlight */}
+                        <circle
+                          cx={mol.x - mol.radius * 0.3}
+                          cy={mol.y - mol.radius * 0.3}
+                          r={mol.radius * 0.3}
+                          fill="white"
+                          opacity="0.35"
+                        />
+                      </g>
+                    );
+                  })}
                 </svg>
               </div>
 
@@ -1189,64 +1973,166 @@ export default function KineticTheoryGasesRenderer({
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-purple-400">Advanced: Molecular Distributions</h2>
 
-            <div className="bg-gray-800/50 rounded-xl p-6">
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-blue-500/20">
               <h3 className="text-lg font-medium text-blue-400 mb-4">Maxwell-Boltzmann Distribution</h3>
 
-              <svg viewBox="0 0 500 250" className="w-full h-64">
-                {/* Background */}
-                <rect x="0" y="0" width="500" height="250" fill="#111827"/>
+              <svg viewBox="0 0 500 270" className="w-full h-72">
+                <defs>
+                  {/* Premium background gradient */}
+                  <linearGradient id="ktgMBAdvBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#0c1929" />
+                    <stop offset="50%" stopColor="#111827" />
+                    <stop offset="100%" stopColor="#0c1929" />
+                  </linearGradient>
 
-                {/* Grid */}
-                {[...Array(5)].map((_, i) => (
-                  <g key={i}>
-                    <line x1="60" y1={50 + i * 40} x2="480" y2={50 + i * 40} stroke="#1f2937" strokeWidth="1"/>
-                    <line x1={60 + i * 105} y1="30" x2={60 + i * 105} y2="210" stroke="#1f2937" strokeWidth="1"/>
+                  {/* Cold (200K) curve gradient */}
+                  <linearGradient id="ktgMBCold" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#60a5fa" />
+                    <stop offset="50%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#2563eb" />
+                  </linearGradient>
+
+                  {/* Medium (400K) curve gradient */}
+                  <linearGradient id="ktgMBMedium" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#4ade80" />
+                    <stop offset="50%" stopColor="#22c55e" />
+                    <stop offset="100%" stopColor="#16a34a" />
+                  </linearGradient>
+
+                  {/* Hot (600K) curve gradient */}
+                  <linearGradient id="ktgMBHot" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f87171" />
+                    <stop offset="50%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#dc2626" />
+                  </linearGradient>
+
+                  {/* Fill gradients for area under curves */}
+                  <linearGradient id="ktgMBColdFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                  </linearGradient>
+
+                  <linearGradient id="ktgMBMediumFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                  </linearGradient>
+
+                  <linearGradient id="ktgMBHotFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                  </linearGradient>
+
+                  {/* Curve glow filters */}
+                  <filter id="ktgMBGlow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  <filter id="ktgMBIntenseGlow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                {/* Premium background */}
+                <rect x="0" y="0" width="500" height="270" rx="8" fill="url(#ktgMBAdvBg)" />
+
+                {/* Subtle grid pattern */}
+                {[...Array(6)].map((_, i) => (
+                  <g key={`grid${i}`}>
+                    <line x1="60" y1={40 + i * 35} x2="475" y2={40 + i * 35} stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.4" />
+                    <line x1={60 + i * 83} y1="30" x2={60 + i * 83} y2="215" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.4" />
                   </g>
                 ))}
 
-                {/* Axes */}
-                <line x1="60" y1="210" x2="480" y2="210" stroke="#6b7280" strokeWidth="2"/>
-                <line x1="60" y1="210" x2="60" y2="30" stroke="#6b7280" strokeWidth="2"/>
+                {/* Axes with premium styling */}
+                <line x1="60" y1="215" x2="480" y2="215" stroke="#475569" strokeWidth="2" />
+                <line x1="60" y1="215" x2="60" y2="25" stroke="#475569" strokeWidth="2" />
 
-                {/* Labels */}
-                <text x="270" y="240" textAnchor="middle" fill="#9ca3af" fontSize="14">Molecular Speed (m/s)</text>
-                <text x="25" y="120" textAnchor="middle" fill="#9ca3af" fontSize="14" transform="rotate(-90, 25, 120)">Probability</text>
+                {/* Axis arrows */}
+                <polygon points="480,215 473,211 473,219" fill="#475569" />
+                <polygon points="60,25 56,32 64,32" fill="#475569" />
 
-                {/* Temperature curves */}
-                {[200, 400, 600].map((temp, idx) => {
-                  const colors = ['#3b82f6', '#22c55e', '#ef4444'];
+                {/* Axis labels */}
+                <text x="270" y="250" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="500">Molecular Speed (m/s)</text>
+                <text x="20" y="120" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="500" transform="rotate(-90, 20, 120)">Probability Density</text>
+
+                {/* Temperature curves with fills */}
+                {[
+                  { temp: 200, gradient: 'ktgMBCold', fill: 'ktgMBColdFill', color: '#60a5fa' },
+                  { temp: 400, gradient: 'ktgMBMedium', fill: 'ktgMBMediumFill', color: '#4ade80' },
+                  { temp: 600, gradient: 'ktgMBHot', fill: 'ktgMBHotFill', color: '#f87171' }
+                ].map(({ temp, gradient, fill, color }, idx) => {
                   const v_rms = calculateRmsSpeed(temp);
                   const v_max = v_rms * 2.5;
 
-                  let path = '';
+                  // Generate curve path
+                  let curvePath = '';
+                  let fillPath = 'M 60 215';
                   for (let i = 0; i <= 100; i++) {
                     const v = (i / 100) * v_max;
-                    const x = 60 + (v / 1500) * 420;
+                    const x = 60 + (v / 1500) * 415;
                     const f = Math.pow(v / v_rms, 2) * Math.exp(-1.5 * Math.pow(v / v_rms, 2));
-                    const y = 210 - f * 250;
-                    path += `${i === 0 ? 'M' : 'L'} ${x} ${Math.max(30, y)}`;
+                    const y = 215 - f * 240;
+                    curvePath += `${i === 0 ? 'M' : 'L'} ${x} ${Math.max(30, y)}`;
+                    fillPath += ` L ${x} ${Math.max(30, y)}`;
                   }
+                  fillPath += ' L 475 215 Z';
 
                   return (
                     <g key={temp}>
-                      <path d={path} fill="none" stroke={colors[idx]} strokeWidth="3"/>
-                      <text x="400" y={60 + idx * 25} fill={colors[idx]} fontSize="12">
-                        {temp} K
-                      </text>
+                      {/* Fill under curve */}
+                      <path d={fillPath} fill={`url(#${fill})`} />
+
+                      {/* Curve with glow */}
+                      <path
+                        d={curvePath}
+                        fill="none"
+                        stroke={`url(#${gradient})`}
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        filter={idx === 2 ? 'url(#ktgMBIntenseGlow)' : 'url(#ktgMBGlow)'}
+                      />
                     </g>
                   );
                 })}
 
-                {/* Speed axis labels */}
+                {/* Legend box */}
+                <rect x="395" y="35" width="95" height="90" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+                <text x="442" y="52" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">TEMPERATURE</text>
+
+                {[
+                  { temp: '200 K', color: '#3b82f6', label: 'Cold', y: 68 },
+                  { temp: '400 K', color: '#22c55e', label: 'Medium', y: 88 },
+                  { temp: '600 K', color: '#ef4444', label: 'Hot', y: 108 }
+                ].map(({ temp, color, label, y }) => (
+                  <g key={temp}>
+                    <line x1="402" y1={y} x2="425" y2={y} stroke={color} strokeWidth="3" strokeLinecap="round" />
+                    <text x="432" y={y + 4} fill={color} fontSize="10" fontWeight="600">{temp}</text>
+                  </g>
+                ))}
+
+                {/* Speed axis tick marks */}
                 {[0, 500, 1000, 1500].map((v, i) => (
-                  <text key={i} x={60 + (v / 1500) * 420} y="225" textAnchor="middle" fill="#6b7280" fontSize="10">
-                    {v}
-                  </text>
+                  <g key={v}>
+                    <line x1={60 + (v / 1500) * 415} y1="215" x2={60 + (v / 1500) * 415} y2="220" stroke="#475569" strokeWidth="1" />
+                    <text x={60 + (v / 1500) * 415} y="232" textAnchor="middle" fill="#6b7280" fontSize="10">{v}</text>
+                  </g>
                 ))}
               </svg>
 
-              <div className="mt-4 text-sm text-gray-400">
-                <p>Higher temperatures shift the distribution to the right (faster speeds) and flatten the peak (wider range of speeds).</p>
+              <div className="mt-4 text-sm text-gray-400 bg-blue-500/10 rounded-lg p-3 border border-blue-500/20">
+                <p className="leading-relaxed">
+                  <span className="text-blue-400 font-medium">Key insight:</span> Higher temperatures shift the distribution to the right (faster speeds) and flatten the peak (wider range of speeds).
+                  The area under each curve equals 1 (100% of molecules).
+                </p>
               </div>
             </div>
 

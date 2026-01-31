@@ -353,78 +353,334 @@ def calculate_momentum(mass, velocity):
   };
 
   const renderVisualization = (interactive: boolean, showCrossCheck: boolean = false) => {
-    const width = 450;
-    const height = 400;
+    const width = 700;
+    const height = 480;
     const score = calculateReviewScore();
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '16px', maxWidth: '750px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Review Checklist Dashboard
+          {/* ============= COMPREHENSIVE DEFS SECTION ============= */}
+          <defs>
+            {/* Premium background gradient with depth */}
+            <linearGradient id="marvLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Code editor panel gradient */}
+            <linearGradient id="marvCodePanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="20%" stopColor="#0f172a" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* AI Model housing gradient with metallic look */}
+            <linearGradient id="marvAIModelMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Review checklist panel gradient */}
+            <linearGradient id="marvChecklistGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#0c4a6e" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#164e63" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Results panel gradient */}
+            <linearGradient id="marvResultsGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Success status radial gradient */}
+            <radialGradient id="marvSuccessGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="30%" stopColor="#059669" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#047857" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#064e3b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Error status radial gradient */}
+            <radialGradient id="marvErrorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="30%" stopColor="#dc2626" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Warning status radial gradient */}
+            <radialGradient id="marvWarningGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="30%" stopColor="#d97706" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#b45309" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#78350f" stopOpacity="0" />
+            </radialGradient>
+
+            {/* AI processing radial gradient */}
+            <radialGradient id="marvAIProcessGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="1" />
+              <stop offset="30%" stopColor="#7c3aed" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#6d28d9" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#4c1d95" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Review pass active indicator gradient */}
+            <radialGradient id="marvReviewActiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="1" />
+              <stop offset="30%" stopColor="#0891b2" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#0e7490" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#155e75" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Effectiveness meter gradient */}
+            <linearGradient id="marvEffectivenessGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="33%" stopColor="#f59e0b" />
+              <stop offset="66%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+
+            {/* Cross-checker model gradient */}
+            <linearGradient id="marvCrossCheckGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Connection beam gradient */}
+            <linearGradient id="marvConnectionBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Bug indicator pulse gradient */}
+            <radialGradient id="marvBugPulse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filter for success elements */}
+            <filter id="marvSuccessBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for error/bug elements */}
+            <filter id="marvErrorBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* AI processing glow filter */}
+            <filter id="marvAIGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner shadow for panels */}
+            <filter id="marvInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Status indicator pulse animation */}
+            <filter id="marvPulseGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern for background */}
+            <pattern id="marvLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* ============= PREMIUM BACKGROUND ============= */}
+          <rect width={width} height={height} fill="url(#marvLabBg)" />
+          <rect width={width} height={height} fill="url(#marvLabGrid)" />
+
+          {/* Title with premium styling */}
+          <text x={width/2} y={32} fill={colors.textPrimary} fontSize={18} fontWeight="bold" textAnchor="middle" letterSpacing="0.5">
+            AI Code Review Dashboard
+          </text>
+          <text x={width/2} y={50} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Model-as-Reviewer Pattern Visualization
           </text>
 
-          {/* Code panel */}
-          <g transform="translate(20, 45)">
-            <rect x={0} y={0} width={200} height={200} fill="rgba(0,0,0,0.4)" rx={8} />
-            <text x={10} y={20} fill={colors.textSecondary} fontSize={10}>Code Sample</text>
+          {/* ============= CODE PANEL WITH PREMIUM STYLING ============= */}
+          <g transform="translate(20, 65)">
+            {/* Panel background with gradient */}
+            <rect x={0} y={0} width={280} height={220} rx={12} fill="url(#marvCodePanelGrad)" stroke="#334155" strokeWidth="1" />
 
-            {codeSample.code.split('\n').slice(0, 12).map((line, i) => {
+            {/* Panel header */}
+            <rect x={0} y={0} width={280} height={28} rx={12} fill="#1e293b" />
+            <rect x={0} y={14} width={280} height={14} fill="#1e293b" />
+
+            {/* Window controls */}
+            <circle cx={16} cy={14} r={5} fill="#ef4444" />
+            <circle cx={34} cy={14} r={5} fill="#f59e0b" />
+            <circle cx={52} cy={14} r={5} fill="#10b981" />
+
+            <text x={140} y={18} fill={colors.textSecondary} fontSize={11} fontWeight="600" textAnchor="middle">
+              physics_calculations.py
+            </text>
+
+            {/* Code lines with syntax highlighting */}
+            {codeSample.code.split('\n').slice(0, 14).map((line, i) => {
               const hasBug = codeSample.bugs.some(b => b.line === i + 1);
-              const bugDetected = hasBug && (
+              const bugDetected = hasBug && useReviewPass && (
                 (i + 1 === 3 && checkUnits) ||
                 (i + 1 === 8 && checkConservation) ||
                 (i + 1 === 12 && checkEdgeCases)
               );
+              const bugHighlighted = hasBug && useReviewPass && !bugDetected;
+
               return (
                 <g key={i}>
-                  <rect
-                    x={5}
-                    y={28 + i * 14}
-                    width={190}
-                    height={13}
-                    fill={bugDetected ? 'rgba(239, 68, 68, 0.3)' : hasBug && useReviewPass ? 'rgba(245, 158, 11, 0.2)' : 'transparent'}
-                    rx={2}
-                  />
-                  <text x={10} y={38 + i * 14} fill={hasBug ? (bugDetected ? colors.error : colors.warning) : colors.textMuted} fontSize={8} fontFamily="monospace">
-                    {line.substring(0, 30)}{line.length > 30 ? '...' : ''}
+                  {/* Line number background */}
+                  <rect x={5} y={35 + i * 13} width={25} height={12} fill="rgba(0,0,0,0.3)" />
+                  <text x={17} y={44 + i * 13} fill={colors.textMuted} fontSize={8} textAnchor="middle" fontFamily="monospace">
+                    {i + 1}
                   </text>
+
+                  {/* Bug highlight background */}
                   {bugDetected && (
-                    <circle cx={195} cy={33 + i * 14} r={4} fill={colors.error} />
+                    <rect
+                      x={32}
+                      y={34 + i * 13}
+                      width={243}
+                      height={13}
+                      fill="rgba(239, 68, 68, 0.25)"
+                      rx={2}
+                    />
+                  )}
+                  {bugHighlighted && (
+                    <rect
+                      x={32}
+                      y={34 + i * 13}
+                      width={243}
+                      height={13}
+                      fill="rgba(245, 158, 11, 0.15)"
+                      rx={2}
+                    />
+                  )}
+
+                  {/* Code text */}
+                  <text
+                    x={38}
+                    y={44 + i * 13}
+                    fill={bugDetected ? colors.error : bugHighlighted ? colors.warning : line.startsWith('#') || line.includes('#') ? '#6b7280' : line.includes('def ') ? '#a78bfa' : colors.textMuted}
+                    fontSize={9}
+                    fontFamily="monospace"
+                  >
+                    {line.substring(0, 35)}{line.length > 35 ? '...' : ''}
+                  </text>
+
+                  {/* Bug indicator with glow */}
+                  {bugDetected && (
+                    <g filter="url(#marvErrorBlur)">
+                      <circle cx={268} cy={40 + i * 13} r={5} fill="url(#marvErrorGlow)" />
+                      <circle cx={268} cy={40 + i * 13} r={3} fill={colors.error} />
+                    </g>
                   )}
                 </g>
               );
             })}
           </g>
 
-          {/* Review checklist */}
-          <g transform="translate(240, 45)">
-            <rect x={0} y={0} width={190} height={200} fill="rgba(0,0,0,0.4)" rx={8} />
-            <text x={10} y={20} fill={colors.textSecondary} fontSize={10}>Review Checklist</text>
+          {/* ============= AI MODEL VISUALIZATION ============= */}
+          <g transform="translate(320, 65)">
+            {/* AI Model housing */}
+            <rect x={0} y={0} width={160} height={100} rx={12} fill="url(#marvAIModelMetal)" stroke="#475569" strokeWidth="1.5" />
+            <rect x={5} y={5} width={150} height={90} rx={10} fill="#0f172a" opacity="0.6" />
 
+            {/* AI brain visualization */}
+            <g transform="translate(80, 50)">
+              <circle r={30} fill={useReviewPass ? 'url(#marvReviewActiveGlow)' : 'rgba(100,116,139,0.3)'} filter={useReviewPass ? 'url(#marvAIGlow)' : 'none'} />
+              <circle r={20} fill={useReviewPass ? 'rgba(6,182,212,0.4)' : 'rgba(71,85,105,0.4)'} />
+              <circle r={10} fill={useReviewPass ? colors.accent : '#475569'} />
+
+              {/* Neural network lines */}
+              {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                <line
+                  key={i}
+                  x1={0} y1={0}
+                  x2={Math.cos(angle * Math.PI / 180) * 28}
+                  y2={Math.sin(angle * Math.PI / 180) * 28}
+                  stroke={useReviewPass ? '#22d3ee' : '#475569'}
+                  strokeWidth="1"
+                  opacity={useReviewPass ? 0.8 : 0.3}
+                />
+              ))}
+            </g>
+
+            <text x={80} y={95} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="600">
+              {useReviewPass ? 'REVIEWING...' : 'STANDBY'}
+            </text>
+          </g>
+
+          {/* ============= REVIEW CHECKLIST PANEL ============= */}
+          <g transform="translate(500, 65)">
+            <rect x={0} y={0} width={180} height={220} rx={12} fill="url(#marvChecklistGrad)" stroke="#0e7490" strokeWidth="1" filter="url(#marvInnerShadow)" />
+
+            {/* Panel header */}
+            <rect x={0} y={0} width={180} height={30} rx={12} fill="rgba(6,182,212,0.2)" />
+            <rect x={0} y={15} width={180} height={15} fill="rgba(6,182,212,0.2)" />
+            <text x={90} y={20} fill={colors.textPrimary} fontSize={11} fontWeight="bold" textAnchor="middle">
+              Review Checklist
+            </text>
+
+            {/* Checklist items */}
             {[
-              { label: 'Unit Consistency', checked: checkUnits, key: 'units' },
-              { label: 'Conservation Laws', checked: checkConservation, key: 'conservation' },
-              { label: 'Edge Cases', checked: checkEdgeCases, key: 'edge' },
-              { label: 'Bounds Checking', checked: checkBounds, key: 'bounds' },
+              { label: 'Unit Consistency', checked: checkUnits, key: 'units', icon: 'U' },
+              { label: 'Conservation Laws', checked: checkConservation, key: 'conservation', icon: 'C' },
+              { label: 'Edge Cases', checked: checkEdgeCases, key: 'edge', icon: 'E' },
+              { label: 'Bounds Checking', checked: checkBounds, key: 'bounds', icon: 'B' },
             ].map((item, i) => (
-              <g key={item.key} transform={`translate(10, ${35 + i * 35})`}>
+              <g key={item.key} transform={`translate(10, ${40 + i * 38})`}>
                 <rect
                   x={0}
                   y={0}
-                  width={170}
-                  height={28}
-                  fill={item.checked ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.05)'}
-                  stroke={item.checked ? colors.success : 'rgba(255,255,255,0.2)'}
-                  strokeWidth={1}
-                  rx={4}
+                  width={160}
+                  height={32}
+                  fill={item.checked ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255,255,255,0.05)'}
+                  stroke={item.checked ? colors.success : 'rgba(255,255,255,0.15)'}
+                  strokeWidth={1.5}
+                  rx={8}
                   style={{ cursor: interactive ? 'pointer' : 'default' }}
                   onClick={interactive ? () => {
                     if (item.key === 'units') setCheckUnits(!checkUnits);
@@ -433,80 +689,154 @@ def calculate_momentum(mass, velocity):
                     if (item.key === 'bounds') setCheckBounds(!checkBounds);
                   } : undefined}
                 />
-                <text x={30} y={18} fill={item.checked ? colors.success : colors.textMuted} fontSize={11}>
+
+                {/* Check indicator with glow */}
+                <g filter={item.checked ? 'url(#marvSuccessBlur)' : 'none'}>
+                  <circle cx={20} cy={16} r={10} fill={item.checked ? 'url(#marvSuccessGlow)' : 'rgba(100,116,139,0.3)'} />
+                  <text x={20} y={20} fill={item.checked ? 'white' : colors.textMuted} fontSize={10} fontWeight="bold" textAnchor="middle">
+                    {item.checked ? '✓' : item.icon}
+                  </text>
+                </g>
+
+                <text x={40} y={20} fill={item.checked ? colors.success : colors.textSecondary} fontSize={11} fontWeight={item.checked ? '600' : '400'}>
                   {item.label}
                 </text>
-                {item.checked && (
-                  <text x={10} y={18} fill={colors.success} fontSize={12} fontWeight="bold">check</text>
-                )}
               </g>
             ))}
 
             {/* Cross-checker option */}
             {showCrossCheck && (
-              <g transform="translate(10, 175)">
+              <g transform="translate(10, 195)">
                 <rect
                   x={0}
                   y={0}
-                  width={170}
-                  height={20}
-                  fill={useCrossChecker ? 'rgba(139, 92, 246, 0.3)' : 'rgba(255,255,255,0.05)'}
-                  stroke={useCrossChecker ? '#8b5cf6' : 'rgba(255,255,255,0.2)'}
-                  strokeWidth={1}
-                  rx={4}
+                  width={160}
+                  height={22}
+                  fill={useCrossChecker ? 'url(#marvCrossCheckGrad)' : 'rgba(255,255,255,0.05)'}
+                  stroke={useCrossChecker ? '#8b5cf6' : 'rgba(255,255,255,0.15)'}
+                  strokeWidth={1.5}
+                  rx={6}
                   style={{ cursor: interactive ? 'pointer' : 'default' }}
                   onClick={interactive ? () => setUseCrossChecker(!useCrossChecker) : undefined}
                 />
-                <text x={10} y={14} fill={useCrossChecker ? '#8b5cf6' : colors.textMuted} fontSize={9}>
-                  {useCrossChecker ? '+ Cross-Check Model' : 'Add Cross-Checker'}
+                <g filter={useCrossChecker ? 'url(#marvAIGlow)' : 'none'}>
+                  <circle cx={15} cy={11} r={6} fill={useCrossChecker ? 'url(#marvAIProcessGlow)' : 'rgba(100,116,139,0.3)'} />
+                </g>
+                <text x={28} y={15} fill={useCrossChecker ? '#a78bfa' : colors.textMuted} fontSize={9} fontWeight={useCrossChecker ? '600' : '400'}>
+                  {useCrossChecker ? 'Cross-Check Active' : '+ Add Cross-Checker'}
                 </text>
               </g>
             )}
           </g>
 
-          {/* Results panel */}
-          <g transform="translate(20, 260)">
-            <rect x={0} y={0} width={410} height={120} fill="rgba(0,0,0,0.4)" rx={8} />
-            <text x={205} y={20} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Review Results</text>
+          {/* ============= CONNECTION BEAM (Code -> AI -> Checklist) ============= */}
+          {useReviewPass && (
+            <g>
+              <line x1={300} y1={175} x2={320} y2={115} stroke="url(#marvConnectionBeam)" strokeWidth="3" opacity="0.8" />
+              <line x1={480} y1={115} x2={500} y2={175} stroke="url(#marvConnectionBeam)" strokeWidth="3" opacity="0.8" />
+            </g>
+          )}
 
-            {/* Effectiveness meter */}
-            <rect x={20} y={35} width={200} height={20} fill="rgba(255,255,255,0.1)" rx={4} />
-            <rect
-              x={20}
-              y={35}
-              width={score.effectiveness * 2}
-              height={20}
-              fill={score.effectiveness > 80 ? colors.success : score.effectiveness > 50 ? colors.warning : colors.error}
-              rx={4}
-            />
-            <text x={120} y={50} fill={colors.textPrimary} fontSize={11} textAnchor="middle" fontWeight="bold">
-              {score.effectiveness.toFixed(0)}% Effective
+          {/* ============= RESULTS PANEL ============= */}
+          <g transform="translate(20, 300)">
+            <rect x={0} y={0} width={660} height={160} rx={12} fill="url(#marvResultsGrad)" stroke="#374151" strokeWidth="1" />
+
+            {/* Panel header */}
+            <rect x={0} y={0} width={660} height={32} rx={12} fill="rgba(55,65,81,0.5)" />
+            <rect x={0} y={16} width={660} height={16} fill="rgba(55,65,81,0.5)" />
+            <text x={330} y={22} fill={colors.textPrimary} fontSize={13} fontWeight="bold" textAnchor="middle">
+              Review Results & AI Feedback
             </text>
 
-            {/* Bug detection status */}
-            <g transform="translate(240, 35)">
-              <text x={0} y={10} fill={colors.textSecondary} fontSize={10}>Bugs Detected:</text>
-              <text x={0} y={30} fill={score.detected === score.total ? colors.success : colors.warning} fontSize={14} fontWeight="bold">
-                {score.detected} / {score.total}
+            {/* Effectiveness meter with gradient */}
+            <g transform="translate(20, 45)">
+              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">Effectiveness</text>
+              <rect x={0} y={8} width={280} height={24} rx={6} fill="rgba(0,0,0,0.4)" />
+              <rect x={2} y={10} width={276} height={20} rx={5} fill="rgba(255,255,255,0.05)" />
+              <rect
+                x={2}
+                y={10}
+                width={Math.max(0, (score.effectiveness / 100) * 276)}
+                height={20}
+                rx={5}
+                fill={score.effectiveness > 80 ? colors.success : score.effectiveness > 50 ? colors.warning : colors.error}
+                filter={score.effectiveness > 0 ? 'url(#marvPulseGlow)' : 'none'}
+              />
+              <text x={140} y={25} fill={colors.textPrimary} fontSize={12} fontWeight="bold" textAnchor="middle">
+                {score.effectiveness.toFixed(0)}%
               </text>
             </g>
 
-            {/* Status messages */}
-            <g transform="translate(20, 70)">
+            {/* Bug detection status with visual indicators */}
+            <g transform="translate(320, 45)">
+              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">Bugs Detected</text>
+              <g transform="translate(0, 12)">
+                {[0, 1, 2].map((i) => (
+                  <g key={i} transform={`translate(${i * 35}, 0)`}>
+                    <circle
+                      cx={12} cy={12} r={12}
+                      fill={i < score.detected ? 'url(#marvErrorGlow)' : 'rgba(100,116,139,0.2)'}
+                      filter={i < score.detected ? 'url(#marvErrorBlur)' : 'none'}
+                    />
+                    <circle
+                      cx={12} cy={12} r={8}
+                      fill={i < score.detected ? colors.error : 'rgba(100,116,139,0.3)'}
+                    />
+                    <text x={12} y={16} fill="white" fontSize={10} fontWeight="bold" textAnchor="middle">
+                      {i < score.detected ? '!' : '?'}
+                    </text>
+                  </g>
+                ))}
+                <text x={120} y={18} fill={score.detected === score.total ? colors.success : colors.warning} fontSize={14} fontWeight="bold">
+                  {score.detected} / {score.total}
+                </text>
+              </g>
+            </g>
+
+            {/* AI Feedback messages */}
+            <g transform="translate(500, 45)">
+              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">Status</text>
+              <g transform="translate(0, 10)">
+                <circle
+                  cx={12} cy={12} r={12}
+                  fill={useReviewPass ? (score.effectiveness > 80 ? 'url(#marvSuccessGlow)' : 'url(#marvWarningGlow)') : 'rgba(100,116,139,0.2)'}
+                  filter="url(#marvPulseGlow)"
+                />
+                <text x={32} y={16} fill={useReviewPass ? (score.effectiveness > 80 ? colors.success : colors.warning) : colors.textMuted} fontSize={11} fontWeight="600">
+                  {useReviewPass ? (score.effectiveness > 80 ? 'PASSING' : 'ISSUES') : 'INACTIVE'}
+                </text>
+              </g>
+            </g>
+
+            {/* Detailed findings */}
+            <g transform="translate(20, 95)">
+              <text x={0} y={0} fill={colors.textSecondary} fontSize={10} fontWeight="600">AI Findings:</text>
               {useReviewPass ? (
-                <>
+                <g transform="translate(0, 8)">
                   {score.bugsFound.units && (
-                    <text x={0} y={15} fill={colors.error} fontSize={10}>Found: Missing 1/2 factor in KE formula</text>
+                    <g transform="translate(0, 0)">
+                      <circle cx={6} cy={8} r={4} fill={colors.error} filter="url(#marvErrorBlur)" />
+                      <text x={16} y={12} fill={colors.error} fontSize={10}>Line 3: Missing 1/2 factor - KE = (1/2)mv², not mv²</text>
+                    </g>
                   )}
                   {score.bugsFound.conservation && (
-                    <text x={0} y={30} fill={colors.error} fontSize={10}>Found: F=m+a should be F=m*a</text>
+                    <g transform="translate(0, 18)">
+                      <circle cx={6} cy={8} r={4} fill={colors.error} filter="url(#marvErrorBlur)" />
+                      <text x={16} y={12} fill={colors.error} fontSize={10}>Line 8: Operator error - F = m*a, not m+a</text>
+                    </g>
                   )}
                   {score.bugsFound.edgeCases && (
-                    <text x={0} y={45} fill={colors.error} fontSize={10}>Found: Negative velocity incorrectly excluded</text>
+                    <g transform="translate(0, 36)">
+                      <circle cx={6} cy={8} r={4} fill={colors.error} filter="url(#marvErrorBlur)" />
+                      <text x={16} y={12} fill={colors.error} fontSize={10}>Line 12: Negative velocity excluded - momentum can be negative</text>
+                    </g>
                   )}
-                </>
+                  {!score.bugsFound.units && !score.bugsFound.conservation && !score.bugsFound.edgeCases && (
+                    <text x={0} y={15} fill={colors.warning} fontSize={10}>Enable checklist items to detect specific bug types...</text>
+                  )}
+                </g>
               ) : (
-                <text x={0} y={20} fill={colors.textMuted} fontSize={10}>Enable review pass to detect bugs...</text>
+                <text x={0} y={20} fill={colors.textMuted} fontSize={10} fontStyle="italic">Enable review pass to activate AI bug detection...</text>
               )}
             </g>
           </g>
@@ -517,14 +847,19 @@ def calculate_momentum(mass, velocity):
             <button
               onClick={() => setUseReviewPass(!useReviewPass)}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 28px',
+                borderRadius: '12px',
                 border: 'none',
-                background: useReviewPass ? colors.success : colors.error,
+                background: useReviewPass
+                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                  : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: useReviewPass
+                  ? '0 4px 20px rgba(16, 185, 129, 0.4)'
+                  : '0 4px 20px rgba(239, 68, 68, 0.4)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -538,9 +873,9 @@ def calculate_momentum(mass, velocity):
                 setCheckBounds(true);
               }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
@@ -549,7 +884,7 @@ def calculate_momentum(mass, velocity):
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Check All
+              Enable All Checks
             </button>
           </div>
         )}

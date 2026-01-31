@@ -360,19 +360,27 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
   };
 
   const renderVisualization = (interactive: boolean, showComparison: boolean = false) => {
-    const width = 400;
-    const height = 350;
+    const width = 500;
+    const height = 420;
     const output = calculateOutput();
 
-    // Generate defect positions
-    const defects = [];
-    const numDefects = passivationType === 'none' ? 12 : passivationType === 'PERC' ? 6 : passivationType === 'TOPCon' ? 2 : 0;
+    // Generate defect positions at both top and bottom surfaces
+    const topDefects: { x: number; y: number }[] = [];
+    const bottomDefects: { x: number; y: number }[] = [];
+    const numDefects = passivationType === 'none' ? 8 : passivationType === 'PERC' ? 4 : passivationType === 'TOPCon' ? 2 : 0;
     for (let i = 0; i < numDefects; i++) {
-      defects.push({
-        x: 70 + i * (260 / numDefects),
-        y: 185 + (Math.random() - 0.5) * 10,
+      topDefects.push({
+        x: 80 + i * (340 / Math.max(numDefects, 1)),
+        y: 95,
+      });
+      bottomDefects.push({
+        x: 80 + i * (340 / Math.max(numDefects, 1)) + 20,
+        y: 255,
       });
     }
+
+    // Generate recombination events (flashing X marks where carriers are lost)
+    const recombEvents = isAnimating ? particles.filter(p => !p.alive).slice(-5) : [];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -381,99 +389,408 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="siliconGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
+            {/* === PREMIUM SILICON WAFER GRADIENTS === */}
+            <linearGradient id="pasrSiliconBulk" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="15%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#3f4f63" />
+              <stop offset="85%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-            <radialGradient id="electronGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.electron} />
-              <stop offset="100%" stopColor={colors.electron} stopOpacity="0.3" />
+
+            {/* Silicon crystal lattice pattern */}
+            <pattern id="pasrLatticePattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" />
+              <circle cx="10" cy="10" r="1.5" fill="#94a3b8" opacity="0.15" />
+              <line x1="0" y1="10" x2="20" y2="10" stroke="#94a3b8" strokeWidth="0.3" opacity="0.1" />
+              <line x1="10" y1="0" x2="10" y2="20" stroke="#94a3b8" strokeWidth="0.3" opacity="0.1" />
+            </pattern>
+
+            {/* Surface interface zone gradient - shows disorder at surface */}
+            <linearGradient id="pasrSurfaceInterface" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.25" />
+              <stop offset="60%" stopColor="#eab308" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#84cc16" stopOpacity="0" />
+            </linearGradient>
+
+            {/* PERC passivation (Al2O3) - blue-green oxide */}
+            <linearGradient id="pasrPERCLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#14b8a6" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#0ea5e9" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.7" />
+            </linearGradient>
+
+            {/* TOPCon passivation (poly-Si/SiO2) - blue with oxide hint */}
+            <linearGradient id="pasrTOPConLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.85" />
+              <stop offset="40%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="80%" stopColor="#3b82f6" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* HJT passivation (a-Si:H) - purple amorphous layer */}
+            <linearGradient id="pasrHJTLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="15%" stopColor="#c084fc" stopOpacity="0.85" />
+              <stop offset="35%" stopColor="#e879f9" stopOpacity="0.75" />
+              <stop offset="50%" stopColor="#d946ef" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#c026d3" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#9333ea" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* === CARRIER GRADIENTS WITH GLOW EFFECTS === */}
+            <radialGradient id="pasrElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="25%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#0891b2" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
             </radialGradient>
-            <radialGradient id="holeGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.hole} />
-              <stop offset="100%" stopColor={colors.hole} stopOpacity="0.3" />
+
+            <radialGradient id="pasrHoleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f9a8d4" stopOpacity="1" />
+              <stop offset="25%" stopColor="#f472b6" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#ec4899" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#db2777" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#be185d" stopOpacity="0" />
             </radialGradient>
-            <radialGradient id="defectGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.defect} />
-              <stop offset="100%" stopColor={colors.defect} stopOpacity="0.5" />
+
+            {/* Defect trap gradient - dangerous red */}
+            <radialGradient id="pasrDefectTrap" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="20%" stopColor="#f87171" stopOpacity="0.9" />
+              <stop offset="45%" stopColor="#ef4444" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
             </radialGradient>
+
+            {/* Recombination event flash */}
+            <radialGradient id="pasrRecombFlash" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#facc15" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Light generation glow (photon absorption) */}
+            <radialGradient id="pasrPhotonGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#fef08a" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#fde047" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Output panel gradient */}
+            <linearGradient id="pasrOutputPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* === FILTER EFFECTS === */}
+            <filter id="pasrElectronBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2.5" />
+            </filter>
+
+            <filter id="pasrHoleBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2.5" />
+            </filter>
+
+            <filter id="pasrDefectGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="pasrRecombGlow" x="-150%" y="-150%" width="400%" height="400%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="pasrPassivationGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="pasrInnerShadow">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Subtle lab grid pattern */}
+            <pattern id="pasrLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.4" strokeOpacity="0.25" />
+            </pattern>
           </defs>
 
-          {/* Top passivation layer */}
+          {/* Lab background grid */}
+          <rect width={width} height={height} fill="url(#pasrLabGrid)" />
+
+          {/* Title and technology label */}
+          <text x={width / 2} y="28" fill={colors.accent} fontSize="16" textAnchor="middle" fontWeight="bold" letterSpacing="0.5">
+            {passivationPresets[passivationType].name}
+          </text>
+          <text x={width / 2} y="46" fill={colors.textMuted} fontSize="10" textAnchor="middle">
+            Surface Recombination Velocity: {output.effectiveSRV} cm/s
+          </text>
+
+          {/* === SOLAR CELL CROSS-SECTION STRUCTURE === */}
+
+          {/* Top metal contact (finger) */}
+          <rect x="60" y="58" width="380" height="8" rx="2" fill="#374151" stroke="#475569" strokeWidth="0.5" />
+          <rect x="60" y="58" width="380" height="3" rx="1" fill="#4b5563" opacity="0.6" />
+
+          {/* Top passivation layer with glow effect */}
           {passivationType !== 'none' && (
-            <rect x="50" y="45" width="300" height="10" fill={
-              passivationType === 'PERC' ? '#4ade80' :
-              passivationType === 'TOPCon' ? '#60a5fa' : '#a78bfa'
-            } opacity={0.6} rx="2" />
+            <g filter="url(#pasrPassivationGlow)">
+              <rect x="60" y="66" width="380" height={passivationType === 'HJT' ? 18 : 12}
+                rx="1"
+                fill={
+                  passivationType === 'PERC' ? 'url(#pasrPERCLayer)' :
+                  passivationType === 'TOPCon' ? 'url(#pasrTOPConLayer)' : 'url(#pasrHJTLayer)'
+                }
+              />
+              {/* Passivation layer label */}
+              <text x="450" y={passivationType === 'HJT' ? 78 : 75} fill={
+                passivationType === 'PERC' ? '#10b981' :
+                passivationType === 'TOPCon' ? '#3b82f6' : '#a855f7'
+              } fontSize="8" textAnchor="end" fontWeight="bold">
+                {passivationType === 'PERC' ? 'Al2O3' : passivationType === 'TOPCon' ? 'SiO2/poly-Si' : 'a-Si:H'}
+              </text>
+            </g>
           )}
 
-          {/* Silicon wafer */}
-          <rect x="50" y="55" width="300" height="140" fill="url(#siliconGrad2)" />
+          {/* Top surface interface zone (dangling bonds region) - only visible without passivation */}
+          {passivationType === 'none' && (
+            <rect x="60" y="66" width="380" height="30" fill="url(#pasrSurfaceInterface)" />
+          )}
+
+          {/* Silicon wafer bulk with crystal lattice pattern */}
+          <rect x="60" y={passivationType === 'none' ? 66 : (passivationType === 'HJT' ? 84 : 78)}
+            width="380"
+            height={passivationType === 'none' ? 190 : (passivationType === 'HJT' ? 168 : 174)}
+            fill="url(#pasrSiliconBulk)"
+          />
+          <rect x="60" y={passivationType === 'none' ? 66 : (passivationType === 'HJT' ? 84 : 78)}
+            width="380"
+            height={passivationType === 'none' ? 190 : (passivationType === 'HJT' ? 168 : 174)}
+            fill="url(#pasrLatticePattern)"
+          />
+
+          {/* Silicon wafer label */}
+          <text x="75" y="175" fill={colors.textMuted} fontSize="9" fontWeight="bold" opacity="0.6">
+            c-Si Wafer
+          </text>
+
+          {/* Bottom surface interface zone */}
+          {passivationType === 'none' && (
+            <rect x="60" y="226" width="380" height="30" fill="url(#pasrSurfaceInterface)" transform="scale(1,-1) translate(0,-512)" />
+          )}
 
           {/* Bottom passivation layer */}
           {passivationType !== 'none' && (
-            <rect x="50" y="195" width="300" height="10" fill={
-              passivationType === 'PERC' ? '#4ade80' :
-              passivationType === 'TOPCon' ? '#60a5fa' : '#a78bfa'
-            } opacity={0.6} rx="2" />
+            <g filter="url(#pasrPassivationGlow)">
+              <rect x="60" y={passivationType === 'HJT' ? 252 : 252}
+                width="380"
+                height={passivationType === 'HJT' ? 18 : 12}
+                rx="1"
+                fill={
+                  passivationType === 'PERC' ? 'url(#pasrPERCLayer)' :
+                  passivationType === 'TOPCon' ? 'url(#pasrTOPConLayer)' : 'url(#pasrHJTLayer)'
+                }
+              />
+            </g>
           )}
 
-          {/* Surface defects */}
-          {defects.map((d, i) => (
-            <g key={i}>
-              <circle cx={d.x} cy={d.y} r="6" fill="url(#defectGrad)" />
-              <text x={d.x} y={d.y + 3} textAnchor="middle" fontSize="8" fill="#fff">X</text>
+          {/* Bottom metal contact */}
+          <rect x="60" y={passivationType === 'none' ? 256 : (passivationType === 'HJT' ? 270 : 264)}
+            width="380" height="10" rx="2" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+          <rect x="60" y={passivationType === 'none' ? 263 : (passivationType === 'HJT' ? 277 : 271)}
+            width="380" height="3" rx="1" fill="#111827" opacity="0.8" />
+
+          {/* === SURFACE DEFECTS (DANGLING BONDS) === */}
+          {topDefects.map((d, i) => (
+            <g key={`top-${i}`} filter="url(#pasrDefectGlow)">
+              <circle cx={d.x} cy={d.y} r="8" fill="url(#pasrDefectTrap)" />
+              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">X</text>
+              {/* Dangling bond indicator lines */}
+              <line x1={d.x} y1={d.y - 10} x2={d.x} y2={d.y - 18} stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
+            </g>
+          ))}
+          {bottomDefects.map((d, i) => (
+            <g key={`bottom-${i}`} filter="url(#pasrDefectGlow)">
+              <circle cx={d.x} cy={d.y} r="8" fill="url(#pasrDefectTrap)" />
+              <text x={d.x} y={d.y + 4} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">X</text>
+              <line x1={d.x} y1={d.y + 10} x2={d.x} y2={d.y + 18} stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
             </g>
           ))}
 
-          {/* Carriers (electrons and holes) */}
+          {/* Defect label */}
+          {passivationType === 'none' && topDefects.length > 0 && (
+            <text x={topDefects[0].x - 5} y={topDefects[0].y - 25} fill="#f87171" fontSize="8" fontWeight="bold">
+              Dangling Bonds
+            </text>
+          )}
+
+          {/* === CARRIER PARTICLES WITH PREMIUM EFFECTS === */}
           {particles.map(p => (
-            <circle
-              key={p.id}
-              cx={p.x}
-              cy={p.y}
-              r="5"
-              fill={p.type === 'electron' ? 'url(#electronGrad)' : 'url(#holeGrad)'}
-              opacity={p.alive ? 0.9 : 0.3}
-            />
+            <g key={p.id}>
+              {/* Outer glow */}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r="10"
+                fill={p.type === 'electron' ? 'url(#pasrElectronGlow)' : 'url(#pasrHoleGlow)'}
+                filter={p.type === 'electron' ? 'url(#pasrElectronBlur)' : 'url(#pasrHoleBlur)'}
+                opacity={p.alive ? 0.6 : 0.1}
+              />
+              {/* Core particle */}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r="5"
+                fill={p.type === 'electron' ? '#22d3ee' : '#f472b6'}
+                opacity={p.alive ? 1 : 0.2}
+              />
+              {/* Carrier label */}
+              <text x={p.x} y={p.y + 3} textAnchor="middle" fontSize="6" fill="#fff" fontWeight="bold" opacity={p.alive ? 1 : 0.3}>
+                {p.type === 'electron' ? 'e-' : 'h+'}
+              </text>
+            </g>
           ))}
 
-          {/* Legend */}
-          <g transform="translate(50, 220)">
-            <circle cx="10" cy="0" r="5" fill={colors.electron} />
-            <text x="20" y="4" fill={colors.textSecondary} fontSize="10">Electron</text>
+          {/* === RECOMBINATION EVENTS (FLASH EFFECTS) === */}
+          {recombEvents.map((p, i) => (
+            <g key={`recomb-${p.id}`} filter="url(#pasrRecombGlow)">
+              <circle cx={p.x} cy={p.y} r="15" fill="url(#pasrRecombFlash)" opacity={0.8 - i * 0.15}>
+                <animate attributeName="r" values="8;20;8" dur="0.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          ))}
 
-            <circle cx="80" cy="0" r="5" fill={colors.hole} />
-            <text x="90" y="4" fill={colors.textSecondary} fontSize="10">Hole</text>
+          {/* === PHOTON GENERATION INDICATOR === */}
+          {isAnimating && (
+            <g>
+              <circle cx="250" cy="140" r="12" fill="url(#pasrPhotonGlow)" opacity="0.6">
+                <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              <text x="250" y="125" textAnchor="middle" fontSize="7" fill="#fef08a" opacity="0.8">
+                hv (photon)
+              </text>
+            </g>
+          )}
 
-            <circle cx="140" cy="0" r="5" fill={colors.defect} />
-            <text x="150" y="4" fill={colors.textSecondary} fontSize="10">Defect (trap)</text>
+          {/* === PREMIUM LEGEND === */}
+          <g transform="translate(60, 295)">
+            <rect x="-5" y="-12" width="200" height="50" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke={colors.border} strokeWidth="0.5" />
+
+            {/* Electron */}
+            <circle cx="15" cy="8" r="6" fill="url(#pasrElectronGlow)" />
+            <circle cx="15" cy="8" r="3" fill="#22d3ee" />
+            <text x="28" y="12" fill={colors.textSecondary} fontSize="9" fontWeight="600">Electron (e-)</text>
+
+            {/* Hole */}
+            <circle cx="110" cy="8" r="6" fill="url(#pasrHoleGlow)" />
+            <circle cx="110" cy="8" r="3" fill="#f472b6" />
+            <text x="123" y="12" fill={colors.textSecondary} fontSize="9" fontWeight="600">Hole (h+)</text>
+
+            {/* Defect */}
+            <circle cx="15" cy="28" r="6" fill="url(#pasrDefectTrap)" />
+            <text x="15" y="31" textAnchor="middle" fontSize="7" fill="#fff" fontWeight="bold">X</text>
+            <text x="28" y="32" fill={colors.textSecondary} fontSize="9" fontWeight="600">Surface Defect</text>
+
+            {/* Recombination */}
+            <circle cx="110" cy="28" r="6" fill="url(#pasrRecombFlash)" />
+            <text x="123" y="32" fill={colors.textSecondary} fontSize="9" fontWeight="600">Recombination</text>
           </g>
 
-          {/* Output panel */}
-          <rect x="250" y="240" width="140" height="100" fill="rgba(0,0,0,0.6)" rx="8" stroke={colors.accent} strokeWidth="1" />
-          <text x="320" y="258" fill={colors.textSecondary} fontSize="10" textAnchor="middle">OUTPUT</text>
+          {/* === PREMIUM OUTPUT PANEL === */}
+          <g transform="translate(280, 295)">
+            <rect x="0" y="-12" width="160" height="85" rx="8" fill="url(#pasrOutputPanel)" stroke={colors.accent} strokeWidth="1.5" />
 
-          <text x="260" y="278" fill={colors.textPrimary} fontSize="11">
-            Voc: {output.voc.toFixed(3)} V
-          </text>
-          <text x="260" y="295" fill={colors.textPrimary} fontSize="11">
-            Efficiency: {output.efficiency.toFixed(1)}%
-          </text>
-          <text x="260" y="312" fill={colors.textSecondary} fontSize="10">
-            SRV: {output.effectiveSRV} cm/s
-          </text>
-          <text x="260" y="329" fill={colors.textSecondary} fontSize="10">
-            Lifetime: {output.effectiveLifetime} µs
-          </text>
+            {/* Panel header */}
+            <rect x="0" y="-12" width="160" height="20" rx="8" fill="rgba(245, 158, 11, 0.15)" />
+            <text x="80" y="3" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold" letterSpacing="1">
+              CELL OUTPUT
+            </text>
 
-          {/* Passivation type label */}
-          <text x="200" y="25" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="bold">
-            {passivationPresets[passivationType].name}
-          </text>
+            {/* Voc */}
+            <text x="12" y="25" fill={colors.textMuted} fontSize="9">Open-Circuit Voltage</text>
+            <text x="148" y="25" fill={colors.textPrimary} fontSize="12" textAnchor="end" fontWeight="bold">
+              {output.voc.toFixed(3)} V
+            </text>
+
+            {/* Efficiency */}
+            <text x="12" y="42" fill={colors.textMuted} fontSize="9">Cell Efficiency</text>
+            <text x="148" y="42" fill={colors.success} fontSize="12" textAnchor="end" fontWeight="bold">
+              {output.efficiency.toFixed(1)}%
+            </text>
+
+            {/* Lifetime */}
+            <text x="12" y="59" fill={colors.textMuted} fontSize="9">Carrier Lifetime</text>
+            <text x="148" y="59" fill={colors.textSecondary} fontSize="11" textAnchor="end" fontWeight="600">
+              {output.effectiveLifetime} us
+            </text>
+          </g>
+
+          {/* === FIELD EFFECT ARROWS (for passivation) === */}
+          {passivationType !== 'none' && (
+            <g opacity="0.7">
+              {/* Top field effect - arrows pushing carriers away */}
+              {[100, 180, 260, 340].map((x, i) => (
+                <g key={`field-top-${i}`}>
+                  <line x1={x} y1={passivationType === 'HJT' ? 90 : 84} x2={x} y2={passivationType === 'HJT' ? 105 : 99}
+                    stroke={passivationType === 'PERC' ? '#10b981' : passivationType === 'TOPCon' ? '#3b82f6' : '#a855f7'}
+                    strokeWidth="1.5" markerEnd="url(#pasrArrow)" />
+                </g>
+              ))}
+              {/* Arrow marker definition */}
+              <defs>
+                <marker id="pasrArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                  <path d="M0,0 L6,3 L0,6 Z" fill={
+                    passivationType === 'PERC' ? '#10b981' :
+                    passivationType === 'TOPCon' ? '#3b82f6' : '#a855f7'
+                  } />
+                </marker>
+              </defs>
+              {/* Field effect label */}
+              <text x="400" y={passivationType === 'HJT' ? 100 : 92} fill={
+                passivationType === 'PERC' ? '#10b981' :
+                passivationType === 'TOPCon' ? '#3b82f6' : '#a855f7'
+              } fontSize="7" fontWeight="bold" opacity="0.8">
+                Field Effect
+              </text>
+            </g>
+          )}
+
+          {/* Status indicator for animation */}
+          {isAnimating && (
+            <g>
+              <circle cx={width - 25} cy="25" r="6" fill={colors.success}>
+                <animate attributeName="opacity" values="1;0.4;1" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <text x={width - 35} y="28" fill={colors.success} fontSize="8" textAnchor="end" fontWeight="bold">ACTIVE</text>
+            </g>
+          )}
         </svg>
 
         {interactive && (
@@ -484,28 +801,35 @@ const PassivationRecombinationRenderer: React.FC<PassivationRecombinationRendere
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating
+                  ? '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 15px rgba(16, 185, 129, 0.4)',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
-              {isAnimating ? 'Stop' : 'Animate Carriers'}
+              {isAnimating ? 'Stop Animation' : 'Animate Carriers'}
             </button>
             <button
               onClick={() => { setPassivationType('none'); setSurfaceRecombVelocity(1000); setCarrierLifetime(100); setParticles([]); }}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(245, 158, 11, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

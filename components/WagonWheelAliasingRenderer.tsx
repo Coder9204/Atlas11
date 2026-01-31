@@ -273,13 +273,16 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
-    const wheelRadius = 80;
+    const width = 700;
+    const height = 400;
+    const wheelRadius = 75;
     const apparentSpeed = getApparentSpeed();
 
     // Calculate apparent angle based on sampled frames
     const apparentAngle = sampledAngles.length > 0 ? sampledAngles[sampledAngles.length - 1] : 0;
+
+    // Determine motion direction for coloring
+    const motionDirection = apparentSpeed > 0.1 ? 'forward' : apparentSpeed < -0.1 ? 'backward' : 'stopped';
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -288,71 +291,447 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '700px' }}
         >
-          {/* True wheel (left) */}
-          <g transform={`translate(${width / 4}, ${height / 2 - 30})`}>
-            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">
-              True Motion
+          <defs>
+            {/* Premium wheel rim gradient - metallic finish */}
+            <linearGradient id="wwaWheelRim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#cbd5e1" />
+              <stop offset="75%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Inner wheel hub gradient */}
+            <radialGradient id="wwaWheelHub" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#cbd5e1" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
+
+            {/* Sampled wheel rim - red tinted */}
+            <linearGradient id="wwaSampledRim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#991b1b" />
+              <stop offset="25%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            {/* Sampled wheel hub */}
+            <radialGradient id="wwaSampledHub" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="40%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#450a0a" />
+            </radialGradient>
+
+            {/* Spoke gradient - silver steel */}
+            <linearGradient id="wwaSpokeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Camera body gradient */}
+            <linearGradient id="wwaCameraBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="20%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="80%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Camera lens gradient */}
+            <radialGradient id="wwaCameraLens" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#1e40af" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#1e3a8a" stopOpacity="1" />
+            </radialGradient>
+
+            {/* Frame capture flash */}
+            <radialGradient id="wwaFrameFlash" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="40%" stopColor="#facc15" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#eab308" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ca8a04" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Direction arrow gradient - forward (green) */}
+            <linearGradient id="wwaArrowForward" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            {/* Direction arrow gradient - backward (red) */}
+            <linearGradient id="wwaArrowBackward" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Stopped indicator gradient */}
+            <linearGradient id="wwaStoppedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="wwaLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Tire rubber gradient */}
+            <linearGradient id="wwaTireRubber" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1c1917" />
+              <stop offset="30%" stopColor="#292524" />
+              <stop offset="50%" stopColor="#1c1917" />
+              <stop offset="70%" stopColor="#292524" />
+              <stop offset="100%" stopColor="#0c0a09" />
+            </linearGradient>
+
+            {/* Wheel glow filter - true motion */}
+            <filter id="wwaWheelGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Sampled wheel glow filter */}
+            <filter id="wwaSampledGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Camera flash glow */}
+            <filter id="wwaFlashGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text glow filter */}
+            <filter id="wwaTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow glow filter */}
+            <filter id="wwaArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Sampling line pattern */}
+            <pattern id="wwaSamplingPattern" width="8" height="8" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="none" />
+              <line x1="0" y1="8" x2="8" y2="0" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.5" />
+            </pattern>
+
+            {/* Grid pattern for background */}
+            <pattern id="wwaGridPattern" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+
+          {/* Background */}
+          <rect width={width} height={height} fill="url(#wwaLabBg)" />
+          <rect width={width} height={height} fill="url(#wwaGridPattern)" />
+
+          {/* Title area */}
+          <text x={width / 2} y={28} textAnchor="middle" fill={colors.accent} fontSize={18} fontWeight="bold" filter="url(#wwaTextGlow)">
+            Wagon Wheel Aliasing Demonstration
+          </text>
+
+          {/* === TRUE WHEEL SECTION (Left) === */}
+          <g transform={`translate(175, 185)`}>
+            {/* Section label */}
+            <text x={0} y={-wheelRadius - 35} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
+              ACTUAL MOTION
             </text>
-            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke={colors.wheel} strokeWidth={4} />
-            <circle cx={0} cy={0} r={wheelRadius - 15} fill="none" stroke={colors.wheel} strokeWidth={2} />
-            <circle cx={0} cy={0} r={10} fill={colors.wheel} />
+            <text x={0} y={-wheelRadius - 18} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
+              Continuous Reality
+            </text>
+
+            {/* Outer tire */}
+            <circle cx={0} cy={0} r={wheelRadius + 12} fill="url(#wwaTireRubber)" filter="url(#wwaWheelGlow)" />
+
+            {/* Wheel rim */}
+            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaWheelRim)" strokeWidth={8} />
+
+            {/* Inner rim detail */}
+            <circle cx={0} cy={0} r={wheelRadius - 12} fill="none" stroke="#475569" strokeWidth={2} />
+
+            {/* Hub */}
+            <circle cx={0} cy={0} r={20} fill="url(#wwaWheelHub)" />
+            <circle cx={0} cy={0} r={8} fill="#1e293b" />
+            <circle cx={0} cy={0} r={4} fill="#64748b" />
+
+            {/* Spokes with gradient */}
             {Array.from({ length: numSpokes }).map((_, i) => {
               const angle = (trueAngle + i * 360 / numSpokes) * Math.PI / 180;
+              const x2 = (wheelRadius - 14) * Math.cos(angle);
+              const y2 = (wheelRadius - 14) * Math.sin(angle);
+              const x1 = 18 * Math.cos(angle);
+              const y1 = 18 * Math.sin(angle);
               return (
                 <line
                   key={i}
-                  x1={0}
-                  y1={0}
-                  x2={wheelRadius * Math.cos(angle)}
-                  y2={wheelRadius * Math.sin(angle)}
-                  stroke={colors.spoke}
-                  strokeWidth={4}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="url(#wwaSpokeGradient)"
+                  strokeWidth={5}
+                  strokeLinecap="round"
                 />
               );
             })}
-            <text x={0} y={wheelRadius + 25} textAnchor="middle" fill={colors.success} fontSize={12}>
+
+            {/* Rotation indicator arrow (curved) */}
+            <g transform={`rotate(${trueAngle})`}>
+              <path
+                d={`M ${wheelRadius + 25} -10 A ${wheelRadius + 25} ${wheelRadius + 25} 0 0 1 ${wheelRadius + 25} 10`}
+                fill="none"
+                stroke="url(#wwaArrowForward)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                filter="url(#wwaArrowGlow)"
+              />
+              <polygon
+                points={`${wheelRadius + 25},15 ${wheelRadius + 20},5 ${wheelRadius + 30},5`}
+                fill="url(#wwaArrowForward)"
+              />
+            </g>
+
+            {/* Speed display */}
+            <rect x={-55} y={wheelRadius + 25} width={110} height={28} rx={6} fill="rgba(16, 185, 129, 0.2)" stroke={colors.success} strokeWidth={1} />
+            <text x={0} y={wheelRadius + 44} textAnchor="middle" fill={colors.success} fontSize={13} fontWeight="bold">
               {rotationSpeed.toFixed(1)} rot/s
             </text>
           </g>
 
-          {/* Sampled wheel (right) */}
-          <g transform={`translate(${3 * width / 4}, ${height / 2 - 30})`}>
-            <text x={0} y={-wheelRadius - 20} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">
-              What Camera Sees
+          {/* === CAMERA / SAMPLING VISUALIZATION (Center) === */}
+          <g transform={`translate(${width / 2}, 185)`}>
+            {/* Camera body */}
+            <rect x={-25} y={-60} width={50} height={35} rx={6} fill="url(#wwaCameraBody)" stroke="#4b5563" strokeWidth={1.5} />
+            <rect x={-20} y={-55} width={40} height={25} rx={4} fill="#0f172a" />
+
+            {/* Camera lens */}
+            <circle cx={0} cy={-42} r={12} fill="url(#wwaCameraLens)" stroke="#1e40af" strokeWidth={2} />
+            <circle cx={-4} cy={-46} r={3} fill="rgba(255,255,255,0.3)" />
+
+            {/* Recording indicator */}
+            <circle cx={18} cy={-55} r={4} fill={isPlaying ? "#ef4444" : "#6b7280"}>
+              {isPlaying && (
+                <animate attributeName="opacity" values="1;0.3;1" dur="1s" repeatCount="indefinite" />
+              )}
+            </circle>
+
+            {/* Frame rate display panel */}
+            <rect x={-50} y={-15} width={100} height={50} rx={6} fill="rgba(30, 41, 59, 0.9)" stroke="#475569" strokeWidth={1} />
+            <text x={0} y={2} textAnchor="middle" fill={colors.accent} fontSize={10} fontWeight="bold">
+              FRAME RATE
             </text>
-            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke={colors.sample} strokeWidth={4} />
-            <circle cx={0} cy={0} r={wheelRadius - 15} fill="none" stroke={colors.sample} strokeWidth={2} />
-            <circle cx={0} cy={0} r={10} fill={colors.sample} />
+            <text x={0} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={16} fontWeight="bold">
+              {frameRate} fps
+            </text>
+
+            {/* Sampling timeline visualization */}
+            <g transform="translate(0, 55)">
+              <rect x={-60} y={-8} width={120} height={40} rx={4} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+              <text x={0} y={4} textAnchor="middle" fill={colors.textMuted} fontSize={9}>
+                SAMPLES PER SECOND
+              </text>
+              {/* Sampling ticks */}
+              {Array.from({ length: Math.min(frameRate / 4, 12) }).map((_, i) => (
+                <rect
+                  key={i}
+                  x={-55 + i * (110 / Math.min(frameRate / 4, 12))}
+                  y={10}
+                  width={3}
+                  height={15}
+                  fill={colors.accent}
+                  opacity={0.7 + (i % 2) * 0.3}
+                />
+              ))}
+            </g>
+
+            {/* Camera flash effect when playing */}
+            {isPlaying && (
+              <circle cx={0} cy={-42} r={20} fill="url(#wwaFrameFlash)" filter="url(#wwaFlashGlow)" opacity={0.6}>
+                <animate attributeName="opacity" values="0.6;0.1;0.6" dur={`${1000 / frameRate}ms`} repeatCount="indefinite" />
+              </circle>
+            )}
+          </g>
+
+          {/* === SAMPLED/APPARENT WHEEL (Right) === */}
+          <g transform={`translate(525, 185)`}>
+            {/* Section label */}
+            <text x={0} y={-wheelRadius - 35} textAnchor="middle" fill={colors.textPrimary} fontSize={15} fontWeight="bold">
+              APPARENT MOTION
+            </text>
+            <text x={0} y={-wheelRadius - 18} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
+              What Camera Captures
+            </text>
+
+            {/* Outer tire - red tinted */}
+            <circle cx={0} cy={0} r={wheelRadius + 12} fill="url(#wwaTireRubber)" filter="url(#wwaSampledGlow)" />
+
+            {/* Wheel rim - sampled version */}
+            <circle cx={0} cy={0} r={wheelRadius} fill="none" stroke="url(#wwaSampledRim)" strokeWidth={8} />
+
+            {/* Inner rim detail */}
+            <circle cx={0} cy={0} r={wheelRadius - 12} fill="none" stroke="#991b1b" strokeWidth={2} />
+
+            {/* Hub - sampled */}
+            <circle cx={0} cy={0} r={20} fill="url(#wwaSampledHub)" />
+            <circle cx={0} cy={0} r={8} fill="#450a0a" />
+            <circle cx={0} cy={0} r={4} fill="#ef4444" />
+
+            {/* Spokes with gradient */}
             {Array.from({ length: numSpokes }).map((_, i) => {
               const angle = (apparentAngle + i * 360 / numSpokes) * Math.PI / 180;
+              const x2 = (wheelRadius - 14) * Math.cos(angle);
+              const y2 = (wheelRadius - 14) * Math.sin(angle);
+              const x1 = 18 * Math.cos(angle);
+              const y1 = 18 * Math.sin(angle);
               return (
                 <line
                   key={i}
-                  x1={0}
-                  y1={0}
-                  x2={wheelRadius * Math.cos(angle)}
-                  y2={wheelRadius * Math.sin(angle)}
-                  stroke={colors.spoke}
-                  strokeWidth={4}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke="url(#wwaSpokeGradient)"
+                  strokeWidth={5}
+                  strokeLinecap="round"
                 />
               );
             })}
-            <text x={0} y={wheelRadius + 25} textAnchor="middle" fill={apparentSpeed > 0 ? colors.success : apparentSpeed < 0 ? colors.error : colors.warning} fontSize={12}>
-              Appears: {apparentSpeed.toFixed(1)} rot/s
-              {apparentSpeed < 0 ? ' (backward!)' : apparentSpeed === 0 ? ' (stopped!)' : ''}
+
+            {/* Apparent rotation indicator - changes based on direction */}
+            {motionDirection === 'forward' && (
+              <g transform={`rotate(${apparentAngle})`} filter="url(#wwaArrowGlow)">
+                <path
+                  d={`M ${wheelRadius + 25} -10 A ${wheelRadius + 25} ${wheelRadius + 25} 0 0 1 ${wheelRadius + 25} 10`}
+                  fill="none"
+                  stroke="url(#wwaArrowForward)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+                <polygon
+                  points={`${wheelRadius + 25},15 ${wheelRadius + 20},5 ${wheelRadius + 30},5`}
+                  fill="url(#wwaArrowForward)"
+                />
+              </g>
+            )}
+            {motionDirection === 'backward' && (
+              <g transform={`rotate(${apparentAngle})`} filter="url(#wwaArrowGlow)">
+                <path
+                  d={`M ${wheelRadius + 25} 10 A ${wheelRadius + 25} ${wheelRadius + 25} 0 0 0 ${wheelRadius + 25} -10`}
+                  fill="none"
+                  stroke="url(#wwaArrowBackward)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                />
+                <polygon
+                  points={`${wheelRadius + 25},-15 ${wheelRadius + 20},-5 ${wheelRadius + 30},-5`}
+                  fill="url(#wwaArrowBackward)"
+                />
+              </g>
+            )}
+            {motionDirection === 'stopped' && (
+              <g>
+                <rect x={wheelRadius + 15} y={-12} width={20} height={24} rx={4} fill="url(#wwaStoppedGradient)" filter="url(#wwaArrowGlow)" />
+                <rect x={wheelRadius + 20} y={-6} width={4} height={12} fill="#0f172a" />
+                <rect x={wheelRadius + 26} y={-6} width={4} height={12} fill="#0f172a" />
+              </g>
+            )}
+
+            {/* Apparent speed display */}
+            <rect
+              x={-65}
+              y={wheelRadius + 25}
+              width={130}
+              height={28}
+              rx={6}
+              fill={motionDirection === 'forward' ? 'rgba(16, 185, 129, 0.2)' : motionDirection === 'backward' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
+              stroke={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
+              strokeWidth={1}
+            />
+            <text
+              x={0}
+              y={wheelRadius + 44}
+              textAnchor="middle"
+              fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
+              fontSize={12}
+              fontWeight="bold"
+            >
+              {motionDirection === 'stopped' ? 'STOPPED' : `${Math.abs(apparentSpeed).toFixed(1)} rot/s ${motionDirection === 'backward' ? 'BACKWARD' : ''}`}
             </text>
           </g>
 
-          {/* Frame indicator */}
-          <g transform={`translate(${width / 2}, ${height - 60})`}>
-            <text x={0} y={0} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-              Camera: {frameRate} fps | Spoke spacing: {(360 / numSpokes).toFixed(0)}°
-            </text>
-            <text x={0} y={18} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-              Movement per frame: {((rotationSpeed * 360) / frameRate).toFixed(1)}°
-            </text>
+          {/* === BOTTOM INFO PANEL === */}
+          <g transform={`translate(${width / 2}, ${height - 45})`}>
+            <rect x={-280} y={-25} width={560} height={50} rx={8} fill="rgba(30, 41, 59, 0.95)" stroke="#475569" strokeWidth={1} />
+
+            {/* Left info: Spoke spacing */}
+            <g transform="translate(-200, 0)">
+              <text x={0} y={-8} textAnchor="middle" fill={colors.textMuted} fontSize={9}>SPOKE SPACING</text>
+              <text x={0} y={10} textAnchor="middle" fill={colors.textSecondary} fontSize={14} fontWeight="bold">{(360 / numSpokes).toFixed(0)}deg</text>
+            </g>
+
+            {/* Center info: Movement per frame */}
+            <g transform="translate(0, 0)">
+              <text x={0} y={-8} textAnchor="middle" fill={colors.textMuted} fontSize={9}>MOVEMENT/FRAME</text>
+              <text x={0} y={10} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">{((rotationSpeed * 360) / frameRate).toFixed(1)}deg</text>
+            </g>
+
+            {/* Right info: Aliased movement */}
+            <g transform="translate(200, 0)">
+              <text x={0} y={-8} textAnchor="middle" fill={colors.textMuted} fontSize={9}>ALIASED SHIFT</text>
+              <text
+                x={0}
+                y={10}
+                textAnchor="middle"
+                fill={motionDirection === 'forward' ? colors.success : motionDirection === 'backward' ? colors.error : colors.warning}
+                fontSize={14}
+                fontWeight="bold"
+              >
+                {(() => {
+                  const degreesPerFrame = (rotationSpeed * 360) / frameRate;
+                  const spokeSpacing = 360 / numSpokes;
+                  let apparentPerFrame = degreesPerFrame % spokeSpacing;
+                  if (apparentPerFrame > spokeSpacing / 2) {
+                    apparentPerFrame = apparentPerFrame - spokeSpacing;
+                  }
+                  return `${apparentPerFrame >= 0 ? '+' : ''}${apparentPerFrame.toFixed(1)}deg`;
+                })()}
+              </text>
+            </g>
           </g>
         </svg>
 
@@ -361,32 +740,39 @@ const WagonWheelAliasingRenderer: React.FC<WagonWheelAliasingRendererProps> = ({
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 28px',
+                borderRadius: '10px',
                 border: 'none',
-                background: isPlaying ? colors.error : colors.success,
+                background: isPlaying
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '15px',
+                boxShadow: isPlaying
+                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play'}
+              {isPlaying ? 'Pause' : 'Play'}
             </button>
             <button
               onClick={resetSimulation}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                padding: '14px 28px',
+                borderRadius: '10px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(245, 158, 11, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: '15px',
+                transition: 'all 0.2s ease',
               }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}

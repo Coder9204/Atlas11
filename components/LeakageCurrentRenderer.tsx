@@ -348,15 +348,22 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 350;
+    const width = 700;
+    const height = 420;
     const output = calculatePower();
 
     // Bar chart data
     const maxPower = Math.max(output.dynamicPower, output.totalLeakage) * 1.2;
-    const dynamicHeight = (output.dynamicPower / maxPower) * 150;
-    const gateHeight = (output.gateLeakage / maxPower) * 150;
-    const subHeight = (output.subthresholdLeakage / maxPower) * 150;
+    const dynamicHeight = (output.dynamicPower / maxPower) * 120;
+    const gateHeight = (output.gateLeakage / maxPower) * 120;
+    const subHeight = (output.subthresholdLeakage / maxPower) * 120;
+
+    // Calculate oxide thickness for visualization (scales with process node)
+    const oxideThickness = Math.max(4, Math.min(20, processNode / 4));
+
+    // Calculate electron animation positions based on leakage intensity
+    const gateLeakIntensity = Math.min(1, output.gateLeakage / 30);
+    const subLeakIntensity = Math.min(1, output.subthresholdLeakage / 50);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -365,93 +372,489 @@ const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Power Breakdown at {processNode}nm Node
+          {/* ============================================ */}
+          {/* PREMIUM DEFS SECTION - Gradients & Filters */}
+          {/* ============================================ */}
+          <defs>
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="leakLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a1628" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Gate metal gradient - premium purple metallic */}
+            <linearGradient id="leakGateMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="20%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="80%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#5b21b6" />
+            </linearGradient>
+
+            {/* Gate oxide gradient - golden insulator with depth */}
+            <linearGradient id="leakOxideGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Silicon substrate gradient - gray semiconductor */}
+            <linearGradient id="leakSiliconGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="60%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Channel region gradient - lighter silicon for inversion layer */}
+            <linearGradient id="leakChannelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="40%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Source/Drain n+ doped regions - blue semiconductor */}
+            <linearGradient id="leakSourceDrainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Depletion region gradient */}
+            <linearGradient id="leakDepletionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#6b7280" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Electron glow - radial for particles */}
+            <radialGradient id="leakElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Gate leakage electron glow - purple tinted */}
+            <radialGradient id="leakGateElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#e879f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#d946ef" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#a855f7" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Subthreshold leakage electron glow - orange tinted */}
+            <radialGradient id="leakSubElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fdba74" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fb923c" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#f97316" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Dynamic power bar gradient - blue */}
+            <linearGradient id="leakDynamicBarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* Leakage power bar gradient - red/orange */}
+            <linearGradient id="leakLeakageBarGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b91c1c" />
+              <stop offset="30%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Warning glow filter */}
+            <filter id="leakWarningGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Electron blur/glow filter */}
+            <filter id="leakElectronBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for oxide */}
+            <filter id="leakOxideGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="leakInnerShadow">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="shadow" />
+              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            </filter>
+
+            {/* Panel background gradient */}
+            <linearGradient id="leakPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Metrics panel gradient */}
+            <linearGradient id="leakMetricsPanelBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#111827" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Grid pattern for background */}
+            <pattern id="leakGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Quantum tunneling arrow marker */}
+            <marker id="leakArrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#a855f7" />
+            </marker>
+
+            {/* Subthreshold arrow marker */}
+            <marker id="leakSubArrowHead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#f97316" />
+            </marker>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#leakLabBg)" />
+          <rect width={width} height={height} fill="url(#leakGridPattern)" />
+
+          {/* Title with glow effect */}
+          <text x={width/2} y={28} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" style={{ letterSpacing: '0.05em' }}>
+            Transistor Leakage at {processNode}nm Node
+          </text>
+          <text x={width/2} y={46} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Gate Oxide: {output.tox.toFixed(2)}nm | Temperature: {temperature}C | Vdd: {supplyVoltage.toFixed(2)}V
           </text>
 
-          {/* Transistor visualization */}
-          <g transform="translate(30, 50)">
-            {/* Gate */}
-            <rect x={40} y={20} width={60} height={10} fill={colors.gate} />
-            <text x={70} y={15} fill={colors.gate} fontSize={9} textAnchor="middle">Gate</text>
+          {/* ============================================ */}
+          {/* PREMIUM TRANSISTOR CROSS-SECTION */}
+          {/* ============================================ */}
+          <g transform="translate(40, 70)">
+            {/* Transistor frame */}
+            <rect x={-10} y={-10} width={280} height={200} rx={8} fill="url(#leakPanelBg)" stroke="#334155" strokeWidth={1} />
 
-            {/* Oxide */}
-            <rect x={40} y={30} width={60} height={Math.max(2, processNode/15)} fill="#fbbf24" opacity={0.7} />
+            {/* Section label */}
+            <rect x={0} y={-25} width={120} height={18} rx={4} fill="#111827" />
+            <text x={60} y={-12} fill="#94a3b8" fontSize={10} fontWeight="bold" textAnchor="middle" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              MOSFET Cross-Section
+            </text>
 
-            {/* Channel */}
-            <rect x={40} y={30 + Math.max(2, processNode/15)} width={60} height={15} fill="#475569" />
+            {/* Silicon substrate (P-type body) */}
+            <rect x={0} y={100} width={260} height={70} fill="url(#leakSiliconGradient)" />
+            <text x={130} y={155} fill="#9ca3af" fontSize={9} textAnchor="middle" fontWeight="bold">P-type Substrate</text>
 
-            {/* Source/Drain */}
-            <rect x={20} y={30 + Math.max(2, processNode/15)} width={25} height={15} fill={colors.dynamic} />
-            <rect x={95} y={30 + Math.max(2, processNode/15)} width={25} height={15} fill={colors.dynamic} />
+            {/* Source region (N+ doped) */}
+            <rect x={10} y={70} width={60} height={50} rx={4} fill="url(#leakSourceDrainGradient)" />
+            <rect x={12} y={72} width={56} height={46} rx={3} fill="none" stroke="#93c5fd" strokeWidth={0.5} strokeOpacity={0.5} />
+            <text x={40} y={100} fill="#bfdbfe" fontSize={10} fontWeight="bold" textAnchor="middle">N+</text>
+            <text x={40} y={135} fill="#60a5fa" fontSize={9} textAnchor="middle" fontWeight="bold">SOURCE</text>
 
-            <text x={32} y={65} fill={colors.textMuted} fontSize={8} textAnchor="middle">S</text>
-            <text x={107} y={65} fill={colors.textMuted} fontSize={8} textAnchor="middle">D</text>
+            {/* Drain region (N+ doped) */}
+            <rect x={190} y={70} width={60} height={50} rx={4} fill="url(#leakSourceDrainGradient)" />
+            <rect x={192} y={72} width={56} height={46} rx={3} fill="none" stroke="#93c5fd" strokeWidth={0.5} strokeOpacity={0.5} />
+            <text x={220} y={100} fill="#bfdbfe" fontSize={10} fontWeight="bold" textAnchor="middle">N+</text>
+            <text x={220} y={135} fill="#60a5fa" fontSize={9} textAnchor="middle" fontWeight="bold">DRAIN</text>
 
-            {/* Leakage arrows */}
-            {/* Gate leakage */}
-            <path d={`M 70 ${35 + Math.max(2, processNode/15)} L 70 70`} stroke={colors.gate} strokeWidth={2} strokeDasharray="3,2" opacity={0.8}>
-              <animate attributeName="stroke-dashoffset" values="0;10" dur="1s" repeatCount="indefinite" />
+            {/* Channel region */}
+            <rect x={70} y={70 + oxideThickness} width={120} height={30} fill="url(#leakChannelGradient)" />
+            <rect x={72} y={72 + oxideThickness} width={116} height={26} fill="url(#leakDepletionGradient)" />
+
+            {/* Gate oxide layer - thickness varies with process node */}
+            <rect x={70} y={70} width={120} height={oxideThickness} fill="url(#leakOxideGradient)" filter="url(#leakOxideGlow)" />
+            <rect x={72} y={71} width={116} height={oxideThickness - 2} fill="none" stroke="#fde68a" strokeWidth={0.5} strokeOpacity={0.6} />
+
+            {/* Gate oxide label */}
+            <line x1={195} y1={70 + oxideThickness/2} x2={235} y2={70 + oxideThickness/2} stroke="#fbbf24" strokeWidth={1} strokeDasharray="2,2" />
+            <text x={240} y={70 + oxideThickness/2 + 3} fill="#fbbf24" fontSize={8} fontWeight="bold">
+              SiO₂ ({output.tox.toFixed(1)}nm)
+            </text>
+
+            {/* Gate metal contact */}
+            <rect x={70} y={40} width={120} height={30} rx={4} fill="url(#leakGateMetal)" />
+            <rect x={72} y={42} width={116} height={26} rx={3} fill="none" stroke="#c4b5fd" strokeWidth={0.5} strokeOpacity={0.5} />
+            <text x={130} y={58} fill="#f5f3ff" fontSize={11} fontWeight="bold" textAnchor="middle">GATE</text>
+
+            {/* Gate contact */}
+            <rect x={115} y={20} width={30} height={25} fill="#4b5563" />
+            <rect x={117} y={22} width={26} height={21} fill="#374151" />
+
+            {/* ============================================ */}
+            {/* ANIMATED LEAKAGE CURRENT ELECTRONS */}
+            {/* ============================================ */}
+
+            {/* Gate Leakage (Quantum Tunneling) - Electrons tunneling through oxide */}
+            {[...Array(Math.ceil(gateLeakIntensity * 6))].map((_, i) => {
+              const baseY = 45 + (i % 3) * 8;
+              const xOffset = (i % 2) * 40 + 90;
+              return (
+                <g key={`gate-leak-${i}`}>
+                  {/* Tunneling electron with glow */}
+                  <circle r="5" fill="url(#leakGateElectronGlow)" filter="url(#leakElectronBlur)">
+                    <animate
+                      attributeName="cy"
+                      values={`${baseY};${baseY + 60};${baseY}`}
+                      dur={`${1.5 + i * 0.2}s`}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="cx"
+                      values={`${xOffset};${xOffset + (Math.random() - 0.5) * 10};${xOffset}`}
+                      dur={`${1.5 + i * 0.2}s`}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.9;0.9;0"
+                      dur={`${1.5 + i * 0.2}s`}
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                  <circle r="2" fill="#e879f9">
+                    <animate
+                      attributeName="cy"
+                      values={`${baseY};${baseY + 60};${baseY}`}
+                      dur={`${1.5 + i * 0.2}s`}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="cx"
+                      values={`${xOffset};${xOffset + (Math.random() - 0.5) * 10};${xOffset}`}
+                      dur={`${1.5 + i * 0.2}s`}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;1;1;0"
+                      dur={`${1.5 + i * 0.2}s`}
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                </g>
+              );
+            })}
+
+            {/* Gate leakage flow indicator arrow */}
+            <path
+              d="M 130 45 L 130 95"
+              stroke="#a855f7"
+              strokeWidth={2}
+              strokeDasharray="4,3"
+              markerEnd="url(#leakArrowHead)"
+              opacity={0.7}
+            >
+              <animate attributeName="stroke-dashoffset" values="0;14" dur="0.8s" repeatCount="indefinite" />
             </path>
-            <text x={85} y={55} fill={colors.gate} fontSize={8}>Gate leak</text>
 
-            {/* Subthreshold leakage */}
-            <path d="M 45 45 L 95 45" stroke={colors.subthreshold} strokeWidth={2} strokeDasharray="3,2" opacity={0.8}>
-              <animate attributeName="stroke-dashoffset" values="0;10" dur="0.5s" repeatCount="indefinite" />
+            {/* Subthreshold Leakage - Electrons flowing source to drain */}
+            {[...Array(Math.ceil(subLeakIntensity * 8))].map((_, i) => {
+              const yPos = 85 + (i % 3) * 8;
+              return (
+                <g key={`sub-leak-${i}`}>
+                  {/* Subthreshold electron with glow */}
+                  <circle r="4" fill="url(#leakSubElectronGlow)" filter="url(#leakElectronBlur)">
+                    <animate
+                      attributeName="cx"
+                      values="55;205"
+                      dur={`${0.8 + i * 0.15}s`}
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                    <animate
+                      attributeName="cy"
+                      values={`${yPos};${yPos + Math.sin(i) * 5};${yPos}`}
+                      dur={`${0.8 + i * 0.15}s`}
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.8;0.8;0"
+                      dur={`${0.8 + i * 0.15}s`}
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                  </circle>
+                  <circle r="2" fill="#fb923c">
+                    <animate
+                      attributeName="cx"
+                      values="55;205"
+                      dur={`${0.8 + i * 0.15}s`}
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                    <animate
+                      attributeName="cy"
+                      values={`${yPos};${yPos + Math.sin(i) * 5};${yPos}`}
+                      dur={`${0.8 + i * 0.15}s`}
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;1;1;0"
+                      dur={`${0.8 + i * 0.15}s`}
+                      repeatCount="indefinite"
+                      begin={`${i * 0.1}s`}
+                    />
+                  </circle>
+                </g>
+              );
+            })}
+
+            {/* Subthreshold leakage flow indicator arrow */}
+            <path
+              d="M 55 90 L 200 90"
+              stroke="#f97316"
+              strokeWidth={2}
+              strokeDasharray="4,3"
+              markerEnd="url(#leakSubArrowHead)"
+              opacity={0.6}
+            >
+              <animate attributeName="stroke-dashoffset" values="0;14" dur="0.5s" repeatCount="indefinite" />
             </path>
-            <text x={70} y={80} fill={colors.subthreshold} fontSize={8} textAnchor="middle">Subthreshold leak</text>
           </g>
 
-          {/* Power bar chart */}
-          <g transform="translate(200, 50)">
-            <text x={85} y={0} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Power (W)</text>
+          {/* ============================================ */}
+          {/* LEAKAGE TYPE LEGEND */}
+          {/* ============================================ */}
+          <g transform="translate(40, 285)">
+            <rect x={-10} y={-10} width={280} height={70} rx={6} fill="url(#leakMetricsPanelBg)" stroke="#334155" strokeWidth={1} />
+
+            {/* Gate Leakage indicator */}
+            <circle cx={15} cy={15} r={8} fill="url(#leakGateElectronGlow)" />
+            <circle cx={15} cy={15} r={3} fill="#e879f9" />
+            <text x={30} y={12} fill={colors.gate} fontSize={10} fontWeight="bold">Gate Leakage</text>
+            <text x={30} y={24} fill={colors.textMuted} fontSize={8}>Quantum tunneling through oxide</text>
+            <text x={200} y={18} fill={colors.gate} fontSize={12} fontWeight="bold" textAnchor="end">
+              {output.gateLeakage.toFixed(2)}W
+            </text>
+
+            {/* Subthreshold Leakage indicator */}
+            <circle cx={15} cy={45} r={8} fill="url(#leakSubElectronGlow)" />
+            <circle cx={15} cy={45} r={3} fill="#fb923c" />
+            <text x={30} y={42} fill={colors.subthreshold} fontSize={10} fontWeight="bold">Subthreshold Leakage</text>
+            <text x={30} y={54} fill={colors.textMuted} fontSize={8}>Source-drain current when OFF</text>
+            <text x={200} y={48} fill={colors.subthreshold} fontSize={12} fontWeight="bold" textAnchor="end">
+              {output.subthresholdLeakage.toFixed(2)}W
+            </text>
+          </g>
+
+          {/* ============================================ */}
+          {/* POWER COMPARISON BAR CHART */}
+          {/* ============================================ */}
+          <g transform="translate(360, 70)">
+            {/* Chart frame */}
+            <rect x={-15} y={-10} width={330} height={200} rx={8} fill="url(#leakPanelBg)" stroke="#334155" strokeWidth={1} />
+
+            {/* Section label */}
+            <rect x={0} y={-25} width={100} height={18} rx={4} fill="#111827" />
+            <text x={50} y={-12} fill="#94a3b8" fontSize={10} fontWeight="bold" textAnchor="middle" style={{ textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Power Analysis
+            </text>
+
+            {/* Y-axis */}
+            <line x1={50} y1={10} x2={50} y2={150} stroke={colors.textMuted} strokeWidth={1} />
+            <text x={25} y={80} fill={colors.textMuted} fontSize={9} textAnchor="middle" transform="rotate(-90, 25, 80)">Power (Watts)</text>
+
+            {/* X-axis */}
+            <line x1={50} y1={150} x2={290} y2={150} stroke={colors.textMuted} strokeWidth={1} />
 
             {/* Dynamic power bar */}
-            <rect x={20} y={160 - dynamicHeight} width={50} height={dynamicHeight} fill={colors.dynamic} rx={4} />
-            <text x={45} y={175} fill={colors.textMuted} fontSize={9} textAnchor="middle">Dynamic</text>
-            <text x={45} y={155 - dynamicHeight} fill={colors.dynamic} fontSize={10} textAnchor="middle">
+            <rect x={80} y={150 - dynamicHeight} width={70} height={dynamicHeight} rx={4} fill="url(#leakDynamicBarGradient)" />
+            <rect x={82} y={152 - dynamicHeight} width={66} height={dynamicHeight - 4} rx={3} fill="none" stroke="#60a5fa" strokeWidth={0.5} strokeOpacity={0.5} />
+            <text x={115} y={165} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="bold">Dynamic</text>
+            <text x={115} y={145 - dynamicHeight} fill={colors.dynamic} fontSize={11} textAnchor="middle" fontWeight="bold">
               {output.dynamicPower.toFixed(1)}W
             </text>
 
-            {/* Leakage power bar (stacked) */}
-            <rect x={100} y={160 - gateHeight - subHeight} width={50} height={subHeight} fill={colors.subthreshold} rx={4} />
-            <rect x={100} y={160 - gateHeight} width={50} height={gateHeight} fill={colors.gate} rx={4} />
-            <text x={125} y={175} fill={colors.textMuted} fontSize={9} textAnchor="middle">Leakage</text>
-            <text x={125} y={155 - gateHeight - subHeight} fill={colors.leakage} fontSize={10} textAnchor="middle">
+            {/* Leakage power bar (stacked: subthreshold + gate) */}
+            <rect x={190} y={150 - subHeight - gateHeight} width={70} height={subHeight} rx={4} fill={colors.subthreshold} />
+            <rect x={190} y={150 - gateHeight} width={70} height={gateHeight} rx={4} fill={colors.gate} />
+            <rect x={192} y={152 - subHeight - gateHeight} width={66} height={subHeight + gateHeight - 4} rx={3} fill="none" stroke="#f87171" strokeWidth={0.5} strokeOpacity={0.5} />
+            <text x={225} y={165} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="bold">Leakage</text>
+            <text x={225} y={145 - gateHeight - subHeight} fill={colors.leakage} fontSize={11} textAnchor="middle" fontWeight="bold">
               {output.totalLeakage.toFixed(1)}W
             </text>
 
-            {/* Baseline */}
-            <line x1={10} y1={160} x2={160} y2={160} stroke={colors.textMuted} strokeWidth={1} />
+            {/* Stack labels */}
+            {gateHeight > 15 && (
+              <text x={225} y={150 - gateHeight/2} fill="#f5f3ff" fontSize={8} textAnchor="middle">Gate</text>
+            )}
+            {subHeight > 15 && (
+              <text x={225} y={150 - gateHeight - subHeight/2} fill="#fff7ed" fontSize={8} textAnchor="middle">Sub</text>
+            )}
           </g>
 
-          {/* Metrics panel */}
-          <rect x={20} y={260} width={360} height={80} fill="rgba(0,0,0,0.4)" rx={8} />
+          {/* ============================================ */}
+          {/* METRICS & STATUS PANEL */}
+          {/* ============================================ */}
+          <g transform="translate(360, 285)">
+            <rect x={-15} y={-10} width={330} height={70} rx={6} fill="url(#leakMetricsPanelBg)" stroke="#334155" strokeWidth={1} />
 
-          <text x={35} y={285} fill={colors.textSecondary} fontSize={11}>Process: {processNode}nm</text>
-          <text x={35} y={305} fill={colors.textSecondary} fontSize={11}>Oxide: {output.tox.toFixed(2)}nm</text>
-          <text x={35} y={325} fill={colors.textSecondary} fontSize={11}>Temp: {temperature}C</text>
+            {/* Total Power */}
+            <text x={10} y={12} fill={colors.textSecondary} fontSize={10}>Total Power:</text>
+            <text x={10} y={28} fill={colors.textPrimary} fontSize={14} fontWeight="bold">{output.totalPower.toFixed(1)}W</text>
 
-          <text x={200} y={285} fill={colors.textSecondary} fontSize={11}>Total: {output.totalPower.toFixed(1)}W</text>
-          <text x={200} y={305} fill={output.isLeakageDominant ? colors.error : colors.success} fontSize={11} fontWeight="bold">
-            Leakage: {output.leakageRatio.toFixed(0)}% of total
-          </text>
-          <text x={200} y={325} fill={colors.textSecondary} fontSize={11}>
-            {transistorCount}B transistors @ {clockFrequency}GHz
-          </text>
+            {/* Leakage Ratio */}
+            <text x={120} y={12} fill={colors.textSecondary} fontSize={10}>Leakage Ratio:</text>
+            <text x={120} y={28} fill={output.isLeakageDominant ? colors.error : colors.success} fontSize={14} fontWeight="bold">
+              {output.leakageRatio.toFixed(0)}%
+            </text>
 
-          {/* Warning indicator */}
-          {output.isLeakageDominant && (
-            <g>
-              <rect x={300} y={45} width={80} height={25} fill={colors.error} rx={4} opacity={0.3} />
-              <text x={340} y={62} fill={colors.error} fontSize={10} textAnchor="middle" fontWeight="bold">
-                Leakage Dominant!
-              </text>
-            </g>
-          )}
+            {/* Transistor count */}
+            <text x={220} y={12} fill={colors.textSecondary} fontSize={10}>Transistors:</text>
+            <text x={220} y={28} fill={colors.textPrimary} fontSize={14} fontWeight="bold">{transistorCount}B</text>
+
+            {/* Clock frequency */}
+            <text x={10} y={48} fill={colors.textSecondary} fontSize={10}>Clock: {clockFrequency}GHz</text>
+            <text x={120} y={48} fill={colors.textSecondary} fontSize={10}>Vth: {output.vth.toFixed(2)}V</text>
+
+            {/* Warning indicator with glow */}
+            {output.isLeakageDominant && (
+              <g filter="url(#leakWarningGlow)">
+                <rect x={200} y={35} width={100} height={22} fill={colors.error} rx={4} opacity={0.3} />
+                <text x={250} y={50} fill={colors.error} fontSize={10} textAnchor="middle" fontWeight="bold">
+                  LEAKAGE DOMINANT
+                </text>
+              </g>
+            )}
+          </g>
+
+          {/* Process node indicator at bottom */}
+          <g transform={`translate(${width/2}, ${height - 25})`}>
+            <text x={0} y={0} fill={colors.textMuted} fontSize={10} textAnchor="middle">
+              Process Technology: {processNode}nm | {processNode <= 7 ? 'FinFET/GAA' : processNode <= 22 ? 'FinFET' : 'Planar MOSFET'}
+            </text>
+          </g>
         </svg>
 
         {interactive && (

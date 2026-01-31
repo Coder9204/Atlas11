@@ -434,102 +434,437 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   ) => {
     const friction = getFriction(type);
     const wheelRotation = type === 'rolling' ? position * 2 : 0;
+    const frictionForce = friction * 10; // weight = 10N
 
     return (
-      <svg viewBox="0 0 400 150" className="w-full h-36 md:h-44">
-        {/* Background */}
-        <rect x="0" y="0" width="400" height="150" fill="#F8FAFC" rx="10" />
+      <svg viewBox="0 0 400 180" className="w-full h-44 md:h-52">
+        <defs>
+          {/* === PREMIUM GRADIENTS FOR ROLLING VS SLIDING === */}
 
-        {/* Surface */}
-        <rect x="0" y="110" width="400" height="40" fill={colors.surface} />
+          {/* Lab background gradient */}
+          <linearGradient id="rvsLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="25%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
 
-        {/* Friction indicators */}
-        <g transform={`translate(${50 + position}, 110)`}>
-          {/* Friction lines (more for sliding) */}
-          {type === 'sliding' && (
-            <>
-              <line x1="-30" y1="-2" x2="-10" y2="-2" stroke={colors.sliding} strokeWidth="3" />
-              <line x1="-25" y1="2" x2="-5" y2="2" stroke={colors.sliding} strokeWidth="3" />
-              <line x1="-20" y1="6" x2="0" y2="6" stroke={colors.sliding} strokeWidth="2" />
-            </>
-          )}
-          {type === 'rolling' && (
-            <line x1="-15" y1="0" x2="0" y2="0" stroke={colors.rolling} strokeWidth="2" strokeDasharray="3,3" />
+          {/* Premium surface gradient with texture depth */}
+          <linearGradient id="rvsSurfaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#78716c" />
+            <stop offset="15%" stopColor="#57534e" />
+            <stop offset="40%" stopColor="#44403c" />
+            <stop offset="70%" stopColor="#292524" />
+            <stop offset="100%" stopColor="#1c1917" />
+          </linearGradient>
+
+          {/* Premium sliding box gradient - 3D metal effect */}
+          <linearGradient id="rvsBoxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="20%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="80%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </linearGradient>
+
+          {/* Box highlight for 3D effect */}
+          <linearGradient id="rvsBoxHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Premium cart body gradient */}
+          <linearGradient id="rvsCartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="25%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#059669" />
+            <stop offset="75%" stopColor="#047857" />
+            <stop offset="100%" stopColor="#065f46" />
+          </linearGradient>
+
+          {/* Cart highlight */}
+          <linearGradient id="rvsCartHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.5" />
+            <stop offset="30%" stopColor="#34d399" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Premium wheel radial gradient - 3D sphere effect */}
+          <radialGradient id="rvsWheelGrad" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="30%" stopColor="#4b5563" />
+            <stop offset="60%" stopColor="#374151" />
+            <stop offset="85%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </radialGradient>
+
+          {/* Wheel rubber tire gradient */}
+          <radialGradient id="rvsWheelTire" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="70%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </radialGradient>
+
+          {/* Wheel hub metallic gradient */}
+          <radialGradient id="rvsWheelHub" cx="40%" cy="40%" r="50%">
+            <stop offset="0%" stopColor="#d1d5db" />
+            <stop offset="40%" stopColor="#9ca3af" />
+            <stop offset="80%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </radialGradient>
+
+          {/* Force arrow gradient */}
+          <linearGradient id="rvsForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#818cf8" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#6366f1" />
+            <stop offset="70%" stopColor="#4f46e5" />
+            <stop offset="100%" stopColor="#4338ca" />
+          </linearGradient>
+
+          {/* Friction force arrow - sliding (red) */}
+          <linearGradient id="rvsFrictionSlide" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#f87171" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#ef4444" />
+            <stop offset="70%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+
+          {/* Friction force arrow - rolling (green, smaller) */}
+          <linearGradient id="rvsFrictionRoll" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#22c55e" />
+            <stop offset="70%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#15803d" />
+          </linearGradient>
+
+          {/* Spark/heat glow for sliding friction */}
+          <radialGradient id="rvsSparkGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="#d97706" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Distance marker gradient */}
+          <linearGradient id="rvsDistanceMarker" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#10b981" stopOpacity="0.5" />
+          </linearGradient>
+
+          {/* === PREMIUM FILTERS === */}
+
+          {/* Glow filter for objects */}
+          <filter id="rvsObjectGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Spark glow filter */}
+          <filter id="rvsSparkFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Force arrow glow */}
+          <filter id="rvsForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Wheel shadow filter */}
+          <filter id="rvsWheelShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.5" result="shadow" />
+            <feOffset dx="2" dy="2" in="shadow" result="offsetShadow" />
+            <feMerge>
+              <feMergeNode in="offsetShadow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Surface texture pattern */}
+          <pattern id="rvsSurfaceTexture" width="8" height="8" patternUnits="userSpaceOnUse">
+            <rect width="8" height="8" fill="#44403c" />
+            <circle cx="2" cy="2" r="0.5" fill="#57534e" opacity="0.5" />
+            <circle cx="6" cy="6" r="0.5" fill="#292524" opacity="0.5" />
+            <circle cx="4" cy="4" r="0.3" fill="#57534e" opacity="0.3" />
+          </pattern>
+
+          {/* Rough surface texture */}
+          <pattern id="rvsRoughTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+            <rect width="6" height="6" fill="#5c4033" />
+            <rect x="0" y="0" width="3" height="3" fill="#4a3728" opacity="0.7" />
+            <rect x="3" y="3" width="3" height="3" fill="#6b4d38" opacity="0.5" />
+            <circle cx="1.5" cy="4.5" r="0.8" fill="#3d2b1f" opacity="0.6" />
+            <circle cx="4.5" cy="1.5" r="0.6" fill="#7a5c45" opacity="0.4" />
+          </pattern>
+
+          {/* Grid pattern for lab floor */}
+          <pattern id="rvsLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+        </defs>
+
+        {/* Premium dark lab background */}
+        <rect x="0" y="0" width="400" height="180" fill="url(#rvsLabBg)" rx="12" />
+        <rect x="0" y="0" width="400" height="130" fill="url(#rvsLabGrid)" rx="12" />
+
+        {/* Premium surface with texture */}
+        <rect x="0" y="130" width="400" height="50" fill="url(#rvsSurfaceGrad)" />
+        <rect x="0" y="130" width="400" height="50" fill="url(#rvsSurfaceTexture)" opacity="0.4" />
+        {/* Surface edge highlight */}
+        <line x1="0" y1="130" x2="400" y2="130" stroke="#a8a29e" strokeWidth="1" opacity="0.5" />
+
+        {/* Surface label */}
+        <text x="380" y="165" textAnchor="end" fill="#a8a29e" fontSize="8" fontFamily="monospace" opacity="0.7">
+          FLOOR SURFACE
+        </text>
+
+        {/* Friction force indicators with labels */}
+        <g transform={`translate(${50 + position}, 130)`}>
+          {type === 'sliding' ? (
+            // Large friction force arrow for sliding
+            <g>
+              {/* Friction force arrow pointing left (opposing motion) */}
+              <line x1="30" y1="-15" x2="-20" y2="-15" stroke="url(#rvsFrictionSlide)" strokeWidth="6" strokeLinecap="round" filter="url(#rvsForceGlow)" />
+              <polygon points="-20,-15 -10,-10 -10,-20" fill="#ef4444" />
+              <text x="5" y="-25" textAnchor="middle" fill="#fca5a5" fontSize="9" fontWeight="bold">
+                f = {frictionForce.toFixed(1)}N
+              </text>
+              <text x="5" y="-36" textAnchor="middle" fill="#f87171" fontSize="7" opacity="0.8">
+                FRICTION
+              </text>
+
+              {/* Friction heat/sparks for sliding */}
+              {position > 0 && (
+                <g filter="url(#rvsSparkFilter)">
+                  <circle cx={-15 - Math.random() * 10} cy={-2} r="4" fill="url(#rvsSparkGlow)" opacity="0.9">
+                    <animate attributeName="opacity" values="0.9;0.4;0.9" dur="0.3s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx={-8 - Math.random() * 8} cy={-4} r="3" fill="url(#rvsSparkGlow)" opacity="0.7">
+                    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="0.25s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx={-20 - Math.random() * 5} cy={-1} r="2.5" fill="url(#rvsSparkGlow)" opacity="0.8">
+                    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.35s" repeatCount="indefinite" />
+                  </circle>
+                  {/* Heat waves */}
+                  <path d="M-25,-5 Q-22,-10 -20,-5 Q-18,-10 -15,-5" stroke="#fbbf24" strokeWidth="1" fill="none" opacity="0.5">
+                    <animate attributeName="opacity" values="0.5;0.2;0.5" dur="0.4s" repeatCount="indefinite" />
+                  </path>
+                </g>
+              )}
+            </g>
+          ) : (
+            // Small friction force arrow for rolling
+            <g>
+              {/* Much smaller friction force arrow */}
+              <line x1="8" y1="-15" x2="-5" y2="-15" stroke="url(#rvsFrictionRoll)" strokeWidth="3" strokeLinecap="round" filter="url(#rvsForceGlow)" />
+              <polygon points="-5,-15 0,-12 0,-18" fill="#22c55e" />
+              <text x="2" y="-25" textAnchor="middle" fill="#86efac" fontSize="9" fontWeight="bold">
+                f = {frictionForce.toFixed(2)}N
+              </text>
+              <text x="2" y="-36" textAnchor="middle" fill="#4ade80" fontSize="7" opacity="0.8">
+                MINIMAL
+              </text>
+            </g>
           )}
         </g>
 
         {/* Object/Cart */}
         <g transform={`translate(${50 + position}, 0)`}>
           {type === 'sliding' ? (
-            // Sliding box
-            <g>
-              <rect x="-25" y="60" width="50" height="50" fill={colors.object} rx="5" />
-              <text x="0" y="90" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">BOX</text>
-              {/* Friction sparks for sliding */}
-              {position > 0 && (
-                <>
-                  <circle cx="-20" cy="108" r="3" fill={colors.accent} opacity="0.7" />
-                  <circle cx="-10" cy="106" r="2" fill={colors.accent} opacity="0.5" />
-                </>
-              )}
+            // Premium sliding box with 3D effect
+            <g filter="url(#rvsObjectGlow)">
+              {/* Box shadow */}
+              <rect x="-23" y="82" width="50" height="50" fill="#000" opacity="0.3" rx="5" />
+              {/* Main box body */}
+              <rect x="-25" y="80" width="50" height="50" fill="url(#rvsBoxGrad)" rx="5" />
+              {/* Box highlight overlay */}
+              <rect x="-25" y="80" width="50" height="25" fill="url(#rvsBoxHighlight)" rx="5" />
+              {/* Box edge details */}
+              <line x1="-25" y1="80" x2="25" y2="80" stroke="#93c5fd" strokeWidth="1" opacity="0.6" />
+              <line x1="-25" y1="80" x2="-25" y2="130" stroke="#93c5fd" strokeWidth="0.5" opacity="0.4" />
+              {/* Box label */}
+              <text x="0" y="108" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                CRATE
+              </text>
+              <text x="0" y="120" textAnchor="middle" fill="#bfdbfe" fontSize="8" opacity="0.8">
+                100 kg
+              </text>
             </g>
           ) : (
-            // Rolling cart with wheels
+            // Premium rolling cart with 3D wheels
             <g>
-              <rect x="-30" y="50" width="60" height="35" fill={colors.object} rx="5" />
-              <text x="0" y="72" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">CART</text>
-              {/* Wheels */}
-              <g transform={`translate(-20, 95)`}>
-                <circle cx="0" cy="0" r="15" fill={colors.wheel} />
-                <circle cx="0" cy="0" r="10" fill="#374151" />
-                <line
-                  x1="0" y1="-8"
-                  x2="0" y2="8"
-                  stroke="white"
-                  strokeWidth="2"
-                  transform={`rotate(${wheelRotation})`}
-                />
+              {/* Cart shadow */}
+              <rect x="-28" y="72" width="60" height="35" fill="#000" opacity="0.3" rx="5" />
+              {/* Cart body */}
+              <rect x="-30" y="70" width="60" height="35" fill="url(#rvsCartGrad)" rx="5" filter="url(#rvsObjectGlow)" />
+              {/* Cart highlight */}
+              <rect x="-30" y="70" width="60" height="17" fill="url(#rvsCartHighlight)" rx="5" />
+              {/* Cart edge details */}
+              <line x1="-30" y1="70" x2="30" y2="70" stroke="#6ee7b7" strokeWidth="1" opacity="0.6" />
+              {/* Cart label */}
+              <text x="0" y="90" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                CART
+              </text>
+              <text x="0" y="100" textAnchor="middle" fill="#a7f3d0" fontSize="7" opacity="0.8">
+                100 kg
+              </text>
+
+              {/* Premium left wheel */}
+              <g transform={`translate(-18, 115)`} filter="url(#rvsWheelShadow)">
+                {/* Outer tire */}
+                <circle cx="0" cy="0" r="15" fill="url(#rvsWheelTire)" />
+                {/* Tire tread marks */}
+                <circle cx="0" cy="0" r="14" fill="none" stroke="#4b5563" strokeWidth="2" strokeDasharray="4,3" opacity="0.5" />
+                {/* Inner wheel */}
+                <circle cx="0" cy="0" r="10" fill="url(#rvsWheelGrad)" />
+                {/* Hub cap */}
+                <circle cx="0" cy="0" r="5" fill="url(#rvsWheelHub)" />
+                {/* Spoke lines showing rotation */}
+                <g transform={`rotate(${wheelRotation})`}>
+                  <line x1="0" y1="-8" x2="0" y2="8" stroke="#e5e7eb" strokeWidth="1.5" opacity="0.8" />
+                  <line x1="-8" y1="0" x2="8" y2="0" stroke="#e5e7eb" strokeWidth="1.5" opacity="0.8" />
+                </g>
+                {/* Center bolt */}
+                <circle cx="0" cy="0" r="2" fill="#f3f4f6" />
               </g>
-              <g transform={`translate(20, 95)`}>
-                <circle cx="0" cy="0" r="15" fill={colors.wheel} />
-                <circle cx="0" cy="0" r="10" fill="#374151" />
-                <line
-                  x1="0" y1="-8"
-                  x2="0" y2="8"
-                  stroke="white"
-                  strokeWidth="2"
-                  transform={`rotate(${wheelRotation})`}
-                />
+
+              {/* Premium right wheel */}
+              <g transform={`translate(18, 115)`} filter="url(#rvsWheelShadow)">
+                <circle cx="0" cy="0" r="15" fill="url(#rvsWheelTire)" />
+                <circle cx="0" cy="0" r="14" fill="none" stroke="#4b5563" strokeWidth="2" strokeDasharray="4,3" opacity="0.5" />
+                <circle cx="0" cy="0" r="10" fill="url(#rvsWheelGrad)" />
+                <circle cx="0" cy="0" r="5" fill="url(#rvsWheelHub)" />
+                <g transform={`rotate(${wheelRotation})`}>
+                  <line x1="0" y1="-8" x2="0" y2="8" stroke="#e5e7eb" strokeWidth="1.5" opacity="0.8" />
+                  <line x1="-8" y1="0" x2="8" y2="0" stroke="#e5e7eb" strokeWidth="1.5" opacity="0.8" />
+                </g>
+                <circle cx="0" cy="0" r="2" fill="#f3f4f6" />
               </g>
             </g>
           )}
 
-          {/* Applied force arrow */}
+          {/* Applied force arrow with premium styling */}
           {force > 0 && (
-            <g>
-              <line x1={-60 - force / 2} y1="80" x2="-30" y2="80" stroke={colors.primary} strokeWidth="4" />
-              <polygon points="-30,80 -40,74 -40,86" fill={colors.primary} />
-              <text x={-60 - force / 2} y="75" textAnchor="middle" fill={colors.primary} fontSize="10" fontWeight="bold">
+            <g filter="url(#rvsForceGlow)">
+              <line
+                x1={-70 - force}
+                y1={type === 'sliding' ? 100 : 85}
+                x2="-35"
+                y2={type === 'sliding' ? 100 : 85}
+                stroke="url(#rvsForceArrow)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+              <polygon
+                points={type === 'sliding'
+                  ? "-35,100 -45,94 -45,106"
+                  : "-35,85 -45,79 -45,91"
+                }
+                fill="#6366f1"
+              />
+              {/* Force label with background */}
+              <rect
+                x={-75 - force}
+                y={type === 'sliding' ? 82 : 67}
+                width="30"
+                height="16"
+                fill="#1e1b4b"
+                rx="3"
+                opacity="0.8"
+              />
+              <text
+                x={-60 - force}
+                y={type === 'sliding' ? 94 : 79}
+                textAnchor="middle"
+                fill="#a5b4fc"
+                fontSize="10"
+                fontWeight="bold"
+              >
                 {force}N
+              </text>
+              <text
+                x={-60 - force}
+                y={type === 'sliding' ? 74 : 59}
+                textAnchor="middle"
+                fill="#818cf8"
+                fontSize="7"
+              >
+                PUSH
               </text>
             </g>
           )}
         </g>
 
-        {/* Distance marker */}
+        {/* Distance marker with premium styling */}
         {position > 0 && (
           <g>
-            <line x1="50" y1="130" x2={50 + position} y2="130" stroke={colors.success} strokeWidth="2" />
-            <text x={50 + position / 2} y="145" textAnchor="middle" fill={colors.success} fontSize="10">
+            <line x1="50" y1="155" x2={50 + position} y2="155" stroke="url(#rvsDistanceMarker)" strokeWidth="3" strokeLinecap="round" />
+            {/* End caps */}
+            <line x1="50" y1="150" x2="50" y2="160" stroke="#10b981" strokeWidth="2" />
+            <line x1={50 + position} y1="150" x2={50 + position} y2="160" stroke="#10b981" strokeWidth="2" />
+            {/* Distance label with background */}
+            <rect x={45 + position / 2 - 25} y="162" width="50" height="14" fill="#064e3b" rx="3" opacity="0.8" />
+            <text x={50 + position / 2} y="173" textAnchor="middle" fill="#6ee7b7" fontSize="10" fontWeight="bold">
               {position.toFixed(0)} units
             </text>
           </g>
         )}
 
-        {/* Type label */}
-        <text x="200" y="25" textAnchor="middle" fill={type === 'sliding' ? colors.sliding : colors.rolling} fontSize="14" fontWeight="bold">
-          {type === 'sliding' ? '📦 SLIDING (μ = 0.4)' : '🛞 ROLLING (μ = 0.02)'}
-        </text>
+        {/* Type label with premium badge styling */}
+        <g transform="translate(200, 20)">
+          <rect
+            x="-80"
+            y="-12"
+            width="160"
+            height="24"
+            fill={type === 'sliding' ? '#7f1d1d' : '#14532d'}
+            rx="12"
+            opacity="0.8"
+          />
+          <rect
+            x="-80"
+            y="-12"
+            width="160"
+            height="12"
+            fill={type === 'sliding' ? '#991b1b' : '#166534'}
+            rx="12"
+            opacity="0.3"
+          />
+          <text
+            x="0"
+            y="5"
+            textAnchor="middle"
+            fill={type === 'sliding' ? '#fca5a5' : '#86efac'}
+            fontSize="12"
+            fontWeight="bold"
+          >
+            {type === 'sliding' ? 'SLIDING FRICTION (μ = 0.4)' : 'ROLLING FRICTION (μ = 0.02)'}
+          </text>
+        </g>
+
+        {/* Physics formula display */}
+        <g transform="translate(350, 60)">
+          <text x="0" y="0" textAnchor="end" fill="#94a3b8" fontSize="8" fontFamily="monospace">
+            f = μ × N
+          </text>
+          <text x="0" y="12" textAnchor="end" fill="#64748b" fontSize="7" fontFamily="monospace">
+            N = mg = 100N
+          </text>
+        </g>
       </svg>
     );
   };
@@ -551,35 +886,150 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
       <div className="bg-slate-800/30 backdrop-blur-xl rounded-2xl p-6 mb-6 shadow-lg border border-white/10">
         <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
-          <rect x="0" y="0" width="300" height="180" fill="white" rx="10" />
+          <defs>
+            {/* Premium gradients for hook visualization */}
+            <linearGradient id="rvsHookBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-          {/* Ground */}
-          <rect x="0" y="150" width="300" height="30" fill={colors.surface} />
+            <linearGradient id="rvsHookGround" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#78716c" />
+              <stop offset="30%" stopColor="#57534e" />
+              <stop offset="70%" stopColor="#44403c" />
+              <stop offset="100%" stopColor="#292524" />
+            </linearGradient>
 
-          {/* Slave dragging block (ancient) */}
+            <linearGradient id="rvsHookStoneSlide" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#f87171" />
+              <stop offset="70%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            <linearGradient id="rvsHookStoneRoll" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="30%" stopColor="#34d399" />
+              <stop offset="70%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            <radialGradient id="rvsHookWheel" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </radialGradient>
+
+            <radialGradient id="rvsHookSpark" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            <linearGradient id="rvsHookArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="50%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#4f46e5" />
+            </linearGradient>
+
+            <filter id="rvsHookGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rvsHookSparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <pattern id="rvsHookGroundTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+              <rect width="6" height="6" fill="#44403c" />
+              <circle cx="2" cy="2" r="0.5" fill="#57534e" opacity="0.4" />
+              <circle cx="5" cy="5" r="0.4" fill="#292524" opacity="0.4" />
+            </pattern>
+          </defs>
+
+          {/* Dark lab background */}
+          <rect x="0" y="0" width="300" height="180" fill="url(#rvsHookBg)" rx="10" />
+
+          {/* Ground with texture */}
+          <rect x="0" y="150" width="300" height="30" fill="url(#rvsHookGround)" />
+          <rect x="0" y="150" width="300" height="30" fill="url(#rvsHookGroundTexture)" opacity="0.3" />
+          <line x1="0" y1="150" x2="300" y2="150" stroke="#a8a29e" strokeWidth="0.5" opacity="0.5" />
+
+          {/* Sliding block (ancient method) */}
           <g transform="translate(70, 150)">
-            <rect x="-30" y="-40" width="60" height="40" fill={colors.sliding} rx="3" />
-            <text x="0" y="-15" textAnchor="middle" fill="white" fontSize="8">STONE</text>
-            {/* Friction lines */}
-            <line x1="-35" y1="-2" x2="-20" y2="-2" stroke={colors.danger} strokeWidth="2" />
-            <line x1="-30" y1="3" x2="-15" y2="3" stroke={colors.danger} strokeWidth="2" />
-            <text x="0" y="20" textAnchor="middle" fill={colors.danger} fontSize="9">Hard to move!</text>
+            {/* Shadow */}
+            <rect x="-28" y="-38" width="60" height="40" fill="#000" opacity="0.3" rx="3" />
+            {/* Stone block */}
+            <rect x="-30" y="-40" width="60" height="40" fill="url(#rvsHookStoneSlide)" rx="3" filter="url(#rvsHookGlow)" />
+            {/* Highlight */}
+            <rect x="-30" y="-40" width="60" height="20" fill="white" opacity="0.1" rx="3" />
+            <text x="0" y="-15" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>STONE</text>
+
+            {/* Friction sparks */}
+            <g filter="url(#rvsHookSparkGlow)">
+              <circle cx="-25" cy="-3" r="3" fill="url(#rvsHookSpark)">
+                <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="-15" cy="-1" r="2" fill="url(#rvsHookSpark)">
+                <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.25s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="-35" cy="-2" r="2.5" fill="url(#rvsHookSpark)">
+                <animate attributeName="opacity" values="0.7;0.25;0.7" dur="0.35s" repeatCount="indefinite" />
+              </circle>
+            </g>
+
+            {/* Friction resistance lines */}
+            <line x1="-40" y1="-2" x2="-20" y2="-2" stroke="#fca5a5" strokeWidth="2" opacity="0.8" />
+            <line x1="-35" y1="3" x2="-15" y2="3" stroke="#fca5a5" strokeWidth="1.5" opacity="0.6" />
+
+            {/* Label */}
+            <rect x="-35" y="8" width="70" height="16" fill="#7f1d1d" rx="3" opacity="0.8" />
+            <text x="0" y="20" textAnchor="middle" fill="#fca5a5" fontSize="9" fontWeight="bold">Hard to move!</text>
           </g>
 
-          {/* Wheeled cart (modern) */}
+          {/* Wheeled cart (modern method) */}
           <g transform="translate(230, 150)">
-            <rect x="-30" y="-55" width="60" height="40" fill={colors.rolling} rx="3" />
-            <text x="0" y="-30" textAnchor="middle" fill="white" fontSize="8">STONE</text>
-            <circle cx="-15" cy="-10" r="12" fill={colors.wheel} />
-            <circle cx="15" cy="-10" r="12" fill={colors.wheel} />
-            <text x="0" y="20" textAnchor="middle" fill={colors.success} fontSize="9">Easy!</text>
+            {/* Shadow */}
+            <rect x="-28" y="-53" width="60" height="40" fill="#000" opacity="0.3" rx="3" />
+            {/* Cart body */}
+            <rect x="-30" y="-55" width="60" height="40" fill="url(#rvsHookStoneRoll)" rx="3" filter="url(#rvsHookGlow)" />
+            {/* Highlight */}
+            <rect x="-30" y="-55" width="60" height="20" fill="white" opacity="0.1" rx="3" />
+            <text x="0" y="-30" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>STONE</text>
+
+            {/* Premium wheels */}
+            <circle cx="-15" cy="-10" r="12" fill="url(#rvsHookWheel)" />
+            <circle cx="-15" cy="-10" r="7" fill="#4b5563" />
+            <circle cx="-15" cy="-10" r="3" fill="#9ca3af" />
+            <circle cx="15" cy="-10" r="12" fill="url(#rvsHookWheel)" />
+            <circle cx="15" cy="-10" r="7" fill="#4b5563" />
+            <circle cx="15" cy="-10" r="3" fill="#9ca3af" />
+
+            {/* Label */}
+            <rect x="-20" y="8" width="40" height="16" fill="#14532d" rx="3" opacity="0.8" />
+            <text x="0" y="20" textAnchor="middle" fill="#86efac" fontSize="9" fontWeight="bold">Easy!</text>
           </g>
 
-          {/* Arrow between */}
-          <text x="150" y="100" textAnchor="middle" fill={colors.primary} fontSize="20" fontWeight="bold">➜</text>
-          <text x="150" y="60" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">WHEELS!</text>
+          {/* Arrow between with premium styling */}
+          <g transform="translate(150, 90)">
+            <rect x="-30" y="-25" width="60" height="50" fill="#312e81" rx="8" opacity="0.4" />
+            <line x1="-15" y1="10" x2="15" y2="10" stroke="url(#rvsHookArrow)" strokeWidth="4" strokeLinecap="round" />
+            <polygon points="15,10 5,5 5,15" fill="#6366f1" />
+            <text x="0" y="-5" textAnchor="middle" fill="#a5b4fc" fontSize="11" fontWeight="bold">WHEELS!</text>
+          </g>
 
-          <text x="150" y="25" textAnchor="middle" fill={colors.neutral} fontSize="12">How pyramids were built vs modern transport</text>
+          {/* Title */}
+          <text x="150" y="25" textAnchor="middle" fill="#94a3b8" fontSize="11">How pyramids were built vs modern transport</text>
         </svg>
 
         <p className="text-lg text-amber-800">
@@ -774,32 +1224,126 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
       {renderSectionHeader('The Friction Difference', 'Why rolling wins')}
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 160" className="w-full h-36 mb-4">
-          <rect x="0" y="0" width="300" height="160" fill="white" rx="10" />
+        <svg viewBox="0 0 300 180" className="w-full h-44 mb-4">
+          <defs>
+            {/* Premium gradients for comparison chart */}
+            <linearGradient id="rvsReviewBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-          {/* Bar chart comparison */}
-          <text x="150" y="20" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
-            FRICTION COEFFICIENT COMPARISON
-          </text>
+            <linearGradient id="rvsReviewSlideBar" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="20%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="80%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-          {/* Sliding bar */}
-          <rect x="60" y="40" width="80" height="30" fill={colors.sliding} rx="5" />
-          <text x="100" y="60" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">μ = 0.4</text>
-          <text x="100" y="85" textAnchor="middle" fill={colors.neutral} fontSize="10">SLIDING</text>
+            <linearGradient id="rvsReviewRollBar" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="20%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="80%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
 
-          {/* Rolling bar (much smaller) */}
-          <rect x="180" y="66" width="4" height="4" fill={colors.rolling} rx="1" />
-          <text x="220" y="72" textAnchor="start" fill={colors.rolling} fontSize="11" fontWeight="bold">μ = 0.02</text>
-          <text x="182" y="85" textAnchor="middle" fill={colors.neutral} fontSize="10">ROLLING</text>
+            <linearGradient id="rvsReviewAxis" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-          {/* Comparison */}
-          <text x="150" y="115" textAnchor="middle" fill={colors.danger} fontSize="14" fontWeight="bold">
-            Sliding = 20× MORE FRICTION!
-          </text>
+            <filter id="rvsReviewBarGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          <text x="150" y="140" textAnchor="middle" fill={colors.neutral} fontSize="10">
-            Same weight, same surface, huge difference
-          </text>
+            <filter id="rvsReviewTextGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <pattern id="rvsReviewGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+              <rect width="15" height="15" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Dark background */}
+          <rect x="0" y="0" width="300" height="180" fill="url(#rvsReviewBg)" rx="10" />
+          <rect x="0" y="0" width="300" height="180" fill="url(#rvsReviewGrid)" rx="10" />
+
+          {/* Title with premium styling */}
+          <g transform="translate(150, 18)">
+            <rect x="-100" y="-10" width="200" height="20" fill="#312e81" rx="4" opacity="0.5" />
+            <text x="0" y="5" textAnchor="middle" fill="#c7d2fe" fontSize="11" fontWeight="bold" letterSpacing="1">
+              FRICTION COEFFICIENT COMPARISON
+            </text>
+          </g>
+
+          {/* Y-axis */}
+          <line x1="50" y1="40" x2="50" y2="120" stroke="url(#rvsReviewAxis)" strokeWidth="2" />
+          <text x="25" y="80" textAnchor="middle" fill="#94a3b8" fontSize="8" transform="rotate(-90, 25, 80)">μ (coefficient)</text>
+
+          {/* Y-axis scale marks */}
+          <line x1="45" y1="45" x2="50" y2="45" stroke="#64748b" strokeWidth="1" />
+          <text x="40" y="48" textAnchor="end" fill="#64748b" fontSize="7">0.4</text>
+          <line x1="45" y1="70" x2="50" y2="70" stroke="#64748b" strokeWidth="1" />
+          <text x="40" y="73" textAnchor="end" fill="#64748b" fontSize="7">0.2</text>
+          <line x1="45" y1="95" x2="50" y2="95" stroke="#64748b" strokeWidth="1" />
+          <text x="40" y="98" textAnchor="end" fill="#64748b" fontSize="7">0.02</text>
+          <line x1="45" y1="115" x2="50" y2="115" stroke="#64748b" strokeWidth="1" />
+          <text x="40" y="118" textAnchor="end" fill="#64748b" fontSize="7">0</text>
+
+          {/* X-axis */}
+          <line x1="50" y1="120" x2="270" y2="120" stroke="url(#rvsReviewAxis)" strokeWidth="2" />
+
+          {/* Sliding bar - tall */}
+          <g filter="url(#rvsReviewBarGlow)">
+            <rect x="80" y="45" width="50" height="75" fill="url(#rvsReviewSlideBar)" rx="4" />
+            {/* Bar highlight */}
+            <rect x="80" y="45" width="25" height="75" fill="white" opacity="0.1" rx="4" />
+            {/* Value label */}
+            <rect x="85" y="55" width="40" height="18" fill="#7f1d1d" rx="3" opacity="0.8" />
+            <text x="105" y="68" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">μ = 0.4</text>
+          </g>
+          <text x="105" y="135" textAnchor="middle" fill="#fca5a5" fontSize="9" fontWeight="bold">SLIDING</text>
+          <text x="105" y="145" textAnchor="middle" fill="#94a3b8" fontSize="7">High resistance</text>
+
+          {/* Rolling bar - tiny (scaled proportionally) */}
+          <g filter="url(#rvsReviewBarGlow)">
+            <rect x="180" y="111" width="50" height="9" fill="url(#rvsReviewRollBar)" rx="2" />
+            {/* Bar highlight */}
+            <rect x="180" y="111" width="25" height="9" fill="white" opacity="0.15" rx="2" />
+          </g>
+          {/* Value label positioned above tiny bar */}
+          <rect x="175" y="90" width="60" height="16" fill="#14532d" rx="3" opacity="0.8" />
+          <text x="205" y="101" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">μ = 0.02</text>
+          <text x="205" y="135" textAnchor="middle" fill="#86efac" fontSize="9" fontWeight="bold">ROLLING</text>
+          <text x="205" y="145" textAnchor="middle" fill="#94a3b8" fontSize="7">Minimal resistance</text>
+
+          {/* 20x comparison indicator */}
+          <g transform="translate(150, 160)">
+            <rect x="-70" y="-10" width="140" height="20" fill="#7f1d1d" rx="10" opacity="0.7" />
+            <rect x="-70" y="-10" width="140" height="10" fill="#991b1b" rx="10" opacity="0.3" />
+            <text x="0" y="4" textAnchor="middle" fill="#fecaca" fontSize="11" fontWeight="bold" filter="url(#rvsReviewTextGlow)">
+              Sliding = 20× MORE FRICTION!
+            </text>
+          </g>
+
+          {/* Comparison arrow */}
+          <g opacity="0.6">
+            <line x1="135" y1="82" x2="175" y2="115" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" />
+            <polygon points="175,115 168,110 170,118" fill="#f59e0b" />
+            <text x="155" y="95" textAnchor="middle" fill="#fcd34d" fontSize="8" fontWeight="bold">20×</text>
+          </g>
         </svg>
 
         <div className="grid grid-cols-2 gap-4">
@@ -893,30 +1437,199 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         {renderSectionHeader('Static vs Kinetic Lab', 'Break free then slide')}
 
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
-          <svg viewBox="0 0 400 120" className="w-full h-28">
-            <rect x="0" y="0" width="400" height="120" fill="#F8FAFC" rx="10" />
-            <rect x="0" y="90" width="400" height="30" fill={surfaceType === 'rough' ? '#5C4033' : colors.surface} />
+          <svg viewBox="0 0 400 150" className="w-full h-36">
+            <defs>
+              {/* Premium gradients for static vs kinetic */}
+              <linearGradient id="rvsTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
 
-            {/* Object */}
-            <g transform={`translate(${50 + twistPosition}, 90)`}>
-              <rect x="-25" y="-50" width="50" height="50" fill={hasBrokenFree ? colors.success : colors.sliding} rx="5" />
-              <text x="0" y="-20" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+              <linearGradient id="rvsTwistSmoothSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#78716c" />
+                <stop offset="30%" stopColor="#57534e" />
+                <stop offset="70%" stopColor="#44403c" />
+                <stop offset="100%" stopColor="#292524" />
+              </linearGradient>
+
+              <linearGradient id="rvsTwistRoughSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#8b6914" />
+                <stop offset="30%" stopColor="#6b4d38" />
+                <stop offset="70%" stopColor="#5c4033" />
+                <stop offset="100%" stopColor="#3d2b1f" />
+              </linearGradient>
+
+              <linearGradient id="rvsTwistBlockStuck" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="30%" stopColor="#f87171" />
+                <stop offset="70%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#dc2626" />
+              </linearGradient>
+
+              <linearGradient id="rvsTwistBlockMoving" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6ee7b7" />
+                <stop offset="30%" stopColor="#34d399" />
+                <stop offset="70%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+
+              <linearGradient id="rvsTwistForce" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#818cf8" stopOpacity="0.3" />
+                <stop offset="30%" stopColor="#6366f1" />
+                <stop offset="70%" stopColor="#4f46e5" />
+                <stop offset="100%" stopColor="#4338ca" />
+              </linearGradient>
+
+              <linearGradient id="rvsTwistStaticFriction" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#fb923c" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ea580c" />
+              </linearGradient>
+
+              <linearGradient id="rvsTwistKineticFriction" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#d97706" />
+              </linearGradient>
+
+              <radialGradient id="rvsTwistBreakGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+                <stop offset="50%" stopColor="#22c55e" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+              </radialGradient>
+
+              <pattern id="rvsTwistRoughTexture" width="8" height="8" patternUnits="userSpaceOnUse">
+                <rect width="8" height="8" fill="#5c4033" />
+                <rect x="0" y="0" width="4" height="4" fill="#4a3728" opacity="0.6" />
+                <rect x="4" y="4" width="4" height="4" fill="#6b4d38" opacity="0.5" />
+                <circle cx="2" cy="6" r="1" fill="#3d2b1f" opacity="0.7" />
+                <circle cx="6" cy="2" r="0.8" fill="#7a5c45" opacity="0.5" />
+              </pattern>
+
+              <pattern id="rvsTwistSmoothTexture" width="6" height="6" patternUnits="userSpaceOnUse">
+                <rect width="6" height="6" fill="#44403c" />
+                <circle cx="2" cy="2" r="0.3" fill="#57534e" opacity="0.3" />
+                <circle cx="5" cy="5" r="0.2" fill="#292524" opacity="0.3" />
+              </pattern>
+
+              <filter id="rvsTwistGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="rvsTwistBreakFilter" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Dark lab background */}
+            <rect x="0" y="0" width="400" height="150" fill="url(#rvsTwistBg)" rx="10" />
+
+            {/* Surface with appropriate texture */}
+            <rect x="0" y="110" width="400" height="40" fill={surfaceType === 'rough' ? 'url(#rvsTwistRoughSurface)' : 'url(#rvsTwistSmoothSurface)'} />
+            <rect x="0" y="110" width="400" height="40" fill={surfaceType === 'rough' ? 'url(#rvsTwistRoughTexture)' : 'url(#rvsTwistSmoothTexture)'} opacity="0.4" />
+            <line x1="0" y1="110" x2="400" y2="110" stroke={surfaceType === 'rough' ? '#a8884d' : '#a8a29e'} strokeWidth="1" opacity="0.5" />
+
+            {/* Surface type label */}
+            <text x="380" y="140" textAnchor="end" fill={surfaceType === 'rough' ? '#d4a574' : '#a8a29e'} fontSize="8" fontFamily="monospace" opacity="0.7">
+              {surfaceType === 'rough' ? 'ROUGH SURFACE' : 'SMOOTH SURFACE'}
+            </text>
+
+            {/* Object with state-dependent styling */}
+            <g transform={`translate(${50 + twistPosition}, 110)`}>
+              {/* Break-free glow effect */}
+              {hasBrokenFree && (
+                <circle cx="0" cy="-25" r="40" fill="url(#rvsTwistBreakGlow)" filter="url(#rvsTwistBreakFilter)" opacity="0.3">
+                  <animate attributeName="r" values="35;45;35" dur="1s" repeatCount="indefinite" />
+                </circle>
+              )}
+
+              {/* Shadow */}
+              <rect x="-23" y="-48" width="50" height="50" fill="#000" opacity="0.3" rx="5" />
+
+              {/* Block with gradient based on state */}
+              <rect
+                x="-25"
+                y="-50"
+                width="50"
+                height="50"
+                fill={hasBrokenFree ? 'url(#rvsTwistBlockMoving)' : 'url(#rvsTwistBlockStuck)'}
+                rx="5"
+                filter="url(#rvsTwistGlow)"
+              />
+
+              {/* Highlight */}
+              <rect x="-25" y="-50" width="50" height="25" fill="white" opacity="0.1" rx="5" />
+
+              {/* Status text */}
+              <text x="0" y="-20" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                 {hasBrokenFree ? 'MOVING!' : 'STUCK'}
               </text>
 
-              {/* Force arrow */}
-              {twistForce > 0 && (
+              {/* Friction force indicator */}
+              {!hasBrokenFree && twistForce > 0 && (
                 <g>
-                  <line x1={-60 - twistForce * 3} y1="-25" x2="-30" y2="-25" stroke={colors.primary} strokeWidth="4" />
-                  <polygon points="-30,-25 -40,-19 -40,-31" fill={colors.primary} />
+                  {/* Static friction resistance arrow */}
+                  <line x1="30" y1="-25" x2={30 + Math.min(twistForce * 2, 40)} y2="-25" stroke="url(#rvsTwistStaticFriction)" strokeWidth="4" strokeLinecap="round" />
+                  <polygon points={`${30 + Math.min(twistForce * 2, 40)},-25 ${20 + Math.min(twistForce * 2, 40)},-20 ${20 + Math.min(twistForce * 2, 40)},-30`} fill="#f97316" />
+                  <text x={45 + Math.min(twistForce, 20)} y="-35" textAnchor="middle" fill="#fdba74" fontSize="7">STATIC</text>
+                </g>
+              )}
+
+              {hasBrokenFree && (
+                <g>
+                  {/* Kinetic friction (smaller) arrow */}
+                  <line x1="30" y1="-25" x2="45" y2="-25" stroke="url(#rvsTwistKineticFriction)" strokeWidth="3" strokeLinecap="round" />
+                  <polygon points="45,-25 38,-21 38,-29" fill="#f59e0b" />
+                  <text x="50" y="-35" textAnchor="middle" fill="#fcd34d" fontSize="7">KINETIC</text>
+                </g>
+              )}
+
+              {/* Applied force arrow */}
+              {twistForce > 0 && (
+                <g filter="url(#rvsTwistGlow)">
+                  <line x1={-60 - twistForce * 2} y1="-25" x2="-30" y2="-25" stroke="url(#rvsTwistForce)" strokeWidth="5" strokeLinecap="round" />
+                  <polygon points="-30,-25 -40,-19 -40,-31" fill="#6366f1" />
+                  <rect x={-75 - twistForce * 2} y="-38" width="30" height="14" fill="#1e1b4b" rx="3" opacity="0.8" />
+                  <text x={-60 - twistForce * 2} y="-28" textAnchor="middle" fill="#a5b4fc" fontSize="9" fontWeight="bold">
+                    {twistForce}N
+                  </text>
                 </g>
               )}
             </g>
 
-            {/* Status */}
-            <text x="200" y="25" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
-              Force: {twistForce}N | Static threshold: {staticForce.toFixed(1)}N | Kinetic: {kineticForce.toFixed(1)}N
-            </text>
+            {/* Status bar with premium styling */}
+            <g transform="translate(200, 20)">
+              <rect x="-190" y="-12" width="380" height="28" fill="#1e1b4b" rx="6" opacity="0.6" />
+
+              {/* Force display */}
+              <text x="-170" y="5" textAnchor="start" fill="#c7d2fe" fontSize="10" fontWeight="bold">
+                Applied: {twistForce}N
+              </text>
+
+              {/* Static threshold */}
+              <text x="-30" y="5" textAnchor="middle" fill="#fdba74" fontSize="10" fontWeight="bold">
+                Static: {staticForce.toFixed(1)}N
+              </text>
+
+              {/* Kinetic threshold */}
+              <text x="120" y="5" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">
+                Kinetic: {kineticForce.toFixed(1)}N
+              </text>
+
+              {/* Progress indicator */}
+              <rect x="-190" y="18" width="380" height="4" fill="#312e81" rx="2" />
+              <rect x="-190" y="18" width={Math.min((twistForce / staticForce) * 380, 380)} height="4" fill={hasBrokenFree ? '#22c55e' : '#f97316'} rx="2" />
+            </g>
           </svg>
         </div>
 
@@ -997,7 +1710,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               <span className="font-bold">✓ Broke free at {staticForce.toFixed(1)}N!</span>
               <br />
               <span className="text-sm">
-                Now only {kineticForce.toFixed(1)}N needed to keep moving. Static friction > Kinetic friction!
+                Now only {kineticForce.toFixed(1)}N needed to keep moving. Static friction {'>'} Kinetic friction!
               </span>
             </p>
           </div>
@@ -1013,33 +1726,148 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
       {renderSectionHeader('Two Types of Friction', 'Static vs Kinetic')}
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 140" className="w-full h-32 mb-4">
-          <rect x="0" y="0" width="300" height="140" fill="white" rx="10" />
+        <svg viewBox="0 0 300 160" className="w-full h-40 mb-4">
+          <defs>
+            {/* Premium gradients for static vs kinetic graph */}
+            <linearGradient id="rvsTwistRevBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-          {/* Graph */}
-          <line x1="50" y1="110" x2="280" y2="110" stroke={colors.neutral} strokeWidth="2" />
-          <line x1="50" y1="110" x2="50" y2="20" stroke={colors.neutral} strokeWidth="2" />
+            <linearGradient id="rvsTwistRevStaticLine" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-          <text x="165" y="130" textAnchor="middle" fill={colors.neutral} fontSize="10">Applied Force →</text>
-          <text x="25" y="70" textAnchor="middle" fill={colors.neutral} fontSize="10" transform="rotate(-90, 25, 70)">Friction →</text>
+            <linearGradient id="rvsTwistRevKineticLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
 
-          {/* Static friction line (rises then drops) */}
-          <path d="M 50,110 L 120,50" stroke={colors.danger} strokeWidth="3" fill="none" />
-          <circle cx="120" cy="50" r="5" fill={colors.danger} />
-          <text x="85" y="45" textAnchor="middle" fill={colors.danger} fontSize="9" fontWeight="bold">STATIC MAX</text>
+            <linearGradient id="rvsTwistRevAxis" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-          {/* Kinetic friction line (lower) */}
-          <line x1="120" y1="70" x2="260" y2="70" stroke={colors.success} strokeWidth="3" />
-          <text x="190" y="60" textAnchor="middle" fill={colors.success} fontSize="9" fontWeight="bold">KINETIC (lower)</text>
+            <radialGradient id="rvsTwistRevPeakGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
 
-          {/* Drop indicator */}
-          <line x1="120" y1="50" x2="120" y2="70" stroke={colors.accent} strokeWidth="2" strokeDasharray="4,2" />
-          <text x="140" y="95" textAnchor="middle" fill={colors.accent} fontSize="8">BREAK FREE!</text>
+            <radialGradient id="rvsTwistRevDropGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+            </radialGradient>
+
+            <filter id="rvsTwistRevLineGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rvsTwistRevPeakFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <pattern id="rvsTwistRevGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Area fill under static line */}
+            <linearGradient id="rvsTwistRevStaticFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.05" />
+            </linearGradient>
+
+            {/* Area fill under kinetic line */}
+            <linearGradient id="rvsTwistRevKineticFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+
+          {/* Dark background with grid */}
+          <rect x="0" y="0" width="300" height="160" fill="url(#rvsTwistRevBg)" rx="10" />
+          <rect x="0" y="0" width="300" height="160" fill="url(#rvsTwistRevGrid)" rx="10" />
+
+          {/* Y-axis */}
+          <line x1="50" y1="130" x2="50" y2="25" stroke="url(#rvsTwistRevAxis)" strokeWidth="2" />
+          <polygon points="50,25 46,32 54,32" fill="#64748b" />
+          <text x="25" y="80" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="bold" transform="rotate(-90, 25, 80)">
+            Friction Force →
+          </text>
+
+          {/* X-axis */}
+          <line x1="50" y1="130" x2="280" y2="130" stroke="url(#rvsTwistRevAxis)" strokeWidth="2" />
+          <polygon points="280,130 273,126 273,134" fill="#64748b" />
+          <text x="165" y="150" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="bold">
+            Applied Force →
+          </text>
+
+          {/* Area fills */}
+          <path d="M 50,130 L 130,55 L 130,130 Z" fill="url(#rvsTwistRevStaticFill)" />
+          <path d="M 130,130 L 130,80 L 270,80 L 270,130 Z" fill="url(#rvsTwistRevKineticFill)" />
+
+          {/* Static friction line (rises to peak) */}
+          <path d="M 50,130 L 130,55" stroke="url(#rvsTwistRevStaticLine)" strokeWidth="4" fill="none" strokeLinecap="round" filter="url(#rvsTwistRevLineGlow)" />
+
+          {/* Peak point with glow */}
+          <circle cx="130" cy="55" r="12" fill="url(#rvsTwistRevPeakGlow)" filter="url(#rvsTwistRevPeakFilter)">
+            <animate attributeName="r" values="10;14;10" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="130" cy="55" r="6" fill="#fbbf24" />
+          <circle cx="130" cy="55" r="3" fill="#fef3c7" />
+
+          {/* Peak label */}
+          <rect x="55" y="35" width="65" height="16" fill="#7f1d1d" rx="3" opacity="0.8" />
+          <text x="87" y="47" textAnchor="middle" fill="#fecaca" fontSize="9" fontWeight="bold">STATIC MAX</text>
+
+          {/* Drop line (transition) */}
+          <line x1="130" y1="55" x2="130" y2="80" stroke="#fbbf24" strokeWidth="3" strokeDasharray="5,3" filter="url(#rvsTwistRevLineGlow)">
+            <animate attributeName="stroke-dashoffset" values="0;16" dur="0.8s" repeatCount="indefinite" />
+          </line>
+
+          {/* Break free indicator */}
+          <circle cx="130" cy="80" r="8" fill="url(#rvsTwistRevDropGlow)" filter="url(#rvsTwistRevPeakFilter)">
+            <animate attributeName="opacity" values="0.8;0.4;0.8" dur="0.6s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Kinetic friction line (lower constant) */}
+          <line x1="130" y1="80" x2="270" y2="80" stroke="url(#rvsTwistRevKineticLine)" strokeWidth="4" strokeLinecap="round" filter="url(#rvsTwistRevLineGlow)" />
+
+          {/* Kinetic label */}
+          <rect x="175" y="60" width="75" height="16" fill="#14532d" rx="3" opacity="0.8" />
+          <text x="212" y="72" textAnchor="middle" fill="#bbf7d0" fontSize="9" fontWeight="bold">KINETIC (lower)</text>
+
+          {/* Break free callout */}
+          <g transform="translate(155, 105)">
+            <rect x="-35" y="-10" width="70" height="18" fill="#78350f" rx="4" opacity="0.8" />
+            <text x="0" y="3" textAnchor="middle" fill="#fcd34d" fontSize="9" fontWeight="bold">BREAK FREE!</text>
+          </g>
+
+          {/* Friction difference annotation */}
+          <line x1="275" y1="55" x2="275" y2="80" stroke="#f59e0b" strokeWidth="2" />
+          <line x1="270" y1="55" x2="280" y2="55" stroke="#f59e0b" strokeWidth="2" />
+          <line x1="270" y1="80" x2="280" y2="80" stroke="#f59e0b" strokeWidth="2" />
+          <text x="285" y="70" textAnchor="start" fill="#fcd34d" fontSize="7" fontWeight="bold">Δf</text>
         </svg>
 
         <div className="text-center">
           <p className="text-lg text-purple-800 font-semibold">
-            Static Friction > Kinetic Friction
+            Static Friction {'>'} Kinetic Friction
           </p>
           <p className="text-purple-700 text-sm mt-1">
             Once you break the bonds and start moving, less force is needed!
@@ -1504,7 +2332,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             </div>
             <div className="bg-white rounded-lg p-3 shadow-sm">
               <span className="font-semibold text-indigo-700">Static vs Kinetic:</span>
-              <p className="text-sm text-gray-700">Static friction (starting) > Kinetic friction (moving)</p>
+              <p className="text-sm text-gray-700">Static friction (starting) {'>'} Kinetic friction (moving)</p>
             </div>
             <div className="bg-white rounded-lg p-3 shadow-sm">
               <span className="font-semibold text-indigo-700">Wheel Revolution:</span>

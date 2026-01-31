@@ -328,11 +328,11 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
   };
 
   const renderVisualization = () => {
-    const width = 400;
-    const height = 350;
+    const width = 500;
+    const height = 400;
     const centerX = width / 2;
-    const centerY = height / 2 - 20;
-    const radius = 100;
+    const centerY = height / 2;
+    const radius = 120;
 
     // Generate node positions based on topology
     const getNodePositions = () => {
@@ -391,88 +391,418 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
         width="100%"
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ background: '#1e293b', borderRadius: '12px' }}
+        style={{ borderRadius: '16px' }}
       >
-        {/* Title */}
-        <text x={width / 2} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize={16} fontWeight="bold">
-          {topology} Topology - {numNodes} Nodes
+        {/* Premium SVG Definitions */}
+        <defs>
+          {/* Premium dark background gradient */}
+          <linearGradient id="itopLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* Metallic copper interconnect gradient */}
+          <linearGradient id="itopCopperTrace" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="20%" stopColor="#d97706" />
+            <stop offset="40%" stopColor="#b45309" />
+            <stop offset="60%" stopColor="#d97706" />
+            <stop offset="80%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
+
+          {/* Metallic silver interconnect gradient for fat tree */}
+          <linearGradient id="itopSilverTrace" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="20%" stopColor="#cbd5e1" />
+            <stop offset="40%" stopColor="#e2e8f0" />
+            <stop offset="60%" stopColor="#cbd5e1" />
+            <stop offset="80%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#64748b" />
+          </linearGradient>
+
+          {/* Gold trace for ring topology */}
+          <linearGradient id="itopGoldTrace" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#fcd34d" />
+            <stop offset="75%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
+
+          {/* Emerald trace for tree */}
+          <linearGradient id="itopEmeraldTrace" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="25%" stopColor="#059669" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="75%" stopColor="#059669" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+
+          {/* GPU chip 3D effect gradient */}
+          <linearGradient id="itopChipTop" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="30%" stopColor="#334155" />
+            <stop offset="70%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* GPU chip side gradient for 3D effect */}
+          <linearGradient id="itopChipSide" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* GPU die glow gradient (radial) */}
+          <radialGradient id="itopDieGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
+            <stop offset="40%" stopColor="#2563eb" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0.3" />
+          </radialGradient>
+
+          {/* Active die glow for animation */}
+          <radialGradient id="itopActiveDie" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+            <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#0891b2" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Data packet glow */}
+          <radialGradient id="itopDataPacket" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+            <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+
+          {/* NVLink glow gradient */}
+          <radialGradient id="itopNVLinkGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#a3e635" stopOpacity="1" />
+            <stop offset="40%" stopColor="#84cc16" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#65a30d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Glow filter for nodes */}
+          <filter id="itopNodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Data flow glow filter */}
+          <filter id="itopDataGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Trace glow filter */}
+          <filter id="itopTraceGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Inner shadow for depth */}
+          <filter id="itopInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* Stats panel gradient */}
+          <linearGradient id="itopStatsPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+            <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+          </linearGradient>
+
+          {/* Grid pattern for background */}
+          <pattern id="itopGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
+          </pattern>
+        </defs>
+
+        {/* Premium dark background */}
+        <rect width={width} height={height} fill="url(#itopLabBg)" />
+
+        {/* Subtle grid overlay */}
+        <rect width={width} height={height} fill="url(#itopGrid)" opacity="0.3" />
+
+        {/* Title with glow effect */}
+        <text
+          x={width / 2}
+          y={32}
+          textAnchor="middle"
+          fill={colors.textPrimary}
+          fontSize={18}
+          fontWeight="bold"
+          style={{ textShadow: `0 0 10px ${spec.color}` }}
+        >
+          {topology} Topology
+        </text>
+        <text
+          x={width / 2}
+          y={52}
+          textAnchor="middle"
+          fill={colors.textSecondary}
+          fontSize={12}
+        >
+          {numNodes} GPU Nodes | {connections.length} Interconnects
         </text>
 
-        {/* Connections */}
+        {/* Connections with premium metallic traces */}
         {connections.map((conn, i) => {
           const from = nodePositions[conn.from];
           const to = nodePositions[conn.to];
           const isFatTree = topology === 'Fat Tree';
+          const isRing = topology === 'Ring';
+          const isTree = topology === 'Tree';
+
+          // Select gradient based on topology
+          const traceGradient = isRing ? 'url(#itopGoldTrace)' :
+                                isFatTree ? 'url(#itopSilverTrace)' :
+                                isTree ? 'url(#itopEmeraldTrace)' :
+                                'url(#itopCopperTrace)';
+
+          const traceWidth = isFatTree ? 6 : isRing ? 4 : 3;
+
+          // Calculate angle for gradient rotation
+          const angle = Math.atan2(to.y - from.y, to.x - from.x) * (180 / Math.PI);
 
           return (
-            <g key={i}>
+            <g key={`conn-${i}`}>
+              {/* Trace shadow for depth */}
+              <line
+                x1={from.x}
+                y1={from.y + 2}
+                x2={to.x}
+                y2={to.y + 2}
+                stroke="#000"
+                strokeWidth={traceWidth + 2}
+                opacity={0.3}
+                strokeLinecap="round"
+              />
+
+              {/* Main metallic trace */}
               <line
                 x1={from.x}
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                stroke={spec.color}
-                strokeWidth={isFatTree ? 4 : 2}
-                opacity={0.6}
+                stroke={traceGradient}
+                strokeWidth={traceWidth}
+                strokeLinecap="round"
+                filter="url(#itopTraceGlow)"
               />
 
-              {/* Data flow animation */}
+              {/* Trace highlight for 3D effect */}
+              <line
+                x1={from.x}
+                y1={from.y - 1}
+                x2={to.x}
+                y2={to.y - 1}
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth={1}
+                strokeLinecap="round"
+              />
+
+              {/* Animated data flow packets */}
               {showDataFlow && (
-                <circle
-                  cx={from.x + (to.x - from.x) * ((animProgress + i * 0.1) % 1)}
-                  cy={from.y + (to.y - from.y) * ((animProgress + i * 0.1) % 1)}
-                  r={3}
-                  fill="white"
-                />
+                <>
+                  {/* Primary data packet */}
+                  <circle
+                    cx={from.x + (to.x - from.x) * ((animProgress + i * 0.15) % 1)}
+                    cy={from.y + (to.y - from.y) * ((animProgress + i * 0.15) % 1)}
+                    r={5}
+                    fill="url(#itopDataPacket)"
+                    filter="url(#itopDataGlow)"
+                  />
+                  {/* Secondary data packet (offset) */}
+                  <circle
+                    cx={from.x + (to.x - from.x) * ((animProgress + i * 0.15 + 0.5) % 1)}
+                    cy={from.y + (to.y - from.y) * ((animProgress + i * 0.15 + 0.5) % 1)}
+                    r={4}
+                    fill="url(#itopNVLinkGlow)"
+                    filter="url(#itopDataGlow)"
+                  />
+                  {/* Trailing glow effect */}
+                  <circle
+                    cx={from.x + (to.x - from.x) * ((animProgress + i * 0.15 - 0.05) % 1)}
+                    cy={from.y + (to.y - from.y) * ((animProgress + i * 0.15 - 0.05) % 1)}
+                    r={3}
+                    fill="rgba(251, 191, 36, 0.4)"
+                  />
+                </>
               )}
             </g>
           );
         })}
 
-        {/* Nodes */}
-        {nodePositions.map((pos, i) => (
-          <g key={i}>
-            <circle
-              cx={pos.x}
-              cy={pos.y}
-              r={20}
-              fill={colors.gpu}
-              stroke="white"
-              strokeWidth={2}
-            />
-            <text
-              x={pos.x}
-              y={pos.y + 5}
-              textAnchor="middle"
-              fill="white"
-              fontSize={10}
-              fontWeight="bold"
-            >
-              G{i}
-            </text>
-          </g>
-        ))}
+        {/* GPU Nodes with 3D chip representation */}
+        {nodePositions.map((pos, i) => {
+          const chipSize = 36;
+          const chipDepth = 6;
+          const isActive = showDataFlow && (Math.floor(animationFrame / 25) % numNodes === i);
 
-        {/* Stats panel */}
-        <g transform={`translate(20, ${height - 80})`}>
-          <rect x={0} y={0} width={160} height={65} rx={8} fill="rgba(0,0,0,0.3)" />
-          <text x={10} y={18} fill={colors.textMuted} fontSize={10}>Latency Steps</text>
-          <text x={10} y={35} fill={spec.color} fontSize={14} fontWeight="bold">{latencySteps}</text>
-          <text x={90} y={18} fill={colors.textMuted} fontSize={10}>Bandwidth Eff.</text>
-          <text x={90} y={35} fill={bandwidthEfficiency > 80 ? colors.success : colors.warning} fontSize={14} fontWeight="bold">
+          return (
+            <g key={`node-${i}`} filter="url(#itopNodeGlow)">
+              {/* Chip shadow */}
+              <rect
+                x={pos.x - chipSize / 2 + 3}
+                y={pos.y - chipSize / 2 + 3}
+                width={chipSize}
+                height={chipSize}
+                rx={4}
+                fill="rgba(0,0,0,0.4)"
+              />
+
+              {/* Chip side (3D depth effect) */}
+              <path
+                d={`M ${pos.x - chipSize/2} ${pos.y + chipSize/2}
+                    L ${pos.x - chipSize/2 + chipDepth} ${pos.y + chipSize/2 + chipDepth}
+                    L ${pos.x + chipSize/2 + chipDepth} ${pos.y + chipSize/2 + chipDepth}
+                    L ${pos.x + chipSize/2 + chipDepth} ${pos.y - chipSize/2 + chipDepth}
+                    L ${pos.x + chipSize/2} ${pos.y - chipSize/2}
+                    L ${pos.x + chipSize/2} ${pos.y + chipSize/2}
+                    Z`}
+                fill="url(#itopChipSide)"
+              />
+
+              {/* Chip top surface */}
+              <rect
+                x={pos.x - chipSize / 2}
+                y={pos.y - chipSize / 2}
+                width={chipSize}
+                height={chipSize}
+                rx={4}
+                fill="url(#itopChipTop)"
+                stroke="#475569"
+                strokeWidth={1}
+              />
+
+              {/* Die area with glow */}
+              <rect
+                x={pos.x - chipSize / 3}
+                y={pos.y - chipSize / 3}
+                width={chipSize * 2 / 3}
+                height={chipSize * 2 / 3}
+                rx={2}
+                fill={isActive ? "url(#itopActiveDie)" : "url(#itopDieGlow)"}
+              />
+
+              {/* Die grid pattern */}
+              <g opacity={0.3}>
+                <line x1={pos.x - 8} y1={pos.y - 8} x2={pos.x - 8} y2={pos.y + 8} stroke="#fff" strokeWidth={0.5} />
+                <line x1={pos.x} y1={pos.y - 8} x2={pos.x} y2={pos.y + 8} stroke="#fff" strokeWidth={0.5} />
+                <line x1={pos.x + 8} y1={pos.y - 8} x2={pos.x + 8} y2={pos.y + 8} stroke="#fff" strokeWidth={0.5} />
+                <line x1={pos.x - 8} y1={pos.y - 8} x2={pos.x + 8} y2={pos.y - 8} stroke="#fff" strokeWidth={0.5} />
+                <line x1={pos.x - 8} y1={pos.y} x2={pos.x + 8} y2={pos.y} stroke="#fff" strokeWidth={0.5} />
+                <line x1={pos.x - 8} y1={pos.y + 8} x2={pos.x + 8} y2={pos.y + 8} stroke="#fff" strokeWidth={0.5} />
+              </g>
+
+              {/* Pin/pad markers on edges */}
+              {[-1, 0, 1].map(offset => (
+                <React.Fragment key={`pins-${offset}`}>
+                  <rect x={pos.x - chipSize/2 - 2} y={pos.y + offset * 8 - 2} width={4} height={4} fill="#94a3b8" rx={1} />
+                  <rect x={pos.x + chipSize/2 - 2} y={pos.y + offset * 8 - 2} width={4} height={4} fill="#94a3b8" rx={1} />
+                  <rect x={pos.x + offset * 8 - 2} y={pos.y - chipSize/2 - 2} width={4} height={4} fill="#94a3b8" rx={1} />
+                  <rect x={pos.x + offset * 8 - 2} y={pos.y + chipSize/2 - 2} width={4} height={4} fill="#94a3b8" rx={1} />
+                </React.Fragment>
+              ))}
+
+              {/* GPU label */}
+              <text
+                x={pos.x}
+                y={pos.y + chipSize / 2 + 16}
+                textAnchor="middle"
+                fill={colors.textSecondary}
+                fontSize={10}
+                fontWeight="bold"
+              >
+                GPU {i}
+              </text>
+
+              {/* Activity indicator */}
+              {isActive && (
+                <circle
+                  cx={pos.x + chipSize / 2 - 4}
+                  cy={pos.y - chipSize / 2 + 4}
+                  r={3}
+                  fill="#22c55e"
+                >
+                  <animate attributeName="opacity" values="1;0.4;1" dur="0.5s" repeatCount="indefinite" />
+                </circle>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Premium stats panel */}
+        <g transform={`translate(12, ${height - 90})`}>
+          <rect
+            x={0}
+            y={0}
+            width={180}
+            height={78}
+            rx={10}
+            fill="url(#itopStatsPanel)"
+            stroke="#334155"
+            strokeWidth={1}
+          />
+
+          {/* Stats header */}
+          <text x={12} y={18} fill={spec.color} fontSize={11} fontWeight="bold">
+            NETWORK METRICS
+          </text>
+          <line x1={12} y1={24} x2={168} y2={24} stroke="#334155" strokeWidth={1} />
+
+          {/* Latency */}
+          <text x={12} y={42} fill={colors.textMuted} fontSize={10}>Latency Steps</text>
+          <text x={12} y={56} fill={spec.color} fontSize={16} fontWeight="bold">{latencySteps}</text>
+
+          {/* Bandwidth */}
+          <text x={95} y={42} fill={colors.textMuted} fontSize={10}>Bandwidth Eff.</text>
+          <text x={95} y={56} fill={bandwidthEfficiency > 80 ? colors.success : colors.warning} fontSize={16} fontWeight="bold">
             {bandwidthEfficiency}%
           </text>
-          <text x={10} y={55} fill={colors.textMuted} fontSize={10}>
-            Links: {connections.length}
+
+          {/* Links count */}
+          <text x={12} y={72} fill={colors.textMuted} fontSize={9}>
+            Total Links: {connections.length} | Complexity: {spec.latency}
           </text>
         </g>
 
-        {/* Connection count for mesh */}
+        {/* Connection count warning for mesh */}
         {topology === 'Full Mesh' && numNodes > 8 && (
-          <text x={width / 2} y={height - 10} textAnchor="middle" fill={colors.error} fontSize={11}>
-            Warning: {(numNodes * (numNodes - 1)) / 2} links needed!
-          </text>
+          <g transform={`translate(${width / 2}, ${height - 8})`}>
+            <rect x={-100} y={-14} width={200} height={20} rx={4} fill="rgba(239, 68, 68, 0.2)" />
+            <text textAnchor="middle" fill={colors.error} fontSize={11} fontWeight="bold">
+              Warning: {(numNodes * (numNodes - 1)) / 2} links needed!
+            </text>
+          </g>
         )}
+
+        {/* Legend */}
+        <g transform={`translate(${width - 90}, ${height - 50})`}>
+          <text x={0} y={0} fill={colors.textMuted} fontSize={9} fontWeight="bold">LEGEND</text>
+          <circle cx={8} cy={15} r={4} fill="url(#itopDataPacket)" />
+          <text x={18} y={18} fill={colors.textSecondary} fontSize={9}>Gradient Data</text>
+          <circle cx={8} cy={30} r={3} fill="url(#itopNVLinkGlow)" />
+          <text x={18} y={33} fill={colors.textSecondary} fontSize={9}>NVLink Packet</text>
+        </g>
       </svg>
     );
   };

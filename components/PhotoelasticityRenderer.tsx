@@ -228,42 +228,62 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
-    const beamWidth = 200;
-    const beamHeight = isThick ? 50 : 25;
-    const beamY = height / 2 - 20;
+    const width = 700;
+    const height = 420;
+    const beamWidth = 260;
+    const beamHeight = isThick ? 60 : 32;
+    const beamY = height / 2 - 30;
 
     // Generate stress fringe colors based on bend amount
     const generateFringes = () => {
       if (!polarizerEnabled) return null;
 
       const fringes = [];
-      const numFringes = isThick ? Math.floor(bendAmount / 5) : Math.floor(bendAmount / 10);
+      const numFringes = isThick ? Math.floor(bendAmount / 4) : Math.floor(bendAmount / 8);
+      // Photoelastic interference colors - realistic sequence
       const fringeColors = [
-        '#000000', '#4a4a4a', '#1e3a5f', '#2563eb', '#0ea5e9',
-        '#10b981', '#84cc16', '#eab308', '#f97316', '#ef4444',
-        '#ec4899', '#a855f7', '#6366f1',
+        '#1a1a2e', '#2d3561', '#1e3a5f', '#0ea5e9', '#22d3ee',
+        '#10b981', '#84cc16', '#fbbf24', '#f97316', '#ef4444',
+        '#ec4899', '#a855f7', '#6366f1', '#3b82f6',
       ];
 
       for (let i = 0; i < numFringes; i++) {
         const t = i / Math.max(numFringes - 1, 1);
         const colorIndex = i % fringeColors.length;
-        const bendOffset = Math.sin(t * Math.PI) * bendAmount * 0.5;
+        const bendOffset = Math.sin(t * Math.PI) * bendAmount * 0.6;
 
+        // Main fringe ellipse
         fringes.push(
           <ellipse
-            key={i}
+            key={`fringe-${i}`}
             cx={width / 2}
-            cy={beamY + beamHeight / 2 + bendOffset * 0.3}
-            rx={beamWidth / 2 - i * 8}
-            ry={beamHeight / 2 + Math.abs(bendOffset) * 0.2}
+            cy={beamY + beamHeight / 2 + bendOffset * 0.35}
+            rx={beamWidth / 2 - i * 10 - 5}
+            ry={beamHeight / 2 + Math.abs(bendOffset) * 0.25}
             fill="none"
             stroke={fringeColors[colorIndex]}
-            strokeWidth={3}
-            opacity={0.8}
+            strokeWidth={isThick ? 4 : 3}
+            opacity={0.85}
+            filter="url(#phoelFringeGlow)"
           />
         );
+
+        // Secondary inner contour for depth
+        if (i < numFringes - 2 && i % 2 === 0) {
+          fringes.push(
+            <ellipse
+              key={`fringe-inner-${i}`}
+              cx={width / 2}
+              cy={beamY + beamHeight / 2 + bendOffset * 0.35}
+              rx={beamWidth / 2 - i * 10 - 8}
+              ry={beamHeight / 2 + Math.abs(bendOffset) * 0.2}
+              fill="none"
+              stroke={fringeColors[(colorIndex + 1) % fringeColors.length]}
+              strokeWidth={1.5}
+              opacity={0.5}
+            />
+          );
+        }
       }
       return fringes;
     };
@@ -272,7 +292,7 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
     const generateBeamPath = () => {
       const leftX = width / 2 - beamWidth / 2;
       const rightX = width / 2 + beamWidth / 2;
-      const bendY = bendAmount * 0.8;
+      const bendY = bendAmount * 0.9;
 
       return `M ${leftX} ${beamY}
               Q ${width / 2} ${beamY + bendY} ${rightX} ${beamY}
@@ -288,67 +308,435 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: polarizerEnabled ? '#0a0a0a' : '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '16px', maxWidth: '720px' }}
         >
-          {/* Polarizer indicators */}
-          <g>
-            <rect x={20} y={30} width={40} height={height - 60} fill="none" stroke={colors.polarizer} strokeWidth={2} strokeDasharray="4,4" opacity={0.5} />
-            <text x={40} y={20} fill={colors.polarizer} fontSize={10} textAnchor="middle">Polarizer</text>
-            <line x1={30} y1={50} x2={50} y2={50} stroke={colors.polarizer} strokeWidth={2} />
-            <line x1={30} y1={70} x2={50} y2={70} stroke={colors.polarizer} strokeWidth={2} />
-            <line x1={30} y1={90} x2={50} y2={90} stroke={colors.polarizer} strokeWidth={2} />
-          </g>
-
-          <g>
-            <rect x={width - 60} y={30} width={40} height={height - 60} fill="none" stroke={colors.polarizer} strokeWidth={2} strokeDasharray="4,4" opacity={polarizerEnabled ? 0.5 : 0.2} />
-            <text x={width - 40} y={20} fill={colors.polarizer} fontSize={10} textAnchor="middle">Analyzer</text>
-            <line x1={width - 50} y1={50} x2={width - 50} y2={70} stroke={colors.polarizer} strokeWidth={2} opacity={polarizerEnabled ? 1 : 0.3} />
-            <line x1={width - 40} y1={50} x2={width - 40} y2={70} stroke={colors.polarizer} strokeWidth={2} opacity={polarizerEnabled ? 1 : 0.3} />
-            <line x1={width - 30} y1={50} x2={width - 30} y2={70} stroke={colors.polarizer} strokeWidth={2} opacity={polarizerEnabled ? 1 : 0.3} />
-          </g>
-
-          {/* Force arrows */}
-          <g>
-            <line x1={width / 2 - beamWidth / 2 - 20} y1={beamY + beamHeight / 2} x2={width / 2 - beamWidth / 2} y2={beamY + beamHeight / 2} stroke={colors.stress} strokeWidth={3} />
-            <polygon points={`${width / 2 - beamWidth / 2 - 20},${beamY + beamHeight / 2 - 8} ${width / 2 - beamWidth / 2 - 20},${beamY + beamHeight / 2 + 8} ${width / 2 - beamWidth / 2 - 35},${beamY + beamHeight / 2}`} fill={colors.stress} />
-          </g>
-          <g>
-            <line x1={width / 2 + beamWidth / 2} y1={beamY + beamHeight / 2} x2={width / 2 + beamWidth / 2 + 20} y2={beamY + beamHeight / 2} stroke={colors.stress} strokeWidth={3} />
-            <polygon points={`${width / 2 + beamWidth / 2 + 20},${beamY + beamHeight / 2 - 8} ${width / 2 + beamWidth / 2 + 20},${beamY + beamHeight / 2 + 8} ${width / 2 + beamWidth / 2 + 35},${beamY + beamHeight / 2}`} fill={colors.stress} />
-          </g>
-
-          {/* Downward force arrow */}
-          <g>
-            <line x1={width / 2} y1={beamY - 30} x2={width / 2} y2={beamY - 5} stroke={colors.warning} strokeWidth={3} />
-            <polygon points={`${width / 2 - 8},${beamY - 5} ${width / 2 + 8},${beamY - 5} ${width / 2},${beamY + 10}`} fill={colors.warning} />
-            <text x={width / 2} y={beamY - 40} fill={colors.warning} fontSize={12} textAnchor="middle">Force</text>
-          </g>
-
-          {/* Bent beam with stress fringes */}
-          <path
-            d={generateBeamPath()}
-            fill={polarizerEnabled ? 'rgba(100, 116, 139, 0.3)' : 'rgba(148, 163, 184, 0.6)'}
-            stroke={colors.textMuted}
-            strokeWidth={1}
-          />
-
-          {/* Stress fringes overlay */}
-          <g clipPath="url(#beamClip)">
-            {generateFringes()}
-          </g>
-
           <defs>
-            <clipPath id="beamClip">
+            {/* === PREMIUM GRADIENT DEFINITIONS === */}
+
+            {/* Lab background gradient with depth */}
+            <linearGradient id="phoelLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor={polarizerEnabled ? '#050810' : '#111827'} />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Polarizer filter glass gradient */}
+            <linearGradient id="phoelPolarizerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#2563eb" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#2563eb" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Analyzer filter glass (crossed polarizer) */}
+            <linearGradient id="phoelAnalyzerGlass" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#312e81" stopOpacity={polarizerEnabled ? 0.9 : 0.3} />
+              <stop offset="25%" stopColor="#4338ca" stopOpacity={polarizerEnabled ? 0.7 : 0.25} />
+              <stop offset="50%" stopColor="#6366f1" stopOpacity={polarizerEnabled ? 0.5 : 0.2} />
+              <stop offset="75%" stopColor="#4338ca" stopOpacity={polarizerEnabled ? 0.7 : 0.25} />
+              <stop offset="100%" stopColor="#312e81" stopOpacity={polarizerEnabled ? 0.9 : 0.3} />
+            </linearGradient>
+
+            {/* Transparent plastic material gradient */}
+            <linearGradient id="phoelPlasticMaterial" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity={polarizerEnabled ? 0.15 : 0.5} />
+              <stop offset="20%" stopColor="#cbd5e1" stopOpacity={polarizerEnabled ? 0.1 : 0.4} />
+              <stop offset="50%" stopColor="#e2e8f0" stopOpacity={polarizerEnabled ? 0.08 : 0.35} />
+              <stop offset="80%" stopColor="#cbd5e1" stopOpacity={polarizerEnabled ? 0.1 : 0.4} />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity={polarizerEnabled ? 0.15 : 0.5} />
+            </linearGradient>
+
+            {/* Stress concentration radial gradient */}
+            <radialGradient id="phoelStressCenter" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Light source glow */}
+            <radialGradient id="phoelLightSource" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Force arrow gradient - compression */}
+            <linearGradient id="phoelForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Downward load gradient */}
+            <linearGradient id="phoelLoadArrow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Optical table surface */}
+            <linearGradient id="phoelOpticalTable" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="20%" stopColor="#111827" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Polarizer frame metal */}
+            <linearGradient id="phoelPolarizerFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Light beam through system */}
+            <linearGradient id="phoelLightBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.8" />
+              <stop offset="20%" stopColor="#fcd34d" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity={polarizerEnabled ? 0.4 : 0.6} />
+              <stop offset="80%" stopColor="#a855f7" stopOpacity={polarizerEnabled ? 0.3 : 0.5} />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity={polarizerEnabled ? 0.2 : 0.4} />
+            </linearGradient>
+
+            {/* === FILTER DEFINITIONS === */}
+
+            {/* Glow filter for fringes */}
+            <filter id="phoelFringeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Strong glow for light source */}
+            <filter id="phoelLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for polarizers */}
+            <filter id="phoelPolarizerGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Force arrow glow */}
+            <filter id="phoelForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Stress center glow */}
+            <filter id="phoelStressGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="phoelInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Beam clip path */}
+            <clipPath id="phoelBeamClip">
               <path d={generateBeamPath()} />
             </clipPath>
+
+            {/* Grid pattern for optical table */}
+            <pattern id="phoelTableGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
           </defs>
 
-          {/* Labels */}
-          <text x={width / 2} y={height - 30} fill={colors.textSecondary} fontSize={12} textAnchor="middle">
-            {isThick ? 'Thick' : 'Thin'} plastic beam under stress
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#phoelLabBg)" />
+          <rect width={width} height={height} fill="url(#phoelTableGrid)" opacity="0.5" />
+
+          {/* === OPTICAL TABLE === */}
+          <rect x="5" y={height - 50} width={width - 10} height="48" rx="4" fill="url(#phoelOpticalTable)" />
+          <rect x="5" y={height - 50} width={width - 10} height="3" fill="#374151" opacity="0.6" />
+          {/* Table mounting holes */}
+          {[80, 180, 280, 380, 480, 580].map(x => (
+            <circle key={`hole-${x}`} cx={x} cy={height - 26} r="3" fill="#0a0a0a" />
+          ))}
+
+          {/* === LIGHT SOURCE === */}
+          <g transform="translate(35, 140)">
+            {/* Light housing */}
+            <rect x="-15" y="-30" width="30" height="100" rx="4" fill="url(#phoelPolarizerFrame)" />
+            <rect x="-12" y="-27" width="24" height="94" rx="3" fill="#1a1a2e" />
+            {/* Light bulb */}
+            <circle cx="0" cy="20" r="15" fill="url(#phoelLightSource)" filter="url(#phoelLightGlow)" />
+            <circle cx="0" cy="20" r="8" fill="#fef9c3" />
+            {/* Label */}
+            <text x="0" y="-40" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="600">LIGHT</text>
+            <text x="0" y="-30" fill="#64748b" fontSize="8" textAnchor="middle">SOURCE</text>
+          </g>
+
+          {/* === LIGHT BEAM (before polarizer) === */}
+          <rect x="50" y={beamY + beamHeight / 2 - 20} width="40" height="40" fill="url(#phoelLightBeam)" opacity="0.5" />
+
+          {/* === FIRST POLARIZER (Polarizer) === */}
+          <g transform={`translate(100, ${beamY - 60})`}>
+            {/* Frame */}
+            <rect x="-8" y="-10" width="16" height={beamHeight + 140} rx="3" fill="url(#phoelPolarizerFrame)" />
+            {/* Glass filter */}
+            <rect x="-5" y="0" width="10" height={beamHeight + 120} fill="url(#phoelPolarizerGlass)" filter="url(#phoelPolarizerGlow)" />
+            {/* Polarization lines (horizontal) */}
+            {[...Array(12)].map((_, i) => (
+              <line
+                key={`pol-line-${i}`}
+                x1="-4"
+                y1={10 + i * 10}
+                x2="4"
+                y2={10 + i * 10}
+                stroke="#60a5fa"
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+            ))}
+            {/* Label */}
+            <text x="0" y="-20" fill="#3b82f6" fontSize="11" textAnchor="middle" fontWeight="700">POLARIZER</text>
+            <text x="0" y={beamHeight + 140} fill="#64748b" fontSize="8" textAnchor="middle">(Horizontal)</text>
+          </g>
+
+          {/* === POLARIZED LIGHT BEAM === */}
+          <rect x="110" y={beamY + beamHeight / 2 - 15} width={width / 2 - beamWidth / 2 - 120} height="30" fill="url(#phoelLightBeam)" opacity="0.4" />
+
+          {/* === SUPPORT CLAMPS (Left) === */}
+          <g transform={`translate(${width / 2 - beamWidth / 2 - 25}, ${beamY + beamHeight / 2})`}>
+            <rect x="-12" y="-25" width="24" height="50" rx="2" fill="url(#phoelPolarizerFrame)" />
+            <rect x="-8" y="-20" width="16" height="40" fill="#0f172a" />
+            <text x="0" y="40" fill="#64748b" fontSize="8" textAnchor="middle">CLAMP</text>
+          </g>
+
+          {/* === HORIZONTAL FORCE ARROWS (Compression) === */}
+          <g filter="url(#phoelForceGlow)">
+            {/* Left force arrow */}
+            <line
+              x1={width / 2 - beamWidth / 2 - 60}
+              y1={beamY + beamHeight / 2}
+              x2={width / 2 - beamWidth / 2 - 25}
+              y2={beamY + beamHeight / 2}
+              stroke="url(#phoelForceArrow)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`${width / 2 - beamWidth / 2 - 60},${beamY + beamHeight / 2 - 10} ${width / 2 - beamWidth / 2 - 60},${beamY + beamHeight / 2 + 10} ${width / 2 - beamWidth / 2 - 80},${beamY + beamHeight / 2}`}
+              fill="url(#phoelForceArrow)"
+            />
+            <text x={width / 2 - beamWidth / 2 - 70} y={beamY + beamHeight / 2 - 18} fill="#f87171" fontSize="9" textAnchor="middle" fontWeight="600">F</text>
+
+            {/* Right force arrow */}
+            <line
+              x1={width / 2 + beamWidth / 2 + 25}
+              y1={beamY + beamHeight / 2}
+              x2={width / 2 + beamWidth / 2 + 60}
+              y2={beamY + beamHeight / 2}
+              stroke="url(#phoelForceArrow)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`${width / 2 + beamWidth / 2 + 60},${beamY + beamHeight / 2 - 10} ${width / 2 + beamWidth / 2 + 60},${beamY + beamHeight / 2 + 10} ${width / 2 + beamWidth / 2 + 80},${beamY + beamHeight / 2}`}
+              fill="url(#phoelForceArrow)"
+            />
+            <text x={width / 2 + beamWidth / 2 + 70} y={beamY + beamHeight / 2 - 18} fill="#f87171" fontSize="9" textAnchor="middle" fontWeight="600">F</text>
+          </g>
+
+          {/* === DOWNWARD LOAD ARROW === */}
+          <g filter="url(#phoelForceGlow)">
+            <line
+              x1={width / 2}
+              y1={beamY - 50}
+              x2={width / 2}
+              y2={beamY - 10}
+              stroke="url(#phoelLoadArrow)"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`${width / 2 - 12},${beamY - 10} ${width / 2 + 12},${beamY - 10} ${width / 2},${beamY + 8}`}
+              fill="url(#phoelLoadArrow)"
+            />
+            <text x={width / 2} y={beamY - 60} fill="#fbbf24" fontSize="11" textAnchor="middle" fontWeight="700">APPLIED LOAD</text>
+            <text x={width / 2} y={beamY - 48} fill="#f59e0b" fontSize="9" textAnchor="middle">({bendAmount}%)</text>
+          </g>
+
+          {/* === TRANSPARENT PLASTIC SPECIMEN (Bent Beam) === */}
+          <g>
+            {/* Beam outline with gradient fill */}
+            <path
+              d={generateBeamPath()}
+              fill="url(#phoelPlasticMaterial)"
+              stroke={polarizerEnabled ? '#475569' : '#64748b'}
+              strokeWidth="2"
+              filter="url(#phoelInnerShadow)"
+            />
+
+            {/* Stress concentration indicator at bend point */}
+            {polarizerEnabled && bendAmount > 20 && (
+              <ellipse
+                cx={width / 2}
+                cy={beamY + beamHeight / 2 + bendAmount * 0.5}
+                rx={30 + bendAmount * 0.3}
+                ry={15 + bendAmount * 0.2}
+                fill="url(#phoelStressCenter)"
+                filter="url(#phoelStressGlow)"
+                opacity={bendAmount / 100}
+              />
+            )}
+
+            {/* Stress fringes overlay (only with polarizers) */}
+            <g clipPath="url(#phoelBeamClip)">
+              {generateFringes()}
+            </g>
+
+            {/* Specimen label */}
+            <text
+              x={width / 2}
+              y={beamY + beamHeight + bendAmount * 0.9 + 25}
+              fill="#94a3b8"
+              fontSize="10"
+              textAnchor="middle"
+              fontWeight="500"
+            >
+              {isThick ? 'Thick' : 'Thin'} Photoelastic Specimen
+            </text>
+          </g>
+
+          {/* === SUPPORT CLAMPS (Right) === */}
+          <g transform={`translate(${width / 2 + beamWidth / 2 + 25}, ${beamY + beamHeight / 2})`}>
+            <rect x="-12" y="-25" width="24" height="50" rx="2" fill="url(#phoelPolarizerFrame)" />
+            <rect x="-8" y="-20" width="16" height="40" fill="#0f172a" />
+            <text x="0" y="40" fill="#64748b" fontSize="8" textAnchor="middle">CLAMP</text>
+          </g>
+
+          {/* === TRANSMITTED LIGHT BEAM === */}
+          <rect
+            x={width / 2 + beamWidth / 2 + 40}
+            y={beamY + beamHeight / 2 - 15}
+            width={width - (width / 2 + beamWidth / 2 + 40) - 120}
+            height="30"
+            fill="url(#phoelLightBeam)"
+            opacity={polarizerEnabled ? 0.25 : 0.5}
+          />
+
+          {/* === SECOND POLARIZER (Analyzer) === */}
+          <g transform={`translate(${width - 100}, ${beamY - 60})`}>
+            {/* Frame */}
+            <rect x="-8" y="-10" width="16" height={beamHeight + 140} rx="3" fill="url(#phoelPolarizerFrame)" />
+            {/* Glass filter */}
+            <rect x="-5" y="0" width="10" height={beamHeight + 120} fill="url(#phoelAnalyzerGlass)" filter="url(#phoelPolarizerGlow)" />
+            {/* Polarization lines (vertical - crossed at 90 degrees) */}
+            {[...Array(10)].map((_, i) => (
+              <line
+                key={`ana-line-${i}`}
+                x1={-4 + i * 1}
+                y1="5"
+                x2={-4 + i * 1}
+                y2={beamHeight + 115}
+                stroke={polarizerEnabled ? '#818cf8' : '#475569'}
+                strokeWidth="1"
+                opacity={polarizerEnabled ? 0.7 : 0.3}
+              />
+            ))}
+            {/* Label */}
+            <text x="0" y="-20" fill={polarizerEnabled ? '#818cf8' : '#64748b'} fontSize="11" textAnchor="middle" fontWeight="700">ANALYZER</text>
+            <text x="0" y={beamHeight + 140} fill="#64748b" fontSize="8" textAnchor="middle">(Vertical, 90deg)</text>
+            {/* Status indicator */}
+            <circle cx="0" cy={beamHeight + 155} r="5" fill={polarizerEnabled ? '#10b981' : '#ef4444'} />
+            <text x="0" y={beamHeight + 168} fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="7" textAnchor="middle">
+              {polarizerEnabled ? 'ACTIVE' : 'OFF'}
+            </text>
+          </g>
+
+          {/* === DETECTOR/SCREEN === */}
+          <g transform={`translate(${width - 45}, ${beamY - 60})`}>
+            <rect x="-15" y="0" width="30" height={beamHeight + 120} rx="3" fill="#1a1a2e" stroke="#334155" strokeWidth="1" />
+            <rect x="-12" y="3" width="24" height={beamHeight + 114} rx="2" fill={polarizerEnabled ? '#0a0a0a' : '#1e293b'} />
+            {/* Detected pattern preview */}
+            {polarizerEnabled && bendAmount > 15 && (
+              <g>
+                {[...Array(5)].map((_, i) => (
+                  <rect
+                    key={`detect-${i}`}
+                    x="-8"
+                    y={20 + i * 20}
+                    width="16"
+                    height="8"
+                    rx="1"
+                    fill={['#3b82f6', '#10b981', '#fbbf24', '#ef4444', '#a855f7'][i % 5]}
+                    opacity={0.6}
+                  />
+                ))}
+              </g>
+            )}
+            <text x="0" y="-8" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="600">DETECTOR</text>
+          </g>
+
+          {/* === INFO PANEL === */}
+          <g transform={`translate(${width - 180}, 15)`}>
+            <rect x="0" y="0" width="165" height="70" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+            <text x="82" y="18" fill="#e2e8f0" fontSize="10" textAnchor="middle" fontWeight="700">PHOTOELASTICITY</text>
+            <line x1="10" y1="25" x2="155" y2="25" stroke="#334155" strokeWidth="1" />
+            <text x="15" y="40" fill="#94a3b8" fontSize="9">Bend Amount:</text>
+            <text x="150" y="40" fill="#f59e0b" fontSize="9" textAnchor="end" fontWeight="600">{bendAmount}%</text>
+            <text x="15" y="54" fill="#94a3b8" fontSize="9">Specimen:</text>
+            <text x="150" y="54" fill="#a855f7" fontSize="9" textAnchor="end" fontWeight="600">{isThick ? 'Thick' : 'Thin'}</text>
+            <text x="15" y="68" fill="#94a3b8" fontSize="9">Polarizers:</text>
+            <text x="150" y="68" fill={polarizerEnabled ? '#10b981' : '#ef4444'} fontSize="9" textAnchor="end" fontWeight="600">
+              {polarizerEnabled ? 'CROSSED' : 'OFF'}
+            </text>
+          </g>
+
+          {/* === LEGEND === */}
+          <g transform="translate(15, 15)">
+            <rect x="0" y="0" width="140" height="85" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+            <text x="70" y="16" fill="#e2e8f0" fontSize="9" textAnchor="middle" fontWeight="700">FRINGE COLOR KEY</text>
+            <line x1="10" y1="22" x2="130" y2="22" stroke="#334155" strokeWidth="1" />
+            {[
+              { color: '#3b82f6', label: 'Low Stress' },
+              { color: '#10b981', label: 'Moderate' },
+              { color: '#fbbf24', label: 'High Stress' },
+              { color: '#ef4444', label: 'Very High' },
+              { color: '#a855f7', label: 'Peak Stress' },
+            ].map((item, i) => (
+              <g key={`legend-${i}`} transform={`translate(12, ${30 + i * 11})`}>
+                <rect x="0" y="0" width="12" height="8" rx="1" fill={item.color} />
+                <text x="20" y="7" fill="#94a3b8" fontSize="8">{item.label}</text>
+              </g>
+            ))}
+          </g>
+
+          {/* === BOTTOM LABELS === */}
+          <text x={width / 2} y={height - 60} fill="#e2e8f0" fontSize="12" textAnchor="middle" fontWeight="600">
+            Stress-Induced Birefringence Visualization
           </text>
-          <text x={width / 2} y={height - 12} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            Bend: {bendAmount}% | Polarizers: {polarizerEnabled ? 'ON' : 'OFF'}
+          <text x={width / 2} y={height - 45} fill="#64748b" fontSize="10" textAnchor="middle">
+            Light polarization rotates through stressed transparent material, creating interference fringes
           </text>
         </svg>
 
@@ -356,13 +744,34 @@ const PhotoelasticityRenderer: React.FC<PhotoelasticityRendererProps> = ({
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <button
               onClick={() => setIsAnimating(!isAnimating)}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: isAnimating ? colors.error : colors.success, color: 'white', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px',
+                boxShadow: isAnimating ? '0 4px 20px rgba(239, 68, 68, 0.4)' : '0 4px 20px rgba(16, 185, 129, 0.4)'
+              }}
             >
-              {isAnimating ? 'Stop' : 'Animate Bend'}
+              {isAnimating ? 'Stop Animation' : 'Animate Bend'}
             </button>
             <button
               onClick={() => { setBendAmount(30); setIsAnimating(false); setPolarizerEnabled(true); }}
-              style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px' }}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: `2px solid ${colors.accent}`,
+                background: 'transparent',
+                color: colors.accent,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
             >
               Reset
             </button>

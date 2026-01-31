@@ -275,152 +275,326 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
     const width = 400;
     const height = 350;
 
-    // Draw vortex ring cross-section
+    // Draw velocity field streamlines around vortex ring
+    const renderVelocityField = (ring: VortexRing) => {
+      const { x, y, radius, rotation, opacity } = ring;
+      const streamlines = [];
+      const numStreamlines = 6;
+
+      for (let i = 0; i < numStreamlines; i++) {
+        const offsetY = (i - numStreamlines / 2) * 12;
+        const startX = x - radius * 2;
+        const midX = x;
+        const endX = x + radius * 2;
+
+        // Streamline bends around the vortex ring
+        const bendAmount = Math.abs(offsetY) < radius * 0.8 ?
+          (offsetY > 0 ? -8 : 8) * (1 - Math.abs(offsetY) / (radius * 1.5)) : 0;
+
+        const pathD = `M ${startX} ${y + offsetY}
+                       Q ${midX} ${y + offsetY + bendAmount} ${endX} ${y + offsetY}`;
+
+        streamlines.push(
+          <path
+            key={`stream-${ring.id}-${i}`}
+            d={pathD}
+            fill="none"
+            stroke="url(#vrtxStreamlineGrad)"
+            strokeWidth={1.5}
+            opacity={opacity * 0.4}
+            strokeDasharray="4,4"
+            style={{ animation: `vrtxStreamFlow 2s linear infinite` }}
+          />
+        );
+      }
+      return streamlines;
+    };
+
+    // Draw vortex ring cross-section with premium graphics
     const renderVortexCrossSection = (ring: VortexRing) => {
       const { x, y, radius, rotation, opacity } = ring;
       const coreRadius = radius * 0.25;
 
-      // Number of flow lines
-      const flowLines = [];
-      const numLines = 8;
+      // Rotation indicators around cores
+      const rotationIndicators = [];
+      const numIndicators = 12;
 
-      for (let i = 0; i < numLines; i++) {
-        const angle = (i / numLines) * Math.PI * 2 + (rotation * Math.PI / 180);
-        const nextAngle = ((i + 1) / numLines) * Math.PI * 2 + (rotation * Math.PI / 180);
+      for (let i = 0; i < numIndicators; i++) {
+        const angle = (i / numIndicators) * Math.PI * 2 + (rotation * Math.PI / 180);
+        const nextAngle = ((i + 0.5) / numIndicators) * Math.PI * 2 + (rotation * Math.PI / 180);
 
-        // Upper core rotation
-        const ux1 = x + Math.cos(angle) * coreRadius;
-        const uy1 = (y - radius * 0.6) + Math.sin(angle) * coreRadius;
-        const ux2 = x + Math.cos(nextAngle) * coreRadius;
-        const uy2 = (y - radius * 0.6) + Math.sin(nextAngle) * coreRadius;
+        // Upper core rotation particles
+        const uR = coreRadius * 0.8;
+        const ux = x + Math.cos(angle) * uR;
+        const uy = (y - radius * 0.6) + Math.sin(angle) * uR;
 
-        // Lower core rotation (opposite direction)
-        const lx1 = x + Math.cos(-angle) * coreRadius;
-        const ly1 = (y + radius * 0.6) + Math.sin(-angle) * coreRadius;
-        const lx2 = x + Math.cos(-nextAngle) * coreRadius;
-        const ly2 = (y + radius * 0.6) + Math.sin(-nextAngle) * coreRadius;
+        // Lower core rotation particles (opposite direction)
+        const lx = x + Math.cos(-angle) * uR;
+        const ly = (y + radius * 0.6) + Math.sin(-angle) * uR;
 
-        flowLines.push(
-          <line key={`upper-${ring.id}-${i}`} x1={ux1} y1={uy1} x2={ux2} y2={uy2} stroke={colors.vortexFlow} strokeWidth={2} opacity={opacity * 0.8} />,
-          <line key={`lower-${ring.id}-${i}`} x1={lx1} y1={ly1} x2={lx2} y2={ly2} stroke={colors.vortexFlow} strokeWidth={2} opacity={opacity * 0.8} />
+        rotationIndicators.push(
+          <circle
+            key={`rot-upper-${ring.id}-${i}`}
+            cx={ux}
+            cy={uy}
+            r={2}
+            fill="url(#vrtxRotationParticle)"
+            opacity={opacity * (0.5 + 0.5 * Math.sin(angle))}
+            filter="url(#vrtxParticleGlow)"
+          />,
+          <circle
+            key={`rot-lower-${ring.id}-${i}`}
+            cx={lx}
+            cy={ly}
+            r={2}
+            fill="url(#vrtxRotationParticle)"
+            opacity={opacity * (0.5 + 0.5 * Math.cos(angle))}
+            filter="url(#vrtxParticleGlow)"
+          />
+        );
+      }
+
+      // Spiral flow lines showing toroidal structure
+      const spiralLines = [];
+      const numSpirals = 4;
+      for (let s = 0; s < numSpirals; s++) {
+        const baseAngle = (s / numSpirals) * Math.PI * 2 + (rotation * Math.PI / 180);
+        const points = [];
+        for (let t = 0; t <= 1; t += 0.1) {
+          const spiralAngle = baseAngle + t * Math.PI;
+          const spiralR = radius * (0.3 + 0.3 * Math.sin(t * Math.PI));
+          const sx = x + Math.cos(spiralAngle) * spiralR * 0.5;
+          const sy = y + (t - 0.5) * radius * 1.2;
+          points.push(`${t === 0 ? 'M' : 'L'} ${sx} ${sy}`);
+        }
+        spiralLines.push(
+          <path
+            key={`spiral-${ring.id}-${s}`}
+            d={points.join(' ')}
+            fill="none"
+            stroke="url(#vrtxSpiralGrad)"
+            strokeWidth={1.5}
+            opacity={opacity * 0.6}
+            strokeLinecap="round"
+          />
         );
       }
 
       return (
         <g key={ring.id}>
+          {/* Velocity field streamlines */}
+          {renderVelocityField(ring)}
+
           {/* Fog visualization if enabled */}
           {showFog && (
             <>
+              {/* Outer fog glow */}
+              <ellipse
+                cx={x}
+                cy={y}
+                rx={radius * 1.3}
+                ry={radius * 1.5}
+                fill="url(#vrtxFogOuterGrad)"
+                opacity={opacity * 0.3}
+                filter="url(#vrtxFogBlur)"
+              />
+              {/* Main fog ring */}
               <ellipse
                 cx={x}
                 cy={y}
                 rx={radius}
                 ry={radius * 1.2}
-                fill={colors.fog}
-                opacity={opacity * 0.5}
+                fill="url(#vrtxFogGrad)"
+                opacity={opacity * 0.6}
               />
+              {/* Inner dark hole */}
               <ellipse
                 cx={x}
                 cy={y}
-                rx={radius * 0.7}
-                ry={radius * 0.9}
-                fill="rgba(15, 23, 42, 0.8)"
-                opacity={opacity}
+                rx={radius * 0.5}
+                ry={radius * 0.6}
+                fill="url(#vrtxFogHole)"
+                opacity={opacity * 0.9}
               />
             </>
           )}
 
-          {/* Vortex ring outline */}
+          {/* Vortex ring outline with gradient stroke */}
           <ellipse
             cx={x}
             cy={y}
             rx={radius}
             ry={radius * 1.2}
             fill="none"
-            stroke={colors.vortexCore}
-            strokeWidth={2}
+            stroke="url(#vrtxRingOutline)"
+            strokeWidth={3}
             opacity={opacity}
+            filter="url(#vrtxRingGlow)"
           />
 
-          {/* Upper vortex core */}
+          {/* Inner structure ellipse */}
+          <ellipse
+            cx={x}
+            cy={y}
+            rx={radius * 0.7}
+            ry={radius * 0.85}
+            fill="none"
+            stroke="url(#vrtxInnerRing)"
+            strokeWidth={1.5}
+            strokeDasharray="4,4"
+            opacity={opacity * 0.5}
+          />
+
+          {/* Spiral flow visualization */}
+          {spiralLines}
+
+          {/* Upper vortex core with premium gradient */}
+          <circle
+            cx={x}
+            cy={y - radius * 0.6}
+            r={coreRadius * 1.3}
+            fill="url(#vrtxCoreGlow)"
+            opacity={opacity * 0.5}
+            filter="url(#vrtxCoreBlur)"
+          />
           <circle
             cx={x}
             cy={y - radius * 0.6}
             r={coreRadius}
-            fill={colors.vortexCore}
+            fill="url(#vrtxCoreGrad)"
             opacity={opacity}
+            filter="url(#vrtxCoreGlowFilter)"
           />
 
-          {/* Lower vortex core */}
+          {/* Lower vortex core with premium gradient */}
+          <circle
+            cx={x}
+            cy={y + radius * 0.6}
+            r={coreRadius * 1.3}
+            fill="url(#vrtxCoreGlow)"
+            opacity={opacity * 0.5}
+            filter="url(#vrtxCoreBlur)"
+          />
           <circle
             cx={x}
             cy={y + radius * 0.6}
             r={coreRadius}
-            fill={colors.vortexCore}
+            fill="url(#vrtxCoreGrad)"
             opacity={opacity}
+            filter="url(#vrtxCoreGlowFilter)"
           />
 
-          {/* Flow lines */}
-          {flowLines}
+          {/* Rotation indicators */}
+          {rotationIndicators}
 
-          {/* Velocity vector */}
+          {/* Spin direction arrows on cores */}
+          <g opacity={opacity}>
+            {/* Upper core spin arrow (clockwise when viewed from right) */}
+            <path
+              d={`M ${x - coreRadius * 0.7} ${y - radius * 0.6 - coreRadius * 0.4}
+                  A ${coreRadius * 0.7} ${coreRadius * 0.5} 0 1 1
+                  ${x + coreRadius * 0.5} ${y - radius * 0.6 - coreRadius * 0.5}`}
+              fill="none"
+              stroke="url(#vrtxSpinArrowGrad)"
+              strokeWidth={2}
+              markerEnd="url(#vrtxSpinArrow)"
+            />
+            {/* Lower core spin arrow (counter-clockwise) */}
+            <path
+              d={`M ${x + coreRadius * 0.7} ${y + radius * 0.6 + coreRadius * 0.4}
+                  A ${coreRadius * 0.7} ${coreRadius * 0.5} 0 1 1
+                  ${x - coreRadius * 0.5} ${y + radius * 0.6 + coreRadius * 0.5}`}
+              fill="none"
+              stroke="url(#vrtxSpinArrowGrad)"
+              strokeWidth={2}
+              markerEnd="url(#vrtxSpinArrow)"
+            />
+          </g>
+
+          {/* Velocity vector with premium styling */}
           <line
-            x1={x + radius + 5}
+            x1={x + radius + 8}
             y1={y}
-            x2={x + radius + 5 + ring.velocity * 4}
+            x2={x + radius + 8 + ring.velocity * 5}
             y2={y}
-            stroke={colors.velocity}
-            strokeWidth={2}
+            stroke="url(#vrtxVelocityGrad)"
+            strokeWidth={3}
             opacity={opacity}
-            markerEnd="url(#arrowhead)"
+            strokeLinecap="round"
+            markerEnd="url(#vrtxVelocityArrow)"
           />
 
-          {/* Circulation arrows on cores */}
-          <path
-            d={`M ${x - coreRadius * 0.6} ${y - radius * 0.6 - coreRadius * 0.3}
-                A ${coreRadius * 0.6} ${coreRadius * 0.6} 0 1 1
-                ${x + coreRadius * 0.6} ${y - radius * 0.6 - coreRadius * 0.3}`}
-            fill="none"
-            stroke={colors.velocity}
-            strokeWidth={1.5}
-            opacity={opacity}
-            markerEnd="url(#smallArrow)"
-          />
-          <path
-            d={`M ${x + coreRadius * 0.6} ${y + radius * 0.6 + coreRadius * 0.3}
-                A ${coreRadius * 0.6} ${coreRadius * 0.6} 0 1 1
-                ${x - coreRadius * 0.6} ${y + radius * 0.6 + coreRadius * 0.3}`}
-            fill="none"
-            stroke={colors.velocity}
-            strokeWidth={1.5}
-            opacity={opacity}
-            markerEnd="url(#smallArrow)"
-          />
+          {/* Velocity magnitude label */}
+          <text
+            x={x + radius + 8 + ring.velocity * 2.5}
+            y={y - 10}
+            fill={colors.velocity}
+            fontSize={9}
+            textAnchor="middle"
+            opacity={opacity * 0.8}
+            fontWeight="bold"
+          >
+            v = {ring.velocity.toFixed(1)} m/s
+          </text>
         </g>
       );
     };
 
-    // Draw bottle with membrane
+    // Draw bottle with membrane - premium styling
     const renderBottle = () => (
       <g>
-        {/* Bottle body */}
-        <rect x={30} y={120} width={60} height={110} rx={5} fill="rgba(100, 149, 237, 0.3)" stroke={colors.vortexFlow} strokeWidth={2} />
+        {/* Bottle shadow */}
+        <ellipse cx={60} cy={235} rx={35} ry={8} fill="url(#vrtxShadowGrad)" opacity={0.5} />
+
+        {/* Bottle body with glass effect */}
+        <rect x={30} y={120} width={60} height={110} rx={8} fill="url(#vrtxBottleGrad)" />
+        <rect x={30} y={120} width={60} height={110} rx={8} fill="none" stroke="url(#vrtxBottleStroke)" strokeWidth={2} />
+
+        {/* Glass reflection */}
+        <rect x={35} y={125} width={8} height={90} rx={4} fill="url(#vrtxGlassReflection)" opacity={0.4} />
 
         {/* Bottle neck */}
-        <rect x={45} y={100} width={30} height={25} fill="rgba(100, 149, 237, 0.3)" stroke={colors.vortexFlow} strokeWidth={2} />
+        <rect x={45} y={100} width={30} height={25} rx={4} fill="url(#vrtxBottleGrad)" />
+        <rect x={45} y={100} width={30} height={25} rx={4} fill="none" stroke="url(#vrtxBottleStroke)" strokeWidth={2} />
 
-        {/* Aperture/opening */}
-        <rect x={50} y={95} width={apertureSize * 0.5} height={8} fill={colors.bgPrimary} stroke={colors.accent} strokeWidth={2} />
+        {/* Aperture/opening with metal rim */}
+        <rect x={48} y={93} width={apertureSize * 0.5 + 4} height={12} rx={3} fill="url(#vrtxApertureRim)" />
+        <rect x={50} y={95} width={apertureSize * 0.5} height={8} fill={colors.bgPrimary} stroke="url(#vrtxApertureGlow)" strokeWidth={1.5} />
 
-        {/* Membrane (back of bottle) */}
-        <rect x={30} y={225} width={60} height={5} fill={colors.warning} opacity={0.8} />
+        {/* Membrane (back of bottle) with flex indicator */}
+        <path
+          d={`M 30 225 Q 60 ${225 + (isAnimating ? 3 : 0)} 90 225 L 90 230 Q 60 ${230 + (isAnimating ? 3 : 0)} 30 230 Z`}
+          fill="url(#vrtxMembraneGrad)"
+          stroke={colors.warning}
+          strokeWidth={1}
+        />
 
-        {/* Tap indicator */}
-        <text x={60} y={250} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Tap here</text>
-        <path d="M 60 235 L 60 245 L 55 240 M 60 245 L 65 240" stroke={colors.warning} strokeWidth={1.5} fill="none" />
+        {/* Tap indicator with animation */}
+        <g opacity={0.9}>
+          <circle cx={60} cy={250} r={12} fill="url(#vrtxTapIndicator)" opacity={0.3} />
+          <text x={60} y={254} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="600">TAP</text>
+          <path
+            d="M 60 265 L 60 275 M 55 270 L 60 275 L 65 270"
+            stroke={colors.warning}
+            strokeWidth={2}
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
 
-        {/* Air inside bottle */}
-        <text x={60} y={175} fill={colors.textMuted} fontSize={9} textAnchor="middle">Air</text>
+        {/* Air pressure visualization inside bottle */}
+        <text x={60} y={165} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontWeight="500">AIR</text>
+        {[0, 1, 2].map(i => (
+          <circle
+            key={`air-${i}`}
+            cx={50 + i * 10}
+            cy={180}
+            r={3}
+            fill="url(#vrtxAirParticle)"
+            opacity={0.6}
+          />
+        ))}
       </g>
     );
 
@@ -433,27 +607,281 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
+          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
+            {/* --- LINEAR GRADIENTS WITH 4-6 COLOR STOPS --- */}
+
+            {/* Premium vortex core gradient */}
+            <linearGradient id="vrtxCoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Vortex ring outline gradient */}
+            <linearGradient id="vrtxRingOutline" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="20%" stopColor="#60a5fa" />
+              <stop offset="40%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="80%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#93c5fd" />
+            </linearGradient>
+
+            {/* Inner ring structure gradient */}
+            <linearGradient id="vrtxInnerRing" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Velocity vector gradient */}
+            <linearGradient id="vrtxVelocityGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Spin arrow gradient */}
+            <linearGradient id="vrtxSpinArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Spiral flow gradient */}
+            <linearGradient id="vrtxSpiralGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0.2" />
+              <stop offset="25%" stopColor="#818cf8" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#6366f1" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#818cf8" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Streamline gradient for velocity field */}
+            <linearGradient id="vrtxStreamlineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0" />
+              <stop offset="20%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.8" />
+              <stop offset="80%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#4ade80" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Bottle glass gradient */}
+            <linearGradient id="vrtxBottleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.15" />
+              <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.25" />
+              <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.15" />
+            </linearGradient>
+
+            {/* Bottle stroke gradient */}
+            <linearGradient id="vrtxBottleStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* Glass reflection gradient */}
+            <linearGradient id="vrtxGlassReflection" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Membrane gradient */}
+            <linearGradient id="vrtxMembraneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Aperture rim metallic gradient */}
+            <linearGradient id="vrtxApertureRim" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#94a3b8" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Shadow gradient */}
+            <linearGradient id="vrtxShadowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+            </linearGradient>
+
+            {/* --- RADIAL GRADIENTS FOR VORTEX EFFECTS --- */}
+
+            {/* Vortex core glow */}
+            <radialGradient id="vrtxCoreGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Rotation particle gradient */}
+            <radialGradient id="vrtxRotationParticle" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="50%" stopColor="#fcd34d" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
+
+            {/* Air particle inside bottle */}
+            <radialGradient id="vrtxAirParticle" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#bae6fd" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.2" />
+            </radialGradient>
+
+            {/* Tap indicator glow */}
+            <radialGradient id="vrtxTapIndicator" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Aperture glow */}
+            <radialGradient id="vrtxApertureGlow" cx="50%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="60%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </radialGradient>
+
+            {/* Fog outer glow gradient */}
+            <radialGradient id="vrtxFogOuterGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#e5e7eb" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#d1d5db" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#9ca3af" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Fog main gradient */}
+            <radialGradient id="vrtxFogGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f3f4f6" stopOpacity="0.1" />
+              <stop offset="30%" stopColor="#e5e7eb" stopOpacity="0.5" />
+              <stop offset="60%" stopColor="#d1d5db" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#9ca3af" stopOpacity="0.4" />
+            </radialGradient>
+
+            {/* Fog inner hole gradient */}
+            <radialGradient id="vrtxFogHole" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#1e293b" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0.3" />
+            </radialGradient>
+
+            {/* --- GLOW FILTERS USING GAUSSIAN BLUR + MERGE --- */}
+
+            {/* Vortex ring outer glow */}
+            <filter id="vrtxRingGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Vortex core glow filter */}
+            <filter id="vrtxCoreGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Core blur for outer glow */}
+            <filter id="vrtxCoreBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+
+            {/* Particle glow filter */}
+            <filter id="vrtxParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Fog blur filter */}
+            <filter id="vrtxFogBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" />
+            </filter>
+
+            {/* --- MARKERS FOR ARROWS --- */}
+
+            {/* Premium velocity arrow marker */}
+            <marker id="vrtxVelocityArrow" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+              <path d="M 0 0 L 12 4 L 0 8 L 3 4 Z" fill="#f59e0b" />
+            </marker>
+
+            {/* Spin direction arrow marker */}
+            <marker id="vrtxSpinArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <path d="M 0 0 L 8 3 L 0 6 L 2 3 Z" fill="#fbbf24" />
+            </marker>
+
+            {/* Legacy markers for compatibility */}
             <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
               <polygon points="0 0, 10 3.5, 0 7" fill={colors.velocity} />
             </marker>
             <marker id="smallArrow" markerWidth="6" markerHeight="5" refX="5" refY="2.5" orient="auto">
               <polygon points="0 0, 6 2.5, 0 5" fill={colors.velocity} />
             </marker>
+
+            {/* --- CSS ANIMATIONS --- */}
+            <style>{`
+              @keyframes vrtxStreamFlow {
+                0% { stroke-dashoffset: 0; }
+                100% { stroke-dashoffset: -16; }
+              }
+              @keyframes vrtxPulse {
+                0%, 100% { opacity: 0.6; }
+                50% { opacity: 1; }
+              }
+            `}</style>
           </defs>
 
-          {/* Background grid for depth perception */}
-          {Array.from({ length: 10 }).map((_, i) => (
+          {/* Premium dark background with subtle gradient */}
+          <rect width={width} height={height} fill="url(#vrtxBgGrad)" />
+          <linearGradient id="vrtxBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Subtle grid pattern for depth */}
+          <pattern id="vrtxGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.2" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#vrtxGrid)" />
+
+          {/* Background flow indicators */}
+          {Array.from({ length: 8 }).map((_, i) => (
             <line
-              key={`grid-${i}`}
-              x1={i * 40 + 40}
-              y1={50}
-              x2={i * 40 + 40}
-              y2={300}
-              stroke="rgba(255,255,255,0.05)"
+              key={`bgflow-${i}`}
+              x1={100 + i * 35}
+              y1={60}
+              x2={100 + i * 35 + 20}
+              y2={60}
+              stroke="#334155"
               strokeWidth={1}
+              strokeOpacity={0.3}
+              markerEnd="url(#vrtxSmallFlowArrow)"
             />
           ))}
+          <marker id="vrtxSmallFlowArrow" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <path d="M 0 0 L 6 2 L 0 4" fill="none" stroke="#334155" strokeWidth="1" />
+          </marker>
 
           {/* Bottle */}
           {renderBottle()}
@@ -474,29 +902,54 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
             })
           )}
 
-          {/* Labels */}
-          <text x={20} y={25} fill={colors.textSecondary} fontSize={11}>
-            Aperture: {apertureSize}mm
+          {/* Premium info panel background */}
+          <rect x={10} y={10} width={150} height={55} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
+
+          {/* Labels with improved styling */}
+          <text x={20} y={28} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+            Aperture: <tspan fill={colors.accent}>{apertureSize}mm</tspan>
           </text>
-          <text x={20} y={40} fill={colors.textSecondary} fontSize={11}>
-            Tap strength: {tapStrength}
+          <text x={20} y={44} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+            Tap strength: <tspan fill={colors.velocity}>{tapStrength}</tspan>
           </text>
-          <text x={width - 100} y={25} fill={colors.textSecondary} fontSize={11}>
-            Viscosity: {airViscosity}
+          <text x={20} y={60} fill={colors.textSecondary} fontSize={11} fontWeight="600">
+            Viscosity: <tspan fill={airViscosity === 'high' ? colors.error : colors.success}>{airViscosity}</tspan>
           </text>
+
+          {/* Fog indicator */}
           {showFog && (
-            <text x={width - 100} y={40} fill={colors.fog} fontSize={11}>
-              Fog: ON
-            </text>
+            <g>
+              <rect x={width - 85} y={10} width={75} height={25} rx={6} fill="#0f172a" fillOpacity={0.8} stroke="#9ca3af" strokeWidth={1} />
+              <circle cx={width - 70} cy={22} r={5} fill="#d1d5db" />
+              <text x={width - 58} y={27} fill="#e5e7eb" fontSize={11} fontWeight="600">FOG ON</text>
+            </g>
           )}
 
-          {/* Legend */}
-          <g transform="translate(280, 280)">
-            <circle cx={0} cy={0} r={5} fill={colors.vortexCore} />
-            <text x={10} y={4} fill={colors.textMuted} fontSize={9}>Vortex core</text>
-            <line x1={0} y1={15} x2={20} y2={15} stroke={colors.velocity} strokeWidth={2} />
-            <text x={25} y={19} fill={colors.textMuted} fontSize={9}>Velocity</text>
+          {/* Legend with premium styling */}
+          <g transform="translate(250, 295)">
+            <rect x={-10} y={-15} width={150} height={50} rx={8} fill="#0f172a" fillOpacity={0.8} stroke="#334155" strokeWidth={1} />
+
+            {/* Vortex core legend */}
+            <circle cx={5} cy={0} r={6} fill="url(#vrtxCoreGrad)" filter="url(#vrtxCoreGlowFilter)" />
+            <text x={18} y={4} fill={colors.textMuted} fontSize={10} fontWeight="500">Vortex Core</text>
+
+            {/* Velocity legend */}
+            <line x1={0} y1={20} x2={25} y2={20} stroke="url(#vrtxVelocityGrad)" strokeWidth={3} strokeLinecap="round" />
+            <text x={32} y={24} fill={colors.textMuted} fontSize={10} fontWeight="500">Velocity</text>
+
+            {/* Rotation legend */}
+            <circle cx={95} cy={0} r={3} fill="url(#vrtxRotationParticle)" />
+            <text x={102} y={4} fill={colors.textMuted} fontSize={10} fontWeight="500">Spin</text>
+
+            {/* Flow legend */}
+            <line x1={90} y1={20} x2={115} y2={20} stroke="url(#vrtxStreamlineGrad)" strokeWidth={2} strokeDasharray="4,2" />
+            <text x={120} y={24} fill={colors.textMuted} fontSize={10} fontWeight="500">Flow</text>
           </g>
+
+          {/* Cross-section label */}
+          <text x={width / 2} y={height - 10} fill={colors.textMuted} fontSize={10} textAnchor="middle" fontStyle="italic">
+            Cross-sectional view of vortex ring propagation
+          </text>
         </svg>
 
         {interactive && (
@@ -510,11 +963,13 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.accent,
+                background: `linear-gradient(135deg, ${colors.accent} 0%, #7c3aed 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: `0 4px 15px ${colors.accentGlow}`,
+                transition: 'all 0.2s ease',
               }}
             >
               Tap Membrane
@@ -524,12 +979,13 @@ const VortexRingsRenderer: React.FC<VortexRingsRendererProps> = ({
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(139, 92, 246, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

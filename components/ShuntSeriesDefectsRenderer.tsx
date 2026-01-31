@@ -386,16 +386,16 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
   };
 
   const renderVisualization = () => {
-    const width = 550;
-    const height = 500;
+    const width = 700;
+    const height = 580;
     const curve = calculateIVCurve();
     const defect = defects[defectType];
 
     // Graph dimensions
-    const graphX = 60;
-    const graphY = 50;
-    const graphWidth = 200;
-    const graphHeight = 150;
+    const graphX = 50;
+    const graphY = 55;
+    const graphWidth = 260;
+    const graphHeight = 180;
 
     const Isc = 8.0;
     const Voc = 0.65;
@@ -405,6 +405,15 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
     // Create path for I-V curve
     const pathData = curve.points
       .map((p, i) => `${i === 0 ? 'M' : 'L'} ${graphX + p.v * vScale} ${graphY + graphHeight - p.i * iScale}`)
+      .join(' ');
+
+    // Power curve (P = V * I)
+    const powerPath = curve.points
+      .map((p, i) => {
+        const power = p.v * p.i;
+        const maxP = 4.0; // Scale for power display
+        return `${i === 0 ? 'M' : 'L'} ${graphX + p.v * vScale} ${graphY + graphHeight - (power / maxP) * graphHeight}`;
+      })
       .join(' ');
 
     // Healthy cell curve for comparison
@@ -427,6 +436,19 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
       .map((p, i) => `${i === 0 ? 'M' : 'L'} ${graphX + p.v * vScale} ${graphY + graphHeight - p.i * iScale}`)
       .join(' ');
 
+    // Healthy power curve
+    const healthyPowerPath = healthyPoints
+      .map((p, i) => {
+        const power = p.v * p.i;
+        const maxP = 4.0;
+        return `${i === 0 ? 'M' : 'L'} ${graphX + p.v * vScale} ${graphY + graphHeight - (power / maxP) * graphHeight}`;
+      })
+      .join(' ');
+
+    // MPP point coordinates
+    const mppX = graphX + curve.Vmp * vScale;
+    const mppY = graphY + graphHeight - curve.Imp * iScale;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
@@ -434,195 +456,611 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '600px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
-          {/* Title */}
-          <text x={width / 2} y={25} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle">
-            Shunt vs Series Defects - Circuit Analysis
+          {/* ============ PREMIUM DEFS SECTION ============ */}
+          <defs>
+            {/* Premium dark background gradient */}
+            <linearGradient id="ssdBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0a1a" />
+              <stop offset="25%" stopColor="#0f1629" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="75%" stopColor="#0f1629" />
+              <stop offset="100%" stopColor="#0a0a1a" />
+            </linearGradient>
+
+            {/* Solar cell silicon gradient with depth */}
+            <linearGradient id="ssdSiliconGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="15%" stopColor="#2563eb" />
+              <stop offset="40%" stopColor="#1d4ed8" />
+              <stop offset="60%" stopColor="#1e40af" />
+              <stop offset="85%" stopColor="#1e3a8a" />
+              <stop offset="100%" stopColor="#172554" />
+            </linearGradient>
+
+            {/* Busbar metallic gradient */}
+            <linearGradient id="ssdBusbarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#d4d4d8" />
+              <stop offset="20%" stopColor="#a1a1aa" />
+              <stop offset="50%" stopColor="#71717a" />
+              <stop offset="80%" stopColor="#a1a1aa" />
+              <stop offset="100%" stopColor="#d4d4d8" />
+            </linearGradient>
+
+            {/* Graph area gradient */}
+            <linearGradient id="ssdGraphBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0c1222" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#0c1222" />
+            </linearGradient>
+
+            {/* I-V Curve gradient - healthy */}
+            <linearGradient id="ssdHealthyCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#6ee7b7" />
+            </linearGradient>
+
+            {/* Power curve gradient */}
+            <linearGradient id="ssdPowerCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Circuit panel gradient */}
+            <linearGradient id="ssdCircuitBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Hotspot radial gradient - intense center */}
+            <radialGradient id="ssdHotspotGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ff4500" stopOpacity="1" />
+              <stop offset="20%" stopColor="#ff6b35" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#ff8c42" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#ffa94d" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#ffcc5c" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ffd700" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Shunt defect radial gradient - purple leak effect */}
+            <radialGradient id="ssdShuntGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#9333ea" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#6d28d9" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#5b21b6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Crack defect gradient - dark fracture */}
+            <linearGradient id="ssdCrackGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#451a03" />
+              <stop offset="30%" stopColor="#78350f" />
+              <stop offset="50%" stopColor="#92400e" />
+              <stop offset="70%" stopColor="#78350f" />
+              <stop offset="100%" stopColor="#451a03" />
+            </linearGradient>
+
+            {/* Contact corrosion gradient */}
+            <linearGradient id="ssdCorrosionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#78350f" />
+              <stop offset="20%" stopColor="#a16207" />
+              <stop offset="50%" stopColor="#ca8a04" />
+              <stop offset="80%" stopColor="#a16207" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
+
+            {/* Current source glow */}
+            <radialGradient id="ssdCurrentSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#059669" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#047857" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#065f46" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Diode gradient */}
+            <linearGradient id="ssdDiodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Risk meter gradient - low to high */}
+            <linearGradient id="ssdRiskMeterBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="30%" stopColor="#84cc16" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* MPP point glow */}
+            <radialGradient id="ssdMppGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#0891b2" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Premium glow filter for curves */}
+            <filter id="ssdCurveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense hotspot glow filter */}
+            <filter id="ssdHotspotFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Shunt leak glow filter */}
+            <filter id="ssdShuntFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Defect indicator glow */}
+            <filter id="ssdDefectGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* MPP marker glow */}
+            <filter id="ssdMppFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text shadow filter */}
+            <filter id="ssdTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Grid pattern for solar cell */}
+            <pattern id="ssdCellGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" />
+              <line x1="0" y1="0" x2="0" y2="20" stroke="#3b82f6" strokeWidth="0.5" strokeOpacity="0.4" />
+              <line x1="0" y1="0" x2="20" y2="0" stroke="#3b82f6" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* ============ BACKGROUND ============ */}
+          <rect width={width} height={height} fill="url(#ssdBgGradient)" />
+
+          {/* Title with premium styling */}
+          <text x={width / 2} y={28} fill={colors.textPrimary} fontSize={18} fontWeight="bold" textAnchor="middle" filter="url(#ssdTextShadow)">
+            Solar Cell Defect Analysis - Shunt vs Series
+          </text>
+          <text x={width / 2} y={46} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Circuit Model & I-V Characteristic Impact
           </text>
 
-          {/* I-V Curve Graph */}
-          <g transform="translate(0, 0)">
-            <rect x={graphX} y={graphY} width={graphWidth} height={graphHeight} fill="#111827" rx={4} />
+          {/* ============ I-V CURVE GRAPH (Left Side) ============ */}
+          <g transform="translate(0, 10)">
+            {/* Graph background with gradient */}
+            <rect x={graphX - 10} y={graphY - 15} width={graphWidth + 40} height={graphHeight + 50} rx={8} fill="url(#ssdGraphBg)" stroke="#334155" strokeWidth={1} />
 
-            {/* Grid lines */}
-            {[0.25, 0.5, 0.75].map(frac => (
+            {/* Graph title */}
+            <text x={graphX + graphWidth / 2} y={graphY - 2} fill={colors.textSecondary} fontSize={11} fontWeight="bold" textAnchor="middle">I-V & Power Curves</text>
+
+            {/* Grid lines with subtle gradient */}
+            {[0.2, 0.4, 0.6, 0.8].map(frac => (
               <g key={`grid-${frac}`}>
-                <line x1={graphX} y1={graphY + graphHeight * (1 - frac)} x2={graphX + graphWidth} y2={graphY + graphHeight * (1 - frac)} stroke="#374151" strokeWidth={1} strokeDasharray="2,2" />
-                <line x1={graphX + graphWidth * frac} y1={graphY} x2={graphX + graphWidth * frac} y2={graphY + graphHeight} stroke="#374151" strokeWidth={1} strokeDasharray="2,2" />
+                <line x1={graphX} y1={graphY + graphHeight * (1 - frac)} x2={graphX + graphWidth} y2={graphY + graphHeight * (1 - frac)} stroke="#334155" strokeWidth={0.5} strokeDasharray="4,4" />
+                <line x1={graphX + graphWidth * frac} y1={graphY} x2={graphX + graphWidth * frac} y2={graphY + graphHeight} stroke="#334155" strokeWidth={0.5} strokeDasharray="4,4" />
               </g>
             ))}
 
-            {/* Healthy curve (reference) */}
-            <path d={healthyPath} fill="none" stroke={colors.success} strokeWidth={2} strokeDasharray="5,3" opacity={0.5} />
+            {/* Fill area under defective curve */}
+            <path d={`${pathData} L ${graphX + graphWidth} ${graphY + graphHeight} L ${graphX} ${graphY + graphHeight} Z`} fill={defect.color} fillOpacity={0.1} />
 
-            {/* Defective curve */}
-            <path d={pathData} fill="none" stroke={defect.color} strokeWidth={3} />
+            {/* Healthy I-V curve (reference - dashed) */}
+            <path d={healthyPath} fill="none" stroke="url(#ssdHealthyCurve)" strokeWidth={2} strokeDasharray="6,4" opacity={0.6} />
 
-            {/* Axes */}
-            <line x1={graphX} y1={graphY + graphHeight} x2={graphX + graphWidth + 10} y2={graphY + graphHeight} stroke={colors.textSecondary} strokeWidth={2} />
+            {/* Healthy power curve (dashed) */}
+            <path d={healthyPowerPath} fill="none" stroke="url(#ssdPowerCurve)" strokeWidth={1.5} strokeDasharray="4,3" opacity={0.4} />
+
+            {/* Defective I-V curve with glow */}
+            <path d={pathData} fill="none" stroke={defect.color} strokeWidth={3.5} filter="url(#ssdCurveGlow)" />
+            <path d={pathData} fill="none" stroke={defect.color} strokeWidth={2.5} />
+
+            {/* Defective power curve */}
+            <path d={powerPath} fill="none" stroke={colors.accent} strokeWidth={2} opacity={0.8} />
+
+            {/* MPP point with glow */}
+            <g filter="url(#ssdMppFilter)">
+              <circle cx={mppX} cy={mppY} r={12} fill="url(#ssdMppGlow)" />
+            </g>
+            <circle cx={mppX} cy={mppY} r={5} fill="#22d3ee" stroke="white" strokeWidth={1.5} />
+            <text x={mppX + 15} y={mppY - 8} fill="#22d3ee" fontSize={9} fontWeight="bold">MPP</text>
+            <text x={mppX + 15} y={mppY + 4} fill={colors.textMuted} fontSize={8}>{curve.maxPower.toFixed(2)}W</text>
+
+            {/* Axes with proper styling */}
+            <line x1={graphX} y1={graphY + graphHeight} x2={graphX + graphWidth + 15} y2={graphY + graphHeight} stroke={colors.textSecondary} strokeWidth={2} />
             <line x1={graphX} y1={graphY - 5} x2={graphX} y2={graphY + graphHeight} stroke={colors.textSecondary} strokeWidth={2} />
-            <text x={graphX + graphWidth / 2} y={graphY + graphHeight + 18} fill={colors.textMuted} fontSize={10} textAnchor="middle">Voltage</text>
-            <text x={graphX - 8} y={graphY + graphHeight / 2} fill={colors.textMuted} fontSize={10} textAnchor="middle" transform={`rotate(-90, ${graphX - 8}, ${graphY + graphHeight / 2})`}>Current</text>
+
+            {/* Axis arrows */}
+            <polygon points={`${graphX + graphWidth + 15},${graphY + graphHeight} ${graphX + graphWidth + 8},${graphY + graphHeight - 4} ${graphX + graphWidth + 8},${graphY + graphHeight + 4}`} fill={colors.textSecondary} />
+            <polygon points={`${graphX},${graphY - 5} ${graphX - 4},${graphY + 2} ${graphX + 4},${graphY + 2}`} fill={colors.textSecondary} />
+
+            {/* Axis labels */}
+            <text x={graphX + graphWidth / 2} y={graphY + graphHeight + 22} fill={colors.textMuted} fontSize={10} textAnchor="middle">Voltage (V)</text>
+            <text x={graphX - 15} y={graphY + graphHeight / 2} fill={colors.textMuted} fontSize={10} textAnchor="middle" transform={`rotate(-90, ${graphX - 15}, ${graphY + graphHeight / 2})`}>Current (A)</text>
+
+            {/* Scale markers */}
+            <text x={graphX + graphWidth} y={graphY + graphHeight + 12} fill={colors.textMuted} fontSize={8} textAnchor="middle">0.7V</text>
+            <text x={graphX} y={graphY + graphHeight + 12} fill={colors.textMuted} fontSize={8} textAnchor="middle">0</text>
+            <text x={graphX - 5} y={graphY + 5} fill={colors.textMuted} fontSize={8} textAnchor="end">8A</text>
 
             {/* Legend */}
-            <line x1={graphX + 10} y1={graphY + 10} x2={graphX + 30} y2={graphY + 10} stroke={colors.success} strokeWidth={2} strokeDasharray="5,3" />
-            <text x={graphX + 35} y={graphY + 13} fill={colors.textMuted} fontSize={9}>Healthy</text>
-            <line x1={graphX + 10} y1={graphY + 23} x2={graphX + 30} y2={graphY + 23} stroke={defect.color} strokeWidth={2} />
-            <text x={graphX + 35} y={graphY + 26} fill={defect.color} fontSize={9}>{defect.name}</text>
+            <g transform={`translate(${graphX + graphWidth - 85}, ${graphY + 8})`}>
+              <rect x={0} y={0} width={90} height={55} rx={4} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth={0.5} />
+              <line x1={8} y1={12} x2={28} y2={12} stroke="url(#ssdHealthyCurve)" strokeWidth={2} strokeDasharray="4,2" />
+              <text x={33} y={15} fill={colors.textMuted} fontSize={8}>Healthy</text>
+              <line x1={8} y1={27} x2={28} y2={27} stroke={defect.color} strokeWidth={2} />
+              <text x={33} y={30} fill={defect.color} fontSize={8}>{defect.name}</text>
+              <line x1={8} y1={42} x2={28} y2={42} stroke={colors.accent} strokeWidth={2} />
+              <text x={33} y={45} fill={colors.accent} fontSize={8}>Power</text>
+            </g>
           </g>
 
-          {/* Equivalent Circuit Diagram */}
-          <g transform="translate(290, 50)">
-            <rect x="0" y="0" width="230" height="150" rx={8} fill="#111827" stroke={colors.textMuted} strokeWidth={1} />
-            <text x="115" y="18" fill={colors.textSecondary} fontSize={11} fontWeight="bold" textAnchor="middle">Equivalent Circuit</text>
+          {/* ============ EQUIVALENT CIRCUIT (Right Side) ============ */}
+          <g transform="translate(355, 55)">
+            <rect x="0" y="0" width="320" height="185" rx={10} fill="url(#ssdCircuitBg)" stroke="#475569" strokeWidth={1.5} />
+            <text x="160" y="20" fill={colors.textSecondary} fontSize={12} fontWeight="bold" textAnchor="middle">Solar Cell Equivalent Circuit</text>
 
-            {/* Circuit components */}
-            {/* Current source (Iph) */}
-            <circle cx="40" cy="75" r="15" fill="none" stroke={colors.success} strokeWidth={2} />
-            <text x="40" y="79" fill={colors.success} fontSize={10} textAnchor="middle">Iph</text>
+            {/* Circuit frame */}
+            <rect x="15" y="35" width="290" height="135" rx={6} fill="rgba(15, 23, 42, 0.5)" stroke="#334155" strokeWidth={0.5} />
 
-            {/* Diode */}
-            <path d="M 70 60 L 85 75 L 70 90 Z" fill="none" stroke={colors.accent} strokeWidth={2} />
-            <line x1="85" y1="60" x2="85" y2="90" stroke={colors.accent} strokeWidth={2} />
-
-            {/* Shunt resistance */}
-            <g transform="translate(110, 55)">
-              <rect x="0" y="0" width="8" height="40" fill="none" stroke={curve.shuntR < 100 ? colors.error : colors.blue} strokeWidth={2} />
-              <text x="4" y="55" fill={curve.shuntR < 100 ? colors.error : colors.textMuted} fontSize={9} textAnchor="middle">Rsh</text>
-              <text x="4" y="67" fill={curve.shuntR < 100 ? colors.error : colors.textMuted} fontSize={8} textAnchor="middle">{curve.shuntR.toFixed(0)}Ω</text>
+            {/* Current source (Iph) with glow */}
+            <g transform="translate(40, 80)">
+              <circle cx="0" cy="0" r="22" fill="url(#ssdCurrentSourceGlow)" />
+              <circle cx="0" cy="0" r="18" fill="none" stroke={colors.success} strokeWidth={2.5} />
+              <line x1="0" y1="-10" x2="0" y2="10" stroke={colors.success} strokeWidth={2} />
+              <polygon points="0,-10 -4,-4 4,-4" fill={colors.success} />
+              <text x="0" y="35" fill={colors.success} fontSize={10} fontWeight="bold" textAnchor="middle">Iph</text>
+              <text x="0" y="47" fill={colors.textMuted} fontSize={8} textAnchor="middle">Photocurrent</text>
             </g>
 
-            {/* Series resistance */}
-            <g transform="translate(145, 65)">
-              <rect x="0" y="0" width="35" height="8" fill="none" stroke={curve.seriesR > 1.5 ? colors.error : colors.blue} strokeWidth={2} />
-              <text x="17" y="20" fill={curve.seriesR > 1.5 ? colors.error : colors.textMuted} fontSize={9} textAnchor="middle">Rs</text>
-              <text x="17" y="32" fill={curve.seriesR > 1.5 ? colors.error : colors.textMuted} fontSize={8} textAnchor="middle">{curve.seriesR.toFixed(1)}Ω</text>
+            {/* Diode with gradient */}
+            <g transform="translate(95, 65)">
+              <path d="M 0 0 L 20 15 L 0 30 Z" fill="url(#ssdDiodeGradient)" stroke="#d97706" strokeWidth={1.5} />
+              <line x1="20" y1="0" x2="20" y2="30" stroke="#d97706" strokeWidth={2.5} />
+              <text x="10" y="48" fill={colors.accent} fontSize={9} fontWeight="bold" textAnchor="middle">D</text>
             </g>
 
-            {/* Load */}
-            <rect x="195" y="55" width="20" height="40" fill="none" stroke={colors.textSecondary} strokeWidth={2} />
-            <text x="205" y="110" fill={colors.textMuted} fontSize={9} textAnchor="middle">Load</text>
+            {/* Shunt resistance (Rsh) */}
+            <g transform="translate(145, 52)">
+              <rect x="0" y="0" width="12" height="56" rx={2} fill="none" stroke={curve.shuntR < 100 ? colors.error : colors.blue} strokeWidth={2.5} />
+              {/* Resistance zigzag pattern */}
+              <path d={`M 6 0 L 6 5 L 2 10 L 10 15 L 2 20 L 10 25 L 2 30 L 10 35 L 2 40 L 10 45 L 6 50 L 6 56`} fill="none" stroke={curve.shuntR < 100 ? colors.error : colors.blue} strokeWidth={1.5} opacity={0.5} />
+              <text x="6" y="72" fill={curve.shuntR < 100 ? colors.error : colors.textMuted} fontSize={9} fontWeight="bold" textAnchor="middle">Rsh</text>
+              <text x="6" y="84" fill={curve.shuntR < 100 ? colors.error : colors.textMuted} fontSize={8} textAnchor="middle">{curve.shuntR.toFixed(0)}Ω</text>
+              {curve.shuntR < 100 && (
+                <g filter="url(#ssdDefectGlow)">
+                  <text x="6" y="96" fill={colors.error} fontSize={7} fontWeight="bold" textAnchor="middle">LOW!</text>
+                </g>
+              )}
+            </g>
 
-            {/* Connection lines */}
-            <line x1="55" y1="75" x2="70" y2="75" stroke={colors.textSecondary} strokeWidth={1} />
-            <line x1="85" y1="75" x2="110" y2="75" stroke={colors.textSecondary} strokeWidth={1} />
-            <line x1="118" y1="75" x2="145" y2="75" stroke={colors.textSecondary} strokeWidth={1} />
-            <line x1="180" y1="69" x2="195" y2="69" stroke={colors.textSecondary} strokeWidth={1} />
+            {/* Series resistance (Rs) */}
+            <g transform="translate(190, 72)">
+              <rect x="0" y="0" width="50" height="12" rx={2} fill="none" stroke={curve.seriesR > 1.5 ? colors.error : colors.blue} strokeWidth={2.5} />
+              {/* Resistance zigzag pattern */}
+              <path d={`M 0 6 L 5 6 L 8 2 L 14 10 L 20 2 L 26 10 L 32 2 L 38 10 L 44 2 L 50 6`} fill="none" stroke={curve.seriesR > 1.5 ? colors.error : colors.blue} strokeWidth={1.5} opacity={0.5} />
+              <text x="25" y="28" fill={curve.seriesR > 1.5 ? colors.error : colors.textMuted} fontSize={9} fontWeight="bold" textAnchor="middle">Rs</text>
+              <text x="25" y="40" fill={curve.seriesR > 1.5 ? colors.error : colors.textMuted} fontSize={8} textAnchor="middle">{curve.seriesR.toFixed(2)}Ω</text>
+              {curve.seriesR > 1.5 && (
+                <g filter="url(#ssdDefectGlow)">
+                  <text x="25" y="52" fill={colors.error} fontSize={7} fontWeight="bold" textAnchor="middle">HIGH!</text>
+                </g>
+              )}
+            </g>
 
-            {/* Current flow indicators */}
-            {defectType !== 'none' && (
-              <>
-                {curve.shuntR < 200 && (
-                  <g>
-                    <circle cx="114" cy="95" r="4" fill={colors.error} opacity={0.8}>
-                      <animate attributeName="cy" values="95;55;95" dur="1s" repeatCount="indefinite" />
-                    </circle>
-                    <text x="125" y="130" fill={colors.error} fontSize={8}>Leakage!</text>
-                  </g>
-                )}
-                {curve.seriesR > 1.5 && (
-                  <g>
-                    <text x="163" y="55" fill={colors.error} fontSize={8}>Resistance!</text>
-                  </g>
-                )}
-              </>
+            {/* Load resistor */}
+            <g transform="translate(260, 55)">
+              <rect x="0" y="0" width="20" height="50" rx={3} fill="none" stroke={colors.textSecondary} strokeWidth={2} />
+              <line x1="5" y1="10" x2="15" y2="10" stroke={colors.textSecondary} strokeWidth={1} />
+              <line x1="5" y1="20" x2="15" y2="20" stroke={colors.textSecondary} strokeWidth={1} />
+              <line x1="5" y1="30" x2="15" y2="30" stroke={colors.textSecondary} strokeWidth={1} />
+              <line x1="5" y1="40" x2="15" y2="40" stroke={colors.textSecondary} strokeWidth={1} />
+              <text x="10" y="65" fill={colors.textMuted} fontSize={9} fontWeight="bold" textAnchor="middle">Load</text>
+            </g>
+
+            {/* Connection wires */}
+            <g stroke={colors.textSecondary} strokeWidth={1.5} fill="none">
+              {/* Top rail */}
+              <line x1="40" y1="55" x2="40" y2="45" />
+              <line x1="40" y1="45" x2="280" y2="45" />
+              <line x1="280" y1="45" x2="280" y2="55" />
+
+              {/* Bottom rail */}
+              <line x1="40" y1="105" x2="40" y2="120" />
+              <line x1="40" y1="120" x2="280" y2="120" />
+              <line x1="280" y1="120" x2="280" y2="105" />
+
+              {/* Component connections */}
+              <line x1="58" y1="80" x2="95" y2="80" />
+              <line x1="115" y1="80" x2="145" y2="80" />
+              <line x1="151" y1="52" x2="151" y2="45" />
+              <line x1="151" y1="108" x2="151" y2="120" />
+              <line x1="157" y1="78" x2="190" y2="78" />
+              <line x1="240" y1="78" x2="260" y2="78" />
+              <line x1="270" y1="55" x2="270" y2="45" />
+            </g>
+
+            {/* Current flow animation when defective */}
+            {defectType !== 'none' && curve.shuntR < 200 && (
+              <g>
+                <circle cx="151" cy="80" r="4" fill={colors.error} filter="url(#ssdDefectGlow)">
+                  <animate attributeName="cy" values="108;52;108" dur="0.8s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="1;0.5;1" dur="0.8s" repeatCount="indefinite" />
+                </circle>
+                <text x="165" y="145" fill={colors.error} fontSize={8} fontWeight="bold">Current Leaking!</text>
+              </g>
             )}
           </g>
 
-          {/* Cell Visualization */}
-          <g transform="translate(60, 220)">
-            <rect x="0" y="0" width="200" height="100" rx={4} fill="#1e40af" stroke="#3b82f6" strokeWidth={2} />
-            <text x="100" y="-8" fill={colors.textSecondary} fontSize={11} textAnchor="middle">Solar Cell</text>
+          {/* ============ SOLAR CELL VISUALIZATION ============ */}
+          <g transform="translate(50, 275)">
+            {/* Cell frame with premium gradient */}
+            <rect x="0" y="0" width="255" height="130" rx={6} fill="url(#ssdSiliconGradient)" stroke="#3b82f6" strokeWidth={2} />
 
-            {/* Grid lines */}
-            {[1, 2, 3, 4].map(i => (
-              <line key={`h${i}`} x1="0" y1={i * 20} x2="200" y2={i * 20} stroke="#3b82f6" strokeWidth={1} opacity={0.5} />
-            ))}
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(i => (
-              <line key={`v${i}`} x1={i * 20} y1="0" x2={i * 20} y2="100" stroke="#3b82f6" strokeWidth={1} opacity={0.3} />
+            {/* Cell grid pattern overlay */}
+            <rect x="0" y="0" width="255" height="130" rx={6} fill="url(#ssdCellGrid)" />
+
+            {/* Busbars (horizontal silver lines) */}
+            {[1, 2, 3].map(i => (
+              <rect key={`busbar-${i}`} x="0" y={i * 32 - 3} width="255" height="6" rx={1} fill="url(#ssdBusbarGradient)" />
             ))}
 
-            {/* Defect visualization */}
+            {/* Fingers (vertical thin lines) */}
+            {Array.from({ length: 25 }).map((_, i) => (
+              <line key={`finger-${i}`} x1={10 + i * 10} y1="0" x2={10 + i * 10} y2="130" stroke="#a1a1aa" strokeWidth={0.5} opacity={0.6} />
+            ))}
+
+            {/* Cell label */}
+            <text x="127" y="-10" fill={colors.textSecondary} fontSize={11} fontWeight="bold" textAnchor="middle">Solar Cell Cross-Section</text>
+
+            {/* ============ DEFECT VISUALIZATIONS ============ */}
             {defectType === 'crack' && (
               <g>
-                <path d="M 60 0 L 65 25 L 55 50 L 70 75 L 60 100" fill="none" stroke={colors.crack} strokeWidth={3} />
-                <path d="M 140 0 L 135 30 L 145 60 L 130 100" fill="none" stroke={colors.crack} strokeWidth={2} opacity={0.6} />
-                <text x="100" y="120" fill={colors.crack} fontSize={10} textAnchor="middle">Cracks interrupt current flow</text>
+                {/* Main crack with gradient and glow */}
+                <g filter="url(#ssdDefectGlow)">
+                  <path d="M 75 0 L 80 20 L 70 45 L 85 70 L 72 95 L 78 130" fill="none" stroke="url(#ssdCrackGradient)" strokeWidth={4} strokeLinecap="round" />
+                  <path d="M 75 0 L 80 20 L 70 45 L 85 70 L 72 95 L 78 130" fill="none" stroke={colors.crack} strokeWidth={2} strokeLinecap="round" />
+                </g>
+                {/* Secondary crack */}
+                <path d="M 175 0 L 170 25 L 180 55 L 168 85 L 175 130" fill="none" stroke="url(#ssdCrackGradient)" strokeWidth={3} strokeLinecap="round" opacity={0.7} />
+                {/* Crack effect - dark voids */}
+                <ellipse cx="77" cy="45" rx="8" ry="4" fill="#1c1917" opacity={0.8} />
+                <ellipse cx="174" cy="60" rx="6" ry="3" fill="#1c1917" opacity={0.6} />
+                {/* Label */}
+                <text x="127" y="150" fill={colors.crack} fontSize={10} fontWeight="bold" textAnchor="middle">Cell Cracks - Series Resistance Increase</text>
               </g>
             )}
+
             {defectType === 'shunt' && (
               <g>
-                <circle cx="80" cy="40" r="15" fill={colors.purple} opacity={0.5}>
-                  <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="150" cy="70" r="10" fill={colors.purple} opacity={0.4}>
-                  <animate attributeName="opacity" values="0.2;0.5;0.2" dur="1.2s" repeatCount="indefinite" />
-                </circle>
-                <text x="100" y="120" fill={colors.purple} fontSize={10} textAnchor="middle">Shunt paths leak current</text>
+                {/* Multiple shunt defect spots with radial glow */}
+                <g filter="url(#ssdShuntFilter)">
+                  <circle cx="90" cy="50" r={18 + defectSeverity * 0.12} fill="url(#ssdShuntGlow)">
+                    <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="180" cy="85" r={14 + defectSeverity * 0.08} fill="url(#ssdShuntGlow)">
+                    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.8s" repeatCount="indefinite" />
+                  </circle>
+                  <circle cx="50" cy="100" r={10 + defectSeverity * 0.05} fill="url(#ssdShuntGlow)">
+                    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+                {/* Leakage current arrows */}
+                <g stroke={colors.purple} strokeWidth={1.5} fill={colors.purple} opacity={0.8}>
+                  <line x1="90" y1="35" x2="90" y2="65">
+                    <animate attributeName="y2" values="65;50;65" dur="0.6s" repeatCount="indefinite" />
+                  </line>
+                  <polygon points="90,65 87,58 93,58">
+                    <animate attributeName="points" values="90,65 87,58 93,58;90,50 87,43 93,43;90,65 87,58 93,58" dur="0.6s" repeatCount="indefinite" />
+                  </polygon>
+                </g>
+                {/* Label */}
+                <text x="127" y="150" fill={colors.purple} fontSize={10} fontWeight="bold" textAnchor="middle">Shunt Defects - Parallel Leakage Paths</text>
               </g>
             )}
+
             {defectType === 'contact' && (
               <g>
-                <rect x="0" y="-5" width="200" height="5" fill={colors.warning} opacity={0.6} />
-                <rect x="0" y="100" width="200" height="5" fill={colors.warning} opacity={0.6} />
-                <text x="100" y="120" fill={colors.warning} fontSize={10} textAnchor="middle">Poor contacts add resistance</text>
+                {/* Corroded contact areas on busbars */}
+                <rect x="0" y="-8" width="255" height="8" rx={2} fill="url(#ssdCorrosionGradient)" opacity={0.9} />
+                <rect x="0" y="130" width="255" height="8" rx={2} fill="url(#ssdCorrosionGradient)" opacity={0.9} />
+                {/* Degraded spots on busbars */}
+                {[40, 100, 160, 220].map(x => (
+                  <g key={`corrosion-${x}`}>
+                    <ellipse cx={x} cy={32} rx="12" ry="4" fill={colors.warning} opacity={0.7}>
+                      <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2s" repeatCount="indefinite" />
+                    </ellipse>
+                    <ellipse cx={x + 15} cy={64} rx="10" ry="3" fill={colors.warning} opacity={0.6}>
+                      <animate attributeName="opacity" values="0.4;0.7;0.4" dur="2.2s" repeatCount="indefinite" />
+                    </ellipse>
+                  </g>
+                ))}
+                {/* Resistance symbol */}
+                <text x="127" y="150" fill={colors.warning} fontSize={10} fontWeight="bold" textAnchor="middle">Poor Contacts - Series Resistance at Busbars</text>
               </g>
             )}
+
             {defectType === 'hotspot' && (
               <g>
-                <circle cx="100" cy="50" r={25 + defectSeverity * 0.15} fill={colors.hotspot} opacity={0.5 + defectSeverity * 0.004}>
-                  <animate attributeName="r" values={`${20 + defectSeverity * 0.1};${30 + defectSeverity * 0.15};${20 + defectSeverity * 0.1}`} dur="0.8s" repeatCount="indefinite" />
+                {/* Intense hotspot with multiple glow layers */}
+                <g filter="url(#ssdHotspotFilter)">
+                  <circle cx="127" cy="65" r={35 + defectSeverity * 0.25} fill="url(#ssdHotspotGlow)">
+                    <animate attributeName="r" values={`${30 + defectSeverity * 0.2};${40 + defectSeverity * 0.3};${30 + defectSeverity * 0.2}`} dur="0.6s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+                {/* Inner hot core */}
+                <circle cx="127" cy="65" r={15 + defectSeverity * 0.1} fill="#ff4500" opacity={0.9}>
+                  <animate attributeName="r" values={`${12 + defectSeverity * 0.08};${18 + defectSeverity * 0.12};${12 + defectSeverity * 0.08}`} dur="0.4s" repeatCount="indefinite" />
                 </circle>
-                <text x="100" y="120" fill={colors.hotspot} fontSize={10} textAnchor="middle">HOTSPOT - Dangerous Heat!</text>
-              </g>
-            )}
-            {defectType === 'none' && (
-              <text x="100" y="120" fill={colors.success} fontSize={10} textAnchor="middle">Healthy Cell - No Defects</text>
-            )}
-          </g>
-
-          {/* Output Metrics */}
-          <g transform="translate(290, 220)">
-            <rect x="0" y="0" width="230" height="100" rx={8} fill="#111827" stroke={defect.color} strokeWidth={1} />
-            <text x="115" y="18" fill={defect.color} fontSize={12} fontWeight="bold" textAnchor="middle">{defect.name}</text>
-
-            <text x="15" y="40" fill={colors.textSecondary} fontSize={10}>Power: <tspan fill={colors.textPrimary} fontWeight="bold">{curve.maxPower.toFixed(1)} W</tspan></text>
-            <text x="15" y="55" fill={colors.textSecondary} fontSize={10}>Fill Factor: <tspan fill={curve.fillFactor > 0.7 ? colors.success : colors.warning} fontWeight="bold">{(curve.fillFactor * 100).toFixed(1)}%</tspan></text>
-            <text x="15" y="70" fill={colors.textSecondary} fontSize={10}>Series R: <tspan fill={curve.seriesR > 1.5 ? colors.error : colors.textPrimary} fontWeight="bold">{curve.seriesR.toFixed(1)} Ω</tspan></text>
-            <text x="15" y="85" fill={colors.textSecondary} fontSize={10}>Shunt R: <tspan fill={curve.shuntR < 100 ? colors.error : colors.textPrimary} fontWeight="bold">{curve.shuntR.toFixed(0)} Ω</tspan></text>
-
-            {/* Power loss indicator */}
-            {defectType !== 'none' && (
-              <g transform="translate(130, 30)">
-                <rect x="0" y="0" width="90" height="60" rx={4} fill="rgba(239, 68, 68, 0.2)" />
-                <text x="45" y="15" fill={colors.error} fontSize={9} textAnchor="middle">Power Loss</text>
-                <text x="45" y="40" fill={colors.error} fontSize={18} fontWeight="bold" textAnchor="middle">
-                  {((1 - curve.maxPower / 3.5) * 100).toFixed(0)}%
+                {/* Heat wave lines */}
+                {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                  <line
+                    key={`heat-${i}`}
+                    x1={127 + Math.cos(angle * Math.PI / 180) * 45}
+                    y1={65 + Math.sin(angle * Math.PI / 180) * 45}
+                    x2={127 + Math.cos(angle * Math.PI / 180) * 60}
+                    y2={65 + Math.sin(angle * Math.PI / 180) * 60}
+                    stroke={colors.hotspot}
+                    strokeWidth={2}
+                    opacity={0.6}
+                  >
+                    <animate attributeName="opacity" values="0.3;0.8;0.3" dur={`${0.5 + i * 0.1}s`} repeatCount="indefinite" />
+                  </line>
+                ))}
+                {/* Warning label */}
+                <text x="127" y="150" fill={colors.hotspot} fontSize={11} fontWeight="bold" textAnchor="middle" filter="url(#ssdTextShadow)">
+                  HOTSPOT - Dangerous Localized Heating!
                 </text>
               </g>
             )}
+
+            {defectType === 'none' && (
+              <g>
+                {/* Healthy cell glow effect */}
+                <rect x="5" y="5" width="245" height="120" rx={4} fill="none" stroke={colors.success} strokeWidth={1} opacity={0.5}>
+                  <animate attributeName="opacity" values="0.3;0.6;0.3" dur="3s" repeatCount="indefinite" />
+                </rect>
+                {/* Checkmark */}
+                <circle cx="230" cy="20" r="12" fill={colors.success} opacity={0.2} />
+                <path d="M 222 20 L 228 26 L 238 14" fill="none" stroke={colors.success} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+                {/* Label */}
+                <text x="127" y="150" fill={colors.success} fontSize={10} fontWeight="bold" textAnchor="middle">Healthy Cell - Optimal Performance</text>
+              </g>
+            )}
           </g>
 
-          {/* Hotspot Risk Meter */}
-          <g transform="translate(60, 340)">
-            <rect x="0" y="0" width="460" height="60" rx={8} fill="#111827" stroke={curve.hotspotRisk > 50 ? colors.hotspot : colors.textMuted} strokeWidth={curve.hotspotRisk > 50 ? 2 : 1} />
-            <text x="230" y="18" fill={colors.textSecondary} fontSize={11} fontWeight="bold" textAnchor="middle">HOTSPOT RISK INDICATOR</text>
+          {/* ============ METRICS PANEL ============ */}
+          <g transform="translate(355, 275)">
+            <rect x="0" y="0" width="320" height="130" rx={10} fill="url(#ssdCircuitBg)" stroke={defect.color} strokeWidth={2} />
 
-            <rect x="20" y="28" width="420" height="20" rx={4} fill="#374151" />
-            <rect x="20" y="28" width={420 * curve.hotspotRisk / 100} height="20" rx={4} fill={curve.hotspotRisk < 30 ? colors.success : curve.hotspotRisk < 60 ? colors.warning : colors.hotspot} />
+            {/* Panel header */}
+            <rect x="0" y="0" width="320" height="28" rx={10} fill={defect.color} fillOpacity={0.2} />
+            <text x="160" y="19" fill={defect.color} fontSize={13} fontWeight="bold" textAnchor="middle">{defect.name} - Performance Metrics</text>
 
-            <text x="230" y="42" fill="white" fontSize={12} fontWeight="bold" textAnchor="middle">
-              {curve.hotspotRisk < 30 ? 'LOW' : curve.hotspotRisk < 60 ? 'MODERATE' : 'HIGH RISK'}
+            {/* Metrics grid */}
+            <g transform="translate(15, 40)">
+              {/* Left column */}
+              <text x="0" y="15" fill={colors.textMuted} fontSize={10}>Max Power:</text>
+              <text x="80" y="15" fill={colors.textPrimary} fontSize={11} fontWeight="bold">{curve.maxPower.toFixed(2)} W</text>
+
+              <text x="0" y="35" fill={colors.textMuted} fontSize={10}>Fill Factor:</text>
+              <text x="80" y="35" fill={curve.fillFactor > 0.7 ? colors.success : curve.fillFactor > 0.5 ? colors.warning : colors.error} fontSize={11} fontWeight="bold">{(curve.fillFactor * 100).toFixed(1)}%</text>
+
+              <text x="0" y="55" fill={colors.textMuted} fontSize={10}>Voc:</text>
+              <text x="80" y="55" fill={colors.textPrimary} fontSize={11} fontWeight="bold">{curve.Voc.toFixed(3)} V</text>
+
+              <text x="0" y="75" fill={colors.textMuted} fontSize={10}>Isc:</text>
+              <text x="80" y="75" fill={colors.textPrimary} fontSize={11} fontWeight="bold">{curve.Isc.toFixed(2)} A</text>
+            </g>
+
+            <g transform="translate(165, 40)">
+              {/* Right column */}
+              <text x="0" y="15" fill={colors.textMuted} fontSize={10}>Series R:</text>
+              <text x="70" y="15" fill={curve.seriesR > 1.5 ? colors.error : colors.textPrimary} fontSize={11} fontWeight="bold">{curve.seriesR.toFixed(2)} Ω</text>
+
+              <text x="0" y="35" fill={colors.textMuted} fontSize={10}>Shunt R:</text>
+              <text x="70" y="35" fill={curve.shuntR < 100 ? colors.error : colors.textPrimary} fontSize={11} fontWeight="bold">{curve.shuntR.toFixed(0)} Ω</text>
+
+              {/* Power loss indicator */}
+              {defectType !== 'none' && (
+                <g transform="translate(-5, 50)">
+                  <rect x="0" y="0" width="140" height="35" rx={6} fill="rgba(239, 68, 68, 0.15)" stroke={colors.error} strokeWidth={1} />
+                  <text x="70" y="15" fill={colors.error} fontSize={9} textAnchor="middle">Power Loss</text>
+                  <text x="70" y="30" fill={colors.error} fontSize={16} fontWeight="bold" textAnchor="middle">
+                    -{((1 - curve.maxPower / 3.5) * 100).toFixed(1)}%
+                  </text>
+                </g>
+              )}
+            </g>
+          </g>
+
+          {/* ============ HOTSPOT RISK METER ============ */}
+          <g transform="translate(50, 425)">
+            <rect x="0" y="0" width="625" height="70" rx={10} fill="url(#ssdCircuitBg)" stroke={curve.hotspotRisk > 50 ? colors.hotspot : "#475569"} strokeWidth={curve.hotspotRisk > 50 ? 2 : 1} />
+
+            {/* Header */}
+            <text x="312" y="20" fill={colors.textSecondary} fontSize={12} fontWeight="bold" textAnchor="middle">HOTSPOT RISK ASSESSMENT</text>
+
+            {/* Risk meter background */}
+            <rect x="25" y="32" width="575" height="24" rx={6} fill="#1e293b" />
+
+            {/* Gradient scale markers */}
+            <rect x="25" y="32" width="575" height="24" rx={6} fill="url(#ssdRiskMeterBg)" opacity={0.3} />
+
+            {/* Active risk level */}
+            <rect x="25" y="32" width={575 * Math.min(curve.hotspotRisk / 100, 1)} height="24" rx={6} fill={curve.hotspotRisk < 30 ? colors.success : curve.hotspotRisk < 60 ? colors.warning : colors.hotspot}>
+              {curve.hotspotRisk > 50 && (
+                <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />
+              )}
+            </rect>
+
+            {/* Risk level indicator */}
+            <circle cx={25 + 575 * Math.min(curve.hotspotRisk / 100, 1)} cy="44" r="14" fill="white" stroke={curve.hotspotRisk < 30 ? colors.success : curve.hotspotRisk < 60 ? colors.warning : colors.hotspot} strokeWidth={3} />
+            <text x={25 + 575 * Math.min(curve.hotspotRisk / 100, 1)} y="48" fill={curve.hotspotRisk < 30 ? colors.success : curve.hotspotRisk < 60 ? colors.warning : colors.hotspot} fontSize={10} fontWeight="bold" textAnchor="middle">
+              {curve.hotspotRisk.toFixed(0)}
+            </text>
+
+            {/* Scale labels */}
+            <text x="45" y="66" fill={colors.success} fontSize={8} textAnchor="start">LOW</text>
+            <text x="312" y="66" fill={colors.warning} fontSize={8} textAnchor="middle">MODERATE</text>
+            <text x="580" y="66" fill={colors.hotspot} fontSize={8} textAnchor="end">CRITICAL</text>
+          </g>
+
+          {/* ============ EXPLANATION PANEL ============ */}
+          <g transform="translate(50, 510)">
+            <rect x="0" y="0" width="625" height="55" rx={10} fill="rgba(245, 158, 11, 0.1)" stroke={colors.accent} strokeWidth={1} />
+
+            {/* Defect icon indicator */}
+            <circle cx="30" cy="27" r="18" fill={defect.color} fillOpacity={0.2} stroke={defect.color} strokeWidth={1.5} />
+            <text x="30" y="32" fill={defect.color} fontSize={14} textAnchor="middle">
+              {defectType === 'none' ? '✓' : defectType === 'crack' ? '⚡' : defectType === 'shunt' ? '↯' : defectType === 'contact' ? '⊗' : '🔥'}
+            </text>
+
+            {/* Description text */}
+            <text x="65" y="22" fill={colors.textSecondary} fontSize={11}>{defect.description}</text>
+            <text x="65" y="42" fill={colors.textMuted} fontSize={10}>
+              {defectType === 'crack' || defectType === 'contact'
+                ? 'Series defect signature: I-V curve slope increases near Voc, reducing fill factor'
+                : defectType === 'shunt' || defectType === 'hotspot'
+                  ? 'Shunt defect signature: Voltage drops under load as current leaks through parallel paths'
+                  : 'Optimal cell: High shunt resistance, low series resistance, rectangular I-V curve'}
             </text>
           </g>
-
-          {/* Explanation */}
-          <rect x={60} y={420} width={430} height={55} rx={8} fill="rgba(245, 158, 11, 0.15)" stroke={colors.accent} strokeWidth={1} />
-          <text x={275} y={442} fill={colors.textSecondary} fontSize={10} textAnchor="middle">{defect.description}</text>
-          <text x={275} y={460} fill={colors.textMuted} fontSize={9} textAnchor="middle">
-            {defectType === 'crack' || defectType === 'contact' ? 'Series defect → Slope change near Voc' : defectType === 'shunt' || defectType === 'hotspot' ? 'Shunt defect → Voltage drop under load' : 'Optimal circuit parameters'}
-          </text>
         </svg>
       </div>
     );

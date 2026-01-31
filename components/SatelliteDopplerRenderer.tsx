@@ -527,161 +527,481 @@ const SatelliteDopplerRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) =
     const satX = 80 + (passProgress / 100) * 340;
     const satY = 120 - Math.sin((passProgress / 100) * Math.PI) * 80;
 
-    // Wave compression/expansion visualization
-    const waveSpacing = passProgress < 50 ? 15 - (50 - passProgress) * 0.1 : 15 + (passProgress - 50) * 0.1;
+    // Wave compression/expansion visualization - more dramatic effect
+    const baseWaveSpacing = 18;
+    const compressionFactor = passProgress < 50 ? 0.6 + (passProgress / 50) * 0.4 : 1.0 + ((passProgress - 50) / 50) * 0.5;
+    const waveSpacing = baseWaveSpacing * compressionFactor;
+
+    // Frequency shift for wave color animation
+    const shiftAmount = parseFloat(doppler.dopplerShift);
+    const isApproaching = passProgress < 50;
 
     return (
-      <svg viewBox="0 0 500 350" className="w-full h-auto max-w-xl">
+      <svg viewBox="0 0 500 400" className="w-full h-auto max-w-xl">
         <defs>
-          <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0a0a2e" />
+          {/* === PREMIUM SKY/SPACE GRADIENTS === */}
+          <linearGradient id="satdSpaceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0a2e" />
+            <stop offset="50%" stopColor="#0c1445" />
+            <stop offset="75%" stopColor="#1e3a5f" />
             <stop offset="100%" stopColor="#1e3a5f" />
           </linearGradient>
-          <radialGradient id="stationGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+
+          {/* Earth atmosphere gradient */}
+          <linearGradient id="satdAtmosphereGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+            <stop offset="50%" stopColor="#0891b2" stopOpacity="0.1" />
+            <stop offset="80%" stopColor="#155e75" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#164e63" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Premium Earth surface gradient */}
+          <linearGradient id="satdEarthSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#166534" />
+            <stop offset="30%" stopColor="#14532d" />
+            <stop offset="60%" stopColor="#0f3d1c" />
+            <stop offset="100%" stopColor="#052e16" />
+          </linearGradient>
+
+          {/* Earth curve highlight */}
+          <radialGradient id="satdEarthCurve" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="40%" stopColor="#166534" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#052e16" stopOpacity="0" />
           </radialGradient>
+
+          {/* === SATELLITE GRADIENTS === */}
+          <linearGradient id="satdSatelliteBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="25%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#475569" />
+            <stop offset="75%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Solar panel gradient with cell pattern effect */}
+          <linearGradient id="satdSolarPanel" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1d4ed8" />
+            <stop offset="20%" stopColor="#2563eb" />
+            <stop offset="40%" stopColor="#1d4ed8" />
+            <stop offset="60%" stopColor="#3b82f6" />
+            <stop offset="80%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#2563eb" />
+          </linearGradient>
+
+          {/* Satellite antenna glow */}
+          <radialGradient id="satdAntennaGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === GROUND STATION GRADIENTS === */}
+          <linearGradient id="satdStationMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="30%" stopColor="#475569" />
+            <stop offset="70%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Dish reflector gradient */}
+          <radialGradient id="satdDishReflector" cx="30%" cy="30%" r="80%">
+            <stop offset="0%" stopColor="#e2e8f0" />
+            <stop offset="30%" stopColor="#cbd5e1" />
+            <stop offset="60%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#64748b" />
+          </radialGradient>
+
+          {/* Station glow effect */}
+          <radialGradient id="satdStationGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === SIGNAL WAVE GRADIENTS === */}
+          {/* Blue-shifted (approaching) signal */}
+          <linearGradient id="satdSignalApproaching" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
+            <stop offset="30%" stopColor="#4ade80" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#86efac" stopOpacity="1" />
+            <stop offset="70%" stopColor="#4ade80" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Red-shifted (receding) signal */}
+          <linearGradient id="satdSignalReceding" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+            <stop offset="30%" stopColor="#f87171" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#fca5a5" stopOpacity="1" />
+            <stop offset="70%" stopColor="#f87171" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Neutral signal (overhead) */}
+          <linearGradient id="satdSignalNeutral" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+            <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+          </linearGradient>
+
+          {/* === GLOW FILTERS === */}
+          <filter id="satdSatelliteGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satdSignalGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satdStationBeamGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="satdPanelShine" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          <filter id="satdStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Orbit path gradient */}
+          <linearGradient id="satdOrbitPath" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
+          </linearGradient>
         </defs>
 
-        <rect width="500" height="350" fill="url(#skyGrad)" />
+        {/* Premium space background */}
+        <rect width="500" height="400" fill="url(#satdSpaceGradient)" />
 
-        {/* Stars */}
-        {[...Array(15)].map((_, i) => (
-          <circle
-            key={i}
-            cx={(i * 47 + 20) % 500}
-            cy={(i * 17 + 10) % 150}
-            r={Math.random() * 1 + 0.5}
-            fill="white"
-            opacity={0.5}
-          />
-        ))}
+        {/* Stars with glow effect */}
+        {[...Array(25)].map((_, i) => {
+          const starX = (i * 47 + 20) % 490 + 5;
+          const starY = (i * 23 + 10) % 180;
+          const starSize = (i % 3) * 0.5 + 0.8;
+          const opacity = 0.4 + (i % 4) * 0.15;
+          return (
+            <circle
+              key={i}
+              cx={starX}
+              cy={starY}
+              r={starSize}
+              fill="white"
+              opacity={opacity}
+              filter="url(#satdStarGlow)"
+            >
+              <animate
+                attributeName="opacity"
+                values={`${opacity};${opacity * 0.5};${opacity}`}
+                dur={`${2 + (i % 3)}s`}
+                repeatCount="indefinite"
+              />
+            </circle>
+          );
+        })}
 
-        {/* Ground */}
-        <rect x="0" y="260" width="500" height="90" fill="#1a3a20" />
-        <ellipse cx="250" cy="260" rx="250" ry="30" fill="#0f2915" />
+        {/* Orbital path arc */}
+        <path
+          d="M 60 120 Q 250 20 440 120"
+          fill="none"
+          stroke="url(#satdOrbitPath)"
+          strokeWidth="2"
+          strokeDasharray="8 4"
+          opacity="0.5"
+        />
+        <text x="250" y="35" textAnchor="middle" fill="#64748b" fontSize="8" fontWeight="600">
+          {orbitType} ORBIT PATH ({orbitType === 'LEO' ? '400 km' : orbitType === 'MEO' ? '20,000 km' : '36,000 km'})
+        </text>
 
-        {/* Ground station */}
-        <g transform="translate(250, 250)">
-          <circle cx="0" cy="0" r="40" fill="url(#stationGlow)" />
-          <rect x="-15" y="-5" width="30" height="25" fill="#374151" rx="2" />
-          <path d="M0 -5 L-25 -35 L25 -35 Z" fill="#64748b" />
-          <ellipse cx="0" cy="-40" rx="20" ry="8" fill="#94a3b8" stroke="#cbd5e1" strokeWidth="2" />
-          {/* Dish pointing at satellite */}
-          <line
-            x1="0"
-            y1="-40"
-            x2={(satX - 250) * 0.3}
-            y2={(satY - 250) * 0.3 - 40}
-            stroke="#22d3ee"
-            strokeWidth="2"
-            opacity="0.5"
-          />
-          <text x="0" y="35" textAnchor="middle" fill="#94a3b8" fontSize="9">Ground Station</text>
+        {/* Atmosphere layer */}
+        <rect x="0" y="240" width="500" height="40" fill="url(#satdAtmosphereGradient)" />
+
+        {/* Earth surface with curvature */}
+        <ellipse cx="250" cy="340" rx="300" ry="80" fill="url(#satdEarthSurface)" />
+        <ellipse cx="250" cy="280" rx="280" ry="40" fill="url(#satdEarthCurve)" />
+
+        {/* Ground terrain details */}
+        <ellipse cx="100" cy="295" rx="40" ry="8" fill="#0f3d1c" opacity="0.6" />
+        <ellipse cx="380" cy="300" rx="50" ry="10" fill="#0f3d1c" opacity="0.5" />
+        <ellipse cx="200" cy="310" rx="30" ry="6" fill="#0f3d1c" opacity="0.4" />
+
+        {/* === PREMIUM GROUND STATION === */}
+        <g transform="translate(250, 265)">
+          {/* Station glow */}
+          <ellipse cx="0" cy="0" rx="50" ry="20" fill="url(#satdStationGlow)" />
+
+          {/* Building base */}
+          <rect x="-20" y="5" width="40" height="30" fill="url(#satdStationMetal)" rx="3" />
+          <rect x="-18" y="7" width="36" height="26" fill="#1e293b" opacity="0.3" rx="2" />
+
+          {/* Equipment details */}
+          <rect x="-15" y="20" width="8" height="12" fill="#22c55e" opacity="0.6" rx="1">
+            <animate attributeName="opacity" values="0.4;0.8;0.4" dur="1.5s" repeatCount="indefinite" />
+          </rect>
+          <rect x="-3" y="22" width="6" height="10" fill="#3b82f6" opacity="0.5" rx="1" />
+          <rect x="7" y="18" width="8" height="14" fill="#f59e0b" opacity="0.5" rx="1">
+            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite" />
+          </rect>
+
+          {/* Dish support structure */}
+          <rect x="-4" y="-25" width="8" height="30" fill="url(#satdStationMetal)" rx="1" />
+          <polygon points="-15,-5 15,-5 8,5 -8,5" fill="#475569" />
+
+          {/* Main dish - premium reflector */}
+          <g transform={`rotate(${(satX - 250) * 0.15}, 0, -35)`}>
+            <ellipse cx="0" cy="-40" rx="28" ry="12" fill="url(#satdDishReflector)" stroke="#94a3b8" strokeWidth="1.5" />
+            <ellipse cx="0" cy="-40" rx="24" ry="10" fill="none" stroke="#cbd5e1" strokeWidth="0.5" strokeOpacity="0.5" />
+            <ellipse cx="0" cy="-40" rx="18" ry="7" fill="none" stroke="#e2e8f0" strokeWidth="0.3" strokeOpacity="0.3" />
+
+            {/* Feed horn */}
+            <line x1="0" y1="-40" x2="0" y2="-55" stroke="#64748b" strokeWidth="2" />
+            <circle cx="0" cy="-57" r="4" fill="#475569" stroke="#64748b" />
+            <circle cx="0" cy="-57" r="2" fill="#06b6d4">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+            </circle>
+          </g>
+
+          {/* Tracking beam to satellite */}
+          {isTracking && (
+            <line
+              x1="0"
+              y1="-55"
+              x2={(satX - 250) * 0.4}
+              y2={(satY - 265) * 0.4 - 55}
+              stroke={isApproaching ? '#4ade80' : passProgress > 50 ? '#f87171' : '#22d3ee'}
+              strokeWidth="1.5"
+              strokeOpacity="0.4"
+              filter="url(#satdStationBeamGlow)"
+            />
+          )}
+
+          {/* Station label */}
+          <rect x="-35" y="40" width="70" height="14" rx="3" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+          <text x="0" y="50" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="600">GROUND STATION</text>
         </g>
 
-        {/* Satellite */}
-        <g transform={`translate(${satX}, ${satY})`}>
-          <rect x="-12" y="-6" width="24" height="12" fill="#475569" stroke="#94a3b8" strokeWidth="1" />
-          <rect x="-35" y="-3" width="20" height="6" fill="#3b82f6" />
-          <rect x="15" y="-3" width="20" height="6" fill="#3b82f6" />
-          <circle cx="0" cy="8" r="4" fill="#22d3ee" />
+        {/* === PREMIUM SATELLITE === */}
+        <g transform={`translate(${satX}, ${satY})`} filter="url(#satdSatelliteGlow)">
+          {/* Main body with depth */}
+          <rect x="-15" y="-8" width="30" height="16" fill="url(#satdSatelliteBody)" rx="3" stroke="#64748b" strokeWidth="0.5" />
+          <rect x="-13" y="-6" width="26" height="12" fill="#1e293b" opacity="0.3" rx="2" />
+
+          {/* Solar panels with cell pattern */}
+          <g filter="url(#satdPanelShine)">
+            <rect x="-45" y="-5" width="28" height="10" fill="url(#satdSolarPanel)" rx="1" stroke="#1e40af" strokeWidth="0.5" />
+            <rect x="17" y="-5" width="28" height="10" fill="url(#satdSolarPanel)" rx="1" stroke="#1e40af" strokeWidth="0.5" />
+            {/* Panel grid lines */}
+            {[-40, -35, -30, -25, 22, 27, 32, 37].map((x, i) => (
+              <line key={i} x1={x} y1="-4" x2={x} y2="4" stroke="#1e3a8a" strokeWidth="0.3" strokeOpacity="0.5" />
+            ))}
+          </g>
+
+          {/* Panel hinges */}
+          <rect x="-17" y="-3" width="4" height="6" fill="#475569" rx="1" />
+          <rect x="13" y="-3" width="4" height="6" fill="#475569" rx="1" />
+
+          {/* Antenna array */}
+          <circle cx="0" cy="12" r="6" fill="url(#satdAntennaGlow)" />
+          <circle cx="0" cy="12" r="3" fill="#06b6d4">
+            <animate attributeName="r" values="3;4;3" dur="1s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Status lights */}
+          <circle cx="-8" cy="-3" r="1.5" fill="#22c55e">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="8" cy="-3" r="1.5" fill="#f59e0b">
+            <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" />
+          </circle>
 
           {/* Orbit type label */}
-          <text x="0" y="-15" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">
+          <rect x="-20" y="-28" width="40" height="12" rx="3" fill="#0f172a" fillOpacity="0.8" />
+          <text x="0" y="-20" textAnchor="middle" fill="#f59e0b" fontSize="9" fontWeight="bold">
             {orbitType}
           </text>
         </g>
 
-        {/* Signal waves from satellite to ground */}
-        {isTracking && [...Array(5)].map((_, i) => {
-          const waveY = satY + 30 + i * waveSpacing;
-          if (waveY > 240) return null;
+        {/* === DOPPLER-SHIFTED SIGNAL WAVES === */}
+        {isTracking && [...Array(6)].map((_, i) => {
+          const progress = (animPhase / 360 + i / 6) % 1;
+          const waveX = satX - (satX - 250) * progress;
+          const waveY = satY + 15 + (265 - satY - 15) * progress;
+
+          // Wave color based on Doppler shift
+          const gradientId = Math.abs(shiftAmount) < 5
+            ? 'satdSignalNeutral'
+            : isApproaching ? 'satdSignalApproaching' : 'satdSignalReceding';
+
+          // Wave compression effect
+          const compressionScale = isApproaching ? 0.7 : passProgress > 50 ? 1.4 : 1.0;
+          const waveWidth = (15 + i * 4) * compressionScale;
+
+          if (waveY > 255) return null;
+
           return (
-            <ellipse
-              key={i}
-              cx={satX - (satX - 250) * (i / 8)}
-              cy={waveY + (250 - satY) * (i / 8)}
-              rx={10 + i * 3}
-              ry={4 + i * 1}
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="1.5"
-              opacity={1 - i * 0.15}
-            />
+            <g key={i} filter="url(#satdSignalGlow)">
+              <ellipse
+                cx={waveX}
+                cy={waveY}
+                rx={waveWidth}
+                ry={waveWidth * 0.3}
+                fill="none"
+                stroke={isApproaching ? '#4ade80' : passProgress > 50 ? '#f87171' : '#22d3ee'}
+                strokeWidth={2 - i * 0.2}
+                opacity={0.8 - i * 0.1}
+              />
+            </g>
           );
         })}
 
-        {/* Direction arrow */}
-        <g transform={`translate(${satX}, ${satY - 30})`}>
+        {/* Direction indicator with velocity */}
+        <g transform={`translate(${satX}, ${satY - 42})`}>
+          <rect x="-35" y="-8" width="70" height="16" rx="4" fill="#0f172a" fillOpacity="0.9" stroke={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'} strokeWidth="0.5" />
           <path
-            d={passProgress < 50 ? "M -15 0 L 15 0 L 10 -5 M 15 0 L 10 5" : "M 15 0 L -15 0 L -10 -5 M -15 0 L -10 5"}
-            stroke={passProgress < 50 ? '#22c55e' : '#ef4444'}
+            d={isApproaching ? "M -25 0 L -15 0 L -18 -3 M -15 0 L -18 3" : passProgress > 50 ? "M 25 0 L 15 0 L 18 -3 M 15 0 L 18 3" : "M -5 0 L 5 0"}
+            stroke={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'}
             strokeWidth="2"
             fill="none"
           />
-          <text x="0" y="-10" textAnchor="middle" fill={passProgress < 50 ? '#22c55e' : '#ef4444'} fontSize="8">
-            {passProgress < 50 ? 'Approaching' : 'Receding'}
+          <text x={isApproaching ? 5 : passProgress > 50 ? -5 : 0} y="4" textAnchor="middle" fill={isApproaching ? '#4ade80' : passProgress > 50 ? '#f87171' : '#67e8f9'} fontSize="7" fontWeight="bold">
+            {Math.abs(passProgress - 50) < 5 ? 'OVERHEAD' : isApproaching ? 'APPROACHING' : 'RECEDING'}
           </text>
         </g>
 
-        {/* Doppler status panel */}
+        {/* === PREMIUM DOPPLER STATUS PANEL === */}
         <g transform="translate(10, 10)">
-          <rect x="0" y="0" width="160" height="130" fill="rgba(0,0,0,0.7)" rx="8" stroke="#334155" />
-          <text x="80" y="18" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="bold">DOPPLER STATUS</text>
+          <rect x="0" y="0" width="165" height="145" fill="#0f172a" fillOpacity="0.95" rx="10" stroke="#334155" strokeWidth="1" />
+          <rect x="2" y="2" width="161" height="20" rx="8" fill="#1e293b" />
+          <text x="82" y="16" textAnchor="middle" fill="#22d3ee" fontSize="10" fontWeight="bold">DOPPLER TELEMETRY</text>
 
-          <text x="10" y="38" fill="#94a3b8" fontSize="9">Tx Frequency:</text>
-          <text x="150" y="38" textAnchor="end" fill="#f59e0b" fontSize="9">{doppler.txFreq} MHz</text>
+          {/* Data rows with better styling */}
+          <text x="10" y="38" fill="#64748b" fontSize="8" fontWeight="600">TX FREQUENCY</text>
+          <text x="155" y="38" textAnchor="end" fill="#f59e0b" fontSize="9" fontWeight="bold">{doppler.txFreq} MHz</text>
 
-          <text x="10" y="53" fill="#94a3b8" fontSize="9">Rx Frequency:</text>
-          <text x="150" y="53" textAnchor="end" fill="#22d3ee" fontSize="9">{doppler.rxFreq} MHz</text>
+          <text x="10" y="55" fill="#64748b" fontSize="8" fontWeight="600">RX FREQUENCY</text>
+          <text x="155" y="55" textAnchor="end" fill="#22d3ee" fontSize="9" fontWeight="bold">{doppler.rxFreq} MHz</text>
 
-          <line x1="10" y1="60" x2="150" y2="60" stroke="#475569" />
+          <line x1="10" y1="62" x2="155" y2="62" stroke="#334155" strokeWidth="0.5" />
 
-          <text x="10" y="75" fill="#94a3b8" fontSize="9">Doppler Shift:</text>
-          <text x="150" y="75" textAnchor="end" fill={parseFloat(doppler.dopplerShift) > 0 ? '#ef4444' : parseFloat(doppler.dopplerShift) < 0 ? '#22c55e' : '#64748b'} fontSize="9" fontWeight="bold">
-            {parseFloat(doppler.dopplerShift) > 0 ? '+' : ''}{doppler.dopplerShift} kHz
+          <text x="10" y="77" fill="#64748b" fontSize="8" fontWeight="600">DOPPLER SHIFT</text>
+          <text x="155" y="77" textAnchor="end" fill={shiftAmount > 0 ? '#ef4444' : shiftAmount < 0 ? '#22c55e' : '#64748b'} fontSize="10" fontWeight="bold">
+            {shiftAmount > 0 ? '+' : ''}{doppler.dopplerShift} kHz
           </text>
 
-          <text x="10" y="90" fill="#94a3b8" fontSize="9">Radial Velocity:</text>
-          <text x="150" y="90" textAnchor="end" fill="#a855f7" fontSize="9">{doppler.radialVelocity} m/s</text>
+          <text x="10" y="94" fill="#64748b" fontSize="8" fontWeight="600">RADIAL VELOCITY</text>
+          <text x="155" y="94" textAnchor="end" fill="#a855f7" fontSize="9" fontWeight="bold">{doppler.radialVelocity} m/s</text>
 
-          <text x="10" y="105" fill="#94a3b8" fontSize="9">Max Shift ({orbitType}):</text>
-          <text x="150" y="105" textAnchor="end" fill="#f97316" fontSize="9">+/-{doppler.maxShift} kHz</text>
+          <text x="10" y="111" fill="#64748b" fontSize="8" fontWeight="600">MAX SHIFT ({orbitType})</text>
+          <text x="155" y="111" textAnchor="end" fill="#f97316" fontSize="9" fontWeight="bold">+/-{doppler.maxShift} kHz</text>
 
-          <rect x="10" y="112" width="140" height="12" fill={isTracking ? '#22c55e' : '#ef4444'} rx="3" opacity="0.3" />
-          <text x="80" y="122" textAnchor="middle" fill={isTracking ? '#22c55e' : '#ef4444'} fontSize="9" fontWeight="bold">
-            {isTracking ? 'TRACKING' : 'LOST SIGNAL'}
+          {/* Tracking status bar */}
+          <rect x="10" y="120" width="145" height="18" rx="5" fill={isTracking ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)'} stroke={isTracking ? '#22c55e' : '#ef4444'} strokeWidth="0.5" />
+          <circle cx="22" cy="129" r="4" fill={isTracking ? '#22c55e' : '#ef4444'}>
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
+          </circle>
+          <text x="82" y="133" textAnchor="middle" fill={isTracking ? '#4ade80' : '#f87171'} fontSize="9" fontWeight="bold">
+            {isTracking ? 'SIGNAL LOCKED' : 'SIGNAL LOST'}
           </text>
         </g>
 
-        {/* Frequency spectrum visualization */}
-        <g transform="translate(330, 10)">
-          <rect x="0" y="0" width="160" height="80" fill="rgba(0,0,0,0.6)" rx="6" stroke="#334155" />
-          <text x="80" y="15" textAnchor="middle" fill="#94a3b8" fontSize="9">FREQUENCY SPECTRUM</text>
+        {/* === FREQUENCY SPECTRUM VISUALIZATION === */}
+        <g transform="translate(325, 10)">
+          <rect x="0" y="0" width="165" height="95" fill="#0f172a" fillOpacity="0.95" rx="10" stroke="#334155" strokeWidth="1" />
+          <rect x="2" y="2" width="161" height="18" rx="8" fill="#1e293b" />
+          <text x="82" y="14" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="bold">FREQUENCY SPECTRUM</text>
 
-          {/* Center frequency line */}
-          <line x1="80" y1="25" x2="80" y2="70" stroke="#475569" strokeWidth="1" strokeDasharray="2" />
-          <text x="80" y="78" textAnchor="middle" fill="#64748b" fontSize="7">Center</text>
+          {/* Spectrum background with grid */}
+          <rect x="10" y="25" width="145" height="55" fill="#020617" rx="4" />
+          {[...Array(7)].map((_, i) => (
+            <line key={i} x1={10 + i * 24.2} y1="25" x2={10 + i * 24.2} y2="80" stroke="#1e293b" strokeWidth="0.5" />
+          ))}
+          {[...Array(4)].map((_, i) => (
+            <line key={i} x1="10" y1={25 + i * 18.3} x2="155" y2={25 + i * 18.3} stroke="#1e293b" strokeWidth="0.5" />
+          ))}
 
-          {/* Shifted signal */}
+          {/* Center frequency marker */}
+          <line x1="82" y1="25" x2="82" y2="80" stroke="#475569" strokeWidth="1" strokeDasharray="3 2" />
+
+          {/* Signal peak with Doppler offset */}
           <rect
-            x={80 + parseFloat(doppler.dopplerShift) * 2 - 5}
-            y="30"
-            width="10"
-            height="35"
-            fill="#22d3ee"
+            x={82 + shiftAmount * 1.5 - 8}
+            y="32"
+            width="16"
+            height="45"
+            rx="3"
+            fill={shiftAmount > 0 ? '#ef4444' : shiftAmount < 0 ? '#22c55e' : '#06b6d4'}
             opacity="0.8"
+          >
+            <animate attributeName="opacity" values="0.6;0.9;0.6" dur="0.5s" repeatCount="indefinite" />
+          </rect>
+          <rect
+            x={82 + shiftAmount * 1.5 - 4}
+            y="38"
+            width="8"
+            height="33"
+            rx="2"
+            fill={shiftAmount > 0 ? '#fca5a5' : shiftAmount < 0 ? '#86efac' : '#67e8f9'}
+            opacity="0.9"
           />
-          <text x={80 + parseFloat(doppler.dopplerShift) * 2} y="25" textAnchor="middle" fill="#22d3ee" fontSize="7">Signal</text>
+
+          {/* Labels */}
+          <text x="20" y="90" fill="#64748b" fontSize="7">-{doppler.maxShift}kHz</text>
+          <text x="82" y="90" textAnchor="middle" fill="#64748b" fontSize="7">Center</text>
+          <text x="145" y="90" textAnchor="end" fill="#64748b" fontSize="7">+{doppler.maxShift}kHz</text>
         </g>
 
-        {/* Pass progress indicator */}
-        <g transform="translate(10, 300)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="9">Pass Progress:</text>
-          <rect x="80" y="-8" width="150" height="8" fill="#1e293b" rx="4" />
-          <rect x="80" y="-8" width={passProgress * 1.5} height="8" fill="#22d3ee" rx="4" />
-          <text x="240" y="0" fill="#22d3ee" fontSize="9">{passProgress.toFixed(0)}%</text>
+        {/* === PASS PROGRESS INDICATOR === */}
+        <g transform="translate(10, 345)">
+          <rect x="0" y="0" width="480" height="45" fill="#0f172a" fillOpacity="0.95" rx="10" stroke="#334155" strokeWidth="1" />
+
+          <text x="15" y="18" fill="#64748b" fontSize="9" fontWeight="600">SATELLITE PASS PROGRESS</text>
+
+          {/* Progress bar with gradient */}
+          <rect x="15" y="25" width="380" height="12" fill="#1e293b" rx="6" />
+          <rect
+            x="15"
+            y="25"
+            width={passProgress * 3.8}
+            height="12"
+            fill={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'}
+            rx="6"
+          />
+
+          {/* Position markers */}
+          <text x="15" y="45" fill="#64748b" fontSize="7">RISE</text>
+          <text x="200" y="45" textAnchor="middle" fill="#64748b" fontSize="7">OVERHEAD</text>
+          <text x="395" y="45" textAnchor="end" fill="#64748b" fontSize="7">SET</text>
+
+          {/* Current position indicator */}
+          <circle cx={15 + passProgress * 3.8} cy="31" r="6" fill="#ffffff" stroke={isApproaching ? '#22c55e' : passProgress > 50 ? '#ef4444' : '#06b6d4'} strokeWidth="2" />
+
+          {/* Percentage display */}
+          <rect x="410" y="20" width="55" height="20" rx="5" fill="#1e293b" />
+          <text x="437" y="34" textAnchor="middle" fill="#22d3ee" fontSize="11" fontWeight="bold">{passProgress.toFixed(0)}%</text>
         </g>
       </svg>
     );

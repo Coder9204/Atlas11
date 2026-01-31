@@ -497,139 +497,489 @@ const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({
   };
 
   const renderVisualization = (showCoolingEffect: boolean = false) => {
-    const width = 400;
-    const height = 320;
+    const width = 700;
+    const height = 400;
 
     const tempRatio = Math.min((temperature - T_AMBIENT) / (T_CRITICAL - T_AMBIENT), 1);
-    const tempColor = `rgb(${Math.floor(59 + tempRatio * 180)}, ${Math.floor(130 - tempRatio * 100)}, ${Math.floor(246 - tempRatio * 200)})`;
+    const performanceRatio = clockSpeed / 4.5;
 
     return (
       <svg
-        width="100%"
-        height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+        className="w-full h-full"
+        style={{ maxHeight: '100%' }}
       >
         <defs>
-          <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={tempColor} />
-            <stop offset="100%" stopColor={isThrottling ? colors.error : colors.chip} />
+          {/* === PREMIUM GRADIENT DEFINITIONS === */}
+
+          {/* Lab background gradient with depth */}
+          <linearGradient id="ththLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
           </linearGradient>
-          <filter id="heatGlow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+
+          {/* CPU die gradient - thermal responsive with 6 color stops */}
+          <linearGradient id="ththCpuDie" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={temperature > 85 ? "#dc2626" : temperature > 70 ? "#f59e0b" : "#6366f1"} />
+            <stop offset="20%" stopColor={temperature > 85 ? "#ef4444" : temperature > 70 ? "#fbbf24" : "#818cf8"} />
+            <stop offset="40%" stopColor={temperature > 85 ? "#f87171" : temperature > 70 ? "#fcd34d" : "#a5b4fc"} />
+            <stop offset="60%" stopColor={temperature > 85 ? "#ef4444" : temperature > 70 ? "#fbbf24" : "#818cf8"} />
+            <stop offset="80%" stopColor={temperature > 85 ? "#dc2626" : temperature > 70 ? "#f59e0b" : "#6366f1"} />
+            <stop offset="100%" stopColor={temperature > 85 ? "#b91c1c" : temperature > 70 ? "#d97706" : "#4f46e5"} />
+          </linearGradient>
+
+          {/* Heatsink brushed metal gradient */}
+          <linearGradient id="ththHeatsinkMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="15%" stopColor="#6b7280" />
+            <stop offset="30%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#6b7280" />
+            <stop offset="70%" stopColor="#4b5563" />
+            <stop offset="85%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </linearGradient>
+
+          {/* PCB substrate gradient */}
+          <linearGradient id="ththPcbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#14532d" />
+            <stop offset="25%" stopColor="#166534" />
+            <stop offset="50%" stopColor="#15803d" />
+            <stop offset="75%" stopColor="#166534" />
+            <stop offset="100%" stopColor="#14532d" />
+          </linearGradient>
+
+          {/* Temperature bar gradient - cool to hot */}
+          <linearGradient id="ththTempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="25%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="75%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+
+          {/* Performance bar gradient */}
+          <linearGradient id="ththPerfGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+
+          {/* Throttled performance gradient */}
+          <linearGradient id="ththThrottleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Cooling flow gradient */}
+          <linearGradient id="ththCoolFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* === RADIAL GRADIENTS FOR HEAT EFFECTS === */}
+
+          {/* CPU core heat glow */}
+          <radialGradient id="ththCoreHeat" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={temperature > 85 ? "#fca5a5" : temperature > 70 ? "#fde68a" : "#c7d2fe"} stopOpacity="1" />
+            <stop offset="40%" stopColor={temperature > 85 ? "#ef4444" : temperature > 70 ? "#fbbf24" : "#818cf8"} stopOpacity="0.7" />
+            <stop offset="70%" stopColor={temperature > 85 ? "#dc2626" : temperature > 70 ? "#f59e0b" : "#6366f1"} stopOpacity="0.4" />
+            <stop offset="100%" stopColor={temperature > 85 ? "#991b1b" : temperature > 70 ? "#b45309" : "#4338ca"} stopOpacity="0" />
+          </radialGradient>
+
+          {/* Status indicator glow */}
+          <radialGradient id="ththStatusGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={isThrottling ? "#fca5a5" : "#86efac"} stopOpacity="1" />
+            <stop offset="60%" stopColor={isThrottling ? "#ef4444" : "#22c55e"} stopOpacity="0.5" />
+            <stop offset="100%" stopColor={isThrottling ? "#dc2626" : "#16a34a"} stopOpacity="0" />
+          </radialGradient>
+
+          {/* Thermal paste layer */}
+          <radialGradient id="ththThermalPaste" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#9ca3af" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#6b7280" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#4b5563" stopOpacity="0.5" />
+          </radialGradient>
+
+          {/* === GLOW FILTERS === */}
+
+          {/* Heat glow filter */}
+          <filter id="ththHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
             <feMerge>
-              <feMergeNode in="coloredBlur" />
+              <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+
+          {/* Intense heat glow for throttling */}
+          <filter id="ththIntenseGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="10" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle glow for indicators */}
+          <filter id="ththSubtleGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Text shadow filter */}
+          <filter id="ththTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* Fan animation blur */}
+          <filter id="ththFanBlur" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1.5" />
+          </filter>
         </defs>
 
-        <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
-          Processor Thermal Simulation
+        {/* === PREMIUM BACKGROUND === */}
+        <rect width={width} height={height} fill="url(#ththLabBg)" />
+
+        {/* Subtle grid pattern */}
+        <pattern id="ththGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+          <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+        </pattern>
+        <rect width={width} height={height} fill="url(#ththGrid)" />
+
+        {/* === TITLE SECTION === */}
+        <text x={width / 2} y="28" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold" filter="url(#ththTextShadow)">
+          Processor Thermal Management Simulation
+        </text>
+        <text x={width / 2} y="46" textAnchor="middle" fill="#94a3b8" fontSize="10">
+          Dynamic Voltage and Frequency Scaling (DVFS)
         </text>
 
-        <rect x="100" y="60" width="200" height="20" fill="#475569" rx="2" />
-        {Array.from({ length: 10 }, (_, i) => (
-          <rect key={i} x={110 + i * 19} y="40" width="4" height="20" fill="#64748b" />
-        ))}
-        <text x="200" y="52" fill={colors.textMuted} fontSize="8" textAnchor="middle">Heatsink</text>
+        {/* === MAIN PROCESSOR ASSEMBLY === */}
+        <g transform="translate(120, 70)">
 
-        <rect
-          x="130"
-          y="85"
-          width="140"
-          height="80"
-          fill="url(#chipGrad)"
-          rx="4"
-          filter={temperature > T_THROTTLE ? "url(#heatGlow)" : undefined}
-        />
+          {/* Heatsink base plate */}
+          <rect x="20" y="-5" width="260" height="15" rx="3" fill="url(#ththHeatsinkMetal)" stroke="#374151" strokeWidth="1" />
 
-        <text x="200" y="115" fill="white" fontSize="12" textAnchor="middle" fontWeight="bold">
-          CPU
-        </text>
-        <text x="200" y="135" fill="rgba(255,255,255,0.8)" fontSize="10" textAnchor="middle">
-          {clockSpeed.toFixed(2)} GHz @ {voltage.toFixed(2)}V
-        </text>
-        <text x="200" y="155" fill="rgba(255,255,255,0.7)" fontSize="9" textAnchor="middle">
-          {power.toFixed(0)}W
-        </text>
+          {/* Heatsink fins */}
+          {Array.from({ length: 14 }, (_, i) => (
+            <g key={i}>
+              <rect
+                x={30 + i * 18}
+                y="-55"
+                width="6"
+                height="50"
+                fill="url(#ththHeatsinkMetal)"
+                stroke="#4b5563"
+                strokeWidth="0.5"
+              />
+              {/* Fin highlight */}
+              <rect x={31 + i * 18} y="-53" width="1.5" height="46" fill="#9ca3af" opacity="0.3" />
+            </g>
+          ))}
 
-        {isSimulating && temperature > 60 && (
-          <g>
-            {Array.from({ length: 5 }, (_, i) => {
-              const offset = ((animationTime * 2 + i * 30) % 60);
-              const opacity = Math.max(0, 1 - offset / 60) * Math.min((temperature - 60) / 40, 1);
+          {/* Heatsink top cover */}
+          <rect x="25" y="-60" width="250" height="8" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+          <text x="150" y="-67" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="bold">HEATSINK</text>
+
+          {/* Cooling airflow indicators */}
+          {showCoolingEffect && (
+            <g opacity={coolingPower / 150}>
+              {Array.from({ length: 8 }, (_, i) => {
+                const yOffset = ((animationTime * 3 + i * 8) % 50);
+                return (
+                  <path
+                    key={i}
+                    d={`M ${35 + i * 30} ${-55 + yOffset} L ${40 + i * 30} ${-45 + yOffset} L ${35 + i * 30} ${-35 + yOffset}`}
+                    fill="none"
+                    stroke="url(#ththCoolFlow)"
+                    strokeWidth="2"
+                    opacity={0.6 - yOffset / 100}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Thermal paste layer */}
+          <rect x="60" y="12" width="180" height="4" rx="1" fill="url(#ththThermalPaste)" />
+
+          {/* CPU IHS (Integrated Heat Spreader) */}
+          <rect x="50" y="18" width="200" height="25" rx="3" fill="#71717a" stroke="#52525b" strokeWidth="1" />
+          <rect x="55" y="20" width="190" height="21" rx="2" fill="#a1a1aa" opacity="0.3" />
+          <text x="150" y="35" textAnchor="middle" fill="#27272a" fontSize="8" fontWeight="bold">INTEGRATED HEAT SPREADER</text>
+
+          {/* CPU DIE - THE MAIN HEAT SOURCE */}
+          <rect
+            x="80"
+            y="48"
+            width="140"
+            height="90"
+            rx="4"
+            fill="url(#ththCpuDie)"
+            stroke={temperature > T_THROTTLE ? "#ef4444" : "#4b5563"}
+            strokeWidth="2"
+            filter={temperature > T_THROTTLE ? "url(#ththIntenseGlow)" : temperature > 70 ? "url(#ththHeatGlow)" : undefined}
+          />
+
+          {/* CPU cores visualization - 8 core layout */}
+          <g transform="translate(85, 53)">
+            {Array.from({ length: 8 }, (_, i) => {
+              const row = Math.floor(i / 4);
+              const col = i % 4;
               return (
-                <path
-                  key={i}
-                  d={`M ${140 + i * 30} ${80 - offset} Q ${145 + i * 30} ${70 - offset} ${150 + i * 30} ${80 - offset}`}
-                  fill="none"
-                  stroke={colors.hot}
-                  strokeWidth="2"
-                  opacity={opacity * 0.5}
-                />
+                <g key={i}>
+                  <rect
+                    x={col * 32 + 2}
+                    y={row * 38 + 2}
+                    width="28"
+                    height="34"
+                    rx="2"
+                    fill="url(#ththCoreHeat)"
+                    opacity={0.7 + tempRatio * 0.3}
+                  />
+                  <text
+                    x={col * 32 + 16}
+                    y={row * 38 + 24}
+                    textAnchor="middle"
+                    fill="rgba(255,255,255,0.9)"
+                    fontSize="7"
+                    fontWeight="bold"
+                  >
+                    C{i}
+                  </text>
+                </g>
               );
             })}
           </g>
-        )}
 
-        <rect x="120" y="170" width="160" height="15" fill="#1e293b" rx="2" />
-        <text x="200" y="180" fill={colors.textMuted} fontSize="7" textAnchor="middle">PCB</text>
+          {/* CPU Label */}
+          <text x="150" y="155" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">
+            CPU: {clockSpeed.toFixed(2)} GHz @ {voltage.toFixed(2)}V
+          </text>
+          <text x="150" y="170" textAnchor="middle" fill="#94a3b8" fontSize="10">
+            Power Draw: {power.toFixed(0)}W
+          </text>
 
-        <g transform="translate(330, 60)">
-          <rect x="0" y="0" width="50" height="130" fill="rgba(0,0,0,0.3)" rx="4" />
-          <text x="25" y="15" fill={colors.textMuted} fontSize="8" textAnchor="middle">TEMP</text>
+          {/* Heat waves animation when hot */}
+          {isSimulating && temperature > 60 && (
+            <g>
+              {Array.from({ length: 7 }, (_, i) => {
+                const offset = ((animationTime * 2.5 + i * 12) % 40);
+                const opacity = Math.max(0, 1 - offset / 40) * Math.min((temperature - 60) / 35, 1);
+                return (
+                  <path
+                    key={i}
+                    d={`M ${90 + i * 20} ${45 - offset}
+                        Q ${95 + i * 20} ${35 - offset} ${100 + i * 20} ${45 - offset}
+                        Q ${105 + i * 20} ${55 - offset} ${110 + i * 20} ${45 - offset}`}
+                    fill="none"
+                    stroke={temperature > T_THROTTLE ? "#ef4444" : "#f59e0b"}
+                    strokeWidth="2.5"
+                    opacity={opacity * 0.6}
+                    filter="url(#ththSubtleGlow)"
+                  />
+                );
+              })}
+            </g>
+          )}
 
-          <rect x="10" y="25" width="30" height="80" fill="#1f2937" rx="2" />
+          {/* PCB (Motherboard) */}
+          <rect x="10" y="145" width="280" height="35" rx="3" fill="url(#ththPcbGrad)" stroke="#15803d" strokeWidth="1" />
+
+          {/* PCB traces */}
+          {Array.from({ length: 12 }, (_, i) => (
+            <line
+              key={i}
+              x1={20 + i * 22}
+              y1="150"
+              x2={20 + i * 22}
+              y2="175"
+              stroke="#22c55e"
+              strokeWidth="1"
+              opacity="0.4"
+            />
+          ))}
+
+          {/* PCB components */}
+          {Array.from({ length: 6 }, (_, i) => (
+            <rect key={i} x={25 + i * 45} y="155" width="15" height="8" rx="1" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+          ))}
+
+          <text x="150" y="190" textAnchor="middle" fill="#86efac" fontSize="8" fontWeight="bold">MOTHERBOARD PCB</text>
+        </g>
+
+        {/* === TEMPERATURE GAUGE === */}
+        <g transform="translate(520, 70)">
+          <rect x="0" y="0" width="80" height="200" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+          <text x="40" y="20" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">TEMPERATURE</text>
+
+          {/* Thermometer tube */}
+          <rect x="25" y="35" width="30" height="130" rx="4" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+
+          {/* Temperature fill */}
           <rect
-            x="10"
-            y={25 + 80 * (1 - tempRatio)}
-            width="30"
-            height={80 * tempRatio}
-            fill={temperature > T_THROTTLE ? colors.error : temperature > 70 ? colors.warning : colors.cool}
-            rx="2"
+            x="27"
+            y={35 + 126 * (1 - tempRatio)}
+            width="26"
+            height={126 * tempRatio}
+            rx="3"
+            fill="url(#ththTempGrad)"
+            filter={temperature > T_THROTTLE ? "url(#ththSubtleGlow)" : undefined}
           />
 
-          <line x1="5" y1={25 + 80 * (1 - (T_THROTTLE - T_AMBIENT) / (T_CRITICAL - T_AMBIENT))} x2="45" y2={25 + 80 * (1 - (T_THROTTLE - T_AMBIENT) / (T_CRITICAL - T_AMBIENT))} stroke={colors.warning} strokeWidth="1" strokeDasharray="2,2" />
-          <text x="48" y={28 + 80 * (1 - (T_THROTTLE - T_AMBIENT) / (T_CRITICAL - T_AMBIENT))} fill={colors.warning} fontSize="7">95C</text>
+          {/* Temperature scale markers */}
+          {[25, 50, 70, 95, 105].map((temp, i) => {
+            const yPos = 35 + 126 * (1 - (temp - T_AMBIENT) / (T_CRITICAL - T_AMBIENT));
+            return (
+              <g key={temp}>
+                <line x1="20" y1={yPos} x2="60" y2={yPos} stroke="#4b5563" strokeWidth="0.5" strokeDasharray="2,2" />
+                <text x="65" y={yPos + 3} fill={temp === 95 ? "#f59e0b" : temp === 105 ? "#ef4444" : "#94a3b8"} fontSize="7">
+                  {temp}°C
+                </text>
+              </g>
+            );
+          })}
 
-          <text x="25" y="120" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
-            {temperature.toFixed(0)}C
+          {/* Throttle threshold indicator */}
+          <line
+            x1="20"
+            y1={35 + 126 * (1 - (T_THROTTLE - T_AMBIENT) / (T_CRITICAL - T_AMBIENT))}
+            x2="60"
+            y2={35 + 126 * (1 - (T_THROTTLE - T_AMBIENT) / (T_CRITICAL - T_AMBIENT))}
+            stroke="#f59e0b"
+            strokeWidth="2"
+          />
+          <text x="40" y={28 + 126 * (1 - (T_THROTTLE - T_AMBIENT) / (T_CRITICAL - T_AMBIENT))} textAnchor="middle" fill="#f59e0b" fontSize="7" fontWeight="bold">
+            THROTTLE
+          </text>
+
+          {/* Current temperature display */}
+          <rect x="10" y="170" width="60" height="25" rx="4" fill={temperature > T_THROTTLE ? "#7f1d1d" : temperature > 70 ? "#78350f" : "#1e3a5f"} />
+          <text x="40" y="188" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold" filter="url(#ththSubtleGlow)">
+            {temperature.toFixed(0)}°C
           </text>
         </g>
 
-        <g transform="translate(20, 200)">
-          <rect x="0" y="0" width="100" height="50" fill={colors.bgCard} rx="6" />
-          <text x="50" y="18" fill={colors.textMuted} fontSize="9" textAnchor="middle">Status</text>
-          <text x="50" y="38" fill={isThrottling ? colors.error : colors.success} fontSize="12" textAnchor="middle" fontWeight="bold">
-            {isThrottling ? 'THROTTLING' : 'NORMAL'}
+        {/* === THROTTLING STATUS PANEL === */}
+        <g transform="translate(520, 280)">
+          <rect x="0" y="0" width="160" height="70" rx="8" fill="#111827" stroke={isThrottling ? "#ef4444" : "#1f2937"} strokeWidth={isThrottling ? 2 : 1} />
+
+          {/* Status indicator light */}
+          <circle
+            cx="25"
+            cy="25"
+            r="10"
+            fill="url(#ththStatusGlow)"
+            filter="url(#ththSubtleGlow)"
+          >
+            {isThrottling && (
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+            )}
+          </circle>
+
+          <text x="45" y="18" fill="#94a3b8" fontSize="9">DVFS STATUS</text>
+          <text x="45" y="33" fill={isThrottling ? "#ef4444" : "#22c55e"} fontSize="13" fontWeight="bold">
+            {isThrottling ? "THROTTLING" : "NORMAL"}
+          </text>
+
+          <text x="10" y="52" fill="#94a3b8" fontSize="8">
+            {isThrottling ? "Reducing power to prevent damage" : "Operating within thermal limits"}
+          </text>
+          <text x="10" y="64" fill="#64748b" fontSize="7">
+            Target: &lt;95°C | Current: {temperature.toFixed(0)}°C
           </text>
         </g>
 
+        {/* === PERFORMANCE METER === */}
+        <g transform="translate(120, 295)">
+          <rect x="0" y="0" width="380" height="85" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+
+          <text x="15" y="20" fill="#f8fafc" fontSize="11" fontWeight="bold">PERFORMANCE vs THERMAL</text>
+
+          {/* Performance bar background */}
+          <rect x="15" y="35" width="280" height="20" rx="4" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+
+          {/* Performance bar fill */}
+          <rect
+            x="15"
+            y="35"
+            width={280 * performanceRatio}
+            height="20"
+            rx="4"
+            fill={isThrottling ? "url(#ththThrottleGrad)" : "url(#ththPerfGrad)"}
+            filter="url(#ththSubtleGlow)"
+          />
+
+          {/* Performance percentage */}
+          <text x="310" y="50" fill="#f8fafc" fontSize="14" fontWeight="bold">
+            {(performanceRatio * 100).toFixed(0)}%
+          </text>
+          <text x="350" y="50" fill="#94a3b8" fontSize="10">perf</text>
+
+          {/* Performance labels */}
+          <text x="15" y="70" fill="#64748b" fontSize="8">0%</text>
+          <text x="145" y="70" fill="#64748b" fontSize="8" textAnchor="middle">50%</text>
+          <text x="275" y="70" fill="#64748b" fontSize="8" textAnchor="end">100%</text>
+
+          {/* Formula reminder */}
+          <text x="305" y="70" fill="#06b6d4" fontSize="8" fontWeight="bold">P = CV²f</text>
+        </g>
+
+        {/* === COOLING PANEL (when enabled) === */}
         {showCoolingEffect && (
-          <g transform="translate(20, 60)">
-            <rect x="0" y="0" width="70" height="50" fill="rgba(59, 130, 246, 0.2)" rx="6" />
-            <text x="35" y="18" fill={colors.cool} fontSize="9" textAnchor="middle">Cooling</text>
-            <text x="35" y="38" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
+          <g transform="translate(20, 70)">
+            <rect x="0" y="0" width="90" height="120" rx="8" fill="#0c4a6e" stroke="#0369a1" strokeWidth="1" />
+            <text x="45" y="18" textAnchor="middle" fill="#7dd3fc" fontSize="10" fontWeight="bold">COOLING</text>
+
+            {/* Fan visualization */}
+            <g transform="translate(45, 55)">
+              <circle cx="0" cy="0" r="25" fill="#1e3a5f" stroke="#0ea5e9" strokeWidth="1" />
+              <g style={{ transformOrigin: '45px 55px' }} filter="url(#ththFanBlur)">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <path
+                    key={i}
+                    d={`M 0 -5 Q 10 -20 0 -22 Q -10 -20 0 -5`}
+                    fill="#22d3ee"
+                    opacity="0.7"
+                    transform={`rotate(${(animationTime * coolingPower / 10) + i * 72})`}
+                  />
+                ))}
+              </g>
+              <circle cx="0" cy="0" r="6" fill="#0c4a6e" stroke="#22d3ee" strokeWidth="1" />
+            </g>
+
+            <text x="45" y="95" textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold">
               {coolingPower}W
             </text>
+            <text x="45" y="110" textAnchor="middle" fill="#7dd3fc" fontSize="8">TDP Capacity</text>
           </g>
         )}
 
-        <g transform="translate(20, 260)">
-          <text x="0" y="0" fill={colors.textMuted} fontSize="10">Performance</text>
-          <rect x="0" y="8" width="200" height="12" fill="#1f2937" rx="2" />
-          <rect
-            x="0"
-            y="8"
-            width={200 * (clockSpeed / 4.5)}
-            height="12"
-            fill={isThrottling ? colors.warning : colors.success}
-            rx="2"
-          />
-          <text x="205" y="18" fill={colors.textPrimary} fontSize="10">
-            {((clockSpeed / 4.5) * 100).toFixed(0)}%
+        {/* === LIVE DATA READOUTS === */}
+        <g transform="translate(20, 295)">
+          <rect x="0" y="0" width="90" height="85" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+          <text x="45" y="16" textAnchor="middle" fill="#94a3b8" fontSize="9" fontWeight="bold">CLOCK</text>
+          <text x="45" y="38" textAnchor="middle" fill="#06b6d4" fontSize="16" fontWeight="bold">
+            {clockSpeed.toFixed(2)}
           </text>
+          <text x="45" y="52" textAnchor="middle" fill="#64748b" fontSize="9">GHz</text>
+
+          <line x1="10" y1="58" x2="80" y2="58" stroke="#1f2937" strokeWidth="1" />
+
+          <text x="45" y="72" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="bold">
+            {voltage.toFixed(2)}V
+          </text>
+          <text x="45" y="82" textAnchor="middle" fill="#64748b" fontSize="8">Voltage</text>
         </g>
       </svg>
     );

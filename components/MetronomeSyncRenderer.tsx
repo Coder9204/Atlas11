@@ -163,73 +163,391 @@ const MetronomeSyncRenderer: React.FC<MetronomeSyncRendererProps> = ({
     const syncLevel = calculateSyncLevel();
 
     return (
-      <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
-        <svg viewBox="0 0 400 320" style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}>
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
+      <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+        <svg viewBox="0 0 500 400" style={{ width: '100%', height: 'auto', borderRadius: '12px' }}>
+          <defs>
+            {/* Premium wooden metronome housing gradient */}
+            <linearGradient id="msyncWoodGrain" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#8B4513" />
+              <stop offset="20%" stopColor="#A0522D" />
+              <stop offset="40%" stopColor="#8B4513" />
+              <stop offset="60%" stopColor="#CD853F" />
+              <stop offset="80%" stopColor="#8B4513" />
+              <stop offset="100%" stopColor="#5D3A1A" />
+            </linearGradient>
+
+            {/* Darker wood for side panels */}
+            <linearGradient id="msyncWoodDark" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#5D3A1A" />
+              <stop offset="30%" stopColor="#4A2E14" />
+              <stop offset="70%" stopColor="#3D2510" />
+              <stop offset="100%" stopColor="#2D1B0C" />
+            </linearGradient>
+
+            {/* Metallic pendulum rod gradient */}
+            <linearGradient id="msyncMetalRod" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#9CA3AF" />
+              <stop offset="25%" stopColor="#D1D5DB" />
+              <stop offset="50%" stopColor="#F3F4F6" />
+              <stop offset="75%" stopColor="#D1D5DB" />
+              <stop offset="100%" stopColor="#9CA3AF" />
+            </linearGradient>
+
+            {/* Brass metallic bob gradient */}
+            <radialGradient id="msyncBrassBob" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#FFD700" />
+              <stop offset="30%" stopColor="#DAA520" />
+              <stop offset="60%" stopColor="#B8860B" />
+              <stop offset="100%" stopColor="#8B7355" />
+            </radialGradient>
+
+            {/* Premium platform wood gradient */}
+            <linearGradient id="msyncPlatformWood" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#654321" />
+              <stop offset="20%" stopColor="#8B5A2B" />
+              <stop offset="50%" stopColor="#A0522D" />
+              <stop offset="80%" stopColor="#8B5A2B" />
+              <stop offset="100%" stopColor="#654321" />
+            </linearGradient>
+
+            {/* Roller chrome gradient */}
+            <radialGradient id="msyncChrome" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#F5F5F5" />
+              <stop offset="30%" stopColor="#C0C0C0" />
+              <stop offset="60%" stopColor="#808080" />
+              <stop offset="100%" stopColor="#4A4A4A" />
+            </radialGradient>
+
+            {/* Sync indicator glow - green */}
+            <radialGradient id="msyncGlowGreen" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="40%" stopColor="#059669" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#047857" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#065f46" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Sync indicator glow - amber */}
+            <radialGradient id="msyncGlowAmber" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="40%" stopColor="#d97706" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#b45309" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Sync indicator glow - red */}
+            <radialGradient id="msyncGlowRed" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="40%" stopColor="#dc2626" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Dark lab background gradient */}
+            <linearGradient id="msyncLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Phase circle gradient */}
+            <radialGradient id="msyncPhaseBg" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </radialGradient>
+
+            {/* Sync meter bar gradient */}
+            <linearGradient id="msyncMeterBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Premium pendulum bob glow filter */}
+            <filter id="msyncBobGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow filter */}
+            <filter id="msyncShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feOffset in="blur" dx="2" dy="4" result="offsetBlur" />
+              <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Sync indicator pulse glow */}
+            <filter id="msyncPulseGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner glow for metronome body */}
+            <filter id="msyncInnerGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="msyncLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width="500" height="400" fill="url(#msyncLabBg)" />
+          <rect width="500" height="400" fill="url(#msyncLabGrid)" />
+
+          {/* Title with premium styling */}
+          <text x="250" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="18" fontWeight="bold" style={{ letterSpacing: '0.5px' }}>
             Metronome Synchronization
           </text>
+          <text x="250" y="45" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+            Coupled Oscillators &amp; Self-Organization
+          </text>
 
-          {/* Platform (movable) */}
+          {/* Platform (movable) with premium wood */}
           <g transform={`translate(${platformOffset}, 0)`}>
-            <rect x="40" y="220" width="320" height="15" fill={colors.platform} rx="3" />
+            {/* Platform shadow */}
+            <rect x="35" y="262" width="330" height="18" rx="4" fill="#000" opacity="0.3" />
 
-            {/* Rollers under platform */}
-            <circle cx="80" cy="240" r="8" fill={colors.textMuted} />
-            <circle cx="200" cy="240" r="8" fill={colors.textMuted} />
-            <circle cx="320" cy="240" r="8" fill={colors.textMuted} />
+            {/* Main platform board */}
+            <rect x="30" y="255" width="340" height="20" rx="4" fill="url(#msyncPlatformWood)" stroke="#4A3728" strokeWidth="1.5" />
+
+            {/* Platform highlight */}
+            <rect x="32" y="257" width="336" height="3" rx="1" fill="#A0522D" opacity="0.5" />
+
+            {/* Platform edge detail */}
+            <rect x="30" y="272" width="340" height="3" rx="1" fill="#3D2510" />
+
+            {/* Rollers under platform with chrome effect */}
+            {[80, 200, 320].map((x, idx) => (
+              <g key={idx}>
+                {/* Roller shadow */}
+                <ellipse cx={x} cy="290" rx="14" ry="4" fill="#000" opacity="0.4" />
+                {/* Main roller */}
+                <circle cx={x} cy="285" r="10" fill="url(#msyncChrome)" stroke="#374151" strokeWidth="1" />
+                {/* Roller highlight */}
+                <ellipse cx={x - 3} cy="282" rx="4" ry="3" fill="#fff" opacity="0.4" />
+                {/* Axle */}
+                <rect x={x - 15} y="283" width="30" height="4" rx="2" fill="#4B5563" />
+              </g>
+            ))}
 
             {/* Metronomes */}
             {metronomes.slice(0, numMetronomes).map((m, i) => {
               const baseX = 80 + i * (280 / numMetronomes);
               const angle = Math.sin(m.phase) * 30;
-              const pendulumLength = 100;
+              const pendulumLength = 120;
+              const metronomeColor = metronomeColors[i];
 
               return (
-                <g key={i} transform={`translate(${baseX}, 220)`}>
-                  {/* Base */}
-                  <rect x="-20" y="-30" width="40" height="30" fill={colors.bgCard} stroke={metronomeColors[i]} strokeWidth="2" rx="3" />
+                <g key={i} transform={`translate(${baseX}, 255)`} filter="url(#msyncShadow)">
+                  {/* Metronome body - trapezoid shape wooden housing */}
+                  <path
+                    d={`M-18,-35 L-25,-145 L25,-145 L18,-35 Z`}
+                    fill="url(#msyncWoodGrain)"
+                    stroke="#5D3A1A"
+                    strokeWidth="1.5"
+                  />
 
-                  {/* Pendulum arm */}
-                  <g transform={`rotate(${angle}, 0, -30)`}>
-                    <line x1="0" y1="-30" x2="0" y2={-30 - pendulumLength}
-                      stroke={metronomeColors[i]} strokeWidth="3" />
-                    {/* Weight */}
-                    <circle cx="0" cy={-30 - pendulumLength * 0.7} r="12" fill={metronomeColors[i]} />
+                  {/* Wood grain texture lines */}
+                  <path d="M-20,-50 Q0,-55 20,-50" stroke="#654321" strokeWidth="0.5" fill="none" opacity="0.5" />
+                  <path d="M-22,-80 Q0,-85 22,-80" stroke="#654321" strokeWidth="0.5" fill="none" opacity="0.5" />
+                  <path d="M-24,-110 Q0,-115 24,-110" stroke="#654321" strokeWidth="0.5" fill="none" opacity="0.5" />
+
+                  {/* Left side panel */}
+                  <path
+                    d={`M-25,-145 L-28,-145 L-22,-35 L-18,-35 Z`}
+                    fill="url(#msyncWoodDark)"
+                  />
+
+                  {/* Decorative top cap */}
+                  <rect x="-27" y="-150" width="54" height="8" rx="2" fill="#4A3728" stroke="#3D2510" strokeWidth="1" />
+
+                  {/* Scale markings on face */}
+                  {[-130, -115, -100, -85, -70, -55].map((y, idx) => (
+                    <g key={idx}>
+                      <line x1="-12" y1={y} x2="-8" y2={y} stroke="#FFD700" strokeWidth="1" />
+                      <line x1="8" y1={y} x2="12" y2={y} stroke="#FFD700" strokeWidth="1" />
+                    </g>
+                  ))}
+
+                  {/* Tempo indicator window */}
+                  <rect x="-10" y="-55" width="20" height="12" rx="2" fill="#1a1a1a" stroke="#8B7355" strokeWidth="1" />
+                  <text x="0" y="-46" textAnchor="middle" fill="#FFD700" fontSize="8" fontFamily="monospace">
+                    {Math.round(60 + i * 0)}
+                  </text>
+
+                  {/* Colored indicator ring */}
+                  <circle cx="0" cy="-38" r="3" fill={metronomeColor} filter="url(#msyncBobGlow)" />
+
+                  {/* Pendulum assembly */}
+                  <g transform={`rotate(${angle}, 0, -140)`}>
+                    {/* Pendulum rod with metallic gradient */}
+                    <rect x="-2" y="-140" width="4" height={pendulumLength * 0.85} rx="1" fill="url(#msyncMetalRod)" />
+
+                    {/* Rod highlight */}
+                    <line x1="0" y1="-140" x2="0" y2={-140 + pendulumLength * 0.85} stroke="#fff" strokeWidth="0.5" opacity="0.3" />
+
+                    {/* Brass weight/bob */}
+                    <g transform={`translate(0, ${-140 + pendulumLength * 0.65})`}>
+                      {/* Bob shadow */}
+                      <ellipse cx="2" cy="3" rx="14" ry="5" fill="#000" opacity="0.3" />
+                      {/* Main bob */}
+                      <circle cx="0" cy="0" r="14" fill="url(#msyncBrassBob)" filter="url(#msyncBobGlow)" />
+                      {/* Bob highlight */}
+                      <ellipse cx="-4" cy="-4" rx="5" ry="4" fill="#fff" opacity="0.4" />
+                      {/* Colored accent ring */}
+                      <circle cx="0" cy="0" r="16" fill="none" stroke={metronomeColor} strokeWidth="2" opacity="0.7" />
+                    </g>
+
+                    {/* Weight adjustment slider track */}
+                    <rect x="-1.5" y="-135" width="3" height="40" rx="1" fill="#4B5563" opacity="0.5" />
                   </g>
 
-                  {/* Pivot */}
-                  <circle cx="0" cy="-30" r="4" fill={colors.textMuted} />
+                  {/* Pivot point with brass fitting */}
+                  <circle cx="0" cy="-140" r="6" fill="#B8860B" stroke="#8B7355" strokeWidth="1" />
+                  <circle cx="0" cy="-140" r="3" fill="#DAA520" />
+
+                  {/* Metronome base */}
+                  <rect x="-22" y="-38" width="44" height="8" rx="2" fill="#3D2510" stroke="#2D1B0C" strokeWidth="1" />
+
+                  {/* Metronome number label */}
+                  <text x="0" y="15" textAnchor="middle" fill={metronomeColor} fontSize="10" fontWeight="bold">
+                    M{i + 1}
+                  </text>
                 </g>
               );
             })}
           </g>
 
-          {/* Ground line */}
-          <line x1="20" y1="250" x2="380" y2="250" stroke={colors.textMuted} strokeWidth="2" />
+          {/* Ground/table surface */}
+          <rect x="10" y="295" width="480" height="8" fill="#1e293b" rx="2" />
+          <line x1="10" y1="295" x2="490" y2="295" stroke="#334155" strokeWidth="1" />
 
-          {/* Sync meter */}
-          <g transform="translate(20, 270)">
-            <rect x="0" y="0" width="360" height="40" fill={colors.bgCard} rx="6" />
-            <text x="10" y="18" fill={colors.textMuted} fontSize="10">Synchronization Level:</text>
-            <rect x="10" y="24" width="280" height="10" fill="rgba(71, 85, 105, 0.5)" rx="5" />
-            <rect x="10" y="24" width={280 * syncLevel} height="10"
-              fill={syncLevel > 0.9 ? colors.success : syncLevel > 0.7 ? colors.warning : colors.error} rx="5" />
-            <text x="300" y="33" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+          {/* === SYNC INDICATOR VISUALIZATION === */}
+          <g transform="translate(250, 340)">
+            {/* Indicator background */}
+            <rect x="-200" y="-15" width="400" height="50" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+
+            {/* Label */}
+            <text x="-185" y="2" fill={colors.textMuted} fontSize="10" fontWeight="500">
+              Synchronization Level:
+            </text>
+
+            {/* Sync meter track */}
+            <rect x="-185" y="10" width="280" height="14" rx="7" fill="url(#msyncMeterBg)" stroke="#475569" strokeWidth="0.5" />
+
+            {/* Sync meter fill with dynamic color */}
+            <rect
+              x="-185"
+              y="10"
+              width={280 * syncLevel}
+              height="14"
+              rx="7"
+              fill={syncLevel > 0.9 ? 'url(#msyncGlowGreen)' : syncLevel > 0.7 ? 'url(#msyncGlowAmber)' : 'url(#msyncGlowRed)'}
+            />
+
+            {/* Meter tick marks */}
+            {[0, 0.25, 0.5, 0.75, 1].map((tick, idx) => (
+              <line
+                key={idx}
+                x1={-185 + 280 * tick}
+                y1="8"
+                x2={-185 + 280 * tick}
+                y2="26"
+                stroke="#64748b"
+                strokeWidth="0.5"
+                opacity="0.5"
+              />
+            ))}
+
+            {/* Percentage display */}
+            <rect x="105" y="2" width="55" height="24" rx="4" fill={syncLevel > 0.9 ? 'rgba(16, 185, 129, 0.2)' : syncLevel > 0.7 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)'} stroke={syncLevel > 0.9 ? colors.success : syncLevel > 0.7 ? colors.warning : colors.error} strokeWidth="1" />
+            <text x="132" y="20" textAnchor="middle" fill={syncLevel > 0.9 ? colors.success : syncLevel > 0.7 ? colors.warning : colors.error} fontSize="14" fontWeight="bold">
               {(syncLevel * 100).toFixed(0)}%
+            </text>
+
+            {/* Sync status indicator light */}
+            <g transform="translate(175, 14)">
+              <circle
+                cx="0"
+                cy="0"
+                r="10"
+                fill={syncLevel > 0.9 ? 'url(#msyncGlowGreen)' : syncLevel > 0.7 ? 'url(#msyncGlowAmber)' : 'url(#msyncGlowRed)'}
+                filter="url(#msyncPulseGlow)"
+              >
+                {syncLevel > 0.9 && (
+                  <animate attributeName="opacity" values="0.7;1;0.7" dur="1s" repeatCount="indefinite" />
+                )}
+              </circle>
+              <circle cx="0" cy="0" r="5" fill={syncLevel > 0.9 ? '#10b981' : syncLevel > 0.7 ? '#f59e0b' : '#ef4444'} />
+            </g>
+          </g>
+
+          {/* === PHASE DIAGRAM === */}
+          <g transform="translate(445, 90)">
+            {/* Phase diagram background */}
+            <circle cx="0" cy="0" r="42" fill="url(#msyncPhaseBg)" stroke="#334155" strokeWidth="1" />
+
+            {/* Phase circle guide */}
+            <circle cx="0" cy="0" r="32" fill="none" stroke="#475569" strokeWidth="1" strokeDasharray="4 2" />
+
+            {/* Axis lines */}
+            <line x1="-35" y1="0" x2="35" y2="0" stroke="#475569" strokeWidth="0.5" opacity="0.5" />
+            <line x1="0" y1="-35" x2="0" y2="35" stroke="#475569" strokeWidth="0.5" opacity="0.5" />
+
+            {/* Phase indicators for each metronome */}
+            {metronomes.slice(0, numMetronomes).map((m, i) => {
+              const x = Math.cos(m.phase - Math.PI/2) * 28;
+              const y = Math.sin(m.phase - Math.PI/2) * 28;
+              return (
+                <g key={i}>
+                  {/* Connection line to center */}
+                  <line x1="0" y1="0" x2={x} y2={y} stroke={metronomeColors[i]} strokeWidth="1" opacity="0.4" />
+                  {/* Phase dot */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r="6"
+                    fill={metronomeColors[i]}
+                    filter="url(#msyncBobGlow)"
+                  />
+                  <circle cx={x} cy={y} r="3" fill="#fff" opacity="0.5" />
+                </g>
+              );
+            })}
+
+            {/* Center point */}
+            <circle cx="0" cy="0" r="3" fill="#64748b" />
+
+            {/* Label */}
+            <text x="0" y="55" textAnchor="middle" fill={colors.textMuted} fontSize="9" fontWeight="500">
+              Phase Diagram
             </text>
           </g>
 
-          {/* Phase diagram (small) */}
-          <g transform="translate(340, 60)">
-            <circle cx="0" cy="0" r="30" fill="none" stroke={colors.textMuted} strokeWidth="1" />
-            {metronomes.slice(0, numMetronomes).map((m, i) => (
-              <circle key={i}
-                cx={Math.cos(m.phase - Math.PI/2) * 25}
-                cy={Math.sin(m.phase - Math.PI/2) * 25}
-                r="5" fill={metronomeColors[i]} />
+          {/* Legend for metronomes */}
+          <g transform="translate(15, 70)">
+            <text x="0" y="0" fill={colors.textMuted} fontSize="9" fontWeight="500">Legend:</text>
+            {metronomes.slice(0, numMetronomes).map((_, i) => (
+              <g key={i} transform={`translate(0, ${15 + i * 16})`}>
+                <circle cx="6" cy="0" r="5" fill={metronomeColors[i]} />
+                <text x="16" y="3" fill={colors.textSecondary} fontSize="9">M{i + 1}</text>
+              </g>
             ))}
-            <text x="0" y="45" textAnchor="middle" fill={colors.textMuted} fontSize="8">Phase</text>
           </g>
         </svg>
       </div>

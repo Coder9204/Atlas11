@@ -355,125 +355,425 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
   };
 
   const renderVisualization = () => {
-    const width = 400;
-    const height = 350;
+    const width = 700;
+    const height = 420;
 
     const levels = Object.entries(MEMORY_SPECS);
-    const pyramidHeight = 250;
-    const pyramidTop = 30;
 
     return (
       <svg
         width="100%"
         height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ background: '#1e293b', borderRadius: '12px' }}
+        style={{ maxHeight: '100%' }}
       >
-        {/* Memory hierarchy pyramid */}
+        <defs>
+          {/* Premium CPU chip gradient */}
+          <linearGradient id="memhCpuGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="25%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="75%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* L1 Cache - Hot red/orange gradient */}
+          <linearGradient id="memhL1Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="25%" stopColor="#f87171" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="75%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+
+          {/* L2 Cache - Warm orange gradient */}
+          <linearGradient id="memhL2Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fdba74" />
+            <stop offset="25%" stopColor="#fb923c" />
+            <stop offset="50%" stopColor="#f97316" />
+            <stop offset="75%" stopColor="#ea580c" />
+            <stop offset="100%" stopColor="#c2410c" />
+          </linearGradient>
+
+          {/* L3 Cache - Yellow/amber gradient */}
+          <linearGradient id="memhL3Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fde047" />
+            <stop offset="25%" stopColor="#facc15" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="75%" stopColor="#ca8a04" />
+            <stop offset="100%" stopColor="#a16207" />
+          </linearGradient>
+
+          {/* Main RAM - Cool green gradient */}
+          <linearGradient id="memhRAMGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#86efac" />
+            <stop offset="25%" stopColor="#4ade80" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="75%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#15803d" />
+          </linearGradient>
+
+          {/* SSD/Disk - Cool blue gradient */}
+          <linearGradient id="memhDiskGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="25%" stopColor="#60a5fa" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="75%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </linearGradient>
+
+          {/* Data access radial glow effects */}
+          <radialGradient id="memhAccessGlowRed" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+            <stop offset="40%" stopColor="#dc2626" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="memhAccessGlowOrange" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f97316" stopOpacity="1" />
+            <stop offset="40%" stopColor="#ea580c" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#c2410c" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#7c2d12" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="memhAccessGlowYellow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#eab308" stopOpacity="1" />
+            <stop offset="40%" stopColor="#ca8a04" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#a16207" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#713f12" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="memhAccessGlowGreen" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+            <stop offset="40%" stopColor="#16a34a" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#15803d" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#14532d" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="memhAccessGlowBlue" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
+            <stop offset="40%" stopColor="#2563eb" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Data packet glow */}
+          <radialGradient id="memhDataGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Premium glow filters */}
+          <filter id="memhGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="memhSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="memhActiveGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Background gradient */}
+          <linearGradient id="memhBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* Silicon wafer pattern */}
+          <pattern id="memhCircuitPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            <circle cx="10" cy="10" r="1" fill="#334155" fillOpacity="0.3" />
+          </pattern>
+        </defs>
+
+        {/* Premium dark background */}
+        <rect width={width} height={height} fill="url(#memhBgGradient)" />
+        <rect width={width} height={height} fill="url(#memhCircuitPattern)" />
+
+        {/* Title and legend area */}
+        <g transform="translate(20, 20)">
+          <rect x="0" y="0" width="180" height="50" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+          <text x="15" y="22" fill="#f8fafc" fontSize="14" fontWeight="bold">Memory Hierarchy</text>
+          <text x="15" y="40" fill="#94a3b8" fontSize="10">Speed vs Capacity Trade-off</text>
+        </g>
+
+        {/* === CPU CHIP (Top) === */}
+        <g transform="translate(250, 55)">
+          {/* CPU outer frame */}
+          <rect x="0" y="0" width="200" height="55" rx="6" fill="url(#memhCpuGradient)" stroke="#475569" strokeWidth="2" />
+          <rect x="4" y="4" width="192" height="47" rx="4" fill="#0f172a" opacity="0.5" />
+
+          {/* CPU pins */}
+          {[...Array(12)].map((_, i) => (
+            <rect key={`pin-top-${i}`} x={15 + i * 15} y="-6" width="6" height="8" rx="1" fill="#64748b" />
+          ))}
+          {[...Array(12)].map((_, i) => (
+            <rect key={`pin-bot-${i}`} x={15 + i * 15} y="53" width="6" height="8" rx="1" fill="#64748b" />
+          ))}
+
+          {/* CPU core indicator */}
+          <circle cx="100" cy="27" r="18" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          <circle cx="100" cy="27" r="12" fill="#334155">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          <text x="100" y="31" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold">CPU</text>
+
+          {/* Active indicator */}
+          <circle cx="180" cy="12" r="5" fill="#22c55e" filter="url(#memhSoftGlow)">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+          </circle>
+        </g>
+
+        {/* === MEMORY HIERARCHY PYRAMID === */}
         {levels.map(([name, spec], i) => {
-          const levelHeight = pyramidHeight / levels.length;
-          const y = pyramidTop + i * levelHeight;
-          const widthRatio = 0.3 + i * 0.15;
-          const rectWidth = width * widthRatio;
+          const levelHeight = 52;
+          const baseY = 125;
+          const y = baseY + i * levelHeight;
+
+          // Pyramid widening effect
+          const minWidth = 120;
+          const maxWidth = 500;
+          const rectWidth = minWidth + (maxWidth - minWidth) * (i / (levels.length - 1));
           const x = (width - rectWidth) / 2;
 
           const isActive = name === activeLevel;
+          const gradientId = i === 0 ? 'memhL1Gradient' : i === 1 ? 'memhL2Gradient' : i === 2 ? 'memhL3Gradient' : i === 3 ? 'memhRAMGradient' : 'memhDiskGradient';
+          const glowId = i === 0 ? 'memhAccessGlowRed' : i === 1 ? 'memhAccessGlowOrange' : i === 2 ? 'memhAccessGlowYellow' : i === 3 ? 'memhAccessGlowGreen' : 'memhAccessGlowBlue';
+
+          // Format size for display
+          const sizeText = spec.size >= 1 ? `${spec.size} GB` : spec.size >= 0.001 ? `${(spec.size * 1000).toFixed(0)} MB` : `${(spec.size * 1000000).toFixed(0)} KB`;
+          const latencyText = spec.latency >= 1000 ? `${spec.latency / 1000}k cycles` : `${spec.latency} cycle${spec.latency > 1 ? 's' : ''}`;
 
           return (
             <g key={name}>
-              {/* Level rectangle */}
+              {/* Active glow effect */}
+              {isActive && (
+                <rect
+                  x={x - 8}
+                  y={y - 4}
+                  width={rectWidth + 16}
+                  height={levelHeight}
+                  rx={10}
+                  fill={`url(#${glowId})`}
+                  opacity="0.4"
+                  filter="url(#memhActiveGlow)"
+                />
+              )}
+
+              {/* Main level block */}
               <rect
                 x={x}
                 y={y}
                 width={rectWidth}
-                height={levelHeight - 4}
-                rx={6}
-                fill={isActive ? spec.color : `${spec.color}44`}
-                stroke={isActive ? 'white' : spec.color}
-                strokeWidth={isActive ? 3 : 1}
+                height={levelHeight - 8}
+                rx={8}
+                fill={isActive ? `url(#${gradientId})` : '#1e293b'}
+                stroke={isActive ? '#ffffff' : spec.color}
+                strokeWidth={isActive ? 2.5 : 1}
+                opacity={isActive ? 1 : 0.6}
+                filter={isActive ? 'url(#memhSoftGlow)' : undefined}
               />
 
-              {/* Level label */}
+              {/* Inner highlight */}
+              <rect
+                x={x + 3}
+                y={y + 3}
+                width={rectWidth - 6}
+                height={levelHeight - 14}
+                rx={6}
+                fill="none"
+                stroke={isActive ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)'}
+                strokeWidth={1}
+              />
+
+              {/* Level name */}
               <text
-                x={width / 2}
-                y={y + levelHeight / 2 - 5}
-                textAnchor="middle"
-                fill={colors.textPrimary}
-                fontSize={11}
-                fontWeight={isActive ? 'bold' : 'normal'}
+                x={x + 15}
+                y={y + levelHeight / 2 - 2}
+                fill={isActive ? '#ffffff' : '#94a3b8'}
+                fontSize={12}
+                fontWeight="bold"
               >
                 {name}
               </text>
 
-              {/* Size and latency */}
-              <text
-                x={width / 2}
-                y={y + levelHeight / 2 + 10}
-                textAnchor="middle"
-                fill={colors.textMuted}
-                fontSize={9}
-              >
-                {spec.size >= 1 ? `${spec.size} GB` : spec.size >= 0.001 ? `${spec.size * 1000} MB` : `${spec.size * 1000000} KB`}
-                {' | '}
-                {spec.latency >= 1000 ? `${spec.latency / 1000}k` : spec.latency} cycles
-              </text>
+              {/* Size indicator (left side) */}
+              <g transform={`translate(${x + rectWidth - 180}, ${y + 8})`}>
+                <rect x="0" y="0" width="80" height="28" rx="4" fill="rgba(0,0,0,0.4)" />
+                <text x="40" y="12" textAnchor="middle" fill="#94a3b8" fontSize="8">CAPACITY</text>
+                <text x="40" y="24" textAnchor="middle" fill={isActive ? '#ffffff' : spec.color} fontSize="11" fontWeight="bold">{sizeText}</text>
+              </g>
+
+              {/* Latency indicator (right side) */}
+              <g transform={`translate(${x + rectWidth - 90}, ${y + 8})`}>
+                <rect x="0" y="0" width="80" height="28" rx="4" fill="rgba(0,0,0,0.4)" />
+                <text x="40" y="12" textAnchor="middle" fill="#94a3b8" fontSize="8">LATENCY</text>
+                <text x="40" y="24" textAnchor="middle" fill={isActive ? '#ffffff' : spec.color} fontSize="11" fontWeight="bold">{latencyText}</text>
+              </g>
+
+              {/* Bandwidth bar */}
+              <g transform={`translate(${x + 120}, ${y + levelHeight - 14})`}>
+                <rect x="0" y="0" width="100" height="4" rx="2" fill="rgba(0,0,0,0.4)" />
+                <rect x="0" y="0" width={Math.min(100, spec.bandwidth / 40)} height="4" rx="2" fill={isActive ? '#22d3ee' : '#475569'} />
+                <text x="105" y="5" fill="#64748b" fontSize="7">{spec.bandwidth} GB/s</text>
+              </g>
 
               {/* Data flow animation when active */}
               {isActive && (
-                <circle
-                  cx={x + (animationFrame / 100) * rectWidth}
-                  cy={y + levelHeight / 2}
-                  r={4}
-                  fill="white"
-                />
+                <>
+                  {/* Multiple data packets flowing */}
+                  {[0, 0.33, 0.66].map((offset, idx) => {
+                    const progress = ((animationFrame / 100) + offset) % 1;
+                    return (
+                      <g key={idx} filter="url(#memhGlowFilter)">
+                        <circle
+                          cx={x + 20 + progress * (rectWidth - 40)}
+                          cy={y + levelHeight / 2 - 2}
+                          r={5}
+                          fill="url(#memhDataGlow)"
+                        />
+                        <circle
+                          cx={x + 20 + progress * (rectWidth - 40)}
+                          cy={y + levelHeight / 2 - 2}
+                          r={2.5}
+                          fill="#ffffff"
+                        />
+                      </g>
+                    );
+                  })}
+                </>
+              )}
+
+              {/* Connection lines between levels */}
+              {i < levels.length - 1 && (
+                <g>
+                  <line
+                    x1={width / 2 - 30}
+                    y1={y + levelHeight - 4}
+                    x2={width / 2 - 50}
+                    y2={y + levelHeight + 4}
+                    stroke={isActive || levels[i + 1][0] === activeLevel ? '#22d3ee' : '#334155'}
+                    strokeWidth={isActive || levels[i + 1][0] === activeLevel ? 2 : 1}
+                    strokeDasharray={isActive || levels[i + 1][0] === activeLevel ? 'none' : '4 2'}
+                  />
+                  <line
+                    x1={width / 2 + 30}
+                    y1={y + levelHeight - 4}
+                    x2={width / 2 + 50}
+                    y2={y + levelHeight + 4}
+                    stroke={isActive || levels[i + 1][0] === activeLevel ? '#22d3ee' : '#334155'}
+                    strokeWidth={isActive || levels[i + 1][0] === activeLevel ? 2 : 1}
+                    strokeDasharray={isActive || levels[i + 1][0] === activeLevel ? 'none' : '4 2'}
+                  />
+                  {/* Animated data flow indicator */}
+                  {(isActive || levels[i + 1][0] === activeLevel) && (
+                    <circle
+                      cx={width / 2}
+                      cy={y + levelHeight + ((animationFrame / 100) * 8)}
+                      r={3}
+                      fill="#22d3ee"
+                      filter="url(#memhSoftGlow)"
+                    >
+                      <animate attributeName="opacity" values="0.4;1;0.4" dur="0.5s" repeatCount="indefinite" />
+                    </circle>
+                  )}
+                </g>
               )}
             </g>
           );
         })}
 
-        {/* Working set indicator */}
-        <g transform={`translate(20, ${pyramidTop})`}>
-          <text x={0} y={0} fill={colors.textMuted} fontSize={10}>Working Set</text>
-          <text x={0} y={15} fill={colors.accent} fontSize={12} fontWeight="bold">
+        {/* === STATS PANEL === */}
+        <g transform="translate(540, 20)">
+          <rect x="0" y="0" width="150" height="95" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+
+          {/* Working set */}
+          <text x="15" y="20" fill="#94a3b8" fontSize="9" fontWeight="bold">WORKING SET</text>
+          <text x="15" y="38" fill={colors.accent} fontSize="14" fontWeight="bold">
             {workingSetSize >= 1 ? `${workingSetSize.toFixed(1)} GB` : workingSetSize >= 0.001 ? `${(workingSetSize * 1000).toFixed(1)} MB` : `${(workingSetSize * 1000000).toFixed(0)} KB`}
           </text>
-        </g>
 
-        {/* Stats panel */}
-        <g transform={`translate(${width - 120}, ${pyramidTop})`}>
-          <text x={0} y={0} fill={colors.textMuted} fontSize={10}>Effective Latency</text>
-          <text x={0} y={15} fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize={12} fontWeight="bold">
+          {/* Effective latency */}
+          <text x="15" y="58" fill="#94a3b8" fontSize="9" fontWeight="bold">EFFECTIVE LATENCY</text>
+          <text x="15" y="76" fill={effectiveLatency > 50 ? colors.error : colors.success} fontSize="14" fontWeight="bold">
             {effectiveLatency >= 1000 ? `${effectiveLatency / 1000}k` : effectiveLatency} cycles
           </text>
-          <text x={0} y={35} fill={colors.textMuted} fontSize={10}>Bandwidth</text>
-          <text x={0} y={50} fill={colors.textSecondary} fontSize={12} fontWeight="bold">
-            {effectiveBandwidth} GB/s
+
+          {/* Status indicator */}
+          <circle cx="135" cy="75" r="6" fill={effectiveLatency > 50 ? colors.error : colors.success} filter="url(#memhSoftGlow)">
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+        </g>
+
+        {/* === ACCESS PATTERN & CACHE HITS === */}
+        <g transform="translate(20, 380)">
+          <rect x="0" y="0" width="220" height="35" rx="6" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+          <text x="15" y="15" fill="#94a3b8" fontSize="9" fontWeight="bold">ACCESS PATTERN</text>
+          <text x="15" y="28" fill="#f8fafc" fontSize="11" fontWeight="bold" textTransform="uppercase">
+            {accessPattern}
+          </text>
+          <text x="100" y="28" fill={accessPattern === 'sequential' ? colors.success : accessPattern === 'random' ? colors.error : colors.warning} fontSize="9">
+            {accessPattern === 'sequential' ? 'OPTIMAL' : accessPattern === 'random' ? 'POOR' : 'MODERATE'}
           </text>
         </g>
 
-        {/* Access pattern indicator */}
-        <g transform={`translate(20, ${height - 40})`}>
-          <text x={0} y={0} fill={colors.textMuted} fontSize={10}>Access Pattern: {accessPattern}</text>
-          <text x={0} y={15} fill={colors.textSecondary} fontSize={9}>
-            {accessPattern === 'sequential' ? 'Good cache utilization' : accessPattern === 'random' ? 'Poor cache utilization' : 'Moderate cache utilization'}
-          </text>
-        </g>
-
-        {/* Recent accesses visualization */}
+        {/* Recent cache hits visualization */}
         {showCacheHits && (
-          <g transform={`translate(${width - 180}, ${height - 40})`}>
-            <text x={0} y={0} fill={colors.textMuted} fontSize={10}>Recent Accesses</text>
+          <g transform="translate(260, 380)">
+            <rect x="0" y="0" width="200" height="35" rx="6" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+            <text x="15" y="15" fill="#94a3b8" fontSize="9" fontWeight="bold">RECENT ACCESSES</text>
             {memoryAccesses.slice(-10).map((access, i) => (
-              <circle
-                key={i}
-                cx={10 + i * 16}
-                cy={20}
-                r={6}
-                fill={access.hit ? colors.success : colors.error}
-              />
+              <g key={i}>
+                <circle
+                  cx={20 + i * 18}
+                  cy={27}
+                  r={6}
+                  fill={access.hit ? colors.success : colors.error}
+                  filter="url(#memhSoftGlow)"
+                />
+                <text
+                  x={20 + i * 18}
+                  y={30}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  fontSize="6"
+                  fontWeight="bold"
+                >
+                  {access.hit ? 'H' : 'M'}
+                </text>
+              </g>
             ))}
           </g>
         )}
+
+        {/* Bandwidth indicator */}
+        <g transform="translate(480, 380)">
+          <rect x="0" y="0" width="200" height="35" rx="6" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+          <text x="15" y="15" fill="#94a3b8" fontSize="9" fontWeight="bold">BANDWIDTH</text>
+          <text x="15" y="28" fill="#22d3ee" fontSize="12" fontWeight="bold">{effectiveBandwidth} GB/s</text>
+          <rect x="100" y="20" width="90" height="8" rx="4" fill="rgba(0,0,0,0.4)" />
+          <rect x="100" y="20" width={Math.min(90, effectiveBandwidth / 44.4 * 90)} height="8" rx="4" fill="#22d3ee" />
+        </g>
       </svg>
     );
   };

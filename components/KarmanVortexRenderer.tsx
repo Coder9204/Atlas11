@@ -193,6 +193,19 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
       }
     }
 
+    // Generate animated flow particles
+    const flowParticles = [];
+    for (let i = 0; i < 12; i++) {
+      const baseY = 80 + (i % 5) * 50;
+      const xPos = ((animationTime * 80 + i * 35) % 420) - 20;
+      const yWobble = Math.sin(animationTime * 2 + i) * 3;
+      flowParticles.push({
+        x: xPos,
+        y: baseY + yWobble,
+        opacity: xPos < 60 ? xPos / 60 : xPos > 360 ? (420 - xPos) / 60 : 1,
+      });
+    }
+
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
         <svg
@@ -201,191 +214,473 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
         >
           <defs>
-            {/* Flow gradient */}
-            <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.flowFast} stopOpacity="0.4" />
-              <stop offset="100%" stopColor={colors.flowFast} stopOpacity="0.1" />
+            {/* ============ PREMIUM GRADIENTS ============ */}
+
+            {/* Flow field background gradient with depth */}
+            <linearGradient id="karvFlowField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.6" />
+              <stop offset="25%" stopColor="#0c4a6e" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#075985" stopOpacity="0.3" />
+              <stop offset="75%" stopColor="#0369a1" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.1" />
             </linearGradient>
 
-            {/* Clockwise vortex gradient */}
-            <radialGradient id="vortexCW" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.vortexCenter} stopOpacity="0.3" />
-              <stop offset="50%" stopColor={colors.vortexCW} stopOpacity="0.6" />
-              <stop offset="100%" stopColor={colors.vortexCW} stopOpacity="0" />
+            {/* Premium metallic cylinder gradient */}
+            <linearGradient id="karvCylinderMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="20%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* Cylinder highlight for 3D effect */}
+            <radialGradient id="karvCylinderHighlight" cx="30%" cy="30%" r="50%">
+              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0" />
             </radialGradient>
 
-            {/* Counter-clockwise vortex gradient */}
-            <radialGradient id="vortexCCW" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.vortexCenter} stopOpacity="0.3" />
-              <stop offset="50%" stopColor={colors.vortexCCW} stopOpacity="0.6" />
-              <stop offset="100%" stopColor={colors.vortexCCW} stopOpacity="0" />
+            {/* Square obstacle brushed metal */}
+            <linearGradient id="karvSquareMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="15%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="85%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Triangle obstacle gradient */}
+            <linearGradient id="karvTriangleMetal" x1="50%" y1="0%" x2="50%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="30%" stopColor="#6b7280" />
+              <stop offset="60%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Clockwise vortex gradient - enhanced orange spiral */}
+            <radialGradient id="karvVortexCW" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+              <stop offset="20%" stopColor="#fed7aa" stopOpacity="0.6" />
+              <stop offset="45%" stopColor="#fb923c" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#f97316" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#ea580c" stopOpacity="0" />
             </radialGradient>
+
+            {/* Counter-clockwise vortex gradient - enhanced purple spiral */}
+            <radialGradient id="karvVortexCCW" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+              <stop offset="20%" stopColor="#e9d5ff" stopOpacity="0.6" />
+              <stop offset="45%" stopColor="#c084fc" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#a855f7" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#9333ea" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Flow particle glow gradient */}
+            <radialGradient id="karvParticleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Flow arrow gradient */}
+            <linearGradient id="karvArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#93c5fd" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Streamline gradient */}
+            <linearGradient id="karvStreamline" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Wake region gradient */}
+            <linearGradient id="karvWakeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#334155" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
+            </linearGradient>
+
+            {/* ============ GLOW FILTERS ============ */}
+
+            {/* Vortex glow filter */}
+            <filter id="karvVortexGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Particle glow filter */}
+            <filter id="karvParticleBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Obstacle shadow filter */}
+            <filter id="karvObstacleShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="shadow" />
+              <feOffset dx="2" dy="2" in="shadow" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Cylinder inner glow */}
+            <filter id="karvCylinderGlow">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Text glow for labels */}
+            <filter id="karvTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
-            Kármán Vortex Street
+          {/* Premium dark lab background with gradient */}
+          <rect width="400" height="350" fill="#030712" />
+          <linearGradient id="karvLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+          <rect width="400" height="350" fill="url(#karvLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="karvLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect x="0" y="40" width="400" height="250" fill="url(#karvLabGrid)" />
+
+          {/* Title with glow */}
+          <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold" filter="url(#karvTextGlow)">
+            Karman Vortex Street
+          </text>
+          <text x="200" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
+            Karman Vortex Street
           </text>
 
-          {/* Flow field background */}
-          <rect x="0" y="50" width="400" height="250" fill="url(#flowGradient)" />
+          {/* Flow field background with premium gradient */}
+          <rect x="0" y="50" width="400" height="250" fill="url(#karvFlowField)" />
 
-          {/* Flow direction arrows on left */}
+          {/* Animated flow particles */}
+          <g filter="url(#karvParticleBlur)">
+            {flowParticles.map((particle, i) => (
+              <g key={`particle-${i}`} opacity={particle.opacity * 0.8}>
+                <circle
+                  cx={particle.x}
+                  cy={particle.y}
+                  r="4"
+                  fill="url(#karvParticleGlow)"
+                />
+                <circle
+                  cx={particle.x}
+                  cy={particle.y}
+                  r="1.5"
+                  fill="#67e8f9"
+                />
+                {/* Particle trail */}
+                <line
+                  x1={particle.x - 8}
+                  y1={particle.y}
+                  x2={particle.x}
+                  y2={particle.y}
+                  stroke="#22d3ee"
+                  strokeWidth="1"
+                  strokeOpacity={particle.opacity * 0.5}
+                />
+              </g>
+            ))}
+          </g>
+
+          {/* Flow direction arrows on left - premium style */}
           {[0, 1, 2, 3, 4].map(i => {
             const y = 80 + i * 50;
             const speed = flowSpeed / 50;
+            const arrowLength = 20 * speed;
             return (
               <g key={i}>
+                {/* Arrow shaft with gradient */}
                 <line
                   x1="15"
                   y1={y}
-                  x2={15 + 20 * speed}
+                  x2={15 + arrowLength}
                   y2={y}
-                  stroke={colors.flowFast}
-                  strokeWidth="2"
+                  stroke="url(#karvArrowGrad)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
                 />
+                {/* Arrow head */}
                 <polygon
-                  points={`${15 + 20 * speed},${y - 4} ${15 + 20 * speed + 8},${y} ${15 + 20 * speed},${y + 4}`}
-                  fill={colors.flowFast}
+                  points={`${15 + arrowLength},${y - 5} ${15 + arrowLength + 10},${y} ${15 + arrowLength},${y + 5}`}
+                  fill="#93c5fd"
+                />
+                {/* Glow effect */}
+                <line
+                  x1="15"
+                  y1={y}
+                  x2={15 + arrowLength}
+                  y2={y}
+                  stroke="#60a5fa"
+                  strokeWidth="6"
+                  strokeOpacity="0.2"
+                  strokeLinecap="round"
                 />
               </g>
             );
           })}
 
-          {/* Streamlines for low Re */}
+          {/* Streamlines for low Re - premium curved lines with particles */}
           {(regime === 'creeping' || regime === 'steady_wake') && streamlines.map((y, i) => {
             const deflection = Math.abs(y - obsY) < obsSize * 1.5
               ? (y > obsY ? 1 : -1) * (obsSize * 2 - Math.abs(y - obsY) * 0.8)
               : 0;
 
             return (
-              <path
-                key={i}
-                d={`M 0,${y}
-                    Q ${obsX - 20},${y}
-                    ${obsX},${y + deflection * 0.3}
-                    Q ${obsX + obsSize},${y + deflection}
-                    ${obsX + obsSize * 3},${y + deflection * 0.5}
-                    L 400,${y}`}
-                fill="none"
-                stroke={colors.flowNeutral}
-                strokeWidth="1"
-                strokeOpacity="0.4"
-              />
+              <g key={i}>
+                {/* Streamline path */}
+                <path
+                  d={`M 0,${y}
+                      Q ${obsX - 20},${y}
+                      ${obsX},${y + deflection * 0.3}
+                      Q ${obsX + obsSize},${y + deflection}
+                      ${obsX + obsSize * 3},${y + deflection * 0.5}
+                      L 400,${y}`}
+                  fill="none"
+                  stroke="url(#karvStreamline)"
+                  strokeWidth="1.5"
+                />
+                {/* Animated particle on streamline */}
+                <circle
+                  cx={((animationTime * 50 + i * 40) % 400)}
+                  cy={y + (((animationTime * 50 + i * 40) % 400) > obsX && ((animationTime * 50 + i * 40) % 400) < obsX + obsSize * 3 ? deflection * 0.5 : 0)}
+                  r="3"
+                  fill="#60a5fa"
+                  opacity="0.8"
+                />
+              </g>
             );
           })}
 
-          {/* Vortices for high Re */}
+          {/* Wake region visualization */}
+          {(regime === 'laminar_vortex' || regime === 'turbulent_vortex') && (
+            <ellipse
+              cx={obsX + 150}
+              cy={obsY}
+              rx="140"
+              ry="60"
+              fill="url(#karvWakeGrad)"
+              opacity="0.3"
+            />
+          )}
+
+          {/* Vortices for high Re - enhanced with glow */}
           {vortices.map((vortex, i) => (
-            <g key={i}>
-              {/* Vortex circle */}
+            <g key={i} filter="url(#karvVortexGlow)">
+              {/* Outer vortex glow */}
+              <circle
+                cx={vortex.x}
+                cy={vortex.y}
+                r={vortex.size * 1.3}
+                fill={vortex.rotation === 'CW' ? 'url(#karvVortexCW)' : 'url(#karvVortexCCW)'}
+                opacity={(1 - vortex.age * 0.7) * 0.5}
+              />
+              {/* Main vortex circle */}
               <circle
                 cx={vortex.x}
                 cy={vortex.y}
                 r={vortex.size}
-                fill={vortex.rotation === 'CW' ? 'url(#vortexCW)' : 'url(#vortexCCW)'}
+                fill={vortex.rotation === 'CW' ? 'url(#karvVortexCW)' : 'url(#karvVortexCCW)'}
                 opacity={1 - vortex.age * 0.7}
               />
 
-              {/* Rotation indicator */}
-              <g opacity={0.7 - vortex.age * 0.5}>
-                {[0, 1, 2].map(j => {
-                  const angle = (animationTime * (vortex.rotation === 'CW' ? 3 : -3) + j * 120) * (Math.PI / 180);
-                  const r = vortex.size * 0.6;
-                  const x1 = vortex.x + Math.cos(angle) * r * 0.3;
-                  const y1 = vortex.y + Math.sin(angle) * r * 0.3;
-                  const x2 = vortex.x + Math.cos(angle) * r;
-                  const y2 = vortex.y + Math.sin(angle) * r;
+              {/* Spinning spiral arms */}
+              <g opacity={0.8 - vortex.age * 0.5}>
+                {[0, 1, 2, 3].map(j => {
+                  const baseAngle = (animationTime * (vortex.rotation === 'CW' ? 150 : -150) + j * 90) * (Math.PI / 180);
+                  const spiralPoints = [];
+                  for (let k = 0; k < 8; k++) {
+                    const angle = baseAngle + k * 0.3 * (vortex.rotation === 'CW' ? 1 : -1);
+                    const radius = (k / 8) * vortex.size * 0.9;
+                    spiralPoints.push({
+                      x: vortex.x + Math.cos(angle) * radius,
+                      y: vortex.y + Math.sin(angle) * radius,
+                    });
+                  }
+                  const pathD = spiralPoints.map((p, idx) =>
+                    `${idx === 0 ? 'M' : 'L'} ${p.x},${p.y}`
+                  ).join(' ');
 
                   return (
-                    <line
+                    <path
                       key={j}
-                      x1={x1}
-                      y1={y1}
-                      x2={x2}
-                      y2={y2}
+                      d={pathD}
+                      fill="none"
                       stroke={vortex.rotation === 'CW' ? colors.vortexCW : colors.vortexCCW}
                       strokeWidth="2"
                       strokeLinecap="round"
+                      strokeOpacity={0.7}
                     />
                   );
                 })}
               </g>
+
+              {/* Center bright core */}
+              <circle
+                cx={vortex.x}
+                cy={vortex.y}
+                r={vortex.size * 0.15}
+                fill="white"
+                opacity={0.6 - vortex.age * 0.4}
+              />
             </g>
           ))}
 
-          {/* Obstacle */}
-          <g>
+          {/* Obstacle with premium metallic appearance */}
+          <g filter="url(#karvObstacleShadow)">
             {obstacleShape === 'cylinder' && (
-              <circle
-                cx={obsX}
-                cy={obsY}
-                r={obsSize}
-                fill={colors.obstacle}
-                stroke={colors.obstacleHighlight}
-                strokeWidth="2"
-              />
+              <g>
+                {/* Base cylinder */}
+                <circle
+                  cx={obsX}
+                  cy={obsY}
+                  r={obsSize}
+                  fill="url(#karvCylinderMetal)"
+                  stroke="#94a3b8"
+                  strokeWidth="1"
+                />
+                {/* Highlight overlay for 3D effect */}
+                <circle
+                  cx={obsX}
+                  cy={obsY}
+                  r={obsSize}
+                  fill="url(#karvCylinderHighlight)"
+                />
+                {/* Rim highlight */}
+                <circle
+                  cx={obsX}
+                  cy={obsY}
+                  r={obsSize - 2}
+                  fill="none"
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                  strokeOpacity="0.3"
+                />
+              </g>
             )}
             {obstacleShape === 'square' && (
-              <rect
-                x={obsX - obsSize}
-                y={obsY - obsSize}
-                width={obsSize * 2}
-                height={obsSize * 2}
-                fill={colors.obstacle}
-                stroke={colors.obstacleHighlight}
-                strokeWidth="2"
-              />
+              <g>
+                <rect
+                  x={obsX - obsSize}
+                  y={obsY - obsSize}
+                  width={obsSize * 2}
+                  height={obsSize * 2}
+                  fill="url(#karvSquareMetal)"
+                  stroke="#9ca3af"
+                  strokeWidth="1"
+                />
+                {/* Top edge highlight */}
+                <line
+                  x1={obsX - obsSize + 2}
+                  y1={obsY - obsSize + 2}
+                  x2={obsX + obsSize - 2}
+                  y2={obsY - obsSize + 2}
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                  strokeOpacity="0.4"
+                />
+              </g>
             )}
             {obstacleShape === 'triangle' && (
-              <polygon
-                points={`${obsX},${obsY - obsSize} ${obsX + obsSize},${obsY + obsSize} ${obsX - obsSize},${obsY + obsSize}`}
-                fill={colors.obstacle}
-                stroke={colors.obstacleHighlight}
-                strokeWidth="2"
-              />
+              <g>
+                <polygon
+                  points={`${obsX},${obsY - obsSize} ${obsX + obsSize},${obsY + obsSize} ${obsX - obsSize},${obsY + obsSize}`}
+                  fill="url(#karvTriangleMetal)"
+                  stroke="#9ca3af"
+                  strokeWidth="1"
+                />
+                {/* Edge highlights */}
+                <line
+                  x1={obsX}
+                  y1={obsY - obsSize + 3}
+                  x2={obsX - obsSize + 5}
+                  y2={obsY + obsSize - 2}
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                  strokeOpacity="0.3"
+                />
+              </g>
             )}
           </g>
 
-          {/* Wake region indicator */}
+          {/* Wake region indicator - enhanced */}
           {interactive && (regime === 'laminar_vortex' || regime === 'turbulent_vortex') && (
-            <path
-              d={`M ${obsX + obsSize + 5},${obsY - 10}
-                  Q ${obsX + obsSize + 30},${obsY - 30}
-                  ${obsX + obsSize + 60},${obsY - 35}
-                  M ${obsX + obsSize + 5},${obsY + 10}
-                  Q ${obsX + obsSize + 30},${obsY + 30}
-                  ${obsX + obsSize + 60},${obsY + 35}`}
-              fill="none"
-              stroke={colors.textMuted}
-              strokeWidth="1"
-              strokeDasharray="4,4"
-            />
+            <g opacity="0.6">
+              <path
+                d={`M ${obsX + obsSize + 5},${obsY - 10}
+                    Q ${obsX + obsSize + 30},${obsY - 30}
+                    ${obsX + obsSize + 60},${obsY - 35}`}
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                strokeDasharray="6,4"
+              />
+              <path
+                d={`M ${obsX + obsSize + 5},${obsY + 10}
+                    Q ${obsX + obsSize + 30},${obsY + 30}
+                    ${obsX + obsSize + 60},${obsY + 35}`}
+                fill="none"
+                stroke="#94a3b8"
+                strokeWidth="1.5"
+                strokeDasharray="6,4"
+              />
+              <text x={obsX + obsSize + 70} y={obsY - 32} fill="#94a3b8" fontSize="8" fontStyle="italic">
+                Wake boundary
+              </text>
+            </g>
           )}
 
-          {/* Legend */}
+          {/* Legend - premium card style */}
           <g transform="translate(10, 290)">
-            <rect x="0" y="0" width="180" height="50" fill={colors.bgCard} rx="6" />
-            <text x="90" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">Vortex Rotation</text>
-            <circle cx="40" cy="32" r="10" fill="url(#vortexCW)" />
-            <text x="60" y="36" fill={colors.vortexCW} fontSize="9">CW ↻</text>
-            <circle cx="120" cy="32" r="10" fill="url(#vortexCCW)" />
-            <text x="140" y="36" fill={colors.vortexCCW} fontSize="9">CCW ↺</text>
+            <rect x="0" y="0" width="180" height="50" fill={colors.bgCard} rx="8" stroke="#334155" strokeWidth="1" />
+            <text x="90" y="14" textAnchor="middle" fill={colors.textMuted} fontSize="9" fontWeight="bold">VORTEX ROTATION</text>
+            <circle cx="40" cy="34" r="12" fill="url(#karvVortexCW)" filter="url(#karvVortexGlow)" />
+            <text x="60" y="38" fill={colors.vortexCW} fontSize="10" fontWeight="bold">CW</text>
+            <circle cx="120" cy="34" r="12" fill="url(#karvVortexCCW)" filter="url(#karvVortexGlow)" />
+            <text x="142" y="38" fill={colors.vortexCCW} fontSize="10" fontWeight="bold">CCW</text>
           </g>
 
-          {/* Flow regime info */}
+          {/* Flow regime info - premium card style */}
           <g transform="translate(200, 290)">
-            <rect x="0" y="0" width="190" height="50" fill={colors.bgCard} rx="6" />
-            <text x="10" y="15" fill={colors.textMuted} fontSize="9">Reynolds Number:</text>
-            <text x="100" y="15" fill={colors.textPrimary} fontSize="9" fontWeight="bold">
+            <rect x="0" y="0" width="190" height="50" fill={colors.bgCard} rx="8" stroke="#334155" strokeWidth="1" />
+            <text x="10" y="14" fill={colors.textMuted} fontSize="8">Reynolds Number</text>
+            <text x="100" y="14" fill={colors.textPrimary} fontSize="10" fontWeight="bold">
               Re = {Math.round(Re).toLocaleString()}
             </text>
-            <text x="10" y="30" fill={colors.textMuted} fontSize="9">Regime:</text>
-            <text x="60" y="30" fill={colors.accent} fontSize="9" fontWeight="bold">
+            <text x="10" y="30" fill={colors.textMuted} fontSize="8">Flow Regime</text>
+            <text x="70" y="30" fill={colors.accent} fontSize="10" fontWeight="bold">
               {regime.replace('_', ' ').toUpperCase()}
             </text>
-            <text x="10" y="44" fill={colors.textMuted} fontSize="9">Shedding Freq:</text>
-            <text x="85" y="44" fill={colors.textPrimary} fontSize="9">
+            <text x="10" y="45" fill={colors.textMuted} fontSize="8">Shedding Frequency</text>
+            <text x="100" y="45" fill="#22d3ee" fontSize="10" fontWeight="bold">
               {freq.toFixed(1)} Hz
             </text>
           </g>

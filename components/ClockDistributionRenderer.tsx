@@ -330,15 +330,18 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
   const renderVisualization = () => {
     const metrics = calculateClockMetrics();
-    const width = 400;
-    const height = 400;
+    const width = 700;
+    const height = 480;
 
     // Clock signal animation
     const clockPhaseAngle = (animationTime / 360) * 2 * Math.PI * 3;
     const clockValue = Math.sin(clockPhaseAngle) > 0 ? 1 : 0;
 
+    // Pulse propagation animation (0-1 cycle every ~2 seconds)
+    const pulseProgress = (animationTime % 120) / 120;
+
     // Skew animation (delayed arrivals at different points)
-    const skewOffsets = [0, 0.1, 0.2, 0.15]; // Different delays for each endpoint
+    const skewOffsets = [0, 0.05, 0.12, 0.08, 0.15, 0.10, 0.18, 0.06];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -347,130 +350,558 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '700px' }}
         >
           <defs>
-            <linearGradient id="clockGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.clock} />
-              <stop offset="100%" stopColor="#7c3aed" />
+            {/* === PREMIUM LINEAR GRADIENTS === */}
+
+            {/* Lab background gradient with depth */}
+            <linearGradient id="clkdLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
+
+            {/* Premium chip substrate gradient */}
+            <linearGradient id="clkdChipSubstrate" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1b4b" />
+              <stop offset="20%" stopColor="#312e81" />
+              <stop offset="50%" stopColor="#3730a3" />
+              <stop offset="80%" stopColor="#312e81" />
+              <stop offset="100%" stopColor="#1e1b4b" />
+            </linearGradient>
+
+            {/* Circuit trace gradient - copper with depth */}
+            <linearGradient id="clkdCopperTrace" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="15%" stopColor="#c084fc" />
+              <stop offset="40%" stopColor="#a855f7" />
+              <stop offset="60%" stopColor="#9333ea" />
+              <stop offset="85%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#c084fc" />
+            </linearGradient>
+
+            {/* Active clock signal pulse gradient */}
+            <linearGradient id="clkdPulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+              <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#a5f3fc" stopOpacity="1" />
+              <stop offset="70%" stopColor="#67e8f9" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+            </linearGradient>
+
+            {/* PLL housing metal gradient */}
+            <linearGradient id="clkdPLLMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="75%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Waveform background gradient */}
+            <linearGradient id="clkdWaveformBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="30%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Metrics panel gradient */}
+            <linearGradient id="clkdMetricsBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="20%" stopColor="#0f172a" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* === RADIAL GRADIENTS FOR GLOW EFFECTS === */}
+
+            {/* PLL core glow - oscillating source */}
+            <radialGradient id="clkdPLLGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#16a34a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Clock buffer glow */}
+            <radialGradient id="clkdBufferGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="1" />
+              <stop offset="40%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#9333ea" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Flip-flop active glow */}
+            <radialGradient id="clkdFFActiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Skew warning glow */}
+            <radialGradient id="clkdSkewWarning" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Error state glow */}
+            <radialGradient id="clkdErrorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* PLL glow filter */}
+            <filter id="clkdPLLBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Clock pulse glow filter */}
+            <filter id="clkdPulseBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft trace glow */}
+            <filter id="clkdTraceGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Flip-flop glow filter */}
+            <filter id="clkdFFGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="clkdInnerShadow">
+              <feOffset dx="1" dy="1" />
+              <feGaussianBlur stdDeviation="1" result="shadow" />
+              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            </filter>
+
+            {/* Grid pattern for chip surface */}
+            <pattern id="clkdChipGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="none" stroke="#4338ca" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Via pattern for realistic circuit */}
+            <pattern id="clkdViaPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="10" r="1.5" fill="#6366f1" opacity="0.4" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Clock Distribution and Skew
+          {/* === PREMIUM DARK LAB BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#clkdLabBg)" />
+
+          {/* Subtle grid overlay */}
+          <pattern id="clkdLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#clkdLabGrid)" />
+
+          {/* === TITLE SECTION === */}
+          <text x={width/2} y={28} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle" style={{ letterSpacing: '0.05em' }}>
+            Clock Distribution Network
+          </text>
+          <text x={width/2} y={46} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            H-Tree Topology with {treeDepth}-Level Buffering
           </text>
 
-          {/* Chip representation with H-tree */}
-          <g transform="translate(120, 60)">
-            {/* Chip outline */}
-            <rect x={0} y={0} width={160} height={160} fill="rgba(100, 100, 200, 0.1)" stroke={colors.clock} strokeWidth={2} rx={4} />
-            <text x={80} y={-8} fill={colors.textMuted} fontSize={10} textAnchor="middle">Chip ({chipSize}mm x {chipSize}mm)</text>
+          {/* === PREMIUM CHIP VISUALIZATION === */}
+          <g transform="translate(50, 70)">
+            {/* Chip package outline with depth */}
+            <rect x={-15} y={-15} width={290} height={230} rx={8} fill="#111827" stroke="#1f2937" strokeWidth={2} />
+            <rect x={-10} y={-10} width={280} height={220} rx={6} fill="#0a0a0a" />
 
-            {/* Clock source (PLL) at center */}
-            <circle cx={80} cy={80} r={12} fill={colors.pll} stroke={colors.textPrimary} strokeWidth={2}>
-              <animate attributeName="r" values="10;14;10" dur="0.5s" repeatCount="indefinite" />
-            </circle>
-            <text x={80} y={84} fill="white" fontSize={8} textAnchor="middle">PLL</text>
+            {/* Die substrate with premium gradient */}
+            <rect x={0} y={0} width={260} height={200} rx={4} fill="url(#clkdChipSubstrate)" stroke="#4f46e5" strokeWidth={1.5} />
+            <rect x={0} y={0} width={260} height={200} rx={4} fill="url(#clkdChipGrid)" />
+            <rect x={0} y={0} width={260} height={200} rx={4} fill="url(#clkdViaPattern)" opacity={0.3} />
 
-            {/* H-tree distribution */}
-            {/* Level 1: Center to mid-points */}
-            <line x1={80} y1={80} x2={40} y2={80} stroke={colors.clock} strokeWidth={3} opacity={clockValue ? 1 : 0.3} />
-            <line x1={80} y1={80} x2={120} y2={80} stroke={colors.clock} strokeWidth={3} opacity={clockValue ? 1 : 0.3} />
-            <line x1={80} y1={80} x2={80} y2={40} stroke={colors.clock} strokeWidth={3} opacity={clockValue ? 1 : 0.3} />
-            <line x1={80} y1={80} x2={80} y2={120} stroke={colors.clock} strokeWidth={3} opacity={clockValue ? 1 : 0.3} />
+            {/* Chip label */}
+            <rect x={85} y={-28} width={90} height={16} rx={4} fill="#111827" stroke="#4f46e5" strokeWidth={0.5} />
+            <text x={130} y={-17} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+              {chipSize}mm x {chipSize}mm Die
+            </text>
 
-            {/* Level 2: Mid-points to quadrants */}
+            {/* === PLL (CLOCK SOURCE) AT CENTER === */}
+            <g transform="translate(130, 100)">
+              {/* PLL outer glow */}
+              <circle cx={0} cy={0} r={28} fill="url(#clkdPLLGlow)" filter="url(#clkdPLLBlur)" opacity={clockValue ? 1 : 0.4}>
+                <animate attributeName="r" values="24;30;24" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+
+              {/* PLL housing */}
+              <rect x={-22} y={-22} width={44} height={44} rx={6} fill="url(#clkdPLLMetal)" stroke="#4ade80" strokeWidth={1.5} />
+              <rect x={-18} y={-18} width={36} height={36} rx={4} fill="#052e16" opacity={0.5} />
+
+              {/* PLL core indicator */}
+              <circle cx={0} cy={0} r={12} fill="#15803d" stroke="#22c55e" strokeWidth={2}>
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="0.3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={0} cy={0} r={6} fill="#4ade80">
+                <animate attributeName="r" values="5;7;5" dur="0.3s" repeatCount="indefinite" />
+              </circle>
+
+              <text x={0} y={4} fill="white" fontSize={8} textAnchor="middle" fontWeight="bold">PLL</text>
+
+              {/* PLL label */}
+              <text x={0} y={38} fill={colors.pll} fontSize={8} textAnchor="middle" fontWeight="bold">Clock Source</text>
+            </g>
+
+            {/* === H-TREE CLOCK DISTRIBUTION NETWORK === */}
+
+            {/* Level 1: Center to quadrant centers (thickest traces) */}
+            <g filter="url(#clkdTraceGlow)">
+              {/* Horizontal trunk */}
+              <line x1={130} y1={100} x2={65} y2={100} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
+              <line x1={130} y1={100} x2={195} y2={100} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
+              {/* Vertical trunk */}
+              <line x1={130} y1={100} x2={130} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
+              <line x1={130} y1={100} x2={130} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={5} strokeLinecap="round" opacity={clockValue ? 1 : 0.4} />
+
+              {/* Level 1 buffer nodes */}
+              {[[65, 100], [195, 100], [130, 50], [130, 150]].map(([x, y], i) => (
+                <g key={`l1-${i}`}>
+                  <circle cx={x} cy={y} r={8} fill="url(#clkdBufferGlow)" opacity={clockValue ? 0.8 : 0.3} />
+                  <circle cx={x} cy={y} r={5} fill="#a855f7" stroke="#c084fc" strokeWidth={1} />
+                </g>
+              ))}
+            </g>
+
+            {/* Level 2: To quadrant edges */}
             {treeDepth >= 2 && (
-              <>
-                <line x1={40} y1={80} x2={40} y2={40} stroke={colors.clock} strokeWidth={2} opacity={clockValue ? 0.9 : 0.2} />
-                <line x1={40} y1={80} x2={40} y2={120} stroke={colors.clock} strokeWidth={2} opacity={clockValue ? 0.9 : 0.2} />
-                <line x1={120} y1={80} x2={120} y2={40} stroke={colors.clock} strokeWidth={2} opacity={clockValue ? 0.9 : 0.2} />
-                <line x1={120} y1={80} x2={120} y2={120} stroke={colors.clock} strokeWidth={2} opacity={clockValue ? 0.9 : 0.2} />
-              </>
+              <g filter="url(#clkdTraceGlow)">
+                {/* Top-left quadrant */}
+                <line x1={65} y1={100} x2={65} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+                <line x1={130} y1={50} x2={65} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+
+                {/* Top-right quadrant */}
+                <line x1={195} y1={100} x2={195} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+                <line x1={130} y1={50} x2={195} y2={50} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+
+                {/* Bottom-left quadrant */}
+                <line x1={65} y1={100} x2={65} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+                <line x1={130} y1={150} x2={65} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+
+                {/* Bottom-right quadrant */}
+                <line x1={195} y1={100} x2={195} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+                <line x1={130} y1={150} x2={195} y2={150} stroke="url(#clkdCopperTrace)" strokeWidth={3.5} opacity={clockValue ? 0.9 : 0.3} />
+
+                {/* Level 2 buffer nodes */}
+                {[[65, 50], [195, 50], [65, 150], [195, 150]].map(([x, y], i) => (
+                  <g key={`l2-${i}`}>
+                    <circle cx={x} cy={y} r={6} fill="url(#clkdBufferGlow)" opacity={clockValue ? 0.7 : 0.25} />
+                    <circle cx={x} cy={y} r={4} fill="#9333ea" stroke="#a855f7" strokeWidth={1} />
+                  </g>
+                ))}
+              </g>
             )}
 
             {/* Level 3: To corners */}
             {treeDepth >= 3 && (
-              <>
-                <line x1={40} y1={40} x2={20} y2={20} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={40} y1={40} x2={60} y2={20} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={40} y1={120} x2={20} y2={140} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={40} y1={120} x2={60} y2={140} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={120} y1={40} x2={100} y2={20} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={120} y1={40} x2={140} y2={20} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={120} y1={120} x2={100} y2={140} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-                <line x1={120} y1={120} x2={140} y2={140} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.8 : 0.15} />
-              </>
+              <g>
+                {/* Top corners */}
+                <line x1={65} y1={50} x2={30} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+                <line x1={65} y1={50} x2={100} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+                <line x1={195} y1={50} x2={160} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+                <line x1={195} y1={50} x2={230} y2={25} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+
+                {/* Bottom corners */}
+                <line x1={65} y1={150} x2={30} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+                <line x1={65} y1={150} x2={100} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+                <line x1={195} y1={150} x2={160} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+                <line x1={195} y1={150} x2={230} y2={175} stroke="url(#clkdCopperTrace)" strokeWidth={2.5} opacity={clockValue ? 0.8 : 0.2} />
+              </g>
             )}
 
-            {/* Endpoint flip-flops/registers */}
-            {[[20, 20], [60, 20], [100, 20], [140, 20],
-              [20, 140], [60, 140], [100, 140], [140, 140]].map(([x, y], i) => {
-              const delayed = Math.sin(clockPhaseAngle - skewOffsets[i % 4] * 2) > 0;
+            {/* Level 4: Extended mesh */}
+            {treeDepth >= 4 && (
+              <g opacity={0.7}>
+                {/* Fine distribution lines */}
+                <line x1={30} y1={25} x2={15} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={30} y1={25} x2={45} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={100} y1={25} x2={85} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={100} y1={25} x2={115} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={160} y1={25} x2={145} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={160} y1={25} x2={175} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={230} y1={25} x2={215} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={230} y1={25} x2={245} y2={15} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+
+                <line x1={30} y1={175} x2={15} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={30} y1={175} x2={45} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={100} y1={175} x2={85} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={100} y1={175} x2={115} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={160} y1={175} x2={145} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={160} y1={175} x2={175} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={230} y1={175} x2={215} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+                <line x1={230} y1={175} x2={245} y2={185} stroke={colors.clock} strokeWidth={1.5} opacity={clockValue ? 0.7 : 0.15} />
+              </g>
+            )}
+
+            {/* === ANIMATED CLOCK PULSE PROPAGATION === */}
+            {[0, 0.25, 0.5, 0.75].map((offset, i) => {
+              const progress = (pulseProgress + offset) % 1;
+              // Pulse travels from center outward
+              const distance = progress * 150;
+              const opacity = progress < 0.1 ? progress * 10 : progress > 0.8 ? (1 - progress) * 5 : 1;
+
               return (
-                <rect
-                  key={i}
-                  x={x - 6}
-                  y={y - 6}
-                  width={12}
-                  height={12}
-                  fill={delayed ? colors.clock : 'rgba(139, 92, 246, 0.3)'}
-                  stroke={colors.clock}
-                  strokeWidth={1}
-                  rx={2}
-                />
+                <g key={`pulse-${i}`} opacity={opacity * 0.8}>
+                  {/* Expanding pulse ring */}
+                  <circle
+                    cx={130}
+                    cy={100}
+                    r={distance}
+                    fill="none"
+                    stroke="url(#clkdPulseGrad)"
+                    strokeWidth={3}
+                    filter="url(#clkdPulseBlur)"
+                  />
+                </g>
               );
             })}
+
+            {/* === ENDPOINT FLIP-FLOPS/REGISTERS === */}
+            {[
+              [15, 15], [45, 15], [85, 15], [115, 15], [145, 15], [175, 15], [215, 15], [245, 15],
+              [15, 185], [45, 185], [85, 185], [115, 185], [145, 185], [175, 185], [215, 185], [245, 185],
+              [30, 25], [100, 25], [160, 25], [230, 25],
+              [30, 175], [100, 175], [160, 175], [230, 175]
+            ].map(([x, y], i) => {
+              const delayed = Math.sin(clockPhaseAngle - skewOffsets[i % 8] * 2) > 0;
+              const hasSkewIssue = metrics.skewPercentage > 10 && i === 7; // Far corner warning
+
+              return (
+                <g key={`ff-${i}`} filter={delayed ? "url(#clkdFFGlow)" : undefined}>
+                  {/* Glow effect when active */}
+                  {delayed && (
+                    <circle cx={x} cy={y} r={10} fill={hasSkewIssue ? "url(#clkdErrorGlow)" : "url(#clkdFFActiveGlow)"} opacity={0.6} />
+                  )}
+                  {/* Flip-flop body */}
+                  <rect
+                    x={x - 6}
+                    y={y - 6}
+                    width={12}
+                    height={12}
+                    fill={delayed ? (hasSkewIssue ? colors.error : '#22d3ee') : 'rgba(34, 211, 238, 0.2)'}
+                    stroke={hasSkewIssue ? colors.error : '#22d3ee'}
+                    strokeWidth={1.5}
+                    rx={2}
+                  />
+                  {/* Clock input indicator */}
+                  <line x1={x - 6} y1={y} x2={x - 3} y2={y - 3} stroke={delayed ? 'white' : '#0891b2'} strokeWidth={1} />
+                  <line x1={x - 6} y1={y} x2={x - 3} y2={y + 3} stroke={delayed ? 'white' : '#0891b2'} strokeWidth={1} />
+                </g>
+              );
+            })}
+
+            {/* Skew warning indicator on far corner */}
+            {metrics.skewPercentage > 10 && (
+              <g transform="translate(245, 185)">
+                <circle cx={0} cy={0} r={18} fill="url(#clkdSkewWarning)" opacity={0.5}>
+                  <animate attributeName="r" values="15;20;15" dur="0.8s" repeatCount="indefinite" />
+                </circle>
+                <text x={0} y={30} fill={colors.error} fontSize={8} textAnchor="middle" fontWeight="bold">SKEW!</text>
+              </g>
+            )}
           </g>
 
-          {/* Clock waveform with skew visualization */}
-          <g transform="translate(30, 250)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Clock Signals at Different Locations:</text>
+          {/* === CLOCK WAVEFORM VISUALIZATION === */}
+          <g transform="translate(370, 80)">
+            {/* Panel background */}
+            <rect x={0} y={0} width={300} height={180} rx={8} fill="url(#clkdWaveformBg)" stroke="#334155" strokeWidth={1} />
 
-            {/* Reference clock */}
-            <rect x={0} y={10} width={340} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
-            <text x={5} y={25} fill={colors.pll} fontSize={9}>Source (PLL)</text>
-            <path
-              d={`M 70 35 L 70 15 L 110 15 L 110 35 L 150 35 L 150 15 L 190 15 L 190 35 L 230 35 L 230 15 L 270 15 L 270 35 L 310 35 L 310 15 L 335 15`}
-              stroke={colors.pll}
-              strokeWidth={2}
-              fill="none"
-            />
-
-            {/* Skewed clock at far corner */}
-            <rect x={0} y={50} width={340} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
-            <text x={5} y={65} fill={colors.skew} fontSize={9}>Far Corner</text>
-            <path
-              d={`M 75 75 L 75 55 L 115 55 L 115 75 L 155 75 L 155 55 L 195 55 L 195 75 L 235 75 L 235 55 L 275 55 L 275 75 L 315 75 L 315 55 L 335 55`}
-              stroke={colors.skew}
-              strokeWidth={2}
-              fill="none"
-            />
-
-            {/* Skew indicator */}
-            <line x1={70} y1={40} x2={70} y2={85} stroke={colors.accent} strokeWidth={1} strokeDasharray="3,3" />
-            <line x1={75} y1={40} x2={75} y2={85} stroke={colors.accent} strokeWidth={1} strokeDasharray="3,3" />
-            <text x={72} y={98} fill={colors.accent} fontSize={10} textAnchor="middle">Skew</text>
-          </g>
-
-          {/* Metrics panel */}
-          <g transform="translate(290, 60)">
-            <rect x={0} y={0} width={100} height={100} fill="rgba(0,0,0,0.5)" rx={8} stroke={colors.accent} strokeWidth={1} />
-            <text x={10} y={18} fill={colors.textSecondary} fontSize={9}>Clock Period:</text>
-            <text x={10} y={32} fill={colors.textPrimary} fontSize={11}>{metrics.clockPeriod.toFixed(0)} ps</text>
-            <text x={10} y={48} fill={colors.textSecondary} fontSize={9}>Skew:</text>
-            <text x={10} y={62} fill={metrics.skewPercentage > 10 ? colors.error : colors.success} fontSize={11}>
-              {metrics.clockTreeSkew.toFixed(1)} ps ({metrics.skewPercentage.toFixed(1)}%)
+            {/* Panel title */}
+            <rect x={90} y={-12} width={120} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth={0.5} />
+            <text x={150} y={3} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="bold">
+              Clock Signal Comparison
             </text>
-            <text x={10} y={78} fill={colors.textSecondary} fontSize={9}>Jitter:</text>
-            <text x={10} y={92} fill={colors.jitter} fontSize={11}>{metrics.jitter.toFixed(1)} ps</text>
+
+            {/* Reference clock (PLL output) */}
+            <g transform="translate(15, 25)">
+              <rect x={0} y={0} width={270} height={45} fill="rgba(0,0,0,0.3)" rx={4} />
+              <rect x={0} y={0} width={60} height={45} fill="rgba(34, 197, 94, 0.15)" rx={4} />
+              <text x={30} y={16} fill={colors.pll} fontSize={9} textAnchor="middle" fontWeight="bold">PLL</text>
+              <text x={30} y={28} fill={colors.textMuted} fontSize={7} textAnchor="middle">Source</text>
+
+              {/* Clean square wave */}
+              <path
+                d={`M 70 38 L 70 12 L 110 12 L 110 38 L 150 38 L 150 12 L 190 12 L 190 38 L 230 38 L 230 12 L 265 12`}
+                stroke={colors.pll}
+                strokeWidth={2.5}
+                fill="none"
+                filter="url(#clkdTraceGlow)"
+              />
+
+              {/* Period annotation */}
+              <line x1={70} y1={42} x2={150} y2={42} stroke={colors.textMuted} strokeWidth={0.5} />
+              <line x1={70} y1={40} x2={70} y2={44} stroke={colors.textMuted} strokeWidth={0.5} />
+              <line x1={150} y1={40} x2={150} y2={44} stroke={colors.textMuted} strokeWidth={0.5} />
+              <text x={110} y={50} fill={colors.textMuted} fontSize={7} textAnchor="middle">{metrics.clockPeriod.toFixed(0)}ps</text>
+            </g>
+
+            {/* Near endpoint clock */}
+            <g transform="translate(15, 75)">
+              <rect x={0} y={0} width={270} height={45} fill="rgba(0,0,0,0.3)" rx={4} />
+              <rect x={0} y={0} width={60} height={45} fill="rgba(6, 182, 212, 0.15)" rx={4} />
+              <text x={30} y={16} fill="#22d3ee" fontSize={9} textAnchor="middle" fontWeight="bold">Near</text>
+              <text x={30} y={28} fill={colors.textMuted} fontSize={7} textAnchor="middle">Corner</text>
+
+              {/* Slightly delayed wave */}
+              <path
+                d={`M 72 38 L 72 12 L 112 12 L 112 38 L 152 38 L 152 12 L 192 12 L 192 38 L 232 38 L 232 12 L 265 12`}
+                stroke="#22d3ee"
+                strokeWidth={2.5}
+                fill="none"
+                filter="url(#clkdTraceGlow)"
+              />
+            </g>
+
+            {/* Far endpoint clock with skew */}
+            <g transform="translate(15, 125)">
+              <rect x={0} y={0} width={270} height={45} fill="rgba(0,0,0,0.3)" rx={4} />
+              <rect x={0} y={0} width={60} height={45} fill={metrics.skewPercentage > 10 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)'} rx={4} />
+              <text x={30} y={16} fill={metrics.skewPercentage > 10 ? colors.error : colors.skew} fontSize={9} textAnchor="middle" fontWeight="bold">Far</text>
+              <text x={30} y={28} fill={colors.textMuted} fontSize={7} textAnchor="middle">Corner</text>
+
+              {/* Skewed wave - offset based on actual skew */}
+              {(() => {
+                const skewPixels = Math.min(15, metrics.skewPercentage * 0.8);
+                return (
+                  <path
+                    d={`M ${70 + skewPixels} 38 L ${70 + skewPixels} 12 L ${110 + skewPixels} 12 L ${110 + skewPixels} 38 L ${150 + skewPixels} 38 L ${150 + skewPixels} 12 L ${190 + skewPixels} 12 L ${190 + skewPixels} 38 L ${230 + skewPixels} 38 L ${230 + skewPixels} 12 L 265 12`}
+                    stroke={metrics.skewPercentage > 10 ? colors.error : colors.skew}
+                    strokeWidth={2.5}
+                    fill="none"
+                    filter="url(#clkdTraceGlow)"
+                  />
+                );
+              })()}
+
+              {/* Skew indicator lines */}
+              <line x1={70} y1={5} x2={70} y2={-25} stroke={colors.accent} strokeWidth={1} strokeDasharray="3,2" />
+              <line x1={70 + Math.min(15, metrics.skewPercentage * 0.8)} y1={5} x2={70 + Math.min(15, metrics.skewPercentage * 0.8)} y2={-25} stroke={colors.accent} strokeWidth={1} strokeDasharray="3,2" />
+
+              {/* Skew arrow and label */}
+              <g transform={`translate(${70 + Math.min(7.5, metrics.skewPercentage * 0.4)}, -40)`}>
+                <rect x={-25} y={-8} width={50} height={16} rx={3} fill={colors.accent} opacity={0.9} />
+                <text x={0} y={4} fill="white" fontSize={8} textAnchor="middle" fontWeight="bold">
+                  Skew: {metrics.clockTreeSkew.toFixed(1)}ps
+                </text>
+              </g>
+            </g>
           </g>
 
-          {/* Frequency indicator */}
-          <text x={width/2} y={height - 10} fill={colors.textMuted} fontSize={11} textAnchor="middle">
-            Clock Frequency: {clockFrequency} GHz | Tree Depth: {treeDepth} levels
-          </text>
+          {/* === METRICS PANEL === */}
+          <g transform="translate(370, 280)">
+            <rect x={0} y={0} width={300} height={110} rx={8} fill="url(#clkdMetricsBg)" stroke="#334155" strokeWidth={1} />
+
+            {/* Panel title */}
+            <rect x={100} y={-12} width={100} height={20} rx={4} fill="#111827" stroke="#334155" strokeWidth={0.5} />
+            <text x={150} y={3} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="bold">
+              Timing Metrics
+            </text>
+
+            {/* Metric boxes */}
+            {/* Clock Period */}
+            <g transform="translate(15, 20)">
+              <rect x={0} y={0} width={85} height={75} rx={6} fill="rgba(34, 197, 94, 0.1)" stroke={colors.pll} strokeWidth={1} />
+              <text x={42} y={18} fill={colors.textMuted} fontSize={8} textAnchor="middle">Clock Period</text>
+              <text x={42} y={42} fill={colors.pll} fontSize={18} textAnchor="middle" fontWeight="bold">{metrics.clockPeriod.toFixed(0)}</text>
+              <text x={42} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle">picoseconds</text>
+              <text x={42} y={70} fill={colors.textSecondary} fontSize={7} textAnchor="middle">{clockFrequency} GHz</text>
+            </g>
+
+            {/* Skew */}
+            <g transform="translate(108, 20)">
+              <rect x={0} y={0} width={85} height={75} rx={6} fill={metrics.skewPercentage > 10 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.1)'} stroke={metrics.skewPercentage > 10 ? colors.error : colors.skew} strokeWidth={1} />
+              <text x={42} y={18} fill={colors.textMuted} fontSize={8} textAnchor="middle">Clock Skew</text>
+              <text x={42} y={42} fill={metrics.skewPercentage > 10 ? colors.error : colors.skew} fontSize={18} textAnchor="middle" fontWeight="bold">
+                {metrics.clockTreeSkew.toFixed(1)}
+              </text>
+              <text x={42} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle">picoseconds</text>
+              <text x={42} y={70} fill={metrics.skewPercentage > 10 ? colors.error : colors.success} fontSize={7} textAnchor="middle" fontWeight="bold">
+                {metrics.skewPercentage.toFixed(1)}% of period
+              </text>
+            </g>
+
+            {/* Jitter */}
+            <g transform="translate(200, 20)">
+              <rect x={0} y={0} width={85} height={75} rx={6} fill="rgba(245, 158, 11, 0.1)" stroke={colors.jitter} strokeWidth={1} />
+              <text x={42} y={18} fill={colors.textMuted} fontSize={8} textAnchor="middle">Jitter</text>
+              <text x={42} y={42} fill={colors.jitter} fontSize={18} textAnchor="middle" fontWeight="bold">{metrics.jitter.toFixed(1)}</text>
+              <text x={42} y={58} fill={colors.textMuted} fontSize={9} textAnchor="middle">picoseconds</text>
+              <text x={42} y={70} fill={colors.textSecondary} fontSize={7} textAnchor="middle">{wireVariation}% variation</text>
+            </g>
+          </g>
+
+          {/* === LEGEND === */}
+          <g transform="translate(50, 405)">
+            <rect x={0} y={0} width={280} height={60} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={1} />
+            <text x={140} y={15} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">Legend</text>
+
+            <g transform="translate(15, 28)">
+              <circle cx={8} cy={8} r={6} fill={colors.pll} />
+              <text x={22} y={12} fill={colors.textMuted} fontSize={8}>PLL (Clock Source)</text>
+            </g>
+            <g transform="translate(115, 28)">
+              <circle cx={8} cy={8} r={5} fill="#a855f7" />
+              <text x={22} y={12} fill={colors.textMuted} fontSize={8}>Buffer Node</text>
+            </g>
+            <g transform="translate(200, 28)">
+              <rect x={3} y={3} width={10} height={10} fill="#22d3ee" rx={2} />
+              <text x={22} y={12} fill={colors.textMuted} fontSize={8}>Flip-Flop</text>
+            </g>
+
+            <g transform="translate(15, 45)">
+              <line x1={0} y1={5} x2={20} y2={5} stroke="url(#clkdCopperTrace)" strokeWidth={3} />
+              <text x={28} y={9} fill={colors.textMuted} fontSize={8}>Clock Trace</text>
+            </g>
+            <g transform="translate(115, 45)">
+              <circle cx={8} cy={5} r={8} fill="url(#clkdPulseGrad)" opacity={0.6} />
+              <text x={22} y={9} fill={colors.textMuted} fontSize={8}>Signal Pulse</text>
+            </g>
+          </g>
+
+          {/* === STATUS BAR === */}
+          <g transform="translate(370, 410)">
+            <rect x={0} y={0} width={300} height={55} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke={metrics.skewPercentage > 10 ? colors.error : colors.success} strokeWidth={1} />
+
+            <text x={150} y={18} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold">
+              {clockFrequency} GHz Clock | {treeDepth}-Level Tree | {chipSize}mm Die
+            </text>
+
+            <text x={150} y={36} fill={metrics.skewPercentage > 10 ? colors.error : colors.success} fontSize={11} textAnchor="middle" fontWeight="bold">
+              {metrics.skewPercentage > 10 ? 'WARNING: Skew exceeds 10% budget!' : 'Timing margin: OK'}
+            </text>
+
+            <text x={150} y={50} fill={colors.textMuted} fontSize={8} textAnchor="middle">
+              Light speed in silicon: 86 mm/ns | Max frequency for this skew: {metrics.maxFreqForSkew.toFixed(1)} GHz
+            </text>
+          </g>
         </svg>
       </div>
     );

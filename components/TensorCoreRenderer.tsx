@@ -378,206 +378,698 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
   // VISUALIZATION
   // ─────────────────────────────────────────────────────────────────────────────
   const renderTensorCoreVisualization = () => {
-    const width = 400;
-    const height = 340;
-    const cellSize = 20;
-    const matrixOffset = 30;
+    const width = 700;
+    const height = 420;
+
+    // Performance metrics for comparison
+    const cudaCoreOps = matrixSize * matrixSize * matrixSize * 2;
+    const tensorCoreOps = getThroughput();
+    const speedup = Math.round(tensorCoreOps / cudaCoreOps);
 
     return (
       <svg
-        width="100%"
-        height={height}
         viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+        style={{ width: '100%', maxWidth: '750px', borderRadius: '12px' }}
       >
+        {/* ═══════════════════════════════════════════════════════════════════════
+            COMPREHENSIVE DEFS SECTION - Premium Gradients, Filters & Effects
+        ═══════════════════════════════════════════════════════════════════════ */}
         <defs>
-          <filter id="matrixGlow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+          {/* === LINEAR GRADIENTS (4-6 color stops for depth) === */}
+
+          {/* Premium chip housing gradient - dark metallic */}
+          <linearGradient id="tcoreChipHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="25%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="75%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* Matrix A gradient - purple depth */}
+          <linearGradient id="tcoreMatrixA" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="25%" stopColor="#9333ea" />
+            <stop offset="50%" stopColor="#7c3aed" />
+            <stop offset="75%" stopColor="#6d28d9" />
+            <stop offset="100%" stopColor="#5b21b6" />
+          </linearGradient>
+
+          {/* Matrix A inactive gradient */}
+          <linearGradient id="tcoreMatrixAInactive" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(168, 85, 247, 0.4)" />
+            <stop offset="50%" stopColor="rgba(139, 92, 246, 0.3)" />
+            <stop offset="100%" stopColor="rgba(124, 58, 237, 0.2)" />
+          </linearGradient>
+
+          {/* Matrix B gradient - blue depth */}
+          <linearGradient id="tcoreMatrixB" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#60a5fa" />
+            <stop offset="25%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="75%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </linearGradient>
+
+          {/* Matrix B inactive gradient */}
+          <linearGradient id="tcoreMatrixBInactive" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(96, 165, 250, 0.4)" />
+            <stop offset="50%" stopColor="rgba(59, 130, 246, 0.3)" />
+            <stop offset="100%" stopColor="rgba(37, 99, 235, 0.2)" />
+          </linearGradient>
+
+          {/* Matrix C gradient - amber/gold depth */}
+          <linearGradient id="tcoreMatrixC" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="75%" stopColor="#b45309" />
+            <stop offset="100%" stopColor="#92400e" />
+          </linearGradient>
+
+          {/* Matrix C inactive gradient */}
+          <linearGradient id="tcoreMatrixCInactive" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(251, 191, 36, 0.4)" />
+            <stop offset="50%" stopColor="rgba(245, 158, 11, 0.3)" />
+            <stop offset="100%" stopColor="rgba(217, 119, 6, 0.2)" />
+          </linearGradient>
+
+          {/* Result Matrix D gradient - emerald success */}
+          <linearGradient id="tcoreMatrixD" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="25%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#059669" />
+            <stop offset="75%" stopColor="#047857" />
+            <stop offset="100%" stopColor="#065f46" />
+          </linearGradient>
+
+          {/* Processing Element gradient - cyan compute */}
+          <linearGradient id="tcorePEActive" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#67e8f9" />
+            <stop offset="30%" stopColor="#22d3ee" />
+            <stop offset="60%" stopColor="#06b6d4" />
+            <stop offset="100%" stopColor="#0891b2" />
+          </linearGradient>
+
+          {/* Data flow gradient - horizontal */}
+          <linearGradient id="tcoreDataFlowH" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0" />
+            <stop offset="20%" stopColor="#a855f7" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#c084fc" stopOpacity="1" />
+            <stop offset="80%" stopColor="#a855f7" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Data flow gradient - vertical */}
+          <linearGradient id="tcoreDataFlowV" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+            <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Performance bar gradient */}
+          <linearGradient id="tcorePerfBar" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#6ee7b7" />
+          </linearGradient>
+
+          {/* Background gradient */}
+          <linearGradient id="tcoreBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="30%" stopColor="#0a0f1a" />
+            <stop offset="70%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* === RADIAL GRADIENTS (for matrix/computation effects) === */}
+
+          {/* Matrix cell glow - active computation */}
+          <radialGradient id="tcoreCellGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+            <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#0891b2" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Processing element core glow */}
+          <radialGradient id="tcorePEGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Result computation glow */}
+          <radialGradient id="tcoreResultGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+            <stop offset="40%" stopColor="#10b981" stopOpacity="0.7" />
+            <stop offset="70%" stopColor="#059669" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Power indicator glow */}
+          <radialGradient id="tcorePowerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+            <stop offset="50%" stopColor="#16a34a" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Precision mode indicator - FP32 */}
+          <radialGradient id="tcoreFP32Glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f472b6" stopOpacity="1" />
+            <stop offset="60%" stopColor="#ec4899" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#db2777" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Precision mode indicator - FP16 */}
+          <radialGradient id="tcoreFP16Glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#a78bfa" stopOpacity="1" />
+            <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Precision mode indicator - INT8 */}
+          <radialGradient id="tcoreINT8Glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+            <stop offset="60%" stopColor="#22c55e" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === GLOW FILTERS (feGaussianBlur + feMerge pattern) === */}
+
+          {/* Standard matrix glow */}
+          <filter id="tcoreMatrixGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <linearGradient id="computeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={colors.compute} />
-            <stop offset="100%" stopColor={colors.accent} />
-          </linearGradient>
+
+          {/* Intense computation glow */}
+          <filter id="tcoreComputeGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle element glow */}
+          <filter id="tcoreSubtleGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Processing element active glow */}
+          <filter id="tcorePEActiveGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Result highlight glow */}
+          <filter id="tcoreResultHighlight" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Text shadow for labels */}
+          <filter id="tcoreTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Arrow markers */}
+          <marker id="tcoreArrowResult" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <polygon points="0 0, 8 4, 0 8" fill="#22d3ee" />
+          </marker>
+          <marker id="tcoreArrowA" markerWidth="6" markerHeight="6" refX="4" refY="3" orient="auto">
+            <polygon points="0 0, 6 3, 0 6" fill="#a855f7" />
+          </marker>
+          <marker id="tcoreArrowB" markerWidth="6" markerHeight="6" refX="3" refY="4" orient="auto-start-reverse">
+            <polygon points="0 0, 6 3, 0 6" fill="#3b82f6" />
+          </marker>
+
+          {/* Grid pattern for background */}
+          <pattern id="tcoreGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
         </defs>
 
-        {/* Title */}
-        <text x={width/2} y={22} textAnchor="middle" fill={colors.textPrimary} fontSize={13} fontWeight="bold">
+        {/* ═══════════════════════════════════════════════════════════════════════
+            BACKGROUND & FRAME
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <rect width={width} height={height} fill="url(#tcoreBackground)" rx="12" />
+        <rect width={width} height={height} fill="url(#tcoreGrid)" rx="12" />
+
+        {/* Outer frame with glow */}
+        <rect x="2" y="2" width={width - 4} height={height - 4} fill="none" stroke="#1e293b" strokeWidth="2" rx="10" />
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            TITLE SECTION
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <text x={width / 2} y={28} textAnchor="middle" fill="#f8fafc" fontSize="15" fontWeight="bold" filter="url(#tcoreTextShadow)">
           Tensor Core: Matrix Multiply-Accumulate (D = A x B + C)
         </text>
+        <text x={width / 2} y={46} textAnchor="middle" fill="#94a3b8" fontSize="11">
+          Parallel SIMD Processing with Systolic Array Architecture
+        </text>
 
-        {/* Matrix A */}
-        <g transform={`translate(${matrixOffset}, 45)`}>
-          <text x={matrixSize * cellSize / 2} y={-5} textAnchor="middle" fill={colors.matrixA} fontSize={11} fontWeight="bold">Matrix A</text>
+        {/* ═══════════════════════════════════════════════════════════════════════
+            MATRIX VISUALIZATION SECTION
+        ═══════════════════════════════════════════════════════════════════════ */}
+
+        {/* Matrix A - Input matrix with gradient fills */}
+        <g transform="translate(30, 70)">
+          {/* Matrix A label */}
+          <rect x="-5" y="-22" width="75" height="18" rx="4" fill="#1e1033" stroke="#8b5cf6" strokeWidth="1" />
+          <text x="32" y="-8" textAnchor="middle" fill="#c084fc" fontSize="11" fontWeight="bold">Matrix A</text>
+
+          {/* Matrix A cells */}
           {Array.from({ length: matrixSize }).map((_, row) =>
             Array.from({ length: matrixSize }).map((_, col) => {
               const isActive = isComputing && animationPhase % 4 === row;
+              const cellX = col * 18;
+              const cellY = row * 18;
               return (
-                <rect
-                  key={`a-${row}-${col}`}
-                  x={col * cellSize}
-                  y={row * cellSize}
-                  width={cellSize - 2}
-                  height={cellSize - 2}
-                  fill={isActive ? colors.matrixA : 'rgba(139, 92, 246, 0.3)'}
-                  stroke={colors.matrixA}
-                  strokeWidth={isActive ? 2 : 1}
-                  rx={2}
-                />
-              );
-            })
-          )}
-        </g>
-
-        {/* Multiplication symbol */}
-        <text x={matrixOffset + matrixSize * cellSize + 15} y={45 + matrixSize * cellSize / 2} fill={colors.textPrimary} fontSize={20}>x</text>
-
-        {/* Matrix B */}
-        <g transform={`translate(${matrixOffset + matrixSize * cellSize + 35}, 45)`}>
-          <text x={matrixSize * cellSize / 2} y={-5} textAnchor="middle" fill={colors.matrixB} fontSize={11} fontWeight="bold">Matrix B</text>
-          {Array.from({ length: matrixSize }).map((_, row) =>
-            Array.from({ length: matrixSize }).map((_, col) => {
-              const isActive = isComputing && animationPhase % 4 === col;
-              return (
-                <rect
-                  key={`b-${row}-${col}`}
-                  x={col * cellSize}
-                  y={row * cellSize}
-                  width={cellSize - 2}
-                  height={cellSize - 2}
-                  fill={isActive ? colors.matrixB : 'rgba(59, 130, 246, 0.3)'}
-                  stroke={colors.matrixB}
-                  strokeWidth={isActive ? 2 : 1}
-                  rx={2}
-                />
-              );
-            })
-          )}
-        </g>
-
-        {/* Plus symbol */}
-        <text x={matrixOffset + 2 * matrixSize * cellSize + 55} y={45 + matrixSize * cellSize / 2} fill={colors.textPrimary} fontSize={20}>+</text>
-
-        {/* Matrix C (accumulator) */}
-        <g transform={`translate(${matrixOffset + 2 * matrixSize * cellSize + 75}, 45)`}>
-          <text x={matrixSize * cellSize / 2} y={-5} textAnchor="middle" fill={colors.matrixC} fontSize={11} fontWeight="bold">Matrix C</text>
-          {Array.from({ length: matrixSize }).map((_, row) =>
-            Array.from({ length: matrixSize }).map((_, col) => (
-              <rect
-                key={`c-${row}-${col}`}
-                x={col * cellSize}
-                y={row * cellSize}
-                width={cellSize - 2}
-                height={cellSize - 2}
-                fill="rgba(245, 158, 11, 0.3)"
-                stroke={colors.matrixC}
-                strokeWidth={1}
-                rx={2}
-              />
-            ))
-          )}
-        </g>
-
-        {/* Arrow to result */}
-        <path
-          d={`M ${matrixOffset + 3 * matrixSize * cellSize + 85} ${45 + matrixSize * cellSize / 2}
-              L ${matrixOffset + 3 * matrixSize * cellSize + 105} ${45 + matrixSize * cellSize / 2}`}
-          stroke={colors.compute}
-          strokeWidth={2}
-          markerEnd="url(#resultArrow)"
-        />
-
-        {/* Result Matrix D */}
-        <g transform={`translate(${matrixOffset + 3 * matrixSize * cellSize + 115}, 45)`}>
-          <text x={20} y={-5} textAnchor="middle" fill={colors.accent} fontSize={11} fontWeight="bold">= D</text>
-          {Array.from({ length: 2 }).map((_, row) =>
-            Array.from({ length: 2 }).map((_, col) => {
-              const cellProgress = (row * 2 + col) / 4 * 100;
-              const isFilled = computeProgress >= cellProgress;
-              return (
-                <rect
-                  key={`d-${row}-${col}`}
-                  x={col * cellSize}
-                  y={row * cellSize}
-                  width={cellSize - 2}
-                  height={cellSize - 2}
-                  fill={isFilled ? colors.accent : 'rgba(16, 185, 129, 0.2)'}
-                  stroke={colors.accent}
-                  strokeWidth={1}
-                  rx={2}
-                  filter={isFilled ? 'url(#matrixGlow)' : undefined}
-                />
-              );
-            })
-          )}
-        </g>
-
-        {/* Arrow marker */}
-        <defs>
-          <marker id="resultArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill={colors.compute} />
-          </marker>
-        </defs>
-
-        {/* Systolic array visualization */}
-        <g transform={`translate(60, 160)`}>
-          <text x={140} y={0} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>Systolic Array Data Flow</text>
-          {Array.from({ length: 4 }).map((_, row) =>
-            Array.from({ length: 4 }).map((_, col) => {
-              const isActive = isComputing && ((animationPhase + row + col) % 8 < 4);
-              return (
-                <g key={`pe-${row}-${col}`}>
+                <g key={`a-${row}-${col}`}>
                   <rect
-                    x={col * 60 + 20}
-                    y={row * 30 + 15}
-                    width={40}
-                    height={20}
-                    fill={isActive ? 'url(#computeGrad)' : 'rgba(255,255,255,0.1)'}
-                    stroke={isActive ? colors.compute : colors.textMuted}
-                    strokeWidth={1}
-                    rx={4}
+                    x={cellX}
+                    y={cellY}
+                    width={16}
+                    height={16}
+                    fill={isActive ? 'url(#tcoreMatrixA)' : 'url(#tcoreMatrixAInactive)'}
+                    stroke="#a855f7"
+                    strokeWidth={isActive ? 2 : 1}
+                    rx={3}
+                    filter={isActive ? 'url(#tcoreMatrixGlow)' : undefined}
                   />
-                  <text x={col * 60 + 40} y={row * 30 + 28} textAnchor="middle" fill={colors.textPrimary} fontSize={8}>
-                    PE
+                  {isActive && (
+                    <circle cx={cellX + 8} cy={cellY + 8} r="6" fill="url(#tcoreCellGlow)" opacity="0.6" />
+                  )}
+                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill={isActive ? '#fff' : '#a855f7'} fontSize="7" fontWeight="bold">
+                    {matrixA[row * matrixSize + col]}
                   </text>
                 </g>
               );
             })
           )}
-          {/* Data flow arrows */}
+
+          {/* Data flow indicator - horizontal */}
           {isComputing && (
-            <>
-              <path d="M 0 45 L 20 45" stroke={colors.matrixA} strokeWidth={2} markerEnd="url(#flowArrowA)" opacity={0.7} />
-              <path d="M 100 10 L 100 15" stroke={colors.matrixB} strokeWidth={2} markerEnd="url(#flowArrowB)" opacity={0.7} />
-            </>
+            <rect
+              x={-15}
+              y={(animationPhase % matrixSize) * 18 + 4}
+              width="10"
+              height="8"
+              fill="url(#tcoreDataFlowH)"
+              rx="2"
+              opacity="0.9"
+            >
+              <animate attributeName="x" values="-15;80" dur="0.5s" repeatCount="indefinite" />
+            </rect>
           )}
         </g>
 
-        <defs>
-          <marker id="flowArrowA" markerWidth="4" markerHeight="4" refX="3" refY="2" orient="auto">
-            <polygon points="0 0, 4 2, 0 4" fill={colors.matrixA} />
-          </marker>
-          <marker id="flowArrowB" markerWidth="4" markerHeight="4" refX="2" refY="3" orient="auto">
-            <polygon points="0 0, 4 2, 0 4" fill={colors.matrixB} />
-          </marker>
-        </defs>
+        {/* Multiplication symbol */}
+        <g transform="translate(110, 115)">
+          <circle cx="0" cy="0" r="14" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+          <text x="0" y="5" textAnchor="middle" fill="#e2e8f0" fontSize="20" fontWeight="bold">x</text>
+        </g>
 
-        {/* Stats panel */}
-        <rect x={30} y={285} width={340} height={50} rx={8} fill="rgba(0,0,0,0.5)" />
-        <text x={50} y={303} fill={colors.textSecondary} fontSize={11}>
-          Precision: {precision.toUpperCase()}
-        </text>
-        <text x={50} y={323} fill={colors.textSecondary} fontSize={11}>
-          Throughput: {getThroughput().toLocaleString()} ops
-        </text>
-        <text x={230} y={303} fill={colors.accent} fontSize={11}>
-          Progress: {computeProgress.toFixed(0)}%
-        </text>
-        <rect x={230} y={312} width={120} height={8} fill="rgba(255,255,255,0.1)" rx={4} />
-        <rect x={230} y={312} width={computeProgress * 1.2} height={8} fill={colors.accent} rx={4} />
+        {/* Matrix B - Input matrix with gradient fills */}
+        <g transform="translate(135, 70)">
+          {/* Matrix B label */}
+          <rect x="-5" y="-22" width="75" height="18" rx="4" fill="#0c1929" stroke="#3b82f6" strokeWidth="1" />
+          <text x="32" y="-8" textAnchor="middle" fill="#60a5fa" fontSize="11" fontWeight="bold">Matrix B</text>
+
+          {/* Matrix B cells */}
+          {Array.from({ length: matrixSize }).map((_, row) =>
+            Array.from({ length: matrixSize }).map((_, col) => {
+              const isActive = isComputing && animationPhase % 4 === col;
+              const cellX = col * 18;
+              const cellY = row * 18;
+              return (
+                <g key={`b-${row}-${col}`}>
+                  <rect
+                    x={cellX}
+                    y={cellY}
+                    width={16}
+                    height={16}
+                    fill={isActive ? 'url(#tcoreMatrixB)' : 'url(#tcoreMatrixBInactive)'}
+                    stroke="#3b82f6"
+                    strokeWidth={isActive ? 2 : 1}
+                    rx={3}
+                    filter={isActive ? 'url(#tcoreMatrixGlow)' : undefined}
+                  />
+                  {isActive && (
+                    <circle cx={cellX + 8} cy={cellY + 8} r="6" fill="url(#tcoreCellGlow)" opacity="0.6" />
+                  )}
+                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill={isActive ? '#fff' : '#3b82f6'} fontSize="7" fontWeight="bold">
+                    {matrixB[row * matrixSize + col]}
+                  </text>
+                </g>
+              );
+            })
+          )}
+
+          {/* Data flow indicator - vertical */}
+          {isComputing && (
+            <rect
+              x={(animationPhase % matrixSize) * 18 + 4}
+              y={-15}
+              width="8"
+              height="10"
+              fill="url(#tcoreDataFlowV)"
+              rx="2"
+              opacity="0.9"
+            >
+              <animate attributeName="y" values="-15;80" dur="0.5s" repeatCount="indefinite" />
+            </rect>
+          )}
+        </g>
+
+        {/* Plus symbol */}
+        <g transform="translate(218, 115)">
+          <circle cx="0" cy="0" r="14" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+          <text x="0" y="6" textAnchor="middle" fill="#e2e8f0" fontSize="22" fontWeight="bold">+</text>
+        </g>
+
+        {/* Matrix C (Accumulator) */}
+        <g transform="translate(243, 70)">
+          {/* Matrix C label */}
+          <rect x="-5" y="-22" width="75" height="18" rx="4" fill="#1c1508" stroke="#f59e0b" strokeWidth="1" />
+          <text x="32" y="-8" textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">Matrix C</text>
+
+          {/* Matrix C cells */}
+          {Array.from({ length: matrixSize }).map((_, row) =>
+            Array.from({ length: matrixSize }).map((_, col) => {
+              const cellX = col * 18;
+              const cellY = row * 18;
+              return (
+                <g key={`c-${row}-${col}`}>
+                  <rect
+                    x={cellX}
+                    y={cellY}
+                    width={16}
+                    height={16}
+                    fill="url(#tcoreMatrixCInactive)"
+                    stroke="#f59e0b"
+                    strokeWidth={1}
+                    rx={3}
+                  />
+                  <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill="#f59e0b" fontSize="7" fontWeight="bold">
+                    0
+                  </text>
+                </g>
+              );
+            })
+          )}
+        </g>
+
+        {/* Arrow to result */}
+        <g transform="translate(330, 115)">
+          <line x1="0" y1="0" x2="35" y2="0" stroke="#22d3ee" strokeWidth="3" markerEnd="url(#tcoreArrowResult)" filter="url(#tcoreSubtleGlow)" />
+        </g>
+
+        {/* Result Matrix D */}
+        <g transform="translate(380, 70)">
+          {/* Matrix D label */}
+          <rect x="-5" y="-22" width="75" height="18" rx="4" fill="#052e16" stroke="#10b981" strokeWidth="1" />
+          <text x="32" y="-8" textAnchor="middle" fill="#34d399" fontSize="11" fontWeight="bold">= Matrix D</text>
+
+          {/* Matrix D cells - showing computation progress */}
+          {Array.from({ length: matrixSize }).map((_, row) =>
+            Array.from({ length: matrixSize }).map((_, col) => {
+              const cellIndex = row * matrixSize + col;
+              const cellProgress = (cellIndex / (matrixSize * matrixSize)) * 100;
+              const isFilled = computeProgress > cellProgress;
+              const isComputing_cell = computeProgress > cellProgress - 10 && computeProgress <= cellProgress + 10;
+              const cellX = col * 18;
+              const cellY = row * 18;
+              return (
+                <g key={`d-${row}-${col}`}>
+                  <rect
+                    x={cellX}
+                    y={cellY}
+                    width={16}
+                    height={16}
+                    fill={isFilled ? 'url(#tcoreMatrixD)' : 'rgba(16, 185, 129, 0.15)'}
+                    stroke="#10b981"
+                    strokeWidth={isFilled ? 2 : 1}
+                    rx={3}
+                    filter={isFilled ? 'url(#tcoreResultHighlight)' : undefined}
+                  />
+                  {isComputing_cell && (
+                    <circle cx={cellX + 8} cy={cellY + 8} r="8" fill="url(#tcoreResultGlow)" opacity="0.8">
+                      <animate attributeName="r" values="6;10;6" dur="0.3s" repeatCount="indefinite" />
+                    </circle>
+                  )}
+                  {isFilled && (
+                    <text x={cellX + 8} y={cellY + 11} textAnchor="middle" fill="#fff" fontSize="7" fontWeight="bold">
+                      R
+                    </text>
+                  )}
+                </g>
+              );
+            })
+          )}
+        </g>
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            SYSTOLIC ARRAY VISUALIZATION WITH COMPUTATION FLOW
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <g transform="translate(480, 55)">
+          {/* Systolic array housing */}
+          <rect x="-15" y="-10" width="220" height="145" rx="8" fill="url(#tcoreChipHousing)" stroke="#334155" strokeWidth="1.5" />
+
+          {/* Title */}
+          <text x="95" y="8" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">Systolic Array - Data Flow</text>
+
+          {/* Processing Elements Grid */}
+          {Array.from({ length: 4 }).map((_, row) =>
+            Array.from({ length: 4 }).map((_, col) => {
+              const isActive = isComputing && ((animationPhase + row + col) % 6 < 3);
+              const peX = col * 48 + 5;
+              const peY = row * 28 + 20;
+              return (
+                <g key={`pe-${row}-${col}`}>
+                  {/* PE background */}
+                  <rect
+                    x={peX}
+                    y={peY}
+                    width={40}
+                    height={22}
+                    fill={isActive ? 'url(#tcorePEActive)' : '#1e293b'}
+                    stroke={isActive ? '#22d3ee' : '#475569'}
+                    strokeWidth={isActive ? 1.5 : 1}
+                    rx={4}
+                    filter={isActive ? 'url(#tcorePEActiveGlow)' : undefined}
+                  />
+                  {/* PE inner glow when active */}
+                  {isActive && (
+                    <ellipse cx={peX + 20} cy={peY + 11} rx="12" ry="6" fill="url(#tcorePEGlow)" opacity="0.5" />
+                  )}
+                  {/* PE label */}
+                  <text x={peX + 20} y={peY + 14} textAnchor="middle" fill={isActive ? '#fff' : '#94a3b8'} fontSize="8" fontWeight="bold">
+                    FMA
+                  </text>
+                </g>
+              );
+            })
+          )}
+
+          {/* Computation flow arrows when computing */}
+          {isComputing && (
+            <>
+              {/* Horizontal data flow (Matrix A) */}
+              {Array.from({ length: 4 }).map((_, row) => (
+                <g key={`flow-h-${row}`}>
+                  <line
+                    x1="-12"
+                    y1={row * 28 + 31}
+                    x2="5"
+                    y2={row * 28 + 31}
+                    stroke="url(#tcoreDataFlowH)"
+                    strokeWidth="3"
+                    markerEnd="url(#tcoreArrowA)"
+                    opacity={(animationPhase + row) % 4 < 2 ? 0.9 : 0.3}
+                  >
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="0.5s" begin={`${row * 0.1}s`} repeatCount="indefinite" />
+                  </line>
+                </g>
+              ))}
+
+              {/* Vertical data flow (Matrix B) */}
+              {Array.from({ length: 4 }).map((_, col) => (
+                <g key={`flow-v-${col}`}>
+                  <line
+                    x1={col * 48 + 25}
+                    y1="15"
+                    x2={col * 48 + 25}
+                    y2="20"
+                    stroke="url(#tcoreDataFlowV)"
+                    strokeWidth="3"
+                    markerEnd="url(#tcoreArrowB)"
+                    opacity={(animationPhase + col) % 4 < 2 ? 0.9 : 0.3}
+                  >
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="0.5s" begin={`${col * 0.1}s`} repeatCount="indefinite" />
+                  </line>
+                </g>
+              ))}
+            </>
+          )}
+
+          {/* Legend */}
+          <g transform="translate(5, 138)">
+            <rect x="0" y="-4" width="8" height="8" fill="url(#tcoreDataFlowH)" rx="2" />
+            <text x="12" y="3" fill="#c084fc" fontSize="7">A flow</text>
+            <rect x="45" y="-4" width="8" height="8" fill="url(#tcoreDataFlowV)" rx="2" />
+            <text x="57" y="3" fill="#60a5fa" fontSize="7">B flow</text>
+            <rect x="90" y="-4" width="8" height="8" fill="url(#tcorePEActive)" rx="2" />
+            <text x="102" y="3" fill="#22d3ee" fontSize="7">FMA unit</text>
+          </g>
+        </g>
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            PERFORMANCE COMPARISON INDICATORS
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <g transform="translate(30, 195)">
+          {/* Performance panel background */}
+          <rect x="-10" y="-5" width="435" height="115" rx="8" fill="url(#tcoreChipHousing)" stroke="#334155" strokeWidth="1" />
+
+          {/* Title */}
+          <text x="205" y="12" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="bold">Performance Comparison</text>
+
+          {/* CUDA Cores baseline */}
+          <g transform="translate(0, 25)">
+            <text x="0" y="12" fill="#94a3b8" fontSize="10">CUDA Cores (baseline)</text>
+            <rect x="130" y="2" width="200" height="16" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+            <rect x="132" y="4" width="20" height="12" rx="2" fill="#6b7280" />
+            <text x="340" y="13" fill="#94a3b8" fontSize="9">{cudaCoreOps.toLocaleString()} ops</text>
+          </g>
+
+          {/* Tensor Cores with current precision */}
+          <g transform="translate(0, 50)">
+            <text x="0" y="12" fill="#22d3ee" fontSize="10" fontWeight="bold">
+              Tensor Cores ({precision.toUpperCase()})
+            </text>
+            <rect x="130" y="2" width="200" height="16" rx="4" fill="#1e293b" stroke="#0891b2" strokeWidth="1" />
+            <rect
+              x="132"
+              y="4"
+              width={Math.min(196, (tensorCoreOps / (cudaCoreOps * 40)) * 196)}
+              height="12"
+              rx="2"
+              fill="url(#tcorePerfBar)"
+              filter="url(#tcoreSubtleGlow)"
+            />
+            <text x="340" y="13" fill="#34d399" fontSize="9" fontWeight="bold">{tensorCoreOps.toLocaleString()} ops</text>
+          </g>
+
+          {/* Speedup indicator */}
+          <g transform="translate(0, 75)">
+            <rect x="130" y="0" width="120" height="28" rx="6" fill="#052e16" stroke="#10b981" strokeWidth="1" />
+            <circle cx="145" cy="14" r="10" fill="url(#tcorePowerGlow)">
+              <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+            </circle>
+            <text x="160" y="18" fill="#34d399" fontSize="12" fontWeight="bold">{speedup}x Speedup</text>
+          </g>
+
+          {/* Precision mode indicators */}
+          <g transform="translate(280, 75)">
+            <text x="0" y="10" fill="#94a3b8" fontSize="9">Precision:</text>
+            {(['fp32', 'fp16', 'int8'] as const).map((p, i) => {
+              const isSelected = precision === p;
+              const glowId = p === 'fp32' ? 'tcoreFP32Glow' : p === 'fp16' ? 'tcoreFP16Glow' : 'tcoreINT8Glow';
+              const color = p === 'fp32' ? '#f472b6' : p === 'fp16' ? '#a78bfa' : '#4ade80';
+              return (
+                <g key={p} transform={`translate(${55 + i * 35}, 0)`}>
+                  <rect
+                    x="0"
+                    y="0"
+                    width="30"
+                    height="20"
+                    rx="4"
+                    fill={isSelected ? `url(#${glowId})` : '#1e293b'}
+                    stroke={color}
+                    strokeWidth={isSelected ? 2 : 1}
+                    filter={isSelected ? 'url(#tcoreSubtleGlow)' : undefined}
+                  />
+                  <text x="15" y="13" textAnchor="middle" fill={isSelected ? '#fff' : color} fontSize="8" fontWeight="bold">
+                    {p.toUpperCase()}
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+        </g>
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            BOTTOM STATS PANEL
+        ═══════════════════════════════════════════════════════════════════════ */}
+        <g transform="translate(30, 320)">
+          {/* Stats panel background */}
+          <rect x="-10" y="-5" width="660" height="90" rx="8" fill="url(#tcoreChipHousing)" stroke="#334155" strokeWidth="1" />
+
+          {/* Current operation info */}
+          <g transform="translate(0, 10)">
+            <text x="0" y="12" fill="#94a3b8" fontSize="10">Matrix Size:</text>
+            <text x="75" y="12" fill="#e2e8f0" fontSize="10" fontWeight="bold">{matrixSize}x{matrixSize}</text>
+
+            <text x="130" y="12" fill="#94a3b8" fontSize="10">Operations:</text>
+            <text x="205" y="12" fill="#e2e8f0" fontSize="10" fontWeight="bold">{(matrixSize * matrixSize * matrixSize * 2).toLocaleString()}</text>
+
+            <text x="290" y="12" fill="#94a3b8" fontSize="10">Clock Cycles:</text>
+            <text x="375" y="12" fill="#22d3ee" fontSize="10" fontWeight="bold">1 (fused)</text>
+          </g>
+
+          {/* Progress bar */}
+          <g transform="translate(0, 35)">
+            <text x="0" y="12" fill="#94a3b8" fontSize="10">Computation Progress:</text>
+            <rect x="130" y="2" width="380" height="16" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <rect
+              x="132"
+              y="4"
+              width={Math.max(0, computeProgress * 3.76)}
+              height="12"
+              rx="2"
+              fill="url(#tcorePerfBar)"
+              filter={computeProgress > 0 ? 'url(#tcoreSubtleGlow)' : undefined}
+            />
+            <text x="530" y="13" fill="#34d399" fontSize="10" fontWeight="bold">{computeProgress.toFixed(0)}%</text>
+          </g>
+
+          {/* Key insights */}
+          <g transform="translate(0, 60)">
+            <rect x="0" y="0" width="200" height="18" rx="4" fill="#1e1033" stroke="#8b5cf6" strokeWidth="0.5" />
+            <text x="10" y="12" fill="#c084fc" fontSize="8">SIMD: 1 instruction, many data</text>
+
+            <rect x="210" y="0" width="200" height="18" rx="4" fill="#0c1929" stroke="#3b82f6" strokeWidth="0.5" />
+            <text x="220" y="12" fill="#60a5fa" fontSize="8">Systolic: Data reuse maximized</text>
+
+            <rect x="420" y="0" width="210" height="18" rx="4" fill="#052e16" stroke="#10b981" strokeWidth="0.5" />
+            <text x="430" y="12" fill="#34d399" fontSize="8">FMA: Multiply + Add in 1 cycle</text>
+          </g>
+        </g>
       </svg>
     );
   };

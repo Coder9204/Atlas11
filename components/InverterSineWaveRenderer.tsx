@@ -390,15 +390,20 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 380;
-    const graphWidth = 360;
-    const graphHeight = 100;
-    const graphX = 20;
+    const width = 700;
+    const height = 520;
+    const graphWidth = 640;
+    const graphHeight = 120;
+    const graphX = 30;
 
     // Scale for waveforms
     const scaleX = (i: number) => graphX + (i / 200) * graphWidth;
-    const scaleY = (v: number, centerY: number) => centerY - (v / (dcVoltage / 2)) * (graphHeight / 2 - 5);
+    const scaleY = (v: number, centerY: number) => centerY - (v / (dcVoltage / 2)) * (graphHeight / 2 - 8);
+
+    // PWM animation phase for visual switching effect
+    const pwmPhase = (animationTime * 15) % (2 * Math.PI);
+    const switchState1 = Math.sin(animationTime * 2) > 0;
+    const switchState2 = !switchState1;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -407,134 +412,491 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '750px' }}
         >
-          {/* Title */}
-          <text x="200" y="22" fill={colors.textPrimary} fontSize="13" textAnchor="middle" fontWeight="bold">
-            DC to AC Conversion: {waveformType === 'square' ? 'Square Wave' : waveformType === 'modified' ? 'Modified Sine' : 'PWM Sine Wave'}
-          </text>
-
-          {/* DC Input representation */}
-          <g transform="translate(20, 40)">
-            <rect x="0" y="0" width="60" height="35" fill="rgba(59, 130, 246, 0.2)" stroke={colors.dc} strokeWidth="2" rx="4" />
-            <text x="30" y="15" fill={colors.dc} fontSize="9" textAnchor="middle">DC Input</text>
-            <text x="30" y="28" fill={colors.textPrimary} fontSize="11" textAnchor="middle" fontWeight="bold">{dcVoltage}V</text>
-          </g>
-
-          {/* H-Bridge representation */}
-          <g transform="translate(100, 40)">
-            <rect x="0" y="0" width="80" height="35" fill="rgba(168, 85, 247, 0.2)" stroke={colors.pwm} strokeWidth="2" rx="4" />
-            <text x="40" y="15" fill={colors.pwm} fontSize="9" textAnchor="middle">H-Bridge</text>
-            <text x="40" y="28" fill={colors.textSecondary} fontSize="8" textAnchor="middle">PWM Control</text>
-            {/* Switching animation */}
-            <rect x="10" y="8" width="15" height="10" fill={Math.sin(animationTime) > 0 ? colors.success : '#374151'} rx="2" />
-            <rect x="55" y="8" width="15" height="10" fill={Math.sin(animationTime) > 0 ? '#374151' : colors.success} rx="2" />
-            <rect x="10" y="22" width="15" height="10" fill={Math.sin(animationTime) > 0 ? '#374151' : colors.success} rx="2" />
-            <rect x="55" y="22" width="15" height="10" fill={Math.sin(animationTime) > 0 ? colors.success : '#374151'} rx="2" />
-          </g>
-
-          {/* Filter representation */}
-          <g transform="translate(200, 40)">
-            <rect x="0" y="0" width="70" height="35" fill="rgba(34, 197, 94, 0.2)" stroke={colors.ac} strokeWidth="2" rx="4" />
-            <text x="35" y="15" fill={colors.ac} fontSize="9" textAnchor="middle">LC Filter</text>
-            <text x="35" y="28" fill={colors.textSecondary} fontSize="8" textAnchor="middle">{pwmFrequency}kHz cutoff</text>
-          </g>
-
-          {/* AC Output */}
-          <g transform="translate(290, 40)">
-            <rect x="0" y="0" width="90" height="35" fill="rgba(34, 197, 94, 0.2)" stroke={colors.ac} strokeWidth="2" rx="4" />
-            <text x="45" y="15" fill={colors.ac} fontSize="9" textAnchor="middle">AC Output</text>
-            <text x="45" y="28" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">{frequency}Hz</text>
-          </g>
-
-          {/* Connection arrows */}
-          <path d="M80 57 L95 57" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
-          <path d="M180 57 L195 57" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
-          <path d="M270 57 L285 57" stroke={colors.textMuted} strokeWidth="2" markerEnd="url(#arrowhead)" />
+          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
-            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-              <polygon points="0 0, 6 3, 0 6" fill={colors.textMuted} />
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="iswLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* DC Source battery gradient with metallic depth */}
+            <linearGradient id="iswBatteryMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* DC positive terminal gradient */}
+            <linearGradient id="iswDcPositive" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* DC negative terminal gradient */}
+            <linearGradient id="iswDcNegative" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* H-Bridge inverter housing gradient */}
+            <linearGradient id="iswInverterHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4c1d95" />
+              <stop offset="25%" stopColor="#5b21b6" />
+              <stop offset="50%" stopColor="#6d28d9" />
+              <stop offset="75%" stopColor="#5b21b6" />
+              <stop offset="100%" stopColor="#4c1d95" />
+            </linearGradient>
+
+            {/* MOSFET transistor gradient - active state */}
+            <linearGradient id="iswMosfetActive" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* MOSFET transistor gradient - inactive state */}
+            <linearGradient id="iswMosfetInactive" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#52525b" />
+              <stop offset="30%" stopColor="#3f3f46" />
+              <stop offset="70%" stopColor="#27272a" />
+              <stop offset="100%" stopColor="#18181b" />
+            </linearGradient>
+
+            {/* LC Filter inductor coil gradient */}
+            <linearGradient id="iswInductorCoil" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="15%" stopColor="#d97706" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="85%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Capacitor body gradient */}
+            <linearGradient id="iswCapacitorBody" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* AC output sine wave gradient */}
+            <linearGradient id="iswSineWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#86efac" />
+              <stop offset="75%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* PWM wave gradient (purple tones) */}
+            <linearGradient id="iswPwmWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="25%" stopColor="#c084fc" />
+              <stop offset="50%" stopColor="#d8b4fe" />
+              <stop offset="75%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+
+            {/* Current flow gradient */}
+            <linearGradient id="iswCurrentFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+              <stop offset="30%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Radial glow for active components */}
+            <radialGradient id="iswActiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Radial glow for PWM switching */}
+            <radialGradient id="iswPwmGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="1" />
+              <stop offset="40%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#9333ea" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#7e22ce" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Heatsink aluminum gradient */}
+            <linearGradient id="iswHeatsink" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="20%" stopColor="#9ca3af" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="80%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#d1d5db" />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="iswGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Stats panel gradient */}
+            <linearGradient id="iswStatsPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            {/* Component glow filter */}
+            <filter id="iswComponentGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Active switch glow filter */}
+            <filter id="iswSwitchGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Waveform glow filter */}
+            <filter id="iswWaveGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text shadow filter */}
+            <filter id="iswTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feOffset dx="0" dy="1" result="offsetBlur" />
+              <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrowhead marker */}
+            <marker id="iswArrowhead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <polygon points="0 0, 8 4, 0 8" fill="#fbbf24" />
             </marker>
+
+            {/* Grid pattern for graphs */}
+            <pattern id="iswGraphGrid" width="40" height="30" patternUnits="userSpaceOnUse">
+              <rect width="40" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
+            </pattern>
           </defs>
 
-          {/* Waveform Graph - Before Filter (Raw PWM/Switching) */}
-          <g transform="translate(0, 85)">
-            <rect x={graphX - 5} y="0" width={graphWidth + 10} height={graphHeight + 20} fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x={graphX} y="15" fill={colors.pwm} fontSize="10">Before Filter (Switching Output)</text>
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#iswLabBg)" />
 
-            {/* Grid lines */}
-            <line x1={graphX} y1={graphHeight/2 + 20} x2={graphX + graphWidth} y2={graphHeight/2 + 20} stroke={colors.textMuted} strokeWidth="0.5" strokeDasharray="2,2" />
+          {/* Subtle grid overlay */}
+          <pattern id="iswMainGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+            <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#iswMainGrid)" />
 
-            {/* Square wave (raw switching) */}
+          {/* === TITLE SECTION === */}
+          <text x={width/2} y="28" fill={colors.textPrimary} fontSize="16" textAnchor="middle" fontWeight="bold" filter="url(#iswTextShadow)">
+            DC to AC Conversion: {waveformType === 'square' ? 'Square Wave Inverter' : waveformType === 'modified' ? 'Modified Sine Wave' : 'PWM Sine Wave Synthesis'}
+          </text>
+
+          {/* === DC SOURCE / BATTERY === */}
+          <g transform="translate(25, 55)">
+            {/* Battery housing */}
+            <rect x="0" y="0" width="85" height="70" rx="6" fill="url(#iswBatteryMetal)" stroke="#475569" strokeWidth="1.5" />
+            <rect x="4" y="4" width="77" height="62" rx="4" fill="#0f172a" opacity="0.4" />
+
+            {/* Positive terminal */}
+            <rect x="15" y="-8" width="24" height="12" rx="2" fill="url(#iswDcPositive)" stroke="#fca5a5" strokeWidth="1" />
+            <text x="27" y="1" fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">+</text>
+
+            {/* Negative terminal */}
+            <rect x="46" y="-8" width="24" height="12" rx="2" fill="url(#iswDcNegative)" stroke="#93c5fd" strokeWidth="1" />
+            <text x="58" y="1" fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">-</text>
+
+            {/* DC label */}
+            <text x="42.5" y="30" fill={colors.dc} fontSize="11" textAnchor="middle" fontWeight="bold">DC SOURCE</text>
+            <text x="42.5" y="48" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{dcVoltage}V</text>
+            <text x="42.5" y="62" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Solar/Battery</text>
+          </g>
+
+          {/* Connection wire from DC to H-Bridge */}
+          <path d="M110 90 L135 90" stroke="#fbbf24" strokeWidth="3" markerEnd="url(#iswArrowhead)" />
+          <circle cx="122" cy="90" r="3" fill="url(#iswCurrentFlow)" opacity={isAnimating ? 1 : 0.5}>
+            {isAnimating && <animate attributeName="cx" values="112;132;112" dur="0.5s" repeatCount="indefinite" />}
+          </circle>
+
+          {/* === H-BRIDGE INVERTER === */}
+          <g transform="translate(145, 45)">
+            {/* Main inverter housing */}
+            <rect x="0" y="0" width="180" height="90" rx="8" fill="url(#iswInverterHousing)" stroke="#7c3aed" strokeWidth="2" />
+            <rect x="4" y="4" width="172" height="82" rx="6" fill="#0f172a" opacity="0.3" />
+
+            {/* Heatsink fins on top */}
+            {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+              <rect key={i} x={15 + i * 20} y="-6" width="12" height="10" rx="1" fill="url(#iswHeatsink)" />
+            ))}
+
+            {/* H-Bridge label */}
+            <text x="90" y="18" fill={colors.pwm} fontSize="12" textAnchor="middle" fontWeight="bold" filter="url(#iswTextShadow)">H-BRIDGE INVERTER</text>
+
+            {/* MOSFET Transistors in H configuration */}
+            {/* Q1 - Top Left */}
+            <g transform="translate(20, 28)">
+              <rect x="0" y="0" width="30" height="24" rx="3"
+                fill={switchState1 ? "url(#iswMosfetActive)" : "url(#iswMosfetInactive)"}
+                stroke={switchState1 ? "#4ade80" : "#52525b"} strokeWidth="1.5"
+                filter={switchState1 ? "url(#iswSwitchGlow)" : "none"} />
+              <text x="15" y="15" fill="white" fontSize="9" textAnchor="middle" fontWeight="bold">Q1</text>
+              {switchState1 && <circle cx="15" cy="12" r="8" fill="url(#iswActiveGlow)" opacity="0.6" />}
+            </g>
+
+            {/* Q2 - Top Right */}
+            <g transform="translate(130, 28)">
+              <rect x="0" y="0" width="30" height="24" rx="3"
+                fill={switchState2 ? "url(#iswMosfetActive)" : "url(#iswMosfetInactive)"}
+                stroke={switchState2 ? "#4ade80" : "#52525b"} strokeWidth="1.5"
+                filter={switchState2 ? "url(#iswSwitchGlow)" : "none"} />
+              <text x="15" y="15" fill="white" fontSize="9" textAnchor="middle" fontWeight="bold">Q2</text>
+              {switchState2 && <circle cx="15" cy="12" r="8" fill="url(#iswActiveGlow)" opacity="0.6" />}
+            </g>
+
+            {/* Q3 - Bottom Left */}
+            <g transform="translate(20, 58)">
+              <rect x="0" y="0" width="30" height="24" rx="3"
+                fill={switchState2 ? "url(#iswMosfetActive)" : "url(#iswMosfetInactive)"}
+                stroke={switchState2 ? "#4ade80" : "#52525b"} strokeWidth="1.5"
+                filter={switchState2 ? "url(#iswSwitchGlow)" : "none"} />
+              <text x="15" y="15" fill="white" fontSize="9" textAnchor="middle" fontWeight="bold">Q3</text>
+              {switchState2 && <circle cx="15" cy="12" r="8" fill="url(#iswActiveGlow)" opacity="0.6" />}
+            </g>
+
+            {/* Q4 - Bottom Right */}
+            <g transform="translate(130, 58)">
+              <rect x="0" y="0" width="30" height="24" rx="3"
+                fill={switchState1 ? "url(#iswMosfetActive)" : "url(#iswMosfetInactive)"}
+                stroke={switchState1 ? "#4ade80" : "#52525b"} strokeWidth="1.5"
+                filter={switchState1 ? "url(#iswSwitchGlow)" : "none"} />
+              <text x="15" y="15" fill="white" fontSize="9" textAnchor="middle" fontWeight="bold">Q4</text>
+              {switchState1 && <circle cx="15" cy="12" r="8" fill="url(#iswActiveGlow)" opacity="0.6" />}
+            </g>
+
+            {/* H-Bridge internal connections */}
+            <line x1="50" y1="40" x2="130" y2="40" stroke="#6b7280" strokeWidth="2" />
+            <line x1="50" y1="70" x2="130" y2="70" stroke="#6b7280" strokeWidth="2" />
+            <line x1="35" y1="52" x2="35" y2="58" stroke="#6b7280" strokeWidth="2" />
+            <line x1="145" y1="52" x2="145" y2="58" stroke="#6b7280" strokeWidth="2" />
+
+            {/* PWM control indicator */}
+            <rect x="65" y="48" width="50" height="18" rx="4" fill="rgba(168, 85, 247, 0.3)" stroke={colors.pwm} strokeWidth="1" />
+            <text x="90" y="60" fill={colors.pwm} fontSize="8" textAnchor="middle">PWM {pwmFrequency}kHz</text>
+
+            {/* Animated PWM glow */}
+            {isAnimating && (
+              <circle cx="90" cy="55" r="12" fill="url(#iswPwmGlow)" opacity={0.3 + 0.3 * Math.sin(pwmPhase)}>
+                <animate attributeName="r" values="10;14;10" dur="0.1s" repeatCount="indefinite" />
+              </circle>
+            )}
+          </g>
+
+          {/* Connection wire from H-Bridge to Filter */}
+          <path d="M325 90 L355 90" stroke="#a855f7" strokeWidth="3" markerEnd="url(#iswArrowhead)" />
+
+          {/* === LC FILTER === */}
+          <g transform="translate(365, 50)">
+            {/* Filter housing */}
+            <rect x="0" y="0" width="140" height="80" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1.5" />
+
+            {/* Inductor (L) - Coil representation */}
+            <g transform="translate(15, 25)">
+              <text x="25" y="-8" fill={colors.textSecondary} fontSize="9" textAnchor="middle">INDUCTOR</text>
+              {/* Coil windings */}
+              <path d="M0,15 Q10,0 20,15 Q30,30 40,15 Q50,0 60,15" fill="none" stroke="url(#iswInductorCoil)" strokeWidth="6" strokeLinecap="round" />
+              {/* Core */}
+              <rect x="5" y="20" width="50" height="8" rx="2" fill="#374151" />
+              <text x="30" y="45" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">L</text>
+            </g>
+
+            {/* Capacitor (C) */}
+            <g transform="translate(85, 25)">
+              <text x="25" y="-8" fill={colors.textSecondary} fontSize="9" textAnchor="middle">CAPACITOR</text>
+              {/* Capacitor plates */}
+              <rect x="10" y="5" width="30" height="6" rx="1" fill="url(#iswCapacitorBody)" />
+              <rect x="10" y="18" width="30" height="6" rx="1" fill="url(#iswCapacitorBody)" />
+              {/* Leads */}
+              <line x1="25" y1="0" x2="25" y2="5" stroke="#6b7280" strokeWidth="2" />
+              <line x1="25" y1="24" x2="25" y2="30" stroke="#6b7280" strokeWidth="2" />
+              <text x="25" y="45" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="bold">C</text>
+            </g>
+
+            <text x="70" y="72" fill={colors.ac} fontSize="10" textAnchor="middle" fontWeight="bold">LC FILTER</text>
+          </g>
+
+          {/* Connection wire from Filter to Output */}
+          <path d="M505 90 L535 90" stroke="#22c55e" strokeWidth="3" markerEnd="url(#iswArrowhead)" />
+
+          {/* === AC OUTPUT === */}
+          <g transform="translate(545, 50)">
+            {/* Output panel */}
+            <rect x="0" y="0" width="130" height="80" rx="6" fill="rgba(34, 197, 94, 0.15)" stroke={colors.ac} strokeWidth="2" />
+            <rect x="4" y="4" width="122" height="72" rx="4" fill="#0f172a" opacity="0.3" />
+
+            {/* Sine wave icon */}
+            <path d="M20,40 Q35,15 50,40 Q65,65 80,40 Q95,15 110,40" fill="none" stroke="url(#iswSineWaveGrad)" strokeWidth="3" strokeLinecap="round" filter="url(#iswWaveGlow)" />
+
+            <text x="65" y="18" fill={colors.ac} fontSize="11" textAnchor="middle" fontWeight="bold">AC OUTPUT</text>
+            <text x="65" y="65" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{frequency}Hz</text>
+            <text x="65" y="78" fill={colors.textSecondary} fontSize="9" textAnchor="middle">{(dcVoltage * 0.707).toFixed(0)}V RMS</text>
+          </g>
+
+          {/* === WAVEFORM GRAPH - Before Filter === */}
+          <g transform="translate(0, 145)">
+            <rect x={graphX - 10} y="0" width={graphWidth + 20} height={graphHeight + 30} rx="8" fill="url(#iswGraphBg)" stroke="#334155" strokeWidth="1" />
+            <rect x={graphX} y="15" width={graphWidth} height={graphHeight} fill="url(#iswGraphGrid)" opacity="0.5" />
+
+            <text x={graphX + 5} y="12" fill={colors.pwm} fontSize="11" fontWeight="bold" filter="url(#iswTextShadow)">
+              Before Filter: PWM Switching Output
+            </text>
+
+            {/* Zero line */}
+            <line x1={graphX} y1={graphHeight/2 + 15} x2={graphX + graphWidth} y2={graphHeight/2 + 15} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+
+            {/* Y-axis labels */}
+            <text x={graphX - 5} y={22} fill={colors.textMuted} fontSize="8" textAnchor="end">+{(dcVoltage/2).toFixed(0)}V</text>
+            <text x={graphX - 5} y={graphHeight/2 + 18} fill={colors.textMuted} fontSize="8" textAnchor="end">0V</text>
+            <text x={graphX - 5} y={graphHeight + 12} fill={colors.textMuted} fontSize="8" textAnchor="end">-{(dcVoltage/2).toFixed(0)}V</text>
+
+            {/* PWM/Square wave with gradient */}
             <path
               d={squareWave.map((p, i) => {
                 const x = scaleX(p.x);
-                const y = scaleY(p.y, graphHeight/2 + 20);
+                const y = scaleY(p.y, graphHeight/2 + 15);
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
-              stroke={colors.pwm}
-              strokeWidth="2"
-              opacity="0.8"
+              stroke="url(#iswPwmWaveGrad)"
+              strokeWidth="2.5"
+              filter="url(#iswWaveGlow)"
             />
 
-            <text x={graphX + graphWidth - 5} y={graphHeight + 15} fill={colors.textMuted} fontSize="8" textAnchor="end">
-              +/- {(dcVoltage/2).toFixed(0)}V peak
+            <text x={graphX + graphWidth - 5} y={graphHeight + 25} fill={colors.textMuted} fontSize="9" textAnchor="end">
+              High-frequency switching at {pwmFrequency}kHz
             </text>
           </g>
 
-          {/* Waveform Graph - After Filter (Output) */}
-          <g transform="translate(0, 200)">
-            <rect x={graphX - 5} y="0" width={graphWidth + 10} height={graphHeight + 20} fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x={graphX} y="15" fill={colors.ac} fontSize="10">After Filter (AC Output)</text>
+          {/* === WAVEFORM GRAPH - After Filter === */}
+          <g transform="translate(0, 295)">
+            <rect x={graphX - 10} y="0" width={graphWidth + 20} height={graphHeight + 30} rx="8" fill="url(#iswGraphBg)" stroke="#334155" strokeWidth="1" />
+            <rect x={graphX} y="15" width={graphWidth} height={graphHeight} fill="url(#iswGraphGrid)" opacity="0.5" />
 
-            {/* Grid lines */}
-            <line x1={graphX} y1={graphHeight/2 + 20} x2={graphX + graphWidth} y2={graphHeight/2 + 20} stroke={colors.textMuted} strokeWidth="0.5" strokeDasharray="2,2" />
+            <text x={graphX + 5} y="12" fill={colors.ac} fontSize="11" fontWeight="bold" filter="url(#iswTextShadow)">
+              After Filter: Clean AC Sine Wave Output
+            </text>
 
-            {/* Ideal sine wave (reference) */}
+            {/* Zero line */}
+            <line x1={graphX} y1={graphHeight/2 + 15} x2={graphX + graphWidth} y2={graphHeight/2 + 15} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+
+            {/* Y-axis labels */}
+            <text x={graphX - 5} y={22} fill={colors.textMuted} fontSize="8" textAnchor="end">+{(dcVoltage/2).toFixed(0)}V</text>
+            <text x={graphX - 5} y={graphHeight/2 + 18} fill={colors.textMuted} fontSize="8" textAnchor="end">0V</text>
+            <text x={graphX - 5} y={graphHeight + 12} fill={colors.textMuted} fontSize="8" textAnchor="end">-{(dcVoltage/2).toFixed(0)}V</text>
+
+            {/* Ideal sine wave (reference - dashed) */}
             <path
               d={sineWave.map((p, i) => {
                 const x = scaleX(p.x);
-                const y = scaleY(p.y, graphHeight/2 + 20);
+                const y = scaleY(p.y, graphHeight/2 + 15);
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
               stroke={colors.textMuted}
-              strokeWidth="1"
-              strokeDasharray="4,4"
-              opacity="0.5"
+              strokeWidth="1.5"
+              strokeDasharray="6,4"
+              opacity="0.4"
             />
 
-            {/* Actual output waveform */}
+            {/* Actual output waveform with gradient */}
             <path
               d={outputWave.map((p, i) => {
                 const x = scaleX(p.x);
-                const y = scaleY(p.y, graphHeight/2 + 20);
+                const y = scaleY(p.y, graphHeight/2 + 15);
                 return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
               }).join(' ')}
               fill="none"
-              stroke={colors.ac}
-              strokeWidth="2"
+              stroke="url(#iswSineWaveGrad)"
+              strokeWidth="2.5"
+              filter="url(#iswWaveGlow)"
             />
 
-            <text x={graphX + graphWidth - 5} y={graphHeight + 15} fill={colors.textMuted} fontSize="8" textAnchor="end">
-              Dashed = ideal sine
+            <text x={graphX + graphWidth - 5} y={graphHeight + 25} fill={colors.textMuted} fontSize="9" textAnchor="end">
+              Dashed line = ideal pure sine wave reference
             </text>
           </g>
 
-          {/* Stats panel */}
-          <g transform="translate(20, 325)">
-            <rect x="0" y="0" width="360" height="45" fill="rgba(0,0,0,0.4)" rx="6" stroke={colors.accent} strokeWidth="1" />
-            <text x="10" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold">Waveform Quality:</text>
-            <text x="120" y="18" fill={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error} fontSize="11">
-              THD: {thd.toFixed(1)}%
-            </text>
-            <text x="200" y="18" fill={colors.textSecondary} fontSize="10">
-              ({thd < 5 ? 'Excellent - Grid Safe' : thd < 25 ? 'Acceptable for most loads' : 'Poor - Motors will overheat'})
-            </text>
-            <text x="10" y="36" fill={colors.textSecondary} fontSize="10">
-              Output: {(dcVoltage * 0.707 / Math.sqrt(2)).toFixed(0)}V RMS | Type: {waveformType === 'pwm' ? 'Pure Sine Wave' : waveformType === 'modified' ? 'Modified Sine' : 'Square Wave'}
-            </text>
+          {/* === STATS PANEL === */}
+          <g transform="translate(graphX - 10, 445)">
+            <rect x="0" y="0" width={graphWidth + 20} height="65" rx="8" fill="url(#iswStatsPanelBg)" stroke={colors.accent} strokeWidth="1.5" />
+
+            {/* THD Indicator */}
+            <g transform="translate(15, 12)">
+              <text fill={colors.textPrimary} fontSize="12" fontWeight="bold">Waveform Quality (THD):</text>
+              <rect x="160" y="-10" width="80" height="18" rx="4"
+                fill={thd < 5 ? 'rgba(34, 197, 94, 0.2)' : thd < 25 ? 'rgba(245, 158, 11, 0.2)' : 'rgba(239, 68, 68, 0.2)'}
+                stroke={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error} strokeWidth="1" />
+              <text x="200" y="3" fill={thd < 5 ? colors.success : thd < 25 ? colors.warning : colors.error} fontSize="12" textAnchor="middle" fontWeight="bold">
+                {thd.toFixed(1)}%
+              </text>
+              <text x="260" y="3" fill={colors.textSecondary} fontSize="10">
+                {thd < 5 ? 'Excellent - Grid Compatible' : thd < 25 ? 'Acceptable - Light Loads' : 'Poor - Motor Damage Risk'}
+              </text>
+            </g>
+
+            {/* Output specs */}
+            <g transform="translate(15, 35)">
+              <text fill={colors.textSecondary} fontSize="11">
+                <tspan fontWeight="bold" fill={colors.textPrimary}>Output: </tspan>
+                {(dcVoltage * 0.707 / Math.sqrt(2)).toFixed(0)}V RMS @ {frequency}Hz
+                <tspan dx="20" fontWeight="bold" fill={colors.textPrimary}>Type: </tspan>
+                {waveformType === 'pwm' ? 'Pure Sine Wave (Grid-Ready)' : waveformType === 'modified' ? 'Modified Sine Wave' : 'Square Wave'}
+              </text>
+            </g>
+
+            {/* PWM info */}
+            <g transform="translate(15, 52)">
+              <text fill={colors.textSecondary} fontSize="10">
+                <tspan fontWeight="bold" fill={colors.pwm}>PWM Frequency: </tspan>
+                {pwmFrequency}kHz
+                <tspan dx="15" fontWeight="bold" fill={colors.dc}>DC Input: </tspan>
+                {dcVoltage}V
+                <tspan dx="15" fontWeight="bold" fill={colors.ac}>Efficiency: </tspan>
+                ~{waveformType === 'pwm' ? '95-98%' : waveformType === 'modified' ? '85-90%' : '80-85%'}
+              </text>
+            </g>
           </g>
         </svg>
 
@@ -545,35 +907,38 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
                 key={type}
                 onClick={() => setWaveformType(type)}
                 style={{
-                  padding: '8px 16px',
+                  padding: '10px 20px',
                   borderRadius: '8px',
                   border: waveformType === type ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                  background: waveformType === type ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  background: waveformType === type ? 'rgba(245, 158, 11, 0.2)' : 'rgba(15, 23, 42, 0.8)',
                   color: waveformType === type ? colors.accent : colors.textPrimary,
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  fontSize: '12px',
+                  fontSize: '13px',
+                  transition: 'all 0.2s ease',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                {type === 'square' ? 'Square' : type === 'modified' ? 'Modified Sine' : 'PWM Sine'}
+                {type === 'square' ? 'Square Wave' : type === 'modified' ? 'Modified Sine' : 'PWM Pure Sine'}
               </button>
             ))}
             <button
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
-                padding: '8px 16px',
+                padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '12px',
+                fontSize: '13px',
+                boxShadow: isAnimating ? '0 0 15px rgba(239, 68, 68, 0.4)' : '0 0 15px rgba(34, 197, 94, 0.4)',
+                transition: 'all 0.2s ease',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              {isAnimating ? 'Pause' : 'Animate'}
+              {isAnimating ? 'Pause Animation' : 'Start Animation'}
             </button>
           </div>
         )}

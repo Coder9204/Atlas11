@@ -326,120 +326,399 @@ export default function TransformerRenderer({ phase: initialPhase, onPhaseComple
     const vOut = ac ? vIn * ratio : 0;
     const currentIntensity = ac ? Math.abs(Math.sin(animPhase)) : 0;
     const fluxIntensity = ac ? currentIntensity : 0;
+    const inputCurrent = 1; // Assume 1A input
+    const outputCurrent = ac ? inputCurrent / ratio : 0;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <svg viewBox="0 0 500 340" className="w-full" style={{ maxHeight: '320px' }}>
+        <defs>
+          {/* Premium iron core gradient with laminated steel appearance */}
+          <linearGradient id="xfmrIronCore" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="20%" stopColor="#4b5563" />
+            <stop offset="40%" stopColor="#374151" />
+            <stop offset="60%" stopColor="#4b5563" />
+            <stop offset="80%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
 
-        {/* Iron Core */}
-        <rect x="120" y="60" width="160" height="160" rx="8" fill="#4b5563" stroke="#6b7280" strokeWidth="4" />
-        <rect x="140" y="80" width="120" height="120" rx="4" fill="#111827" />
+          {/* Laminated steel texture for core edges */}
+          <linearGradient id="xfmrLaminatedSteel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="10%" stopColor="#475569" />
+            <stop offset="20%" stopColor="#64748b" />
+            <stop offset="30%" stopColor="#475569" />
+            <stop offset="40%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#475569" />
+            <stop offset="60%" stopColor="#64748b" />
+            <stop offset="70%" stopColor="#475569" />
+            <stop offset="80%" stopColor="#64748b" />
+            <stop offset="90%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#64748b" />
+          </linearGradient>
 
-        {/* Magnetic flux in core */}
+          {/* Primary coil copper gradient */}
+          <linearGradient id="xfmrCopperPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="75%" stopColor="#b45309" />
+            <stop offset="100%" stopColor="#92400e" />
+          </linearGradient>
+
+          {/* Secondary coil copper gradient */}
+          <linearGradient id="xfmrCopperSecondary" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fde047" />
+            <stop offset="25%" stopColor="#facc15" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="75%" stopColor="#ca8a04" />
+            <stop offset="100%" stopColor="#a16207" />
+          </linearGradient>
+
+          {/* Magnetic flux radial gradient - blue field effect */}
+          <radialGradient id="xfmrMagneticFlux" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+            <stop offset="30%" stopColor="#2563eb" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Primary current glow - red energy */}
+          <radialGradient id="xfmrPrimaryGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+            <stop offset="30%" stopColor="#f87171" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Secondary current glow - green energy */}
+          <radialGradient id="xfmrSecondaryGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+            <stop offset="30%" stopColor="#4ade80" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#22c55e" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Indicator panel gradient */}
+          <linearGradient id="xfmrPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#111827" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Lab background gradient */}
+          <linearGradient id="xfmrLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* Glow filter for active elements */}
+          <filter id="xfmrGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Strong glow for flux visualization */}
+          <filter id="xfmrFluxGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Soft inner glow for coils */}
+          <filter id="xfmrCoilGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Voltage indicator glow */}
+          <filter id="xfmrVoltageGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Premium lab background */}
+        <rect width="500" height="340" fill="url(#xfmrLabBg)" />
+
+        {/* Subtle grid pattern */}
+        <pattern id="xfmrGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+        </pattern>
+        <rect width="500" height="340" fill="url(#xfmrGrid)" />
+
+        {/* === PREMIUM IRON CORE === */}
+        <g transform="translate(145, 55)">
+          {/* Outer core frame with laminated appearance */}
+          <rect x="0" y="0" width="210" height="190" rx="8" fill="url(#xfmrIronCore)" stroke="url(#xfmrLaminatedSteel)" strokeWidth="4" />
+
+          {/* Inner cutout (air gap / winding window) */}
+          <rect x="25" y="25" width="160" height="140" rx="4" fill="#030712" stroke="#1f2937" strokeWidth="2" />
+
+          {/* Lamination lines for realism */}
+          {[...Array(8)].map((_, i) => (
+            <line key={i} x1="5" y1={25 + i * 20} x2="20" y2={25 + i * 20} stroke="#374151" strokeWidth="1" opacity="0.6" />
+          ))}
+          {[...Array(8)].map((_, i) => (
+            <line key={i} x1="190" y1={25 + i * 20} x2="205" y2={25 + i * 20} stroke="#374151" strokeWidth="1" opacity="0.6" />
+          ))}
+
+          {/* Core label */}
+          <text x="105" y="-8" textAnchor="middle" className="text-[9px] fill-slate-400 font-medium uppercase tracking-wider">Laminated Iron Core</text>
+        </g>
+
+        {/* === MAGNETIC FLUX VISUALIZATION === */}
         {ac && (
-          <g style={{ opacity: fluxIntensity }}>
-            <rect x="140" y="85" width="120" height="10" fill="#3b82f6" className="animate-pulse" />
-            <rect x="140" y="185" width="120" height="10" fill="#3b82f6" className="animate-pulse" />
-            <rect x="140" y="85" width="10" height="110" fill="#3b82f6" className="animate-pulse" />
-            <rect x="250" y="85" width="10" height="110" fill="#3b82f6" className="animate-pulse" />
+          <g style={{ opacity: fluxIntensity * 0.9 }} filter="url(#xfmrFluxGlow)">
+            {/* Top flux path */}
+            <rect x="170" y="75" width="160" height="18" rx="3" fill="url(#xfmrMagneticFlux)">
+              <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.5s" repeatCount="indefinite" />
+            </rect>
+            {/* Bottom flux path */}
+            <rect x="170" y="207" width="160" height="18" rx="3" fill="url(#xfmrMagneticFlux)">
+              <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.5s" repeatCount="indefinite" />
+            </rect>
+            {/* Left flux path */}
+            <rect x="150" y="80" width="18" height="150" rx="3" fill="url(#xfmrMagneticFlux)">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+            </rect>
+            {/* Right flux path */}
+            <rect x="332" y="80" width="18" height="150" rx="3" fill="url(#xfmrMagneticFlux)">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+            </rect>
+
+            {/* Flux direction arrows */}
+            <g className="fill-blue-300" style={{ opacity: 0.8 }}>
+              <polygon points="250,82 256,75 256,89" />
+              <polygon points="250,218 244,225 256,225" />
+              <polygon points="158,150 165,144 165,156" />
+              <polygon points="342,150 335,156 335,144" />
+            </g>
+
+            {/* Flux label */}
+            <text x="250" y="150" textAnchor="middle" className="text-[8px] fill-blue-300 font-medium">
+              Magnetic Flux (Phi)
+            </text>
           </g>
         )}
 
-        {/* Primary Coil (left) */}
-        <g>
+        {/* === PRIMARY COIL (LEFT) === */}
+        <g transform="translate(180, 95)">
+          {/* Coil glow background when active */}
+          {ac && (
+            <ellipse cx="0" cy="55" rx="30" ry="65" fill="url(#xfmrPrimaryGlow)" style={{ opacity: currentIntensity * 0.5 }} />
+          )}
+
+          {/* Copper windings */}
           {[...Array(Math.min(Math.floor(pTurns / 10), 10))].map((_, i) => (
-            <ellipse
-              key={i}
-              cx="135"
-              cy={90 + i * 10}
-              rx="15"
-              ry="8"
-              fill="none"
-              stroke={ac ? `rgba(239, 68, 68, ${0.5 + currentIntensity * 0.5})` : '#6b7280'}
-              strokeWidth="3"
-            />
+            <g key={i}>
+              <ellipse
+                cx="0"
+                cy={10 + i * 11}
+                rx="22"
+                ry="7"
+                fill="none"
+                stroke="url(#xfmrCopperPrimary)"
+                strokeWidth="5"
+                filter={ac ? "url(#xfmrCoilGlow)" : undefined}
+                style={{ opacity: ac ? 0.7 + currentIntensity * 0.3 : 0.5 }}
+              />
+              {/* Highlight on each coil */}
+              <ellipse
+                cx="-5"
+                cy={8 + i * 11}
+                rx="8"
+                ry="2"
+                fill="#fde68a"
+                opacity="0.3"
+              />
+            </g>
           ))}
-          <text x="135" y="220" textAnchor="middle" className="fill-red-400 text-xs">
-            Primary
+
+          {/* Primary label */}
+          <text x="0" y="135" textAnchor="middle" className="text-[10px] fill-red-400 font-bold">Primary</text>
+          <text x="0" y="148" textAnchor="middle" className="text-[9px] fill-slate-400">{pTurns} turns</text>
+        </g>
+
+        {/* === SECONDARY COIL (RIGHT) === */}
+        <g transform="translate(320, 95)">
+          {/* Coil glow background when active */}
+          {ac && vOut > 0 && (
+            <ellipse cx="0" cy="55" rx="30" ry="65" fill="url(#xfmrSecondaryGlow)" style={{ opacity: currentIntensity * 0.5 }} />
+          )}
+
+          {/* Copper windings - more turns visible for step-up */}
+          {[...Array(Math.min(Math.floor(sTurns / 10), 12))].map((_, i) => (
+            <g key={i}>
+              <ellipse
+                cx="0"
+                cy={8 + i * 9}
+                rx="22"
+                ry="6"
+                fill="none"
+                stroke="url(#xfmrCopperSecondary)"
+                strokeWidth="4"
+                filter={ac && vOut > 0 ? "url(#xfmrCoilGlow)" : undefined}
+                style={{ opacity: ac && vOut > 0 ? 0.7 + currentIntensity * 0.3 : 0.5 }}
+              />
+              {/* Highlight on each coil */}
+              <ellipse
+                cx="-5"
+                cy={6 + i * 9}
+                rx="7"
+                ry="2"
+                fill="#fef08a"
+                opacity="0.3"
+              />
+            </g>
+          ))}
+
+          {/* Secondary label */}
+          <text x="0" y="135" textAnchor="middle" className="text-[10px] fill-green-400 font-bold">Secondary</text>
+          <text x="0" y="148" textAnchor="middle" className="text-[9px] fill-slate-400">{sTurns} turns</text>
+        </g>
+
+        {/* === INPUT VOLTAGE/CURRENT INDICATOR === */}
+        <g transform="translate(15, 75)">
+          <rect x="0" y="0" width="95" height="110" rx="10" fill="url(#xfmrPanelBg)" stroke="#374151" strokeWidth="2" />
+          <rect x="3" y="3" width="89" height="20" rx="6" fill="#0f172a" />
+          <text x="47" y="17" textAnchor="middle" className="text-[10px] fill-slate-300 font-bold uppercase tracking-wide">Input</text>
+
+          {/* Voltage display */}
+          <rect x="8" y="28" width="79" height="32" rx="4" fill="#030712" stroke="#1e3a8a" strokeWidth="1" />
+          <text x="47" y="50" textAnchor="middle" className="text-[16px] fill-red-400 font-bold font-mono" filter="url(#xfmrVoltageGlow)">
+            {vIn}V
           </text>
-          <text x="135" y="235" textAnchor="middle" className="fill-gray-400 text-xs">
-            {pTurns} turns
+
+          {/* Current display */}
+          <rect x="8" y="65" width="79" height="20" rx="4" fill="#030712" stroke="#1e3a8a" strokeWidth="1" />
+          <text x="47" y="79" textAnchor="middle" className="text-[11px] fill-amber-400 font-mono">
+            {inputCurrent.toFixed(1)}A
+          </text>
+
+          {/* AC/DC indicator */}
+          <rect x="8" y="90" width="79" height="16" rx="4" fill={ac ? '#14532d' : '#450a0a'} stroke={ac ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+          <text x="47" y="102" textAnchor="middle" className={`text-[10px] font-bold ${ac ? 'fill-green-400' : 'fill-red-400'}`}>
+            {ac ? 'AC ∿ 60Hz' : 'DC ═'}
           </text>
         </g>
 
-        {/* Secondary Coil (right) */}
-        <g>
-          {[...Array(Math.min(Math.floor(sTurns / 10), 15))].map((_, i) => (
-            <ellipse
-              key={i}
-              cx="265"
-              cy={85 + i * 7}
-              rx="15"
-              ry="6"
-              fill="none"
-              stroke={ac && vOut > 0 ? `rgba(34, 197, 94, ${0.5 + currentIntensity * 0.5})` : '#6b7280'}
-              strokeWidth="3"
-            />
-          ))}
-          <text x="265" y="220" textAnchor="middle" className="fill-green-400 text-xs">
-            Secondary
+        {/* === OUTPUT VOLTAGE/CURRENT INDICATOR === */}
+        <g transform="translate(390, 75)">
+          <rect x="0" y="0" width="95" height="110" rx="10" fill="url(#xfmrPanelBg)" stroke="#374151" strokeWidth="2" />
+          <rect x="3" y="3" width="89" height="20" rx="6" fill="#0f172a" />
+          <text x="47" y="17" textAnchor="middle" className="text-[10px] fill-slate-300 font-bold uppercase tracking-wide">Output</text>
+
+          {/* Voltage display */}
+          <rect x="8" y="28" width="79" height="32" rx="4" fill="#030712" stroke={vOut > 0 ? '#14532d' : '#7f1d1d'} strokeWidth="1" />
+          <text x="47" y="50" textAnchor="middle" className={`text-[16px] font-bold font-mono ${vOut > 0 ? 'fill-green-400' : 'fill-red-400'}`} filter="url(#xfmrVoltageGlow)">
+            {vOut.toFixed(0)}V
           </text>
-          <text x="265" y="235" textAnchor="middle" className="fill-gray-400 text-xs">
-            {sTurns} turns
+
+          {/* Current display */}
+          <rect x="8" y="65" width="79" height="20" rx="4" fill="#030712" stroke={vOut > 0 ? '#14532d' : '#7f1d1d'} strokeWidth="1" />
+          <text x="47" y="79" textAnchor="middle" className={`text-[11px] font-mono ${vOut > 0 ? 'fill-cyan-400' : 'fill-gray-500'}`}>
+            {outputCurrent.toFixed(2)}A
+          </text>
+
+          {/* Status indicator */}
+          <rect x="8" y="90" width="79" height="16" rx="4" fill={vOut > 0 ? '#14532d' : '#450a0a'} stroke={vOut > 0 ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+          <text x="47" y="102" textAnchor="middle" className={`text-[10px] font-bold ${vOut > 0 ? 'fill-green-400' : 'fill-red-400'}`}>
+            {vOut > 0 ? 'ACTIVE' : 'NO OUTPUT'}
           </text>
         </g>
 
-        {/* Input voltage indicator */}
-        <rect x="20" y="80" width="70" height="80" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="55" y="100" textAnchor="middle" className="fill-gray-400 text-xs">Input</text>
-        <text x="55" y="125" textAnchor="middle" className="fill-red-400 text-lg font-bold">
-          {vIn}V
-        </text>
-        <text x="55" y="145" textAnchor="middle" className={`text-xs ${ac ? 'fill-yellow-400' : 'fill-gray-500'}`}>
-          {ac ? 'AC ∿' : 'DC ═'}
-        </text>
-
-        {/* Output voltage indicator */}
-        <rect x="310" y="80" width="70" height="80" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="345" y="100" textAnchor="middle" className="fill-gray-400 text-xs">Output</text>
-        <text x="345" y="125" textAnchor="middle" className={`text-lg font-bold ${vOut > 0 ? 'fill-green-400' : 'fill-red-400'}`}>
-          {vOut.toFixed(0)}V
-        </text>
-        <text x="345" y="145" textAnchor="middle" className={`text-xs ${vOut > 0 ? 'fill-yellow-400' : 'fill-red-400'}`}>
-          {vOut > 0 ? 'AC ∿' : 'NONE'}
-        </text>
-
-        {/* Waveform visualization */}
-        {ac && (
-          <g>
-            {/* Input waveform */}
+        {/* === WAVEFORM VISUALIZATION === */}
+        <g transform="translate(0, 260)">
+          {/* Input waveform panel */}
+          <rect x="15" y="0" width="95" height="50" rx="6" fill="#030712" stroke="#374151" strokeWidth="1" />
+          <text x="62" y="12" textAnchor="middle" className="text-[8px] fill-slate-400">Input Waveform</text>
+          {ac ? (
             <path
-              d={`M 25 250 ${[...Array(10)].map((_, i) =>
-                `L ${25 + i * 6} ${250 + Math.sin(animPhase + i * 0.5) * 10}`
+              d={`M 22 35 ${[...Array(14)].map((_, i) =>
+                `L ${22 + i * 6} ${35 + Math.sin(animPhase + i * 0.6) * 12}`
               ).join(' ')}`}
               fill="none"
               stroke="#ef4444"
               strokeWidth="2"
+              strokeLinecap="round"
             />
-            {/* Output waveform */}
+          ) : (
+            <line x1="22" y1="35" x2="100" y2="35" stroke="#6b7280" strokeWidth="2" strokeDasharray="4 2" />
+          )}
+
+          {/* Output waveform panel */}
+          <rect x="390" y="0" width="95" height="50" rx="6" fill="#030712" stroke="#374151" strokeWidth="1" />
+          <text x="437" y="12" textAnchor="middle" className="text-[8px] fill-slate-400">Output Waveform</text>
+          {ac && vOut > 0 ? (
             <path
-              d={`M 315 250 ${[...Array(10)].map((_, i) =>
-                `L ${315 + i * 6} ${250 + Math.sin(animPhase + i * 0.5) * 10 * (vOut > 0 ? ratio : 0)}`
+              d={`M 397 35 ${[...Array(14)].map((_, i) =>
+                `L ${397 + i * 6} ${35 + Math.sin(animPhase + i * 0.6) * 12 * Math.min(ratio, 2)}`
               ).join(' ')}`}
               fill="none"
               stroke="#22c55e"
               strokeWidth="2"
+              strokeLinecap="round"
             />
+          ) : (
+            <line x1="397" y1="35" x2="475" y2="35" stroke="#374151" strokeWidth="2" strokeDasharray="4 2" />
+          )}
+        </g>
+
+        {/* === TRANSFORMER TYPE BADGE === */}
+        <g transform="translate(175, 5)">
+          <rect x="0" y="0" width="150" height="38" rx="10" fill="url(#xfmrPanelBg)" stroke={ratio > 1 ? '#22c55e' : ratio < 1 ? '#f97316' : '#3b82f6'} strokeWidth="2" />
+          <text x="75" y="16" textAnchor="middle" className="text-[9px] fill-slate-400 uppercase tracking-wider">Transformer Type</text>
+          <text x="75" y="31" textAnchor="middle" className={`text-[13px] font-bold ${
+            ratio > 1 ? 'fill-green-400' : ratio < 1 ? 'fill-orange-400' : 'fill-blue-400'
+          }`}>
+            {ratio > 1 ? '⬆ STEP-UP' : ratio < 1 ? '⬇ STEP-DOWN' : '= ISOLATION'}
+          </text>
+        </g>
+
+        {/* === TURNS RATIO DISPLAY === */}
+        <g transform="translate(200, 315)">
+          <rect x="0" y="0" width="100" height="22" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+          <text x="50" y="15" textAnchor="middle" className="text-[10px] fill-yellow-400 font-mono font-medium">
+            Ratio: {ratio.toFixed(2)}:1
+          </text>
+        </g>
+
+        {/* === CONNECTION WIRES === */}
+        {/* Input wires */}
+        <line x1="110" y1="105" x2="160" y2="105" stroke="#ef4444" strokeWidth="2" strokeDasharray={ac ? "none" : "4 2"} />
+        <line x1="110" y1="165" x2="160" y2="165" stroke="#ef4444" strokeWidth="2" strokeDasharray={ac ? "none" : "4 2"} />
+
+        {/* Output wires */}
+        <line x1="340" y1="105" x2="390" y2="105" stroke={vOut > 0 ? "#22c55e" : "#374151"} strokeWidth="2" />
+        <line x1="340" y1="165" x2="390" y2="165" stroke={vOut > 0 ? "#22c55e" : "#374151"} strokeWidth="2" />
+
+        {/* Power flow indicators */}
+        {ac && (
+          <g style={{ opacity: currentIntensity }}>
+            <circle cx={130 + Math.sin(animPhase * 2) * 15} cy="105" r="3" fill="#fca5a5" filter="url(#xfmrGlow)" />
+            <circle cx={130 - Math.sin(animPhase * 2) * 15} cy="165" r="3" fill="#fca5a5" filter="url(#xfmrGlow)" />
           </g>
         )}
-
-        {/* Transformer type label */}
-        <rect x="150" y="10" width="100" height="35" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="200" y="33" textAnchor="middle" className={`text-sm font-bold ${
-          ratio > 1 ? 'fill-green-400' : ratio < 1 ? 'fill-orange-400' : 'fill-blue-400'
-        }`}>
-          {ratio > 1 ? '⬆ Step-Up' : ratio < 1 ? '⬇ Step-Down' : '= Isolation'}
-        </text>
+        {ac && vOut > 0 && (
+          <g style={{ opacity: currentIntensity }}>
+            <circle cx={365 + Math.sin(animPhase * 2) * 12} cy="105" r="3" fill="#86efac" filter="url(#xfmrGlow)" />
+            <circle cx={365 - Math.sin(animPhase * 2) * 12} cy="165" r="3" fill="#86efac" filter="url(#xfmrGlow)" />
+          </g>
+        )}
       </svg>
     );
   };
@@ -452,75 +731,198 @@ export default function TransformerRenderer({ phase: initialPhase, onPhaseComple
     const efficiency = ((240 - powerLoss) / 240) * 100;
 
     return (
-      <svg viewBox="0 0 400 200" className="w-full h-40">
-        <rect width="400" height="200" fill="#111827" />
+      <svg viewBox="0 0 500 220" className="w-full" style={{ maxHeight: '180px' }}>
+        <defs>
+          {/* Building gradient */}
+          <linearGradient id="xfmrBuildingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="30%" stopColor="#374151" />
+            <stop offset="70%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
 
-        {/* Power plant */}
-        <rect x="20" y="80" width="60" height="60" rx="4" fill="#4b5563" />
-        <text x="50" y="115" textAnchor="middle" className="fill-white text-xs">🏭</text>
-        <text x="50" y="155" textAnchor="middle" className="fill-gray-400 text-xs">240V</text>
+          {/* Transformer box gradient */}
+          <linearGradient id="xfmrBoxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="50%" stopColor="#111827" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
 
-        {/* Step-up transformer */}
+          {/* High voltage wire glow */}
+          <filter id="xfmrWireGlow" x="-20%" y="-200%" width="140%" height="500%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Heat glow filter */}
+          <filter id="xfmrHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Transmission line gradient */}
+          <linearGradient id="xfmrLineHV" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#22c55e" />
+          </linearGradient>
+
+          <linearGradient id="xfmrLineLV" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+
+          {/* Background gradient */}
+          <linearGradient id="xfmrTransBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="500" height="220" fill="url(#xfmrTransBg)" />
+
+        {/* Grid pattern */}
+        <pattern id="xfmrTransGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+          <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="500" height="220" fill="url(#xfmrTransGrid)" />
+
+        {/* === POWER PLANT === */}
+        <g transform="translate(20, 70)">
+          <rect x="0" y="0" width="70" height="70" rx="6" fill="url(#xfmrBuildingGrad)" stroke="#475569" strokeWidth="2" />
+          {/* Smokestacks */}
+          <rect x="10" y="-20" width="12" height="25" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+          <rect x="30" y="-25" width="12" height="30" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+          <rect x="50" y="-15" width="10" height="20" rx="2" fill="#374151" stroke="#4b5563" strokeWidth="1" />
+          {/* Windows */}
+          <rect x="8" y="12" width="14" height="10" rx="1" fill="#fbbf24" opacity="0.6" />
+          <rect x="28" y="12" width="14" height="10" rx="1" fill="#fbbf24" opacity="0.5" />
+          <rect x="48" y="12" width="14" height="10" rx="1" fill="#fbbf24" opacity="0.7" />
+          <rect x="8" y="35" width="54" height="20" rx="2" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+          <text x="35" y="49" textAnchor="middle" className="text-[9px] fill-slate-300 font-medium">GENERATOR</text>
+          {/* Label */}
+          <text x="35" y="85" textAnchor="middle" className="text-[10px] fill-slate-400 font-medium">Power Plant</text>
+          <text x="35" y="97" textAnchor="middle" className="text-[11px] fill-yellow-400 font-bold">240V AC</text>
+        </g>
+
+        {/* === STEP-UP TRANSFORMER === */}
         {useHighVoltage && (
-          <g>
-            <rect x="100" y="90" width="40" height="40" rx="4" fill="#1f2937" stroke="#22c55e" strokeWidth="2" />
-            <text x="120" y="115" textAnchor="middle" className="fill-green-400 text-xs">⬆</text>
+          <g transform="translate(110, 85)">
+            <rect x="0" y="0" width="50" height="50" rx="6" fill="url(#xfmrBoxGrad)" stroke="#22c55e" strokeWidth="2" />
+            <rect x="5" y="5" width="40" height="15" rx="3" fill="#030712" stroke="#14532d" strokeWidth="1" />
+            <text x="25" y="16" textAnchor="middle" className="text-[8px] fill-green-400 font-bold">STEP-UP</text>
+            {/* Coil symbols */}
+            <ellipse cx="15" cy="35" rx="8" ry="5" fill="none" stroke="#f59e0b" strokeWidth="2" />
+            <ellipse cx="35" cy="35" rx="8" ry="5" fill="none" stroke="#fde047" strokeWidth="2" />
+            <text x="25" y="60" textAnchor="middle" className="text-[7px] fill-slate-500">1:1667</text>
           </g>
         )}
 
-        {/* Transmission lines */}
-        <line
-          x1={useHighVoltage ? 140 : 80}
-          y1="110"
-          x2={useHighVoltage ? 260 : 320}
-          y2="110"
-          stroke={useHighVoltage ? '#22c55e' : '#ef4444'}
-          strokeWidth={useHighVoltage ? 2 : 6}
-        />
-        {/* Heat loss visualization */}
+        {/* === TRANSMISSION LINES === */}
+        <g>
+          {/* Power line towers */}
+          {useHighVoltage && (
+            <>
+              <polygon points="200,60 210,120 190,120" fill="#374151" stroke="#475569" strokeWidth="1" />
+              <line x1="185" y1="65" x2="215" y2="65" stroke="#475569" strokeWidth="2" />
+              <polygon points="290,60 300,120 280,120" fill="#374151" stroke="#475569" strokeWidth="1" />
+              <line x1="275" y1="65" x2="305" y2="65" stroke="#475569" strokeWidth="2" />
+            </>
+          )}
+
+          {/* Transmission wire */}
+          <line
+            x1={useHighVoltage ? 160 : 90}
+            y1={useHighVoltage ? 65 : 105}
+            x2={useHighVoltage ? 330 : 390}
+            y2={useHighVoltage ? 65 : 105}
+            stroke={useHighVoltage ? 'url(#xfmrLineHV)' : 'url(#xfmrLineLV)'}
+            strokeWidth={useHighVoltage ? 3 : 8}
+            filter={useHighVoltage ? 'url(#xfmrWireGlow)' : undefined}
+          />
+
+          {/* Second wire for HV */}
+          {useHighVoltage && (
+            <line x1="160" y1="75" x2="330" y2="75" stroke="url(#xfmrLineHV)" strokeWidth="2" filter="url(#xfmrWireGlow)" />
+          )}
+
+          {/* Voltage/Current label */}
+          <rect x="195" y={useHighVoltage ? 82 : 70} width="100" height="28" rx="6" fill="#0f172a" stroke={useHighVoltage ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+          <text x="245" y={useHighVoltage ? 93 : 81} textAnchor="middle" className={`text-[9px] font-bold ${useHighVoltage ? 'fill-green-400' : 'fill-red-400'}`}>
+            {useHighVoltage ? '400,000V' : '240V'}
+          </text>
+          <text x="245" y={useHighVoltage ? 105 : 93} textAnchor="middle" className={`text-[8px] ${useHighVoltage ? 'fill-cyan-400' : 'fill-orange-400'}`}>
+            {useHighVoltage ? '0.6mA' : '1000A'}
+          </text>
+        </g>
+
+        {/* Heat loss visualization for low voltage */}
         {!useHighVoltage && (
-          <g className="animate-pulse">
-            {[...Array(10)].map((_, i) => (
-              <text
-                key={i}
-                x={100 + i * 22}
-                y="100"
-                className="fill-red-500 text-xs"
-              >
-                🔥
-              </text>
+          <g filter="url(#xfmrHeatGlow)">
+            {[...Array(8)].map((_, i) => (
+              <g key={i}>
+                <circle cx={120 + i * 35} cy="90" r="8" fill="#ef4444" opacity="0.6">
+                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur={`${0.3 + i * 0.1}s`} repeatCount="indefinite" />
+                  <animate attributeName="r" values="6;10;6" dur={`${0.4 + i * 0.05}s`} repeatCount="indefinite" />
+                </circle>
+                <circle cx={120 + i * 35} cy="90" r="4" fill="#fbbf24" opacity="0.8">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur={`${0.25 + i * 0.08}s`} repeatCount="indefinite" />
+                </circle>
+              </g>
             ))}
+            <text x="245" y="125" textAnchor="middle" className="text-[10px] fill-red-400 font-bold">MASSIVE HEAT LOSS!</text>
           </g>
         )}
 
-        {/* Voltage label on line */}
-        <text x="200" y="90" textAnchor="middle" className={`text-xs font-bold ${
-          useHighVoltage ? 'fill-green-400' : 'fill-red-400'
-        }`}>
-          {useHighVoltage ? '400,000V / 0.6mA' : '240V / 1000A'}
-        </text>
-
-        {/* Step-down transformer */}
+        {/* === STEP-DOWN TRANSFORMER === */}
         {useHighVoltage && (
-          <g>
-            <rect x="260" y="90" width="40" height="40" rx="4" fill="#1f2937" stroke="#orange-500" strokeWidth="2" />
-            <text x="280" y="115" textAnchor="middle" className="fill-orange-400 text-xs">⬇</text>
+          <g transform="translate(330, 85)">
+            <rect x="0" y="0" width="50" height="50" rx="6" fill="url(#xfmrBoxGrad)" stroke="#f97316" strokeWidth="2" />
+            <rect x="5" y="5" width="40" height="15" rx="3" fill="#030712" stroke="#7c2d12" strokeWidth="1" />
+            <text x="25" y="16" textAnchor="middle" className="text-[7px] fill-orange-400 font-bold">STEP-DOWN</text>
+            {/* Coil symbols */}
+            <ellipse cx="15" cy="35" rx="8" ry="5" fill="none" stroke="#fde047" strokeWidth="2" />
+            <ellipse cx="35" cy="35" rx="8" ry="5" fill="none" stroke="#f59e0b" strokeWidth="2" />
+            <text x="25" y="60" textAnchor="middle" className="text-[7px] fill-slate-500">1667:1</text>
           </g>
         )}
 
-        {/* House */}
-        <rect x="320" y="80" width="60" height="60" rx="4" fill="#4b5563" />
-        <text x="350" y="115" textAnchor="middle" className="fill-white text-xs">🏠</text>
-        <text x="350" y="155" textAnchor="middle" className="fill-gray-400 text-xs">240V</text>
+        {/* === HOUSE === */}
+        <g transform="translate(400, 70)">
+          <rect x="0" y="20" width="70" height="50" rx="4" fill="url(#xfmrBuildingGrad)" stroke="#475569" strokeWidth="2" />
+          {/* Roof */}
+          <polygon points="35,-5 -5,20 75,20" fill="#374151" stroke="#475569" strokeWidth="1" />
+          {/* Door */}
+          <rect x="28" y="45" width="14" height="25" rx="2" fill="#78350f" stroke="#92400e" strokeWidth="1" />
+          {/* Windows */}
+          <rect x="8" y="30" width="14" height="12" rx="1" fill="#fbbf24" opacity="0.7" />
+          <rect x="48" y="30" width="14" height="12" rx="1" fill="#fbbf24" opacity="0.6" />
+          {/* Label */}
+          <text x="35" y="85" textAnchor="middle" className="text-[10px] fill-slate-400 font-medium">Home</text>
+          <text x="35" y="97" textAnchor="middle" className="text-[11px] fill-yellow-400 font-bold">240V AC</text>
+        </g>
 
-        {/* Efficiency display */}
-        <rect x="140" y="150" width="120" height="40" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="200" y="168" textAnchor="middle" className="fill-gray-400 text-xs">Power Delivered</text>
-        <text x="200" y="185" textAnchor="middle" className={`text-sm font-bold ${
-          efficiency > 90 ? 'fill-green-400' : 'fill-red-400'
-        }`}>
-          {efficiency.toFixed(1)}% ({useHighVoltage ? 'Minimal' : 'Huge'} Loss)
-        </text>
+        {/* === EFFICIENCY DISPLAY === */}
+        <g transform="translate(160, 165)">
+          <rect x="0" y="0" width="170" height="45" rx="8" fill="#0f172a" stroke={efficiency > 90 ? '#22c55e' : '#ef4444'} strokeWidth="2" />
+          <text x="85" y="16" textAnchor="middle" className="text-[9px] fill-slate-400 uppercase tracking-wide">Power Delivered to Home</text>
+          <text x="85" y="36" textAnchor="middle" className={`text-[14px] font-bold ${efficiency > 90 ? 'fill-green-400' : 'fill-red-400'}`}>
+            {efficiency > 0 ? efficiency.toFixed(1) : '0.0'}% Efficiency
+          </text>
+          <text x="85" y="42" textAnchor="middle" className={`text-[8px] ${efficiency > 90 ? 'fill-emerald-300' : 'fill-red-300'}`}>
+            {useHighVoltage ? '(Minimal Loss)' : '(Huge Loss - Wires Melt!)'}
+          </text>
+        </g>
       </svg>
     );
   };

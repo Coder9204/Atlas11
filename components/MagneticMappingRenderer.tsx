@@ -478,11 +478,179 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         onMouseUp={interactive ? handleProbeMouseUp : undefined}
         onMouseLeave={interactive ? handleProbeMouseUp : undefined}
       >
-        <rect width="400" height="280" fill="#111827" />
+        {/* ============================================================= */}
+        {/* PREMIUM SVG DEFINITIONS - Gradients, Filters, Patterns        */}
+        {/* ============================================================= */}
+        <defs>
+          {/* === LINEAR GRADIENTS === */}
 
-        {/* Heat map layer */}
+          {/* Premium lab background gradient with depth */}
+          <linearGradient id="magmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#111827" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* North pole gradient - deep red with metallic sheen */}
+          <linearGradient id="magmNorthPole" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="20%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#dc2626" />
+            <stop offset="80%" stopColor="#b91c1c" />
+            <stop offset="100%" stopColor="#7f1d1d" />
+          </linearGradient>
+
+          {/* South pole gradient - deep blue with metallic sheen */}
+          <linearGradient id="magmSouthPole" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="20%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="80%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
+
+          {/* Field line gradient - animated flow effect */}
+          <linearGradient id="magmFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
+            <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* Compass housing gradient - brushed metal */}
+          <linearGradient id="magmCompassMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="25%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#6b7280" />
+            <stop offset="75%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Info panel gradient */}
+          <linearGradient id="magmInfoPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#0f172a" stopOpacity="0.98" />
+            <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+          </linearGradient>
+
+          {/* === RADIAL GRADIENTS === */}
+
+          {/* North pole radial glow */}
+          <radialGradient id="magmNorthGlow" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#fecaca" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#ef4444" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#dc2626" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* South pole radial glow */}
+          <radialGradient id="magmSouthGlow" cx="50%" cy="50%" r="60%">
+            <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="70%" stopColor="#2563eb" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Field strength indicator glow */}
+          <radialGradient id="magmStrengthGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#d97706" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Compass needle center pivot */}
+          <radialGradient id="magmCompassPivot" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#fef3c7" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#b45309" />
+          </radialGradient>
+
+          {/* Probe compass glass dome */}
+          <radialGradient id="magmProbeGlass" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#0c4a6e" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#0f172a" stopOpacity="0.3" />
+          </radialGradient>
+
+          {/* === GLOW FILTERS === */}
+
+          {/* Field line glow filter */}
+          <filter id="magmFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Strong pole glow */}
+          <filter id="magmPoleGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+            <feFlood floodColor="#67e8f9" floodOpacity="0.5" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="shadow" />
+            <feMerge>
+              <feMergeNode in="shadow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Compass probe active glow */}
+          <filter id="magmProbeActive" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+            <feFlood floodColor="#fbbf24" floodOpacity="0.6" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Heat map cell soft edge */}
+          <filter id="magmHeatBlur" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" />
+          </filter>
+
+          {/* Selection ring pulse */}
+          <filter id="magmSelectGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* === PATTERNS === */}
+
+          {/* Subtle lab grid pattern */}
+          <pattern id="magmLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+
+          {/* Magnet surface texture */}
+          <pattern id="magmMetalTexture" width="4" height="4" patternUnits="userSpaceOnUse">
+            <rect width="4" height="4" fill="none" />
+            <circle cx="2" cy="2" r="0.5" fill="#ffffff" fillOpacity="0.05" />
+          </pattern>
+        </defs>
+
+        {/* === PREMIUM BACKGROUND === */}
+        <rect width="400" height="280" fill="url(#magmLabBg)" />
+        <rect width="400" height="280" fill="url(#magmLabGrid)" />
+
+        {/* Subtle vignette effect */}
+        <rect width="400" height="280" fill="url(#magmLabBg)" opacity="0.3" />
+
+        {/* === HEAT MAP LAYER (when enabled) === */}
         {showHeatMap && heatMapData.map((d, i) => {
+          // Enhanced heat map with smooth color transitions
           const hue = 240 - d.strength * 240; // Blue (cold) to Red (hot)
+          const saturation = 70 + d.strength * 20;
+          const lightness = 35 + d.strength * 25;
           return (
             <rect
               key={`heat-${i}`}
@@ -490,57 +658,238 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               y={d.y}
               width="15"
               height="15"
-              fill={`hsl(${hue}, 80%, 50%)`}
-              opacity={0.4}
+              fill={`hsl(${hue}, ${saturation}%, ${lightness}%)`}
+              opacity={0.5 + d.strength * 0.2}
+              filter="url(#magmHeatBlur)"
             />
           );
         })}
 
-        {fieldLines && tracedLines.map((path, i) => (<path key={i} d={path} fill="none" stroke="#60a5fa" strokeWidth="1.5" opacity="0.6" />))}
-        {compassGrid && compassPositions.map((pos, i) => {
-          const { bx, by } = calculateField(pos.x, pos.y, mags);
-          const angle = Math.atan2(by, bx) * 180 / Math.PI;
-          return (
-            <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${angle})`}>
-              <line x1="-8" y1="0" x2="8" y2="0" stroke="#ef4444" strokeWidth="2" />
-              <polygon points="8,0 4,-3 4,3" fill="#ef4444" />
-              <circle cx="0" cy="0" r="2" fill="#fbbf24" />
-            </g>
-          );
-        })}
-        {mags.map((m, i) => (
-          <g key={i} transform={`translate(${m.x}, ${m.y}) rotate(${m.angle})`} style={{ cursor: 'pointer' }} onMouseDown={() => setSelectedMagnet(i)}>
-            <rect x="-30" y="-12" width="30" height="24" rx="4" fill={m.polarity === 'reversed' ? '#3b82f6' : '#ef4444'} />
-            <rect x="0" y="-12" width="30" height="24" rx="4" fill={m.polarity === 'reversed' ? '#ef4444' : '#3b82f6'} />
-            <text x="-15" y="5" textAnchor="middle" className="fill-white text-xs font-bold">{m.polarity === 'reversed' ? 'S' : 'N'}</text>
-            <text x="15" y="5" textAnchor="middle" className="fill-white text-xs font-bold">{m.polarity === 'reversed' ? 'N' : 'S'}</text>
-            {selectedMagnet === i && (<circle r="35" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,4" />)}
+        {/* === FIELD LINES WITH PREMIUM STYLING === */}
+        {fieldLines && tracedLines.map((path, i) => (
+          <g key={i}>
+            {/* Outer glow layer */}
+            <path
+              d={path}
+              fill="none"
+              stroke="#0891b2"
+              strokeWidth="4"
+              opacity="0.2"
+              strokeLinecap="round"
+            />
+            {/* Main field line with gradient */}
+            <path
+              d={path}
+              fill="none"
+              stroke="url(#magmFieldLine)"
+              strokeWidth="2"
+              opacity="0.8"
+              strokeLinecap="round"
+              filter="url(#magmFieldGlow)"
+            />
+            {/* Bright core */}
+            <path
+              d={path}
+              fill="none"
+              stroke="#67e8f9"
+              strokeWidth="0.8"
+              opacity="0.9"
+              strokeLinecap="round"
+            />
+            {/* Animated flow markers along field lines */}
+            <circle r="2" fill="#22d3ee" opacity="0.8">
+              <animateMotion dur={`${2 + i * 0.2}s`} repeatCount="indefinite" path={path} />
+            </circle>
           </g>
         ))}
 
-        {/* Interactive compass probe */}
+        {/* === COMPASS GRID === */}
+        {compassGrid && compassPositions.map((pos, i) => {
+          const { bx, by } = calculateField(pos.x, pos.y, mags);
+          const angle = Math.atan2(by, bx) * 180 / Math.PI;
+          const fieldMag = Math.sqrt(bx * bx + by * by);
+          const normalizedMag = Math.min(1, fieldMag / 5);
+          return (
+            <g key={i} transform={`translate(${pos.x}, ${pos.y}) rotate(${angle})`}>
+              {/* Compass housing */}
+              <circle r="10" fill="url(#magmCompassMetal)" stroke="#4b5563" strokeWidth="1" />
+              <circle r="8" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+              {/* Needle - North pointing half (red) */}
+              <path d="M 0,-7 L 2,0 L 0,1 L -2,0 Z" fill="url(#magmNorthPole)" opacity={0.6 + normalizedMag * 0.4} />
+              {/* Needle - South pointing half (blue) */}
+              <path d="M 0,7 L 2,0 L 0,-1 L -2,0 Z" fill="url(#magmSouthPole)" opacity={0.6 + normalizedMag * 0.4} />
+              {/* Center pivot */}
+              <circle cx="0" cy="0" r="1.5" fill="url(#magmCompassPivot)" />
+            </g>
+          );
+        })}
+
+        {/* === PREMIUM MAGNET RENDERING === */}
+        {mags.map((m, i) => {
+          const isNorthLeft = m.polarity !== 'reversed';
+          return (
+            <g key={i} transform={`translate(${m.x}, ${m.y}) rotate(${m.angle})`} style={{ cursor: 'pointer' }} onMouseDown={() => setSelectedMagnet(i)}>
+              {/* Magnetic field glow around magnet */}
+              <ellipse cx="0" cy="0" rx="45" ry="20" fill="url(#magmNorthGlow)" opacity="0.3" />
+
+              {/* Magnet body shadow */}
+              <rect x="-29" y="-10" width="58" height="22" rx="3" fill="#000000" opacity="0.4" />
+
+              {/* North pole half */}
+              <rect
+                x="-30"
+                y="-12"
+                width="30"
+                height="24"
+                rx="4"
+                fill={isNorthLeft ? "url(#magmNorthPole)" : "url(#magmSouthPole)"}
+                stroke={isNorthLeft ? "#fca5a5" : "#93c5fd"}
+                strokeWidth="0.5"
+              />
+              <rect x="-30" y="-12" width="30" height="24" rx="4" fill="url(#magmMetalTexture)" />
+
+              {/* South pole half */}
+              <rect
+                x="0"
+                y="-12"
+                width="30"
+                height="24"
+                rx="4"
+                fill={isNorthLeft ? "url(#magmSouthPole)" : "url(#magmNorthPole)"}
+                stroke={isNorthLeft ? "#93c5fd" : "#fca5a5"}
+                strokeWidth="0.5"
+              />
+              <rect x="0" y="-12" width="30" height="24" rx="4" fill="url(#magmMetalTexture)" />
+
+              {/* Pole labels with shadow */}
+              <text x="-15" y="6" textAnchor="middle" className="fill-black text-xs font-bold" opacity="0.3" style={{ fontSize: '11px' }}>
+                {isNorthLeft ? 'N' : 'S'}
+              </text>
+              <text x="-15" y="5" textAnchor="middle" className="fill-white text-xs font-bold" style={{ fontSize: '11px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                {isNorthLeft ? 'N' : 'S'}
+              </text>
+              <text x="15" y="6" textAnchor="middle" className="fill-black text-xs font-bold" opacity="0.3" style={{ fontSize: '11px' }}>
+                {isNorthLeft ? 'S' : 'N'}
+              </text>
+              <text x="15" y="5" textAnchor="middle" className="fill-white text-xs font-bold" style={{ fontSize: '11px', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                {isNorthLeft ? 'S' : 'N'}
+              </text>
+
+              {/* Pole glow indicators */}
+              <circle cx="-25" cy="0" r="3" fill={isNorthLeft ? "url(#magmNorthGlow)" : "url(#magmSouthGlow)"} opacity="0.8">
+                <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="25" cy="0" r="3" fill={isNorthLeft ? "url(#magmSouthGlow)" : "url(#magmNorthGlow)"} opacity="0.8">
+                <animate attributeName="r" values="2;4;2" dur="2s" repeatCount="indefinite" />
+              </circle>
+
+              {/* Selection ring when selected */}
+              {selectedMagnet === i && (
+                <ellipse
+                  rx="40"
+                  ry="22"
+                  fill="none"
+                  stroke="#fbbf24"
+                  strokeWidth="2"
+                  strokeDasharray="6,3"
+                  filter="url(#magmSelectGlow)"
+                >
+                  <animate attributeName="stroke-dashoffset" values="0;18" dur="1s" repeatCount="indefinite" />
+                </ellipse>
+              )}
+            </g>
+          );
+        })}
+
+        {/* === INTERACTIVE COMPASS PROBE === */}
         {interactive && (
           <g
             transform={`translate(${compassProbe.x}, ${compassProbe.y})`}
             style={{ cursor: compassProbe.isDragging ? 'grabbing' : 'grab' }}
             onMouseDown={handleProbeMouseDown}
+            filter={compassProbe.isDragging ? "url(#magmProbeActive)" : undefined}
           >
-            <circle r="20" fill="#1f2937" stroke={compassProbe.isDragging ? '#fbbf24' : '#6b7280'} strokeWidth="3" />
-            <g transform={`rotate(${probeAngle})`}>
-              <line x1="-12" y1="0" x2="12" y2="0" stroke="#ef4444" strokeWidth="3" />
-              <polygon points="12,0 6,-4 6,4" fill="#ef4444" />
-              <line x1="-12" y1="0" x2="0" y2="0" stroke="#3b82f6" strokeWidth="3" />
+            {/* Probe outer ring */}
+            <circle r="22" fill="url(#magmCompassMetal)" stroke="#6b7280" strokeWidth="2" />
+
+            {/* Glass dome effect */}
+            <circle r="18" fill="url(#magmProbeGlass)" stroke="#4b5563" strokeWidth="1" />
+
+            {/* Inner compass face */}
+            <circle r="16" fill="#0f172a" stroke="#1e293b" strokeWidth="0.5" />
+
+            {/* Cardinal direction markers */}
+            <g opacity="0.4">
+              <line x1="0" y1="-14" x2="0" y2="-11" stroke="#94a3b8" strokeWidth="1" />
+              <line x1="0" y1="14" x2="0" y2="11" stroke="#94a3b8" strokeWidth="1" />
+              <line x1="-14" y1="0" x2="-11" y2="0" stroke="#94a3b8" strokeWidth="1" />
+              <line x1="14" y1="0" x2="11" y2="0" stroke="#94a3b8" strokeWidth="1" />
             </g>
-            <circle cx="0" cy="0" r="3" fill="#fbbf24" />
-            <text x="0" y="35" textAnchor="middle" className="fill-cyan-400 text-xs font-bold">
-              B = {fieldStrengthAtProbe.toFixed(1)}
-            </text>
+
+            {/* Compass needle */}
+            <g transform={`rotate(${probeAngle})`}>
+              {/* North-pointing half (red) */}
+              <path d="M 0,-12 L 3,0 L 0,2 L -3,0 Z" fill="url(#magmNorthPole)" stroke="#fca5a5" strokeWidth="0.3" />
+              {/* South-pointing half (blue) */}
+              <path d="M 0,12 L 3,0 L 0,-2 L -3,0 Z" fill="url(#magmSouthPole)" stroke="#93c5fd" strokeWidth="0.3" />
+            </g>
+
+            {/* Center pivot with glow */}
+            <circle cx="0" cy="0" r="3" fill="url(#magmCompassPivot)" />
+            <circle cx="0" cy="0" r="1.5" fill="#fef3c7" />
+
+            {/* Field strength readout */}
+            <g transform="translate(0, 35)">
+              <rect x="-35" y="-10" width="70" height="20" rx="4" fill="url(#magmInfoPanel)" stroke="#334155" strokeWidth="0.5" />
+              <text x="0" y="4" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#22d3ee', fontFamily: 'monospace' }}>
+                B = {fieldStrengthAtProbe.toFixed(1)} T
+              </text>
+            </g>
+
+            {/* Drag indicator ring when active */}
+            {compassProbe.isDragging && (
+              <circle r="26" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,4" opacity="0.8">
+                <animate attributeName="stroke-dashoffset" values="0;8" dur="0.3s" repeatCount="indefinite" />
+              </circle>
+            )}
           </g>
         )}
 
-        <rect x="10" y="10" width="100" height="40" rx="4" fill="#1f2937" opacity="0.9" />
-        <text x="60" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Magnets: {mags.length}</text>
-        <text x="60" y="43" textAnchor="middle" className="fill-gray-500 text-xs">{interactive ? 'Drag compass' : 'Click to select'}</text>
+        {/* === INFO PANEL === */}
+        <g transform="translate(10, 10)">
+          <rect width="110" height="48" rx="6" fill="url(#magmInfoPanel)" stroke="#334155" strokeWidth="0.5" />
+          <text x="55" y="18" textAnchor="middle" style={{ fontSize: '11px', fill: '#e2e8f0', fontWeight: '600' }}>
+            Magnets: {mags.length}
+          </text>
+          <text x="55" y="34" textAnchor="middle" style={{ fontSize: '9px', fill: '#64748b' }}>
+            {interactive ? 'Drag compass to measure' : 'Click magnet to select'}
+          </text>
+          {/* Status indicator */}
+          <circle cx="10" cy="40" r="3" fill={fieldLines ? '#10b981' : '#64748b'}>
+            {fieldLines && <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />}
+          </circle>
+        </g>
+
+        {/* === FIELD STRENGTH LEGEND (when heat map is shown) === */}
+        {showHeatMap && (
+          <g transform="translate(340, 10)">
+            <rect x="0" y="0" width="50" height="100" rx="4" fill="url(#magmInfoPanel)" stroke="#334155" strokeWidth="0.5" />
+            <text x="25" y="14" textAnchor="middle" style={{ fontSize: '8px', fill: '#94a3b8', fontWeight: '600' }}>FIELD</text>
+            {/* Gradient bar */}
+            <defs>
+              <linearGradient id="magmLegendGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="hsl(240, 80%, 50%)" />
+                <stop offset="25%" stopColor="hsl(180, 80%, 50%)" />
+                <stop offset="50%" stopColor="hsl(120, 80%, 50%)" />
+                <stop offset="75%" stopColor="hsl(60, 80%, 50%)" />
+                <stop offset="100%" stopColor="hsl(0, 80%, 50%)" />
+              </linearGradient>
+            </defs>
+            <rect x="10" y="20" width="12" height="60" rx="2" fill="url(#magmLegendGrad)" />
+            <text x="28" y="28" style={{ fontSize: '7px', fill: '#ef4444' }}>High</text>
+            <text x="28" y="82" style={{ fontSize: '7px', fill: '#3b82f6' }}>Low</text>
+          </g>
+        )}
       </svg>
     );
   };
@@ -555,74 +904,284 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     return renderMagneticField(mags, true, false, false);
   };
 
-  // Render electromagnet visualization
+  // Render electromagnet visualization with premium SVG graphics
   const renderElectromagnet = () => {
+    const currentNormalized = electromagnetCurrent / 100;
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+        {/* Premium SVG Definitions for Electromagnet */}
+        <defs>
+          {/* Lab background gradient */}
+          <linearGradient id="magmElectroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#111827" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        {/* Electromagnet coil */}
+          {/* Iron core gradient - dark metal */}
+          <linearGradient id="magmIronCore" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="25%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="75%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Copper wire gradient */}
+          <linearGradient id="magmCopperWire" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="75%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#fcd34d" />
+          </linearGradient>
+
+          {/* Current flow glow - when active */}
+          <radialGradient id="magmCurrentGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+            <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Positive terminal gradient */}
+          <radialGradient id="magmPositiveTerminal" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#86efac" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#166534" />
+          </radialGradient>
+
+          {/* Negative terminal gradient */}
+          <radialGradient id="magmNegativeTerminal" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </radialGradient>
+
+          {/* Wire glow filter when current flows */}
+          <filter id="magmWireGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feFlood floodColor="#fbbf24" floodOpacity="0.6" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Field line glow */}
+          <filter id="magmElectroFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Lab grid pattern */}
+          <pattern id="magmElectroGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+        </defs>
+
+        {/* Premium background */}
+        <rect width="400" height="280" fill="url(#magmElectroBg)" />
+        <rect width="400" height="280" fill="url(#magmElectroGrid)" />
+
+        {/* Electromagnet coil assembly */}
         <g transform="translate(200, 140)">
-          {/* Iron core */}
-          <rect x="-40" y="-15" width="80" height="30" rx="4" fill="#4b5563" />
+          {/* Background glow when active */}
+          {electromagnetCurrent > 20 && (
+            <ellipse cx="0" cy="0" rx="70" ry="35" fill="url(#magmCurrentGlow)" opacity={currentNormalized * 0.3}>
+              <animate attributeName="opacity" values={`${currentNormalized * 0.2};${currentNormalized * 0.4};${currentNormalized * 0.2}`} dur="1s" repeatCount="indefinite" />
+            </ellipse>
+          )}
 
-          {/* Wire coils */}
+          {/* Iron core with metallic sheen */}
+          <rect x="-42" y="-13" width="84" height="28" rx="3" fill="#000000" opacity="0.3" />
+          <rect x="-40" y="-15" width="80" height="30" rx="4" fill="url(#magmIronCore)" stroke="#4b5563" strokeWidth="1" />
+
+          {/* Core highlight */}
+          <rect x="-38" y="-13" width="76" height="8" rx="2" fill="#6b7280" opacity="0.3" />
+
+          {/* Premium wire coils with 3D effect */}
           {[...Array(8)].map((_, i) => (
-            <ellipse
-              key={i}
-              cx={-35 + i * 10}
-              cy="0"
-              rx="8"
-              ry="20"
-              fill="none"
-              stroke="#f59e0b"
-              strokeWidth="3"
-              opacity={0.8}
-            />
+            <g key={i}>
+              {/* Coil shadow */}
+              <ellipse
+                cx={-35 + i * 10 + 1}
+                cy="2"
+                rx="8"
+                ry="22"
+                fill="none"
+                stroke="#000000"
+                strokeWidth="4"
+                opacity="0.2"
+              />
+              {/* Main coil wire */}
+              <ellipse
+                cx={-35 + i * 10}
+                cy="0"
+                rx="8"
+                ry="22"
+                fill="none"
+                stroke="url(#magmCopperWire)"
+                strokeWidth="3.5"
+                opacity={0.9}
+                filter={electromagnetCurrent > 20 ? "url(#magmWireGlow)" : undefined}
+              />
+              {/* Wire highlight */}
+              <ellipse
+                cx={-35 + i * 10 - 2}
+                cy="-2"
+                rx="6"
+                ry="18"
+                fill="none"
+                stroke="#fef3c7"
+                strokeWidth="0.5"
+                opacity="0.4"
+              />
+              {/* Current flow animation along wire */}
+              {electromagnetCurrent > 10 && (
+                <circle r="2" fill="#fef3c7" opacity={currentNormalized}>
+                  <animateMotion
+                    dur={`${0.5 + (8 - i) * 0.1}s`}
+                    repeatCount="indefinite"
+                    path={`M ${-35 + i * 10} -22 A 8 22 0 0 1 ${-35 + i * 10} 22 A 8 22 0 0 1 ${-35 + i * 10} -22`}
+                  />
+                </circle>
+              )}
+            </g>
           ))}
 
-          {/* Current flow indicators */}
+          {/* Electrical terminals */}
           {electromagnetCurrent > 0 && (
             <>
-              <circle cx="-50" cy="-25" r="4" fill="#22c55e" />
-              <text x="-50" y="-35" textAnchor="middle" className="fill-green-400 text-xs">+</text>
-              <circle cx="50" cy="-25" r="4" fill="#ef4444" />
-              <text x="50" y="-35" textAnchor="middle" className="fill-red-400 text-xs">-</text>
+              {/* Wire connections to terminals */}
+              <path d="M -45 -20 Q -50 -22 -50 -25" fill="none" stroke="url(#magmCopperWire)" strokeWidth="2" />
+              <path d="M 45 -20 Q 50 -22 50 -25" fill="none" stroke="url(#magmCopperWire)" strokeWidth="2" />
+
+              {/* Positive terminal */}
+              <circle cx="-50" cy="-30" r="6" fill="url(#magmPositiveTerminal)" stroke="#22c55e" strokeWidth="1">
+                {electromagnetCurrent > 20 && (
+                  <animate attributeName="r" values="6;7;6" dur="0.5s" repeatCount="indefinite" />
+                )}
+              </circle>
+              <text x="-50" y="-27" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#ffffff' }}>+</text>
+              <text x="-50" y="-42" textAnchor="middle" style={{ fontSize: '8px', fill: '#86efac' }}>ANODE</text>
+
+              {/* Negative terminal */}
+              <circle cx="50" cy="-30" r="6" fill="url(#magmNegativeTerminal)" stroke="#ef4444" strokeWidth="1">
+                {electromagnetCurrent > 20 && (
+                  <animate attributeName="r" values="6;7;6" dur="0.5s" repeatCount="indefinite" />
+                )}
+              </circle>
+              <text x="50" y="-27" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 'bold', fill: '#ffffff' }}>-</text>
+              <text x="50" y="-42" textAnchor="middle" style={{ fontSize: '8px', fill: '#fca5a5' }}>CATHODE</text>
             </>
           )}
 
           {/* Magnetic poles appear with current */}
           {electromagnetCurrent > 20 && (
             <>
-              <circle cx="-50" cy="0" r="8" fill="#ef4444" opacity={electromagnetCurrent / 100} />
-              <text x="-50" y="4" textAnchor="middle" className="fill-white text-xs font-bold">N</text>
-              <circle cx="50" cy="0" r="8" fill="#3b82f6" opacity={electromagnetCurrent / 100} />
-              <text x="50" y="4" textAnchor="middle" className="fill-white text-xs font-bold">S</text>
+              {/* North pole glow and indicator */}
+              <ellipse cx="-55" cy="0" rx="12" ry="8" fill="url(#magmNorthGlow)" opacity={currentNormalized * 0.6}>
+                <animate attributeName="rx" values="10;14;10" dur="1.5s" repeatCount="indefinite" />
+              </ellipse>
+              <circle cx="-55" cy="0" r="10" fill="url(#magmNorthPole)" opacity={currentNormalized} stroke="#fca5a5" strokeWidth="1" />
+              <text x="-55" y="4" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 'bold', fill: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>N</text>
+
+              {/* South pole glow and indicator */}
+              <ellipse cx="55" cy="0" rx="12" ry="8" fill="url(#magmSouthGlow)" opacity={currentNormalized * 0.6}>
+                <animate attributeName="rx" values="10;14;10" dur="1.5s" repeatCount="indefinite" />
+              </ellipse>
+              <circle cx="55" cy="0" r="10" fill="url(#magmSouthPole)" opacity={currentNormalized} stroke="#93c5fd" strokeWidth="1" />
+              <text x="55" y="4" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 'bold', fill: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>S</text>
             </>
           )}
         </g>
 
-        {/* Field lines based on current */}
-        {electromagnetCurrent > 20 && [...Array(6)].map((_, i) => {
-          const spread = (i - 2.5) * 15;
+        {/* Premium field lines based on current */}
+        {electromagnetCurrent > 20 && [...Array(7)].map((_, i) => {
+          const spread = (i - 3) * 12;
+          const animDelay = i * 0.15;
           return (
-            <path
-              key={i}
-              d={`M 150 ${140 + spread} C 100 ${140 + spread * 0.5}, 100 ${140 - spread * 0.5}, 150 ${140 - spread}
-                  M 250 ${140 - spread} C 300 ${140 - spread * 0.5}, 300 ${140 + spread * 0.5}, 250 ${140 + spread}`}
-              fill="none"
-              stroke="#60a5fa"
-              strokeWidth="1.5"
-              opacity={electromagnetCurrent / 150}
-            />
+            <g key={i}>
+              {/* Outer glow */}
+              <path
+                d={`M 145 ${140 + spread} C 95 ${140 + spread * 0.5}, 95 ${140 - spread * 0.5}, 145 ${140 - spread}`}
+                fill="none"
+                stroke="#0891b2"
+                strokeWidth="4"
+                opacity={currentNormalized * 0.2}
+              />
+              <path
+                d={`M 255 ${140 - spread} C 305 ${140 - spread * 0.5}, 305 ${140 + spread * 0.5}, 255 ${140 + spread}`}
+                fill="none"
+                stroke="#0891b2"
+                strokeWidth="4"
+                opacity={currentNormalized * 0.2}
+              />
+              {/* Main field lines */}
+              <path
+                d={`M 145 ${140 + spread} C 95 ${140 + spread * 0.5}, 95 ${140 - spread * 0.5}, 145 ${140 - spread}`}
+                fill="none"
+                stroke="url(#magmFieldLine)"
+                strokeWidth="2"
+                opacity={currentNormalized * 0.8}
+                filter="url(#magmElectroFieldGlow)"
+                strokeLinecap="round"
+              />
+              <path
+                d={`M 255 ${140 - spread} C 305 ${140 - spread * 0.5}, 305 ${140 + spread * 0.5}, 255 ${140 + spread}`}
+                fill="none"
+                stroke="url(#magmFieldLine)"
+                strokeWidth="2"
+                opacity={currentNormalized * 0.8}
+                filter="url(#magmElectroFieldGlow)"
+                strokeLinecap="round"
+              />
+              {/* Flow markers */}
+              <circle r="2" fill="#67e8f9" opacity={currentNormalized}>
+                <animateMotion
+                  dur={`${2 + animDelay}s`}
+                  repeatCount="indefinite"
+                  path={`M 145 ${140 + spread} C 95 ${140 + spread * 0.5}, 95 ${140 - spread * 0.5}, 145 ${140 - spread}`}
+                />
+              </circle>
+              <circle r="2" fill="#67e8f9" opacity={currentNormalized}>
+                <animateMotion
+                  dur={`${2 + animDelay}s`}
+                  repeatCount="indefinite"
+                  path={`M 255 ${140 - spread} C 305 ${140 - spread * 0.5}, 305 ${140 + spread * 0.5}, 255 ${140 + spread}`}
+                />
+              </circle>
+            </g>
           );
         })}
 
-        {/* Info panel */}
-        <rect x="10" y="10" width="120" height="50" rx="4" fill="#1f2937" opacity="0.9" />
-        <text x="70" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Electromagnet</text>
-        <text x="70" y="43" textAnchor="middle" className="fill-cyan-400 text-xs">Current: {electromagnetCurrent}%</text>
-        <text x="70" y="55" textAnchor="middle" className="fill-yellow-400 text-xs">B ~ I (proportional)</text>
+        {/* Premium info panel */}
+        <g transform="translate(10, 10)">
+          <rect width="130" height="58" rx="6" fill="url(#magmInfoPanel)" stroke="#334155" strokeWidth="0.5" />
+          <text x="65" y="18" textAnchor="middle" style={{ fontSize: '11px', fill: '#e2e8f0', fontWeight: '600' }}>Electromagnet</text>
+          <text x="65" y="34" textAnchor="middle" style={{ fontSize: '10px', fill: '#22d3ee', fontFamily: 'monospace' }}>
+            I = {electromagnetCurrent}% ({(electromagnetCurrent * 0.1).toFixed(1)} A)
+          </text>
+          <text x="65" y="50" textAnchor="middle" style={{ fontSize: '9px', fill: '#fbbf24' }}>B = u₀ × n × I</text>
+          {/* Status LED */}
+          <circle cx="10" cy="50" r="3" fill={electromagnetCurrent > 20 ? '#10b981' : '#64748b'}>
+            {electromagnetCurrent > 20 && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+          </circle>
+        </g>
+
+        {/* Current off indicator */}
+        {electromagnetCurrent <= 10 && (
+          <g transform="translate(200, 240)">
+            <rect x="-60" y="-12" width="120" height="24" rx="4" fill="#1f2937" stroke="#374151" strokeWidth="0.5" />
+            <text x="0" y="4" textAnchor="middle" style={{ fontSize: '10px', fill: '#94a3b8' }}>No current = No field</text>
+          </g>
+        )}
       </svg>
     );
   };
@@ -633,47 +1192,284 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
 
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#0f172a" />
+        {/* Premium SVG Definitions for Earth Field */}
+        <defs>
+          {/* Space background gradient */}
+          <radialGradient id="magmSpaceBg" cx="50%" cy="50%" r="70%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#020617" />
+            <stop offset="100%" stopColor="#000000" />
+          </radialGradient>
+
+          {/* Earth ocean gradient */}
+          <radialGradient id="magmEarthOcean" cx="35%" cy="35%" r="70%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="30%" stopColor="#2563eb" />
+            <stop offset="60%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </radialGradient>
+
+          {/* Earth land gradient */}
+          <radialGradient id="magmEarthLand" cx="40%" cy="40%" r="60%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#166534" />
+          </radialGradient>
+
+          {/* Atmosphere glow */}
+          <radialGradient id="magmAtmosphere" cx="50%" cy="50%" r="50%">
+            <stop offset="85%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="95%" stopColor="#60a5fa" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.5" />
+          </radialGradient>
+
+          {/* Magnetic field line gradient */}
+          <linearGradient id="magmEarthFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
+            <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+            <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* Star glow effect */}
+          <filter id="magmStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Field line glow */}
+          <filter id="magmEarthFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Solar wind particles */}
+          <radialGradient id="magmSolarParticle" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+            <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Premium space background */}
+        <rect width="400" height="280" fill="url(#magmSpaceBg)" />
+
+        {/* Enhanced stars with twinkling */}
         {stars.map((star, i) => (
-          <circle key={i} cx={star.x} cy={star.y} r={star.r} fill="white" opacity={star.opacity} />
+          <g key={i}>
+            <circle
+              cx={star.x}
+              cy={star.y}
+              r={star.r}
+              fill="white"
+              opacity={star.opacity}
+              filter={star.r > 1 ? "url(#magmStarGlow)" : undefined}
+            >
+              {star.r > 0.8 && (
+                <animate
+                  attributeName="opacity"
+                  values={`${star.opacity};${star.opacity * 0.5};${star.opacity}`}
+                  dur={`${2 + i * 0.1}s`}
+                  repeatCount="indefinite"
+                />
+              )}
+            </circle>
+          </g>
         ))}
-        <circle cx="200" cy="140" r="80" fill="#1e40af" />
-        <ellipse cx="200" cy="140" rx="80" ry="30" fill="#22c55e" fillOpacity="0.5" />
-        <circle cx="180" cy="120" r="15" fill="#22c55e" fillOpacity="0.6" />
-        <circle cx="220" cy="150" r="20" fill="#22c55e" fillOpacity="0.6" />
-        <circle cx="200" cy="70" r="5" fill="#3b82f6" />
-        <text x="200" y="55" textAnchor="middle" className="fill-blue-400 text-xs">Magnetic S</text>
-        <circle cx="200" cy="210" r="5" fill="#ef4444" />
-        <text x="200" y="230" textAnchor="middle" className="fill-red-400 text-xs">Magnetic N</text>
+
+        {/* Solar wind particles (incoming from left) */}
+        {showEarthField && [...Array(5)].map((_, i) => (
+          <circle key={`solar-${i}`} r="1.5" fill="url(#magmSolarParticle)" opacity={fieldOpacity * 0.6}>
+            <animateMotion
+              dur={`${3 + i * 0.5}s`}
+              repeatCount="indefinite"
+              path={`M -20 ${100 + i * 30} Q 60 ${110 + i * 25} 100 ${140 + (i - 2) * 20}`}
+            />
+          </circle>
+        ))}
+
+        {/* Earth with premium rendering */}
+        <g transform="translate(200, 140)">
+          {/* Magnetosphere shield (outer glow when field active) */}
+          {showEarthField && (
+            <ellipse
+              cx="0"
+              cy="0"
+              rx={100 + fieldOpacity * 20}
+              ry={60 + fieldOpacity * 10}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="1"
+              opacity={fieldOpacity * 0.3}
+              strokeDasharray="8,4"
+            >
+              <animate attributeName="rx" values={`${100 + fieldOpacity * 20};${110 + fieldOpacity * 20};${100 + fieldOpacity * 20}`} dur="4s" repeatCount="indefinite" />
+            </ellipse>
+          )}
+
+          {/* Atmosphere glow */}
+          <circle r="86" fill="url(#magmAtmosphere)" />
+
+          {/* Earth main body */}
+          <circle r="80" fill="url(#magmEarthOcean)" stroke="#60a5fa" strokeWidth="0.5" />
+
+          {/* Continents with 3D effect */}
+          <ellipse cx="0" cy="0" rx="80" ry="30" fill="url(#magmEarthLand)" fillOpacity="0.6" />
+          <circle cx="-20" cy="-20" r="18" fill="url(#magmEarthLand)" fillOpacity="0.7" />
+          <circle cx="25" cy="15" r="22" fill="url(#magmEarthLand)" fillOpacity="0.65" />
+          <ellipse cx="-10" cy="30" rx="15" ry="10" fill="url(#magmEarthLand)" fillOpacity="0.5" />
+
+          {/* Ice caps */}
+          <ellipse cx="0" cy="-70" rx="25" ry="10" fill="#e0f2fe" fillOpacity="0.8" />
+          <ellipse cx="0" cy="70" rx="20" ry="8" fill="#e0f2fe" fillOpacity="0.7" />
+
+          {/* Earth's axial tilt indicator */}
+          <line x1="0" y1="-90" x2="0" y2="90" stroke="#64748b" strokeWidth="0.5" strokeDasharray="3,3" opacity="0.3" />
+        </g>
+
+        {/* Magnetic poles with premium styling */}
+        <g transform="translate(200, 70)">
+          {/* South magnetic pole (near geographic north) */}
+          <circle r="8" fill="url(#magmSouthPole)" stroke="#93c5fd" strokeWidth="1">
+            {showEarthField && <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite" />}
+          </circle>
+          <circle r="12" fill="url(#magmSouthGlow)" opacity={showEarthField ? fieldOpacity * 0.5 : 0.2} />
+          <text y="-18" textAnchor="middle" style={{ fontSize: '9px', fill: '#93c5fd', fontWeight: '600' }}>Magnetic S</text>
+          <text y="-8" textAnchor="middle" style={{ fontSize: '6px', fill: '#64748b' }}>(Geographic N)</text>
+        </g>
+
+        <g transform="translate(200, 210)">
+          {/* North magnetic pole (near geographic south) */}
+          <circle r="8" fill="url(#magmNorthPole)" stroke="#fca5a5" strokeWidth="1">
+            {showEarthField && <animate attributeName="r" values="6;9;6" dur="2s" repeatCount="indefinite" />}
+          </circle>
+          <circle r="12" fill="url(#magmNorthGlow)" opacity={showEarthField ? fieldOpacity * 0.5 : 0.2} />
+          <text y="22" textAnchor="middle" style={{ fontSize: '9px', fill: '#fca5a5', fontWeight: '600' }}>Magnetic N</text>
+          <text y="32" textAnchor="middle" style={{ fontSize: '6px', fill: '#64748b' }}>(Geographic S)</text>
+        </g>
+
+        {/* Premium field lines with flow animation */}
         {showEarthField && (
           <g opacity={fieldOpacity}>
             {[-1, 1].map(side => ([30, 60, 90, 120, 150].map((offset, i) => (
-              <path
-                key={`${side}-${i}`}
-                d={`M ${200 + side * 5} 70 C ${200 + side * offset} 40, ${200 + side * offset} 240, ${200 + side * 5} 210`}
-                fill="none"
-                stroke="#60a5fa"
-                strokeWidth={1 + earthFieldIntensity / 50}
-                opacity={0.4 + (5 - i) * 0.1}
-              />
+              <g key={`${side}-${i}`}>
+                {/* Outer glow */}
+                <path
+                  d={`M ${200 + side * 5} 70 C ${200 + side * offset} 40, ${200 + side * offset} 240, ${200 + side * 5} 210`}
+                  fill="none"
+                  stroke="#0891b2"
+                  strokeWidth="4"
+                  opacity={0.15}
+                />
+                {/* Main field line */}
+                <path
+                  d={`M ${200 + side * 5} 70 C ${200 + side * offset} 40, ${200 + side * offset} 240, ${200 + side * 5} 210`}
+                  fill="none"
+                  stroke="url(#magmEarthFieldLine)"
+                  strokeWidth={1.5 + earthFieldIntensity / 80}
+                  opacity={0.5 + (5 - i) * 0.1}
+                  filter="url(#magmEarthFieldGlow)"
+                  strokeLinecap="round"
+                />
+                {/* Flow markers */}
+                <circle r="2" fill="#67e8f9" opacity="0.8">
+                  <animateMotion
+                    dur={`${3 + i * 0.3}s`}
+                    repeatCount="indefinite"
+                    path={`M ${200 + side * 5} 70 C ${200 + side * offset} 40, ${200 + side * offset} 240, ${200 + side * 5} 210`}
+                  />
+                </circle>
+              </g>
             ))))}
-            <polygon points="120,140 130,135 130,145" fill="#60a5fa" />
-            <polygon points="280,140 270,145 270,135" fill="#60a5fa" />
+
+            {/* Direction arrows */}
+            <g filter="url(#magmEarthFieldGlow)">
+              <polygon points="115,140 128,133 128,147" fill="url(#magmEarthFieldLine)" />
+              <polygon points="285,140 272,147 272,133" fill="url(#magmEarthFieldLine)" />
+            </g>
           </g>
         )}
-        <g transform="translate(120, 140)">
-          <circle r="15" fill="#1f2937" stroke="#6b7280" strokeWidth="2" />
-          <g transform={`rotate(${showEarthField ? -10 * (earthFieldIntensity / 100) : 0})`}>
-            <line x1="0" y1="10" x2="0" y2="-10" stroke="#ef4444" strokeWidth="2" />
-            <polygon points="0,-10 -3,-5 3,-5" fill="#ef4444" />
+
+        {/* Premium compass with detailed rendering */}
+        <g transform="translate(80, 140)">
+          {/* Compass housing */}
+          <circle r="18" fill="url(#magmCompassMetal)" stroke="#4b5563" strokeWidth="2" />
+          <circle r="15" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+
+          {/* Compass rose markings */}
+          <g opacity="0.4">
+            {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
+              <line
+                key={deg}
+                x1={Math.sin(deg * Math.PI / 180) * 11}
+                y1={-Math.cos(deg * Math.PI / 180) * 11}
+                x2={Math.sin(deg * Math.PI / 180) * 13}
+                y2={-Math.cos(deg * Math.PI / 180) * 13}
+                stroke="#94a3b8"
+                strokeWidth={deg % 90 === 0 ? 1.5 : 0.5}
+              />
+            ))}
           </g>
-          <text x="0" y="30" textAnchor="middle" className="fill-gray-400 text-xs">Compass</text>
+
+          {/* Compass needle aligned to Earth's field */}
+          <g transform={`rotate(${showEarthField ? -10 * fieldOpacity : 0})`}>
+            {/* North-pointing half (red) */}
+            <path d="M 0,-11 L 2.5,0 L 0,1.5 L -2.5,0 Z" fill="url(#magmNorthPole)" stroke="#fca5a5" strokeWidth="0.3" />
+            {/* South-pointing half (blue) */}
+            <path d="M 0,11 L 2.5,0 L 0,-1.5 L -2.5,0 Z" fill="url(#magmSouthPole)" stroke="#93c5fd" strokeWidth="0.3" />
+          </g>
+
+          {/* Center pivot */}
+          <circle r="2.5" fill="url(#magmCompassPivot)" />
+          <circle r="1" fill="#fef3c7" />
+
+          {/* Label */}
+          <text y="30" textAnchor="middle" style={{ fontSize: '9px', fill: '#94a3b8' }}>Compass</text>
         </g>
-        <rect x="280" y="20" width="110" height="80" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="335" y="38" textAnchor="middle" className="fill-gray-400 text-xs">Earth&apos;s Field</text>
-        <text x="335" y="55" textAnchor="middle" className="fill-cyan-400 text-xs">~25-65 uT</text>
-        <text x="335" y="72" textAnchor="middle" className="fill-gray-500 text-xs">(very weak!)</text>
-        <text x="335" y="90" textAnchor="middle" className="fill-yellow-400 text-xs">Intensity: {earthFieldIntensity}%</text>
+
+        {/* Premium info panel */}
+        <g transform="translate(280, 15)">
+          <rect width="115" height="90" rx="8" fill="url(#magmInfoPanel)" stroke="#334155" strokeWidth="1" />
+
+          {/* Header with icon */}
+          <text x="57" y="18" textAnchor="middle" style={{ fontSize: '10px', fill: '#e2e8f0', fontWeight: '600' }}>Earth&apos;s Field</text>
+
+          {/* Field strength display */}
+          <rect x="10" y="25" width="95" height="22" rx="4" fill="#0f172a" stroke="#1e293b" strokeWidth="0.5" />
+          <text x="57" y="40" textAnchor="middle" style={{ fontSize: '11px', fill: '#22d3ee', fontFamily: 'monospace', fontWeight: 'bold' }}>
+            ~{(25 + earthFieldIntensity * 0.4).toFixed(0)}-{(45 + earthFieldIntensity * 0.2).toFixed(0)} uT
+          </text>
+
+          {/* Status info */}
+          <text x="57" y="58" textAnchor="middle" style={{ fontSize: '8px', fill: '#64748b' }}>(1 Tesla = 1,000,000 uT)</text>
+
+          {/* Intensity bar */}
+          <rect x="10" y="66" width="95" height="6" rx="3" fill="#1e293b" />
+          <rect x="10" y="66" width={95 * fieldOpacity} height="6" rx="3" fill="url(#magmEarthFieldLine)" />
+          <text x="57" y="82" textAnchor="middle" style={{ fontSize: '8px', fill: '#fbbf24' }}>
+            Intensity: {earthFieldIntensity}%
+          </text>
+
+          {/* Status LED */}
+          <circle cx="100" cy="14" r="3" fill={showEarthField ? '#10b981' : '#64748b'}>
+            {showEarthField && <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />}
+          </circle>
+        </g>
+
+        {/* Declination angle indicator */}
+        {showEarthField && (
+          <g transform="translate(45, 30)">
+            <text textAnchor="middle" style={{ fontSize: '8px', fill: '#f59e0b' }}>Declination</text>
+            <text y="12" textAnchor="middle" style={{ fontSize: '10px', fill: '#fbbf24', fontFamily: 'monospace' }}>~{(10 * fieldOpacity).toFixed(1)}deg</text>
+          </g>
+        )}
       </svg>
     );
   };

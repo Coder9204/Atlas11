@@ -284,22 +284,42 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
   }, [testAnswers, testQuestions, onCorrectAnswer, onIncorrectAnswer]);
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 320;
+    const width = 700;
+    const height = 400;
 
-    // City positions on visualization
+    // City positions on visualization - adjusted for wider canvas
     const cityPositions = [
-      { x: 80, y: 120 },  // New York
-      { x: 200, y: 80 },  // London
-      { x: 350, y: 100 }, // Tokyo
-      { x: 320, y: 220 }, // Sydney
-      { x: 50, y: 160 },  // San Francisco
+      { x: 120, y: 160 },  // New York
+      { x: 300, y: 100 },  // London
+      { x: 550, y: 130 }, // Tokyo
+      { x: 500, y: 300 }, // Sydney
+      { x: 80, y: 220 },  // San Francisco
     ];
 
     const srcPos = cityPositions[sourceCity];
     const dstPos = cityPositions[destCity];
-    const packetX = srcPos.x + (dstPos.x - srcPos.x) * (animationFrame / 100);
-    const packetY = srcPos.y + (dstPos.y - srcPos.y) * (animationFrame / 100);
+    const packetProgress = animationFrame / 100;
+    const packetX = srcPos.x + (dstPos.x - srcPos.x) * packetProgress;
+    const packetY = srcPos.y + (dstPos.y - srcPos.y) * packetProgress;
+
+    // Calculate control point for curved path
+    const midX = (srcPos.x + dstPos.x) / 2;
+    const midY = (srcPos.y + dstPos.y) / 2;
+    const curveOffset = -40; // Curve upward
+    const ctrlX = midX;
+    const ctrlY = midY + curveOffset;
+
+    // Bezier curve position calculation
+    const getBezierPoint = (t: number) => {
+      const x = (1-t)*(1-t)*srcPos.x + 2*(1-t)*t*ctrlX + t*t*dstPos.x;
+      const y = (1-t)*(1-t)*srcPos.y + 2*(1-t)*t*ctrlY + t*t*dstPos.y;
+      return { x, y };
+    };
+    const packetPos = getBezierPoint(packetProgress);
+
+    // Calculate path length approximation for latency indicator spacing
+    const pathLength = Math.sqrt(Math.pow(dstPos.x - srcPos.x, 2) + Math.pow(dstPos.y - srcPos.y, 2));
+    const hopCount = Math.min(numHops, Math.floor(pathLength / 40)); // Limit visible hops
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -308,133 +328,459 @@ const NetworkLatencyRenderer: React.FC<NetworkLatencyRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '16px', maxWidth: '750px' }}
         >
           <defs>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            {/* Premium background gradient */}
+            <linearGradient id="netlBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a1628" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Server device gradient - metallic blue */}
+            <linearGradient id="netlServerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Client device gradient - emerald */}
+            <linearGradient id="netlClientGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#047857" />
+              <stop offset="25%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="75%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+
+            {/* Destination device gradient - rose/red */}
+            <linearGradient id="netlDestGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9f1239" />
+              <stop offset="25%" stopColor="#e11d48" />
+              <stop offset="50%" stopColor="#fb7185" />
+              <stop offset="75%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#9f1239" />
+            </linearGradient>
+
+            {/* Inactive node gradient - slate */}
+            <linearGradient id="netlInactiveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Fiber optic cable gradient - cyan with depth */}
+            <linearGradient id="netlFiberGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#22d3ee" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="80%" stopColor="#22d3ee" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Active fiber path gradient - brighter */}
+            <linearGradient id="netlActiveFiberGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
+              <stop offset="15%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="35%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="50%" stopColor="#a5f3fc" stopOpacity="1" />
+              <stop offset="65%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="85%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Data packet radial gradient - glowing core */}
+            <radialGradient id="netlPacketGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="20%" stopColor="#a5f3fc" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="80%" stopColor="#0891b2" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Packet trail gradient */}
+            <linearGradient id="netlPacketTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.3" />
+              <stop offset="60%" stopColor="#67e8f9" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Router hop indicator gradient - amber */}
+            <radialGradient id="netlRouterGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* World map gradient */}
+            <linearGradient id="netlMapGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#334155" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="netlInfoPanelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Glow filter for nodes */}
+            <filter id="netlNodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
-            <linearGradient id="fiberLine" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.fiber} stopOpacity={0.8} />
-              <stop offset="50%" stopColor={colors.accent} stopOpacity={0.4} />
-              <stop offset="100%" stopColor={colors.fiber} stopOpacity={0.8} />
-            </linearGradient>
+
+            {/* Strong glow for active elements */}
+            <filter id="netlActiveGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Packet glow filter */}
+            <filter id="netlPacketFilter" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="3" result="blur1" />
+              <feGaussianBlur stdDeviation="8" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner shadow for panels */}
+            <filter id="netlInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feOffset dx="0" dy="1" />
+              <feComposite in="SourceGraphic" operator="over" />
+            </filter>
+
+            {/* Fiber cable pattern */}
+            <pattern id="netlFiberPattern" patternUnits="userSpaceOnUse" width="20" height="4">
+              <rect width="20" height="4" fill="transparent" />
+              <rect x="0" y="1" width="15" height="2" rx="1" fill="#22d3ee" opacity="0.6" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={200} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-            Network Latency: {cities[sourceCity].name} to {cities[destCity].name}
-          </text>
+          {/* Premium dark background */}
+          <rect width={width} height={height} fill="url(#netlBgGradient)" />
 
-          {/* World map outline (simplified) */}
-          <ellipse cx={200} cy={150} rx={180} ry={100} fill="none" stroke={colors.server} strokeWidth={1} strokeDasharray="4,4" opacity={0.3} />
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {Array.from({ length: 15 }).map((_, i) => (
+              <line key={`vgrid-${i}`} x1={i * 50} y1="0" x2={i * 50} y2={height} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 9 }).map((_, i) => (
+              <line key={`hgrid-${i}`} x1="0" y1={i * 50} x2={width} y2={i * 50} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+          </g>
+
+          {/* World map outline - stylized ellipse */}
+          <ellipse cx={350} cy={190} rx={300} ry={160} fill="url(#netlMapGradient)" stroke="#334155" strokeWidth="1" strokeDasharray="8,4" opacity="0.5" />
 
           {/* Draw all fiber connections faintly */}
           {cityPositions.map((src, i) =>
             cityPositions.map((dst, j) => {
               if (i >= j) return null;
+              const mx = (src.x + dst.x) / 2;
+              const my = (src.y + dst.y) / 2 - 20;
               return (
-                <line
-                  key={`${i}-${j}`}
-                  x1={src.x}
-                  y1={src.y}
-                  x2={dst.x}
-                  y2={dst.y}
-                  stroke={colors.fiber}
-                  strokeWidth={1}
-                  opacity={0.1}
+                <path
+                  key={`fiber-${i}-${j}`}
+                  d={`M ${src.x} ${src.y} Q ${mx} ${my} ${dst.x} ${dst.y}`}
+                  fill="none"
+                  stroke="url(#netlFiberGradient)"
+                  strokeWidth="1.5"
+                  opacity="0.15"
                 />
               );
             })
           )}
 
-          {/* Active connection */}
-          <line
-            x1={srcPos.x}
-            y1={srcPos.y}
-            x2={dstPos.x}
-            y2={dstPos.y}
-            stroke="url(#fiberLine)"
-            strokeWidth={3}
-            opacity={0.8}
-          />
+          {/* Active connection path with glow */}
+          <g>
+            {/* Outer glow */}
+            <path
+              d={`M ${srcPos.x} ${srcPos.y} Q ${ctrlX} ${ctrlY} ${dstPos.x} ${dstPos.y}`}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="8"
+              opacity="0.2"
+              filter="url(#netlActiveGlow)"
+            />
+            {/* Main fiber cable */}
+            <path
+              d={`M ${srcPos.x} ${srcPos.y} Q ${ctrlX} ${ctrlY} ${dstPos.x} ${dstPos.y}`}
+              fill="none"
+              stroke="url(#netlActiveFiberGradient)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* Inner bright core */}
+            <path
+              d={`M ${srcPos.x} ${srcPos.y} Q ${ctrlX} ${ctrlY} ${dstPos.x} ${dstPos.y}`}
+              fill="none"
+              stroke="#a5f3fc"
+              strokeWidth="1"
+              opacity="0.8"
+            />
+          </g>
 
-          {/* City nodes */}
-          {cityPositions.map((pos, i) => (
-            <g key={i}>
-              <circle
-                cx={pos.x}
-                cy={pos.y}
-                r={i === sourceCity || i === destCity ? 12 : 8}
-                fill={i === sourceCity ? colors.success : i === destCity ? colors.error : colors.server}
-                stroke={colors.textPrimary}
-                strokeWidth={i === sourceCity || i === destCity ? 2 : 1}
-                filter={i === sourceCity || i === destCity ? 'url(#glow)' : undefined}
-              />
-              <text
-                x={pos.x}
-                y={pos.y + 25}
-                textAnchor="middle"
-                fill={colors.textSecondary}
-                fontSize={9}
-              >
-                {cities[i].name}
-              </text>
-            </g>
-          ))}
+          {/* Router hop indicators along path */}
+          {Array.from({ length: hopCount }).map((_, i) => {
+            const t = (i + 1) / (hopCount + 1);
+            const hopPos = getBezierPoint(t);
+            const isPacketNear = packetInFlight && Math.abs(packetProgress - t) < 0.08;
+            return (
+              <g key={`hop-${i}`}>
+                <circle
+                  cx={hopPos.x}
+                  cy={hopPos.y}
+                  r={isPacketNear ? 6 : 4}
+                  fill={isPacketNear ? "url(#netlRouterGlow)" : "#475569"}
+                  filter={isPacketNear ? "url(#netlNodeGlow)" : undefined}
+                  opacity={isPacketNear ? 1 : 0.6}
+                />
+                {isPacketNear && (
+                  <circle
+                    cx={hopPos.x}
+                    cy={hopPos.y}
+                    r={10}
+                    fill="none"
+                    stroke="#fbbf24"
+                    strokeWidth="1"
+                    opacity="0.5"
+                  >
+                    <animate attributeName="r" from="6" to="14" dur="0.3s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" from="0.8" to="0" dur="0.3s" repeatCount="indefinite" />
+                  </circle>
+                )}
+              </g>
+            );
+          })}
 
-          {/* Packet animation */}
+          {/* City nodes - premium server/client visualization */}
+          {cityPositions.map((pos, i) => {
+            const isSource = i === sourceCity;
+            const isDest = i === destCity;
+            const isActive = isSource || isDest;
+            const nodeSize = isActive ? 18 : 12;
+            const gradient = isSource ? "url(#netlClientGradient)" : isDest ? "url(#netlDestGradient)" : "url(#netlInactiveGradient)";
+
+            return (
+              <g key={`city-${i}`}>
+                {/* Outer glow ring for active nodes */}
+                {isActive && (
+                  <circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={nodeSize + 8}
+                    fill="none"
+                    stroke={isSource ? "#10b981" : "#e11d48"}
+                    strokeWidth="2"
+                    opacity="0.3"
+                    filter="url(#netlNodeGlow)"
+                  />
+                )}
+
+                {/* Main node circle */}
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={nodeSize}
+                  fill={gradient}
+                  stroke={isActive ? "#ffffff" : "#64748b"}
+                  strokeWidth={isActive ? 2 : 1}
+                  filter={isActive ? "url(#netlNodeGlow)" : undefined}
+                />
+
+                {/* Server/Client icon inside */}
+                {isActive && (
+                  <g>
+                    {/* Server rack lines */}
+                    <rect x={pos.x - 6} y={pos.y - 6} width="12" height="3" rx="1" fill="#ffffff" opacity="0.9" />
+                    <rect x={pos.x - 6} y={pos.y - 1} width="12" height="3" rx="1" fill="#ffffff" opacity="0.7" />
+                    <rect x={pos.x - 6} y={pos.y + 4} width="12" height="3" rx="1" fill="#ffffff" opacity="0.5" />
+                  </g>
+                )}
+
+                {/* City label */}
+                <text
+                  x={pos.x}
+                  y={pos.y + nodeSize + 16}
+                  textAnchor="middle"
+                  fill={isActive ? "#f8fafc" : "#94a3b8"}
+                  fontSize={isActive ? "11" : "9"}
+                  fontWeight={isActive ? "bold" : "normal"}
+                  fontFamily="system-ui, -apple-system, sans-serif"
+                >
+                  {cities[i].name}
+                </text>
+
+                {/* Role label for active nodes */}
+                {isSource && (
+                  <text x={pos.x} y={pos.y - nodeSize - 8} textAnchor="middle" fill="#10b981" fontSize="9" fontWeight="bold">
+                    SOURCE
+                  </text>
+                )}
+                {isDest && (
+                  <text x={pos.x} y={pos.y - nodeSize - 8} textAnchor="middle" fill="#e11d48" fontSize="9" fontWeight="bold">
+                    DESTINATION
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Data packet animation */}
           {packetInFlight && (
             <g>
+              {/* Packet trail effect */}
+              {Array.from({ length: 8 }).map((_, i) => {
+                const trailT = Math.max(0, packetProgress - i * 0.03);
+                const trailPos = getBezierPoint(trailT);
+                return (
+                  <circle
+                    key={`trail-${i}`}
+                    cx={trailPos.x}
+                    cy={trailPos.y}
+                    r={8 - i}
+                    fill="#22d3ee"
+                    opacity={(8 - i) / 20}
+                  />
+                );
+              })}
+
+              {/* Main packet glow */}
               <circle
-                cx={packetX}
-                cy={packetY}
+                cx={packetPos.x}
+                cy={packetPos.y}
+                r={16}
+                fill="url(#netlPacketGlow)"
+                filter="url(#netlPacketFilter)"
+              />
+
+              {/* Packet core */}
+              <circle
+                cx={packetPos.x}
+                cy={packetPos.y}
                 r={6}
-                fill={colors.packet}
-                filter="url(#glow)"
+                fill="#ffffff"
               />
-              <rect
-                x={packetX - 4}
-                y={packetY - 3}
-                width={8}
-                height={6}
-                fill={colors.accent}
-                rx={1}
-              />
+
+              {/* Packet icon - data bits */}
+              <g transform={`translate(${packetPos.x}, ${packetPos.y})`}>
+                <rect x="-3" y="-3" width="2" height="2" fill="#06b6d4" />
+                <rect x="1" y="-3" width="2" height="2" fill="#06b6d4" />
+                <rect x="-3" y="1" width="2" height="2" fill="#06b6d4" />
+                <rect x="1" y="1" width="2" height="2" fill="#06b6d4" />
+              </g>
+
+              {/* Expanding pulse ring */}
+              <circle
+                cx={packetPos.x}
+                cy={packetPos.y}
+                r={12}
+                fill="none"
+                stroke="#67e8f9"
+                strokeWidth="2"
+                opacity="0.6"
+              >
+                <animate attributeName="r" from="8" to="25" dur="0.6s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.8" to="0" dur="0.6s" repeatCount="indefinite" />
+              </circle>
             </g>
           )}
 
-          {/* Distance indicator */}
-          <rect x={20} y={260} width={360} height={50} rx={8} fill="rgba(0,0,0,0.3)" />
-          <text x={200} y={280} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-            Fiber Distance: {distance.toLocaleString()} km
+          {/* Title */}
+          <text x={350} y={28} textAnchor="middle" fill="#f8fafc" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+            Network Latency Visualization
           </text>
-          <text x={200} y={300} textAnchor="middle" fill={colors.accent} fontSize={14} fontWeight="bold">
-            Speed of Light Limit: {(distance / SPEED_OF_LIGHT_VACUUM * 2 * 1000).toFixed(1)} ms RTT theoretical
+          <text x={350} y={46} textAnchor="middle" fill="#94a3b8" fontSize="12" fontFamily="system-ui, -apple-system, sans-serif">
+            {cities[sourceCity].name} to {cities[destCity].name}
           </text>
+
+          {/* Info panel at bottom */}
+          <g>
+            <rect x={50} y={height - 70} width={width - 100} height={55} rx="12" fill="url(#netlInfoPanelGradient)" stroke="#334155" strokeWidth="1" />
+
+            {/* Distance info */}
+            <text x={150} y={height - 45} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, -apple-system, sans-serif">
+              FIBER DISTANCE
+            </text>
+            <text x={150} y={height - 28} textAnchor="middle" fill="#22d3ee" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+              {distance.toLocaleString()} km
+            </text>
+
+            {/* Theoretical minimum */}
+            <text x={350} y={height - 45} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, -apple-system, sans-serif">
+              SPEED OF LIGHT LIMIT
+            </text>
+            <text x={350} y={height - 28} textAnchor="middle" fill="#8b5cf6" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+              {theoreticalMin.toFixed(1)} ms RTT (theoretical)
+            </text>
+
+            {/* Actual RTT */}
+            <text x={550} y={height - 45} textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="system-ui, -apple-system, sans-serif">
+              ESTIMATED RTT
+            </text>
+            <text x={550} y={height - 28} textAnchor="middle" fill="#10b981" fontSize="16" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">
+              {roundTrip.toFixed(1)} ms
+            </text>
+          </g>
+
+          {/* Latency component legend */}
+          <g transform="translate(580, 80)">
+            <rect x="-10" y="-10" width="110" height="100" rx="8" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+            <text x="45" y="8" textAnchor="middle" fill="#f8fafc" fontSize="9" fontWeight="bold">LATENCY BREAKDOWN</text>
+
+            <circle cx="8" cy="28" r="4" fill="#22d3ee" />
+            <text x="18" y="32" fill="#94a3b8" fontSize="8">Propagation</text>
+            <text x="95" y="32" textAnchor="end" fill="#22d3ee" fontSize="8" fontWeight="bold">{propagationDelay.toFixed(1)}ms</text>
+
+            <circle cx="8" cy="48" r="4" fill="#f59e0b" />
+            <text x="18" y="52" fill="#94a3b8" fontSize="8">Serialization</text>
+            <text x="95" y="52" textAnchor="end" fill="#f59e0b" fontSize="8" fontWeight="bold">{serialization.toFixed(2)}ms</text>
+
+            <circle cx="8" cy="68" r="4" fill="#8b5cf6" />
+            <text x="18" y="72" fill="#94a3b8" fontSize="8">Processing</text>
+            <text x="95" y="72" textAnchor="end" fill="#8b5cf6" fontSize="8" fontWeight="bold">{routerProcessing.toFixed(1)}ms</text>
+          </g>
         </svg>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
-            <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center', minWidth: '80px' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>PROPAGATION</div>
-              <div style={{ color: colors.fiber, fontSize: '14px', fontWeight: 'bold' }}>{propagationDelay.toFixed(1)} ms</div>
+            <div style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(6, 182, 212, 0.1))', padding: '10px 14px', borderRadius: '10px', textAlign: 'center', minWidth: '85px', border: '1px solid rgba(6, 182, 212, 0.3)' }}>
+              <div style={{ color: colors.textMuted, fontSize: '9px', fontWeight: 'bold', letterSpacing: '0.5px' }}>PROPAGATION</div>
+              <div style={{ color: colors.fiber, fontSize: '16px', fontWeight: 'bold' }}>{propagationDelay.toFixed(1)} ms</div>
             </div>
-            <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center', minWidth: '80px' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>SERIALIZATION</div>
-              <div style={{ color: colors.warning, fontSize: '14px', fontWeight: 'bold' }}>{serialization.toFixed(2)} ms</div>
+            <div style={{ background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1))', padding: '10px 14px', borderRadius: '10px', textAlign: 'center', minWidth: '85px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+              <div style={{ color: colors.textMuted, fontSize: '9px', fontWeight: 'bold', letterSpacing: '0.5px' }}>SERIALIZATION</div>
+              <div style={{ color: colors.warning, fontSize: '16px', fontWeight: 'bold' }}>{serialization.toFixed(2)} ms</div>
             </div>
-            <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center', minWidth: '80px' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>PROCESSING</div>
-              <div style={{ color: colors.accent, fontSize: '14px', fontWeight: 'bold' }}>{routerProcessing.toFixed(1)} ms</div>
+            <div style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1))', padding: '10px 14px', borderRadius: '10px', textAlign: 'center', minWidth: '85px', border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+              <div style={{ color: colors.textMuted, fontSize: '9px', fontWeight: 'bold', letterSpacing: '0.5px' }}>PROCESSING</div>
+              <div style={{ color: colors.accent, fontSize: '16px', fontWeight: 'bold' }}>{routerProcessing.toFixed(1)} ms</div>
             </div>
-            <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center', minWidth: '80px' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>RTT TOTAL</div>
-              <div style={{ color: colors.success, fontSize: '14px', fontWeight: 'bold' }}>{roundTrip.toFixed(1)} ms</div>
+            <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))', padding: '10px 14px', borderRadius: '10px', textAlign: 'center', minWidth: '85px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <div style={{ color: colors.textMuted, fontSize: '9px', fontWeight: 'bold', letterSpacing: '0.5px' }}>RTT TOTAL</div>
+              <div style={{ color: colors.success, fontSize: '16px', fontWeight: 'bold' }}>{roundTrip.toFixed(1)} ms</div>
             </div>
           </div>
         )}

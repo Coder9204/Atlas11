@@ -377,80 +377,384 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1e3a5f 0%, #0c1929 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Background - representing fluid medium */}
+          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
-            <radialGradient id="fluidGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(59, 130, 246, 0.1)" />
-              <stop offset="100%" stopColor="rgba(59, 130, 246, 0.02)" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="brownLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a1628" />
+              <stop offset="50%" stopColor="#0c1929" />
+              <stop offset="75%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Fluid medium gradient with depth */}
+            <radialGradient id="brownFluidGradient" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#164e73" stopOpacity="0.25" />
+              <stop offset="60%" stopColor="#0c4a6e" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#082f49" stopOpacity="0.08" />
             </radialGradient>
+
+            {/* Container glass effect gradient */}
+            <linearGradient id="brownContainerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#94a3b8" stopOpacity="0.15" />
+              <stop offset="50%" stopColor="#475569" stopOpacity="0.1" />
+              <stop offset="80%" stopColor="#334155" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.35" />
+            </linearGradient>
+
+            {/* Container border depth gradient */}
+            <linearGradient id="brownContainerBorder" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* 3D tracked particle radial gradient (red) */}
+            <radialGradient id="brownTrackedParticle3D" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+
+            {/* 3D regular particle radial gradient (blue) */}
+            <radialGradient id="brownParticle3D" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+
+            {/* Water molecule gradient (smaller particles) */}
+            <radialGradient id="brownMolecule3D" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0.15" />
+            </radialGradient>
+
+            {/* Motion path gradient */}
+            <linearGradient id="brownPathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0" />
+              <stop offset="10%" stopColor="#34d399" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#6ee7b7" stopOpacity="0.7" />
+              <stop offset="90%" stopColor="#34d399" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Tracked particle glow filter */}
+            <filter id="brownTrackedGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Particle outer glow filter */}
+            <filter id="brownParticleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Motion trail blur filter */}
+            <filter id="brownTrailBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" />
+            </filter>
+
+            {/* Inner shadow for container depth */}
+            <filter id="brownInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Temperature indicator gradient */}
+            <linearGradient id="brownTempGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#a3e635" />
+              <stop offset="75%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Label background gradient */}
+            <linearGradient id="brownLabelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+            </linearGradient>
           </defs>
-          <rect x="0" y="0" width={width} height={height} fill="url(#fluidGradient)" />
 
-          {/* Invisible molecule hints (small dots) */}
-          {Array.from({ length: 50 }).map((_, i) => (
-            <circle
-              key={`mol-${i}`}
-              cx={Math.random() * width}
-              cy={Math.random() * height}
-              r={1}
-              fill={colors.molecule}
-              opacity={0.3 + Math.random() * 0.3}
-            />
-          ))}
+          {/* === PREMIUM DARK LAB BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#brownLabBg)" />
 
-          {/* Tracked particle path */}
+          {/* Subtle grid pattern for scientific feel */}
+          <pattern id="brownLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#brownLabGrid)" />
+
+          {/* === FLUID CONTAINER WITH DEPTH === */}
+          {/* Outer container shadow */}
+          <rect
+            x="18"
+            y="58"
+            width={width - 36}
+            height={height - 96}
+            rx="12"
+            fill="#000"
+            opacity="0.4"
+          />
+
+          {/* Main container with glass effect */}
+          <rect
+            x="15"
+            y="55"
+            width={width - 30}
+            height={height - 90}
+            rx="12"
+            fill="url(#brownFluidGradient)"
+            stroke="url(#brownContainerBorder)"
+            strokeWidth="2"
+          />
+
+          {/* Glass reflection highlight */}
+          <rect
+            x="20"
+            y="60"
+            width={width - 40}
+            height="8"
+            rx="4"
+            fill="url(#brownContainerGlass)"
+            opacity="0.5"
+          />
+
+          {/* Inner container edge for depth */}
+          <rect
+            x="18"
+            y="58"
+            width={width - 36}
+            height={height - 96}
+            rx="10"
+            fill="none"
+            stroke="#0c4a6e"
+            strokeWidth="1"
+            opacity="0.3"
+          />
+
+          {/* === INVISIBLE WATER MOLECULES (HINT VISUALIZATION) === */}
+          {Array.from({ length: 80 }).map((_, i) => {
+            const mx = 25 + (i * 47) % (width - 50);
+            const my = 65 + (i * 31) % (height - 110);
+            return (
+              <circle
+                key={`mol-${i}`}
+                cx={mx}
+                cy={my}
+                r={1.5}
+                fill="url(#brownMolecule3D)"
+                opacity={0.2 + (i % 3) * 0.15}
+              />
+            );
+          })}
+
+          {/* === MOTION TRAIL EFFECTS FOR PARTICLE PATH === */}
           {showPath && trackedPath.length > 1 && (
-            <path
-              d={`M ${trackedPath.map(p => `${p.x},${p.y}`).join(' L ')}`}
-              fill="none"
-              stroke={colors.path}
-              strokeWidth={1.5}
-              opacity={0.7}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
-
-          {/* Particles */}
-          {particles.map((p, i) => (
-            <g key={i}>
-              {p.isTracked && (
+            <g>
+              {/* Outer glow trail */}
+              <path
+                d={`M ${trackedPath.map(p => `${p.x},${p.y}`).join(' L ')}`}
+                fill="none"
+                stroke="#10b981"
+                strokeWidth={6}
+                opacity={0.15}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#brownTrailBlur)"
+              />
+              {/* Middle glow trail */}
+              <path
+                d={`M ${trackedPath.map(p => `${p.x},${p.y}`).join(' L ')}`}
+                fill="none"
+                stroke="#34d399"
+                strokeWidth={3}
+                opacity={0.4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Core trail line */}
+              <path
+                d={`M ${trackedPath.map(p => `${p.x},${p.y}`).join(' L ')}`}
+                fill="none"
+                stroke="#6ee7b7"
+                strokeWidth={1.5}
+                opacity={0.85}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Trail start point marker */}
+              {trackedPath.length > 0 && (
                 <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={p.radius + 4}
-                  fill="none"
-                  stroke={colors.trackedParticle}
-                  strokeWidth={2}
-                  opacity={0.5}
+                  cx={trackedPath[0].x}
+                  cy={trackedPath[0].y}
+                  r={4}
+                  fill="#10b981"
+                  opacity={0.6}
                 />
               )}
+            </g>
+          )}
+
+          {/* === 3D PARTICLES WITH REALISTIC SPHERICAL APPEARANCE === */}
+          {particles.map((p, i) => (
+            <g key={i}>
+              {/* Tracked particle outer glow ring */}
+              {p.isTracked && (
+                <>
+                  {/* Pulsing outer glow */}
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={p.radius + 8}
+                    fill="none"
+                    stroke="#f87171"
+                    strokeWidth={2}
+                    opacity={0.25}
+                    filter="url(#brownTrackedGlow)"
+                  />
+                  {/* Inner tracking ring */}
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={p.radius + 4}
+                    fill="none"
+                    stroke="#ef4444"
+                    strokeWidth={1.5}
+                    opacity={0.6}
+                    strokeDasharray="4,3"
+                  />
+                </>
+              )}
+
+              {/* Particle shadow for 3D effect */}
+              <ellipse
+                cx={p.x + 2}
+                cy={p.y + 3}
+                rx={p.radius * 0.9}
+                ry={p.radius * 0.5}
+                fill="#000"
+                opacity={0.25}
+              />
+
+              {/* Main 3D particle sphere */}
               <circle
                 cx={p.x}
                 cy={p.y}
                 r={p.radius}
-                fill={p.isTracked ? colors.trackedParticle : colors.particle}
-                opacity={p.isTracked ? 1 : 0.8}
+                fill={p.isTracked ? 'url(#brownTrackedParticle3D)' : 'url(#brownParticle3D)'}
+                filter={p.isTracked ? 'url(#brownTrackedGlow)' : 'url(#brownParticleGlow)'}
               />
-              {p.isTracked && (
-                <circle
-                  cx={p.x - p.radius * 0.3}
-                  cy={p.y - p.radius * 0.3}
-                  r={p.radius * 0.25}
-                  fill="rgba(255,255,255,0.4)"
-                />
-              )}
+
+              {/* Specular highlight for 3D depth */}
+              <circle
+                cx={p.x - p.radius * 0.35}
+                cy={p.y - p.radius * 0.35}
+                r={p.radius * 0.3}
+                fill="rgba(255,255,255,0.5)"
+              />
+
+              {/* Secondary highlight */}
+              <circle
+                cx={p.x - p.radius * 0.15}
+                cy={p.y - p.radius * 0.5}
+                r={p.radius * 0.12}
+                fill="rgba(255,255,255,0.7)"
+              />
             </g>
           ))}
 
-          {/* Labels */}
-          <text x={20} y={25} fill={colors.textPrimary} fontSize={12}>
+          {/* === PROFESSIONAL LABELS WITH BACKGROUNDS === */}
+          {/* Temperature label background */}
+          <rect
+            x="12"
+            y="8"
+            width="135"
+            height="40"
+            rx="6"
+            fill="url(#brownLabelBg)"
+            stroke="#334155"
+            strokeWidth="1"
+          />
+
+          {/* Temperature indicator bar */}
+          <rect
+            x="18"
+            y="32"
+            width="100"
+            height="6"
+            rx="3"
+            fill="#1e293b"
+          />
+          <rect
+            x="18"
+            y="32"
+            width={temperature}
+            height="6"
+            rx="3"
+            fill="url(#brownTempGradient)"
+          />
+
+          <text x="22" y="24" fill={colors.textPrimary} fontSize="12" fontWeight="600">
             Temperature: {temperature}%
           </text>
-          <text x={20} y={42} fill={colors.textSecondary} fontSize={11}>
-            Red = Tracked Particle | Green = Path
+
+          {/* Legend label background */}
+          <rect
+            x={width - 185}
+            y="8"
+            width="173"
+            height="28"
+            rx="6"
+            fill="url(#brownLabelBg)"
+            stroke="#334155"
+            strokeWidth="1"
+          />
+
+          {/* Legend items */}
+          <circle cx={width - 170} cy="22" r="5" fill="url(#brownTrackedParticle3D)" />
+          <text x={width - 160} y="26" fill={colors.textSecondary} fontSize="10">
+            Tracked
+          </text>
+
+          <circle cx={width - 110} cy="22" r="5" fill="url(#brownParticle3D)" />
+          <text x={width - 100} y="26" fill={colors.textSecondary} fontSize="10">
+            Particles
+          </text>
+
+          <line x1={width - 55} y1="22" x2={width - 35} y2="22" stroke="#6ee7b7" strokeWidth="2" strokeLinecap="round" />
+          <text x={width - 30} y="26" fill={colors.textSecondary} fontSize="10">
+            Path
+          </text>
+
+          {/* Container label */}
+          <text
+            x={width / 2}
+            y={height - 18}
+            fill={colors.textMuted}
+            fontSize="10"
+            textAnchor="middle"
+            fontStyle="italic"
+          >
+            Fluid Medium (Water with Suspended Particles)
           </text>
         </svg>
 

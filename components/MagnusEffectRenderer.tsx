@@ -362,82 +362,433 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
     return (
       <svg width="400" height="320" className="mx-auto">
         <defs>
-          <linearGradient id="skyGradMagnus" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a5f" />
-            <stop offset="100%" stopColor="#0c1929" />
+          {/* === PREMIUM BACKGROUND GRADIENTS === */}
+          {/* Sky gradient with atmospheric depth */}
+          <linearGradient id="magnSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0c1929" />
+            <stop offset="25%" stopColor="#1e3a5f" />
+            <stop offset="50%" stopColor="#1a4a6e" />
+            <stop offset="75%" stopColor="#0f2a4a" />
+            <stop offset="100%" stopColor="#030712" />
           </linearGradient>
-          <radialGradient id="ballGrad" cx="30%" cy="30%" r="70%">
+
+          {/* Lab environment gradient */}
+          <linearGradient id="magnLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="30%" stopColor="#0a1628" />
+            <stop offset="70%" stopColor="#0f1d32" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* === 3D SPINNING BALL GRADIENTS === */}
+          {/* Baseball/ball primary radial gradient for 3D effect */}
+          <radialGradient id="magnBall3D" cx="35%" cy="25%" r="65%" fx="30%" fy="20%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#dc2626" />
+            <stop offset="15%" stopColor="#fef2f2" />
+            <stop offset="35%" stopColor="#fca5a5" />
+            <stop offset="60%" stopColor="#ef4444" />
+            <stop offset="85%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#991b1b" />
           </radialGradient>
+
+          {/* Ball shadow gradient for depth */}
+          <radialGradient id="magnBallShadow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#000000" stopOpacity="0" />
+            <stop offset="70%" stopColor="#000000" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0.4" />
+          </radialGradient>
+
+          {/* Ball specular highlight */}
+          <radialGradient id="magnBallHighlight" cx="30%" cy="25%" r="40%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+            <stop offset="40%" stopColor="#ffffff" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === AIRFLOW GRADIENTS === */}
+          {/* Fast airflow (low pressure - blue) */}
+          <linearGradient id="magnFastAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
+            <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.9" />
+            <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Slow airflow (high pressure - red/orange) */}
+          <linearGradient id="magnSlowAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+            <stop offset="20%" stopColor="#f87171" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#fca5a5" stopOpacity="0.8" />
+            <stop offset="80%" stopColor="#f87171" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* === FORCE ARROW GRADIENTS === */}
+          {/* Magnus force arrow gradient (green) */}
+          <linearGradient id="magnForceArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#166534" />
+            <stop offset="30%" stopColor="#22c55e" />
+            <stop offset="70%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#86efac" />
+          </linearGradient>
+
+          {/* Spin indicator gradient (gold) */}
+          <linearGradient id="magnSpinIndicator" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* === PRESSURE ZONE GRADIENTS === */}
+          {/* Low pressure zone (blue glow) */}
+          <radialGradient id="magnLowPressure" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#1d4ed8" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </radialGradient>
+
+          {/* High pressure zone (red glow) */}
+          <radialGradient id="magnHighPressure" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#dc2626" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Target zone gradient */}
+          <linearGradient id="magnTargetZone" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Trajectory trail gradient */}
+          <linearGradient id="magnTrajectory" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* === GLOW FILTERS === */}
+          {/* Ball glow filter */}
+          <filter id="magnBallGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Force arrow glow filter */}
+          <filter id="magnForceGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Soft airflow glow */}
+          <filter id="magnAirflowGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Spin indicator glow */}
+          <filter id="magnSpinGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Text shadow filter */}
+          <filter id="magnTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="1" dy="1" stdDeviation="1" floodColor="#000000" floodOpacity="0.5" />
+          </filter>
+
+          {/* === ARROW MARKERS === */}
+          {/* Magnus force arrow marker (large, green) */}
+          <marker id="magnArrowForce" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L12,4 z" fill="url(#magnForceArrow)" />
+          </marker>
+
+          {/* Spin direction arrow marker (gold) */}
+          <marker id="magnArrowSpin" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24" />
+          </marker>
+
+          {/* Airflow arrow marker (blue) */}
+          <marker id="magnArrowAirFast" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#60a5fa" />
+          </marker>
+
+          {/* Airflow arrow marker (red) */}
+          <marker id="magnArrowAirSlow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L8,3 z" fill="#f87171" />
+          </marker>
+
+          {/* === PATTERNS === */}
+          {/* Subtle grid pattern for lab environment */}
+          <pattern id="magnLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
         </defs>
 
-        {/* Background */}
-        <rect width="400" height="320" fill="url(#skyGradMagnus)" rx="12" />
+        {/* === BACKGROUND LAYERS === */}
+        <rect width="400" height="320" fill="url(#magnLabBg)" rx="12" />
+        <rect width="400" height="320" fill="url(#magnSkyGradient)" opacity="0.6" rx="12" />
+        <rect width="400" height="320" fill="url(#magnLabGrid)" rx="12" />
 
-        {/* Trajectory trail */}
+        {/* === TRAJECTORY TRAIL === */}
         {trajectory.length > 1 && (
-          <path
-            d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
-            fill="none"
-            stroke="#fbbf24"
-            strokeWidth="2"
-            strokeDasharray="5,5"
-            opacity="0.6"
-          />
+          <g>
+            <path
+              d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
+              fill="none"
+              stroke="url(#magnTrajectory)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.8"
+            />
+            {/* Trajectory glow */}
+            <path
+              d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
+              fill="none"
+              stroke="#fbbf24"
+              strokeWidth="6"
+              strokeLinecap="round"
+              opacity="0.2"
+            />
+          </g>
         )}
 
-        {/* Airflow lines when showing */}
+        {/* === AIRFLOW VISUALIZATION === */}
         {showAirflow && (
           <g>
-            {/* Top airflow - faster */}
-            <path d="M80,120 Q200,100 350,120" fill="none" stroke="#3b82f6" strokeWidth="2" opacity="0.7">
-              <animate attributeName="stroke-dashoffset" from="20" to="0" dur="0.5s" repeatCount="indefinite" />
-            </path>
-            <text x="200" y="95" textAnchor="middle" fill="#3b82f6" fontSize="11">Fast air = Low pressure</text>
+            {/* Pressure zones */}
+            <ellipse cx="200" cy="100" rx="80" ry="40" fill="url(#magnLowPressure)" />
+            <ellipse cx="200" cy="200" rx="80" ry="40" fill="url(#magnHighPressure)" />
 
-            {/* Bottom airflow - slower */}
-            <path d="M80,180 Q200,200 350,180" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.7" strokeDasharray="8,4">
-              <animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite" />
-            </path>
-            <text x="200" y="220" textAnchor="middle" fill="#ef4444" fontSize="11">Slow air = High pressure</text>
+            {/* Fast airflow streamlines (top - low pressure) */}
+            <g filter="url(#magnAirflowGlow)">
+              {[0, 1, 2].map((i) => (
+                <path
+                  key={`fast-${i}`}
+                  d={`M${60 + i * 20},${110 + i * 8} Q200,${85 + i * 5} ${340 - i * 20},${110 + i * 8}`}
+                  fill="none"
+                  stroke="url(#magnFastAirflow)"
+                  strokeWidth={3 - i * 0.5}
+                  strokeLinecap="round"
+                  markerEnd="url(#magnArrowAirFast)"
+                >
+                  <animate attributeName="stroke-dashoffset" from="40" to="0" dur={`${0.4 + i * 0.1}s`} repeatCount="indefinite" />
+                </path>
+              ))}
+            </g>
 
-            {/* Magnus force arrow */}
-            <line x1="200" y1="180" x2="200" y2="130" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowMagnus)" />
-            <text x="230" y="155" fill="#22c55e" fontSize="12" fontWeight="bold">Magnus Force</text>
+            {/* Slow airflow streamlines (bottom - high pressure) */}
+            <g filter="url(#magnAirflowGlow)">
+              {[0, 1, 2].map((i) => (
+                <path
+                  key={`slow-${i}`}
+                  d={`M${60 + i * 20},${190 - i * 8} Q200,${215 - i * 5} ${340 - i * 20},${190 - i * 8}`}
+                  fill="none"
+                  stroke="url(#magnSlowAirflow)"
+                  strokeWidth={3 - i * 0.5}
+                  strokeLinecap="round"
+                  strokeDasharray="8,4"
+                  markerEnd="url(#magnArrowAirSlow)"
+                >
+                  <animate attributeName="stroke-dashoffset" from="0" to="24" dur={`${0.8 + i * 0.2}s`} repeatCount="indefinite" />
+                </path>
+              ))}
+            </g>
+
+            {/* Pressure labels with premium styling */}
+            <g filter="url(#magnTextShadow)">
+              <rect x="140" y="70" width="120" height="22" rx="4" fill="#1e40af" fillOpacity="0.8" />
+              <text x="200" y="85" textAnchor="middle" fill="#93c5fd" fontSize="11" fontWeight="bold">
+                FAST AIR = LOW P
+              </text>
+            </g>
+            <g filter="url(#magnTextShadow)">
+              <rect x="135" y="225" width="130" height="22" rx="4" fill="#991b1b" fillOpacity="0.8" />
+              <text x="200" y="240" textAnchor="middle" fill="#fca5a5" fontSize="11" fontWeight="bold">
+                SLOW AIR = HIGH P
+              </text>
+            </g>
+
+            {/* === MAGNUS FORCE ARROW === */}
+            <g filter="url(#magnForceGlow)">
+              {/* Force arrow background glow */}
+              <line x1="200" y1="195" x2="200" y2="115" stroke="#22c55e" strokeWidth="8" opacity="0.3" strokeLinecap="round" />
+              {/* Main force arrow */}
+              <line x1="200" y1="190" x2="200" y2="120" stroke="url(#magnForceArrow)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#magnArrowForce)" />
+            </g>
+
+            {/* Force label with premium box */}
+            <g filter="url(#magnTextShadow)">
+              <rect x="215" y="140" width="95" height="26" rx="5" fill="#166534" fillOpacity="0.9" stroke="#4ade80" strokeWidth="1" />
+              <text x="262" y="158" textAnchor="middle" fill="#86efac" fontSize="12" fontWeight="bold">
+                Magnus Force
+              </text>
+            </g>
           </g>
         )}
 
-        {/* Ball */}
-        <g transform={`translate(${ballX}, ${ballY})`}>
-          <circle r={size/2} fill="url(#ballGrad)" stroke="#991b1b" strokeWidth="2" />
-          {/* Seam lines to show rotation */}
+        {/* === 3D SPINNING BALL === */}
+        <g transform={`translate(${ballX}, ${ballY})`} filter="url(#magnBallGlow)">
+          {/* Ball drop shadow */}
+          <ellipse cx="3" cy={size/2 + 5} rx={size/2.5} ry={size/8} fill="#000000" opacity="0.3" />
+
+          {/* Main ball with 3D gradient */}
+          <circle r={size/2} fill="url(#magnBall3D)" />
+
+          {/* Ball shadow overlay for depth */}
+          <circle r={size/2} fill="url(#magnBallShadow)" />
+
+          {/* Ball specular highlight */}
+          <circle r={size/2} fill="url(#magnBallHighlight)" />
+
+          {/* Seam lines with rotation animation */}
           <g transform={`rotate(${ballRotation})`}>
-            <path d={`M-${size/3},0 Q0,-${size/3} ${size/3},0 Q0,${size/3} -${size/3},0`}
-                  fill="none" stroke="#ffffff" strokeWidth="2" opacity="0.8" />
+            {/* Primary seam */}
+            <path
+              d={`M-${size/3},0 Q0,-${size/3} ${size/3},0 Q0,${size/3} -${size/3},0`}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="2.5"
+              opacity="0.9"
+              strokeLinecap="round"
+            />
+            {/* Secondary seam details */}
+            <path
+              d={`M-${size/4},${size/6} Q0,${size/4} ${size/4},${size/6}`}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="1.5"
+              opacity="0.6"
+              strokeLinecap="round"
+            />
+            <path
+              d={`M-${size/4},-${size/6} Q0,-${size/4} ${size/4},-${size/6}`}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="1.5"
+              opacity="0.6"
+              strokeLinecap="round"
+            />
           </g>
-          {/* Spin direction indicator */}
-          {spinDirection === 'topspin' && (
-            <path d={`M-15,-${size/2+10} A20,20 0 0 1 15,-${size/2+10}`} fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#arrowSpin)" />
-          )}
-          {spinDirection === 'backspin' && (
-            <path d={`M15,-${size/2+10} A20,20 0 0 0 -15,-${size/2+10}`} fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#arrowSpin)" />
-          )}
+
+          {/* Rotation speed indicator ring */}
+          <circle
+            r={size/2 + 3}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth="1.5"
+            strokeDasharray={`${spinRate / 10} ${10 - spinRate / 10}`}
+            opacity="0.6"
+          >
+            <animateTransform
+              attributeName="transform"
+              type="rotate"
+              from="0"
+              to={spinDirection === 'backspin' ? '-360' : '360'}
+              dur={`${2 - spinRate / 100}s`}
+              repeatCount="indefinite"
+            />
+          </circle>
+
+          {/* === SPIN DIRECTION INDICATORS === */}
+          <g filter="url(#magnSpinGlow)">
+            {spinDirection === 'topspin' && (
+              <g>
+                {/* Topspin arc with glow */}
+                <path
+                  d={`M-18,-${size/2 + 12} A24,24 0 0 1 18,-${size/2 + 12}`}
+                  fill="none"
+                  stroke="url(#magnSpinIndicator)"
+                  strokeWidth="3"
+                  markerEnd="url(#magnArrowSpin)"
+                />
+                <text x="0" y={-size/2 - 22} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold" filter="url(#magnTextShadow)">
+                  TOPSPIN
+                </text>
+              </g>
+            )}
+            {spinDirection === 'backspin' && (
+              <g>
+                {/* Backspin arc with glow */}
+                <path
+                  d={`M18,-${size/2 + 12} A24,24 0 0 0 -18,-${size/2 + 12}`}
+                  fill="none"
+                  stroke="url(#magnSpinIndicator)"
+                  strokeWidth="3"
+                  markerEnd="url(#magnArrowSpin)"
+                />
+                <text x="0" y={-size/2 - 22} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold" filter="url(#magnTextShadow)">
+                  BACKSPIN
+                </text>
+              </g>
+            )}
+            {spinDirection === 'sidespin' && (
+              <g>
+                {/* Sidespin indicator */}
+                <path
+                  d={`M${size/2 + 12},-18 A24,24 0 0 1 ${size/2 + 12},18`}
+                  fill="none"
+                  stroke="url(#magnSpinIndicator)"
+                  strokeWidth="3"
+                  markerEnd="url(#magnArrowSpin)"
+                />
+                <text x={size/2 + 25} y="0" textAnchor="start" fill="#fbbf24" fontSize="10" fontWeight="bold" filter="url(#magnTextShadow)">
+                  SIDESPIN
+                </text>
+              </g>
+            )}
+          </g>
         </g>
 
-        {/* Ground/target */}
-        <rect x="360" y="100" width="30" height="180" fill="#4ade80" opacity="0.3" rx="4" />
-        <text x="375" y="195" textAnchor="middle" fill="#4ade80" fontSize="10">Target</text>
+        {/* === TARGET ZONE === */}
+        <g>
+          <rect x="360" y="100" width="32" height="180" fill="url(#magnTargetZone)" rx="6" />
+          <rect x="360" y="100" width="32" height="180" fill="none" stroke="#4ade80" strokeWidth="1.5" strokeDasharray="4,4" rx="6" opacity="0.6" />
+          {/* Target rings */}
+          {[0, 1, 2].map((i) => (
+            <circle
+              key={`target-${i}`}
+              cx="376"
+              cy="190"
+              r={15 + i * 15}
+              fill="none"
+              stroke="#4ade80"
+              strokeWidth="1"
+              opacity={0.5 - i * 0.15}
+            />
+          ))}
+          <text x="376" y="290" textAnchor="middle" fill="#4ade80" fontSize="11" fontWeight="bold" filter="url(#magnTextShadow)">
+            TARGET
+          </text>
+        </g>
 
-        {/* Markers */}
-        <defs>
-          <marker id="arrowMagnus" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
-          </marker>
-          <marker id="arrowSpin" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L7,3 z" fill="#fbbf24" />
-          </marker>
-        </defs>
+        {/* === MEASUREMENT SCALE === */}
+        <g opacity="0.5">
+          <line x1="50" y1="300" x2="350" y2="300" stroke="#64748b" strokeWidth="1" />
+          {[50, 100, 150, 200, 250, 300, 350].map((x) => (
+            <g key={`scale-${x}`}>
+              <line x1={x} y1="295" x2={x} y2="300" stroke="#64748b" strokeWidth="1" />
+              <text x={x} y="310" textAnchor="middle" fill="#64748b" fontSize="8">
+                {x - 50}
+              </text>
+            </g>
+          ))}
+        </g>
       </svg>
     );
   };
@@ -1194,7 +1545,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhase
             <p className="text-sm text-slate-300">Sports Applications</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">[<>]</div>
+            <div className="text-2xl mb-2">[{'<>'}]</div>
             <p className="text-sm text-slate-300">Reverse Magnus</p>
           </div>
         </div>

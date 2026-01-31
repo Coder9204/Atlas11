@@ -490,122 +490,457 @@ const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="lightBeam" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.light} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.light} stopOpacity="0.2" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="lfdLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-            <pattern id="maskPattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <rect width="10" height="20" fill="black" />
-              <rect x="10" width="10" height="20" fill="transparent" />
-            </pattern>
-            <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation={result.focusError * 3} />
+
+            {/* Light source housing - premium metal gradient */}
+            <linearGradient id="lfdLightSourceMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Light source emitter glow */}
+            <radialGradient id="lfdEmitterGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Premium optical lens gradient - glass with depth */}
+            <linearGradient id="lfdLensGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.4" />
+              <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="80%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Lens rim - metallic edge */}
+            <linearGradient id="lfdLensRim" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6366f1" />
+              <stop offset="25%" stopColor="#818cf8" />
+              <stop offset="50%" stopColor="#a5b4fc" />
+              <stop offset="75%" stopColor="#818cf8" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
+
+            {/* Light beam gradient - focused exposure */}
+            <linearGradient id="lfdLightBeam" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#fde68a" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.6" />
+              <stop offset="80%" stopColor="#fbbf24" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Focused light cone - radial intensity */}
+            <radialGradient id="lfdFocusedBeam" cx="50%" cy="100%" r="80%" fx="50%" fy="100%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#fde68a" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#fcd34d" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.1" />
+            </radialGradient>
+
+            {/* Photomask chrome pattern */}
+            <linearGradient id="lfdChromeMask" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="20%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Photoresist layer gradient */}
+            <linearGradient id="lfdPhotoresist" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fde047" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#facc15" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#eab308" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#ca8a04" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Exposed resist - developed region */}
+            <linearGradient id="lfdExposedResist" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#6d28d9" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#5b21b6" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Silicon wafer substrate */}
+            <linearGradient id="lfdSiliconWafer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Process window map - success region */}
+            <radialGradient id="lfdProcessWindow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#059669" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0.2" />
+            </radialGradient>
+
+            {/* Metrics panel background */}
+            <linearGradient id="lfdMetricsPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Glow filter for light source */}
+            <filter id="lfdEmitterBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
+
+            {/* Glow filter for exposed regions */}
+            <filter id="lfdExposureGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Lens refraction glow */}
+            <filter id="lfdLensGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Defocus blur filter - dynamic based on focus error */}
+            <filter id="lfdDefocusBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation={result.focusError * 4} />
+            </filter>
+
+            {/* Current position marker glow */}
+            <filter id="lfdMarkerGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Photomask pattern with chrome absorber */}
+            <pattern id="lfdMaskPattern" x="0" y="0" width="16" height="20" patternUnits="userSpaceOnUse">
+              <rect width="8" height="20" fill="url(#lfdChromeMask)" />
+              <rect x="8" width="8" height="20" fill="transparent" />
+            </pattern>
+
+            {/* Quality score gradient - success */}
+            <linearGradient id="lfdQualitySuccess" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+
+            {/* Quality score gradient - warning */}
+            <linearGradient id="lfdQualityWarning" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Quality score gradient - error */}
+            <linearGradient id="lfdQualityError" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
           </defs>
 
-          <text x={mapX + mapSize / 2} y={mapY - 5} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Focus-Dose Map</text>
-          {Array.from({ length: 10 }, (_, i) =>
-            Array.from({ length: 10 }, (_, j) => {
-              const cellFocus = (i + 0.5) * 10;
-              const cellDose = (j + 0.5) * 10;
-              const cellFocusErr = Math.abs(cellFocus - 50) / 50;
-              const cellDoseErr = Math.abs(cellDose - 50) / 50;
-              const cellErr = Math.sqrt(cellFocusErr * cellFocusErr + cellDoseErr * cellDoseErr);
-              const inWindow = cellErr < 0.7;
-              return (
-                <rect
-                  key={`cell${i}${j}`}
-                  x={mapX + i * cellSize}
-                  y={mapY + j * cellSize}
-                  width={cellSize - 1}
-                  height={cellSize - 1}
-                  fill={inWindow ? colors.success : colors.error}
-                  opacity={0.3 + (1 - cellErr) * 0.5}
-                />
-              );
-            })
-          )}
-          <circle
-            cx={mapX + (focus / 100) * mapSize}
-            cy={mapY + (dose / 100) * mapSize}
-            r={5}
-            fill={result.inSpec ? colors.success : colors.error}
-            stroke="white"
-            strokeWidth={2}
-          />
-          <text x={mapX} y={mapY + mapSize + 15} fill={colors.textMuted} fontSize={9}>Focus</text>
-          <text x={mapX - 15} y={mapY + mapSize / 2} fill={colors.textMuted} fontSize={9} transform={`rotate(-90, ${mapX - 15}, ${mapY + mapSize / 2})`}>Dose</text>
+          {/* Premium background */}
+          <rect width={width} height={height} fill="url(#lfdLabBg)" />
 
-          <rect x={250} y={30} width={100} height={30} fill="#4b5563" rx={4} />
-          <text x={300} y={50} fill={colors.textPrimary} fontSize={10} textAnchor="middle">Light Source</text>
+          {/* Subtle grid pattern for lab feel */}
+          <g opacity="0.1">
+            {Array.from({ length: 25 }, (_, i) => (
+              <line key={`vg${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 20 }, (_, i) => (
+              <line key={`hg${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+          </g>
 
-          <rect x={260} y={80} width={80} height={15} fill="url(#maskPattern)" stroke={colors.textMuted} />
-          <text x={300} y={110} fill={colors.textSecondary} fontSize={9} textAnchor="middle">Photomask</text>
+          {/* Focus-Dose Process Window Map */}
+          <g>
+            <text x={mapX + mapSize / 2} y={mapY - 8} fill={colors.textSecondary} fontSize={10} textAnchor="middle" fontWeight="600">Focus-Dose Map</text>
 
-          <ellipse cx={300} cy={140} rx={35} ry={10} fill="rgba(100, 180, 255, 0.3)" stroke={colors.accent} strokeWidth={2} />
-          <text x={300} y={160} fill={colors.textMuted} fontSize={8} textAnchor="middle">Projection Lens</text>
+            {/* Map background */}
+            <rect x={mapX - 2} y={mapY - 2} width={mapSize + 4} height={mapSize + 4} fill="#0f172a" rx={4} stroke="#334155" strokeWidth="1" />
 
-          <polygon
-            points="265,95 270,140 290,200 310,200 330,140 335,95"
-            fill="url(#lightBeam)"
-            opacity={dose / 100}
-            filter={result.focusError > 0.3 ? 'url(#blur)' : undefined}
-          />
+            {/* Process window cells */}
+            {Array.from({ length: 10 }, (_, i) =>
+              Array.from({ length: 10 }, (_, j) => {
+                const cellFocus = (i + 0.5) * 10;
+                const cellDose = (j + 0.5) * 10;
+                const cellFocusErr = Math.abs(cellFocus - 50) / 50;
+                const cellDoseErr = Math.abs(cellDose - 50) / 50;
+                const cellErr = Math.sqrt(cellFocusErr * cellFocusErr + cellDoseErr * cellDoseErr);
+                const inWindow = cellErr < 0.7;
+                return (
+                  <rect
+                    key={`cell${i}${j}`}
+                    x={mapX + i * cellSize}
+                    y={mapY + j * cellSize}
+                    width={cellSize - 1}
+                    height={cellSize - 1}
+                    fill={inWindow ? colors.success : colors.error}
+                    opacity={0.25 + (1 - cellErr) * 0.55}
+                    rx={1}
+                  />
+                );
+              })
+            )}
 
-          <rect x={230} y={200} width={140} height={20} fill={colors.silicon} />
-          <rect x={230} y={200} width={140} height={10} fill={colors.photoresist} opacity={0.8} />
-          <text x={300} y={235} fill={colors.textSecondary} fontSize={9} textAnchor="middle">Photoresist on Silicon</text>
-
-          <text x={300} y={260} fill={colors.textPrimary} fontSize={11} textAnchor="middle">Printed Feature:</text>
-
-          <g transform="translate(250, 270)">
-            <rect x={0} y={0} width={100} height={60} fill={colors.silicon} rx={2} />
-            <rect
-              x={50 - targetWidth / 2}
-              y={5}
-              width={targetWidth}
-              height={50}
-              fill="none"
-              stroke={colors.textMuted}
-              strokeWidth={1}
-              strokeDasharray="3,3"
+            {/* Current position marker with glow */}
+            <circle
+              cx={mapX + (focus / 100) * mapSize}
+              cy={mapY + (dose / 100) * mapSize}
+              r={7}
+              fill={result.inSpec ? colors.success : colors.error}
+              filter="url(#lfdMarkerGlow)"
+              opacity="0.5"
             />
-            <polyline
-              points={generateLERPoints(50 - result.printedWidth / 2, result.printedWidth, result.ler, 5, 55)}
-              fill="none"
-              stroke={colors.exposed}
+            <circle
+              cx={mapX + (focus / 100) * mapSize}
+              cy={mapY + (dose / 100) * mapSize}
+              r={5}
+              fill={result.inSpec ? colors.success : colors.error}
+              stroke="white"
               strokeWidth={2}
             />
-            <polyline
-              points={generateLERPoints(50 + result.printedWidth / 2, result.printedWidth, result.ler, 5, 55)}
-              fill="none"
-              stroke={colors.exposed}
-              strokeWidth={2}
+
+            {/* Axis labels */}
+            <text x={mapX + mapSize / 2} y={mapY + mapSize + 14} fill={colors.textMuted} fontSize={9} textAnchor="middle">Focus</text>
+            <text x={mapX - 10} y={mapY + mapSize / 2} fill={colors.textMuted} fontSize={9} textAnchor="middle" transform={`rotate(-90, ${mapX - 10}, ${mapY + mapSize / 2})`}>Dose</text>
+          </g>
+
+          {/* Premium Light Source Assembly */}
+          <g>
+            {/* Light source housing */}
+            <rect x={245} y={22} width={110} height={38} fill="url(#lfdLightSourceMetal)" rx={6} />
+            <rect x={247} y={24} width={106} height={34} fill="none" stroke="#475569" strokeWidth="1" rx={5} />
+
+            {/* Emitter window */}
+            <rect x={270} y={50} width={60} height={8} fill="#1e293b" rx={2} />
+            <ellipse cx={300} cy={54} rx={25} ry={4} fill="url(#lfdEmitterGlow)" filter="url(#lfdEmitterBlur)" />
+
+            {/* Light source label */}
+            <text x={300} y={40} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="600">UV Light Source</text>
+
+            {/* Intensity indicator */}
+            <rect x={360} y={30} width={40} height={8} fill="#1e293b" rx={2} />
+            <rect x={362} y={32} width={(dose / 100) * 36} height={4} fill={dose > 70 ? colors.warning : dose < 30 ? colors.error : colors.success} rx={1} />
+          </g>
+
+          {/* Photomask with chrome pattern */}
+          <g>
+            <rect x={255} y={75} width={90} height={18} fill="url(#lfdMaskPattern)" stroke="#4b5563" strokeWidth="1.5" rx={2} />
+            <rect x={253} y={73} width={94} height={22} fill="none" stroke="#64748b" strokeWidth="1" rx={3} />
+            <text x={300} y={108} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="500">Photomask</text>
+          </g>
+
+          {/* Premium Projection Lens System */}
+          <g>
+            {/* Outer lens housing */}
+            <ellipse cx={300} cy={135} rx={45} ry={14} fill="url(#lfdLensRim)" opacity="0.8" />
+
+            {/* Inner lens glass with depth effect */}
+            <ellipse cx={300} cy={135} rx={38} ry={11} fill="url(#lfdLensGlass)" filter="url(#lfdLensGlow)" />
+
+            {/* Lens surface highlight */}
+            <ellipse cx={290} cy={132} rx={15} ry={4} fill="white" opacity="0.15" />
+
+            {/* Lens center mark */}
+            <circle cx={300} cy={135} r={3} fill="#60a5fa" opacity="0.6" />
+
+            <text x={300} y={160} fill={colors.textMuted} fontSize={8} textAnchor="middle">Projection Lens (NA: 0.93)</text>
+          </g>
+
+          {/* Light Beam with focus visualization */}
+          <g>
+            {/* Upper beam cone (mask to lens) */}
+            <polygon
+              points="265,93 275,135 325,135 335,93"
+              fill="url(#lfdLightBeam)"
+              opacity={0.3 + (dose / 100) * 0.5}
             />
-            <rect
-              x={50 - result.printedWidth / 2}
-              y={5}
-              width={result.printedWidth}
-              height={50}
-              fill={colors.exposed}
-              opacity={0.4}
+
+            {/* Lower beam cone (lens to wafer) - shows focus effect */}
+            <polygon
+              points={`${275 - result.focusError * 15},135 ${290 - result.focusError * 5},195 ${310 + result.focusError * 5},195 ${325 + result.focusError * 15},135`}
+              fill="url(#lfdFocusedBeam)"
+              opacity={0.4 + (dose / 100) * 0.4}
+              filter={result.focusError > 0.25 ? 'url(#lfdDefocusBlur)' : undefined}
+            />
+
+            {/* Focal point indicator */}
+            <ellipse
+              cx={300}
+              cy={195 + (focus - 50) * 0.5}
+              rx={4 + result.focusError * 8}
+              ry={2}
+              fill="#fcd34d"
+              opacity={0.8}
+              filter="url(#lfdExposureGlow)"
             />
           </g>
 
-          <rect x={380} y={20} width={110} height={180} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={390} y={40} fill={colors.textSecondary} fontSize={10}>METRICS</text>
-          <text x={390} y={60} fill={colors.textPrimary} fontSize={10}>Target: {targetWidth.toFixed(0)} nm</text>
-          <text x={390} y={78} fill={colors.textPrimary} fontSize={10}>Printed: {result.printedWidth.toFixed(1)} nm</text>
-          <text x={390} y={96} fill={result.widthError < 5 ? colors.success : colors.error} fontSize={10}>Error: {result.widthError.toFixed(1)} nm</text>
-          <text x={390} y={114} fill={result.ler < 6 ? colors.success : colors.warning} fontSize={10}>LER: {result.ler.toFixed(1)} nm</text>
-          <text x={390} y={140} fill={colors.textMuted} fontSize={9}>Focus err: {(result.focusError * 100).toFixed(0)}%</text>
-          <text x={390} y={155} fill={colors.textMuted} fontSize={9}>Dose err: {(result.doseError * 100).toFixed(0)}%</text>
-          <text x={390} y={180} fill={result.inSpec ? colors.success : colors.error} fontSize={12} fontWeight="bold">{result.inSpec ? 'PASS' : 'FAIL'}</text>
+          {/* Wafer Stack with Photoresist */}
+          <g>
+            {/* Silicon substrate */}
+            <rect x={225} y={208} width={150} height={18} fill="url(#lfdSiliconWafer)" rx={2} />
 
-          <rect x={380} y={340} width={110} height={40} fill="rgba(0,0,0,0.4)" rx={4} />
-          <text x={390} y={358} fill={colors.textSecondary} fontSize={9}>Quality Score</text>
-          <rect x={390} y={365} width={90} height={8} fill="rgba(255,255,255,0.1)" rx={2} />
-          <rect x={390} y={365} width={Math.max(0, result.quality) * 0.9} height={8} fill={result.quality > 70 ? colors.success : result.quality > 40 ? colors.warning : colors.error} rx={2} />
+            {/* Photoresist layer */}
+            <rect x={225} y={195} width={150} height={13} fill="url(#lfdPhotoresist)" rx={2} />
+
+            {/* Exposure region on resist (shows dose effect) */}
+            <rect
+              x={285 - (dose - 50) * 0.2}
+              y={195}
+              width={30 + (dose - 50) * 0.4}
+              height={13}
+              fill="url(#lfdExposedResist)"
+              opacity={0.7 + (dose / 100) * 0.3}
+              filter="url(#lfdExposureGlow)"
+              rx={1}
+            />
+
+            {/* Wafer edge highlight */}
+            <rect x={225} y={195} width={150} height={1} fill="white" opacity="0.1" />
+
+            <text x={300} y={240} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="500">Photoresist on Silicon Wafer</text>
+          </g>
+
+          {/* Printed Feature Result with LER visualization */}
+          <g transform="translate(250, 260)">
+            <text x={50} y={-5} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="600">Printed Feature Profile</text>
+
+            {/* Silicon background */}
+            <rect x={0} y={5} width={100} height={55} fill="url(#lfdSiliconWafer)" rx={3} />
+
+            {/* Target width indicator (dashed) */}
+            <rect
+              x={50 - targetWidth / 2}
+              y={8}
+              width={targetWidth}
+              height={49}
+              fill="none"
+              stroke={colors.textMuted}
+              strokeWidth={1}
+              strokeDasharray="4,2"
+              opacity="0.6"
+            />
+
+            {/* Printed feature with LER */}
+            <polyline
+              points={generateLERPoints(50 - result.printedWidth / 2, result.printedWidth, result.ler, 8, 57)}
+              fill="none"
+              stroke="url(#lfdExposedResist)"
+              strokeWidth={2.5}
+            />
+            <polyline
+              points={generateLERPoints(50 + result.printedWidth / 2, result.printedWidth, result.ler, 8, 57)}
+              fill="none"
+              stroke="url(#lfdExposedResist)"
+              strokeWidth={2.5}
+            />
+
+            {/* Feature fill */}
+            <rect
+              x={50 - result.printedWidth / 2}
+              y={8}
+              width={result.printedWidth}
+              height={49}
+              fill="url(#lfdExposedResist)"
+              opacity={0.5}
+              filter="url(#lfdExposureGlow)"
+            />
+
+            {/* Width dimension annotations */}
+            <line x1={50 - targetWidth / 2} y1={62} x2={50 + targetWidth / 2} y2={62} stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
+            <text x={50} y={72} fill={colors.textMuted} fontSize={7} textAnchor="middle">Target: {targetWidth}nm</text>
+          </g>
+
+          {/* Premium Metrics Panel */}
+          <g>
+            <rect x={378} y={18} width={115} height={185} fill="url(#lfdMetricsPanel)" rx={10} stroke={colors.accent} strokeWidth="1.5" />
+
+            {/* Panel header */}
+            <rect x={378} y={18} width={115} height={24} fill={colors.accent} opacity="0.15" rx={10} />
+            <text x={435} y={35} fill={colors.accent} fontSize={11} textAnchor="middle" fontWeight="700">METRICS</text>
+
+            {/* Divider line */}
+            <line x1={385} y1={45} x2={485} y2={45} stroke={colors.border} strokeWidth="1" />
+
+            {/* Metrics content */}
+            <text x={390} y={62} fill={colors.textSecondary} fontSize={9}>Target Width</text>
+            <text x={483} y={62} fill={colors.textPrimary} fontSize={10} textAnchor="end" fontWeight="600">{targetWidth.toFixed(0)} nm</text>
+
+            <text x={390} y={80} fill={colors.textSecondary} fontSize={9}>Printed Width</text>
+            <text x={483} y={80} fill={colors.textPrimary} fontSize={10} textAnchor="end" fontWeight="600">{result.printedWidth.toFixed(1)} nm</text>
+
+            <text x={390} y={98} fill={colors.textSecondary} fontSize={9}>Width Error</text>
+            <text x={483} y={98} fill={result.widthError < 5 ? colors.success : colors.error} fontSize={10} textAnchor="end" fontWeight="600">{result.widthError.toFixed(1)} nm</text>
+
+            <text x={390} y={116} fill={colors.textSecondary} fontSize={9}>Line Edge Roughness</text>
+            <text x={483} y={116} fill={result.ler < 6 ? colors.success : colors.warning} fontSize={10} textAnchor="end" fontWeight="600">{result.ler.toFixed(1)} nm</text>
+
+            {/* Divider */}
+            <line x1={385} y1={125} x2={485} y2={125} stroke={colors.border} strokeWidth="1" opacity="0.5" />
+
+            <text x={390} y={142} fill={colors.textMuted} fontSize={8}>Focus Error</text>
+            <text x={483} y={142} fill={colors.textMuted} fontSize={9} textAnchor="end">{(result.focusError * 100).toFixed(0)}%</text>
+
+            <text x={390} y={158} fill={colors.textMuted} fontSize={8}>Dose Error</text>
+            <text x={483} y={158} fill={colors.textMuted} fontSize={9} textAnchor="end">{(result.doseError * 100).toFixed(0)}%</text>
+
+            {/* Pass/Fail indicator */}
+            <rect x={390} y={170} width={83} height={24} fill={result.inSpec ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'} rx={6} />
+            <text x={431} y={186} fill={result.inSpec ? colors.success : colors.error} fontSize={13} textAnchor="middle" fontWeight="800">{result.inSpec ? 'PASS' : 'FAIL'}</text>
+          </g>
+
+          {/* Quality Score Bar */}
+          <g>
+            <rect x={378} y={340} width={115} height={45} fill="url(#lfdMetricsPanel)" rx={8} stroke={colors.border} strokeWidth="1" />
+            <text x={435} y={357} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="600">Quality Score</text>
+
+            {/* Score bar background */}
+            <rect x={388} y={363} width={95} height={12} fill="rgba(255,255,255,0.08)" rx={3} />
+
+            {/* Score bar fill */}
+            <rect
+              x={388}
+              y={363}
+              width={Math.max(0, result.quality) * 0.95}
+              height={12}
+              fill={result.quality > 70 ? 'url(#lfdQualitySuccess)' : result.quality > 40 ? 'url(#lfdQualityWarning)' : 'url(#lfdQualityError)'}
+              rx={3}
+            />
+
+            {/* Score percentage */}
+            <text x={435} y={373} fill={colors.textPrimary} fontSize={8} textAnchor="middle" fontWeight="700">{Math.max(0, result.quality).toFixed(0)}%</text>
+          </g>
         </svg>
 
         {interactive && (

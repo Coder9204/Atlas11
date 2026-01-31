@@ -267,19 +267,18 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   };
 
   const renderMaterialBlob = (interactive: boolean, showGraph: boolean = false) => {
-    const width = 400;
-    const height = 300;
+    const width = 700;
+    const height = 450;
     const centerX = width / 2;
-    const centerY = height / 2;
+    const centerY = 200;
 
     // Material blob deformation based on stretch
     const De = deborahNumber();
-    const blobWidth = 80 + stretchAmount * (De > 1 ? 0.5 : 1.5);
-    const blobHeight = 60 - stretchAmount * 0.3 * (De > 1 ? 0.5 : 1.5);
+    const blobWidth = 90 + stretchAmount * (De > 1 ? 0.5 : 1.5);
+    const blobHeight = 65 - stretchAmount * 0.3 * (De > 1 ? 0.5 : 1.5);
 
-    // Color based on behavior - more purple = elastic, more red = viscous
+    // Behavior ratio for visual effects
     const behaviorRatio = Math.min(De / 2, 1);
-    const blobColor = `rgb(${Math.round(168 + (59 - 168) * behaviorRatio)}, ${Math.round(85 + (130 - 85) * behaviorRatio)}, ${Math.round(247 + (246 - 247) * behaviorRatio)})`;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -288,154 +287,499 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#f8fafc', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ maxWidth: '750px' }}
         >
-          {/* Background indicators */}
-          <text x={20} y={25} fill={colors.bgPrimary} fontSize={12} fontWeight="bold">
-            Deborah Number: {De.toFixed(2)}
-          </text>
-          <text x={20} y={42} fill={colors.bgPrimary} fontSize={11}>
-            {De > 1.5 ? 'SOLID-LIKE (elastic)' : De < 0.5 ? 'FLUID-LIKE (viscous)' : 'TRANSITIONAL'}
-          </text>
-
-          {/* Strain rate indicator */}
-          <rect x={width - 100} y={15} width={80} height={8} fill="#ddd" rx={4} />
-          <rect x={width - 100} y={15} width={strainRate * 0.8} height={8} fill={colors.accent} rx={4} />
-          <text x={width - 100} y={38} fill={colors.bgPrimary} fontSize={10}>
-            Rate: {strainRate < 30 ? 'SLOW' : strainRate > 70 ? 'FAST' : 'MEDIUM'}
-          </text>
-
-          {/* Pulling hands/arrows */}
-          <g>
-            {/* Left arrow */}
-            <path
-              d={`M ${centerX - blobWidth - 30} ${centerY} L ${centerX - blobWidth - 10} ${centerY}`}
-              stroke={colors.elastic}
-              strokeWidth={3}
-              markerEnd="url(#arrowRight)"
-            />
-            <text x={centerX - blobWidth - 60} y={centerY + 5} fill={colors.bgPrimary} fontSize={12}>Pull</text>
-
-            {/* Right arrow */}
-            <path
-              d={`M ${centerX + blobWidth + 30} ${centerY} L ${centerX + blobWidth + 10} ${centerY}`}
-              stroke={colors.elastic}
-              strokeWidth={3}
-              markerEnd="url(#arrowLeft)"
-            />
-            <text x={centerX + blobWidth + 35} y={centerY + 5} fill={colors.bgPrimary} fontSize={12}>Pull</text>
-          </g>
-
-          {/* Arrow markers */}
+          {/* ============ PREMIUM DEFS SECTION ============ */}
           <defs>
-            <marker id="arrowRight" markerWidth={10} markerHeight={10} refX={0} refY={3} orient="auto">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.elastic} />
+            {/* Premium dark laboratory background gradient */}
+            <linearGradient id="viscLabBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Viscoelastic material gradient - elastic (blue-purple) to viscous (red-orange) */}
+            <linearGradient id="viscMaterialElastic" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="25%" stopColor="#6366f1" />
+              <stop offset="50%" stopColor="#4f46e5" />
+              <stop offset="75%" stopColor="#4338ca" />
+              <stop offset="100%" stopColor="#3730a3" />
+            </linearGradient>
+
+            <linearGradient id="viscMaterialViscous" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fb923c" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ea580c" />
+              <stop offset="75%" stopColor="#c2410c" />
+              <stop offset="100%" stopColor="#9a3412" />
+            </linearGradient>
+
+            {/* Radial glow for material center */}
+            <radialGradient id="viscMaterialGlow" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor={behaviorRatio > 0.5 ? "#a5b4fc" : "#fed7aa"} stopOpacity="0.8" />
+              <stop offset="40%" stopColor={behaviorRatio > 0.5 ? "#6366f1" : "#f97316"} stopOpacity="0.5" />
+              <stop offset="70%" stopColor={behaviorRatio > 0.5 ? "#4338ca" : "#c2410c"} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={behaviorRatio > 0.5 ? "#1e1b4b" : "#431407"} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Polymer chain highlight gradient */}
+            <linearGradient id="viscPolymerChain" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="20%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.6" />
+              <stop offset="80%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Spring metal gradient for Maxwell model */}
+            <linearGradient id="viscSpringMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="20%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#cbd5e1" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Dashpot cylinder gradient */}
+            <linearGradient id="viscDashpotCylinder" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="15%" stopColor="#334155" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="85%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Dashpot fluid gradient */}
+            <linearGradient id="viscDashpotFluid" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="30%" stopColor="#ea580c" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#c2410c" />
+              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Temperature bar gradient - cold to hot */}
+            <linearGradient id="viscTempGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Stress indicator gradient */}
+            <linearGradient id="viscStressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="33%" stopColor="#eab308" />
+              <stop offset="66%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="viscGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Force arrow gradient */}
+            <linearGradient id="viscForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#67e8f9" />
+              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Premium glow filters */}
+            <filter id="viscMaterialGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="viscSoftGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="viscInnerGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            <filter id="viscTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers */}
+            <marker id="viscArrowRight" markerWidth={12} markerHeight={12} refX={0} refY={6} orient="auto">
+              <path d="M0,0 L0,12 L12,6 z" fill="url(#viscForceArrow)" />
             </marker>
-            <marker id="arrowLeft" markerWidth={10} markerHeight={10} refX={9} refY={3} orient="auto">
-              <path d="M9,0 L9,6 L0,3 z" fill={colors.elastic} />
+            <marker id="viscArrowLeft" markerWidth={12} markerHeight={12} refX={12} refY={6} orient="auto">
+              <path d="M12,0 L12,12 L0,6 z" fill="url(#viscForceArrow)" />
             </marker>
+
+            {/* Lab grid pattern */}
+            <pattern id="viscLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
           </defs>
 
-          {/* Material blob with viscoelastic deformation */}
-          <ellipse
-            cx={centerX}
-            cy={centerY}
-            rx={Math.max(30, blobWidth)}
-            ry={Math.max(20, blobHeight)}
-            fill={blobColor}
-            stroke={colors.material}
-            strokeWidth={3}
-            style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))' }}
-          />
+          {/* ============ BACKGROUND ============ */}
+          <rect width={width} height={height} fill="url(#viscLabBackground)" />
+          <rect width={width} height={height} fill="url(#viscLabGrid)" />
 
-          {/* Internal structure lines showing polymer chains */}
-          {[...Array(5)].map((_, i) => {
-            const y = centerY - 30 + i * 15;
-            const waveAmplitude = De > 1 ? 2 : 8;
-            const waveFreq = De > 1 ? 0.1 : 0.05;
+          {/* ============ HEADER PANEL ============ */}
+          <g transform="translate(20, 15)">
+            {/* Deborah Number display */}
+            <rect x="0" y="0" width="180" height="55" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <rect x="0" y="0" width="180" height="55" rx="8" fill="url(#viscGraphBg)" opacity="0.5" />
+            <text x="90" y="18" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">DEBORAH NUMBER</text>
+            <text x="90" y="42" fill={De > 1 ? "#818cf8" : "#fb923c"} fontSize="22" textAnchor="middle" fontWeight="bold" filter="url(#viscTextGlow)">
+              De = {De.toFixed(2)}
+            </text>
+          </g>
+
+          {/* Behavior indicator */}
+          <g transform={`translate(${width - 200}, 15)`}>
+            <rect x="0" y="0" width="180" height="55" rx="8" fill={De > 1.5 ? "rgba(99, 102, 241, 0.2)" : De < 0.5 ? "rgba(249, 115, 22, 0.2)" : "rgba(234, 179, 8, 0.2)"} stroke={De > 1.5 ? "#6366f1" : De < 0.5 ? "#f97316" : "#eab308"} strokeWidth="1.5" />
+            <text x="90" y="18" fill="#e2e8f0" fontSize="10" textAnchor="middle" fontWeight="bold">MATERIAL BEHAVIOR</text>
+            <text x="90" y="42" fill={De > 1.5 ? "#a5b4fc" : De < 0.5 ? "#fed7aa" : "#fef08a"} fontSize="16" textAnchor="middle" fontWeight="bold">
+              {De > 1.5 ? 'SOLID-LIKE (Elastic)' : De < 0.5 ? 'FLUID-LIKE (Viscous)' : 'TRANSITIONAL'}
+            </text>
+          </g>
+
+          {/* Strain rate indicator */}
+          <g transform={`translate(${width / 2 - 100}, 15)`}>
+            <rect x="0" y="0" width="200" height="55" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x="100" y="18" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">STRAIN RATE</text>
+            <rect x="15" y="28" width="170" height="10" rx="5" fill="#1e293b" />
+            <rect x="15" y="28" width={strainRate * 1.7} height="10" rx="5" fill="url(#viscStressGradient)" />
+            <text x="100" y="50" fill="#e2e8f0" fontSize="11" textAnchor="middle">
+              {strainRate < 30 ? 'SLOW (flows)' : strainRate > 70 ? 'FAST (bounces)' : 'MEDIUM'}
+            </text>
+          </g>
+
+          {/* ============ MAIN VISUALIZATION AREA ============ */}
+
+          {/* Left force arrow */}
+          <g>
+            <path
+              d={`M ${centerX - blobWidth - 80} ${centerY} L ${centerX - blobWidth - 20} ${centerY}`}
+              stroke="url(#viscForceArrow)"
+              strokeWidth={4}
+              markerEnd="url(#viscArrowRight)"
+              filter="url(#viscSoftGlow)"
+            />
+            <rect x={centerX - blobWidth - 130} y={centerY - 20} width="50" height="40" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x={centerX - blobWidth - 105} y={centerY - 5} fill="#94a3b8" fontSize="9" textAnchor="middle">FORCE</text>
+            <text x={centerX - blobWidth - 105} y={centerY + 10} fill="#22d3ee" fontSize="12" textAnchor="middle" fontWeight="bold">PULL</text>
+          </g>
+
+          {/* Right force arrow */}
+          <g>
+            <path
+              d={`M ${centerX + blobWidth + 80} ${centerY} L ${centerX + blobWidth + 20} ${centerY}`}
+              stroke="url(#viscForceArrow)"
+              strokeWidth={4}
+              markerEnd="url(#viscArrowLeft)"
+              filter="url(#viscSoftGlow)"
+            />
+            <rect x={centerX + blobWidth + 80} y={centerY - 20} width="50" height="40" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x={centerX + blobWidth + 105} y={centerY - 5} fill="#94a3b8" fontSize="9" textAnchor="middle">FORCE</text>
+            <text x={centerX + blobWidth + 105} y={centerY + 10} fill="#22d3ee" fontSize="12" textAnchor="middle" fontWeight="bold">PULL</text>
+          </g>
+
+          {/* ============ VISCOELASTIC MATERIAL BLOB ============ */}
+          <g filter="url(#viscMaterialGlowFilter)">
+            {/* Outer glow */}
+            <ellipse
+              cx={centerX}
+              cy={centerY}
+              rx={Math.max(35, blobWidth) + 15}
+              ry={Math.max(25, blobHeight) + 12}
+              fill={behaviorRatio > 0.5 ? "rgba(99, 102, 241, 0.15)" : "rgba(249, 115, 22, 0.15)"}
+            />
+
+            {/* Main material blob */}
+            <ellipse
+              cx={centerX}
+              cy={centerY}
+              rx={Math.max(35, blobWidth)}
+              ry={Math.max(25, blobHeight)}
+              fill={behaviorRatio > 0.5 ? "url(#viscMaterialElastic)" : "url(#viscMaterialViscous)"}
+              stroke={behaviorRatio > 0.5 ? "#818cf8" : "#fb923c"}
+              strokeWidth={2}
+            />
+
+            {/* Inner highlight */}
+            <ellipse
+              cx={centerX - blobWidth * 0.2}
+              cy={centerY - blobHeight * 0.3}
+              rx={Math.max(15, blobWidth * 0.4)}
+              ry={Math.max(10, blobHeight * 0.3)}
+              fill="url(#viscMaterialGlow)"
+              opacity="0.6"
+            />
+          </g>
+
+          {/* Polymer chains inside material */}
+          {[...Array(7)].map((_, i) => {
+            const yBase = centerY - 40 + i * 13;
+            const waveAmplitude = De > 1 ? 2 : 10;
+            const waveFreq = De > 1 ? 0.08 : 0.04;
+            const chainOpacity = 0.3 + (i % 2) * 0.2;
             return (
               <path
                 key={i}
-                d={`M ${centerX - blobWidth + 20} ${y} ${[...Array(10)].map((_, j) => {
-                  const x = centerX - blobWidth + 20 + j * (blobWidth * 2 - 40) / 10;
-                  const yOffset = Math.sin((x + time * 50) * waveFreq) * waveAmplitude;
-                  return `L ${x} ${y + yOffset}`;
+                d={`M ${centerX - blobWidth + 25} ${yBase} ${[...Array(12)].map((_, j) => {
+                  const x = centerX - blobWidth + 25 + j * (blobWidth * 2 - 50) / 12;
+                  const yOffset = Math.sin((x + time * 40 + i * 20) * waveFreq) * waveAmplitude;
+                  return `L ${x} ${yBase + yOffset}`;
                 }).join(' ')}`}
-                stroke="rgba(255,255,255,0.4)"
-                strokeWidth={1.5}
+                stroke="url(#viscPolymerChain)"
+                strokeWidth={2}
+                strokeLinecap="round"
                 fill="none"
+                opacity={chainOpacity}
               />
             );
           })}
 
-          {/* Behavior label */}
-          <rect
-            x={centerX - 50}
-            y={centerY + blobHeight + 20}
-            width={100}
-            height={24}
-            fill={De > 1 ? colors.elastic : colors.viscous}
-            rx={12}
-          />
-          <text
-            x={centerX}
-            y={centerY + blobHeight + 36}
-            fill="white"
-            fontSize={12}
-            textAnchor="middle"
-            fontWeight="bold"
-          >
-            {De > 1 ? 'ELASTIC' : 'VISCOUS'}
-          </text>
+          {/* Material behavior label */}
+          <g transform={`translate(${centerX}, ${centerY + blobHeight + 35})`}>
+            <rect
+              x="-60"
+              y="-12"
+              width="120"
+              height="28"
+              rx="14"
+              fill={De > 1 ? "rgba(99, 102, 241, 0.3)" : "rgba(249, 115, 22, 0.3)"}
+              stroke={De > 1 ? "#6366f1" : "#f97316"}
+              strokeWidth="1.5"
+            />
+            <text
+              y="5"
+              fill={De > 1 ? "#c7d2fe" : "#fed7aa"}
+              fontSize="13"
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              {De > 1 ? 'ELASTIC RESPONSE' : 'VISCOUS FLOW'}
+            </text>
+          </g>
 
-          {/* Temperature indicator */}
-          <rect x={15} y={height - 60} width={12} height={50} fill="#ddd" rx={6} />
-          <rect
-            x={15}
-            y={height - 60 + (100 - temperature) * 0.5}
-            width={12}
-            height={temperature * 0.5}
-            fill={temperature > 60 ? colors.error : temperature < 40 ? colors.elastic : colors.warning}
-            rx={6}
-          />
-          <text x={10} y={height - 5} fill={colors.bgPrimary} fontSize={9}>TEMP</text>
+          {/* ============ MAXWELL MODEL VISUALIZATION ============ */}
+          <g transform="translate(50, 300)">
+            <rect x="-10" y="-10" width="280" height="80" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x="130" y="8" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">MAXWELL MODEL (Series)</text>
+
+            {/* Fixed anchor */}
+            <rect x="10" y="25" width="15" height="30" fill="#475569" rx="2" />
+            <line x1="10" y1="28" x2="10" y2="52" stroke="#64748b" strokeWidth="2" />
+
+            {/* Spring element */}
+            <g transform="translate(25, 40)">
+              {/* Spring coils */}
+              <path
+                d={`M 0 0 ${[...Array(6)].map((_, i) => {
+                  const x = 10 + i * 15 + (isAnimating ? stretchAmount * 0.2 : 0);
+                  const y = i % 2 === 0 ? -10 : 10;
+                  return `L ${x} ${y}`;
+                }).join(' ')} L ${100 + (isAnimating ? stretchAmount * 0.2 : 0)} 0`}
+                stroke="url(#viscSpringMetal)"
+                strokeWidth="4"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </g>
+            <text x="75" y="65" fill="#818cf8" fontSize="9" textAnchor="middle">Spring (E)</text>
+
+            {/* Dashpot element */}
+            <g transform={`translate(${130 + (isAnimating ? stretchAmount * 0.1 : 0)}, 25)`}>
+              {/* Cylinder */}
+              <rect x="0" y="0" width="60" height="30" rx="3" fill="url(#viscDashpotCylinder)" stroke="#64748b" strokeWidth="1" />
+              {/* Piston */}
+              <rect x={-15 + (isAnimating ? stretchAmount * 0.15 : 0)} y="8" width="45" height="14" rx="2" fill="#94a3b8" stroke="#cbd5e1" strokeWidth="1" />
+              {/* Fluid */}
+              <rect x="5" y="5" width="50" height="20" rx="2" fill="url(#viscDashpotFluid)" opacity="0.6" />
+            </g>
+            <text x={160 + (isAnimating ? stretchAmount * 0.1 : 0)} y="65" fill="#fb923c" fontSize="9" textAnchor="middle">Dashpot (eta)</text>
+
+            {/* Moving anchor */}
+            <g transform={`translate(${195 + (isAnimating ? stretchAmount * 0.25 : 0)}, 25)`}>
+              <rect x="0" y="0" width="15" height="30" fill="#475569" rx="2" />
+              <path d="M 18 5 L 28 15 L 18 25" stroke="#22d3ee" strokeWidth="2" fill="none" />
+            </g>
+          </g>
+
+          {/* ============ KELVIN-VOIGT MODEL VISUALIZATION ============ */}
+          <g transform="translate(370, 300)">
+            <rect x="-10" y="-10" width="280" height="80" rx="8" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x="130" y="8" fill="#94a3b8" fontSize="10" textAnchor="middle" fontWeight="bold">KELVIN-VOIGT MODEL (Parallel)</text>
+
+            {/* Fixed anchor */}
+            <rect x="10" y="20" width="15" height="40" fill="#475569" rx="2" />
+
+            {/* Parallel arrangement */}
+            {/* Top: Spring */}
+            <g transform="translate(30, 28)">
+              <path
+                d={`M 0 0 ${[...Array(5)].map((_, i) => {
+                  const x = 8 + i * 12 + (isAnimating ? stretchAmount * 0.15 : 0);
+                  const y = i % 2 === 0 ? -6 : 6;
+                  return `L ${x} ${y}`;
+                }).join(' ')} L ${70 + (isAnimating ? stretchAmount * 0.15 : 0)} 0`}
+                stroke="url(#viscSpringMetal)"
+                strokeWidth="3"
+                fill="none"
+              />
+            </g>
+            <text x="65" y="22" fill="#818cf8" fontSize="8" textAnchor="middle">E</text>
+
+            {/* Bottom: Dashpot */}
+            <g transform={`translate(30, 42)`}>
+              <rect x="0" y="0" width="45" height="18" rx="2" fill="url(#viscDashpotCylinder)" stroke="#64748b" strokeWidth="0.5" />
+              <rect x={-8 + (isAnimating ? stretchAmount * 0.1 : 0)} y="4" width="30" height="10" rx="1" fill="#94a3b8" />
+              <rect x="5" y="2" width="35" height="14" rx="1" fill="url(#viscDashpotFluid)" opacity="0.5" />
+              <line x1={45} y1="9" x2={70 + (isAnimating ? stretchAmount * 0.15 : 0)} y2="9" stroke="#64748b" strokeWidth="2" />
+            </g>
+            <text x="55" y="68" fill="#fb923c" fontSize="8" textAnchor="middle">eta</text>
+
+            {/* Connecting bars */}
+            <line x1="25" y1="28" x2="25" y2="51" stroke="#64748b" strokeWidth="2" />
+            <line x1={100 + (isAnimating ? stretchAmount * 0.15 : 0)} y1="28" x2={100 + (isAnimating ? stretchAmount * 0.15 : 0)} y2="51" stroke="#64748b" strokeWidth="2" />
+
+            {/* Moving anchor */}
+            <g transform={`translate(${105 + (isAnimating ? stretchAmount * 0.15 : 0)}, 20)`}>
+              <rect x="0" y="0" width="15" height="40" fill="#475569" rx="2" />
+              <path d="M 18 10 L 28 20 L 18 30" stroke="#22d3ee" strokeWidth="2" fill="none" />
+            </g>
+
+            {/* Behavior note */}
+            <text x="200" y="35" fill="#94a3b8" fontSize="8" textAnchor="middle">Creep &</text>
+            <text x="200" y="47" fill="#94a3b8" fontSize="8" textAnchor="middle">Recovery</text>
+          </g>
+
+          {/* ============ TEMPERATURE INDICATOR ============ */}
+          <g transform={`translate(${width - 50}, 90)`}>
+            <rect x="-20" y="-10" width="40" height="170" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <text x="0" y="8" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="bold">TEMP</text>
+
+            {/* Temperature bar background */}
+            <rect x="-8" y="20" width="16" height="120" rx="8" fill="#1e293b" />
+
+            {/* Temperature bar fill */}
+            <rect
+              x="-8"
+              y={20 + (100 - temperature) * 1.2}
+              width="16"
+              height={temperature * 1.2}
+              rx="8"
+              fill="url(#viscTempGradient)"
+              filter="url(#viscSoftGlow)"
+            />
+
+            {/* Temperature markers */}
+            <text x="0" y="148" fill="#3b82f6" fontSize="8" textAnchor="middle">COLD</text>
+            <text x="0" y="30" fill="#ef4444" fontSize="8" textAnchor="middle">HOT</text>
+
+            {/* Current value */}
+            <text x="0" y="162" fill="#e2e8f0" fontSize="10" textAnchor="middle" fontWeight="bold">{temperature}%</text>
+          </g>
         </svg>
 
+        {/* ============ STRESS-STRAIN GRAPH ============ */}
         {showGraph && (
-          <div style={{ width: '100%', maxWidth: '500px', marginTop: '16px' }}>
-            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px' }}>
-              <div style={{ color: colors.bgPrimary, fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
-                Stress-Strain Curve (changes with strain rate)
-              </div>
-              <svg width="100%" height={120} viewBox="0 0 200 120">
-                {/* Axes */}
-                <line x1={30} y1={100} x2={190} y2={100} stroke={colors.bgPrimary} strokeWidth={1} />
-                <line x1={30} y1={10} x2={30} y2={100} stroke={colors.bgPrimary} strokeWidth={1} />
-                <text x={100} y={115} fill={colors.bgPrimary} fontSize={10} textAnchor="middle">Strain</text>
-                <text x={15} y={55} fill={colors.bgPrimary} fontSize={10} textAnchor="middle" transform="rotate(-90, 15, 55)">Stress</text>
+          <div style={{ width: '100%', maxWidth: '700px', marginTop: '16px' }}>
+            <svg width="100%" height={180} viewBox="0 0 700 180">
+              <defs>
+                <linearGradient id="viscCurveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="50%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#d946ef" />
+                </linearGradient>
+                <linearGradient id="viscAxisGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#64748b" />
+                </linearGradient>
+              </defs>
 
-                {/* Plot stress-strain history */}
-                {stressHistory.length > 1 && (
-                  <path
-                    d={`M ${30 + stressHistory[0].strain * 1.5} ${100 - stressHistory[0].stress * 0.8} ${stressHistory.slice(1).map(p =>
-                      `L ${30 + Math.max(0, Math.min(100, p.strain + 50)) * 1.5} ${100 - Math.max(0, Math.min(100, p.stress + 50)) * 0.8}`
-                    ).join(' ')}`}
-                    stroke={colors.material}
-                    strokeWidth={2}
-                    fill="none"
-                  />
-                )}
+              {/* Graph background */}
+              <rect width="700" height="180" fill="#0f172a" rx="12" />
+              <rect x="60" y="20" width="600" height="130" fill="#020617" rx="4" />
 
-                {/* Reference lines */}
-                <line x1={30} y1={100} x2={190} y2={10} stroke={colors.elastic} strokeWidth={1} strokeDasharray="4,4" opacity={0.5} />
-                <text x={160} y={30} fill={colors.elastic} fontSize={8}>Elastic</text>
-              </svg>
-            </div>
+              {/* Grid lines */}
+              {[...Array(6)].map((_, i) => (
+                <line key={`h${i}`} x1="60" y1={20 + i * 26} x2="660" y2={20 + i * 26} stroke="#1e293b" strokeWidth="1" />
+              ))}
+              {[...Array(7)].map((_, i) => (
+                <line key={`v${i}`} x1={60 + i * 100} y1="20" x2={60 + i * 100} y2="150" stroke="#1e293b" strokeWidth="1" />
+              ))}
+
+              {/* Axes */}
+              <line x1="60" y1="150" x2="660" y2="150" stroke="url(#viscAxisGradient)" strokeWidth="2" />
+              <line x1="60" y1="20" x2="60" y2="150" stroke="url(#viscAxisGradient)" strokeWidth="2" />
+
+              {/* Axis labels */}
+              <text x="360" y="172" fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="bold">STRAIN (%)</text>
+              <text x="25" y="90" fill="#94a3b8" fontSize="12" textAnchor="middle" fontWeight="bold" transform="rotate(-90, 25, 90)">STRESS</text>
+
+              {/* Title */}
+              <text x="360" y="15" fill="#e2e8f0" fontSize="11" textAnchor="middle" fontWeight="bold">STRESS-STRAIN CURVE (Rate-Dependent)</text>
+
+              {/* Reference elastic line */}
+              <line x1="60" y1="150" x2="660" y2="30" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="8,4" opacity="0.4" />
+              <text x="620" y="45" fill="#6366f1" fontSize="9">Pure Elastic</text>
+
+              {/* Reference viscous line */}
+              <line x1="60" y1="150" x2="660" y2="120" stroke="#f97316" strokeWidth="1.5" strokeDasharray="8,4" opacity="0.4" />
+              <text x="620" y="115" fill="#f97316" fontSize="9">Pure Viscous</text>
+
+              {/* Actual stress-strain curve */}
+              {stressHistory.length > 1 && (
+                <path
+                  d={`M ${60 + (stressHistory[0].strain + 50) * 5.5} ${150 - (stressHistory[0].stress + 50) * 1.2} ${stressHistory.slice(1).map(p =>
+                    `L ${60 + Math.max(0, Math.min(100, p.strain + 50)) * 5.5} ${150 - Math.max(0, Math.min(100, p.stress + 50)) * 1.2}`
+                  ).join(' ')}`}
+                  stroke="url(#viscCurveGradient)"
+                  strokeWidth="3"
+                  fill="none"
+                  filter="url(#viscSoftGlow)"
+                />
+              )}
+
+              {/* Legend */}
+              <rect x="80" y="25" width="120" height="50" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth="1" />
+              <line x1="90" y1="40" x2="110" y2="40" stroke="#a855f7" strokeWidth="2" />
+              <text x="115" y="44" fill="#e2e8f0" fontSize="9">Viscoelastic</text>
+              <line x1="90" y1="55" x2="110" y2="55" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="4,2" />
+              <text x="115" y="59" fill="#94a3b8" fontSize="9">Elastic ref.</text>
+              <line x1="90" y1="70" x2="110" y2="70" stroke="#f97316" strokeWidth="1.5" strokeDasharray="4,2" />
+              <text x="115" y="74" fill="#94a3b8" fontSize="9">Viscous ref.</text>
+            </svg>
           </div>
         )}
 
+        {/* ============ INTERACTIVE CONTROLS ============ */}
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '12px' }}>
             <button
               onClick={() => {
                 setIsAnimating(!isAnimating);
@@ -444,17 +788,23 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
                 }
               }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 28px',
+                borderRadius: '12px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating
+                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
-              {isAnimating ? 'Stop' : 'Stretch/Compress'}
+              {isAnimating ? 'Stop Deformation' : 'Start Stretch/Compress'}
             </button>
             <button
               onClick={() => {
@@ -465,17 +815,18 @@ const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
                 setStressHistory([]);
               }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(139, 92, 246, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
-              Reset
+              Reset Simulation
             </button>
           </div>
         )}

@@ -244,19 +244,20 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
+    const width = 450;
     const height = 350;
     const intensity = calculateIntensity();
     const intensityPercent = Math.round(intensity * 100);
 
-    // Polarizer grid rendering
-    const renderPolarizer = (x: number, y: number, rotation: number, color: string, label: string) => {
+    // Premium polarizer rendering with gradient glass effect
+    const renderPolarizer = (x: number, y: number, rotation: number, color: string, label: string, polarizerId: string) => {
       const gridSize = 60;
-      const lineCount = 8;
+      const lineCount = 10;
       const lines = [];
 
       for (let i = 0; i <= lineCount; i++) {
         const offset = (i / lineCount - 0.5) * gridSize;
+        const lineOpacity = 0.4 + 0.4 * Math.abs((i / lineCount) - 0.5) * 2;
         lines.push(
           <line
             key={`line-${i}`}
@@ -265,62 +266,118 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
             x2={gridSize / 2}
             y2={offset}
             stroke={color}
-            strokeWidth={2}
-            opacity={0.8}
+            strokeWidth={1.5}
+            opacity={lineOpacity}
           />
         );
       }
 
       return (
         <g transform={`translate(${x}, ${y}) rotate(${rotation})`}>
+          {/* Outer frame with metallic effect */}
           <rect
-            x={-gridSize / 2 - 5}
-            y={-gridSize / 2 - 5}
-            width={gridSize + 10}
-            height={gridSize + 10}
-            fill="rgba(255,255,255,0.1)"
-            stroke={color}
-            strokeWidth={2}
-            rx={4}
+            x={-gridSize / 2 - 8}
+            y={-gridSize / 2 - 8}
+            width={gridSize + 16}
+            height={gridSize + 16}
+            fill={`url(#polrFrame${polarizerId})`}
+            stroke="#475569"
+            strokeWidth={1.5}
+            rx={6}
           />
+          {/* Inner glass panel with gradient */}
+          <rect
+            x={-gridSize / 2 - 2}
+            y={-gridSize / 2 - 2}
+            width={gridSize + 4}
+            height={gridSize + 4}
+            fill={`url(#polrGlass${polarizerId})`}
+            rx={3}
+          />
+          {/* Polarization grid lines */}
           {lines}
-          <text
-            x={0}
-            y={gridSize / 2 + 20}
-            fill={color}
-            fontSize={11}
-            textAnchor="middle"
-            transform={`rotate(${-rotation})`}
-          >
-            {label}
-          </text>
+          {/* Glass highlight reflection */}
+          <rect
+            x={-gridSize / 2 + 5}
+            y={-gridSize / 2 + 3}
+            width={gridSize / 3}
+            height={4}
+            fill="white"
+            opacity={0.15}
+            rx={2}
+          />
+          {/* Label background */}
+          <g transform={`rotate(${-rotation})`}>
+            <rect
+              x={-35}
+              y={gridSize / 2 + 8}
+              width={70}
+              height={18}
+              fill="#111827"
+              stroke={color}
+              strokeWidth={1}
+              rx={4}
+              opacity={0.9}
+            />
+            <text
+              x={0}
+              y={gridSize / 2 + 20}
+              fill={color}
+              fontSize={10}
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              {label}
+            </text>
+          </g>
         </g>
       );
     };
 
-    // Light wave rendering
-    const renderLightWave = (startX: number, endX: number, y: number, amplitude: number, polarizationAngle: number) => {
+    // Premium light wave rendering with glow effect
+    const renderLightWave = (startX: number, endX: number, y: number, amplitude: number, polarizationAngle: number, waveId: string) => {
       const points = [];
-      const steps = 50;
-      const wavelength = 30;
+      const steps = 60;
+      const wavelength = 25;
 
       for (let i = 0; i <= steps; i++) {
         const x = startX + (endX - startX) * (i / steps);
         const phase = (x / wavelength + animationTime) * 2 * Math.PI;
         const wave = Math.sin(phase) * amplitude;
-        // Apply polarization direction
         const yOffset = wave * Math.cos(polarizationAngle * Math.PI / 180);
         points.push(`${x},${y + yOffset}`);
       }
 
+      const waveOpacity = amplitude > 5 ? 1 : amplitude > 0 ? 0.5 : 0.15;
+
       return (
-        <polyline
-          points={points.join(' ')}
-          fill="none"
-          stroke={colors.lightWave}
-          strokeWidth={2}
-          opacity={amplitude > 0 ? 0.8 : 0.2}
-        />
+        <g>
+          {/* Outer glow layer */}
+          <polyline
+            points={points.join(' ')}
+            fill="none"
+            stroke="url(#polrWaveGlow)"
+            strokeWidth={amplitude > 5 ? 6 : 3}
+            opacity={waveOpacity * 0.3}
+            filter="url(#polrWaveBlur)"
+          />
+          {/* Middle glow layer */}
+          <polyline
+            points={points.join(' ')}
+            fill="none"
+            stroke="url(#polrWaveCore)"
+            strokeWidth={amplitude > 5 ? 3 : 2}
+            opacity={waveOpacity * 0.7}
+          />
+          {/* Core bright line */}
+          <polyline
+            points={points.join(' ')}
+            fill="none"
+            stroke="#fef3c7"
+            strokeWidth={amplitude > 5 ? 1.5 : 1}
+            opacity={waveOpacity}
+          />
+        </g>
       );
     };
 
@@ -331,66 +388,294 @@ const PolarizationRenderer: React.FC<PolarizationRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: `rgba(0, 0, 0, ${1 - intensity * 0.7})`, borderRadius: '12px', maxWidth: '500px', transition: 'background 0.3s' }}
+          style={{ borderRadius: '12px', maxWidth: '550px', transition: 'background 0.3s' }}
         >
-          {/* Light source */}
-          <circle cx={40} cy={height / 2} r={20} fill={colors.lightWave} opacity={0.8} />
-          <text x={40} y={height / 2 + 45} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
+          <defs>
+            {/* === PREMIUM GRADIENT DEFINITIONS === */}
+
+            {/* Lab background gradient with depth */}
+            <linearGradient id="polrLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor={`rgba(0, 0, 0, ${1 - intensity * 0.5})`} />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Light source radial glow */}
+            <radialGradient id="polrLightSource" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Light source outer halo */}
+            <radialGradient id="polrLightHalo" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Polarizer 1 frame (blue) - metallic brushed effect */}
+            <linearGradient id="polrFrame1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="20%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#1d4ed8" />
+              <stop offset="80%" stopColor="#1e40af" />
+              <stop offset="100%" stopColor="#1e3a5f" />
+            </linearGradient>
+
+            {/* Polarizer 1 glass with blue tint */}
+            <linearGradient id="polrGlass1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.15" />
+              <stop offset="30%" stopColor="#1d4ed8" stopOpacity="0.1" />
+              <stop offset="70%" stopColor="#1e40af" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Polarizer 2 frame (red) - metallic brushed effect */}
+            <linearGradient id="polrFrame2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="20%" stopColor="#b91c1c" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="80%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            {/* Polarizer 2 glass with red tint */}
+            <linearGradient id="polrGlass2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.15" />
+              <stop offset="30%" stopColor="#dc2626" stopOpacity="0.1" />
+              <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Polarizer 3 frame (green) - metallic brushed effect */}
+            <linearGradient id="polrFrame3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#14532d" />
+              <stop offset="20%" stopColor="#15803d" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="80%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
+
+            {/* Polarizer 3 glass with green tint */}
+            <linearGradient id="polrGlass3" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.15" />
+              <stop offset="30%" stopColor="#059669" stopOpacity="0.1" />
+              <stop offset="70%" stopColor="#047857" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Light wave gradient - golden glow */}
+            <linearGradient id="polrWaveGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#fef3c7" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#fcd34d" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Light wave core gradient */}
+            <linearGradient id="polrWaveCore" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Intensity meter gradient - dynamic based on intensity */}
+            <linearGradient id="polrMeterFill" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={intensity > 0.5 ? '#10b981' : intensity > 0.1 ? '#f59e0b' : '#ef4444'} />
+              <stop offset="30%" stopColor={intensity > 0.5 ? '#34d399' : intensity > 0.1 ? '#fbbf24' : '#f87171'} />
+              <stop offset="70%" stopColor={intensity > 0.5 ? '#6ee7b7' : intensity > 0.1 ? '#fcd34d' : '#fca5a5'} />
+              <stop offset="100%" stopColor={intensity > 0.5 ? '#a7f3d0' : intensity > 0.1 ? '#fef3c7' : '#fecaca'} />
+            </linearGradient>
+
+            {/* Intensity meter frame gradient */}
+            <linearGradient id="polrMeterFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="75%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* === GLOW FILTER DEFINITIONS === */}
+
+            {/* Light source glow filter */}
+            <filter id="polrSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Wave blur for soft glow effect */}
+            <filter id="polrWaveBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intensity meter inner glow */}
+            <filter id="polrMeterGlow" x="-20%" y="-5%" width="140%" height="110%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text shadow filter */}
+            <filter id="polrTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern for lab background */}
+            <pattern id="polrLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* === BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#polrLabBg)" />
+          <rect width={width} height={height} fill="url(#polrLabGrid)" />
+
+          {/* === PREMIUM LIGHT SOURCE === */}
+          <g transform={`translate(40, ${height / 2})`}>
+            {/* Outer halo */}
+            <circle cx={0} cy={0} r={35} fill="url(#polrLightHalo)" />
+            {/* Main light glow */}
+            <circle cx={0} cy={0} r={22} fill="url(#polrLightSource)" filter="url(#polrSourceGlow)">
+              <animate attributeName="r" values="20;23;20" dur="2s" repeatCount="indefinite" />
+            </circle>
+            {/* Core bright center */}
+            <circle cx={0} cy={0} r={8} fill="#fef3c7">
+              <animate attributeName="opacity" values="0.9;1;0.9" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Housing ring */}
+            <circle cx={0} cy={0} r={25} fill="none" stroke="#475569" strokeWidth={3} />
+            <circle cx={0} cy={0} r={27} fill="none" stroke="#374151" strokeWidth={1} />
+          </g>
+          {/* Light source label */}
+          <rect x={10} y={height / 2 + 38} width={60} height={30} fill="#111827" stroke="#334155" strokeWidth={1} rx={4} opacity={0.9} />
+          <text x={40} y={height / 2 + 50} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
             Unpolarized
           </text>
-          <text x={40} y={height / 2 + 56} fill={colors.textSecondary} fontSize={10} textAnchor="middle">
-            Light
+          <text x={40} y={height / 2 + 62} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+            Light Source
           </text>
 
+          {/* === LIGHT WAVES === */}
           {/* Incoming light wave (unpolarized - show multiple directions) */}
-          {renderLightWave(60, 110, height / 2, 15, 0)}
-          {renderLightWave(60, 110, height / 2, 15, 45)}
-          {renderLightWave(60, 110, height / 2, 15, 90)}
+          {renderLightWave(65, 105, height / 2, 12, 0, 'in1')}
+          {renderLightWave(65, 105, height / 2, 10, 45, 'in2')}
+          {renderLightWave(65, 105, height / 2, 10, -45, 'in3')}
+          {renderLightWave(65, 105, height / 2, 12, 90, 'in4')}
 
+          {/* === POLARIZERS === */}
           {/* First polarizer (fixed at 0 degrees - vertical) */}
-          {renderPolarizer(130, height / 2, 0, colors.polarizer1, 'Polarizer 1 (0deg)')}
+          {renderPolarizer(130, height / 2, 0, colors.polarizer1, 'Polarizer 1 (0 deg)', '1')}
 
           {/* After first polarizer - vertically polarized */}
-          {renderLightWave(160, showThirdPolarizer ? 190 : 240, height / 2, 15, 0)}
+          {renderLightWave(160, showThirdPolarizer ? 185 : 235, height / 2, 14, 0, 'mid1')}
 
           {/* Third polarizer (optional, in middle) */}
           {showThirdPolarizer && (
             <>
-              {renderPolarizer(210, height / 2, thirdPolarizerAngle, colors.polarizer3, `Middle (${thirdPolarizerAngle}deg)`)}
-              {renderLightWave(240, 290, height / 2, 15 * Math.cos(thirdPolarizerAngle * Math.PI / 180), thirdPolarizerAngle)}
+              {renderPolarizer(210, height / 2, thirdPolarizerAngle, colors.polarizer3, `Middle (${thirdPolarizerAngle} deg)`, '3')}
+              {renderLightWave(240, 285, height / 2, 14 * Math.cos(thirdPolarizerAngle * Math.PI / 180), thirdPolarizerAngle, 'mid2')}
             </>
           )}
 
           {/* Second polarizer (rotatable) */}
-          {renderPolarizer(showThirdPolarizer ? 310 : 260, height / 2, angle, colors.polarizer2, `Polarizer 2 (${angle}deg)`)}
+          {renderPolarizer(showThirdPolarizer ? 310 : 260, height / 2, angle, colors.polarizer2, `Polarizer 2 (${angle} deg)`, '2')}
 
           {/* Output light */}
-          {renderLightWave(showThirdPolarizer ? 340 : 290, showThirdPolarizer ? 380 : 360, height / 2, 15 * Math.sqrt(intensity), angle)}
+          {renderLightWave(showThirdPolarizer ? 340 : 290, showThirdPolarizer ? 385 : 355, height / 2, 14 * Math.sqrt(intensity), angle, 'out')}
 
-          {/* Intensity meter */}
-          <rect x={width - 60} y={20} width={40} height={150} fill="rgba(255,255,255,0.1)" stroke={colors.textMuted} strokeWidth={1} rx={4} />
-          <rect
-            x={width - 58}
-            y={20 + 148 * (1 - intensity)}
-            width={36}
-            height={148 * intensity}
-            fill={intensity > 0.5 ? colors.success : intensity > 0.1 ? colors.warning : colors.error}
-            rx={2}
-          />
-          <text x={width - 40} y={185} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
-            {intensityPercent}%
-          </text>
-          <text x={width - 40} y={200} fill={colors.textSecondary} fontSize={9} textAnchor="middle">
-            Intensity
-          </text>
+          {/* === PREMIUM INTENSITY METER === */}
+          <g transform={`translate(${width - 55}, 15)`}>
+            {/* Meter housing */}
+            <rect x={-5} y={-5} width={50} height={180} fill="#111827" stroke="#334155" strokeWidth={1} rx={6} />
 
-          {/* Angle indicator */}
-          <text x={20} y={25} fill={colors.textPrimary} fontSize={12}>
-            Angle: {angle}deg
-          </text>
-          <text x={20} y={42} fill={colors.textSecondary} fontSize={11}>
-            I = I0 * cos^2({angle}deg) = {intensityPercent}%
-          </text>
+            {/* Meter frame with gradient */}
+            <rect x={0} y={0} width={40} height={155} fill="url(#polrMeterFrame)" stroke="#4b5563" strokeWidth={1} rx={4} />
+
+            {/* Meter background */}
+            <rect x={2} y={2} width={36} height={151} fill="#030712" rx={3} />
+
+            {/* Scale markings */}
+            {[0, 25, 50, 75, 100].map((mark, i) => (
+              <g key={mark}>
+                <line x1={3} y1={150 - (mark / 100) * 148} x2={8} y2={150 - (mark / 100) * 148} stroke="#6b7280" strokeWidth={1} />
+                <text x={-3} y={154 - (mark / 100) * 148} fill="#64748b" fontSize={7} textAnchor="end">{mark}</text>
+              </g>
+            ))}
+
+            {/* Intensity fill with gradient and glow */}
+            <rect
+              x={4}
+              y={4 + 147 * (1 - intensity)}
+              width={32}
+              height={147 * intensity}
+              fill="url(#polrMeterFill)"
+              rx={2}
+              filter="url(#polrMeterGlow)"
+            >
+              <animate attributeName="opacity" values="0.85;1;0.85" dur="2s" repeatCount="indefinite" />
+            </rect>
+
+            {/* Current value indicator line */}
+            <line x1={0} y1={4 + 147 * (1 - intensity)} x2={40} y2={4 + 147 * (1 - intensity)} stroke="#f8fafc" strokeWidth={1.5} opacity={0.8} />
+
+            {/* Value display */}
+            <rect x={-2} y={158} width={44} height={22} fill="#0f172a" stroke={intensity > 0.5 ? colors.success : intensity > 0.1 ? colors.warning : colors.error} strokeWidth={1} rx={4} />
+            <text x={20} y={172} fill={colors.textPrimary} fontSize={13} textAnchor="middle" fontWeight="bold" filter="url(#polrTextShadow)">
+              {intensityPercent}%
+            </text>
+
+            {/* Label */}
+            <text x={20} y={192} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+              Transmitted
+            </text>
+            <text x={20} y={202} fill={colors.textSecondary} fontSize={9} textAnchor="middle" fontWeight="bold">
+              Intensity
+            </text>
+          </g>
+
+          {/* === INFO PANEL === */}
+          <g transform="translate(10, 10)">
+            <rect x={0} y={0} width={145} height={55} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} opacity={0.95} />
+            <text x={10} y={20} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+              Angle: {angle} deg
+            </text>
+            <text x={10} y={38} fill={colors.accent} fontSize={10}>
+              I = I0 x cos2({angle} deg)
+            </text>
+            <text x={10} y={50} fill={colors.textSecondary} fontSize={9}>
+              = {intensityPercent}% transmission
+            </text>
+          </g>
+
+          {/* === MALUS'S LAW FORMULA DISPLAY === */}
+          <g transform={`translate(10, ${height - 35})`}>
+            <rect x={0} y={0} width={180} height={28} fill="#0f172a" stroke={colors.accent} strokeWidth={1} rx={6} opacity={0.95} />
+            <text x={90} y={18} fill={colors.accent} fontSize={10} textAnchor="middle" fontWeight="bold">
+              Malus's Law: I = I0 * cos^2(theta)
+            </text>
+          </g>
         </svg>
 
         {interactive && (

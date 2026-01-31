@@ -176,223 +176,530 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
     // Stored elastic energy visualization
     const storedEnergy = stress / threshold;
 
+    // Spring compression calculation
+    const springCompression = storedEnergy * 0.6;
+    const springCoils = 8;
+    const springBaseWidth = 60;
+    const springCompressedWidth = springBaseWidth * (1 - springCompression * 0.5);
+
     return (
-      <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+      <div style={{ width: '100%', maxWidth: '600px', margin: '0 auto' }}>
         <svg
-          viewBox="0 0 400 380"
+          viewBox="0 0 500 420"
           preserveAspectRatio="xMidYMid meet"
-          style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
+          style={{ width: '100%', height: 'auto', borderRadius: '12px' }}
         >
           <defs>
-            {/* Rock texture patterns */}
-            <pattern id="rockPatternTop" patternUnits="userSpaceOnUse" width="20" height="20">
-              <rect width="20" height="20" fill={colors.rockLight} />
-              <circle cx="5" cy="5" r="2" fill={colors.rockHighlight} opacity="0.3" />
-              <circle cx="15" cy="15" r="3" fill={colors.rockDark} opacity="0.3" />
+            {/* === PREMIUM BACKGROUND GRADIENT === */}
+            <linearGradient id="stslLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a1628" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* === TOP ROCK BLOCK GRADIENT (Pacific Plate style) === */}
+            <linearGradient id="stslTopRock" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a8a29e" />
+              <stop offset="20%" stopColor="#78716c" />
+              <stop offset="50%" stopColor="#57534e" />
+              <stop offset="80%" stopColor="#44403c" />
+              <stop offset="100%" stopColor="#292524" />
+            </linearGradient>
+
+            {/* === BOTTOM ROCK BLOCK GRADIENT (North American Plate style) === */}
+            <linearGradient id="stslBottomRock" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#44403c" />
+              <stop offset="20%" stopColor="#57534e" />
+              <stop offset="50%" stopColor="#78716c" />
+              <stop offset="80%" stopColor="#a8a29e" />
+              <stop offset="100%" stopColor="#d6d3d1" />
+            </linearGradient>
+
+            {/* === ROCK TEXTURE OVERLAY === */}
+            <linearGradient id="stslRockTexture" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.05" />
+              <stop offset="25%" stopColor="#000000" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.03" />
+              <stop offset="75%" stopColor="#000000" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.02" />
+            </linearGradient>
+
+            {/* === FAULT LINE GRADIENT (Active) === */}
+            <linearGradient id="stslFaultActive" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="80%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* === FAULT LINE GRADIENT (Slipping - Earthquake) === */}
+            <linearGradient id="stslFaultSlip" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.5" />
+              <stop offset="25%" stopColor="#fb923c" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="75%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* === SPRING METAL GRADIENT === */}
+            <linearGradient id="stslSpringMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+
+            {/* === SPRING STRESSED GRADIENT === */}
+            <linearGradient id="stslSpringStressed" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#fca5a5" />
+            </linearGradient>
+
+            {/* === FORCE ARROW GRADIENT === */}
+            <linearGradient id="stslForceArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#93c5fd" />
+              <stop offset="70%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* === STRESS METER GRADIENT === */}
+            <linearGradient id="stslStressMeter" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="40%" stopColor="#84cc16" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="80%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* === CONTACT POINT GLOW (Radial) === */}
+            <radialGradient id="stslContactGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === SEISMIC WAVE GLOW (Radial) === */}
+            <radialGradient id="stslSeismicGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="30%" stopColor="#fb923c" stopOpacity="0.5" />
+              <stop offset="60%" stopColor="#fdba74" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fed7aa" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === LOCKED STATE INDICATOR (Radial) === */}
+            <radialGradient id="stslLockedGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+              <stop offset="40%" stopColor="#16a34a" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#15803d" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === SLIPPING STATE INDICATOR (Radial) === */}
+            <radialGradient id="stslSlippingGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="40%" stopColor="#dc2626" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTER (Gaussian Blur + Merge) === */}
+            <filter id="stslGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* === STRONG GLOW FILTER === */}
+            <filter id="stslStrongGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* === SEISMIC WAVE FILTER === */}
+            <filter id="stslWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* === INNER SHADOW FILTER === */}
+            <filter id="stslInnerShadow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* === SUBTLE GRID PATTERN === */}
+            <pattern id="stslLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
             </pattern>
 
-            <pattern id="rockPatternBottom" patternUnits="userSpaceOnUse" width="20" height="20">
-              <rect width="20" height="20" fill={colors.rockDark} />
-              <circle cx="10" cy="5" r="2" fill={colors.rockHighlight} opacity="0.3" />
-              <circle cx="3" cy="15" r="3" fill={colors.rockLight} opacity="0.3" />
+            {/* === ROCK GRAIN PATTERN === */}
+            <pattern id="stslRockGrain" width="8" height="8" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="0.5" fill="#ffffff" opacity="0.05" />
+              <circle cx="6" cy="6" r="0.3" fill="#000000" opacity="0.1" />
+              <circle cx="4" cy="1" r="0.4" fill="#ffffff" opacity="0.03" />
             </pattern>
 
-            {/* Stress gradient */}
-            <linearGradient id="stressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.stressLow} />
-              <stop offset="50%" stopColor={colors.stressMedium} />
-              <stop offset="100%" stopColor={colors.stressHigh} />
+            {/* === CARD BACKGROUND GRADIENT === */}
+            <linearGradient id="stslCardBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0c1322" />
             </linearGradient>
           </defs>
 
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width="500" height="420" fill="url(#stslLabBg)" />
+          <rect width="500" height="420" fill="url(#stslLabGrid)" />
+
+          {/* === TITLE SECTION === */}
+          <text x="250" y="28" textAnchor="middle" fill={colors.textPrimary} fontSize="18" fontWeight="bold" letterSpacing="0.5">
             Stick-Slip Fault Model
           </text>
+          <text x="250" y="44" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+            Tectonic Plate Boundary Cross-Section
+          </text>
 
-          {/* Cross-section view */}
-          <g transform="translate(50, 50)">
+          {/* === MAIN CROSS-SECTION VIEW === */}
+          <g transform="translate(60, 60)">
             {/* Ground surface indicator */}
-            <line x1="0" y1="0" x2="300" y2="0" stroke={colors.textMuted} strokeWidth="2" />
-            <text x="150" y="-8" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-              Surface
+            <line x1="0" y1="0" x2="320" y2="0" stroke="#475569" strokeWidth="3" />
+            <line x1="0" y1="0" x2="320" y2="0" stroke="#64748b" strokeWidth="1" />
+            <text x="160" y="-10" textAnchor="middle" fill={colors.textMuted} fontSize="10" fontWeight="600">
+              EARTH'S SURFACE
             </text>
 
-            {/* Top block (moving right) */}
-            <g transform={`translate(${topBlockOffset + displacement * 0.5}, 0)`}>
+            {/* === TOP BLOCK (Pacific Plate - Moving) === */}
+            <g transform={`translate(${topBlockOffset + displacement * 0.3}, 0)`}>
+              {/* Main rock body with premium gradient */}
               <rect
                 x="0"
                 y="5"
-                width="300"
-                height="80"
-                fill="url(#rockPatternTop)"
-                stroke={colors.rockHighlight}
-                strokeWidth="1"
+                width="320"
+                height="75"
+                fill="url(#stslTopRock)"
+                stroke="#78716c"
+                strokeWidth="1.5"
+                rx="2"
               />
+              {/* Texture overlay */}
+              <rect x="0" y="5" width="320" height="75" fill="url(#stslRockTexture)" rx="2" />
+              <rect x="0" y="5" width="320" height="75" fill="url(#stslRockGrain)" rx="2" />
 
-              {/* Driving force arrow */}
-              <path
-                d={`M 320,45 L ${340 + drivingForce / 5},45`}
-                fill="none"
-                stroke={colors.stored}
-                strokeWidth="3"
-              />
-              <polygon
-                points={`${340 + drivingForce / 5},40 ${350 + drivingForce / 5},45 ${340 + drivingForce / 5},50`}
-                fill={colors.stored}
-              />
-              <text x="330" y="35" fill={colors.stored} fontSize="9">Force</text>
+              {/* Plate label */}
+              <rect x="110" y="30" width="100" height="22" fill="rgba(0,0,0,0.4)" rx="4" />
+              <text x="160" y="45" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">
+                MOVING PLATE
+              </text>
 
-              {/* Elastic strain visualization (compressed spring) */}
-              <g transform="translate(-30, 30)">
-                {[0, 1, 2, 3, 4].map(i => {
-                  const compression = storedEnergy * 0.7;
-                  const x = i * (6 - compression * 3);
+              {/* Direction arrow on plate */}
+              <path d="M 280,42 L 305,42 L 298,36 M 305,42 L 298,48" fill="none" stroke="#94a3b8" strokeWidth="2" />
+            </g>
+
+            {/* === SPRING WITH FORCE INDICATOR === */}
+            <g transform={`translate(${-70 + topBlockOffset + displacement * 0.3}, 25)`}>
+              {/* Spring anchor block */}
+              <rect x="-15" y="5" width="20" height="40" fill="#374151" stroke="#4b5563" strokeWidth="1" rx="3" />
+              <text x="-5" y="50" textAnchor="middle" fill={colors.textMuted} fontSize="7">FIXED</text>
+
+              {/* Premium spring coils */}
+              <g filter={stressPercent > 70 ? "url(#stslGlowFilter)" : undefined}>
+                {Array.from({ length: springCoils }).map((_, i) => {
+                  const coilWidth = springCompressedWidth / springCoils;
+                  const x = 10 + i * coilWidth;
+                  const amplitude = 12;
                   return (
-                    <line
+                    <path
                       key={i}
-                      x1={x}
-                      y1={i % 2 === 0 ? 0 : 20}
-                      x2={x + (6 - compression * 3)}
-                      y2={i % 2 === 0 ? 20 : 0}
-                      stroke={stressColor}
-                      strokeWidth="2"
+                      d={`M ${x},${25 - amplitude} Q ${x + coilWidth / 2},${25 + amplitude} ${x + coilWidth},${25 - amplitude}`}
+                      fill="none"
+                      stroke={stressPercent > 70 ? "url(#stslSpringStressed)" : "url(#stslSpringMetal)"}
+                      strokeWidth="3"
+                      strokeLinecap="round"
                     />
                   );
                 })}
               </g>
+
+              {/* Force indicator arrow */}
+              <g transform={`translate(${springCompressedWidth + 15}, 0)`}>
+                <line
+                  x1="0"
+                  y1="25"
+                  x2={20 + drivingForce / 4}
+                  y2="25"
+                  stroke="url(#stslForceArrow)"
+                  strokeWidth="6"
+                  filter="url(#stslGlowFilter)"
+                />
+                <polygon
+                  points={`${25 + drivingForce / 4},25 ${15 + drivingForce / 4},18 ${15 + drivingForce / 4},32`}
+                  fill="#3b82f6"
+                  filter="url(#stslGlowFilter)"
+                />
+                <text x={(20 + drivingForce / 4) / 2} y="12" textAnchor="middle" fill="#60a5fa" fontSize="8" fontWeight="bold">
+                  F = {(drivingForce / 10).toFixed(1)} kN
+                </text>
+              </g>
+
+              {/* Stored energy indicator */}
+              <text x={springCompressedWidth / 2 + 10} y="55" textAnchor="middle" fill={stressColor} fontSize="8">
+                Elastic Energy: {(storedEnergy * 100).toFixed(0)}%
+              </text>
             </g>
 
-            {/* Fault line */}
-            <line
-              x1="0"
-              y1="85"
-              x2="300"
-              y2="85"
-              stroke={isSlipping ? colors.released : colors.fault}
-              strokeWidth={isSlipping ? 6 : 3}
-              strokeDasharray={isSlipping ? "none" : "10,5"}
-            />
+            {/* === FAULT LINE (The main event!) === */}
+            <g filter={isSlipping ? "url(#stslStrongGlow)" : undefined}>
+              <line
+                x1="-10"
+                y1="80"
+                x2="330"
+                y2="80"
+                stroke={isSlipping ? "url(#stslFaultSlip)" : "url(#stslFaultActive)"}
+                strokeWidth={isSlipping ? 8 : 4}
+                strokeLinecap="round"
+              />
+              {!isSlipping && (
+                <line
+                  x1="-10"
+                  y1="80"
+                  x2="330"
+                  y2="80"
+                  stroke="#ef4444"
+                  strokeWidth="2"
+                  strokeDasharray="12,8"
+                  opacity="0.6"
+                />
+              )}
+            </g>
 
-            {/* Slip indicator */}
+            {/* === FAULT LINE LABEL === */}
+            <rect x="340" y="70" width="80" height="20" fill="rgba(239, 68, 68, 0.2)" rx="4" stroke="#ef4444" strokeWidth="1" />
+            <text x="380" y="84" textAnchor="middle" fill="#fca5a5" fontSize="9" fontWeight="600">
+              FAULT LINE
+            </text>
+
+            {/* === CONTACT POINTS / ASPERITIES === */}
+            {!isSlipping && (
+              <g>
+                {[40, 100, 160, 220, 280].map((x, i) => (
+                  <g key={i} transform={`translate(${x}, 80)`}>
+                    {/* Asperity glow */}
+                    <circle cx="0" cy="0" r="8" fill="url(#stslContactGlow)" />
+                    {/* Asperity symbol (interlocking) */}
+                    <path
+                      d="M -4,-4 L 4,4 M 4,-4 L -4,4"
+                      stroke="#fbbf24"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </g>
+                ))}
+                <text x="160" y="100" textAnchor="middle" fill="#fbbf24" fontSize="8">
+                  Asperities (Contact Points)
+                </text>
+              </g>
+            )}
+
+            {/* === SLIP INDICATOR AND SEISMIC WAVES === */}
             {isSlipping && (
               <g>
-                <text x="150" y="95" textAnchor="middle" fill={colors.released} fontSize="12" fontWeight="bold">
-                  ⚡ SLIP! ⚡
-                </text>
-                {/* Seismic waves */}
-                {[0, 1, 2].map(i => {
-                  const waveRadius = 20 + i * 20 + (animationTime % 1) * 30;
+                {/* Seismic wave rings */}
+                {[0, 1, 2, 3].map(i => {
+                  const waveRadius = 15 + i * 25 + (animationTime % 1) * 40;
+                  const opacity = 0.6 - i * 0.15;
                   return (
                     <circle
                       key={i}
-                      cx="150"
-                      cy="85"
+                      cx="160"
+                      cy="80"
                       r={waveRadius}
                       fill="none"
-                      stroke={colors.released}
-                      strokeWidth="2"
-                      opacity={0.5 - i * 0.15}
+                      stroke="url(#stslFaultSlip)"
+                      strokeWidth={3 - i * 0.5}
+                      opacity={opacity}
+                      filter="url(#stslWaveGlow)"
                     />
                   );
                 })}
+
+                {/* EARTHQUAKE label */}
+                <rect x="110" y="95" width="100" height="24" fill="rgba(249, 115, 22, 0.3)" rx="6" stroke="#fb923c" strokeWidth="2">
+                  <animate attributeName="opacity" values="0.5;1;0.5" dur="0.3s" repeatCount="indefinite" />
+                </rect>
+                <text x="160" y="112" textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">
+                  SLIP EVENT!
+                </text>
               </g>
             )}
 
-            {/* Bottom block (stationary reference) */}
+            {/* === BOTTOM BLOCK (North American Plate - Stationary) === */}
             <g transform={`translate(${bottomBlockOffset}, 0)`}>
+              {/* Main rock body */}
               <rect
                 x="0"
-                y="90"
-                width="300"
-                height="80"
-                fill="url(#rockPatternBottom)"
-                stroke={colors.rockDark}
-                strokeWidth="1"
+                y="85"
+                width="320"
+                height="75"
+                fill="url(#stslBottomRock)"
+                stroke="#78716c"
+                strokeWidth="1.5"
+                rx="2"
               />
+              {/* Texture overlay */}
+              <rect x="0" y="85" width="320" height="75" fill="url(#stslRockTexture)" rx="2" />
+              <rect x="0" y="85" width="320" height="75" fill="url(#stslRockGrain)" rx="2" />
 
-              {/* Fixed anchor indicator */}
-              <text x="-20" y="130" fill={colors.textMuted} fontSize="10">⚓</text>
+              {/* Plate label */}
+              <rect x="110" y="112" width="100" height="22" fill="rgba(0,0,0,0.4)" rx="4" />
+              <text x="160" y="127" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="600">
+                FIXED PLATE
+              </text>
+
+              {/* Anchor symbols */}
+              <g transform="translate(-25, 120)">
+                <circle cx="0" cy="0" r="10" fill="#1e293b" stroke="#374151" strokeWidth="2" />
+                <path d="M 0,-5 L 0,5 M -4,2 L 0,7 L 4,2" fill="none" stroke="#64748b" strokeWidth="2" />
+              </g>
+            </g>
+          </g>
+
+          {/* === STRESS METER PANEL === */}
+          <g transform="translate(20, 240)">
+            <rect x="0" y="0" width="220" height="70" fill="url(#stslCardBg)" rx="8" stroke="#334155" strokeWidth="1" />
+
+            {/* Title */}
+            <text x="110" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+              STRESS ACCUMULATION
+            </text>
+
+            {/* Meter background */}
+            <rect x="15" y="28" width="190" height="16" fill="#1e293b" rx="8" stroke="#334155" strokeWidth="1" />
+
+            {/* Meter fill with gradient */}
+            <rect
+              x="15"
+              y="28"
+              width={190 * (stressPercent / 100)}
+              height="16"
+              fill="url(#stslStressMeter)"
+              rx="8"
+            />
+
+            {/* Threshold marker */}
+            <line x1="205" y1="25" x2="205" y2="47" stroke="#ef4444" strokeWidth="2" strokeDasharray="3,2" />
+            <text x="205" y="55" textAnchor="middle" fill="#ef4444" fontSize="7">BREAK</text>
+
+            {/* Percentage */}
+            <text x="110" y="62" textAnchor="middle" fill={stressColor} fontSize="12" fontWeight="bold">
+              {stressPercent.toFixed(0)}% of Threshold
+            </text>
+          </g>
+
+          {/* === STICK/SLIP STATE INDICATOR === */}
+          <g transform="translate(260, 240)">
+            <rect x="0" y="0" width="220" height="70" fill="url(#stslCardBg)" rx="8" stroke="#334155" strokeWidth="1" />
+
+            {/* Title */}
+            <text x="110" y="18" textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+              FAULT STATE
+            </text>
+
+            {/* State indicator with glow */}
+            <g transform="translate(110, 42)">
+              <circle
+                cx="0"
+                cy="0"
+                r="16"
+                fill={isSlipping ? "url(#stslSlippingGlow)" : "url(#stslLockedGlow)"}
+                filter="url(#stslStrongGlow)"
+              >
+                {isSlipping && (
+                  <animate attributeName="r" values="16;20;16" dur="0.2s" repeatCount="indefinite" />
+                )}
+              </circle>
+              <circle
+                cx="0"
+                cy="0"
+                r="10"
+                fill={isSlipping ? "#ef4444" : "#22c55e"}
+              />
             </g>
 
-            {/* Friction indicators at fault */}
-            {!isSlipping && (
-              <g>
-                {[0, 1, 2, 3, 4].map(i => (
-                  <g key={i} transform={`translate(${30 + i * 60}, 85)`}>
-                    <line x1="-5" y1="-5" x2="5" y2="5" stroke={colors.textMuted} strokeWidth="1" />
-                    <line x1="5" y1="-5" x2="-5" y2="5" stroke={colors.textMuted} strokeWidth="1" />
-                  </g>
-                ))}
-              </g>
-            )}
+            {/* State label */}
+            <text x="110" y="68" textAnchor="middle" fill={isSlipping ? "#fca5a5" : "#86efac"} fontSize="12" fontWeight="bold">
+              {isSlipping ? "SLIPPING" : "LOCKED (Stick)"}
+            </text>
+
+            {/* Friction coefficients */}
+            <text x="30" y="42" fill={colors.textMuted} fontSize="8">μs: {staticFriction.toFixed(2)}</text>
+            <text x="170" y="42" fill={colors.textMuted} fontSize="8">μk: {kineticFriction.toFixed(2)}</text>
           </g>
 
-          {/* Stress meter */}
-          <g transform="translate(20, 230)">
-            <rect x="0" y="0" width="170" height="55" fill={colors.bgCard} rx="6" />
-            <text x="85" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-              Stress Level
+          {/* === EARTHQUAKE HISTORY (Seismograph) === */}
+          <g transform="translate(20, 320)">
+            <rect x="0" y="0" width="460" height="90" fill="url(#stslCardBg)" rx="8" stroke="#334155" strokeWidth="1" />
+
+            {/* Title */}
+            <text x="20" y="18" fill={colors.textPrimary} fontSize="11" fontWeight="bold">
+              SEISMOGRAPH - Earthquake History
             </text>
-            <rect x="10" y="22" width="150" height="12" fill="rgba(71, 85, 105, 0.5)" rx="6" />
-            <rect
-              x="10"
-              y="22"
-              width={150 * (stressPercent / 100)}
-              height="12"
-              fill={stressColor}
-              rx="6"
-            />
-            <text x="85" y="48" textAnchor="middle" fill={colors.textPrimary} fontSize="11">
-              {stressPercent.toFixed(0)}% of threshold
-            </text>
-          </g>
 
-          {/* Friction info */}
-          <g transform="translate(210, 230)">
-            <rect x="0" y="0" width="170" height="55" fill={colors.bgCard} rx="6" />
-            <text x="10" y="15" fill={colors.textMuted} fontSize="9">Static μ:</text>
-            <text x="70" y="15" fill={colors.textPrimary} fontSize="9">{staticFriction.toFixed(2)}</text>
-            <text x="100" y="15" fill={colors.textMuted} fontSize="9">Kinetic μ:</text>
-            <text x="155" y="15" fill={colors.textPrimary} fontSize="9">{kineticFriction.toFixed(2)}</text>
+            {/* Seismograph baseline */}
+            <line x1="20" y1="60" x2="440" y2="60" stroke="#475569" strokeWidth="1" />
 
-            <text x="85" y="32" textAnchor="middle" fill={colors.textMuted} fontSize="9">
-              Status:
-            </text>
-            <text
-              x="85"
-              y="48"
-              textAnchor="middle"
-              fill={isSlipping ? colors.released : colors.stored}
-              fontSize="12"
-              fontWeight="bold"
-            >
-              {isSlipping ? '🔴 SLIPPING' : '🟢 LOCKED'}
-            </text>
-          </g>
+            {/* Grid lines */}
+            {[0, 1, 2, 3].map(i => (
+              <line key={i} x1="20" y1={45 + i * 10} x2="440" y2={45 + i * 10} stroke="#1e293b" strokeWidth="1" />
+            ))}
 
-          {/* Slip history (seismograph) */}
-          <g transform="translate(20, 295)">
-            <rect x="0" y="0" width="360" height="50" fill={colors.bgCard} rx="6" />
-            <text x="10" y="15" fill={colors.textMuted} fontSize="9">Earthquake History:</text>
-
-            {/* Seismograph trace */}
-            <line x1="10" y1="35" x2="350" y2="35" stroke={colors.textMuted} strokeWidth="1" />
-
+            {/* Earthquake spikes */}
             {slipHistory.map((slip, i) => {
-              const x = 30 + i * 35;
-              const height = slip.magnitude * 15;
+              const x = 40 + i * 42;
+              const height = slip.magnitude * 25;
               return (
                 <g key={i}>
+                  {/* Spike glow */}
                   <line
                     x1={x}
-                    y1={35}
+                    y1={60}
                     x2={x}
-                    y2={35 - height}
-                    stroke={colors.accent}
-                    strokeWidth="3"
+                    y2={60 - height}
+                    stroke="#f97316"
+                    strokeWidth="6"
+                    opacity="0.3"
+                    filter="url(#stslGlowFilter)"
                   />
-                  <text x={x} y={45} textAnchor="middle" fill={colors.textMuted} fontSize="7">
+                  {/* Main spike */}
+                  <line
+                    x1={x}
+                    y1={60}
+                    x2={x}
+                    y2={60 - height}
+                    stroke="#ef4444"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  {/* Magnitude label */}
+                  <text x={x} y={75} textAnchor="middle" fill={colors.textMuted} fontSize="8">
                     M{slip.magnitude.toFixed(1)}
                   </text>
                 </g>
@@ -400,10 +707,14 @@ const StickSlipRenderer: React.FC<StickSlipRendererProps> = ({
             })}
 
             {slipHistory.length === 0 && (
-              <text x="180" y="38" textAnchor="middle" fill={colors.textMuted} fontSize="10">
-                No earthquakes yet...
+              <text x="230" y="58" textAnchor="middle" fill={colors.textMuted} fontSize="11">
+                Monitoring... No earthquakes recorded yet
               </text>
             )}
+
+            {/* Y-axis labels */}
+            <text x="15" y="38" textAnchor="end" fill={colors.textMuted} fontSize="7">High</text>
+            <text x="15" y="63" textAnchor="end" fill={colors.textMuted} fontSize="7">Low</text>
           </g>
         </svg>
       </div>

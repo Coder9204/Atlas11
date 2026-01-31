@@ -432,54 +432,235 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     void nodesPerCavity; // Used in getIntensityAt via scaleFactor
 
     return (
-      <svg viewBox="0 0 400 320" className="w-full h-64">
-        <rect width="400" height="320" fill="#111827" />
+      <svg viewBox="0 0 500 400" className="w-full h-auto" style={{ maxHeight: '100%' }}>
+        <defs>
+          {/* Premium microwave oven body gradient - brushed stainless steel */}
+          <linearGradient id="mswOvenBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="15%" stopColor="#4b5563" />
+            <stop offset="40%" stopColor="#374151" />
+            <stop offset="60%" stopColor="#4b5563" />
+            <stop offset="85%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
 
-        {/* Microwave body */}
-        <rect x="50" y="30" width="300" height="200" rx="10" fill="#374151" stroke="#4b5563" strokeWidth="3" />
+          {/* Door frame metallic gradient */}
+          <linearGradient id="mswDoorFrame" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3f3f46" />
+            <stop offset="20%" stopColor="#52525b" />
+            <stop offset="50%" stopColor="#3f3f46" />
+            <stop offset="80%" stopColor="#27272a" />
+            <stop offset="100%" stopColor="#18181b" />
+          </linearGradient>
 
-        {/* Door frame */}
-        <rect x="60" y="40" width="220" height="180" rx="5" fill="#1f2937" />
+          {/* Cavity interior gradient - dark reflective metal */}
+          <radialGradient id="mswCavityInterior" cx="50%" cy="30%" r="80%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="40%" stopColor="#0f172a" />
+            <stop offset="70%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </radialGradient>
 
-        {/* Viewing window */}
-        <rect x="70" y="50" width="200" height="160" rx="3" fill="#0a1628" />
+          {/* Glass door with depth effect */}
+          <linearGradient id="mswGlassDoor" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#0c4a6e" stopOpacity="0.15" />
+            <stop offset="70%" stopColor="#164e63" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.25" />
+          </linearGradient>
 
-        {/* Mesh pattern */}
-        {[...Array(20)].map((_, i) => (
-          <line key={`h${i}`} x1="70" y1={55 + i * 8} x2="270" y2={55 + i * 8} stroke="#1e293b" strokeWidth="1" />
-        ))}
-        {[...Array(25)].map((_, i) => (
-          <line key={`v${i}`} x1={75 + i * 8} y1="50" x2={75 + i * 8} y2="210" stroke="#1e293b" strokeWidth="1" />
-        ))}
+          {/* Magnetron housing gradient */}
+          <linearGradient id="mswMagnetron" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#78716c" />
+            <stop offset="30%" stopColor="#57534e" />
+            <stop offset="70%" stopColor="#44403c" />
+            <stop offset="100%" stopColor="#292524" />
+          </linearGradient>
 
-        {/* Animated standing wave pattern visualization */}
-        <g opacity="0.6">
-          {[...Array(7)].map((_, yi) => (
-            [...Array(7)].map((_, xi) => {
-              const x = (xi / 6 - 0.5);
-              const y = (yi / 6 - 0.5);
-              const intensity = getIntensityAt(x, y, 0, 1);
-              const pulseIntensity = intensity * (0.7 + 0.3 * Math.sin(animPhase * 2));
+          {/* Hot spot radial gradient - intense red glow */}
+          <radialGradient id="mswHotSpot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+            <stop offset="30%" stopColor="#f87171" stopOpacity="0.9" />
+            <stop offset="60%" stopColor="#ef4444" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Cold spot radial gradient - cool blue */}
+          <radialGradient id="mswColdSpot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+            <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Medium intensity spot - amber/yellow */}
+          <radialGradient id="mswMediumSpot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde047" stopOpacity="1" />
+            <stop offset="30%" stopColor="#facc15" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#eab308" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#ca8a04" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Turntable glass plate gradient */}
+          <radialGradient id="mswTurntablePlate" cx="40%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#e5e7eb" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#9ca3af" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#6b7280" stopOpacity="0.15" />
+          </radialGradient>
+
+          {/* Control panel gradient */}
+          <linearGradient id="mswControlPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#27272a" />
+            <stop offset="50%" stopColor="#18181b" />
+            <stop offset="100%" stopColor="#09090b" />
+          </linearGradient>
+
+          {/* Power indicator glow */}
+          <radialGradient id="mswPowerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+            <stop offset="40%" stopColor="#22c55e" stopOpacity="0.8" />
+            <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Microwave beam gradient for wave visualization */}
+          <linearGradient id="mswWaveBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
+            <stop offset="20%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#fcd34d" stopOpacity="1" />
+            <stop offset="80%" stopColor="#fbbf24" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Standing wave pattern gradient */}
+          <linearGradient id="mswStandingWave" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="25%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="75%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+
+          {/* Glow filter for hot spots */}
+          <filter id="mswHotGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Glow filter for cold spots */}
+          <filter id="mswColdGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Soft glow for power indicator */}
+          <filter id="mswPowerIndicatorGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Wave animation glow */}
+          <filter id="mswWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Inner shadow for cavity depth */}
+          <filter id="mswInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur" />
+            <feOffset dx="2" dy="2" result="offsetBlur" />
+            <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
+          </filter>
+
+          {/* Food gradient - warm cooked appearance */}
+          <linearGradient id="mswFoodHot" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+
+          <linearGradient id="mswFoodCold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="50%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+
+          <linearGradient id="mswFoodWarm" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fde047" />
+            <stop offset="50%" stopColor="#facc15" />
+            <stop offset="100%" stopColor="#eab308" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="500" height="400" fill="#030712" />
+
+        {/* Premium microwave oven body with shadow */}
+        <rect x="35" y="25" width="330" height="235" rx="12" fill="#1f2937" opacity="0.6" />
+        <rect x="30" y="20" width="330" height="235" rx="12" fill="url(#mswOvenBody)" stroke="#52525b" strokeWidth="2" />
+
+        {/* Microwave door frame */}
+        <rect x="45" y="35" width="240" height="200" rx="6" fill="url(#mswDoorFrame)" />
+
+        {/* Cavity interior */}
+        <rect x="55" y="45" width="220" height="180" rx="4" fill="url(#mswCavityInterior)" filter="url(#mswInnerShadow)" />
+
+        {/* Glass door overlay */}
+        <rect x="55" y="45" width="220" height="180" rx="4" fill="url(#mswGlassDoor)" />
+
+        {/* Door mesh pattern - safety grid */}
+        <g opacity="0.4">
+          {[...Array(22)].map((_, i) => (
+            <line key={`mh${i}`} x1="55" y1={50 + i * 8} x2="275" y2={50 + i * 8} stroke="#334155" strokeWidth="0.5" />
+          ))}
+          {[...Array(28)].map((_, i) => (
+            <line key={`mv${i}`} x1={58 + i * 8} y1="45" x2={58 + i * 8} y2="225" stroke="#334155" strokeWidth="0.5" />
+          ))}
+        </g>
+
+        {/* Standing wave pattern visualization */}
+        <g opacity={cooking ? 0.8 : 0.5}>
+          {[...Array(9)].map((_, yi) => (
+            [...Array(9)].map((_, xi) => {
+              const x = (xi / 8 - 0.5);
+              const y = (yi / 8 - 0.5);
+              const intensity = getIntensityAt(x, y, turntable ? angle : 0, 1);
+              const pulseIntensity = cooking ? intensity * (0.6 + 0.4 * Math.sin(animPhase * 2)) : intensity * 0.5;
               const isAntinode = intensity > 0.7;
               const isNode = intensity < 0.15;
+              const spotGradient = isAntinode ? 'url(#mswHotSpot)' : isNode ? 'url(#mswColdSpot)' : 'url(#mswMediumSpot)';
+              const filterEffect = isAntinode ? 'url(#mswHotGlow)' : isNode ? 'url(#mswColdGlow)' : '';
 
               return (
-                <g key={`w${xi}-${yi}`}>
+                <g key={`sw${xi}-${yi}`}>
                   <circle
-                    cx={85 + xi * 28}
-                    cy={65 + yi * 22}
-                    r={4 + pulseIntensity * 10}
-                    fill={isAntinode ? '#ef4444' : isNode ? '#3b82f6' : '#eab308'}
-                    opacity={0.4 + pulseIntensity * 0.4}
+                    cx={75 + xi * 22}
+                    cy={60 + yi * 18}
+                    r={3 + pulseIntensity * 12}
+                    fill={spotGradient}
+                    filter={filterEffect}
+                    opacity={0.3 + pulseIntensity * 0.5}
                   />
                   {/* Node/Antinode labels */}
                   {showNodeLabels && isAntinode && xi % 2 === 0 && yi % 2 === 0 && (
-                    <text x={85 + xi * 28} y={65 + yi * 22 - 12} textAnchor="middle" className="fill-red-300 text-xs font-bold" style={{ fontSize: '8px' }}>
+                    <text x={75 + xi * 22} y={60 + yi * 18 - 14} textAnchor="middle" fill="#fca5a5" fontWeight="bold" fontSize="8px">
                       HOT
                     </text>
                   )}
                   {showNodeLabels && isNode && xi % 2 === 0 && yi % 2 === 0 && (
-                    <text x={85 + xi * 28} y={65 + yi * 22 - 12} textAnchor="middle" className="fill-blue-300 text-xs font-bold" style={{ fontSize: '8px' }}>
+                    <text x={75 + xi * 22} y={60 + yi * 18 - 14} textAnchor="middle" fill="#93c5fd" fontWeight="bold" fontSize="8px">
                       COLD
                     </text>
                   )}
@@ -489,78 +670,172 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           ))}
         </g>
 
-        {/* Turntable */}
-        <g transform={`translate(170, 180)`}>
-          <ellipse cx="0" cy="0" rx="60" ry="15" fill="#4b5563" />
-          {turntable && cooking && (
-            <line
-              x1="0"
-              y1="0"
-              x2={Math.cos(angle) * 50}
-              y2={Math.sin(angle) * 10}
-              stroke="#9ca3af"
-              strokeWidth="2"
+        {/* Magnetron housing (top of cavity) */}
+        <rect x="130" y="30" width="70" height="18" rx="3" fill="url(#mswMagnetron)" />
+        <text x="165" y="43" textAnchor="middle" fill="#a8a29e" fontSize="7px" fontWeight="bold">MAGNETRON</text>
+
+        {/* Microwave beam animation from magnetron */}
+        {cooking && (
+          <g filter="url(#mswWaveGlow)">
+            <path
+              d={`M 165 48 Q ${165 + Math.sin(animPhase) * 20} 100, 165 135`}
+              stroke="url(#mswWaveBeam)"
+              strokeWidth="3"
+              fill="none"
+              opacity={0.6 + 0.3 * Math.sin(animPhase * 3)}
             />
+            <path
+              d={`M 165 48 Q ${165 + Math.sin(animPhase + 1) * 25} 80, ${100 + Math.sin(animPhase) * 10} 135`}
+              stroke="url(#mswWaveBeam)"
+              strokeWidth="2"
+              fill="none"
+              opacity={0.4 + 0.3 * Math.sin(animPhase * 2)}
+            />
+            <path
+              d={`M 165 48 Q ${165 + Math.sin(animPhase + 2) * 25} 80, ${230 + Math.sin(animPhase) * 10} 135`}
+              stroke="url(#mswWaveBeam)"
+              strokeWidth="2"
+              fill="none"
+              opacity={0.4 + 0.3 * Math.sin(animPhase * 2 + 1)}
+            />
+          </g>
+        )}
+
+        {/* Turntable with glass plate effect */}
+        <g transform="translate(165, 195)">
+          <ellipse cx="0" cy="0" rx="75" ry="20" fill="#27272a" />
+          <ellipse cx="0" cy="-3" rx="70" ry="18" fill="url(#mswTurntablePlate)" stroke="#6b7280" strokeWidth="1" />
+          {/* Turntable rotation indicator */}
+          {turntable && cooking && (
+            <g>
+              <line
+                x1="0"
+                y1="0"
+                x2={Math.cos(angle) * 60}
+                y2={Math.sin(angle) * 15}
+                stroke="#d1d5db"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <circle cx={Math.cos(angle) * 60} cy={Math.sin(angle) * 15} r="3" fill="#e5e7eb" />
+            </g>
           )}
         </g>
 
-        {/* Food (5x5 grid representing a plate) */}
-        <g transform={`translate(120, 100) rotate(${turntable ? angle * 180 / Math.PI : 0}, 50, 40)`}>
+        {/* Food plate with temperature visualization */}
+        <g transform={`translate(115, 120) rotate(${turntable ? angle * 180 / Math.PI : 0}, 50, 40)`}>
+          {/* Plate base */}
+          <ellipse cx="50" cy="50" rx="55" ry="15" fill="#d1d5db" opacity="0.3" />
+
+          {/* Food items grid */}
           {temps.map((temp, i) => {
-            const x = (i % 5) * 20;
-            const y = Math.floor(i / 5) * 16;
+            const x = (i % 5) * 22;
+            const y = Math.floor(i / 5) * 18;
+            const normalized = (temp - 20) / 80;
+            const foodGradient = normalized > 0.6 ? 'url(#mswFoodHot)' : normalized < 0.3 ? 'url(#mswFoodCold)' : 'url(#mswFoodWarm)';
+            const glowFilter = normalized > 0.6 ? 'url(#mswHotGlow)' : '';
+
             return (
-              <rect
-                key={i}
-                x={x}
-                y={y}
-                width="18"
-                height="14"
-                rx="2"
-                fill={tempToColor(temp)}
-                stroke="#1f2937"
-                strokeWidth="1"
-              />
+              <g key={i}>
+                <rect
+                  x={x}
+                  y={y}
+                  width="20"
+                  height="16"
+                  rx="3"
+                  fill={foodGradient}
+                  filter={glowFilter}
+                  stroke="#1f2937"
+                  strokeWidth="1"
+                  opacity={0.8 + normalized * 0.2}
+                />
+                {/* Temperature indicator dot */}
+                <circle
+                  cx={x + 10}
+                  cy={y + 8}
+                  r="2"
+                  fill={tempToColor(temp)}
+                  opacity="0.9"
+                />
+              </g>
             );
           })}
         </g>
 
         {/* Control panel */}
-        <rect x="290" y="50" width="50" height="160" fill="#1f2937" rx="3" />
-        <circle cx="315" cy="80" r="12" fill={cooking ? '#22c55e' : '#4b5563'} />
-        <text x="315" y="110" textAnchor="middle" className="fill-gray-400 text-xs">
-          {cooking ? 'ON' : 'OFF'}
-        </text>
-        <rect x="300" y="130" width="30" height="8" fill={turntable ? '#3b82f6' : '#4b5563'} rx="2" />
-        <text x="315" y="155" textAnchor="middle" className="fill-gray-500 text-xs">Turn</text>
+        <rect x="295" y="35" width="55" height="200" rx="6" fill="url(#mswControlPanel)" stroke="#3f3f46" strokeWidth="1" />
 
-        {/* Timer */}
-        <text x="315" y="190" textAnchor="middle" className="fill-green-400 text-sm font-mono">
-          {cookTime.toFixed(1)}s
-        </text>
-
-        {/* Temperature legend with node/antinode explanation */}
-        <g transform="translate(50, 240)">
-          <rect x="0" y="0" width="16" height="10" fill="#3b82f6" />
-          <text x="20" y="9" className="fill-gray-400 text-xs">Node (Cold)</text>
-          <rect x="90" y="0" width="16" height="10" fill="#eab308" />
-          <text x="110" y="9" className="fill-gray-400 text-xs">Between</text>
-          <rect x="170" y="0" width="16" height="10" fill="#ef4444" />
-          <text x="190" y="9" className="fill-gray-400 text-xs">Antinode (Hot)</text>
-        </g>
-
-        {/* Wavelength info */}
-        <g transform="translate(50, 260)">
-          <text x="0" y="10" className="fill-amber-400 text-xs">
-            {`λ = ${wavelength.toFixed(1)} cm | Nodes every ${(wavelength / 2).toFixed(1)} cm`}
+        {/* Power indicator with glow */}
+        <g filter={cooking ? "url(#mswPowerIndicatorGlow)" : ""}>
+          <circle cx="322" cy="65" r="15" fill={cooking ? 'url(#mswPowerGlow)' : '#3f3f46'} />
+          <text x="322" y="68" textAnchor="middle" fill={cooking ? '#052e16' : '#6b7280'} fontSize="8px" fontWeight="bold">
+            {cooking ? 'ON' : 'OFF'}
           </text>
         </g>
 
-        {/* Power indicator */}
-        <g transform="translate(50, 280)">
-          <text x="0" y="10" className="fill-gray-400 text-xs">Power: {powerLevel}%</text>
-          <rect x="80" y="2" width="100" height="8" fill="#1f2937" rx="2" />
-          <rect x="80" y="2" width={powerLevel} height="8" fill="#22c55e" rx="2" />
+        {/* Turntable indicator */}
+        <rect x="302" y="95" width="40" height="20" rx="4" fill={turntable ? '#2563eb' : '#3f3f46'} />
+        <text x="322" y="109" textAnchor="middle" fill={turntable ? '#dbeafe' : '#6b7280'} fontSize="8px" fontWeight="bold">
+          TURN
+        </text>
+
+        {/* Digital timer display */}
+        <rect x="302" y="130" width="40" height="25" rx="3" fill="#0a0a0a" stroke="#1f2937" strokeWidth="1" />
+        <text x="322" y="147" textAnchor="middle" fill="#4ade80" fontSize="12px" fontFamily="monospace" fontWeight="bold">
+          {cookTime.toFixed(1)}
+        </text>
+
+        {/* Power level display */}
+        <rect x="302" y="165" width="40" height="18" rx="3" fill="#0a0a0a" stroke="#1f2937" strokeWidth="1" />
+        <text x="322" y="178" textAnchor="middle" fill="#fbbf24" fontSize="9px" fontWeight="bold">
+          {powerLevel}%
+        </text>
+
+        {/* Control buttons */}
+        <rect x="302" y="195" width="40" height="12" rx="2" fill="#27272a" stroke="#52525b" strokeWidth="1" />
+        <rect x="302" y="212" width="40" height="12" rx="2" fill="#27272a" stroke="#52525b" strokeWidth="1" />
+
+        {/* Premium legend section */}
+        <g transform="translate(30, 270)">
+          {/* Legend background */}
+          <rect x="0" y="0" width="340" height="110" rx="8" fill="#111827" stroke="#1f2937" strokeWidth="1" />
+
+          {/* Title */}
+          <text x="170" y="20" textAnchor="middle" fill="#f8fafc" fontSize="11px" fontWeight="bold">
+            Standing Wave Pattern - Hot & Cold Spots
+          </text>
+
+          {/* Temperature scale */}
+          <g transform="translate(20, 35)">
+            <text x="0" y="0" fill="#94a3b8" fontSize="9px" fontWeight="bold">Temperature Scale:</text>
+
+            <rect x="0" y="8" width="25" height="14" rx="2" fill="url(#mswFoodCold)" />
+            <text x="30" y="18" fill="#94a3b8" fontSize="8px">Node (Cold)</text>
+
+            <rect x="100" y="8" width="25" height="14" rx="2" fill="url(#mswFoodWarm)" />
+            <text x="130" y="18" fill="#94a3b8" fontSize="8px">Between</text>
+
+            <rect x="200" y="8" width="25" height="14" rx="2" fill="url(#mswFoodHot)" />
+            <text x="230" y="18" fill="#94a3b8" fontSize="8px">Antinode (Hot)</text>
+          </g>
+
+          {/* Wavelength info */}
+          <g transform="translate(20, 65)">
+            <text x="0" y="0" fill="#fbbf24" fontSize="9px" fontWeight="bold">
+              {`Wavelength: λ = ${wavelength.toFixed(1)} cm`}
+            </text>
+            <text x="0" y="14" fill="#94a3b8" fontSize="8px">
+              {`Hot spots every ${(wavelength / 2).toFixed(1)} cm (half wavelength)`}
+            </text>
+          </g>
+
+          {/* Power bar */}
+          <g transform="translate(20, 90)">
+            <text x="0" y="0" fill="#94a3b8" fontSize="8px">Power:</text>
+            <rect x="45" y="-8" width="120" height="10" rx="2" fill="#1f2937" />
+            <rect x="45" y="-8" width={powerLevel * 1.2} height="10" rx="2" fill="url(#mswPowerGlow)" />
+            <text x="175" y="0" fill="#4ade80" fontSize="8px" fontWeight="bold">{powerLevel}%</text>
+          </g>
         </g>
       </svg>
     );
@@ -571,21 +846,115 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     const tempVariance = Math.sqrt(temps.reduce((acc, t) => acc + Math.pow(t - avgTemp, 2), 0) / temps.length);
 
     return (
-      <svg viewBox="0 0 400 250" className="w-full h-48">
-        <rect width="400" height="250" fill="#111827" />
+      <svg viewBox="0 0 400 280" className="w-full h-auto" style={{ maxHeight: '100%' }}>
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="mswTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
 
-        <text x="200" y="25" textAnchor="middle" className="fill-gray-300 text-sm font-semibold">
+          {/* Card background gradient */}
+          <linearGradient id="mswTwistCard" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Score bar gradients */}
+          <linearGradient id="mswScoreExcellent" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#22c55e" />
+          </linearGradient>
+
+          <linearGradient id="mswScoreOK" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#eab308" />
+            <stop offset="50%" stopColor="#fde047" />
+            <stop offset="100%" stopColor="#eab308" />
+          </linearGradient>
+
+          <linearGradient id="mswScorePoor" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#dc2626" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Food temperature gradients */}
+          <radialGradient id="mswTwistHot" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="60%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </radialGradient>
+
+          <radialGradient id="mswTwistCold" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="60%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#2563eb" />
+          </radialGradient>
+
+          <radialGradient id="mswTwistWarm" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde047" />
+            <stop offset="60%" stopColor="#eab308" />
+            <stop offset="100%" stopColor="#ca8a04" />
+          </radialGradient>
+
+          {/* Glow effects */}
+          <filter id="mswTwistGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="mswTwistShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur" />
+            <feOffset dx="2" dy="2" result="offset" />
+            <feMerge>
+              <feMergeNode in="offset" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect width="400" height="280" fill="url(#mswTwistBg)" />
+
+        {/* Title card */}
+        <rect x="80" y="8" width="240" height="28" rx="6" fill="url(#mswTwistCard)" stroke="#334155" strokeWidth="1" />
+        <text x="200" y="27" textAnchor="middle" fill="#f8fafc" fontSize="12px" fontWeight="bold">
           After 10 seconds of cooking:
         </text>
 
-        {/* Food grid display */}
-        <g transform="translate(100, 50)">
-          <text x="50" y="-10" textAnchor="middle" className="fill-gray-400 text-xs">
-            {turntable ? 'WITH Turntable' : 'NO Turntable'}
-          </text>
+        {/* Mode indicator badge */}
+        <rect
+          x="140"
+          y="42"
+          width="120"
+          height="22"
+          rx="11"
+          fill={turntable ? '#065f46' : '#7f1d1d'}
+          stroke={turntable ? '#10b981' : '#ef4444'}
+          strokeWidth="1"
+        />
+        <text x="200" y="57" textAnchor="middle" fill={turntable ? '#6ee7b7' : '#fca5a5'} fontSize="10px" fontWeight="bold">
+          {turntable ? 'WITH Turntable' : 'NO Turntable'}
+        </text>
+
+        {/* Food grid container */}
+        <rect x="85" y="70" width="130" height="130" rx="8" fill="url(#mswTwistCard)" stroke="#334155" strokeWidth="1" filter="url(#mswTwistShadow)" />
+
+        {/* Food grid */}
+        <g transform="translate(95, 80)">
           {temps.map((temp, i) => {
             const x = (i % 5) * 22;
             const y = Math.floor(i / 5) * 22;
+            const normalized = (temp - 20) / 80;
+            const foodGradient = normalized > 0.6 ? 'url(#mswTwistHot)' : normalized < 0.3 ? 'url(#mswTwistCold)' : 'url(#mswTwistWarm)';
+            const filterEffect = normalized > 0.6 ? 'url(#mswTwistGlow)' : '';
+
             return (
               <rect
                 key={i}
@@ -593,43 +962,66 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
                 y={y}
                 width="20"
                 height="20"
-                rx="3"
-                fill={tempToColor(temp)}
-                stroke="#374151"
+                rx="4"
+                fill={foodGradient}
+                filter={filterEffect}
+                stroke="#1f2937"
                 strokeWidth="1"
               />
             );
           })}
-          <text x="50" y="130" textAnchor="middle" className="fill-gray-400 text-xs">
-            Avg: {avgTemp.toFixed(0)}C
-          </text>
-          <text x="50" y="145" textAnchor="middle" className="fill-gray-400 text-xs">
-            Variation: +/-{tempVariance.toFixed(0)}C
-          </text>
         </g>
 
-        {/* Comparison metrics */}
-        <g transform="translate(220, 60)">
-          <text x="0" y="0" className="fill-gray-300 text-sm">Evenness Score:</text>
-          <rect x="0" y="10" width="150" height="20" fill="#1f2937" rx="4" />
+        {/* Temperature stats */}
+        <text x="150" y="218" textAnchor="middle" fill="#94a3b8" fontSize="10px">
+          Avg: <tspan fill="#f8fafc" fontWeight="bold">{avgTemp.toFixed(0)}C</tspan>
+        </text>
+        <text x="150" y="234" textAnchor="middle" fill="#94a3b8" fontSize="10px">
+          Variation: <tspan fill={tempVariance < 10 ? '#4ade80' : tempVariance < 20 ? '#fde047' : '#f87171'} fontWeight="bold">+/-{tempVariance.toFixed(0)}C</tspan>
+        </text>
+
+        {/* Evenness score section */}
+        <g transform="translate(230, 80)">
+          <text x="0" y="0" fill="#f8fafc" fontSize="11px" fontWeight="bold">Evenness Score</text>
+
+          {/* Score bar background */}
+          <rect x="0" y="12" width="140" height="24" rx="6" fill="#1f2937" stroke="#334155" strokeWidth="1" />
+
+          {/* Score bar fill */}
           <rect
-            x="0"
-            y="10"
-            width={Math.max(10, 150 - tempVariance * 5)}
+            x="2"
+            y="14"
+            width={Math.max(10, (136 - tempVariance * 5))}
             height="20"
-            fill={tempVariance < 10 ? '#22c55e' : tempVariance < 20 ? '#eab308' : '#ef4444'}
-            rx="4"
+            rx="5"
+            fill={tempVariance < 10 ? 'url(#mswScoreExcellent)' : tempVariance < 20 ? 'url(#mswScoreOK)' : 'url(#mswScorePoor)'}
+            filter="url(#mswTwistGlow)"
           />
-          <text x="75" y="25" textAnchor="middle" className="fill-white text-xs font-semibold">
+
+          {/* Score label */}
+          <text x="70" y="30" textAnchor="middle" fill="#f8fafc" fontSize="10px" fontWeight="bold">
             {tempVariance < 10 ? 'Excellent!' : tempVariance < 20 ? 'OK' : 'Uneven!'}
           </text>
+
+          {/* Explanation box */}
+          <rect x="0" y="50" width="140" height="70" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+          <text x="70" y="70" textAnchor="middle" fill="#94a3b8" fontSize="9px">
+            {turntable ? 'Turntable moves' : 'Food sits in'}
+          </text>
+          <text x="70" y="84" textAnchor="middle" fill="#94a3b8" fontSize="9px">
+            {turntable ? 'food through' : 'fixed positions'}
+          </text>
+          <text x="70" y="98" textAnchor="middle" fill={turntable ? '#4ade80' : '#f87171'} fontSize="9px" fontWeight="bold">
+            {turntable ? 'hot spots = even heating!' : '= hot and cold spots!'}
+          </text>
         </g>
 
-        {/* Explanation */}
-        <text x="200" y="220" textAnchor="middle" className="fill-gray-400 text-sm">
+        {/* Bottom explanation */}
+        <rect x="30" y="248" width="340" height="24" rx="6" fill={turntable ? '#052e16' : '#450a0a'} stroke={turntable ? '#16a34a' : '#dc2626'} strokeWidth="1" />
+        <text x="200" y="264" textAnchor="middle" fill={turntable ? '#86efac' : '#fca5a5'} fontSize="10px" fontWeight="bold">
           {turntable
-            ? 'Turntable moves food through hot spots - even heating!'
-            : 'Food sits in fixed positions - hot and cold spots!'}
+            ? 'Rotation ensures every part passes through hot spots'
+            : 'Standing waves create fixed hot & cold positions'}
         </text>
       </svg>
     );

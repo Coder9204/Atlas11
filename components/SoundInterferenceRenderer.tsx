@@ -271,17 +271,17 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
   }, [isDragging]);
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 350;
-    const scale = 50; // pixels per meter
+    const width = 500;
+    const height = 400;
+    const scale = 55; // pixels per meter
     const centerX = width / 2;
-    const speakerYPx = height - 50;
+    const speakerYPx = height - 70;
 
-    // Generate interference pattern
+    // Generate interference pattern with premium gradients
     const patternElements = [];
-    const resolution = 10;
+    const resolution = 8;
     for (let px = 0; px < width; px += resolution) {
-      for (let py = 30; py < height - 30; py += resolution) {
+      for (let py = 50; py < height - 50; py += resolution) {
         const x = (px - centerX) / scale;
         const y = (speakerYPx - py) / scale;
 
@@ -290,16 +290,16 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
         const pd = Math.abs(d2 - d1);
         const interference = Math.cos(2 * Math.PI * pd / wavelength);
 
-        // Color based on interference
+        // Color based on interference with enhanced gradients
         let fillColor;
         if (interference > 0.3) {
           const intensity = (interference - 0.3) / 0.7;
-          fillColor = `rgba(16, 185, 129, ${0.2 + intensity * 0.5})`; // Green for constructive
+          fillColor = `rgba(16, 185, 129, ${0.15 + intensity * 0.45})`; // Green for constructive
         } else if (interference < -0.3) {
           const intensity = (-interference - 0.3) / 0.7;
-          fillColor = `rgba(239, 68, 68, ${0.2 + intensity * 0.5})`; // Red for destructive
+          fillColor = `rgba(239, 68, 68, ${0.15 + intensity * 0.45})`; // Red for destructive
         } else {
-          fillColor = 'rgba(99, 102, 241, 0.15)'; // Purple for neutral
+          fillColor = 'rgba(99, 102, 241, 0.08)'; // Purple for neutral
         }
 
         patternElements.push(
@@ -323,34 +323,36 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
     const listenerPxX = centerX + listenerX * scale;
     const listenerPxY = speakerYPx - listenerY * scale;
 
-    // Animated wave circles
+    // Premium animated wave circles with gradient effect
     const waveCircles = [];
     if (isAnimating) {
-      const numWaves = 8;
+      const numWaves = 10;
       for (let i = 0; i < numWaves; i++) {
-        const radius = ((animationTime + i * (2 * Math.PI / numWaves)) % (2 * Math.PI)) / (2 * Math.PI) * 200;
-        const opacity = 1 - radius / 200;
-        if (opacity > 0) {
+        const radius = ((animationTime + i * (2 * Math.PI / numWaves)) % (2 * Math.PI)) / (2 * Math.PI) * 220;
+        const opacity = Math.pow(1 - radius / 220, 1.5);
+        if (opacity > 0.05) {
           waveCircles.push(
             <circle
               key={`wave1-${i}`}
               cx={speaker1Px}
-              cy={speakerYPx}
+              cy={speakerYPx - 15}
               r={radius}
               fill="none"
-              stroke={colors.speaker}
-              strokeWidth={2}
-              opacity={opacity * 0.5}
+              stroke="url(#sintfWaveGradient)"
+              strokeWidth={2.5 - radius / 150}
+              opacity={opacity * 0.7}
+              filter="url(#sintfWaveGlow)"
             />,
             <circle
               key={`wave2-${i}`}
               cx={speaker2Px}
-              cy={speakerYPx}
+              cy={speakerYPx - 15}
               r={radius}
               fill="none"
-              stroke={colors.speaker}
-              strokeWidth={2}
-              opacity={opacity * 0.5}
+              stroke="url(#sintfWaveGradient)"
+              strokeWidth={2.5 - radius / 150}
+              opacity={opacity * 0.7}
+              filter="url(#sintfWaveGlow)"
             />
           );
         }
@@ -364,96 +366,366 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px', cursor: interactive ? 'crosshair' : 'default' }}
+          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '16px', maxWidth: '550px', cursor: interactive ? 'crosshair' : 'default', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)' }}
           onMouseDown={interactive ? handleVisualizationMouseDown : undefined}
           onMouseUp={interactive ? handleVisualizationMouseUp : undefined}
           onMouseMove={interactive ? handleVisualizationMouseMove : undefined}
           onMouseLeave={interactive ? handleVisualizationMouseUp : undefined}
         >
+          {/* === PREMIUM DEFS SECTION === */}
+          <defs>
+            {/* Premium speaker housing gradient - metallic finish */}
+            <linearGradient id="sintfSpeakerHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Speaker cone gradient - depth effect */}
+            <radialGradient id="sintfSpeakerCone" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="40%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
+
+            {/* Speaker membrane vibration glow */}
+            <radialGradient id="sintfMembraneGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Sound wave gradient */}
+            <linearGradient id="sintfWaveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Constructive interference indicator gradient */}
+            <radialGradient id="sintfConstructiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+              <stop offset="30%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#059669" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Destructive interference indicator gradient */}
+            <radialGradient id="sintfDestructiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="30%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Neutral interference gradient */}
+            <radialGradient id="sintfNeutralGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="1" />
+              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Listener marker gradient */}
+            <radialGradient id="sintfListenerGlow" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Floor/stage gradient */}
+            <linearGradient id="sintfFloorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#000000" />
+            </linearGradient>
+
+            {/* Wave glow filter */}
+            <filter id="sintfWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Speaker glow filter */}
+            <filter id="sintfSpeakerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Listener glow filter */}
+            <filter id="sintfListenerGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text glow filter */}
+            <filter id="sintfTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Info box shadow filter */}
+            <filter id="sintfBoxShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+          </defs>
+
+          {/* Premium background with subtle grid */}
+          <rect width={width} height={height} fill="url(#sintfFloorGradient)" rx="16" />
+
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {Array.from({ length: Math.floor(width / 25) + 1 }).map((_, i) => (
+              <line key={`vgrid-${i}`} x1={i * 25} y1="0" x2={i * 25} y2={height} stroke="#475569" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: Math.floor(height / 25) + 1 }).map((_, i) => (
+              <line key={`hgrid-${i}`} x1="0" y1={i * 25} x2={width} y2={i * 25} stroke="#475569" strokeWidth="0.5" />
+            ))}
+          </g>
+
           {/* Interference pattern */}
           {patternElements}
 
           {/* Animated waves */}
           {waveCircles}
 
-          {/* Path lines from speakers to listener */}
+          {/* Path lines from speakers to listener with gradient */}
           {interactive && (
             <>
               <line
                 x1={speaker1Px}
-                y1={speakerYPx}
+                y1={speakerYPx - 15}
                 x2={listenerPxX}
                 y2={listenerPxY}
-                stroke={colors.speaker}
+                stroke="#60a5fa"
                 strokeWidth={2}
-                strokeDasharray="5,5"
-                opacity={0.7}
+                strokeDasharray="8,4"
+                opacity={0.6}
               />
               <line
                 x1={speaker2Px}
-                y1={speakerYPx}
+                y1={speakerYPx - 15}
                 x2={listenerPxX}
                 y2={listenerPxY}
-                stroke={colors.speaker}
+                stroke="#60a5fa"
                 strokeWidth={2}
-                strokeDasharray="5,5"
-                opacity={0.7}
+                strokeDasharray="8,4"
+                opacity={0.6}
               />
-            </>
-          )}
-
-          {/* Speakers */}
-          <rect
-            x={speaker1Px - 15}
-            y={speakerYPx - 10}
-            width={30}
-            height={20}
-            fill={colors.speaker}
-            rx={4}
-          />
-          <rect
-            x={speaker2Px - 15}
-            y={speakerYPx - 10}
-            width={30}
-            height={20}
-            fill={colors.speaker}
-            rx={4}
-          />
-          <text x={speaker1Px} y={speakerYPx + 25} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>Speaker 1</text>
-          <text x={speaker2Px} y={speakerYPx + 25} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>Speaker 2</text>
-
-          {/* Listener */}
-          {interactive && (
-            <>
-              <circle
-                cx={listenerPxX}
-                cy={listenerPxY}
-                r={12}
-                fill={isDestructive ? colors.destructive : isConstructive ? colors.constructive : colors.neutral}
-                stroke={colors.textPrimary}
-                strokeWidth={2}
-              />
-              <text x={listenerPxX} y={listenerPxY + 4} textAnchor="middle" fill={colors.textPrimary} fontSize={10} fontWeight="bold">
-                {isDestructive ? 'X' : isConstructive ? '+' : 'o'}
+              {/* Distance labels on path lines */}
+              <text
+                x={(speaker1Px + listenerPxX) / 2 - 15}
+                y={(speakerYPx - 15 + listenerPxY) / 2}
+                fill="#60a5fa"
+                fontSize="9"
+                fontWeight="bold"
+                opacity={0.8}
+              >
+                d1
+              </text>
+              <text
+                x={(speaker2Px + listenerPxX) / 2 + 8}
+                y={(speakerYPx - 15 + listenerPxY) / 2}
+                fill="#60a5fa"
+                fontSize="9"
+                fontWeight="bold"
+                opacity={0.8}
+              >
+                d2
               </text>
             </>
           )}
 
-          {/* Legend */}
-          <rect x={10} y={10} width={12} height={12} fill="rgba(16, 185, 129, 0.6)" />
-          <text x={26} y={20} fill={colors.textSecondary} fontSize={10}>Loud (constructive)</text>
-          <rect x={10} y={26} width={12} height={12} fill="rgba(239, 68, 68, 0.6)" />
-          <text x={26} y={36} fill={colors.textSecondary} fontSize={10}>Quiet (destructive)</text>
+          {/* === PREMIUM SPEAKER 1 === */}
+          <g transform={`translate(${speaker1Px - 22}, ${speakerYPx - 35})`}>
+            {/* Speaker cabinet */}
+            <rect x="0" y="0" width="44" height="50" rx="6" fill="url(#sintfSpeakerHousing)" stroke="#475569" strokeWidth="1" />
+            <rect x="2" y="2" width="40" height="46" rx="5" fill="#0f172a" opacity="0.3" />
 
-          {/* Info box */}
+            {/* Speaker cone */}
+            <ellipse cx="22" cy="20" rx="16" ry="14" fill="url(#sintfSpeakerCone)" stroke="#334155" strokeWidth="1" />
+            <ellipse cx="22" cy="20" rx="12" ry="10" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
+            <ellipse cx="22" cy="20" rx="6" ry="5" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+
+            {/* Center dust cap */}
+            <circle cx="22" cy="20" r="3" fill="#020617" />
+
+            {/* Membrane vibration glow when animating */}
+            {isAnimating && (
+              <ellipse cx="22" cy="20" rx="14" ry="12" fill="url(#sintfMembraneGlow)" filter="url(#sintfSpeakerGlow)">
+                <animate attributeName="rx" values="12;16;12" dur="0.15s" repeatCount="indefinite" />
+                <animate attributeName="ry" values="10;14;10" dur="0.15s" repeatCount="indefinite" />
+              </ellipse>
+            )}
+
+            {/* Power indicator */}
+            <circle cx="36" cy="42" r="3" fill={isAnimating ? "#22c55e" : "#475569"}>
+              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+            </circle>
+          </g>
+
+          {/* Speaker 1 label */}
+          <text x={speaker1Px} y={speakerYPx + 25} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" filter="url(#sintfTextGlow)">Speaker 1</text>
+
+          {/* === PREMIUM SPEAKER 2 === */}
+          <g transform={`translate(${speaker2Px - 22}, ${speakerYPx - 35})`}>
+            {/* Speaker cabinet */}
+            <rect x="0" y="0" width="44" height="50" rx="6" fill="url(#sintfSpeakerHousing)" stroke="#475569" strokeWidth="1" />
+            <rect x="2" y="2" width="40" height="46" rx="5" fill="#0f172a" opacity="0.3" />
+
+            {/* Speaker cone */}
+            <ellipse cx="22" cy="20" rx="16" ry="14" fill="url(#sintfSpeakerCone)" stroke="#334155" strokeWidth="1" />
+            <ellipse cx="22" cy="20" rx="12" ry="10" fill="#1e293b" stroke="#475569" strokeWidth="0.5" />
+            <ellipse cx="22" cy="20" rx="6" ry="5" fill="#0f172a" stroke="#334155" strokeWidth="0.5" />
+
+            {/* Center dust cap */}
+            <circle cx="22" cy="20" r="3" fill="#020617" />
+
+            {/* Membrane vibration glow when animating */}
+            {isAnimating && (
+              <ellipse cx="22" cy="20" rx="14" ry="12" fill="url(#sintfMembraneGlow)" filter="url(#sintfSpeakerGlow)">
+                <animate attributeName="rx" values="12;16;12" dur="0.15s" repeatCount="indefinite" />
+                <animate attributeName="ry" values="10;14;10" dur="0.15s" repeatCount="indefinite" />
+              </ellipse>
+            )}
+
+            {/* Power indicator */}
+            <circle cx="36" cy="42" r="3" fill={isAnimating ? "#22c55e" : "#475569"}>
+              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+            </circle>
+          </g>
+
+          {/* Speaker 2 label */}
+          <text x={speaker2Px} y={speakerYPx + 25} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600" filter="url(#sintfTextGlow)">Speaker 2</text>
+
+          {/* Speaker separation indicator */}
+          <g opacity="0.6">
+            <line x1={speaker1Px} y1={speakerYPx + 35} x2={speaker2Px} y2={speakerYPx + 35} stroke="#64748b" strokeWidth="1" />
+            <line x1={speaker1Px} y1={speakerYPx + 32} x2={speaker1Px} y2={speakerYPx + 38} stroke="#64748b" strokeWidth="1" />
+            <line x1={speaker2Px} y1={speakerYPx + 32} x2={speaker2Px} y2={speakerYPx + 38} stroke="#64748b" strokeWidth="1" />
+            <text x={centerX} y={speakerYPx + 48} textAnchor="middle" fill="#64748b" fontSize="9">{speakerSeparation.toFixed(1)}m separation</text>
+          </g>
+
+          {/* === LISTENER WITH INTERFERENCE INDICATOR === */}
           {interactive && (
-            <g>
-              <rect x={width - 140} y={10} width={130} height={55} fill="rgba(0,0,0,0.7)" rx={6} />
-              <text x={width - 135} y={26} fill={colors.textSecondary} fontSize={10}>d1: {distance1.toFixed(2)} m</text>
-              <text x={width - 135} y={40} fill={colors.textSecondary} fontSize={10}>d2: {distance2.toFixed(2)} m</text>
-              <text x={width - 135} y={54} fill={colors.textSecondary} fontSize={10}>Delta: {pathDifference.toFixed(3)} m</text>
+            <g filter="url(#sintfListenerGlow)">
+              {/* Outer glow ring based on interference type */}
+              <circle
+                cx={listenerPxX}
+                cy={listenerPxY}
+                r={20}
+                fill={isDestructive ? "url(#sintfDestructiveGlow)" : isConstructive ? "url(#sintfConstructiveGlow)" : "url(#sintfNeutralGlow)"}
+                opacity={0.6}
+              />
+
+              {/* Listener marker */}
+              <circle
+                cx={listenerPxX}
+                cy={listenerPxY}
+                r={14}
+                fill={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"}
+                stroke={colors.textPrimary}
+                strokeWidth={2.5}
+              />
+
+              {/* Inner indicator */}
+              <circle
+                cx={listenerPxX}
+                cy={listenerPxY}
+                r={8}
+                fill={isDestructive ? "#fca5a5" : isConstructive ? "#6ee7b7" : "#c4b5fd"}
+                opacity={0.5}
+              />
+
+              {/* Symbol */}
+              <text x={listenerPxX} y={listenerPxY + 5} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
+                {isDestructive ? 'X' : isConstructive ? '+' : 'o'}
+              </text>
+
+              {/* Listener label */}
+              <text x={listenerPxX} y={listenerPxY - 24} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="bold">LISTENER</text>
             </g>
           )}
+
+          {/* === PREMIUM LEGEND === */}
+          <g transform="translate(12, 12)" filter="url(#sintfBoxShadow)">
+            <rect x="0" y="0" width="130" height="75" rx="8" fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+
+            {/* Constructive */}
+            <circle cx="14" cy="18" r="8" fill="url(#sintfConstructiveGlow)" />
+            <text x="28" y="22" fill="#10b981" fontSize="10" fontWeight="600">Loud (constructive)</text>
+
+            {/* Destructive */}
+            <circle cx="14" cy="40" r="8" fill="url(#sintfDestructiveGlow)" />
+            <text x="28" y="44" fill="#ef4444" fontSize="10" fontWeight="600">Quiet (destructive)</text>
+
+            {/* Neutral */}
+            <circle cx="14" cy="62" r="8" fill="url(#sintfNeutralGlow)" />
+            <text x="28" y="66" fill="#8b5cf6" fontSize="10" fontWeight="600">Partial interference</text>
+          </g>
+
+          {/* === PREMIUM INFO BOX === */}
+          {interactive && (
+            <g transform={`translate(${width - 155}, 12)`} filter="url(#sintfBoxShadow)">
+              <rect x="0" y="0" width="143" height="90" rx="8" fill="rgba(15, 23, 42, 0.95)" stroke="#334155" strokeWidth="1" />
+
+              {/* Title bar */}
+              <rect x="0" y="0" width="143" height="22" rx="8" fill="rgba(59, 130, 246, 0.2)" />
+              <rect x="0" y="14" width="143" height="8" fill="rgba(59, 130, 246, 0.2)" />
+              <text x="72" y="15" textAnchor="middle" fill="#60a5fa" fontSize="10" fontWeight="700">PATH ANALYSIS</text>
+
+              {/* Distance info */}
+              <text x="12" y="40" fill="#94a3b8" fontSize="10">d1:</text>
+              <text x="35" y="40" fill="#f8fafc" fontSize="11" fontWeight="600">{distance1.toFixed(2)} m</text>
+
+              <text x="80" y="40" fill="#94a3b8" fontSize="10">d2:</text>
+              <text x="103" y="40" fill="#f8fafc" fontSize="11" fontWeight="600">{distance2.toFixed(2)} m</text>
+
+              {/* Path difference */}
+              <line x1="12" y1="50" x2="131" y2="50" stroke="#334155" strokeWidth="1" />
+              <text x="12" y="65" fill="#94a3b8" fontSize="10">Path diff:</text>
+              <text x="70" y="65" fill={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} fontSize="12" fontWeight="700">{pathDifference.toFixed(3)} m</text>
+
+              {/* Wavelength comparison */}
+              <text x="12" y="82" fill="#64748b" fontSize="9">= {(pathDifference / wavelength).toFixed(2)} wavelengths</text>
+            </g>
+          )}
+
+          {/* === INTERFERENCE STATUS INDICATOR === */}
+          {interactive && (
+            <g transform={`translate(${centerX}, 28)`}>
+              <rect x="-80" y="-15" width="160" height="28" rx="14" fill={isDestructive ? "rgba(239, 68, 68, 0.2)" : isConstructive ? "rgba(16, 185, 129, 0.2)" : "rgba(139, 92, 246, 0.2)"} stroke={isDestructive ? "#ef4444" : isConstructive ? "#10b981" : "#8b5cf6"} strokeWidth="1.5" />
+              <text x="0" y="4" textAnchor="middle" fill={isDestructive ? "#f87171" : isConstructive ? "#34d399" : "#a78bfa"} fontSize="12" fontWeight="700">
+                {isDestructive ? 'DESTRUCTIVE - Dead Spot!' : isConstructive ? 'CONSTRUCTIVE - Loud!' : 'PARTIAL INTERFERENCE'}
+              </text>
+            </g>
+          )}
+
+          {/* Wavelength indicator at bottom */}
+          <g transform={`translate(${centerX}, ${height - 18})`} opacity="0.7">
+            <text x="0" y="0" textAnchor="middle" fill="#64748b" fontSize="10">
+              Frequency: {frequency} Hz | Wavelength: {wavelength.toFixed(2)} m
+            </text>
+          </g>
         </svg>
 
         {interactive && (
@@ -461,14 +733,20 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             <button
               onClick={() => setIsAnimating(!isAnimating)}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: '14px 28px',
+                borderRadius: '12px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isAnimating
+                  ? '0 4px 20px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 20px rgba(16, 185, 129, 0.4)',
+                transition: 'all 0.2s ease',
               }}
             >
               {isAnimating ? 'Stop Waves' : 'Show Waves'}
@@ -476,14 +754,15 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
             <button
               onClick={() => { setFrequency(340); setSpeakerSeparation(2); setListenerX(0); setListenerY(3); }}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                padding: '14px 28px',
+                borderRadius: '12px',
+                border: `2px solid ${colors.accent}`,
+                background: 'rgba(139, 92, 246, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

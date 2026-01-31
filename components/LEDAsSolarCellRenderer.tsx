@@ -460,8 +460,8 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   };
 
   const renderVisualization = () => {
-    const width = 500;
-    const height = 400;
+    const width = 600;
+    const height = 450;
     const output = calculateOutput();
     const led = ledBandgaps[ledColor];
 
@@ -472,131 +472,480 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #020617 50%, #0a0f1a 100%)', borderRadius: '12px', maxWidth: '650px' }}
         >
           <defs>
-            <radialGradient id="lightGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity={lightIntensity / 100} />
+            {/* === PREMIUM GRADIENTS === */}
+
+            {/* Light source housing - brushed aluminum effect */}
+            <linearGradient id="ledscLightHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="40%" stopColor="#374151" />
+              <stop offset="60%" stopColor="#4b5563" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* LED housing - epoxy dome effect */}
+            <linearGradient id="ledscLEDHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={led.color} stopOpacity="0.9" />
+              <stop offset="25%" stopColor={led.color} stopOpacity="0.7" />
+              <stop offset="50%" stopColor={led.color} stopOpacity="0.5" />
+              <stop offset="75%" stopColor={led.color} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={led.color} stopOpacity="0.15" />
+            </linearGradient>
+
+            {/* LED inner dome highlight */}
+            <radialGradient id="ledscLEDHighlight" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.15" />
+              <stop offset="60%" stopColor={led.color} stopOpacity="0.1" />
+              <stop offset="100%" stopColor={led.color} stopOpacity="0" />
+            </radialGradient>
+
+            {/* P-N Junction gradient */}
+            <linearGradient id="ledscPNJunction" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="20%" stopColor="#2563eb" />
+              <stop offset="45%" stopColor="#1e40af" />
+              <stop offset="55%" stopColor="#991b1b" />
+              <stop offset="80%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Depletion zone gradient */}
+            <linearGradient id="ledscDepletionZone" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#991b1b" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Light beam gradient */}
+            <linearGradient id="ledscLightBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0.8" />
+              <stop offset="30%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0.6" />
+              <stop offset="70%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0.4" />
+              <stop offset="100%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Photon glow - radial */}
+            <radialGradient id="ledscPhotonGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="1" />
+              <stop offset="30%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0.7" />
+              <stop offset="60%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0.3" />
               <stop offset="100%" stopColor={wavelengthToColor(lightWavelength)} stopOpacity="0" />
             </radialGradient>
-            <filter id="ledGlow">
-              <feGaussianBlur stdDeviation="4" result="blur" />
+
+            {/* Electron glow - blue */}
+            <radialGradient id="ledscElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Hole glow - red */}
+            <radialGradient id="ledscHoleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="30%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Multimeter display gradient */}
+            <linearGradient id="ledscMeterDisplay" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="20%" stopColor="#111827" />
+              <stop offset="80%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Multimeter housing */}
+            <linearGradient id="ledscMeterHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="75%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Wire gradient - cathode */}
+            <linearGradient id="ledscWireCathode" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="30%" stopColor="#6b7280" />
+              <stop offset="70%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Wire gradient - anode */}
+            <linearGradient id="ledscWireAnode" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="30%" stopColor="#9ca3af" />
+              <stop offset="70%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* === PREMIUM FILTERS === */}
+
+            {/* LED glow filter */}
+            <filter id="ledscGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="12" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Photon glow filter */}
+            <filter id="ledscPhotonFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
                 <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            {/* Electron/hole particle filter */}
+            <filter id="ledscParticleFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow */}
+            <filter id="ledscInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Light source emission glow */}
+            <filter id="ledscEmissionGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker for current flow */}
+            <marker id="ledscArrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill={colors.success} />
+            </marker>
+
+            {/* Lab background pattern */}
+            <pattern id="ledscLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
+          {/* Background grid pattern */}
+          <rect width={width} height={height} fill="url(#ledscLabGrid)" />
+
           {/* Title */}
-          <text x={width / 2} y={25} fill={colors.textPrimary} fontSize={16} fontWeight="bold" textAnchor="middle">
+          <text x={width / 2} y={28} fill={colors.textPrimary} fontSize={18} fontWeight="bold" textAnchor="middle">
             LED as Solar Cell - Photovoltaic Mode
           </text>
+          <text x={width / 2} y={46} fill={colors.textMuted} fontSize={11} textAnchor="middle">
+            Semiconductor P-N Junction Converting Light to Electricity
+          </text>
 
-          {/* Light source / flashlight */}
-          <g transform="translate(80, 180)">
-            <rect x="-30" y="-40" width={60} height={80} rx={8} fill="#374151" stroke="#4b5563" strokeWidth={2} />
-            <circle cx="0" cy="0" r={25} fill={wavelengthToColor(lightWavelength)} opacity={lightIntensity / 100} filter="url(#ledGlow)" />
-            <circle cx="0" cy="0" r={15} fill="#fff" opacity={0.5} />
-            <text x="0" y={60} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Light Source</text>
-            <text x="0" y={75} fill={wavelengthToColor(lightWavelength)} fontSize={10} fontWeight="bold" textAnchor="middle">{lightWavelength} nm</text>
-          </g>
+          {/* === PREMIUM LIGHT SOURCE === */}
+          <g transform="translate(85, 200)">
+            {/* Flashlight body */}
+            <rect x="-40" y="-50" width={80} height={100} rx={10} fill="url(#ledscLightHousing)" stroke="#4b5563" strokeWidth={1.5} />
+            <rect x="-35" y="-45" width={70} height={90} rx={8} fill="#1f2937" opacity="0.3" />
 
-          {/* Light rays */}
-          {Array.from({ length: 8 }).map((_, i) => {
-            const angle = (i - 3.5) * 0.12;
-            const endX = 250;
-            const endY = 180 + (i - 3.5) * 8;
-            const opacity = output.aboveThreshold ? (lightIntensity / 100) * 0.6 : 0.2;
-            return (
-              <line
-                key={`ray${i}`}
-                x1={110}
-                y1={180}
-                x2={endX}
-                y2={endY}
-                stroke={wavelengthToColor(lightWavelength)}
-                strokeWidth={3}
-                opacity={opacity}
-                strokeDasharray={output.aboveThreshold ? "none" : "8,4"}
-              />
-            );
-          })}
+            {/* Lens bezel */}
+            <ellipse cx="40" cy="0" rx={12} ry={35} fill="#374151" stroke="#4b5563" strokeWidth={1} />
 
-          {/* LED component */}
-          <g transform="translate(300, 180)">
-            {/* LED body */}
-            <ellipse cx="0" cy="0" rx={35} ry={45} fill={led.color} opacity={0.3} />
-            <ellipse cx="0" cy="0" rx={30} ry={40} fill={led.color} opacity={output.aboveThreshold ? 0.5 : 0.2} filter={output.aboveThreshold ? "url(#ledGlow)" : "none"} />
-            <ellipse cx="0" cy="-10" rx={15} ry={20} fill="#fff" opacity={0.2} />
+            {/* Light emitter with glow */}
+            <circle cx="0" cy="0" r={30} fill="url(#ledscPhotonGlow)" filter="url(#ledscEmissionGlow)" opacity={lightIntensity / 100} />
+            <circle cx="0" cy="0" r={20} fill={wavelengthToColor(lightWavelength)} opacity={lightIntensity / 100 * 0.8} />
+            <circle cx="0" cy="0" r={10} fill="#ffffff" opacity={0.6} />
 
-            {/* LED legs */}
-            <line x1="-10" y1={45} x2="-10" y2={80} stroke="#9ca3af" strokeWidth={3} />
-            <line x1="10" y1={45} x2="10" y2={80} stroke="#9ca3af" strokeWidth={3} />
+            {/* Control panel */}
+            <rect x="-30" y="55" width={60} height={25} rx={4} fill="#111827" stroke="#334155" strokeWidth={0.5} />
+            <circle cx="-15" cy="67" r={5} fill={colors.success}>
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <text x="10" y="71" fill={colors.textMuted} fontSize={8} textAnchor="middle">ON</text>
 
             {/* Labels */}
-            <text x="0" y={-55} fill={colors.textPrimary} fontSize={12} fontWeight="bold" textAnchor="middle">{ledColor.toUpperCase()} LED</text>
-            <text x="0" y={95} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Bandgap: {led.bandgap} eV</text>
+            <text x="0" y={95} fill={colors.textSecondary} fontSize={11} fontWeight="600" textAnchor="middle">Light Source</text>
+            <text x="0" y={110} fill={wavelengthToColor(lightWavelength)} fontSize={12} fontWeight="bold" textAnchor="middle">{lightWavelength} nm</text>
+          </g>
 
-            {/* Electron flow indicator */}
+          {/* === PHOTON BEAM WITH PARTICLES === */}
+          <g>
+            {/* Main beam path */}
+            {Array.from({ length: 12 }).map((_, i) => {
+              const spread = (i - 5.5) * 0.08;
+              const startX = 130;
+              const endX = 260;
+              const startY = 200;
+              const endY = 200 + (i - 5.5) * 6;
+              const opacity = output.aboveThreshold ? (lightIntensity / 100) * 0.5 : 0.15;
+              return (
+                <line
+                  key={`ray${i}`}
+                  x1={startX}
+                  y1={startY}
+                  x2={endX}
+                  y2={endY}
+                  stroke="url(#ledscLightBeam)"
+                  strokeWidth={2.5}
+                  opacity={opacity}
+                  strokeDasharray={output.aboveThreshold ? "none" : "6,4"}
+                />
+              );
+            })}
+
+            {/* Animated photon particles traveling to LED */}
+            {output.aboveThreshold && Array.from({ length: 5 }).map((_, i) => (
+              <g key={`photon${i}`}>
+                <circle
+                  r={4}
+                  fill="url(#ledscPhotonGlow)"
+                  filter="url(#ledscPhotonFilter)"
+                >
+                  <animateMotion
+                    dur={`${1.2 + i * 0.3}s`}
+                    repeatCount="indefinite"
+                    path={`M130,${195 + i * 4} L260,${195 + i * 4}`}
+                    begin={`${i * 0.25}s`}
+                  />
+                </circle>
+                {/* Photon wave visualization */}
+                <circle
+                  r={6}
+                  fill="none"
+                  stroke={wavelengthToColor(lightWavelength)}
+                  strokeWidth={1}
+                  opacity={0.4}
+                >
+                  <animateMotion
+                    dur={`${1.2 + i * 0.3}s`}
+                    repeatCount="indefinite"
+                    path={`M130,${195 + i * 4} L260,${195 + i * 4}`}
+                    begin={`${i * 0.25}s`}
+                  />
+                  <animate attributeName="r" values="4;8;4" dur="0.3s" repeatCount="indefinite" />
+                  <animate attributeName="opacity" values="0.4;0.1;0.4" dur="0.3s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            ))}
+          </g>
+
+          {/* === PREMIUM LED COMPONENT WITH P-N JUNCTION === */}
+          <g transform="translate(320, 200)">
+            {/* LED dome - outer shell */}
+            <ellipse cx="0" cy="-10" rx={50} ry={65} fill="url(#ledscLEDHousing)" stroke={led.color} strokeWidth={1} strokeOpacity={0.5} />
+
+            {/* LED dome - inner highlight */}
+            <ellipse cx="-10" cy="-25" rx={30} ry={40} fill="url(#ledscLEDHighlight)" />
+
+            {/* Active glow when generating */}
+            {output.aboveThreshold && (
+              <ellipse cx="0" cy="-10" rx={45} ry={60} fill={led.color} opacity={0.3} filter="url(#ledscGlowFilter)">
+                <animate attributeName="opacity" values="0.2;0.4;0.2" dur="1.5s" repeatCount="indefinite" />
+              </ellipse>
+            )}
+
+            {/* P-N Junction visualization inside LED */}
+            <g transform="translate(0, 30)">
+              {/* Junction housing */}
+              <rect x="-35" y="-20" width={70} height={40} rx={4} fill="url(#ledscPNJunction)" stroke="#475569" strokeWidth={1} />
+
+              {/* Depletion zone */}
+              <rect x="-8" y="-18" width={16} height={36} fill="url(#ledscDepletionZone)" />
+
+              {/* N-type label */}
+              <text x="-22" y="0" fill="#93c5fd" fontSize={9} fontWeight="bold" textAnchor="middle">N</text>
+
+              {/* P-type label */}
+              <text x="22" y="0" fill="#fca5a5" fontSize={9} fontWeight="bold" textAnchor="middle">P</text>
+
+              {/* Electron-hole pair generation animation */}
+              {output.aboveThreshold && (
+                <g>
+                  {/* Electrons moving to N-side */}
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <circle
+                      key={`electron${i}`}
+                      r={3}
+                      fill="url(#ledscElectronGlow)"
+                      filter="url(#ledscParticleFilter)"
+                    >
+                      <animateMotion
+                        dur={`${1 + i * 0.4}s`}
+                        repeatCount="indefinite"
+                        path="M0,0 L-25,0"
+                        begin={`${i * 0.35}s`}
+                      />
+                      <animate attributeName="opacity" values="0;1;1;0" dur={`${1 + i * 0.4}s`} repeatCount="indefinite" begin={`${i * 0.35}s`} />
+                    </circle>
+                  ))}
+
+                  {/* Holes moving to P-side */}
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <circle
+                      key={`hole${i}`}
+                      r={3}
+                      fill="url(#ledscHoleGlow)"
+                      filter="url(#ledscParticleFilter)"
+                    >
+                      <animateMotion
+                        dur={`${1 + i * 0.4}s`}
+                        repeatCount="indefinite"
+                        path="M0,0 L25,0"
+                        begin={`${i * 0.35}s`}
+                      />
+                      <animate attributeName="opacity" values="0;1;1;0" dur={`${1 + i * 0.4}s`} repeatCount="indefinite" begin={`${i * 0.35}s`} />
+                    </circle>
+                  ))}
+
+                  {/* Photon absorption burst at junction */}
+                  <circle cx="0" cy="0" r={5} fill={wavelengthToColor(lightWavelength)} opacity={0.6}>
+                    <animate attributeName="r" values="3;8;3" dur="0.8s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.8s" repeatCount="indefinite" />
+                  </circle>
+                </g>
+              )}
+            </g>
+
+            {/* LED legs with gradient */}
+            <rect x="-14" y={55} width={6} height={40} rx={1} fill="url(#ledscWireCathode)" />
+            <rect x="8" y={55} width={6} height={40} rx={1} fill="url(#ledscWireAnode)" />
+
+            {/* Leg labels */}
+            <text x="-11" y={105} fill="#93c5fd" fontSize={7} textAnchor="middle">-</text>
+            <text x="11" y={105} fill="#fca5a5" fontSize={7} textAnchor="middle">+</text>
+
+            {/* Labels */}
+            <text x="0" y={-85} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">{ledColor.toUpperCase()} LED</text>
+            <text x="0" y={120} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Bandgap: {led.bandgap} eV</text>
+
+            {/* Current flow indicator */}
             {output.aboveThreshold && (
               <g>
-                <text x="0" y={115} fill={colors.success} fontSize={10} fontWeight="bold" textAnchor="middle">
-                  Generating Power!
+                <text x="0" y={140} fill={colors.success} fontSize={11} fontWeight="bold" textAnchor="middle">
+                  Generating Power
                 </text>
-                {/* Flow arrows */}
-                <path d="M -10,70 L -10,55" stroke={colors.success} strokeWidth={2} markerEnd="url(#arrowhead)" />
+                {/* Animated current arrows */}
+                <path d="M -11,90 L -11,70" stroke={colors.success} strokeWidth={2} markerEnd="url(#ledscArrowGreen)" opacity={0.8}>
+                  <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" />
+                </path>
+                <path d="M 11,70 L 11,90" stroke={colors.success} strokeWidth={2} opacity={0.8}>
+                  <animate attributeName="opacity" values="0.4;1;0.4" dur="1s" repeatCount="indefinite" begin="0.5s" />
+                </path>
               </g>
             )}
           </g>
 
-          {/* Multimeter display */}
+          {/* === PREMIUM MULTIMETER === */}
           {showMultimeter && (
-            <g transform="translate(420, 120)">
-              <rect x="-50" y="-50" width={100} height={160} rx={8} fill="#1f2937" stroke={colors.accent} strokeWidth={2} />
-              <text x="0" y={-30} fill={colors.accent} fontSize={10} fontWeight="bold" textAnchor="middle">MULTIMETER</text>
+            <g transform="translate(500, 140)">
+              {/* Meter housing */}
+              <rect x="-55" y="-60" width={110} height={180} rx={10} fill="url(#ledscMeterHousing)" stroke="#475569" strokeWidth={1.5} />
+              <rect x="-50" y="-55" width={100} height={170} rx={8} fill="#111827" opacity="0.3" />
+
+              {/* Brand label */}
+              <text x="0" y={-42} fill={colors.accent} fontSize={11} fontWeight="bold" textAnchor="middle" letterSpacing="1">MULTIMETER</text>
+
+              {/* LCD Display background */}
+              <rect x="-45" y="-30" width={90} height={130} rx={6} fill="url(#ledscMeterDisplay)" stroke="#334155" strokeWidth={0.5} />
 
               {/* Voltage display */}
-              <rect x="-40" y="-20" width={80} height={35} rx={4} fill="#111827" />
-              <text x="0" y={0} fill={colors.success} fontSize={18} fontWeight="bold" textAnchor="middle">
-                {output.voltage.toFixed(3)} V
+              <rect x="-40" y="-25" width={80} height={38} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
+              <text x="0" y={-5} fill={colors.success} fontSize={20} fontWeight="bold" textAnchor="middle" fontFamily="monospace">
+                {output.voltage.toFixed(3)}
               </text>
-              <text x="0" y={10} fill={colors.textMuted} fontSize={8} textAnchor="middle">VOLTAGE</text>
+              <text x="35" y={-5} fill={colors.success} fontSize={12} textAnchor="middle">V</text>
+              <text x="0" y={10} fill={colors.textMuted} fontSize={8} textAnchor="middle" letterSpacing="0.5">VOLTAGE</text>
 
               {/* Current display */}
-              <rect x="-40" y={25} width={80} height={35} rx={4} fill="#111827" />
-              <text x="0" y={45} fill={colors.blue} fontSize={16} fontWeight="bold" textAnchor="middle">
-                {(output.current * 1000).toFixed(1)} uA
+              <rect x="-40" y={20} width={80} height={38} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
+              <text x="0" y={42} fill={colors.blue} fontSize={18} fontWeight="bold" textAnchor="middle" fontFamily="monospace">
+                {(output.current * 1000).toFixed(1)}
               </text>
-              <text x="0" y={55} fill={colors.textMuted} fontSize={8} textAnchor="middle">CURRENT</text>
+              <text x="35" y={42} fill={colors.blue} fontSize={10} textAnchor="middle">uA</text>
+              <text x="0" y={55} fill={colors.textMuted} fontSize={8} textAnchor="middle" letterSpacing="0.5">CURRENT</text>
 
               {/* Power display */}
-              <rect x="-40" y={70} width={80} height={30} rx={4} fill="#111827" />
-              <text x="0" y={88} fill={colors.warning} fontSize={12} fontWeight="bold" textAnchor="middle">
-                {(output.power * 1000).toFixed(2)} uW
+              <rect x="-40" y={65} width={80} height={32} rx={4} fill="#030712" stroke="#1f2937" strokeWidth={0.5} />
+              <text x="0" y={85} fill={colors.warning} fontSize={14} fontWeight="bold" textAnchor="middle" fontFamily="monospace">
+                {(output.power * 1000).toFixed(2)}
               </text>
-              <text x="0" y={96} fill={colors.textMuted} fontSize={8} textAnchor="middle">POWER</text>
+              <text x="35" y={85} fill={colors.warning} fontSize={9} textAnchor="middle">uW</text>
+              <text x="0" y={95} fill={colors.textMuted} fontSize={7} textAnchor="middle" letterSpacing="0.5">POWER</text>
+
+              {/* Connection indicator */}
+              <circle cx="-35" cy={110} r={4} fill={output.aboveThreshold ? colors.success : colors.textMuted}>
+                {output.aboveThreshold && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+              </circle>
+              <text x="-20" y={113} fill={colors.textMuted} fontSize={7}>SIGNAL</text>
             </g>
           )}
 
-          {/* Energy diagram */}
-          <g transform="translate(80, 320)">
-            <text x="0" y="0" fill={colors.textSecondary} fontSize={10}>Energy Diagram:</text>
+          {/* === ENERGY DIAGRAM === */}
+          <g transform="translate(60, 365)">
+            <text x="0" y="0" fill={colors.textSecondary} fontSize={11} fontWeight="600">Energy Comparison:</text>
 
             {/* Photon energy bar */}
-            <rect x="100" y="-15" width={Math.min(output.photonEnergy * 40, 150)} height={10} rx={2} fill={wavelengthToColor(lightWavelength)} />
-            <text x="100" y={0} fill={colors.textMuted} fontSize={9}>Photon: {output.photonEnergy.toFixed(2)} eV</text>
+            <rect x="120" y="-12" width={Math.min(output.photonEnergy * 50, 180)} height={14} rx={3} fill={wavelengthToColor(lightWavelength)} opacity={0.8} />
+            <rect x="120" y="-12" width={Math.min(output.photonEnergy * 50, 180)} height={4} rx={2} fill="#ffffff" opacity={0.3} />
+            <text x="120" y={15} fill={colors.textMuted} fontSize={9}>Photon Energy: <tspan fill={wavelengthToColor(lightWavelength)} fontWeight="bold">{output.photonEnergy.toFixed(2)} eV</tspan></text>
 
-            {/* Bandgap threshold line */}
-            <line x1={100 + led.bandgap * 40} y1="-20" x2={100 + led.bandgap * 40} y2="5" stroke={colors.error} strokeWidth={2} strokeDasharray="3,2" />
-            <text x={100 + led.bandgap * 40 + 5} y="-12" fill={colors.error} fontSize={8}>Bandgap</text>
+            {/* Bandgap threshold indicator */}
+            <line x1={120 + led.bandgap * 50} y1="-18" x2={120 + led.bandgap * 50} y2="8" stroke={colors.error} strokeWidth={2} strokeDasharray="4,2" />
+            <text x={120 + led.bandgap * 50} y="-22" fill={colors.error} fontSize={8} textAnchor="middle" fontWeight="bold">Bandgap</text>
+            <text x={120 + led.bandgap * 50} y="22" fill={colors.error} fontSize={8} textAnchor="middle">{led.bandgap} eV</text>
           </g>
 
-          {/* Status indicator */}
-          <rect x={150} y={350} width={200} height={30} rx={6} fill={output.aboveThreshold ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'} stroke={output.aboveThreshold ? colors.success : colors.error} strokeWidth={1} />
-          <text x={250} y={370} fill={output.aboveThreshold ? colors.success : colors.error} fontSize={12} fontWeight="bold" textAnchor="middle">
-            {output.aboveThreshold ? 'PHOTOVOLTAIC ACTIVE' : 'BELOW THRESHOLD'}
-          </text>
+          {/* === STATUS INDICATOR === */}
+          <g transform={`translate(${width / 2}, 420)`}>
+            <rect x="-110" y="-15" width={220} height={30} rx={8}
+              fill={output.aboveThreshold ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}
+              stroke={output.aboveThreshold ? colors.success : colors.error}
+              strokeWidth={1.5}
+            />
+            {output.aboveThreshold && (
+              <rect x="-110" y="-15" width={220} height={30} rx={8} fill={colors.success} opacity={0.1}>
+                <animate attributeName="opacity" values="0.1;0.2;0.1" dur="2s" repeatCount="indefinite" />
+              </rect>
+            )}
+            <circle cx="-90" cy="0" r={5} fill={output.aboveThreshold ? colors.success : colors.error}>
+              {output.aboveThreshold && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+            </circle>
+            <text x="10" y="5" fill={output.aboveThreshold ? colors.success : colors.error} fontSize={13} fontWeight="bold" textAnchor="middle">
+              {output.aboveThreshold ? 'PHOTOVOLTAIC ACTIVE' : 'BELOW THRESHOLD'}
+            </text>
+          </g>
+
+          {/* === LEGEND === */}
+          <g transform="translate(20, 60)">
+            <rect x="-5" y="-15" width={120} height={70} rx={6} fill="rgba(15, 23, 42, 0.8)" stroke="#334155" strokeWidth={0.5} />
+            <text x="5" y="0" fill={colors.textSecondary} fontSize={9} fontWeight="600">LEGEND</text>
+
+            {/* Photon */}
+            <circle cx="15" cy="18" r={4} fill={wavelengthToColor(lightWavelength)} filter="url(#ledscPhotonFilter)" />
+            <text x="28" y="21" fill={colors.textMuted} fontSize={8}>Photon</text>
+
+            {/* Electron */}
+            <circle cx="15" cy="35" r={4} fill="url(#ledscElectronGlow)" />
+            <text x="28" y="38" fill={colors.textMuted} fontSize={8}>Electron (e-)</text>
+
+            {/* Hole */}
+            <circle cx="75" cy="35" r={4} fill="url(#ledscHoleGlow)" />
+            <text x="88" y="38" fill={colors.textMuted} fontSize={8}>Hole (h+)</text>
+          </g>
         </svg>
       </div>
     );

@@ -254,12 +254,13 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 320;
+    const width = 700;
+    const height = 400;
 
     // Wire thickness based on gauge
-    const wireThickness = 2 + (10 - gaugeIndex * 2);
-    const heatIntensity = Math.min(1, powerLoss / 20);
+    const wireThickness = 3 + (10 - gaugeIndex * 2);
+    const heatIntensity = Math.min(1, powerLoss / 15);
+    const efficiency = (loadVoltage / supplyVoltage) * 100;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -268,194 +269,471 @@ const PowerLossRenderer: React.FC<PowerLossRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ maxWidth: '700px' }}
         >
-          {/* Battery */}
-          <rect x={30} y={100} width={40} height={100} rx={4} fill={colors.battery} stroke="#92400e" strokeWidth={2} />
-          <rect x={42} y={90} width={16} height={12} rx={2} fill={colors.battery} />
-          <text x={50} y={155} textAnchor="middle" fill="#92400e" fontSize={12} fontWeight="bold">12V</text>
-          <text x={50} y={175} textAnchor="middle" fill="#92400e" fontSize={10}>+</text>
-
-          {/* Top wire (positive) - with length visualization */}
+          {/* === COMPREHENSIVE DEFS SECTION === */}
           <defs>
-            <linearGradient id="wireHeat" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.wireCopper} />
-              <stop offset="50%" stopColor={`rgba(239, 68, 68, ${heatIntensity})`} />
-              <stop offset="100%" stopColor={colors.wireCopper} />
+            {/* Premium battery gradient with metallic depth */}
+            <linearGradient id="plossBatteryBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
             </linearGradient>
+
+            {/* Battery terminal gradient */}
+            <linearGradient id="plossBatteryTerminal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a1a1aa" />
+              <stop offset="30%" stopColor="#71717a" />
+              <stop offset="70%" stopColor="#52525b" />
+              <stop offset="100%" stopColor="#3f3f46" />
+            </linearGradient>
+
+            {/* Copper wire gradient with realistic metallic sheen */}
+            <linearGradient id="plossWireCopper" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#dc8c5a" />
+              <stop offset="20%" stopColor="#cd7f32" />
+              <stop offset="50%" stopColor="#b87333" />
+              <stop offset="80%" stopColor="#a0522d" />
+              <stop offset="100%" stopColor="#8b4513" />
+            </linearGradient>
+
+            {/* Wire heat gradient - dynamic based on power loss */}
+            <linearGradient id="plossWireHeat" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b87333" />
+              <stop offset="15%" stopColor={heatIntensity > 0.3 ? '#ef4444' : '#b87333'} stopOpacity={0.3 + heatIntensity * 0.7} />
+              <stop offset="35%" stopColor={heatIntensity > 0.5 ? '#f97316' : '#cd7f32'} stopOpacity={0.5 + heatIntensity * 0.5} />
+              <stop offset="50%" stopColor={heatIntensity > 0.7 ? '#fbbf24' : '#dc8c5a'} stopOpacity={heatIntensity} />
+              <stop offset="65%" stopColor={heatIntensity > 0.5 ? '#f97316' : '#cd7f32'} stopOpacity={0.5 + heatIntensity * 0.5} />
+              <stop offset="85%" stopColor={heatIntensity > 0.3 ? '#ef4444' : '#b87333'} stopOpacity={0.3 + heatIntensity * 0.7} />
+              <stop offset="100%" stopColor="#b87333" />
+            </linearGradient>
+
+            {/* Heat radial gradient for hot spots */}
+            <radialGradient id="plossHeatSpot" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Energy flow gradient - cyan electrons */}
+            <radialGradient id="plossElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* LED bulb glow gradient */}
+            <radialGradient id="plossLEDGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity={brightness} />
+              <stop offset="40%" stopColor="#fde047" stopOpacity={brightness * 0.7} />
+              <stop offset="70%" stopColor="#facc15" stopOpacity={brightness * 0.4} />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+            </radialGradient>
+
+            {/* LED outer glow for bright states */}
+            <radialGradient id="plossLEDOuterGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef9c3" stopOpacity={brightness * 0.6} />
+              <stop offset="50%" stopColor="#fef08a" stopOpacity={brightness * 0.3} />
+              <stop offset="100%" stopColor="#fde047" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Efficiency meter gradient - green to red */}
+            <linearGradient id="plossEfficiencyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Premium dark background gradient */}
+            <linearGradient id="plossLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Meter panel gradient */}
+            <linearGradient id="plossMeterPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Power loss indicator gradient */}
+            <linearGradient id="plossPowerLossBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset={`${Math.max(0, 100 - heatIntensity * 100)}%`} stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset={`${Math.max(0, 100 - heatIntensity * 100)}%`} stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Transmission tower gradient */}
+            <linearGradient id="plossTowerMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="25%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="75%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Glow filter for electrons */}
+            <filter id="plossElectronBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Strong glow filter for LED */}
+            <filter id="plossLEDGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat shimmer filter */}
+            <filter id="plossHeatShimmer" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner glow for meters */}
+            <filter id="plossMeterGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="plossLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {isCoiled ? (
-            // Coiled wire visualization
-            <>
-              <path
-                d={`M 70 100
-                    Q 100 70, 130 100 Q 160 130, 190 100 Q 220 70, 250 100
-                    Q 280 130, 310 100 L 330 100`}
-                fill="none"
-                stroke={`url(#wireHeat)`}
-                strokeWidth={wireThickness}
-                strokeLinecap="round"
-              />
-              {/* Electron flow animation for coiled */}
-              {[0, 25, 50, 75].map((offset) => (
-                <circle
-                  key={offset}
-                  r={3}
-                  fill="#60a5fa"
-                  opacity={0.8}
-                >
-                  <animateMotion
-                    dur="2s"
-                    repeatCount="indefinite"
-                    begin={`${offset / 100}s`}
-                    path="M 70 100 Q 100 70, 130 100 Q 160 130, 190 100 Q 220 70, 250 100 Q 280 130, 310 100 L 330 100"
-                  />
-                </circle>
-              ))}
-            </>
-          ) : (
-            // Straight wire
-            <>
-              <line
-                x1={70}
-                y1={100}
-                x2={330}
-                y2={100}
-                stroke={`url(#wireHeat)`}
-                strokeWidth={wireThickness}
-                strokeLinecap="round"
-              />
-              {/* Electron flow animation */}
-              {[0, 0.25, 0.5, 0.75].map((offset) => (
-                <circle
-                  key={offset}
-                  cx={70 + ((animationFrame / 100 + offset) % 1) * 260}
-                  cy={100}
-                  r={3}
-                  fill="#60a5fa"
-                  opacity={0.8}
-                />
-              ))}
-            </>
-          )}
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width={width} height={height} fill="url(#plossLabBg)" />
+          <rect width={width} height={height} fill="url(#plossLabGrid)" />
 
-          {/* LED/Bulb */}
-          <circle
-            cx={350}
-            cy={150}
-            r={25}
-            fill={`rgba(254, 240, 138, ${brightness})`}
-            stroke={brightness > 0.5 ? colors.bulbOn : colors.bulbDim}
-            strokeWidth={3}
-          />
-          {brightness > 0.3 && (
-            <>
-              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+          {/* === POWER STATION / BATTERY === */}
+          <g transform="translate(30, 100)">
+            {/* Battery housing */}
+            <rect x="0" y="0" width="70" height="140" rx="8" fill="url(#plossBatteryBody)" stroke="#78350f" strokeWidth="2" />
+            <rect x="5" y="5" width="60" height="130" rx="6" fill="#92400e" opacity="0.3" />
+
+            {/* Battery positive terminal */}
+            <rect x="22" y="-15" width="26" height="18" rx="4" fill="url(#plossBatteryTerminal)" stroke="#52525b" strokeWidth="1" />
+            <text x="35" y="-2" textAnchor="middle" fill="#e4e4e7" fontSize="12" fontWeight="bold">+</text>
+
+            {/* Battery negative terminal */}
+            <rect x="22" y="137" width="26" height="18" rx="4" fill="url(#plossBatteryTerminal)" stroke="#52525b" strokeWidth="1" />
+            <text x="35" y="150" textAnchor="middle" fill="#e4e4e7" fontSize="12" fontWeight="bold">-</text>
+
+            {/* Voltage label */}
+            <rect x="10" y="55" width="50" height="30" rx="4" fill="#78350f" />
+            <text x="35" y="75" textAnchor="middle" fill="#fef3c7" fontSize="14" fontWeight="bold">12V</text>
+
+            {/* Power indicator */}
+            <circle cx="35" cy="110" r="8" fill="#22c55e" opacity="0.8">
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            <text x="35" y="130" textAnchor="middle" fill="#fef3c7" fontSize="8">POWER</text>
+
+            {/* Label */}
+            <text x="35" y="-30" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">POWER SOURCE</text>
+          </g>
+
+          {/* === TRANSMISSION PATH WITH POWER LOSS INDICATORS === */}
+          <g>
+            {/* Connection from battery */}
+            <line x1="100" y1="100" x2="130" y2="100" stroke="url(#plossWireCopper)" strokeWidth={wireThickness} strokeLinecap="round" />
+            <line x1="100" y1="240" x2="130" y2="240" stroke="url(#plossWireCopper)" strokeWidth={wireThickness} strokeLinecap="round" />
+
+            {/* Main transmission line - top (with heat) */}
+            {isCoiled ? (
+              <g>
+                <path
+                  d={`M 130 100
+                      Q 180 50, 230 100 Q 280 150, 330 100 Q 380 50, 430 100
+                      Q 480 150, 530 100 L 560 100`}
+                  fill="none"
+                  stroke="url(#plossWireHeat)"
+                  strokeWidth={wireThickness}
+                  strokeLinecap="round"
+                  filter={heatIntensity > 0.5 ? "url(#plossHeatShimmer)" : undefined}
+                />
+                {/* Electron flow animation for coiled */}
+                {[0, 0.2, 0.4, 0.6, 0.8].map((offset, i) => (
+                  <circle
+                    key={i}
+                    r={4}
+                    fill="url(#plossElectronGlow)"
+                    filter="url(#plossElectronBlur)"
+                  >
+                    <animateMotion
+                      dur={`${2.5 - current * 0.1}s`}
+                      repeatCount="indefinite"
+                      begin={`${offset}s`}
+                      path="M 130 100 Q 180 50, 230 100 Q 280 150, 330 100 Q 380 50, 430 100 Q 480 150, 530 100 L 560 100"
+                    />
+                  </circle>
+                ))}
+              </g>
+            ) : (
+              <g>
                 <line
-                  key={angle}
-                  x1={350 + Math.cos((angle * Math.PI) / 180) * 30}
-                  y1={150 + Math.sin((angle * Math.PI) / 180) * 30}
-                  x2={350 + Math.cos((angle * Math.PI) / 180) * (35 + brightness * 10)}
-                  y2={150 + Math.sin((angle * Math.PI) / 180) * (35 + brightness * 10)}
-                  stroke={colors.bulbOn}
-                  strokeWidth={2}
-                  opacity={brightness}
+                  x1={130}
+                  y1={100}
+                  x2={560}
+                  y2={100}
+                  stroke="url(#plossWireHeat)"
+                  strokeWidth={wireThickness}
+                  strokeLinecap="round"
+                  filter={heatIntensity > 0.5 ? "url(#plossHeatShimmer)" : undefined}
                 />
-              ))}
-            </>
-          )}
-          <text x={350} y={155} textAnchor="middle" fill={brightness > 0.5 ? '#92400e' : colors.textMuted} fontSize={10} fontWeight="bold">
-            LED
-          </text>
+                {/* Electron flow animation */}
+                {[0, 0.2, 0.4, 0.6, 0.8].map((offset, i) => (
+                  <circle
+                    key={i}
+                    cx={130 + ((animationFrame / 100 + offset) % 1) * 430}
+                    cy={100}
+                    r={4}
+                    fill="url(#plossElectronGlow)"
+                    filter="url(#plossElectronBlur)"
+                  />
+                ))}
+              </g>
+            )}
 
-          {/* Bottom wire (return) */}
-          <line
-            x1={70}
-            y1={200}
-            x2={330}
-            y2={200}
-            stroke={colors.wireCopper}
-            strokeWidth={wireThickness}
-            strokeLinecap="round"
-          />
+            {/* Power loss indicators along transmission path */}
+            {powerLoss > 0.5 && (
+              <g>
+                {[200, 300, 400, 500].map((x, i) => {
+                  const lossAtPoint = (powerLoss / 4) * (i + 1) / 4;
+                  const showIndicator = lossAtPoint > 0.2;
+                  return showIndicator ? (
+                    <g key={i} transform={`translate(${x}, ${isCoiled ? (i % 2 === 0 ? 75 : 125) : 75})`}>
+                      {/* Heat wave indicator */}
+                      <ellipse cx="0" cy="0" rx={8 + lossAtPoint * 5} ry={12 + lossAtPoint * 8} fill="url(#plossHeatSpot)" opacity={heatIntensity * 0.6}>
+                        <animate attributeName="ry" values={`${12 + lossAtPoint * 8};${18 + lossAtPoint * 10};${12 + lossAtPoint * 8}`} dur="0.8s" repeatCount="indefinite" />
+                      </ellipse>
+                      {/* Loss value */}
+                      <text y={-25} textAnchor="middle" fill="#f97316" fontSize="8" fontWeight="bold">
+                        -{(powerLoss / 4).toFixed(1)}W
+                      </text>
+                    </g>
+                  ) : null;
+                })}
+              </g>
+            )}
+
+            {/* Bottom return wire */}
+            <line x1={130} y1={240} x2={560} y2={240} stroke="url(#plossWireCopper)" strokeWidth={wireThickness} strokeLinecap="round" />
+          </g>
+
+          {/* === LED LOAD === */}
+          <g transform="translate(590, 170)">
+            {/* LED outer glow when bright */}
+            {brightness > 0.3 && (
+              <circle cx="0" cy="0" r={50} fill="url(#plossLEDOuterGlow)" filter="url(#plossLEDGlowFilter)" />
+            )}
+
+            {/* LED housing */}
+            <ellipse cx="0" cy="0" rx="35" ry="40" fill="#1e293b" stroke="#475569" strokeWidth="2" />
+
+            {/* LED dome */}
+            <ellipse cx="0" cy="-5" rx="28" ry="32" fill={`rgba(254, 240, 138, ${0.1 + brightness * 0.4})`} stroke={brightness > 0.5 ? '#fef08a' : '#854d0e'} strokeWidth="2" />
+
+            {/* LED filament glow */}
+            <ellipse cx="0" cy="0" rx="18" ry="22" fill="url(#plossLEDGlow)" filter={brightness > 0.5 ? "url(#plossLEDGlowFilter)" : undefined} />
+
+            {/* Light rays when bright */}
+            {brightness > 0.4 && (
+              <g>
+                {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle) => (
+                  <line
+                    key={angle}
+                    x1={Math.cos((angle * Math.PI) / 180) * 38}
+                    y1={Math.sin((angle * Math.PI) / 180) * 42}
+                    x2={Math.cos((angle * Math.PI) / 180) * (45 + brightness * 15)}
+                    y2={Math.sin((angle * Math.PI) / 180) * (50 + brightness * 15)}
+                    stroke="#fef08a"
+                    strokeWidth={1.5}
+                    opacity={brightness * 0.7}
+                  >
+                    <animate attributeName="opacity" values={`${brightness * 0.5};${brightness * 0.8};${brightness * 0.5}`} dur="0.5s" repeatCount="indefinite" />
+                  </line>
+                ))}
+              </g>
+            )}
+
+            {/* LED base */}
+            <rect x="-15" y="35" width="30" height="20" rx="3" fill="#475569" stroke="#64748b" strokeWidth="1" />
+
+            {/* Wire connections to LED */}
+            <line x1="-30" y1="-70" x2="0" y2="-35" stroke="url(#plossWireCopper)" strokeWidth={wireThickness / 2} />
+            <line x1="-30" y1="70" x2="0" y2="35" stroke="url(#plossWireCopper)" strokeWidth={wireThickness / 2} />
+
+            {/* Labels */}
+            <text x="0" y="70" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">LOAD</text>
+            <text x="0" y="82" textAnchor="middle" fill={brightness > 0.5 ? '#22c55e' : '#ef4444'} fontSize="9">
+              {brightness > 0.7 ? 'BRIGHT' : brightness > 0.4 ? 'DIM' : brightness > 0.1 ? 'VERY DIM' : 'OFF'}
+            </text>
+          </g>
 
           {/* Vertical connections */}
-          <line x1={70} y1={100} x2={70} y2={200} stroke={colors.wireCopper} strokeWidth={wireThickness} />
-          <line x1={350} y1={125} x2={350} y2={175} stroke={colors.wireCopper} strokeWidth={wireThickness / 2} />
-          <line x1={330} y1={100} x2={350} y2={125} stroke={colors.wireCopper} strokeWidth={wireThickness / 2} />
-          <line x1={330} y1={200} x2={350} y2={175} stroke={colors.wireCopper} strokeWidth={wireThickness / 2} />
+          <line x1="100" y1="100" x2="100" y2="240" stroke="url(#plossWireCopper)" strokeWidth={wireThickness} />
+          <line x1="560" y1="100" x2="560" y2="240" stroke="url(#plossWireCopper)" strokeWidth={wireThickness} />
 
-          {/* Voltage drop visualization */}
-          <rect x={80} y={60} width={240} height={25} rx={4} fill="rgba(0,0,0,0.3)" />
-          <rect
-            x={80}
-            y={60}
-            width={240 * (loadVoltage / supplyVoltage)}
-            height={25}
-            rx={4}
-            fill={colors.success}
-            opacity={0.7}
-          />
-          <text x={200} y={77} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
-            {loadVoltage.toFixed(1)}V at LED ({(brightness * 100).toFixed(0)}% brightness)
-          </text>
+          {/* === EFFICIENCY METER === */}
+          <g transform="translate(180, 280)">
+            {/* Meter background panel */}
+            <rect x="0" y="0" width="340" height="80" rx="10" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1.5" filter="url(#plossMeterGlow)" />
 
-          {/* Heat indicator */}
-          {powerLoss > 1 && (
-            <g>
-              <text x={200} y={140} textAnchor="middle" fill={colors.error} fontSize={10}>
-                {powerLoss.toFixed(2)}W lost as heat
-              </text>
-              {powerLoss > 5 && (
-                <>
-                  <text x={200} y={155} textAnchor="middle" fill={colors.error} fontSize={18}>
-                    ~
-                  </text>
-                </>
-              )}
+            {/* Meter title */}
+            <text x="170" y="18" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold" letterSpacing="1">TRANSMISSION EFFICIENCY</text>
+
+            {/* Efficiency bar background */}
+            <rect x="20" y="28" width="300" height="20" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+            {/* Efficiency bar fill with gradient */}
+            <rect x="20" y="28" width={300 * (efficiency / 100)} height="20" rx="4" fill="url(#plossEfficiencyGrad)" opacity="0.9">
+              <animate attributeName="opacity" values="0.7;0.95;0.7" dur="2s" repeatCount="indefinite" />
+            </rect>
+
+            {/* Efficiency percentage markers */}
+            {[0, 25, 50, 75, 100].map((pct) => (
+              <g key={pct}>
+                <line x1={20 + pct * 3} y1="48" x2={20 + pct * 3} y2="52" stroke="#64748b" strokeWidth="1" />
+                <text x={20 + pct * 3} y="62" textAnchor="middle" fill="#64748b" fontSize="8">{pct}%</text>
+              </g>
+            ))}
+
+            {/* Current efficiency value */}
+            <text x="170" y="75" textAnchor="middle" fill={efficiency > 70 ? '#22c55e' : efficiency > 40 ? '#f59e0b' : '#ef4444'} fontSize="14" fontWeight="bold">
+              {efficiency.toFixed(1)}% Efficient
+            </text>
+
+            {/* Power flow indicators */}
+            <g transform="translate(20, 28)">
+              <text x="-15" y="14" textAnchor="end" fill="#22c55e" fontSize="8">IN</text>
+              <text x="315" y="14" textAnchor="start" fill={efficiency > 50 ? '#22c55e' : '#ef4444'} fontSize="8">OUT</text>
+            </g>
+          </g>
+
+          {/* === DATA READOUTS === */}
+          {/* Voltage at load */}
+          <g transform="translate(550, 20)">
+            <rect x="0" y="0" width="120" height="50" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
+            <text x="60" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">LOAD VOLTAGE</text>
+            <text x="60" y="38" textAnchor="middle" fill={loadVoltage > 9 ? '#22c55e' : loadVoltage > 6 ? '#f59e0b' : '#ef4444'} fontSize="18" fontWeight="bold">
+              {loadVoltage.toFixed(2)}V
+            </text>
+          </g>
+
+          {/* Power loss readout */}
+          <g transform="translate(30, 280)">
+            <rect x="0" y="0" width="130" height="80" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
+            <text x="65" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">POWER LOSS</text>
+            <text x="65" y="42" textAnchor="middle" fill="#ef4444" fontSize="20" fontWeight="bold">
+              {powerLoss.toFixed(2)}W
+            </text>
+            <text x="65" y="58" textAnchor="middle" fill="#f97316" fontSize="9">
+              as HEAT
+            </text>
+            {/* Heat icon */}
+            {powerLoss > 2 && (
+              <g transform="translate(65, 70)">
+                <text textAnchor="middle" fill="#ef4444" fontSize="10">
+                  {powerLoss > 10 ? 'HOT!' : powerLoss > 5 ? 'WARM' : '~'}
+                </text>
+              </g>
+            )}
+          </g>
+
+          {/* Wire specs readout */}
+          <g transform="translate(30, 20)">
+            <rect x="0" y="0" width="180" height="60" rx="6" fill="url(#plossMeterPanel)" stroke="#475569" strokeWidth="1" />
+            <text x="90" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">WIRE SPECIFICATIONS</text>
+            <text x="90" y="32" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="bold">{gauge.label}</text>
+            <text x="90" y="48" textAnchor="middle" fill="#64748b" fontSize="9">
+              {effectiveLength}m | R = {resistance.toFixed(4)}Ω
+            </text>
+          </g>
+
+          {/* Current flow indicator */}
+          <g transform="translate(230, 20)">
+            <rect x="0" y="0" width="100" height="50" rx="6" fill="url(#plossMeterPanel)" stroke="#8b5cf6" strokeWidth="1.5" />
+            <text x="50" y="15" textAnchor="middle" fill="#94a3b8" fontSize="8" letterSpacing="0.5">CURRENT</text>
+            <text x="50" y="38" textAnchor="middle" fill="#8b5cf6" fontSize="18" fontWeight="bold">
+              {current.toFixed(1)}A
+            </text>
+          </g>
+
+          {/* Coiled indicator */}
+          {isCoiled && (
+            <g transform="translate(350, 20)">
+              <rect x="0" y="0" width="90" height="50" rx="6" fill="rgba(245, 158, 11, 0.2)" stroke="#f59e0b" strokeWidth="1.5" />
+              <text x="45" y="15" textAnchor="middle" fill="#f59e0b" fontSize="8" letterSpacing="0.5">COILED</text>
+              <text x="45" y="35" textAnchor="middle" fill="#f59e0b" fontSize="11" fontWeight="bold">3x LENGTH</text>
+              <text x="45" y="46" textAnchor="middle" fill="#fbbf24" fontSize="8">MORE LOSS!</text>
             </g>
           )}
-
-          {/* Current meter */}
-          <rect x={130} y={220} width={140} height={45} rx={6} fill={colors.bgCard} stroke={colors.accent} strokeWidth={2} />
-          <text x={200} y={238} textAnchor="middle" fill={colors.textMuted} fontSize={10}>CURRENT</text>
-          <text x={200} y={258} textAnchor="middle" fill={colors.accent} fontSize={16} fontWeight="bold">{current.toFixed(1)} A</text>
-
-          {/* Wire info */}
-          <text x={200} y={290} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-            {gauge.label} | {effectiveLength}m | R = {resistance.toFixed(3)} ohm
-          </text>
         </svg>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <div style={{
               background: colors.bgCard,
-              padding: '8px 16px',
-              borderRadius: '8px',
+              padding: '10px 20px',
+              borderRadius: '10px',
               textAlign: 'center',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
             }}>
-              <div style={{ color: colors.textMuted, fontSize: '10px' }}>VOLTAGE DROP</div>
-              <div style={{ color: colors.warning, fontSize: '16px', fontWeight: 'bold' }}>{voltageDrop.toFixed(2)}V</div>
+              <div style={{ color: colors.textMuted, fontSize: '10px', letterSpacing: '0.5px' }}>VOLTAGE DROP</div>
+              <div style={{ color: colors.warning, fontSize: '18px', fontWeight: 'bold' }}>{voltageDrop.toFixed(2)}V</div>
             </div>
             <div style={{
               background: colors.bgCard,
-              padding: '8px 16px',
-              borderRadius: '8px',
+              padding: '10px 20px',
+              borderRadius: '10px',
               textAlign: 'center',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
             }}>
-              <div style={{ color: colors.textMuted, fontSize: '10px' }}>POWER LOSS</div>
-              <div style={{ color: colors.error, fontSize: '16px', fontWeight: 'bold' }}>{powerLoss.toFixed(2)}W</div>
+              <div style={{ color: colors.textMuted, fontSize: '10px', letterSpacing: '0.5px' }}>POWER LOSS</div>
+              <div style={{ color: colors.error, fontSize: '18px', fontWeight: 'bold' }}>{powerLoss.toFixed(2)}W</div>
             </div>
             <div style={{
               background: colors.bgCard,
-              padding: '8px 16px',
-              borderRadius: '8px',
+              padding: '10px 20px',
+              borderRadius: '10px',
               textAlign: 'center',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
             }}>
-              <div style={{ color: colors.textMuted, fontSize: '10px' }}>RESISTANCE</div>
-              <div style={{ color: colors.accent, fontSize: '16px', fontWeight: 'bold' }}>{resistance.toFixed(3)} ohm</div>
+              <div style={{ color: colors.textMuted, fontSize: '10px', letterSpacing: '0.5px' }}>RESISTANCE</div>
+              <div style={{ color: colors.accent, fontSize: '18px', fontWeight: 'bold' }}>{resistance.toFixed(4)}Ω</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              padding: '10px 20px',
+              borderRadius: '10px',
+              textAlign: 'center',
+              border: `1px solid ${efficiency > 70 ? 'rgba(34, 197, 94, 0.3)' : efficiency > 40 ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            }}>
+              <div style={{ color: colors.textMuted, fontSize: '10px', letterSpacing: '0.5px' }}>EFFICIENCY</div>
+              <div style={{ color: efficiency > 70 ? colors.success : efficiency > 40 ? colors.warning : colors.error, fontSize: '18px', fontWeight: 'bold' }}>{efficiency.toFixed(1)}%</div>
             </div>
           </div>
         )}
