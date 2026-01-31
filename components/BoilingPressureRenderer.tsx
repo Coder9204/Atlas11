@@ -116,6 +116,120 @@ const TEST_QUESTIONS = [
   }
 ];
 
+// Scenario-based test questions with enhanced format
+const testQuestions = [
+  {
+    scenario: "A hiker is camping at 14,000 feet elevation in the Rocky Mountains. She tries to boil water for her instant coffee but notices the water starts bubbling at a surprisingly low temperature.",
+    question: "Why does water boil at a lower temperature at high altitude?",
+    options: [
+      { id: 'a', label: "The air is colder at high altitude, which cools the water faster" },
+      { id: 'b', label: "There is less atmospheric pressure pushing down on the water surface, so molecules escape more easily", correct: true },
+      { id: 'c', label: "The oxygen content is lower, which changes water's chemical properties" },
+      { id: 'd', label: "UV radiation from the sun breaks apart water molecules at lower temperatures" }
+    ],
+    explanation: "At higher altitudes, atmospheric pressure decreases because there is less air above pushing down. Water boils when its vapor pressure equals the surrounding atmospheric pressure. With less pressure to overcome, water molecules can escape into the gas phase at lower temperatures. At 14,000 feet, water boils at about 86C (187F) instead of 100C (212F)."
+  },
+  {
+    scenario: "A home cook uses a pressure cooker to prepare dried beans. At sea level, the beans would normally take 2 hours to soften in boiling water, but in the pressure cooker they're ready in just 25 minutes.",
+    question: "How does a pressure cooker dramatically reduce cooking time?",
+    options: [
+      { id: 'a', label: "The sealed environment traps heat better and prevents energy loss" },
+      { id: 'b', label: "The increased pressure raises the boiling point of water, allowing it to reach higher temperatures", correct: true },
+      { id: 'c', label: "Pressure forces water molecules into the food, hydrating it faster" },
+      { id: 'd', label: "The lack of oxygen prevents oxidation that slows cooking" }
+    ],
+    explanation: "A pressure cooker seals in steam, raising the internal pressure to about 2 atmospheres. This increases water's boiling point from 100C to approximately 120C (250F). The 20-degree temperature increase dramatically speeds up the chemical reactions that break down tough proteins and starches, reducing cooking time by 70% or more."
+  },
+  {
+    scenario: "A climbing expedition on Denali (20,310 feet) attempts to cook pasta for dinner. Despite the water rolling at a vigorous boil, the pasta remains hard and undercooked even after 20 minutes.",
+    question: "Why does pasta fail to cook properly at extreme altitudes even in boiling water?",
+    options: [
+      { id: 'a', label: "The cold air temperature constantly removes heat from the pot" },
+      { id: 'b', label: "The water is boiling at only 80C, too cool to properly gelatinize the starches", correct: true },
+      { id: 'c', label: "Pasta requires oxygen dissolved in water to cook, which is scarce at altitude" },
+      { id: 'd', label: "The dry air causes the water to evaporate before cooking is complete" }
+    ],
+    explanation: "At 20,000+ feet, atmospheric pressure is only about 0.46 atm, causing water to boil at roughly 80C (176F). Pasta requires temperatures above 90C to properly gelatinize starches and denature proteins. The boiling is vigorous because molecules are escaping rapidly, but the actual temperature is too low for effective cooking. Climbers often use pressure cookers or pre-cooked foods at extreme altitudes."
+  },
+  {
+    scenario: "A pharmaceutical company needs to purify a heat-sensitive medication compound. At normal atmospheric pressure, the compound would decompose before reaching its boiling point of 180C.",
+    question: "How does vacuum distillation solve this problem?",
+    options: [
+      { id: 'a', label: "The vacuum removes air that would react with and decompose the compound" },
+      { id: 'b', label: "Reducing pressure lowers the boiling point, allowing purification at safe temperatures", correct: true },
+      { id: 'c', label: "The vacuum increases molecular movement, speeding up evaporation without heat" },
+      { id: 'd', label: "Without air resistance, molecules evaporate with less energy input" }
+    ],
+    explanation: "Vacuum distillation reduces the surrounding pressure, which lowers the boiling point of all liquids. By reducing pressure to 0.01 atm or less, a compound with a normal boiling point of 180C might boil at only 80C. This allows heat-sensitive pharmaceuticals, essential oils, and other delicate compounds to be purified without thermal decomposition."
+  },
+  {
+    scenario: "A commercial airline flying at 35,000 feet maintains cabin pressure equivalent to about 8,000 feet altitude (0.75 atm). A flight attendant heats water for tea using the onboard galley.",
+    question: "At what approximate temperature will the water boil in the aircraft cabin?",
+    options: [
+      { id: 'a', label: "100C - cabin heating systems compensate for altitude effects" },
+      { id: 'b', label: "92C - the reduced cabin pressure lowers the boiling point", correct: true },
+      { id: 'c', label: "85C - aircraft use special pressurized kettles" },
+      { id: 'd', label: "110C - the pressurized cabin increases the boiling point" }
+    ],
+    explanation: "Although aircraft fly at 35,000 feet where pressure is extremely low, cabins are pressurized to a comfortable level equivalent to about 8,000 feet (0.75 atm). At this pressure, water boils at approximately 92C (198F). This is why airline coffee and tea often taste different - the water never reaches 100C, affecting extraction and flavor development."
+  },
+  {
+    scenario: "A power plant engineer is designing a steam turbine system. The boiler operates at 100 atmospheres of pressure to generate superheated steam for maximum efficiency.",
+    question: "What is the approximate boiling point of water at 100 atmospheres pressure?",
+    options: [
+      { id: 'a', label: "200C - pressure has a modest effect on boiling point" },
+      { id: 'b', label: "311C - extremely high pressure dramatically raises the boiling point", correct: true },
+      { id: 'c', label: "100C - boiling point is a fixed property of water" },
+      { id: 'd', label: "500C - the relationship between pressure and boiling point is linear" }
+    ],
+    explanation: "At 100 atmospheres, water's boiling point rises to approximately 311C (592F). Modern power plants use these extreme conditions because higher-temperature steam carries more energy, improving thermodynamic efficiency. The relationship between pressure and boiling point follows a logarithmic curve (Clausius-Clapeyron equation), not a linear one, which is why 100x pressure doesn't mean 100x temperature increase."
+  },
+  {
+    scenario: "A food scientist is developing freeze-dried astronaut ice cream. The process involves freezing the ice cream solid, then placing it in a vacuum chamber where the ice transitions directly to vapor without melting.",
+    question: "What pressure and temperature conditions enable this freeze-drying process?",
+    options: [
+      { id: 'a', label: "Very high pressure forces ice to evaporate at sub-zero temperatures" },
+      { id: 'b', label: "Below 0.006 atm (triple point pressure), ice sublimes directly to vapor at low temperatures", correct: true },
+      { id: 'c', label: "Near-vacuum conditions cause ice to melt instantaneously into gas" },
+      { id: 'd', label: "The vacuum removes air that normally prevents sublimation" }
+    ],
+    explanation: "Water's triple point occurs at 0.006 atm and 0.01C. Below this pressure, liquid water cannot exist - ice can only sublimate directly to vapor. Freeze-drying exploits this by reducing pressure below the triple point while keeping temperature low. The ice in the frozen food sublimes away, leaving behind a dried product that retains its structure and can be rehydrated later."
+  },
+  {
+    scenario: "NASA engineers are designing water systems for a Mars habitat. Mars's atmospheric pressure is only 0.006 atm (about 600 Pascals), similar to Earth's triple point pressure.",
+    question: "What unique challenge does Mars's low pressure create for handling liquid water?",
+    options: [
+      { id: 'a', label: "Water would freeze instantly in the cold Martian environment" },
+      { id: 'b', label: "Water cannot exist as a stable liquid - it would boil and freeze simultaneously", correct: true },
+      { id: 'c', label: "The low gravity would cause water to float away as droplets" },
+      { id: 'd', label: "Solar radiation would break water into hydrogen and oxygen" }
+    ],
+    explanation: "At Mars's surface pressure (0.006 atm), we're at water's triple point. Any exposed liquid water would simultaneously boil (because pressure is too low for liquid at most temperatures) and freeze (because the rapid evaporation removes heat). Liquid water can only exist on Mars in pressurized habitats or temporarily in very specific conditions. This is why Mars missions require completely sealed water systems."
+  },
+  {
+    scenario: "A chemical plant produces synthetic flavoring compounds using reactive distillation. The process must carefully control temperature to prevent unwanted side reactions while separating products.",
+    question: "Why might the plant operate the distillation column at 0.5 atmospheres instead of normal pressure?",
+    options: [
+      { id: 'a', label: "Lower pressure reduces energy costs by requiring less heating fuel" },
+      { id: 'b', label: "Lower pressure reduces boiling points, allowing separation at temperatures that prevent decomposition", correct: true },
+      { id: 'c', label: "Reduced pressure increases the purity of separated compounds" },
+      { id: 'd', label: "The vacuum removes reactive oxygen that would contaminate products" }
+    ],
+    explanation: "Many organic compounds are thermally unstable and decompose or undergo unwanted reactions at high temperatures. By operating at reduced pressure (vacuum distillation), the boiling points of all components decrease proportionally. A mixture that would require 200C to separate at 1 atm might only need 140C at 0.5 atm, allowing successful separation without thermal damage to the products."
+  },
+  {
+    scenario: "A student is studying a phase diagram of water showing solid, liquid, and gas regions. The diagram shows three lines meeting at a single point, with pressure on the y-axis and temperature on the x-axis.",
+    question: "On this phase diagram, what happens if you start with liquid water at 1 atm and 50C, then reduce pressure while keeping temperature constant?",
+    options: [
+      { id: 'a', label: "The water remains liquid because temperature hasn't changed" },
+      { id: 'b', label: "The water will eventually cross into the gas region and boil", correct: true },
+      { id: 'c', label: "The water will first freeze, then sublimate to gas" },
+      { id: 'd', label: "Nothing changes until you reach absolute zero pressure" }
+    ],
+    explanation: "On a phase diagram, moving vertically downward (decreasing pressure at constant temperature) from the liquid region will eventually cross the liquid-gas boundary line. At this boundary, the liquid boils. For water at 50C, this transition occurs at about 0.12 atm. Below this pressure, water at 50C exists only as vapor. This is why vacuum chambers can cause room-temperature water to boil - you're crossing the phase boundary by reducing pressure rather than increasing temperature."
+  }
+];
+
 const TRANSFER_APPS = [
   {
     title: 'Pressure Cookers',

@@ -198,6 +198,130 @@ const TRANSFER_APPS = [
   },
 ];
 
+// Comprehensive test questions covering quantization precision topics
+const testQuestions = [
+  // Q1: Core concept - what is quantization (Easy)
+  {
+    scenario: "A software engineer is learning about how modern AI systems are deployed efficiently on resource-constrained devices like smartphones and embedded systems.",
+    question: "What is quantization in the context of machine learning and signal processing?",
+    options: [
+      { id: 'a', label: "A technique to increase the number of parameters in a neural network" },
+      { id: 'b', label: "The process of mapping continuous or high-precision values to a discrete set of lower-precision values", correct: true },
+      { id: 'c', label: "A method for encrypting neural network weights for security" },
+      { id: 'd', label: "The process of adding more layers to a deep learning model" },
+    ],
+    explanation: "Quantization is the process of constraining values from a large (often continuous) set to a smaller discrete set. In ML, this typically means converting 32-bit floating-point weights to 8-bit or 4-bit integers, reducing memory footprint and enabling faster computation while accepting small precision losses."
+  },
+  // Q2: Bit depth in audio (Easy-Medium)
+  {
+    scenario: "An audio engineer is mastering a recording for a streaming platform. The original recording was captured at 24-bit depth, but the platform uses 16-bit audio for delivery.",
+    question: "How does reducing bit depth from 24-bit to 16-bit affect the audio signal?",
+    options: [
+      { id: 'a', label: "It reduces the frequency range that can be captured" },
+      { id: 'b', label: "It decreases the dynamic range from approximately 144 dB to 96 dB", correct: true },
+      { id: 'c', label: "It doubles the file size due to compression overhead" },
+      { id: 'd', label: "It has no perceptible effect on audio quality" },
+    ],
+    explanation: "Each bit of depth provides approximately 6 dB of dynamic range. 24-bit audio offers about 144 dB of dynamic range, while 16-bit provides about 96 dB. The reduction affects how quietly and loudly sounds can be represented relative to each other, though 96 dB is still sufficient for most listening scenarios."
+  },
+  // Q3: Quantization noise (Medium)
+  {
+    scenario: "A data scientist notices that after converting a neural network from FP32 to INT8, some outputs have small but consistent errors compared to the original model.",
+    question: "What is the primary source of this error introduced during quantization?",
+    options: [
+      { id: 'a', label: "Hardware defects in the processor" },
+      { id: 'b', label: "Quantization noise caused by rounding continuous values to discrete levels", correct: true },
+      { id: 'c', label: "Memory corruption during the conversion process" },
+      { id: 'd', label: "Software bugs in the quantization library" },
+    ],
+    explanation: "Quantization noise (or quantization error) is the difference between the original continuous value and its quantized representation. When values are rounded to the nearest discrete level, this introduces a form of noise that is inherent to the quantization process itself, not a bug or hardware issue."
+  },
+  // Q4: Dynamic range calculation (Medium)
+  {
+    scenario: "An engineer is designing an analog-to-digital converter (ADC) for a high-fidelity audio system and needs to determine the appropriate bit depth.",
+    question: "What is the theoretical dynamic range of a 16-bit ADC using the formula DR = 6.02n + 1.76 dB?",
+    options: [
+      { id: 'a', label: "Approximately 48 dB" },
+      { id: 'b', label: "Approximately 72 dB" },
+      { id: 'c', label: "Approximately 98 dB", correct: true },
+      { id: 'd', label: "Approximately 120 dB" },
+    ],
+    explanation: "Using the formula DR = 6.02n + 1.76 dB where n is the number of bits: DR = 6.02(16) + 1.76 = 96.32 + 1.76 = 98.08 dB. This theoretical maximum represents the ratio between the largest and smallest signals that can be accurately represented by the ADC."
+  },
+  // Q5: Dithering technique (Medium-Hard)
+  {
+    scenario: "A mastering engineer is preparing to reduce a 24-bit audio file to 16-bit for CD distribution. They are concerned about audible artifacts in quiet passages.",
+    question: "What is the purpose of applying dither when reducing bit depth?",
+    options: [
+      { id: 'a', label: "To increase the volume of quiet passages" },
+      { id: 'b', label: "To add random noise that masks quantization distortion and preserves low-level detail", correct: true },
+      { id: 'c', label: "To compress the dynamic range of the audio" },
+      { id: 'd', label: "To remove high-frequency content above 20 kHz" },
+    ],
+    explanation: "Dithering adds a small amount of random noise before quantization, which decorrelates the quantization error from the signal. This converts harsh, audible quantization distortion into a smooth, benign noise floor, preserving the perception of low-level signals that would otherwise be lost or distorted."
+  },
+  // Q6: ADC resolution and accuracy (Hard)
+  {
+    scenario: "A sensor engineer is selecting an ADC for a precision measurement system. The system needs to detect voltage changes as small as 1 millivolt across a 0-5V range.",
+    question: "What is the minimum ADC resolution required to reliably detect 1mV changes in a 0-5V range?",
+    options: [
+      { id: 'a', label: "8-bit (256 levels, ~19.5mV per step)" },
+      { id: 'b', label: "10-bit (1024 levels, ~4.9mV per step)" },
+      { id: 'c', label: "12-bit (4096 levels, ~1.2mV per step)" },
+      { id: 'd', label: "14-bit (16384 levels, ~0.3mV per step)", correct: true },
+    ],
+    explanation: "To detect 1mV changes in a 5V range, we need step sizes smaller than 1mV. A 12-bit ADC provides 5V/4096 = 1.22mV per step, which is too coarse. A 14-bit ADC provides 5V/16384 = 0.305mV per step, ensuring that 1mV changes span multiple quantization levels and can be reliably detected."
+  },
+  // Q7: Neural network quantization (Hard)
+  {
+    scenario: "A ML engineer is deploying a transformer model to edge devices. They are comparing post-training quantization (PTQ) with quantization-aware training (QAT) for INT8 deployment.",
+    question: "Why does quantization-aware training (QAT) typically achieve better accuracy than post-training quantization (PTQ)?",
+    options: [
+      { id: 'a', label: "QAT uses more bits during inference than PTQ" },
+      { id: 'b', label: "QAT simulates quantization during training, allowing the model to learn weights that are robust to quantization errors", correct: true },
+      { id: 'c', label: "QAT compresses the model more aggressively than PTQ" },
+      { id: 'd', label: "QAT only quantizes biases while keeping weights in full precision" },
+    ],
+    explanation: "QAT inserts fake quantization operations during training, allowing gradients to flow through simulated quantization. This enables the network to adapt its weights to be more robust to the precision loss. The model learns representations that maintain accuracy even after the rounding operations inherent in quantization."
+  },
+  // Q8: Fixed-point vs floating-point (Hard)
+  {
+    scenario: "An embedded systems developer is implementing a neural network inference engine on a microcontroller without a floating-point unit (FPU).",
+    question: "What is the key advantage of fixed-point arithmetic over floating-point for this application?",
+    options: [
+      { id: 'a', label: "Fixed-point provides higher precision than floating-point" },
+      { id: 'b', label: "Fixed-point operations can be executed using integer ALU instructions, avoiding slow software floating-point emulation", correct: true },
+      { id: 'c', label: "Fixed-point eliminates all quantization errors" },
+      { id: 'd', label: "Fixed-point automatically scales values to prevent overflow" },
+    ],
+    explanation: "On processors without FPU hardware, floating-point operations must be emulated in software, which is orders of magnitude slower than native integer operations. Fixed-point arithmetic uses integer operations with implicit scaling, enabling efficient computation on simple microcontrollers while maintaining reasonable precision."
+  },
+  // Q9: Sigma-delta modulation (Hard)
+  {
+    scenario: "An audio hardware designer is evaluating ADC architectures. They are comparing a 24-bit sigma-delta ADC running at 64x oversampling with a traditional successive approximation (SAR) ADC.",
+    question: "How does sigma-delta modulation achieve high effective resolution?",
+    options: [
+      { id: 'a', label: "By using extremely precise analog components" },
+      { id: 'b', label: "By oversampling and noise shaping to push quantization noise to higher frequencies where it can be filtered out", correct: true },
+      { id: 'c', label: "By averaging multiple SAR conversions" },
+      { id: 'd', label: "By using 32-bit internal registers" },
+    ],
+    explanation: "Sigma-delta ADCs use a 1-bit quantizer at very high sample rates (oversampling) combined with noise shaping, which pushes quantization noise energy to frequencies above the band of interest. A digital decimation filter then removes this high-frequency noise while reducing the sample rate, achieving high effective resolution from a simple 1-bit converter."
+  },
+  // Q10: Quantization in image compression (Hard)
+  {
+    scenario: "A video streaming engineer is optimizing JPEG compression settings. They notice that increasing the quality factor from 50 to 90 significantly increases file size but has diminishing returns on visual quality.",
+    question: "How does JPEG's quantization matrix affect the compression quality tradeoff?",
+    options: [
+      { id: 'a', label: "Higher quality factors use larger quantization divisors, discarding more high-frequency DCT coefficients" },
+      { id: 'b', label: "Lower quality factors use larger quantization divisors, more aggressively rounding DCT coefficients and introducing blocking artifacts", correct: true },
+      { id: 'c', label: "The quantization matrix only affects the color channels, not luminance" },
+      { id: 'd', label: "Quantization has no effect on file size, only on decoding speed" },
+    ],
+    explanation: "JPEG divides DCT coefficients by values in a quantization matrix, then rounds to integers. Lower quality settings use larger divisors, causing more coefficients to round to zero and introducing visible artifacts like blocking. Higher quality uses smaller divisors, preserving more detail but reducing compression ratio. The human visual system is less sensitive to high-frequency detail, so these are quantized more aggressively."
+  },
+];
+
 const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps> = ({
   gamePhase,
 }) => {

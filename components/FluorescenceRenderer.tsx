@@ -145,6 +145,130 @@ const FLUOROPHORES = {
   fluorescein: { name: 'Fluorescein', excitation: 494, emission: 521, color: '#88ff00', description: 'Classic green fluorescent dye' }
 };
 
+// Scenario-based test questions for comprehensive assessment
+const testQuestions = [
+  // 1. Core concept - what causes fluorescence (Easy)
+  {
+    scenario: "A student shines a UV flashlight on various objects in a dark room. Some objects begin to glow brightly in visible colors, while others remain dark.",
+    question: "What is the fundamental process that causes certain materials to glow under UV light?",
+    options: [
+      { id: 'a', label: "The UV light reflects off the surface and changes color" },
+      { id: 'b', label: "Fluorescent molecules absorb UV photons and re-emit lower-energy visible light photons", correct: true },
+      { id: 'c', label: "The materials contain tiny LEDs that activate when exposed to UV" },
+      { id: 'd', label: "UV light chemically reacts with the material to produce new glowing compounds" }
+    ],
+    explanation: "Fluorescence occurs when molecules absorb high-energy UV photons, which excite electrons to higher energy states. These electrons then relax back down, releasing the energy as visible light photons. Since some energy is lost as heat during the process, the emitted light has lower energy (longer wavelength) than the absorbed UV light."
+  },
+  // 2. Black light posters (Easy-Medium)
+  {
+    scenario: "At a party, black light posters on the walls display vivid neon colors that seem to glow intensely, while a regular printed photograph nearby appears dull and barely visible.",
+    question: "Why do black light posters glow so brightly while regular photographs do not?",
+    options: [
+      { id: 'a', label: "Black light posters are printed with special fluorescent inks that absorb UV and emit visible light", correct: true },
+      { id: 'b', label: "Regular photographs absorb all the UV light without releasing any" },
+      { id: 'c', label: "The black light only illuminates certain color pigments" },
+      { id: 'd', label: "Black light posters have a battery-powered backlight" }
+    ],
+    explanation: "Black light posters use fluorescent inks and dyes specifically designed to absorb UV radiation efficiently and re-emit it as bright visible light. Regular photographs use standard pigments that primarily reflect visible light but don't undergo fluorescence. Under UV illumination with minimal visible light, only the fluorescent materials produce visible emissions."
+  },
+  // 3. Fluorescent vs incandescent lighting (Medium)
+  {
+    scenario: "An office manager notices that fluorescent tube lights consume far less electricity than incandescent bulbs while producing similar brightness. Inside the fluorescent tube, mercury vapor produces UV light.",
+    question: "How does a fluorescent light tube convert this UV light into the white light we see?",
+    options: [
+      { id: 'a', label: "The glass tube filters the UV and only allows white light through" },
+      { id: 'b', label: "A phosphor coating on the inside of the tube absorbs UV and fluoresces visible white light", correct: true },
+      { id: 'c', label: "The mercury vapor directly produces white light at high temperatures" },
+      { id: 'd', label: "Multiple colored gases mix together to create white light" }
+    ],
+    explanation: "Fluorescent tubes work by a two-step process: first, electrical current excites mercury vapor to produce UV light. Then, a phosphor coating on the tube's inner surface absorbs this UV and fluoresces, emitting visible light across the spectrum to appear white. This is more efficient than incandescent bulbs because less energy is wasted as heat."
+  },
+  // 4. Highlighter ink under UV (Medium)
+  {
+    scenario: "A forensic investigator uses a UV lamp to examine a document. The yellow highlighter marks, which appear pale yellow in normal light, now glow an intense bright green under the UV lamp.",
+    question: "Why does the highlighter appear a different, more intense color under UV light compared to normal light?",
+    options: [
+      { id: 'a', label: "UV light is stronger and makes all colors more vivid" },
+      { id: 'b', label: "The fluorescent dye absorbs UV and emits green light, adding to the reflected yellow to create intense brightness", correct: true },
+      { id: 'c', label: "The ink chemically changes color when exposed to UV" },
+      { id: 'd', label: "Our eyes perceive UV light as green" }
+    ],
+    explanation: "Highlighter ink contains fluorescent dyes that serve two purposes: they reflect yellow light (making them visible normally) AND they absorb UV light and fluoresce green. Under UV illumination, you see both the normal reflected color plus the additional fluorescent emission, creating an unusually bright, slightly green-shifted glow that appears more intense than any normal reflection could produce."
+  },
+  // 5. Stokes shift (Medium-Hard)
+  {
+    scenario: "A photophysics researcher measures that a fluorescent dye absorbs light at 350 nm (UV) but emits at 520 nm (green visible light). She notes this wavelength difference is essential for the dye's usefulness in imaging.",
+    question: "What is this wavelength difference between absorption and emission called, and why does it always occur?",
+    options: [
+      { id: 'a', label: "Chromatic shift - the molecule changes its chemical structure during fluorescence" },
+      { id: 'b', label: "Stokes shift - energy is lost to molecular vibrations and heat before emission", correct: true },
+      { id: 'c', label: "Quantum tunneling - some photon energy escapes through quantum effects" },
+      { id: 'd', label: "Reflection loss - part of the light bounces away before being absorbed" }
+    ],
+    explanation: "The Stokes shift describes the difference between absorption and emission wavelengths. After a molecule absorbs a photon and reaches an excited state, it rapidly loses some energy through vibrational relaxation (heat) before emitting a photon. This means the emitted photon always has less energy (longer wavelength) than the absorbed one. This shift is crucial in fluorescence microscopy because it allows filters to separate excitation light from emission."
+  },
+  // 6. Fluorescence microscopy (Hard)
+  {
+    scenario: "A cell biologist uses fluorescence microscopy to study protein locations inside living cells. She labels a specific protein with GFP (Green Fluorescent Protein) and can see exactly where that protein exists in the cell.",
+    question: "Why is fluorescence microscopy particularly powerful for studying specific structures in cells?",
+    options: [
+      { id: 'a', label: "It magnifies cells more than regular microscopes" },
+      { id: 'b', label: "Fluorescent labels can target specific molecules, and the Stokes shift allows emission to be separated from background", correct: true },
+      { id: 'c', label: "All cell components naturally fluoresce in different colors" },
+      { id: 'd', label: "Fluorescent light penetrates deeper into thick samples" }
+    ],
+    explanation: "Fluorescence microscopy is powerful because: (1) fluorescent labels like GFP can be genetically attached to specific proteins, allowing precise targeting, (2) the Stokes shift means emission wavelength differs from excitation, so filters can block the excitation light while passing only fluorescence from labeled structures, and (3) against a dark background, even single fluorescent molecules can be detected, providing extreme sensitivity and contrast."
+  },
+  // 7. Phosphorescence vs fluorescence (Hard)
+  {
+    scenario: "A child notices that glow-in-the-dark stars on their ceiling continue glowing for several minutes after the lights are turned off, while their fluorescent poster stops glowing immediately when the UV lamp is switched off.",
+    question: "What fundamental difference explains why phosphorescent materials glow long after excitation while fluorescent materials stop immediately?",
+    options: [
+      { id: 'a', label: "Phosphorescent materials store more light energy in their chemical bonds" },
+      { id: 'b', label: "Phosphorescence involves a 'forbidden' triplet state transition that occurs slowly, while fluorescence uses allowed transitions", correct: true },
+      { id: 'c', label: "Phosphorescent materials have larger molecules that release energy more slowly" },
+      { id: 'd', label: "Fluorescent materials convert all their energy to heat instead of storing it" }
+    ],
+    explanation: "In fluorescence, electrons return from the excited singlet state to ground state via an 'allowed' transition that happens in nanoseconds. In phosphorescence, electrons first cross to a triplet state where the return transition is quantum mechanically 'forbidden' - it can still happen but very slowly (milliseconds to hours). This forbidden transition acts like a bottleneck, creating the prolonged afterglow characteristic of phosphorescent materials."
+  },
+  // 8. FRET in biochemistry (Hard)
+  {
+    scenario: "A biochemist studies protein interactions using FRET (Forster Resonance Energy Transfer). She labels one protein with a cyan fluorescent protein and another with a yellow one. When the proteins bind together, the cyan emission decreases while yellow emission appears.",
+    question: "What physical mechanism allows energy to transfer between the two fluorescent labels when the proteins interact?",
+    options: [
+      { id: 'a', label: "The proteins physically merge, combining their fluorescent properties" },
+      { id: 'b', label: "Non-radiative dipole-dipole coupling transfers energy between nearby fluorophores without emitting a photon", correct: true },
+      { id: 'c', label: "The cyan fluorophore emits a photon that the yellow one absorbs" },
+      { id: 'd', label: "Chemical bonds form between the two fluorescent labels" }
+    ],
+    explanation: "FRET occurs through non-radiative energy transfer - the excited donor fluorophore transfers energy directly to the acceptor through electromagnetic dipole-dipole coupling, without emitting a photon. This only works when the fluorophores are very close (1-10 nm) and their spectra overlap. Because FRET efficiency depends strongly on distance (1/r^6), it serves as a 'molecular ruler' to detect when two labeled molecules are in close proximity."
+  },
+  // 9. Quantum yield (Hard)
+  {
+    scenario: "A materials scientist compares two fluorescent dyes for a sensor application. Dye A has a quantum yield of 0.95, while Dye B has a quantum yield of 0.15. Both absorb the same wavelength of light.",
+    question: "What does quantum yield measure, and why would Dye A be preferred for a brightness-critical application?",
+    options: [
+      { id: 'a', label: "Quantum yield measures color purity; Dye A produces more saturated colors" },
+      { id: 'b', label: "Quantum yield is the ratio of photons emitted to photons absorbed; Dye A converts 95% of absorbed photons to fluorescence", correct: true },
+      { id: 'c', label: "Quantum yield measures how fast the dye fluoresces; Dye A glows more quickly" },
+      { id: 'd', label: "Quantum yield measures the wavelength shift; Dye A has a larger Stokes shift" }
+    ],
+    explanation: "Quantum yield (QY) is the ratio of photons emitted to photons absorbed, measuring fluorescence efficiency. A QY of 0.95 means 95% of absorbed photons result in fluorescence emission, while only 5% of energy is lost to non-radiative processes like heat. Dye A would be much brighter than Dye B under identical illumination because it converts nearly all absorbed light to fluorescence rather than wasting it as heat."
+  },
+  // 10. Photobleaching (Hard)
+  {
+    scenario: "A microscopist observes a fluorescently-labeled cell over time. After several minutes of continuous UV exposure, the fluorescence signal gradually fades until the cell is barely visible, even though the UV lamp intensity remains constant.",
+    question: "What causes this permanent loss of fluorescence, and why is it a concern in fluorescence imaging?",
+    options: [
+      { id: 'a', label: "The fluorescent molecules migrate out of the illuminated area" },
+      { id: 'b', label: "Photobleaching - reactive oxygen species generated during fluorescence irreversibly destroy the fluorophore molecules", correct: true },
+      { id: 'c', label: "The UV lamp gradually weakens over time" },
+      { id: 'd', label: "The cell membrane blocks UV light increasingly over time" }
+    ],
+    explanation: "Photobleaching occurs when fluorophores are permanently destroyed through photochemical reactions. Excited fluorophores can react with oxygen to form reactive oxygen species (ROS), which damage the fluorophore's chemical structure, eliminating its ability to fluoresce. This limits how long samples can be observed and how much light can be used for excitation. Researchers minimize photobleaching by using oxygen scavengers, reducing excitation intensity, or choosing more photostable fluorophores."
+  }
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────

@@ -339,6 +339,132 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
     { id: 'error', label: 'Lower precision causes too many errors to be useful' },
   ];
 
+  // ===============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions covering tensor cores
+  // ===============================================================================
+  const testQuestions = [
+    // Q1: Core concept - what are tensor cores (Easy)
+    {
+      scenario: "NVIDIA introduced Tensor Cores in their Volta architecture (2017) to accelerate deep learning workloads. Modern GPUs like the H100 contain hundreds of these specialized units.",
+      question: "What is the primary function of a tensor core compared to a standard CUDA core?",
+      options: [
+        { id: 'a', label: 'Tensor cores store more data in memory for faster access' },
+        { id: 'b', label: 'Tensor cores perform matrix multiply-accumulate operations on entire matrix blocks in a single cycle', correct: true },
+        { id: 'c', label: 'Tensor cores run at higher clock speeds than CUDA cores' },
+        { id: 'd', label: 'Tensor cores are designed for graphics rendering, not computation' }
+      ],
+      explanation: "Tensor cores are specialized hardware units designed to perform fused matrix multiply-accumulate (MMA) operations. While a CUDA core performs one multiply-add per cycle, a tensor core computes an entire 4x4 (or larger) matrix operation in a single cycle, providing massive throughput for AI workloads dominated by matrix math."
+    },
+    // Q2: Matrix multiplication acceleration (Easy-Medium)
+    {
+      scenario: "A machine learning engineer is training a transformer model and notices that matrix multiplications account for over 90% of the compute time. They enable tensor core acceleration in their framework.",
+      question: "Why are tensor cores particularly effective at accelerating matrix multiplication?",
+      options: [
+        { id: 'a', label: 'They use a special compression algorithm to reduce matrix sizes' },
+        { id: 'b', label: 'They exploit the regular, predictable data access patterns of matrix operations to maximize parallelism', correct: true },
+        { id: 'c', label: 'They automatically convert matrices to sparse format' },
+        { id: 'd', label: 'They bypass the GPU memory entirely and compute in registers' }
+      ],
+      explanation: "Matrix multiplication has highly regular and predictable memory access patterns - each element participates in multiple calculations in a structured way. Tensor cores exploit this regularity with systolic array architectures where data flows through processing elements, allowing massive parallelism and data reuse that would be impossible with irregular computations."
+    },
+    // Q3: Mixed precision training (Medium)
+    {
+      scenario: "A research team is training a 70-billion parameter language model. To fit the model in GPU memory and speed up training, they use mixed-precision training with FP16 forward passes and FP32 master weights.",
+      question: "What is the key benefit of mixed-precision training with tensor cores?",
+      options: [
+        { id: 'a', label: 'It eliminates the need for gradient checkpointing' },
+        { id: 'b', label: 'It doubles throughput while maintaining training stability by keeping critical calculations in higher precision', correct: true },
+        { id: 'c', label: 'It reduces the number of training epochs needed' },
+        { id: 'd', label: 'It allows training without any GPU memory' }
+      ],
+      explanation: "Mixed-precision training uses FP16 for forward and backward passes (2x throughput on tensor cores, 2x memory savings) while maintaining FP32 master weights and using loss scaling to prevent gradient underflow. This provides the speed benefits of lower precision while preserving training stability and model quality."
+    },
+    // Q4: FP16 vs FP32 tradeoffs (Medium)
+    {
+      scenario: "A startup is deploying their image classification model to production. They're deciding between FP32 inference (100% accuracy baseline) and FP16 inference (potential accuracy loss but 2x faster).",
+      question: "What is the primary tradeoff when using FP16 instead of FP32 for neural network inference?",
+      options: [
+        { id: 'a', label: 'FP16 requires completely retraining the model from scratch' },
+        { id: 'b', label: 'FP16 has reduced numerical range and precision, but neural networks are typically robust to small rounding errors', correct: true },
+        { id: 'c', label: 'FP16 only works on NVIDIA GPUs, not AMD or Intel' },
+        { id: 'd', label: 'FP16 increases power consumption significantly' }
+      ],
+      explanation: "FP16 uses 16 bits versus 32 bits, reducing both dynamic range (max/min values) and precision (decimal places). However, neural networks are inherently noise-tolerant - their millions of parameters average out small numerical errors. For most models, FP16 inference has negligible accuracy impact while providing 2x memory bandwidth and 2x tensor core throughput."
+    },
+    // Q5: FLOPS comparison (Medium-Hard)
+    {
+      scenario: "An NVIDIA A100 GPU advertises 312 TFLOPS for FP16 tensor core operations but only 19.5 TFLOPS for FP32 CUDA core operations. An engineer needs to understand this 16x difference.",
+      question: "Why do tensor cores achieve approximately 16x higher FLOPS than CUDA cores for matrix operations?",
+      options: [
+        { id: 'a', label: 'Tensor cores have 16x more transistors dedicated to them' },
+        { id: 'b', label: 'Tensor cores compute 4x4 matrix blocks (64 ops) per cycle versus single ops, plus FP16 doubles throughput', correct: true },
+        { id: 'c', label: 'CUDA cores are intentionally slowed down to save power' },
+        { id: 'd', label: 'The FLOPS numbers use different counting methods' }
+      ],
+      explanation: "The ~16x speedup comes from two factors: (1) Tensor cores process entire 4x4 matrix blocks per cycle, performing 64 multiply-add operations versus 1 for a CUDA core (8x). (2) Using FP16 instead of FP32 allows 2x more values per memory transfer and 2x operations per tensor core cycle (2x). Combined: 8x * 2x = 16x theoretical speedup."
+    },
+    // Q6: Transformer model acceleration (Hard)
+    {
+      scenario: "GPT-4 and similar large language models use transformer architecture with attention mechanisms. The attention computation involves multiplying Query, Key, and Value matrices across thousands of tokens.",
+      question: "Why are tensor cores essential for making large transformer models practical?",
+      options: [
+        { id: 'a', label: 'Transformers require specialized attention hardware that only tensor cores provide' },
+        { id: 'b', label: 'Attention mechanisms are dominated by matrix multiplications that scale quadratically with sequence length, making tensor core acceleration critical', correct: true },
+        { id: 'c', label: 'Tensor cores can process natural language directly without tokenization' },
+        { id: 'd', label: 'Transformers only work on GPUs with tensor cores enabled' }
+      ],
+      explanation: "Transformer attention computes QK^T (sequence_length x sequence_length) and multiplies by V, scaling O(n^2) with sequence length. For a 32K context window, this means billions of operations per layer. Tensor cores make this feasible by accelerating these matrix multiplications 10-20x, reducing inference time from minutes to milliseconds."
+    },
+    // Q7: Tensor core generations (Hard)
+    {
+      scenario: "NVIDIA has released multiple tensor core generations: Volta (1st gen), Turing (2nd gen), Ampere (3rd gen), and Hopper (4th gen). Each generation expanded supported data types and matrix sizes.",
+      question: "What key capability did later tensor core generations add to improve AI training efficiency?",
+      options: [
+        { id: 'a', label: 'Support for larger matrix tile sizes (8x8, 16x16) and new formats like TF32 and FP8 for better performance-accuracy tradeoffs', correct: true },
+        { id: 'b', label: 'Built-in support for running Python code directly on tensor cores' },
+        { id: 'c', label: 'Automatic model parallelism across multiple GPUs' },
+        { id: 'd', label: 'Native support for training models without backpropagation' }
+      ],
+      explanation: "Later tensor core generations added crucial capabilities: TF32 (Ampere) provides FP32-like range with faster computation; FP8 (Hopper) enables 2x throughput over FP16; larger matrix tiles (16x16, 16x8x16) increase arithmetic intensity. The Transformer Engine in Hopper dynamically selects FP8/FP16 per layer for optimal training."
+    },
+    // Q8: Memory bandwidth bottleneck (Hard)
+    {
+      scenario: "A data scientist benchmarks their model and finds tensor core utilization is only 30%. The tensor cores are waiting idle most of the time despite being capable of much higher throughput.",
+      question: "What is the most likely cause of low tensor core utilization in practice?",
+      options: [
+        { id: 'a', label: 'The model has too many parameters for the GPU' },
+        { id: 'b', label: 'Memory bandwidth cannot feed data to tensor cores fast enough, causing them to stall waiting for operands', correct: true },
+        { id: 'c', label: 'Tensor cores overheat and throttle when used continuously' },
+        { id: 'd', label: 'The CUDA driver limits tensor core usage to prevent errors' }
+      ],
+      explanation: "Tensor cores can compute faster than data arrives from GPU memory - this is called being 'memory-bound.' With 2 TB/s HBM bandwidth and 300+ TFLOPS compute, operations need ~150 FLOPs per byte loaded to fully utilize tensor cores. Techniques like operator fusion, larger batch sizes, and optimized memory layouts help keep tensor cores fed."
+    },
+    // Q9: Sparse tensor operations (Hard)
+    {
+      scenario: "NVIDIA's Ampere and later architectures support structured sparsity, where 2 out of every 4 weights can be zero. A researcher is considering pruning their model to use this feature.",
+      question: "How does structured sparsity provide a 2x speedup on tensor cores?",
+      options: [
+        { id: 'a', label: 'Sparse matrices use less memory, so more layers fit in cache' },
+        { id: 'b', label: 'Tensor cores skip zero-value multiplications entirely, doubling effective throughput', correct: true },
+        { id: 'c', label: 'The GPU automatically increases clock speed for sparse operations' },
+        { id: 'd', label: 'Sparsity allows using INT4 precision instead of INT8' }
+      ],
+      explanation: "With 2:4 structured sparsity, tensor cores store only non-zero values plus a small index bitmap. During computation, they skip multiplications with zeros entirely. Since 50% of values are zero, the tensor core effectively processes 2x more useful work per cycle. Models can often be pruned to 2:4 sparsity with minimal accuracy loss."
+    },
+    // Q10: TPU vs GPU tensor cores (Hard)
+    {
+      scenario: "Google's TPU (Tensor Processing Unit) and NVIDIA's GPU tensor cores both accelerate matrix operations for machine learning. A cloud architect is choosing between TPU v4 and H100 GPUs for their workload.",
+      question: "What is a fundamental architectural difference between Google TPUs and NVIDIA tensor cores?",
+      options: [
+        { id: 'a', label: 'TPUs are dedicated matrix multiplication ASICs with larger systolic arrays, while tensor cores are specialized units within a general-purpose GPU', correct: true },
+        { id: 'b', label: 'TPUs only support TensorFlow while tensor cores work with any framework' },
+        { id: 'c', label: 'Tensor cores are faster but TPUs use less power' },
+        { id: 'd', label: 'TPUs cannot perform inference, only training' }
+      ],
+      explanation: "TPUs are purpose-built ASICs (Application-Specific Integrated Circuits) designed exclusively for matrix math, with massive 128x128 systolic arrays and optimized for specific ML patterns. GPU tensor cores are specialized units embedded within a flexible GPU that also handles graphics, general compute, and diverse workloads. TPUs excel at large-scale training; GPUs offer more flexibility."
+    }
+  ];
+
   const handleTestAnswer = (answerId: string) => {
     const newAnswers = [...testAnswers];
     newAnswers[currentTestIndex] = answerId;

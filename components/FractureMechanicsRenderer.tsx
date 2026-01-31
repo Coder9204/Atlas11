@@ -149,6 +149,119 @@ const TRANSFER_APPS = [
   }
 ];
 
+const testQuestions = [
+  {
+    scenario: 'A pressure vessel has a small scratch on its inner surface. Under repeated pressurization cycles, engineers notice the scratch has grown into a visible crack.',
+    question: 'Why does stress concentrate at the tip of a crack or sharp defect?',
+    options: [
+      { id: 'a', label: 'The material is weaker at those locations due to manufacturing defects' },
+      { id: 'b', label: 'Stress flow lines crowd together at sharp features, amplifying local stress', correct: true },
+      { id: 'c', label: 'Cracks absorb heat which weakens the surrounding material' },
+      { id: 'd', label: 'Sharp corners reflect stress waves back into the material' }
+    ],
+    explanation: 'Stress flows through a material like fluid through a channel. When it encounters a sharp feature like a crack tip, the stress flow lines must crowd together to go around the obstacle. This crowding effect dramatically amplifies the local stress at the tip, often by factors of 5-10x or more for sharp cracks.'
+  },
+  {
+    scenario: 'A glass window in a skyscraper develops a tiny edge chip during installation. Six months later, during a cold snap, the entire pane suddenly shatters.',
+    question: 'According to the Griffith criterion, what causes a crack to propagate?',
+    options: [
+      { id: 'a', label: 'The crack reaches a critical length regardless of applied stress' },
+      { id: 'b', label: 'Temperature changes always cause crack growth in brittle materials' },
+      { id: 'c', label: 'Energy released by crack growth exceeds energy needed to create new surfaces', correct: true },
+      { id: 'd', label: 'Vibrations from wind cause resonance at the crack tip' }
+    ],
+    explanation: 'Griffith showed that cracks propagate when the strain energy released by crack extension exceeds the surface energy required to create new crack surfaces. Below this threshold, cracks remain stable. The cold snap increased thermal stresses enough to tip the energy balance, causing catastrophic propagation.'
+  },
+  {
+    scenario: 'Two identical steel components fail under the same load. Component A shows a rough, grainy fracture surface with shear lips at the edges. Component B has a smooth, mirror-like fracture surface with no plastic deformation.',
+    question: 'Which component experienced brittle fracture and why is this distinction important?',
+    options: [
+      { id: 'a', label: 'Component A; rough surfaces indicate rapid crack propagation' },
+      { id: 'b', label: 'Component B; smooth surface and no plastic deformation indicate brittle failure', correct: true },
+      { id: 'c', label: 'Both experienced brittle fracture at different temperatures' },
+      { id: 'd', label: 'Neither; steel always fails in a ductile manner' }
+    ],
+    explanation: 'Brittle fracture occurs with little to no plastic deformation, producing smooth, often mirror-like fracture surfaces. Ductile fracture involves significant plastic deformation before failure, creating rough surfaces with shear lips. This distinction matters because brittle failures are sudden and catastrophic with no warning, while ductile failures show visible deformation first.'
+  },
+  {
+    scenario: 'An aircraft wing undergoes approximately 10,000 pressurization cycles per year. After 15 years of service, routine inspection discovers small cracks emanating from rivet holes, despite the wing never experiencing loads above 60% of its design limit.',
+    question: 'What mechanism caused these cracks to form below the yield strength?',
+    options: [
+      { id: 'a', label: 'Hydrogen embrittlement from atmospheric moisture' },
+      { id: 'b', label: 'Fatigue failure from repeated cyclic loading below yield strength', correct: true },
+      { id: 'c', label: 'Creep deformation from sustained loading over time' },
+      { id: 'd', label: 'Galvanic corrosion between dissimilar metals' }
+    ],
+    explanation: 'Fatigue failure occurs when materials are subjected to repeated cyclic stresses well below their yield strength. Each cycle causes microscopic damage accumulation at stress concentrators like rivet holes. Over thousands of cycles, these micro-cracks coalesce and grow into visible cracks. This is why aircraft have mandatory inspection intervals based on flight cycles.'
+  },
+  {
+    scenario: 'An engineer is analyzing a cracked pipeline and calculates the stress intensity factor K to be 45 MPa-sqrt(m). The pipeline material has a fracture toughness KIC of 50 MPa-sqrt(m).',
+    question: 'What does the stress intensity factor K represent and what should the engineer conclude?',
+    options: [
+      { id: 'a', label: 'K measures crack length; the crack is 90% of critical size' },
+      { id: 'b', label: 'K measures stress field intensity at crack tip; crack is near critical - immediate action needed', correct: true },
+      { id: 'c', label: 'K measures material hardness; the pipe needs heat treatment' },
+      { id: 'd', label: 'K measures average stress; the pipe is operating safely within limits' }
+    ],
+    explanation: 'The stress intensity factor K characterizes the magnitude of the stress field around a crack tip, combining effects of applied stress and crack geometry. When K approaches the material\'s fracture toughness KIC, unstable crack propagation occurs. At K = 45 vs KIC = 50, the crack is at 90% of critical - the engineer should immediately reduce pressure and schedule repair.'
+  },
+  {
+    scenario: 'A materials testing lab needs to determine the fracture toughness (KIC) of a new aluminum alloy for aerospace applications. They must choose an appropriate test specimen geometry.',
+    question: 'Why do fracture toughness tests require specific specimen thickness requirements?',
+    options: [
+      { id: 'a', label: 'Thicker specimens are easier to machine with precise crack geometries' },
+      { id: 'b', label: 'Thin specimens give artificially high toughness due to plane stress conditions', correct: true },
+      { id: 'c', label: 'Specimen thickness must match the intended application thickness exactly' },
+      { id: 'd', label: 'Testing equipment can only grip specimens above a minimum thickness' }
+    ],
+    explanation: 'Fracture toughness depends on the stress state at the crack tip. Thin specimens experience plane stress (triaxial stress relieved at free surfaces), allowing more plastic deformation and higher apparent toughness. Thick specimens develop plane strain conditions, giving lower, more conservative KIC values. Standards specify minimum thickness to ensure plane strain and reproducible results.'
+  },
+  {
+    scenario: 'A ceramic furnace lining repeatedly cracks after rapid temperature changes during startup, even though the material easily withstands the maximum operating temperature when heated slowly.',
+    question: 'What causes thermal shock fracture in ceramics?',
+    options: [
+      { id: 'a', label: 'Chemical reactions with furnace gases at high temperature' },
+      { id: 'b', label: 'Differential expansion creates internal stresses exceeding fracture strength', correct: true },
+      { id: 'c', label: 'Thermal radiation damages the crystal structure' },
+      { id: 'd', label: 'Phase transformations occur only during rapid heating' }
+    ],
+    explanation: 'During rapid temperature change, the surface and interior of a ceramic heat at different rates. This temperature gradient causes differential thermal expansion - the hot surface wants to expand while the cooler interior constrains it. These internal stresses can exceed the material\'s fracture strength, causing cracking. Slow heating allows temperature equalization, preventing thermal shock.'
+  },
+  {
+    scenario: 'A pipeline weld passes visual inspection but fails catastrophically during a pressure test. Post-failure analysis reveals a lack-of-fusion defect hidden at the weld root.',
+    question: 'Why are internal weld defects like lack-of-fusion particularly dangerous from a fracture mechanics perspective?',
+    options: [
+      { id: 'a', label: 'They reduce the total cross-sectional area of the weld' },
+      { id: 'b', label: 'They create sharp crack-like flaws with high stress concentration factors', correct: true },
+      { id: 'c', label: 'They trap corrosive gases that weaken the weld metal' },
+      { id: 'd', label: 'They indicate the welder was not properly certified' }
+    ],
+    explanation: 'Lack-of-fusion defects create planar, crack-like discontinuities within the weld. These sharp-tipped flaws act as pre-existing cracks with very high stress concentration factors. Unlike rounded pores that have Kt around 2-3, lack-of-fusion defects can have Kt approaching infinity at their tips, making them far more likely to initiate catastrophic fracture under load.'
+  },
+  {
+    scenario: 'A carbon fiber composite wing skin shows visible whitening (stress whitening) along a line after a hard landing. Ultrasonic inspection reveals the layers have separated in that region.',
+    question: 'What is delamination in composite materials and why is it a critical failure mode?',
+    options: [
+      { id: 'a', label: 'Surface paint damage that exposes fibers to UV degradation' },
+      { id: 'b', label: 'Separation between composite layers that propagates under load and reduces strength', correct: true },
+      { id: 'c', label: 'Chemical breakdown of the resin matrix at high temperatures' },
+      { id: 'd', label: 'Fiber breakage that occurs during manufacturing' }
+    ],
+    explanation: 'Delamination is the separation of adjacent layers in a laminated composite, typically occurring at the weak resin-rich interface between plies. Once initiated, delamination can propagate rapidly under continued loading, especially under compression or cyclic loads. This dramatically reduces the load-carrying capacity of the composite structure and is difficult to detect visually, making it a critical failure mode.'
+  },
+  {
+    scenario: 'Engineers designing a large ship hull incorporate "crack arrestor strakes" - thick steel strips welded perpendicular to the hull plating at regular intervals. During service, a crack initiates but stops when it reaches an arrestor.',
+    question: 'How do crack arrestor features prevent catastrophic failure?',
+    options: [
+      { id: 'a', label: 'They chemically bond with the crack surfaces to seal them shut' },
+      { id: 'b', label: 'They provide tougher material and geometry changes that reduce crack driving force', correct: true },
+      { id: 'c', label: 'They create electrical barriers that prevent electrochemical crack growth' },
+      { id: 'd', label: 'They absorb vibrations that would otherwise drive crack propagation' }
+    ],
+    explanation: 'Crack arrestors work through multiple mechanisms: the thicker, tougher material requires more energy to crack through, the geometry change disrupts the stress field at the crack tip reducing the stress intensity factor, and the material transition can blunt the crack tip. Together, these effects reduce the crack driving force below the critical value, arresting propagation and preventing a local crack from becoming a catastrophic hull failure.'
+  }
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
 // ─────────────────────────────────────────────────────────────────────────────

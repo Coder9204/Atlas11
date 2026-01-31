@@ -926,6 +926,122 @@ export default function DepthOfFieldRenderer({
   }, [isMobile, apertureSize, subjectDistance, focusDistance, showRayCone, getBlurAmount, typo]);
 
   // =============================================================================
+  // TEST QUESTIONS DATA - Scenario-based multiple choice questions
+  // =============================================================================
+  const testQuestions = [
+    {
+      scenario: "A photography student is learning about depth of field and wants to understand what physically creates the blur in out-of-focus areas.",
+      question: "What is the primary factor that determines depth of field in a photograph?",
+      options: [
+        { id: 'a', label: 'The resolution of the camera sensor' },
+        { id: 'b', label: 'The aperture size relative to focal length', correct: true },
+        { id: 'c', label: 'The shutter speed setting' },
+        { id: 'd', label: 'The ISO sensitivity' }
+      ],
+      explanation: "Depth of field is primarily determined by the aperture size (f-number). A wider aperture (lower f-number) creates a larger cone of light rays passing through the lens, which spreads into larger circles of confusion for out-of-focus objects, resulting in shallower depth of field."
+    },
+    {
+      scenario: "A portrait photographer wants to capture a headshot with a beautifully blurred background that separates the subject from distracting elements.",
+      question: "Which aperture setting should they choose for maximum background blur?",
+      options: [
+        { id: 'a', label: 'f/16 for maximum sharpness throughout' },
+        { id: 'b', label: 'f/8 as a balanced middle ground' },
+        { id: 'c', label: 'f/1.8 for shallow depth of field', correct: true },
+        { id: 'd', label: 'f/22 to capture more detail' }
+      ],
+      explanation: "f/1.8 creates a wide aperture opening, producing a large cone of light rays. This results in bigger circles of confusion for the background, creating creamy bokeh that isolates the subject. Portrait photographers commonly use f/1.4 to f/2.8 for this effect."
+    },
+    {
+      scenario: "A landscape photographer is shooting a mountain scene and wants everything from nearby wildflowers to distant peaks to be sharp.",
+      question: "What camera settings and technique should they use?",
+      options: [
+        { id: 'a', label: 'Wide aperture (f/2.8) focused on infinity' },
+        { id: 'b', label: 'Narrow aperture (f/11-f/16) focused at hyperfocal distance', correct: true },
+        { id: 'c', label: 'Any aperture focused on the flowers' },
+        { id: 'd', label: 'Maximum aperture with image stabilization' }
+      ],
+      explanation: "A narrow aperture (f/11-f/16) minimizes the circle of confusion size, extending depth of field. Focusing at the hyperfocal distance maximizes sharpness from half that distance to infinity, ensuring both foreground flowers and distant mountains are acceptably sharp."
+    },
+    {
+      scenario: "A macro photographer is shooting a tiny insect at 1:1 magnification and notices that even at f/16, only a thin slice of the subject is in focus.",
+      question: "Why is depth of field so extremely shallow in macro photography?",
+      options: [
+        { id: 'a', label: 'Macro lenses have defective optics' },
+        { id: 'b', label: 'The close focusing distance dramatically reduces depth of field', correct: true },
+        { id: 'c', label: 'Small subjects always appear blurry' },
+        { id: 'd', label: 'Camera sensors struggle with close objects' }
+      ],
+      explanation: "At macro distances, the subject is extremely close to the lens, which dramatically increases the angular spread of light rays from any point. This creates larger circles of confusion even at narrow apertures, resulting in razor-thin depth of field measured in millimeters."
+    },
+    {
+      scenario: "A smartphone user wonders why their phone's 'Portrait Mode' uses computational processing while their friend's DSLR creates natural background blur.",
+      question: "Why do smartphones struggle to create optical background blur like DSLRs?",
+      options: [
+        { id: 'a', label: 'Smartphone cameras have lower megapixel counts' },
+        { id: 'b', label: 'Their small sensors and short focal lengths create deep depth of field naturally', correct: true },
+        { id: 'c', label: 'Smartphones only use digital zoom' },
+        { id: 'd', label: 'Phone apps are not optimized for bokeh' }
+      ],
+      explanation: "Smartphones have tiny sensors requiring very short focal lengths (typically 4-6mm equivalent). The combination of small sensor and short focal length creates inherently deep depth of field. DSLRs with larger sensors use longer focal lengths at equivalent fields of view, enabling shallow depth of field optically."
+    },
+    {
+      scenario: "A landscape photographer learns about hyperfocal distance and wants to maximize the depth of field in their 35mm lens shot at f/11.",
+      question: "What is the hyperfocal distance technique and how does it work?",
+      options: [
+        { id: 'a', label: 'Focusing on the closest object in frame' },
+        { id: 'b', label: 'Focusing at infinity for distant sharpness' },
+        { id: 'c', label: 'Focusing at a specific distance where everything from half that distance to infinity appears sharp', correct: true },
+        { id: 'd', label: 'Using autofocus to find the best focus point' }
+      ],
+      explanation: "The hyperfocal distance is the focus distance that maximizes depth of field. When focused at this distance, acceptable sharpness extends from half the hyperfocal distance to infinity. It's calculated based on focal length, aperture, and the acceptable circle of confusion size for the format."
+    },
+    {
+      scenario: "An optical engineer is designing a camera system and must specify the maximum acceptable circle of confusion for their sensor.",
+      question: "What is the circle of confusion and why does it matter for depth of field?",
+      options: [
+        { id: 'a', label: 'A lens aberration that reduces image quality' },
+        { id: 'b', label: 'The blur disk formed when light from an out-of-focus point spreads on the sensor', correct: true },
+        { id: 'c', label: 'The area of the lens that light passes through' },
+        { id: 'd', label: 'A measurement of lens sharpness at the center' }
+      ],
+      explanation: "When a point is out of focus, light rays don't converge to a single point on the sensor but form a disk called the circle of confusion. If this disk is smaller than the sensor's resolving ability, we perceive it as sharp. This threshold defines the boundaries of acceptable depth of field."
+    },
+    {
+      scenario: "A cinematographer is filming a dialogue scene and needs to shift audience attention from one actor to another mid-shot without cutting.",
+      question: "What technique uses depth of field to guide viewer attention in cinema?",
+      options: [
+        { id: 'a', label: 'Zooming between subjects' },
+        { id: 'b', label: 'Rack focus or focus pulling between sharp and blurred subjects', correct: true },
+        { id: 'c', label: 'Changing the aperture during the shot' },
+        { id: 'd', label: 'Moving the camera closer to subjects' }
+      ],
+      explanation: "Rack focus (focus pulling) smoothly shifts focus between subjects at different distances. Using shallow depth of field, only one subject is sharp at a time. A skilled focus puller adjusts focus during the shot, directing audience attention by making the intended subject sharp while others blur."
+    },
+    {
+      scenario: "An architectural photographer is using a tilt-shift lens to photograph a tall building while keeping the entire facade sharp despite the camera angle.",
+      question: "How do tilt-shift lenses manipulate depth of field differently than standard lenses?",
+      options: [
+        { id: 'a', label: 'They use larger apertures for more light' },
+        { id: 'b', label: 'They tilt the focus plane so it no longer parallels the sensor', correct: true },
+        { id: 'c', label: 'They digitally extend the depth of field' },
+        { id: 'd', label: 'They reduce the circle of confusion size' }
+      ],
+      explanation: "Tilt-shift lenses can angle the focus plane relative to the sensor using the Scheimpflug principle. This allows the plane of focus to align with non-parallel surfaces like building facades or tables, achieving sharp focus across subjects at varying distances without stopping down to tiny apertures."
+    },
+    {
+      scenario: "A smartphone manufacturer is developing a new Portrait Mode feature that simulates DSLR-like background blur using dual cameras and AI processing.",
+      question: "How does computational bokeh work in modern smartphones?",
+      options: [
+        { id: 'a', label: 'By using larger physical apertures in the lens' },
+        { id: 'b', label: 'By capturing depth information and applying variable blur based on distance from subject', correct: true },
+        { id: 'c', label: 'By mechanically adjusting the sensor position' },
+        { id: 'd', label: 'By using optical zoom to compress perspective' }
+      ],
+      explanation: "Computational bokeh uses depth sensing (from dual cameras, structured light, or LIDAR) to create a depth map of the scene. Software then applies progressive blur based on each pixel's distance from the focused subject, simulating optical bokeh. Challenges include accurate edge detection around fine details like hair."
+    }
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
   const renderHook = () => (

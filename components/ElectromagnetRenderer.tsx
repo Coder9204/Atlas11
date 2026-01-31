@@ -143,6 +143,132 @@ const TEST_QUESTIONS = [
   }
 ];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// SCENARIO-BASED TEST QUESTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    // Question 1: Core concept - how electromagnets work (Easy)
+    scenario: "A student wraps copper wire around a nail and connects it to a battery. When the circuit is complete, the nail picks up paper clips.",
+    question: "What causes the nail to become magnetic when current flows through the wire?",
+    options: [
+      { id: 'a', label: "The battery transfers its magnetic energy to the nail", correct: false },
+      { id: 'b', label: "The electric current flowing through the wire creates a magnetic field around it", correct: true },
+      { id: 'c', label: "The copper wire is naturally magnetic when heated by electricity", correct: false },
+      { id: 'd', label: "The nail absorbs static electricity from the wire insulation", correct: false }
+    ],
+    explanation: "When electric current flows through a wire, it creates a circular magnetic field around the wire. Coiling the wire concentrates this field, and the iron nail amplifies it by aligning its magnetic domains with the field. This is the fundamental principle discovered by Hans Christian Oersted in 1820."
+  },
+  {
+    // Question 2: Electromagnet vs permanent magnet (Easy-Medium)
+    scenario: "A junkyard uses a crane with a large electromagnet to sort metal scraps. The operator needs to pick up a car, move it to a pile, and release it.",
+    question: "What is the main advantage of using an electromagnet instead of a permanent magnet for this task?",
+    options: [
+      { id: 'a', label: "Electromagnets are always stronger than permanent magnets", correct: false },
+      { id: 'b', label: "Electromagnets can be turned on to grab objects and off to release them", correct: true },
+      { id: 'c', label: "Electromagnets are lighter and easier to mount on cranes", correct: false },
+      { id: 'd', label: "Permanent magnets would rust when exposed to metal scraps", correct: false }
+    ],
+    explanation: "The key advantage of electromagnets is controllability. By switching the current on or off, operators can grab metal objects (current on, magnetic field present) and release them precisely where needed (current off, magnetic field disappears). A permanent magnet would require mechanical force to separate it from the metal."
+  },
+  {
+    // Question 3: Factors affecting electromagnet strength (Medium)
+    scenario: "An engineer is designing an electromagnet for a recycling facility. The initial design uses 50 turns of wire carrying 2 amperes of current, but needs to be twice as strong.",
+    question: "Which modification would double the electromagnet's field strength?",
+    options: [
+      { id: 'a', label: "Use wire with twice the diameter", correct: false },
+      { id: 'b', label: "Double the current to 4 amperes OR double the turns to 100", correct: true },
+      { id: 'c', label: "Add a plastic core inside the coil", correct: false },
+      { id: 'd', label: "Paint the wire with magnetic paint", correct: false }
+    ],
+    explanation: "The magnetic field strength of a solenoid is proportional to both the current (I) and the number of turns (n): B = u0 * n * I. Doubling either the current or the number of turns will double the field strength. Wire diameter affects resistance but not the field directly, and plastic is not ferromagnetic so it won't amplify the field."
+  },
+  {
+    // Question 4: Electric motor operation (Medium)
+    scenario: "A toy car's DC motor suddenly stops working. When you open it, you see that the metal brushes that contact the spinning commutator are completely worn away.",
+    question: "Why are brushes and a commutator necessary in a DC motor?",
+    options: [
+      { id: 'a', label: "They cool down the motor by conducting heat away from the coils", correct: false },
+      { id: 'b', label: "They reverse the current direction in the rotor coils at the right moment to maintain rotation", correct: true },
+      { id: 'c', label: "They provide lubrication between the rotor and stator", correct: false },
+      { id: 'd', label: "They amplify the voltage from the battery to increase speed", correct: false }
+    ],
+    explanation: "In a DC motor, the rotor would simply align with the magnetic field and stop if the current direction stayed constant. The commutator and brushes mechanically reverse the current direction in the rotor coils every half rotation, ensuring the rotor continuously chases the magnetic field and keeps spinning."
+  },
+  {
+    // Question 5: MRI machine magnets (Medium-Hard)
+    scenario: "An MRI technician explains that the hospital's MRI machine contains an electromagnet producing a field of 3 Tesla - about 60,000 times stronger than Earth's magnetic field - yet doesn't require enormous amounts of electricity.",
+    question: "What technology allows MRI machines to achieve such powerful magnetic fields efficiently?",
+    options: [
+      { id: 'a', label: "Superconducting coils cooled to near absolute zero, eliminating electrical resistance", correct: true },
+      { id: 'b', label: "Rare earth permanent magnets that don't need electricity at all", correct: false },
+      { id: 'c', label: "Pulsed electromagnets that only activate during scans", correct: false },
+      { id: 'd', label: "Multiple small electromagnets arranged in a special pattern", correct: false }
+    ],
+    explanation: "MRI machines use superconducting electromagnets cooled with liquid helium to around 4 Kelvin (-269 C). At these temperatures, the wire has zero electrical resistance, so once current is established, it flows indefinitely without power loss. This allows extremely high currents and powerful fields without continuous energy consumption or heat generation."
+  },
+  {
+    // Question 6: Magnetic field direction (right-hand rule) (Hard)
+    scenario: "A physicist holds a current-carrying wire pointing upward. Using the right-hand rule, she points her thumb in the direction of conventional current flow (upward).",
+    question: "In which direction do her curled fingers indicate the magnetic field circulates?",
+    options: [
+      { id: 'a', label: "The field lines point straight up, parallel to the current", correct: false },
+      { id: 'b', label: "The field circulates counterclockwise when viewed from above (fingers curl from front to left to back to right)", correct: true },
+      { id: 'c', label: "The field points straight down, opposite to the current", correct: false },
+      { id: 'd', label: "The field radiates outward in all directions like light from a bulb", correct: false }
+    ],
+    explanation: "The right-hand rule states: point your thumb in the direction of conventional current, and your curled fingers show the direction of the magnetic field lines. These field lines form concentric circles around the wire, circulating counterclockwise when viewed from the direction the current is flowing. This circular field pattern is why coiling wire into a solenoid concentrates the magnetic field."
+  },
+  {
+    // Question 7: Solenoid design considerations (Hard)
+    scenario: "An automotive engineer is designing a solenoid actuator for a fuel injector that must respond extremely quickly (within milliseconds) when the engine computer signals it to open.",
+    question: "Why might the engineer choose fewer coil turns with higher current rather than more turns with lower current?",
+    options: [
+      { id: 'a', label: "Fewer turns make the solenoid physically smaller, which is the only consideration", correct: false },
+      { id: 'b', label: "More turns create higher inductance, which slows the rate at which current (and thus the magnetic field) can change", correct: true },
+      { id: 'c', label: "The magnetic field only forms at the ends of the coil, so fewer turns is always better", correct: false },
+      { id: 'd', label: "Higher current produces a different type of magnetism that acts faster", correct: false }
+    ],
+    explanation: "Inductance (L) is proportional to the square of the number of turns (L proportional to n^2). Higher inductance opposes changes in current, slowing the time for the magnetic field to build up or collapse. For fast-acting applications like fuel injectors, using fewer turns with higher current reduces inductance and allows rapid response times, even though it may require more robust power electronics."
+  },
+  {
+    // Question 8: Magnetic saturation (Hard)
+    scenario: "A student keeps increasing the current through an electromagnet with an iron core. Initially, doubling the current doubles the magnetic field strength, but at very high currents, the field increases much more slowly.",
+    question: "What phenomenon explains why the magnetic field stops increasing proportionally at high currents?",
+    options: [
+      { id: 'a', label: "The wire insulation begins to melt, creating resistance", correct: false },
+      { id: 'b', label: "The iron core reaches magnetic saturation - nearly all its magnetic domains are already aligned", correct: true },
+      { id: 'c', label: "The magnetic field lines start canceling each other out", correct: false },
+      { id: 'd', label: "The battery voltage drops due to the high current draw", correct: false }
+    ],
+    explanation: "Magnetic saturation occurs when nearly all the magnetic domains in a ferromagnetic material (like iron) have aligned with the external field. Once saturated, there are no more domains left to align, so further increases in current only add the small field from the coil itself, not the massive amplification from the core. Most iron cores saturate around 1.5-2.0 Tesla."
+  },
+  {
+    // Question 9: Superconducting electromagnets (Hard)
+    scenario: "The Large Hadron Collider at CERN uses superconducting electromagnets cooled to 1.9 Kelvin (colder than outer space) to bend particle beams traveling near the speed of light around a 27-kilometer ring.",
+    question: "Why must these magnets use superconductors rather than conventional copper wire?",
+    options: [
+      { id: 'a', label: "Copper cannot be formed into coils large enough for the accelerator", correct: false },
+      { id: 'b', label: "Superconductors can carry the enormous currents needed without energy loss or heat generation that would melt copper", correct: true },
+      { id: 'c', label: "Superconductors are magnetic, while copper is not", correct: false },
+      { id: 'd', label: "The cold temperature is needed to slow down the particles, and superconductors provide it", correct: false }
+    ],
+    explanation: "Bending particles at near-light speeds requires magnetic fields of 8+ Tesla, which demands currents of over 11,000 amperes. In normal copper wire, this would generate enormous heat (P = I^2 * R), making the magnets impossible to cool. Superconductors have zero resistance, allowing these massive currents to flow without any energy loss, making the LHC technically and economically feasible."
+  },
+  {
+    // Question 10: Electromagnetic relay operation (Hard)
+    scenario: "A home automation system uses a small electromagnetic relay to control a 240V air conditioning unit. The relay coil operates on just 5V from a microcontroller, yet can safely switch the high-voltage AC power.",
+    question: "How does the relay allow a low-voltage control signal to switch high-voltage power safely?",
+    options: [
+      { id: 'a', label: "The relay amplifies the 5V signal to 240V before passing it through", correct: false },
+      { id: 'b', label: "The relay coil is connected directly to the 240V circuit, converting it to 5V", correct: false },
+      { id: 'c', label: "The electromagnetic coil mechanically moves a switch contact, keeping the control and power circuits electrically isolated", correct: true },
+      { id: 'd', label: "The relay stores energy from the 240V line and releases it in small 5V bursts", correct: false }
+    ],
+    explanation: "A relay provides galvanic isolation - the low-voltage control circuit and high-voltage power circuit are completely separate electrically. When 5V energizes the relay coil, it creates a magnetic field that physically pulls a metal armature, which mechanically closes (or opens) the contacts in the separate 240V circuit. This allows safe control of dangerous voltages from low-power electronics."
+  }
+];
+
 const TRANSFER_APPS = [
   {
     title: 'Electric Motors',

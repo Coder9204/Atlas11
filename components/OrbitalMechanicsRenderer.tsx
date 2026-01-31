@@ -1616,6 +1616,120 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
     </div>
   );
 
+  // ─── Test Questions Array ────────────────────────────────────────────────────
+  const testQuestions = [
+    {
+      scenario: "The International Space Station orbits Earth at about 400 km altitude, completing one orbit every 90 minutes. Despite being so close to Earth, astronauts inside experience weightlessness.",
+      question: "Why does the ISS stay in orbit instead of falling to Earth?",
+      options: [
+        { id: 'a', label: "The ISS is above Earth's gravitational field where there is no gravity" },
+        { id: 'b', label: "The ISS is falling toward Earth but moving sideways fast enough that it continuously misses the surface", correct: true },
+        { id: 'c', label: "The ISS has thrusters that constantly fire to keep it from falling" },
+        { id: 'd', label: "Earth's magnetic field repels the metallic structure of the station" }
+      ],
+      explanation: "The ISS is constantly falling toward Earth due to gravity, but it's also moving horizontally at about 7.66 km/s. This sideways motion means that as it falls, the Earth's surface curves away beneath it at the same rate. The result is a continuous 'free fall' around the planet - this is what an orbit actually is."
+    },
+    {
+      scenario: "Communication satellites in geostationary orbit appear to hover over the same spot on Earth's equator. The Hubble Space Telescope, in contrast, orbits much lower at about 540 km altitude.",
+      question: "How does a satellite's orbital speed change as its altitude increases?",
+      options: [
+        { id: 'a', label: "Orbital speed increases with altitude because the satellite has more potential energy" },
+        { id: 'b', label: "Orbital speed remains constant regardless of altitude" },
+        { id: 'c', label: "Orbital speed decreases with altitude because gravity is weaker and less centripetal force is needed", correct: true },
+        { id: 'd', label: "Orbital speed oscillates depending on the satellite's position relative to the Sun" }
+      ],
+      explanation: "At higher altitudes, gravity is weaker, so satellites need less speed to balance the reduced gravitational pull. The ISS at 400 km travels at 7.66 km/s, while geostationary satellites at 35,786 km orbit at only 3.07 km/s. The relationship comes from v = sqrt(GM/r), showing velocity decreases as radius increases."
+    },
+    {
+      scenario: "Weather satellites like GOES-16 provide continuous imagery of the same region of Earth, making them ideal for tracking hurricanes and severe storms as they develop over hours and days.",
+      question: "What specific conditions must be met for a satellite to maintain a geostationary orbit?",
+      options: [
+        { id: 'a', label: "The satellite must orbit at exactly 35,786 km altitude, directly above the equator, moving eastward with a 24-hour period", correct: true },
+        { id: 'b', label: "The satellite must be positioned at any altitude as long as it matches Earth's rotation speed" },
+        { id: 'c', label: "The satellite must orbit over Earth's poles to avoid atmospheric drag" },
+        { id: 'd', label: "The satellite must use ion thrusters to maintain position against solar wind" }
+      ],
+      explanation: "A geostationary orbit requires three precise conditions: the satellite must be at 35,786 km altitude (where orbital period equals 24 hours), it must orbit directly above the equator (0 degrees inclination), and it must travel eastward (same direction as Earth's rotation). Only this combination allows the satellite to remain stationary relative to a point on Earth's surface."
+    },
+    {
+      scenario: "NASA's Mars missions use a fuel-efficient trajectory called a Hohmann transfer orbit to travel between Earth and Mars. The journey takes about 9 months even though more direct paths exist.",
+      question: "Why is a Hohmann transfer orbit the preferred method for interplanetary travel?",
+      options: [
+        { id: 'a', label: "It provides the fastest route between two planets" },
+        { id: 'b', label: "It minimizes fuel consumption by using only two engine burns to transfer between circular orbits", correct: true },
+        { id: 'c', label: "It keeps the spacecraft in constant sunlight for solar power" },
+        { id: 'd', label: "It avoids the asteroid belt entirely" }
+      ],
+      explanation: "A Hohmann transfer is an elliptical orbit that touches both the starting orbit and destination orbit. It requires only two burns: one to enter the ellipse and one to circularize at the destination. While slower than direct trajectories, it uses the minimum possible fuel for the transfer, which is critical when every kilogram of fuel must be launched from Earth."
+    },
+    {
+      scenario: "The Voyager 1 spacecraft, launched in 1977, is now over 24 billion kilometers from Earth and continuing to move away from the Sun. It will never return to the inner solar system.",
+      question: "What must be true about Voyager 1's velocity for it to escape the Sun's gravitational influence?",
+      options: [
+        { id: 'a', label: "Its velocity must be exactly equal to the Sun's orbital velocity around the galaxy" },
+        { id: 'b', label: "Its velocity must exceed the local escape velocity, meaning its kinetic energy exceeds the gravitational potential energy binding it to the Sun", correct: true },
+        { id: 'c', label: "Its velocity must be zero relative to the cosmic microwave background" },
+        { id: 'd', label: "Its velocity must be perpendicular to the Sun's gravity at all times" }
+      ],
+      explanation: "Escape velocity is the minimum speed needed for an object's kinetic energy to overcome the gravitational potential energy binding it to a massive body. For Voyager 1, this means v >= sqrt(2GM/r) at its distance from the Sun. Once achieved, the spacecraft follows a hyperbolic trajectory and will never return, even though it continues to slow down as it moves away."
+    },
+    {
+      scenario: "GPS satellites orbit at approximately 20,200 km altitude and complete exactly two orbits per day. The Moon, much farther away at 384,400 km, takes about 27.3 days to complete one orbit around Earth.",
+      question: "According to Kepler's Third Law, how does orbital period (T) relate to orbital radius (r)?",
+      options: [
+        { id: 'a', label: "T is directly proportional to r (double the radius means double the period)" },
+        { id: 'b', label: "T squared is proportional to r cubed (T^2 is proportional to r^3)", correct: true },
+        { id: 'c', label: "T is inversely proportional to r (higher orbits are faster)" },
+        { id: 'd', label: "T squared is proportional to r squared (T^2 is proportional to r^2)" }
+      ],
+      explanation: "Kepler's Third Law states that T^2 is proportional to r^3, or T^2 = (4 pi^2 / GM) * r^3. This means if you double the orbital radius, the period increases by a factor of 2^1.5 (about 2.83). This relationship holds for all orbiting bodies and explains why distant planets take so much longer to orbit the Sun than closer ones."
+    },
+    {
+      scenario: "The Voyager 2 spacecraft used gravity assists from Jupiter, Saturn, Uranus, and Neptune to reach speeds that would have been impossible with its rocket fuel alone. This 'Grand Tour' trajectory was only possible due to a rare planetary alignment.",
+      question: "How does a gravity assist (gravitational slingshot) increase a spacecraft's speed relative to the Sun?",
+      options: [
+        { id: 'a', label: "The planet's gravity accelerates the spacecraft, adding energy from nowhere" },
+        { id: 'b', label: "The spacecraft steals a tiny amount of the planet's orbital momentum, gaining velocity relative to the Sun while the planet loses an imperceptible amount", correct: true },
+        { id: 'c', label: "The spacecraft's engines fire more efficiently in the planet's gravitational field" },
+        { id: 'd', label: "The planet's magnetic field accelerates charged particles in the spacecraft" }
+      ],
+      explanation: "In a gravity assist, the spacecraft's speed relative to the planet remains the same before and after the encounter. However, by approaching from behind the planet (relative to its orbit), the spacecraft gets 'dragged along' and exits with added velocity relative to the Sun. This energy comes from the planet's orbital momentum - though the planet slows down, the change is unmeasurably small due to its enormous mass."
+    },
+    {
+      scenario: "The James Webb Space Telescope orbits the Sun at the L2 Lagrange point, about 1.5 million kilometers from Earth. At this location, it maintains a stable position relative to both Earth and the Sun without using much fuel.",
+      question: "What makes Lagrange points special locations in a two-body gravitational system?",
+      options: [
+        { id: 'a', label: "They are points where gravity from both bodies cancels out completely, creating zero gravity" },
+        { id: 'b', label: "They are points where the combined gravitational pull of both bodies and the centrifugal effect of orbiting allow an object to orbit the larger body with the same period as the smaller body", correct: true },
+        { id: 'c', label: "They are points where solar wind pressure exactly balances gravitational attraction" },
+        { id: 'd', label: "They are points where time dilation effects cancel out" }
+      ],
+      explanation: "At Lagrange points, the gravitational forces from two large bodies (like Earth and Sun) combine with the centrifugal effect of the orbital motion to create equilibrium positions. An object at L2 orbits the Sun at the same rate as Earth, despite being farther out, because Earth's gravity 'helps pull it along.' L1, L2, and L3 are unstable (requiring station-keeping), while L4 and L5 are stable."
+    },
+    {
+      scenario: "The International Space Station experiences slight atmospheric drag even at 400 km altitude, causing it to lose about 2 km of altitude per month. Without periodic reboosts, it would eventually re-enter Earth's atmosphere.",
+      question: "How does atmospheric drag affect a satellite's orbit over time?",
+      options: [
+        { id: 'a', label: "Drag slows the satellite, causing it to drop to a lower orbit where it actually speeds up, while the orbital period decreases", correct: true },
+        { id: 'b', label: "Drag slows the satellite uniformly, keeping it in the same orbit but at lower speed" },
+        { id: 'c', label: "Drag pushes the satellite to a higher orbit where there is less atmosphere" },
+        { id: 'd', label: "Drag has no effect because there is no air in space" }
+      ],
+      explanation: "Atmospheric drag removes energy from the satellite, causing it to spiral inward to lower orbits. Counterintuitively, as the satellite drops, it speeds up because lower orbits require higher velocities. The orbital period also decreases as the satellite gets closer to Earth. This is why the ISS needs regular reboosts - it's slowly spiraling inward due to the thin upper atmosphere at its altitude."
+    },
+    {
+      scenario: "When SpaceX's Crew Dragon approaches the ISS for docking, it must match the station's position, velocity, and orientation precisely. The approach takes several hours despite the spacecraft being capable of moving much faster.",
+      question: "Why can't a spacecraft simply accelerate directly toward a target to catch up in orbit?",
+      options: [
+        { id: 'a', label: "Speeding up in orbit raises your altitude, potentially causing you to move away from a target in a lower orbit - orbital rendezvous requires careful phasing maneuvers", correct: true },
+        { id: 'b', label: "Direct acceleration would create dangerous g-forces for the crew" },
+        { id: 'c', label: "Fuel efficiency requires slow approaches at all times" },
+        { id: 'd', label: "Space debris makes fast approaches too dangerous" }
+      ],
+      explanation: "Orbital mechanics is counterintuitive: if you thrust forward to speed up, you raise your orbit and actually end up moving away from a target below you. To catch up to a target ahead of you in the same orbit, you must first slow down (dropping to a lower, faster orbit), let yourself catch up, then raise your orbit again. This phasing process requires precise timing and multiple maneuvers, which is why rendezvous operations take hours."
+    }
+  ];
+
   // ─── Main Render ─────────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {

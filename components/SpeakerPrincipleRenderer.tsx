@@ -143,6 +143,122 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
     });
   }, [onGameEvent, phase, audioFrequency, audioAmplitude, magnetStrength]);
 
+  // ============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ============================================================================
+  const testQuestions = [
+    {
+      scenario: "You're building a DIY Bluetooth speaker for a school project. When you connect your phone and play music, you can see the speaker cone moving back and forth.",
+      question: "What fundamental principle causes the speaker cone to move when an audio signal is sent to it?",
+      options: [
+        { id: 'a', label: "The electrical signal heats the voice coil, causing thermal expansion and contraction", correct: false },
+        { id: 'b', label: "The Lorentz force acts on the current-carrying voice coil in the magnetic field, pushing it back and forth", correct: true },
+        { id: 'c', label: "The audio signal creates pressure waves that directly push the cone", correct: false },
+        { id: 'd', label: "Static electricity builds up and discharges, creating mechanical vibrations", correct: false }
+      ],
+      explanation: "Speakers work via the Lorentz force (F = BIL). When alternating current flows through the voice coil sitting in a permanent magnet's field, the force on the coil alternates direction, causing it to vibrate and produce sound waves."
+    },
+    {
+      scenario: "A sound engineer notices that when she increases the volume on the mixing board, the bass speaker cones move with larger excursions. She's curious about the physics involved.",
+      question: "How does increasing the audio signal amplitude affect the voice coil and magnet interaction?",
+      options: [
+        { id: 'a', label: "It strengthens the permanent magnet's field", correct: false },
+        { id: 'b', label: "It increases the current through the voice coil, resulting in greater Lorentz force and larger cone displacement", correct: true },
+        { id: 'c', label: "It changes the frequency of the magnetic field oscillation", correct: false },
+        { id: 'd', label: "It reduces the electrical resistance of the voice coil wire", correct: false }
+      ],
+      explanation: "The Lorentz force F = BIL is directly proportional to current (I). When you turn up the volume, you increase the current amplitude flowing through the voice coil, which increases the force and causes the cone to move further in each direction."
+    },
+    {
+      scenario: "An audiophile is comparing two speaker cones: one made of paper and one made of Kevlar composite. Both are the same size but the Kevlar cone is significantly lighter.",
+      question: "What advantage does a lighter cone material provide for sound reproduction?",
+      options: [
+        { id: 'a', label: "Lighter cones produce louder bass frequencies due to reduced air resistance", correct: false },
+        { id: 'b', label: "Lighter cones can accelerate and decelerate faster, improving transient response and high-frequency reproduction", correct: true },
+        { id: 'c', label: "Lighter cones require less magnetic field strength from the permanent magnet", correct: false },
+        { id: 'd', label: "Lighter cones are more resistant to thermal damage from high power levels", correct: false }
+      ],
+      explanation: "Newton's second law (F = ma) tells us that for the same force, a lighter mass accelerates faster. A lighter cone can start and stop moving more quickly, accurately reproducing fast transients and higher frequencies where rapid direction changes are required."
+    },
+    {
+      scenario: "You're setting up a 3-way home theater speaker system that has a woofer, midrange driver, and tweeter. The crossover network inside routes different frequencies to each driver.",
+      question: "Why is a crossover network essential in a multi-driver speaker system?",
+      options: [
+        { id: 'a', label: "To amplify the audio signal before it reaches each driver", correct: false },
+        { id: 'b', label: "To convert the AC audio signal to DC for more efficient power transfer", correct: false },
+        { id: 'c', label: "To direct appropriate frequency ranges to drivers optimized for those frequencies, preventing damage and improving sound quality", correct: true },
+        { id: 'd', label: "To synchronize the phase of all drivers so they produce sound simultaneously", correct: false }
+      ],
+      explanation: "Each driver is designed for a specific frequency range. Crossovers use capacitors and inductors to filter frequencies, sending bass to woofers (which can handle large excursions) and treble to tweeters (which are light enough to vibrate rapidly). This prevents damage and optimizes performance."
+    },
+    {
+      scenario: "A guitarist is shopping for a new amplifier and notices that some speaker cabinets are rated at 4 ohms while others are rated at 8 ohms. The amplifier manual warns about mismatched impedance.",
+      question: "What happens if you connect an 8-ohm rated amplifier to a 4-ohm speaker cabinet?",
+      options: [
+        { id: 'a', label: "The speaker will play at half volume due to impedance mismatch", correct: false },
+        { id: 'b', label: "The amplifier may overheat and potentially fail because it must deliver twice the current to the lower impedance load", correct: true },
+        { id: 'c', label: "The sound quality improves because lower impedance means better frequency response", correct: false },
+        { id: 'd', label: "Nothing changes because modern amplifiers automatically adjust to any impedance", correct: false }
+      ],
+      explanation: "With a lower impedance load, Ohm's law (I = V/R) means more current flows for the same voltage. This forces the amplifier to work harder, generating excess heat. If the amp isn't designed for 4-ohm loads, it can overheat, trigger protection circuits, or suffer permanent damage."
+    },
+    {
+      scenario: "A speaker designer is using Thiele-Small parameters to model a new subwoofer. She's particularly interested in the Qts value, which is 0.38 for her driver.",
+      question: "What does a Thiele-Small Qts value of 0.38 tell the designer about enclosure requirements?",
+      options: [
+        { id: 'a', label: "The driver requires no enclosure and works best as an open-baffle design", correct: false },
+        { id: 'b', label: "The driver is well-suited for a sealed enclosure, providing tight, accurate bass response", correct: true },
+        { id: 'c', label: "The driver can only be used in a bandpass enclosure with dual chambers", correct: false },
+        { id: 'd', label: "The driver has too much damping and will produce weak bass regardless of enclosure", correct: false }
+      ],
+      explanation: "Qts describes the total damping of a driver. Values between 0.3-0.5 indicate good damping, ideal for sealed enclosures that provide additional air-spring damping. Higher Qts values (0.5-0.7) often work better in ported enclosures. This parameter is crucial for matching drivers to enclosure designs."
+    },
+    {
+      scenario: "An audio engineer is designing a ported subwoofer enclosure. She calculates that the port tuning frequency should be 35 Hz to match the driver's parameters.",
+      question: "What is the primary purpose of the port (bass reflex tube) in this enclosure design?",
+      options: [
+        { id: 'a', label: "To allow air to escape and prevent pressure buildup that could damage the cone", correct: false },
+        { id: 'b', label: "To reinforce bass output at and around the tuning frequency by using the rear radiation of the cone", correct: true },
+        { id: 'c', label: "To cool the voice coil by allowing airflow through the enclosure", correct: false },
+        { id: 'd', label: "To reduce the weight of the enclosure for easier transportation", correct: false }
+      ],
+      explanation: "The port creates a Helmholtz resonator that uses the normally wasted rear wave of the cone. At the tuning frequency, the port output reinforces the front radiation, boosting bass. Below tuning, output rolls off rapidly, so port tuning frequency selection is critical for extended bass response."
+    },
+    {
+      scenario: "A recording studio is considering electrostatic speakers for their mastering suite. These speakers use a thin diaphragm between two charged metal grids instead of a traditional voice coil and magnet.",
+      question: "What is the main advantage of electrostatic speakers over traditional dynamic speakers?",
+      options: [
+        { id: 'a', label: "They produce significantly more bass due to the larger diaphragm surface area", correct: false },
+        { id: 'b', label: "They offer exceptionally low distortion and fast transient response because the entire ultra-light diaphragm is driven uniformly", correct: true },
+        { id: 'c', label: "They are more efficient and require less amplifier power than dynamic speakers", correct: false },
+        { id: 'd', label: "They work without any electrical power, making them ideal for portable use", correct: false }
+      ],
+      explanation: "Electrostatic speakers drive an extremely thin, lightweight diaphragm uniformly across its entire surface using electrostatic force. This eliminates the cone breakup and inertia issues of traditional speakers, resulting in remarkably low distortion and excellent transient response, though they typically need dedicated amplifiers."
+    },
+    {
+      scenario: "A home theater enthusiast is matching a new power amplifier to his floor-standing speakers. The speakers are rated for 200 watts RMS, and he's deciding between a 100-watt and a 300-watt amplifier.",
+      question: "Which amplifier choice is generally safer and why?",
+      options: [
+        { id: 'a', label: "The 100-watt amplifier, because it cannot send enough power to damage the speakers", correct: false },
+        { id: 'b', label: "The 300-watt amplifier, because it has headroom to deliver clean power without clipping, which can damage speakers", correct: true },
+        { id: 'c', label: "Either amplifier is equally safe because speaker ratings are just guidelines", correct: false },
+        { id: 'd', label: "Neither is safe; you must exactly match amplifier and speaker wattage ratings", correct: false }
+      ],
+      explanation: "An underpowered amplifier driven to clipping produces distorted waveforms rich in harmonics that can overheat tweeters. A higher-powered amplifier with headroom delivers clean, undistorted signal at normal listening levels. The key is responsible volume control, not exact wattage matching."
+    },
+    {
+      scenario: "A sound system installer notices that when two identical subwoofers are placed facing each other 10 feet apart, the bass seems weak in the middle of the room. Moving one subwoofer fixes the problem.",
+      question: "What acoustic phenomenon caused the weak bass in the middle of the room?",
+      options: [
+        { id: 'a', label: "The subwoofers were too far apart, causing the sound to dissipate before reaching the center", correct: false },
+        { id: 'b', label: "Phase cancellation occurred where the opposing sound waves met out of phase, destructively interfering", correct: true },
+        { id: 'c', label: "The room's acoustics absorbed all the bass energy at that specific location", correct: false },
+        { id: 'd', label: "The subwoofers' magnetic fields interfered with each other, reducing output", correct: false }
+      ],
+      explanation: "When speakers face each other, their sound waves can arrive at the midpoint out of phase (one pushing while the other pulls). This causes destructive interference where the waves cancel out, creating a null zone. Proper subwoofer placement considers phase relationships to avoid cancellation."
+    }
+  ];
+
   // Navigation
   const goToPhase = useCallback((p: Phase) => {
     if (isNavigating.current) return;
@@ -1804,160 +1920,191 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   };
 
   const renderTest = () => {
-    const questions = [
-      {
-        question: 'What force causes a current-carrying wire to move in a magnetic field?',
-        options: [
-          { text: 'Gravitational force', correct: false },
-          { text: 'Lorentz force', correct: true },
-          { text: 'Centripetal force', correct: false },
-          { text: 'Friction', correct: false }
-        ]
-      },
-      {
-        question: 'In the formula F = BIL, what does "B" represent?',
-        options: [
-          { text: 'Battery voltage', correct: false },
-          { text: 'Magnetic field strength', correct: true },
-          { text: 'Wire resistance', correct: false },
-          { text: 'Current frequency', correct: false }
-        ]
-      },
-      {
-        question: 'Why does the wire vibrate when AC current flows through it?',
-        options: [
-          { text: 'Heat expansion', correct: false },
-          { text: 'The current direction alternates', correct: true },
-          { text: 'Gravity pulls it', correct: false },
-          { text: 'The magnets vibrate', correct: false }
-        ]
-      },
-      {
-        question: 'What component in a speaker creates the magnetic field?',
-        options: [
-          { text: 'Voice coil', correct: false },
-          { text: 'Permanent magnet', correct: true },
-          { text: 'Speaker cone', correct: false },
-          { text: 'Crossover', correct: false }
-        ]
-      },
-      {
-        question: 'Why do quality speakers have multiple drivers (woofer, tweeter)?',
-        options: [
-          { text: 'Looks better', correct: false },
-          { text: 'Different sizes handle different frequencies better', correct: true },
-          { text: 'More expensive', correct: false },
-          { text: 'Louder volume', correct: false }
-        ]
-      },
-      {
-        question: 'What is the primary function of the voice coil in a speaker?',
-        options: [
-          { text: 'To amplify the audio signal', correct: false },
-          { text: 'To create a permanent magnetic field', correct: false },
-          { text: 'To carry current and interact with the magnetic field to produce motion', correct: true },
-          { text: 'To filter out unwanted frequencies', correct: false }
-        ]
-      },
-      {
-        question: 'What happens to the Lorentz force when you increase both the current AND the magnetic field strength?',
-        options: [
-          { text: 'Force stays the same', correct: false },
-          { text: 'Force decreases', correct: false },
-          { text: 'Force increases significantly (multiplicative effect)', correct: true },
-          { text: 'Force becomes unpredictable', correct: false }
-        ]
-      },
-      {
-        question: 'Why do subwoofers have larger, heavier cones than tweeters?',
-        options: [
-          { text: 'To look more impressive in home theaters', correct: false },
-          { text: 'To move more air for low-frequency bass sounds', correct: true },
-          { text: 'To handle higher electrical power', correct: false },
-          { text: 'To reduce manufacturing costs', correct: false }
-        ]
-      },
-      {
-        question: 'What is the purpose of a crossover network in a speaker system?',
-        options: [
-          { text: 'To amplify all frequencies equally', correct: false },
-          { text: 'To direct different frequency ranges to the appropriate drivers', correct: true },
-          { text: 'To convert AC to DC current', correct: false },
-          { text: 'To protect the speaker from overheating', correct: false }
-        ]
-      },
-      {
-        question: 'Why is impedance matching important between an amplifier and speaker?',
-        options: [
-          { text: 'To make the speaker louder regardless of quality', correct: false },
-          { text: 'To ensure efficient power transfer and prevent damage', correct: true },
-          { text: 'To change the frequency response of the speaker', correct: false },
-          { text: 'To eliminate the need for a crossover', correct: false }
-        ]
-      }
-    ];
-
-    const currentQ = questions[currentQuestion];
+    const currentQ = testQuestions[currentQuestion];
+    const selectedAnswer = testAnswers[currentQuestion];
+    const hasAnswered = selectedAnswer !== null;
+    const selectedOption = hasAnswered ? currentQ.options[selectedAnswer] : null;
+    const isCorrect = selectedOption?.correct ?? false;
 
     return (
       <div style={{ height: '100%', overflowY: 'auto', padding: isMobile ? '16px' : '32px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600 }}>
-            Question {currentQuestion + 1} of {questions.length}
-          </span>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px'
+          }}>
+            <span style={{ fontSize: '11px', color: colors.primary, fontWeight: 600, textTransform: 'uppercase' }}>
+              Step 9 of 10 - Question {currentQuestion + 1} of {testQuestions.length}
+            </span>
+            <span style={{
+              fontSize: '14px',
+              color: colors.textSecondary,
+              padding: '4px 12px',
+              backgroundColor: colors.bgSurface,
+              borderRadius: '12px'
+            }}>
+              Score: {testScore}/{testQuestions.length}
+            </span>
+          </div>
 
+          {/* Scenario Box */}
+          <div style={{
+            padding: '16px 20px',
+            backgroundColor: `${colors.primary}10`,
+            borderLeft: `4px solid ${colors.primary}`,
+            borderRadius: '0 12px 12px 0',
+            marginBottom: '20px'
+          }}>
+            <div style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: colors.primary,
+              textTransform: 'uppercase',
+              marginBottom: '8px',
+              letterSpacing: '0.5px'
+            }}>
+              Scenario
+            </div>
+            <div style={{
+              fontSize: isMobile ? '14px' : '15px',
+              color: colors.textSecondary,
+              lineHeight: 1.6
+            }}>
+              {currentQ.scenario}
+            </div>
+          </div>
+
+          {/* Question */}
           <h2 style={{
-            fontSize: isMobile ? '20px' : '24px',
+            fontSize: isMobile ? '18px' : '22px',
             color: colors.textPrimary,
-            margin: '12px 0 24px'
+            margin: '0 0 20px',
+            lineHeight: 1.4
           }}>
             {currentQ.question}
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {currentQ.options.map((opt, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  const newAnswers = [...testAnswers];
-                  newAnswers[currentQuestion] = i;
-                  setTestAnswers(newAnswers);
-                  if (opt.correct) setTestScore(prev => prev + 1);
-                  playSound(opt.correct ? 'success' : 'failure');
-                  setTimeout(() => {
-                    if (currentQuestion < questions.length - 1) {
-                      setCurrentQuestion(prev => prev + 1);
-                    } else {
-                      goNext();
-                    }
-                  }, 1000);
-                }}
-                disabled={testAnswers[currentQuestion] !== null}
-                style={{
-                  padding: '16px',
-                  background: testAnswers[currentQuestion] === i
-                    ? opt.correct ? `${colors.success}20` : `${colors.error}20`
-                    : colors.bgSurface,
-                  border: testAnswers[currentQuestion] === i
-                    ? `2px solid ${opt.correct ? colors.success : colors.error}`
-                    : `1px solid ${colors.bgElevated}`,
-                  borderRadius: '12px',
-                  color: colors.textPrimary,
-                  fontSize: '15px',
-                  textAlign: 'left',
-                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer',
-                  position: 'relative',
-                  zIndex: 10
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {currentQ.options.map((opt, i) => {
+              const isSelected = selectedAnswer === i;
+              const showCorrect = hasAnswered && opt.correct;
+              const showIncorrect = hasAnswered && isSelected && !opt.correct;
+
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    if (hasAnswered) return;
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentQuestion] = i;
+                    setTestAnswers(newAnswers);
+                    if (opt.correct) setTestScore(prev => prev + 1);
+                    playSound(opt.correct ? 'success' : 'failure');
+                  }}
+                  disabled={hasAnswered}
+                  style={{
+                    padding: '16px 20px',
+                    background: showCorrect
+                      ? `${colors.success}15`
+                      : showIncorrect
+                        ? `${colors.error}15`
+                        : colors.bgSurface,
+                    border: showCorrect
+                      ? `2px solid ${colors.success}`
+                      : showIncorrect
+                        ? `2px solid ${colors.error}`
+                        : `1px solid ${colors.bgElevated}`,
+                    borderRadius: '12px',
+                    color: colors.textPrimary,
+                    fontSize: isMobile ? '14px' : '15px',
+                    textAlign: 'left',
+                    cursor: hasAnswered ? 'default' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    transition: 'all 0.2s',
+                    opacity: hasAnswered && !isSelected && !opt.correct ? 0.6 : 1
+                  }}
+                >
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    backgroundColor: showCorrect
+                      ? colors.success
+                      : showIncorrect
+                        ? colors.error
+                        : colors.bgElevated,
+                    color: showCorrect || showIncorrect ? '#fff' : colors.textSecondary,
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    flexShrink: 0
+                  }}>
+                    {showCorrect ? '✓' : showIncorrect ? '✗' : opt.id.toUpperCase()}
+                  </span>
+                  <span style={{ lineHeight: 1.5, paddingTop: '3px' }}>{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'space-between', marginTop: '24px' }}>
+          {/* Explanation (shown after answering) */}
+          {hasAnswered && (
+            <div style={{
+              marginTop: '24px',
+              padding: '16px 20px',
+              backgroundColor: isCorrect ? `${colors.success}10` : `${colors.warning}10`,
+              borderLeft: `4px solid ${isCorrect ? colors.success : colors.warning}`,
+              borderRadius: '0 12px 12px 0'
+            }}>
+              <div style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: isCorrect ? colors.success : colors.warning,
+                textTransform: 'uppercase',
+                marginBottom: '8px',
+                letterSpacing: '0.5px'
+              }}>
+                {isCorrect ? 'Correct!' : 'Explanation'}
+              </div>
+              <div style={{
+                fontSize: isMobile ? '14px' : '15px',
+                color: colors.textSecondary,
+                lineHeight: 1.6
+              }}>
+                {currentQ.explanation}
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            justifyContent: 'space-between',
+            marginTop: '28px',
+            paddingTop: '20px',
+            borderTop: `1px solid ${colors.bgElevated}`
+          }}>
             <Button variant="ghost" onClick={goBack}>← Back</Button>
-            <span style={{ color: colors.textMuted }}>Score: {testScore}/{questions.length}</span>
+            {hasAnswered && (
+              <Button onClick={() => {
+                if (currentQuestion < testQuestions.length - 1) {
+                  setCurrentQuestion(prev => prev + 1);
+                } else {
+                  goNext();
+                }
+              }}>
+                {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -307,6 +307,132 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     }
   ];
 
+  // ============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ============================================================================
+  const testQuestions = [
+    // 1. Core concept - what is center of mass (Easy)
+    {
+      scenario: "A physics teacher holds up a baseball bat and asks students to find the point where it balances perfectly on one finger.",
+      question: "What is this special balance point called, and what does it represent?",
+      options: [
+        { id: 'a', label: "The geometric center - the exact middle of the bat's length" },
+        { id: 'b', label: "The center of mass - the average position of all the bat's mass weighted by location", correct: true },
+        { id: 'c', label: "The pivot point - where the bat naturally wants to rotate" },
+        { id: 'd', label: "The fulcrum - the strongest part of the bat" }
+      ],
+      explanation: "The center of mass is the point where all of an object's mass can be considered concentrated. For the bat, it's closer to the heavier barrel end. When supported at this exact point, the gravitational torques on either side balance perfectly, allowing it to rest horizontally on your finger."
+    },
+    // 2. Balancing objects - why they tip (Easy-Medium)
+    {
+      scenario: "A waiter carries a tray of drinks at shoulder height. When a customer takes a drink from one side of the tray, the waiter must quickly adjust.",
+      question: "Why does removing a drink cause the tray to start tipping?",
+      options: [
+        { id: 'a', label: "The tray becomes lighter and floats upward" },
+        { id: 'b', label: "The center of mass shifts away from under the support point, creating unbalanced torque", correct: true },
+        { id: 'c', label: "Air pressure pushes harder on the empty side" },
+        { id: 'd', label: "The waiter's arm gets tired from the weight" }
+      ],
+      explanation: "When mass is removed from one side, the center of mass shifts toward the remaining drinks. Since the waiter's hand stays in the same place, the COM is no longer directly above the support point. Gravity then creates a net torque that tips the tray toward the heavier side."
+    },
+    // 3. High jump technique (Fosbury Flop) (Medium)
+    {
+      scenario: "In the 1968 Olympics, Dick Fosbury revolutionized high jumping by going over the bar backwards with an arched back - the 'Fosbury Flop.' This technique allows athletes to clear higher bars than the traditional straddle method.",
+      question: "How does arching the back during the Fosbury Flop help jumpers clear higher bars?",
+      options: [
+        { id: 'a', label: "It makes the athlete more aerodynamic" },
+        { id: 'b', label: "It allows the center of mass to pass UNDER the bar while the body goes over", correct: true },
+        { id: 'c', label: "It gives more time to rotate in the air" },
+        { id: 'd', label: "It reduces the athlete's weight temporarily" }
+      ],
+      explanation: "By arching their back into a U-shape, the jumper's center of mass actually travels below the bar even though every part of their body clears it! This is possible because the COM is the average position of mass - with the body curved, that average point sits in the empty space of the arch. This means less height is needed to clear the same bar."
+    },
+    // 4. Vehicle rollover physics (Medium)
+    {
+      scenario: "SUVs and trucks have higher rollover rates in accidents compared to sedans. Vehicle safety engineers spend significant effort addressing this issue in design.",
+      question: "Why are taller vehicles more prone to rolling over during sharp turns or collisions?",
+      options: [
+        { id: 'a', label: "They have weaker frames that collapse sideways" },
+        { id: 'b', label: "Their higher center of mass creates larger tipping torque relative to their base width", correct: true },
+        { id: 'c', label: "Their tires have less grip due to weight distribution" },
+        { id: 'd', label: "Wind catches them more easily due to larger surface area" }
+      ],
+      explanation: "A higher center of mass means gravitational force acts through a point farther from the ground. During turns, when centrifugal effects push sideways, this height creates a longer 'lever arm' for the tipping torque. The taller the vehicle relative to its width, the easier it is for this torque to lift wheels off the ground and cause rollover."
+    },
+    // 5. Gymnast in mid-air rotation (Medium-Hard)
+    {
+      scenario: "A gymnast performs a somersault. During the flip, they start with arms extended, then tuck into a tight ball, and finally extend again before landing.",
+      question: "Why does tucking into a ball make the gymnast spin faster?",
+      options: [
+        { id: 'a', label: "Tucking reduces air resistance so they fall faster" },
+        { id: 'b', label: "Tucking brings mass closer to the rotation axis, and angular momentum conservation increases spin rate", correct: true },
+        { id: 'c', label: "Tucking makes them lighter so gravity affects them less" },
+        { id: 'd', label: "Tucking stores energy in their muscles for the spin" }
+      ],
+      explanation: "Angular momentum (mass times rotation speed times distance from axis) stays constant in the air. When the gymnast tucks, they move their mass closer to their rotation axis, reducing 'rotational inertia.' To keep angular momentum constant, their spin rate must increase. This is the same physics that makes ice skaters spin faster when they pull in their arms."
+    },
+    // 6. Rocket fuel consumption and COM shift (Hard)
+    {
+      scenario: "During a rocket launch, the vehicle burns thousands of kilograms of fuel per second. The fuel tanks are located below the crew capsule and engines.",
+      question: "How does fuel consumption affect the rocket's center of mass during ascent, and why does this matter for control?",
+      options: [
+        { id: 'a', label: "COM moves downward toward the engines, making the rocket harder to steer" },
+        { id: 'b', label: "COM moves upward as bottom fuel depletes, requiring constant guidance computer adjustments", correct: true },
+        { id: 'c', label: "COM stays constant because fuel weight is replaced by thrust force" },
+        { id: 'd', label: "COM shifts randomly requiring manual pilot corrections" }
+      ],
+      explanation: "As fuel burns from tanks in the lower sections, the remaining mass is increasingly concentrated in the upper stages and payload. This shifts the COM upward, changing the rocket's balance point and rotational behavior. The guidance computer must continuously recalculate and adjust engine gimbal angles to maintain stable flight as this shift occurs throughout the ascent."
+    },
+    // 7. Binary star systems (Hard)
+    {
+      scenario: "Astronomers observe two stars orbiting each other: a massive blue giant and a smaller red dwarf. Rather than one star sitting still while the other orbits, both stars appear to move in circles.",
+      question: "Around what point do both stars in a binary system actually orbit?",
+      options: [
+        { id: 'a', label: "Around the larger star's center, which barely moves" },
+        { id: 'b', label: "Around their common center of mass (barycenter), located closer to the more massive star", correct: true },
+        { id: 'c', label: "Around a point exactly halfway between them" },
+        { id: 'd', label: "Around an external point determined by nearby galaxies" }
+      ],
+      explanation: "Both stars orbit their shared center of mass, called the barycenter. This point lies along the line connecting them, positioned closer to the heavier star (the blue giant). The massive star makes a small orbit while the lighter star makes a large one, but both complete their orbits in the same time. Even our Sun wobbles slightly as it and Jupiter orbit their common barycenter!"
+    },
+    // 8. Hammer throw technique (Hard)
+    {
+      scenario: "In the hammer throw, an athlete spins rapidly while swinging a 7.26 kg metal ball on a wire. Just before release, top throwers lean back dramatically, almost horizontally, while the hammer extends outward.",
+      question: "Why must the thrower lean so far back during the spin?",
+      options: [
+        { id: 'a', label: "To generate more arm strength for the throw" },
+        { id: 'b', label: "To position the combined system's center of mass over their feet for balance", correct: true },
+        { id: 'c', label: "To reduce wind resistance during the spin" },
+        { id: 'd', label: "To stretch their muscles for maximum power" }
+      ],
+      explanation: "The hammer and thrower form one rotating system. As the heavy ball swings outward at high speed, it would pull the athlete off balance if they stood upright. By leaning back, the thrower positions their body so the combined center of mass of the athlete-hammer system remains over their feet. This is the same principle as the fork balancing on a glass - counterbalancing to keep COM over the support point."
+    },
+    // 9. Building structural design (Hard)
+    {
+      scenario: "Taipei 101, once the world's tallest building, features a massive 730-ton steel pendulum suspended near the top floors. This 'tuned mass damper' swings freely inside the building.",
+      question: "How does this giant pendulum help protect the skyscraper during typhoons and earthquakes?",
+      options: [
+        { id: 'a', label: "It adds weight to anchor the building more firmly to its foundation" },
+        { id: 'b', label: "It swings opposite to building motion, shifting the system's center of mass to counteract sway", correct: true },
+        { id: 'c', label: "It absorbs wind energy by converting it to heat through friction" },
+        { id: 'd', label: "It stores potential energy from building movement for emergency power" }
+      ],
+      explanation: "When wind or seismic forces push the building one direction, the massive pendulum naturally swings the opposite way due to inertia. This shifts the building's overall center of mass in the opposite direction of the sway, creating a counteracting force. The pendulum is 'tuned' to swing at the building's natural frequency, maximizing this cancellation effect and reducing sway by up to 40%."
+    },
+    // 10. Spacecraft docking (Hard)
+    {
+      scenario: "When a cargo spacecraft docks with the International Space Station, mission controllers must carefully plan the approach. After docking, the Station's orientation thrusters may need recalibration.",
+      question: "Why does adding a docked spacecraft require adjustments to the space station's attitude control system?",
+      options: [
+        { id: 'a', label: "The docked spacecraft blocks solar panels, reducing available power" },
+        { id: 'b', label: "The combined system has a new center of mass, changing how thrusters must fire to rotate the station", correct: true },
+        { id: 'c', label: "Radio signals from the spacecraft interfere with navigation" },
+        { id: 'd', label: "The docking seal creates air pressure differences that push the station" }
+      ],
+      explanation: "Adding mass changes the system's center of mass location. The ISS rotates around its center of mass, and thrusters work by applying force at specific distances from this point. When a new spacecraft docks, the COM shifts toward it. The attitude control computer must recalculate how much thrust each thruster needs to produce the same rotational effect around the new COM location."
+    }
+  ];
+
   const handleAnswer = useCallback((idx: number) => {
     if (testAnswers[currentQuestion] !== null) return;
     const newAnswers = [...testAnswers];

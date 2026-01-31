@@ -1160,6 +1160,122 @@ export default function ChromaticAberrationRenderer({
   }, [isMobile, lensCurvature, showAllWavelengths, selectedWavelength, useDoublet, animationFrame, getFocalPoint, typo]);
 
   // =============================================================================
+  // TEST QUESTIONS - SCENARIO-BASED MULTIPLE CHOICE
+  // =============================================================================
+  const testQuestions = [
+    {
+      scenario: "A photographer notices that white light passing through a simple glass lens separates into different colors, with each color focusing at a slightly different distance from the lens.",
+      question: "What fundamental property of glass causes this color separation phenomenon?",
+      options: [
+        { id: 'a', label: "Glass absorbs certain wavelengths more than others", correct: false },
+        { id: 'b', label: "The refractive index of glass varies with wavelength (dispersion)", correct: true },
+        { id: 'c', label: "Glass reflects shorter wavelengths back toward the source", correct: false },
+        { id: 'd', label: "Air gaps between glass molecules scatter light randomly", correct: false },
+      ],
+      explanation: "Glass exhibits dispersion, meaning its refractive index depends on the wavelength of light. Shorter wavelengths (blue/violet) have a higher refractive index and bend more than longer wavelengths (red). This wavelength-dependent refraction is described by Cauchy's equation: n(λ) = A + B/λ² + C/λ⁴, where shorter λ yields higher n.",
+    },
+    {
+      scenario: "A wildlife photographer reviewing their images notices purple and green fringes around tree branches photographed against a bright sky, especially toward the edges of the frame.",
+      question: "Why does this color fringing appear most prominently at high-contrast edges near the frame's periphery?",
+      options: [
+        { id: 'a', label: "The camera sensor has defective pixels at the edges", correct: false },
+        { id: 'b', label: "Light rays hit the lens at steeper angles at the edges, amplifying chromatic aberration", correct: true },
+        { id: 'c', label: "The lens coating wears off faster at the edges", correct: false },
+        { id: 'd', label: "The image processor applies less correction at frame edges", correct: false },
+      ],
+      explanation: "Chromatic aberration is most visible at high-contrast boundaries where misaligned color channels create visible fringes. The effect worsens toward frame edges because peripheral rays strike the lens at oblique angles, experiencing greater refraction differences between wavelengths. This is why fast wide-angle lenses require more complex optical designs.",
+    },
+    {
+      scenario: "An optical engineer is designing a telescope objective lens and decides to cement together a biconvex crown glass element (Abbe number ~60) with a plano-concave flint glass element (Abbe number ~30).",
+      question: "How does this achromatic doublet design reduce chromatic aberration?",
+      options: [
+        { id: 'a', label: "The two lenses cancel all refraction, producing parallel light", correct: false },
+        { id: 'b', label: "The high-dispersion flint element's divergence counteracts the crown's color spread while preserving net convergence", correct: true },
+        { id: 'c', label: "The cement between the lenses filters out problematic wavelengths", correct: false },
+        { id: 'd', label: "Flint glass converts chromatic aberration into spherical aberration", correct: false },
+      ],
+      explanation: "An achromatic doublet pairs a converging crown glass lens (low dispersion, high Abbe number) with a diverging flint glass lens (high dispersion, low Abbe number). Because flint glass disperses light more strongly per unit of refractive power, a weaker diverging flint element can cancel the color spread of the crown element without canceling all its focusing power. The result is a net converging lens that brings two wavelengths (typically red and blue) to a common focus.",
+    },
+    {
+      scenario: "An amateur astronomer is choosing between two refractor telescopes: one with a standard achromatic doublet objective and one with an apochromatic triplet using ED (extra-low dispersion) glass.",
+      question: "What advantage does the apochromatic design offer for planetary observation?",
+      options: [
+        { id: 'a', label: "It gathers more light, making planets appear brighter", correct: false },
+        { id: 'b', label: "It brings three wavelengths to a common focus, virtually eliminating residual color fringing", correct: true },
+        { id: 'c', label: "It magnifies images more than achromatic designs", correct: false },
+        { id: 'd', label: "It automatically tracks celestial objects", correct: false },
+      ],
+      explanation: "While achromatic doublets bring two wavelengths to a common focus, they leave residual 'secondary spectrum' (typically a purple halo around bright objects). Apochromatic lenses use three or more elements with special glasses (like ED or fluorite) to bring three wavelengths to a common focus, dramatically reducing secondary spectrum. This produces crisper, more color-accurate planetary images with minimal false color around limbs and details.",
+    },
+    {
+      scenario: "An ophthalmology student learns that the human eye has significant chromatic aberration—about 2 diopters difference between red and blue focus—yet we don't normally see colored fringes around objects.",
+      question: "What primary mechanism allows humans to perceive sharp images despite ocular chromatic aberration?",
+      options: [
+        { id: 'a', label: "The cornea contains special proteins that correct chromatic aberration", correct: false },
+        { id: 'b', label: "The brain's visual processing filters out chromatic blur and the eye focuses yellow-green light on the fovea", correct: true },
+        { id: 'c', label: "Tears form a corrective liquid lens over the eye", correct: false },
+        { id: 'd', label: "The iris blocks peripheral light rays that would cause aberration", correct: false },
+      ],
+      explanation: "The human visual system compensates for chromatic aberration through multiple mechanisms. The eye's accommodation system focuses yellow-green light (peak sensitivity ~555nm) on the fovea, leaving red slightly behind and blue slightly in front. The brain's visual cortex then performs sophisticated processing to suppress awareness of chromatic blur. Additionally, the fovea's cone density and the eye's small pupil in bright light naturally reduce the visible effects of chromatic aberration.",
+    },
+    {
+      scenario: "A lens designer is creating a premium apochromatic lens for astrophotography. They're considering adding a fourth element made of fluorite crystal (calcium fluoride) to the three-element design.",
+      question: "What unique optical property makes fluorite valuable for advanced chromatic correction?",
+      options: [
+        { id: 'a', label: "Fluorite has the highest refractive index of any optical material", correct: false },
+        { id: 'b', label: "Fluorite exhibits anomalous partial dispersion, allowing correction of secondary spectrum", correct: true },
+        { id: 'c', label: "Fluorite is completely colorless, unlike regular glass", correct: false },
+        { id: 'd', label: "Fluorite amplifies certain wavelengths to compensate for absorption", correct: false },
+      ],
+      explanation: "Fluorite and certain ED glasses exhibit 'anomalous partial dispersion'—their dispersion characteristics deviate from the normal relationship between Abbe number and partial dispersion found in conventional glasses. This allows lens designers to correct secondary spectrum (the residual color error in achromatic doublets) that cannot be eliminated using only normal glasses. Fluorite's position on the partial dispersion diagram enables superachromatic designs approaching diffraction-limited performance across the visible spectrum.",
+    },
+    {
+      scenario: "A research biologist is selecting a microscope objective for fluorescence imaging. They must choose between a plan-achromat (2 wavelengths corrected) and a plan-apochromat (3+ wavelengths corrected) objective, both at 60x magnification.",
+      question: "Why is the plan-apochromat objective essential for accurate multi-channel fluorescence microscopy?",
+      options: [
+        { id: 'a', label: "It produces brighter images due to larger aperture", correct: false },
+        { id: 'b', label: "It ensures different fluorescent emission wavelengths focus in the same plane, enabling accurate colocalization", correct: true },
+        { id: 'c', label: "It eliminates the need for emission filters", correct: false },
+        { id: 'd', label: "It prevents photobleaching of fluorescent samples", correct: false },
+      ],
+      explanation: "In multi-channel fluorescence microscopy, researchers image the same sample using different fluorophores that emit at different wavelengths (e.g., blue DAPI, green GFP, red mCherry). With a plan-achromat objective, these wavelengths focus at slightly different planes, causing apparent shifts in structure positions between channels. Plan-apochromat objectives correct chromatic aberration across the visible spectrum, ensuring all fluorescent channels focus precisely in the same plane—critical for accurate colocalization studies determining whether proteins interact or structures overlap.",
+    },
+    {
+      scenario: "An optician is helping a patient with a -8.00 diopter prescription choose between standard polycarbonate lenses (Abbe number 30) and higher-cost CR-39 plastic lenses (Abbe number 58).",
+      question: "Why might the CR-39 lenses provide better visual comfort despite being thicker and heavier?",
+      options: [
+        { id: 'a', label: "CR-39 blocks more UV radiation than polycarbonate", correct: false },
+        { id: 'b', label: "CR-39's higher Abbe number means less chromatic aberration and reduced color fringing in peripheral vision", correct: true },
+        { id: 'c', label: "CR-39 has better scratch resistance than polycarbonate", correct: false },
+        { id: 'd', label: "CR-39 lenses are easier to clean and maintain", correct: false },
+      ],
+      explanation: "The Abbe number (V-number) quantifies a material's dispersion—higher values indicate less chromatic aberration. Strong prescriptions require thick lenses where peripheral viewing involves rays at steep angles, amplifying chromatic effects. Polycarbonate's low Abbe number (30) can produce noticeable color fringes when looking through lens peripheries, causing visual discomfort. CR-39's Abbe number of 58 produces roughly half the chromatic aberration, making it preferable for high prescriptions despite being thicker. This is why premium high-index materials emphasize Abbe number alongside refractive index.",
+    },
+    {
+      scenario: "A software engineer is developing an automatic chromatic aberration correction algorithm for a smartphone camera app. They notice the aberration pattern differs between the center and edges of images.",
+      question: "What optical phenomenon must their algorithm account for that causes this position-dependent aberration pattern?",
+      options: [
+        { id: 'a', label: "Sensor pixel size varies across the chip", correct: false },
+        { id: 'b', label: "Lateral chromatic aberration shifts colors sideways by increasing amounts toward frame edges", correct: true },
+        { id: 'c', label: "The lens aperture shape changes with field position", correct: false },
+        { id: 'd', label: "Digital noise increases toward image edges", correct: false },
+      ],
+      explanation: "Chromatic aberration has two components: longitudinal (axial) and lateral (transverse). Longitudinal CA causes colors to focus at different distances along the optical axis, producing color fringes everywhere. Lateral CA causes different wavelengths to be magnified differently, shifting colors perpendicular to the optical axis. Lateral CA is zero at the image center (on-axis) and increases toward edges, creating position-dependent color shifts. Effective digital correction must model this radial variation, typically using polynomial functions calibrated to the specific lens profile.",
+    },
+    {
+      scenario: "A physics student is analyzing why a prism creates a broader spectrum than a simple lens. Both are made of the same BK7 glass, but the prism spreads colors across a 4-degree arc while the lens only shows subtle focal differences.",
+      question: "What geometric factor explains why prisms produce more dramatic visible dispersion than lenses?",
+      options: [
+        { id: 'a', label: "Prisms use higher-quality glass with more dispersion", correct: false },
+        { id: 'b', label: "Prisms refract light at two non-parallel surfaces, accumulating angular deviation that separates into a spatial spread", correct: true },
+        { id: 'c', label: "Prisms absorb some wavelengths, making others more visible", correct: false },
+        { id: 'd', label: "Light travels farther through prisms, increasing wavelength separation", correct: false },
+      ],
+      explanation: "While both prisms and lenses exhibit the same wavelength-dependent refractive index, their geometry produces different effects. A prism's non-parallel faces cause light to deviate from its original path, with different wavelengths deviating by different amounts—this angular dispersion spreads into visible spatial separation. Lenses have curved surfaces designed so rays converge (or diverge) rather than deviate, converting dispersion into focal length differences. The prism's design intentionally maximizes angular separation while lens design minimizes it, though cannot eliminate it entirely—hence chromatic aberration.",
+    },
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
   const renderHook = () => (

@@ -198,6 +198,133 @@ const TEST_QUESTIONS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
+// SCENARIO-BASED TEST QUESTIONS (10 questions covering grid frequency topics)
+// ────────────────────────────────────────────────────────────────────────────
+
+const testQuestions = [
+  // 1. Core concept - why 50/60 Hz matters (Easy)
+  {
+    scenario: 'A manufacturing plant in the US operates precision machinery that relies on AC motors. The plant manager notices that equipment designed for Europe (50 Hz) runs differently when plugged in.',
+    question: 'Why does grid frequency (50 Hz vs 60 Hz) matter for electrical equipment?',
+    options: [
+      { id: 'a', label: 'Higher frequency means more electricity is used', correct: false },
+      { id: 'b', label: 'AC motors spin at speeds directly tied to frequency, affecting machinery timing and performance', correct: true },
+      { id: 'c', label: 'Frequency only affects the color of indicator lights', correct: false },
+      { id: 'd', label: 'Different frequencies require different wire gauges', correct: false },
+    ],
+    explanation: 'AC motor speed is directly proportional to grid frequency. A motor designed for 50 Hz will spin 20% faster on a 60 Hz grid, potentially damaging equipment or causing timing issues in precision machinery.',
+  },
+  // 2. Frequency as indicator of supply/demand (Easy-Medium)
+  {
+    scenario: 'At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.95 Hz.',
+    question: 'What does this frequency drop indicate about the grid?',
+    options: [
+      { id: 'a', label: 'The power plants are generating too much electricity', correct: false },
+      { id: 'b', label: 'Demand has suddenly exceeded supply, and generators are slowing down', correct: true },
+      { id: 'c', label: 'The transmission lines are overheating', correct: false },
+      { id: 'd', label: 'The frequency meters are malfunctioning due to heat', correct: false },
+    ],
+    explanation: 'Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down and the frequency to drop. This 0.05 Hz drop signals that more generation is needed immediately.',
+  },
+  // 3. Generator synchronization (Medium)
+  {
+    scenario: 'A natural gas power plant is about to connect to the grid. Before the connection, operators carefully monitor the generator\'s output on an oscilloscope, comparing it to the grid waveform.',
+    question: 'Why must generators be synchronized before connecting to the grid?',
+    options: [
+      { id: 'a', label: 'To ensure the billing meters work correctly', correct: false },
+      { id: 'b', label: 'Connecting out of phase would cause massive current surges that could damage equipment and destabilize the grid', correct: true },
+      { id: 'c', label: 'Synchronization is only required for nuclear plants', correct: false },
+      { id: 'd', label: 'It allows the generator to warm up gradually', correct: false },
+    ],
+    explanation: 'Generators must match the grid\'s frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a short circuit condition, causing potentially destructive current surges that can damage generator windings, trip breakers, and send shockwaves through the grid.',
+  },
+  // 4. Frequency droop response (Medium)
+  {
+    scenario: 'A large industrial facility suddenly shuts down, removing 500 MW of load from the grid. Multiple generators across the region automatically begin reducing their power output without any operator intervention.',
+    question: 'What mechanism causes generators to automatically reduce output when frequency rises?',
+    options: [
+      { id: 'a', label: 'Smart meters send signals to power plants', correct: false },
+      { id: 'b', label: 'Droop control - generators are programmed to decrease output as frequency increases above the setpoint', correct: true },
+      { id: 'c', label: 'The generators physically cannot spin faster than 60 Hz', correct: false },
+      { id: 'd', label: 'Grid operators manually adjust each generator within seconds', correct: false },
+    ],
+    explanation: 'Droop control is a fundamental stability mechanism where generators automatically adjust power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This decentralized response provides automatic load balancing without communication delays.',
+  },
+  // 5. Inertia in power systems (Medium-Hard)
+  {
+    scenario: 'Two identical islands have the same peak demand. Island A relies entirely on diesel generators, while Island B has replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A\'s frequency drops to 59.5 Hz while Island B\'s drops to 58.8 Hz.',
+    question: 'Why does Island B experience a larger frequency drop despite having modern equipment?',
+    options: [
+      { id: 'a', label: 'Solar panels produce lower quality electricity', correct: false },
+      { id: 'b', label: 'Island B has less rotational inertia from spinning generators to resist frequency changes', correct: true },
+      { id: 'c', label: 'Batteries cannot respond quickly enough to load changes', correct: false },
+      { id: 'd', label: 'The diesel generators on Island A are more efficient', correct: false },
+    ],
+    explanation: 'Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Island B\'s solar-dominated grid has little physical inertia, so the same load change causes a larger frequency excursion. This is why high-renewable grids need synthetic inertia from batteries or other fast-response resources.',
+  },
+  // 6. Under-frequency load shedding (Hard)
+  {
+    scenario: 'A major transmission line fails during peak demand, isolating a region from external generation. As frequency drops to 59.0 Hz, automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence.',
+    question: 'What is the purpose of under-frequency load shedding (UFLS)?',
+    options: [
+      { id: 'a', label: 'To punish areas that use too much electricity', correct: false },
+      { id: 'b', label: 'To prevent complete grid collapse by sacrificing some loads to stabilize frequency for the remaining system', correct: true },
+      { id: 'c', label: 'To reduce electricity bills during emergencies', correct: false },
+      { id: 'd', label: 'To test the grid\'s resilience during normal operations', correct: false },
+    ],
+    explanation: 'UFLS is a last-resort protection mechanism. If frequency falls too low (typically below 59 Hz), generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout affecting everyone.',
+  },
+  // 7. Renewable energy integration challenges (Hard)
+  {
+    scenario: 'A grid operator in California observes that frequency volatility has increased significantly on days with high solar generation, especially during the "duck curve" transition when solar output drops rapidly at sunset.',
+    question: 'Why do high levels of solar generation create frequency stability challenges?',
+    options: [
+      { id: 'a', label: 'Solar panels generate electricity at the wrong frequency', correct: false },
+      { id: 'b', label: 'Solar inverters displace synchronous generators, reducing system inertia and requiring faster ramping from remaining plants', correct: true },
+      { id: 'c', label: 'Solar electricity is incompatible with the existing grid infrastructure', correct: false },
+      { id: 'd', label: 'Clouds cause solar panels to generate excess power', correct: false },
+    ],
+    explanation: 'Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly to compensate. The combination of low inertia and fast ramps creates frequency volatility that requires careful management.',
+  },
+  // 8. Grid-forming vs grid-following inverters (Hard)
+  {
+    scenario: 'Engineers are designing a microgrid for a remote community that will operate independently from the main grid. They debate whether to use traditional "grid-following" inverters or newer "grid-forming" inverters for the battery storage system.',
+    question: 'What is the key difference between grid-forming and grid-following inverters?',
+    options: [
+      { id: 'a', label: 'Grid-forming inverters are more expensive but otherwise identical', correct: false },
+      { id: 'b', label: 'Grid-following inverters track existing grid frequency, while grid-forming inverters can establish and maintain frequency independently', correct: true },
+      { id: 'c', label: 'Grid-forming inverters only work with solar panels', correct: false },
+      { id: 'd', label: 'Grid-following inverters are newer and more advanced technology', correct: false },
+    ],
+    explanation: 'Grid-following inverters synchronize to an existing frequency reference and cannot operate without it. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential to establish stable operation.',
+  },
+  // 9. Inter-area oscillations (Hard)
+  {
+    scenario: 'Power system engineers detect a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.',
+    question: 'What causes inter-area oscillations in large power grids?',
+    options: [
+      { id: 'a', label: 'Faulty frequency meters creating false readings', correct: false },
+      { id: 'b', label: 'Groups of generators in different regions swinging against each other due to weak interconnections and insufficient damping', correct: true },
+      { id: 'c', label: 'Too many renewable energy sources connected at once', correct: false },
+      { id: 'd', label: 'Consumers turning appliances on and off in a synchronized pattern', correct: false },
+    ],
+    explanation: 'Inter-area oscillations occur when clusters of generators in different regions exchange power in a growing oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper controls like Power System Stabilizers, these oscillations can grow and cause widespread outages.',
+  },
+  // 10. Black start and frequency recovery (Hard)
+  {
+    scenario: 'After a complete blackout, grid operators begin the restoration process. They start a hydroelectric plant with its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.',
+    question: 'Why is frequency control especially critical during black start recovery?',
+    options: [
+      { id: 'a', label: 'Electricity costs more during blackouts', correct: false },
+      { id: 'b', label: 'The isolated system has minimal inertia and load pickup must be carefully balanced with generation to prevent frequency collapse', correct: true },
+      { id: 'c', label: 'Frequency meters need time to recalibrate after a blackout', correct: false },
+      { id: 'd', label: 'Black start generators operate at a different frequency', correct: false },
+    ],
+    explanation: 'During black start, the grid is rebuilt from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout.',
+  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // TRANSFER APPLICATIONS
 // ────────────────────────────────────────────────────────────────────────────
 

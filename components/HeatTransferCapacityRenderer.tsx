@@ -215,6 +215,123 @@ const quizQuestions = [
 ];
 
 // ============================================================================
+// TEST QUESTIONS - SCENARIO-BASED MULTIPLE CHOICE
+// ============================================================================
+
+const testQuestions = [
+  {
+    scenario: "You're designing a thermal storage system for a solar power plant that needs to store energy during the day and release it at night.",
+    question: "What property determines how much thermal energy a material can store per unit mass for a given temperature change?",
+    options: [
+      { id: 'a', label: 'Thermal conductivity - how fast heat spreads through the material', correct: false },
+      { id: 'b', label: 'Specific heat capacity - the energy required to raise 1 kg by 1 degree', correct: true },
+      { id: 'c', label: 'Density - how much mass fits in a given volume', correct: false },
+      { id: 'd', label: 'Melting point - the temperature at which the material changes phase', correct: false },
+    ],
+    explanation: "Specific heat capacity (c) directly determines thermal energy storage. The equation Q = mcΔT shows that for a given mass and temperature change, materials with higher specific heat capacity store more energy. This is why water (c = 4.18 J/g°C) is often used in thermal storage systems."
+  },
+  {
+    scenario: "A swimmer exits a pool on a hot summer day. The air temperature is 35°C and the water was 28°C.",
+    question: "Why does the swimmer feel cold despite the air being warmer than the pool water?",
+    options: [
+      { id: 'a', label: 'The pool water lowered their core body temperature significantly', correct: false },
+      { id: 'b', label: 'Evaporating water absorbs heat from their skin, and water has high heat capacity', correct: true },
+      { id: 'c', label: 'Air has higher thermal conductivity than water', correct: false },
+      { id: 'd', label: 'The swimmer is experiencing psychological discomfort', correct: false },
+    ],
+    explanation: "Water's exceptionally high specific heat capacity (4.18 J/g°C) means evaporation requires substantial energy. As water evaporates from the swimmer's skin, it absorbs this energy as latent heat, rapidly cooling the skin. This is why evaporative cooling is so effective - water can carry away large amounts of thermal energy."
+  },
+  {
+    scenario: "A professional chef is preparing a steak and has two pans available: a thin aluminum pan and a heavy cast iron skillet, both preheated to 230°C.",
+    question: "Why do professional chefs prefer cast iron for searing steaks despite aluminum heating up faster?",
+    options: [
+      { id: 'a', label: 'Cast iron has higher thermal conductivity for even heat distribution', correct: false },
+      { id: 'b', label: 'Cast iron is cheaper and more durable than aluminum', correct: false },
+      { id: 'c', label: 'Cast iron has greater thermal mass, maintaining temperature when cold food is added', correct: true },
+      { id: 'd', label: 'Aluminum reacts chemically with meat proteins', correct: false },
+    ],
+    explanation: "Thermal mass (mass × specific heat capacity) determines how much energy a pan stores. Cast iron's high mass means it stores substantial thermal energy. When a cold steak hits the pan, aluminum's temperature drops dramatically, but cast iron maintains its heat, enabling the Maillard reaction for proper searing. The equation Q = mcΔT shows that larger m means smaller ΔT for the same heat transfer."
+  },
+  {
+    scenario: "An architect is designing a passive solar home in a desert climate with hot days and cold nights.",
+    question: "What thermal strategy would best regulate indoor temperatures throughout the day-night cycle?",
+    options: [
+      { id: 'a', label: 'Use highly insulating materials to prevent all heat transfer', correct: false },
+      { id: 'b', label: 'Install large south-facing windows with high thermal conductivity frames', correct: false },
+      { id: 'c', label: 'Incorporate high thermal mass materials like concrete or water walls to absorb and release heat', correct: true },
+      { id: 'd', label: 'Use reflective roofing to maximize heat rejection', correct: false },
+    ],
+    explanation: "High thermal mass materials (like concrete, adobe, or water containers) have large heat capacity, allowing them to absorb excess heat during hot days and release it during cold nights. This thermal flywheel effect buffers temperature swings. The key equation Q = mcΔT shows that high mass and specific heat mean large energy storage with small temperature fluctuations."
+  },
+  {
+    scenario: "A computer engineer is designing a cooling system for a high-performance CPU that generates 150W of heat in an area smaller than a postage stamp.",
+    question: "What is the primary thermal challenge that heat sinks with copper bases and aluminum fins address?",
+    options: [
+      { id: 'a', label: 'Increasing the heat generated by the CPU', correct: false },
+      { id: 'b', label: 'Converting electrical energy to thermal energy more efficiently', correct: false },
+      { id: 'c', label: 'Spreading concentrated heat over a larger surface area for convective dissipation', correct: true },
+      { id: 'd', label: 'Storing heat until the computer is turned off', correct: false },
+    ],
+    explanation: "Copper's exceptionally high thermal conductivity (401 W/m·K) rapidly spreads heat from the tiny CPU die across the heat sink base. Aluminum fins (k = 237 W/m·K) then provide large surface area for convection. Fourier's Law Q/t = -kA(dT/dx) shows that high k enables rapid heat flow from the concentrated source to the extended surface area."
+  },
+  {
+    scenario: "A cold storage facility uses containers filled with a special salt solution that freezes at 5°C to maintain consistent temperatures during power outages.",
+    question: "Why are phase change materials (PCMs) more effective for thermal storage than simply using more of a conventional material?",
+    options: [
+      { id: 'a', label: 'PCMs are cheaper and more readily available than conventional materials', correct: false },
+      { id: 'b', label: 'Latent heat of fusion stores far more energy at constant temperature than sensible heat', correct: true },
+      { id: 'c', label: 'PCMs have higher thermal conductivity than all other materials', correct: false },
+      { id: 'd', label: 'PCMs are lighter and take up less space than water', correct: false },
+    ],
+    explanation: "Phase change materials exploit latent heat - the energy absorbed or released during phase transitions without temperature change. Water's latent heat of fusion (334 J/g) is 80 times greater than the energy needed to change its temperature by 1°C. This means a PCM can absorb massive amounts of energy while maintaining a stable temperature, far exceeding sensible heat storage (Q = mcΔT)."
+  },
+  {
+    scenario: "A chemistry student mixes 100g of water at 80°C with 100g of water at 20°C in an insulated container. The specific heat of water is 4.18 J/g°C.",
+    question: "What is the final equilibrium temperature of the mixture?",
+    options: [
+      { id: 'a', label: '40°C - because equal masses with equal specific heat meet at the average', correct: false },
+      { id: 'b', label: '50°C - the exact midpoint of the two temperatures', correct: true },
+      { id: 'c', label: '60°C - weighted toward the hotter water', correct: false },
+      { id: 'd', label: '45°C - accounting for heat loss to the container', correct: false },
+    ],
+    explanation: "In calorimetry, heat lost equals heat gained: m₁c(T_f - T₁) = m₂c(T₂ - T_f). With equal masses and specific heats: (T_f - 20) = (80 - T_f), solving to T_f = 50°C. The final temperature is the arithmetic mean because both samples have identical thermal properties (mass × specific heat), so they contribute equally to the equilibrium."
+  },
+  {
+    scenario: "San Francisco and Sacramento are at similar latitudes, yet San Francisco has mild temperatures year-round (10-20°C range) while Sacramento experiences extremes (0-40°C range).",
+    question: "What thermal property of the nearby Pacific Ocean primarily explains San Francisco's moderate climate?",
+    options: [
+      { id: 'a', label: 'The ocean reflects more sunlight than land, reducing heating', correct: false },
+      { id: 'b', label: 'Ocean currents bring cold water from the Arctic', correct: false },
+      { id: 'c', label: 'Water has high specific heat capacity, buffering temperature changes in coastal air', correct: true },
+      { id: 'd', label: 'Fog blocks all solar radiation from reaching the city', correct: false },
+    ],
+    explanation: "Water's specific heat capacity (4.18 J/g°C) is about 4 times higher than land (~1 J/g°C). The massive Pacific Ocean absorbs enormous amounts of solar energy with minimal temperature change (Q = mcΔT with huge m and c means tiny ΔT). This thermal buffer moderates coastal air temperatures. Sacramento, far from water, lacks this thermal mass and experiences extreme temperature swings."
+  },
+  {
+    scenario: "A lithium-ion battery pack in an electric vehicle begins experiencing thermal runaway, where one cell overheats and triggers adjacent cells to fail.",
+    question: "What thermal property relationship makes thermal runaway particularly dangerous in densely packed battery cells?",
+    options: [
+      { id: 'a', label: 'High specific heat causes heat to build up slowly then release suddenly', correct: false },
+      { id: 'b', label: 'Low thermal conductivity between cells prevents heat from escaping, while high conductivity within cells spreads damage', correct: false },
+      { id: 'c', label: 'Exothermic reactions increase temperature, which accelerates reaction rates, creating positive feedback', correct: true },
+      { id: 'd', label: 'Battery electrolyte has unusually low boiling point', correct: false },
+    ],
+    explanation: "Thermal runaway involves positive feedback: cell temperature rises → chemical reaction rates increase exponentially (Arrhenius equation) → more heat generated → temperature rises further. The heat transfer equation Q/t = -kA(dT/dx) shows that high dT/dx (steep temperature gradients) drives rapid heat flow to adjacent cells, propagating the runaway. Battery management systems must detect and prevent this cascade."
+  },
+  {
+    scenario: "A chemical plant needs to heat 10,000 liters of oil from 25°C to 150°C for a manufacturing process. The oil has a specific heat of 2.0 J/g°C and density of 0.9 kg/L.",
+    question: "Approximately how much thermal energy is required for this heating process?",
+    options: [
+      { id: 'a', label: '250 MJ - using Q = mcΔT with careful unit conversion', correct: false },
+      { id: 'b', label: '1,125 MJ - accounting for mass and specific heat', correct: false },
+      { id: 'c', label: '2,250 MJ - the full calculation with all parameters', correct: true },
+      { id: 'd', label: '4,500 MJ - doubling for industrial safety margins', correct: false },
+    ],
+    explanation: "Using Q = mcΔT: mass = 10,000 L × 0.9 kg/L = 9,000 kg = 9,000,000 g. Temperature change ΔT = 150°C - 25°C = 125°C. Therefore Q = 9,000,000 g × 2.0 J/g°C × 125°C = 2,250,000,000 J = 2,250 MJ. Industrial heating processes require careful energy calculations to size equipment and estimate operating costs."
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 

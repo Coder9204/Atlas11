@@ -54,127 +54,128 @@ const MEMORY_SPECS = {
   'SSD/NVMe': { latency: 100000, size: 2000, bandwidth: 5, color: colors.disk }, // 2TB, ~100k cycles
 };
 
-const TEST_QUESTIONS = [
-  // Q1: Core Concept - Cache Hierarchy (Easy)
+// Test questions array - 10 scenario-based multiple choice questions covering memory hierarchy topics
+const testQuestions = [
+  // Q1: Core concept - why memory hierarchy exists (Easy)
   {
-    scenario: "A modern CPU has multiple levels of cache: L1 (64KB), L2 (512KB), and L3 (32MB). Each level has different speed and size characteristics.",
-    question: "Why is L1 cache faster than L2 cache?",
+    scenario: "You're building a computer and wondering why manufacturers don't just use the fastest memory (SRAM) for everything instead of having L1, L2, L3 cache, RAM, and storage.",
+    question: "Why does the memory hierarchy exist with multiple levels of progressively slower but larger storage?",
     options: [
-      { id: 'closer', label: "L1 is physically closer to the CPU core and uses faster SRAM", correct: true },
-      { id: 'bigger', label: "L1 is larger and can store more data" },
-      { id: 'newer', label: "L1 uses newer technology than L2" },
-      { id: 'dedicated', label: "L1 is only used by the operating system" },
+      { id: 'a', label: "It's a legacy design from older computers that hasn't been updated" },
+      { id: 'b', label: "Fast memory (SRAM) is expensive and physically cannot scale to large sizes while maintaining speed", correct: true },
+      { id: 'c', label: "Software requires different memory types to function properly" },
+      { id: 'd', label: "It's purely a cost-cutting measure by manufacturers" },
     ],
-    explanation: "L1 cache is fastest because it's physically closest to the CPU core (minimizing signal travel time) and uses the fastest (most expensive) SRAM. The trade-off is size - you can't have fast AND big memory due to physics constraints."
+    explanation: "The memory hierarchy exists because of fundamental physics constraints. Fast memory like SRAM requires 6 transistors per bit and must be physically close to the CPU to minimize signal travel time. You literally cannot build 64GB of L1-speed memory - the signals couldn't travel fast enough across that distance. The hierarchy trades off speed for capacity at each level, exploiting the principle of locality to keep frequently-used data close to the CPU."
   },
-  // Q2: Cache Hit/Miss Concepts (Medium)
+  // Q2: Cache hit vs miss (Easy-Medium)
   {
-    scenario: "A program running on your computer requests data from memory. The CPU first checks L1 cache, then L2, then L3, and finally main RAM.",
-    question: "What happens when the requested data is NOT found in any cache level?",
+    scenario: "A programmer is debugging a performance issue. Their profiler shows the application has a 70% L1 cache hit rate, 20% L2 hit rate, 8% L3 hit rate, and 2% RAM access rate.",
+    question: "What happens during the 30% of accesses that miss the L1 cache?",
     options: [
-      { id: 'error', label: "The program crashes with a memory error" },
-      { id: 'wait', label: "The CPU stalls for ~100 cycles while fetching from RAM - this is a cache miss", correct: true },
-      { id: 'skip', label: "The CPU skips that data and continues execution" },
-      { id: 'swap', label: "The data is automatically moved to the fastest cache" },
+      { id: 'a', label: "The program crashes and must be restarted" },
+      { id: 'b', label: "The CPU checks L2, then L3, then RAM, with increasing latency at each level", correct: true },
+      { id: 'c', label: "The operating system is notified to handle the missing data" },
+      { id: 'd', label: "The data is regenerated from scratch by the CPU" },
     ],
-    explanation: "A cache miss forces the CPU to fetch data from slower memory. RAM access takes ~100 CPU cycles compared to 1 cycle for L1. During this time, the CPU pipeline stalls, wasting computational potential. This is why cache hit rates are crucial for performance!"
+    explanation: "When data isn't found in L1 cache (a cache miss), the CPU doesn't crash - it simply checks the next level. L2 takes ~4 cycles, L3 takes ~12 cycles, and RAM takes ~100 cycles. The CPU pipeline may stall during this time, which is why high cache hit rates are critical for performance. The 70% L1 hit rate means most accesses are fast (1 cycle), but the 2% that go all the way to RAM cause significant delays."
   },
-  // Q3: Temporal Locality (Medium)
+  // Q3: L1/L2/L3 cache differences (Medium)
   {
-    scenario: "You're running a loop that processes the same variable 1000 times: for(i=0; i<1000; i++) { sum += value; }",
-    question: "Why does this code benefit from temporal locality?",
+    scenario: "An engineer is analyzing CPU specifications and notices: L1 cache is 64KB with 1-cycle latency, L2 is 512KB with 4-cycle latency, and L3 is 32MB with 12-cycle latency. L1 is split into instruction and data caches, while L3 is shared across all cores.",
+    question: "Why is L1 cache per-core and split, while L3 is larger and shared across cores?",
     options: [
-      { id: 'parallel', label: "The loop runs in parallel across multiple cores" },
-      { id: 'reuse', label: "The variable 'value' stays in cache after first access and is reused", correct: true },
-      { id: 'prefetch', label: "The CPU prefetches all 1000 iterations at once" },
-      { id: 'compile', label: "The compiler optimizes away the loop entirely" },
+      { id: 'a', label: "L1 must be extremely fast for each core's critical path; L3 trades speed for capacity and sharing efficiency", correct: true },
+      { id: 'b', label: "L1 is older technology that couldn't be shared" },
+      { id: 'c', label: "L3 is shared only to reduce manufacturing costs" },
+      { id: 'd', label: "Each core needs different instructions, but data can be shared" },
     ],
-    explanation: "Temporal locality means recently accessed data is likely to be accessed again soon. After the first access, 'value' is loaded into L1 cache and remains there for all 999 subsequent accesses - each taking only 1 cycle instead of 100!"
+    explanation: "L1 cache is per-core and split (instruction/data) because it sits in the critical path of every CPU cycle - it must be as fast as possible. Being small and close to each core enables 1-cycle access. L3 is shared because it acts as a 'last line of defense' before slow RAM, benefiting from pooled capacity across cores. A core that doesn't need L3 space leaves more for others. The 12-cycle latency is acceptable because L1/L2 handle most accesses."
   },
-  // Q4: Spatial Locality (Medium)
+  // Q4: Spatial and temporal locality (Medium)
   {
-    scenario: "A program iterates through an array sequentially: for(i=0; i<1000; i++) { process(array[i]); }. Cache lines are 64 bytes, and each array element is 8 bytes.",
-    question: "How does spatial locality improve this code's performance?",
+    scenario: "A data scientist is processing a large dataset. Version A iterates through a 2D array row-by-row (row-major order), while Version B iterates column-by-column. Both process the same data, but Version A runs 10x faster.",
+    question: "Why does row-major iteration significantly outperform column-major iteration?",
     options: [
-      { id: 'predict', label: "The CPU predicts which elements will be accessed" },
-      { id: 'cacheline', label: "Loading array[0] brings array[1-7] into cache for free via the cache line", correct: true },
-      { id: 'compress', label: "The array is compressed to fit more data in cache" },
-      { id: 'virtual', label: "Virtual memory maps the array to faster storage" },
+      { id: 'a', label: "Row-major order uses less memory overall" },
+      { id: 'b', label: "The CPU can only process data in row-major format" },
+      { id: 'c', label: "Row-major accesses consecutive memory addresses, exploiting spatial locality and cache lines", correct: true },
+      { id: 'd', label: "Column-major order causes the CPU to overheat" },
     ],
-    explanation: "Spatial locality means nearby memory addresses are often accessed together. When array[0] is loaded, the entire 64-byte cache line (8 elements) is fetched. The next 7 accesses are instant cache hits! This is why sequential array access is much faster than random access."
+    explanation: "Arrays are stored in contiguous memory in row-major order (in C/Python). When you access array[0][0], the CPU loads an entire 64-byte cache line containing array[0][0] through array[0][7] (assuming 8-byte elements). Row-major iteration gets 7 'free' cache hits per cache line load. Column-major iteration jumps to different rows, missing the cache every time and wasting the prefetched data. This is spatial locality in action - nearby memory addresses are loaded together."
   },
-  // Q5: Cache Levels Comparison (Medium-Hard)
+  // Q5: Cache line size impact (Medium-Hard)
   {
-    scenario: "You're optimizing a database query. The working set (frequently accessed data) is 20MB. Your CPU has: L1=64KB, L2=512KB, L3=32MB, RAM=64GB.",
-    question: "Which memory level will primarily serve this workload, and what's the performance implication?",
+    scenario: "A game developer has two data structures: Structure A has position (x,y,z) and velocity (vx,vy,vz) interleaved for each object (48 bytes per object). Structure B separates all positions in one array and all velocities in another. The physics update only needs positions.",
+    question: "Why might Structure B (separated arrays) perform better for position-only updates?",
     options: [
-      { id: 'l1', label: "L1 cache - fastest possible performance" },
-      { id: 'l2', label: "L2 cache - good performance with 4-cycle latency" },
-      { id: 'l3', label: "L3 cache - the 20MB fits in 32MB L3 with ~12 cycle latency", correct: true },
-      { id: 'ram', label: "RAM - cache is too small for database workloads" },
+      { id: 'a', label: "Separated arrays use less total memory" },
+      { id: 'b', label: "The compiler can better optimize separated arrays" },
+      { id: 'c', label: "Each 64-byte cache line contains more useful position data, reducing memory bandwidth waste", correct: true },
+      { id: 'd', label: "Structure A would cause cache coherency issues" },
     ],
-    explanation: "The 20MB working set exceeds L1 (64KB) and L2 (512KB) but fits in L3 (32MB). L3 access at ~12 cycles is still 8x faster than RAM at ~100 cycles. Sizing your working set to fit in cache is a key optimization strategy!"
+    explanation: "With Structure A, each 64-byte cache line holds only ~1.3 objects (48 bytes each), and half of that (velocity) is unused during position-only updates. With Structure B, each cache line holds ~5 positions (12 bytes each for x,y,z), and every byte is useful. This is called 'data-oriented design' - organizing data for how it's accessed rather than how it's conceptually grouped. It can provide 2-4x speedups in cache-sensitive applications like games and simulations."
   },
-  // Q6: Memory Latency Hierarchy (Hard)
+  // Q6: Write-through vs write-back (Hard)
   {
-    scenario: "An AI inference server processes requests using a 7B parameter model (28GB). The server has an H100 GPU with 80GB HBM3 memory at 3.35 TB/s bandwidth.",
-    question: "Why is this workload called 'memory-bound' rather than 'compute-bound'?",
+    scenario: "A systems architect is choosing between write-through cache (writes go to cache AND memory immediately) and write-back cache (writes go only to cache, memory updated later when cache line is evicted) for a real-time trading system.",
+    question: "What is the key trade-off between write-through and write-back caching strategies?",
     options: [
-      { id: 'weights', label: "Each token requires reading ALL 28GB of weights, but weights are used only once - GPU waits for memory", correct: true },
-      { id: 'slow', label: "The GPU is too slow to process the model" },
-      { id: 'batch', label: "The batch size is too small for efficient computation" },
-      { id: 'precision', label: "FP16 precision limits computational accuracy" },
+      { id: 'a', label: "Write-through is faster but uses more power" },
+      { id: 'b', label: "Write-back offers better performance but risks data loss on power failure and adds coherency complexity", correct: true },
+      { id: 'c', label: "Write-through is only used in older systems" },
+      { id: 'd', label: "Write-back requires special memory chips to function" },
     ],
-    explanation: "LLM inference has terrible arithmetic intensity - each weight is loaded from memory, used for ONE multiply-add, then discarded. The GPU spends 90% of time waiting for memory transfers! This is why memory bandwidth (3.35 TB/s) matters more than TFLOPS for LLM inference."
+    explanation: "Write-through guarantees data consistency - every write reaches memory immediately, so power loss won't lose cached writes. But it's slower because every write waits for slow memory. Write-back is faster because writes complete at cache speed, and multiple writes to the same location coalesce before reaching memory. However, dirty cache lines (modified but not yet written to memory) can be lost on power failure, and multi-core systems need complex coherency protocols (like MESI) to track which caches have the latest data."
   },
-  // Q7: Virtual Memory Concepts (Medium)
+  // Q7: Cache coherency in multicore (Hard)
   {
-    scenario: "Your laptop has 16GB RAM but you're running applications that need 24GB total. The system uses an NVMe SSD for virtual memory (swap).",
-    question: "What is the performance impact when the system swaps data between RAM and SSD?",
+    scenario: "A parallel computing application has 8 threads on 8 cores, all frequently reading and writing a shared counter variable. Performance is 10x slower than expected despite the parallelism.",
+    question: "What cache phenomenon is likely causing this severe performance degradation?",
     options: [
-      { id: 'seamless', label: "No impact - modern SSDs are as fast as RAM" },
-      { id: 'thousand', label: "Severe slowdown - SSD access is ~1000x slower than RAM", correct: true },
-      { id: 'double', label: "Minor impact - only 2x slower than RAM" },
-      { id: 'crash', label: "The system crashes when RAM is exceeded" },
+      { id: 'a', label: "The counter variable is too small for the cache to store" },
+      { id: 'b', label: "False sharing or true sharing is causing constant cache line invalidations across cores", correct: true },
+      { id: 'c', label: "The CPU is automatically serializing access to prevent errors" },
+      { id: 'd', label: "8 cores cannot physically access memory simultaneously" },
     ],
-    explanation: "Even fast NVMe SSDs have ~100,000 cycle latency vs RAM's ~100 cycles - that's 1000x slower! When swapping occurs, the CPU stalls waiting for SSD I/O. This is why adding RAM is often the best upgrade for systems that frequently swap."
+    explanation: "This is cache thrashing due to coherency traffic. When Core 1 writes to the counter, the MESI protocol must invalidate that cache line in all other cores' caches. Each of the 8 cores constantly invalidates the others' copies, forcing expensive cache misses. Even if cores accessed different variables, if those variables share a cache line (false sharing), the same invalidation storm occurs. Solutions include padding variables to separate cache lines, using thread-local counters that are periodically merged, or atomic operations designed to minimize coherency traffic."
   },
-  // Q8: Prefetching (Medium)
+  // Q8: TLB and virtual memory (Hard)
   {
-    scenario: "A CPU's hardware prefetcher detects that your code is accessing array elements sequentially: array[0], array[1], array[2], etc.",
-    question: "What does the prefetcher do to optimize this access pattern?",
+    scenario: "A database administrator notices that queries on a 500GB dataset perform well initially but slow down dramatically when accessing rarely-used tables. The system has 64GB RAM and the TLB can cache 1536 page table entries.",
+    question: "How might TLB (Translation Lookaside Buffer) misses contribute to this slowdown?",
     options: [
-      { id: 'parallel', label: "It parallelizes the array processing across cores" },
-      { id: 'load', label: "It loads array[3], array[4], etc. into cache BEFORE they're requested", correct: true },
-      { id: 'compress', label: "It compresses the array to reduce memory usage" },
-      { id: 'reorder', label: "It reorders array elements for faster access" },
+      { id: 'a', label: "The TLB can only store data, not addresses" },
+      { id: 'b', label: "TLB misses require expensive page table walks through memory, adding latency to every memory access in cold regions", correct: true },
+      { id: 'c', label: "The TLB automatically compresses data that doesn't fit" },
+      { id: 'd', label: "TLB misses only affect write operations, not reads" },
     ],
-    explanation: "Hardware prefetching predicts future memory accesses and loads data into cache before it's needed. For sequential patterns, the prefetcher stays ahead of the program, hiding memory latency. Random access patterns defeat prefetching - the CPU can't predict what's needed next."
+    explanation: "The TLB caches virtual-to-physical address translations. With 4KB pages and 1536 entries, the TLB covers only ~6MB of address space. Frequently-accessed 'hot' data keeps its translations cached, but accessing cold tables causes TLB misses. Each miss requires a page table walk - potentially 4-5 memory accesses to traverse the multi-level page table. This adds 400-500 cycles on top of the actual data access. Using huge pages (2MB or 1GB) dramatically increases TLB coverage, which is why databases often enable them."
   },
-  // Q9: GPU Memory Architecture (Hard)
+  // Q9: Prefetching strategies (Hard)
   {
-    scenario: "NVIDIA's H100 uses HBM3 (High Bandwidth Memory) with 3.35 TB/s bandwidth, while consumer GPUs use GDDR6X with ~1 TB/s bandwidth.",
-    question: "Why does the H100 use expensive HBM3 instead of cheaper GDDR6X?",
+    scenario: "A machine learning engineer is optimizing matrix multiplication. Version A accesses matrix elements sequentially, achieving 95% of theoretical memory bandwidth. Version B accesses elements based on a hash function, achieving only 15% bandwidth utilization despite the same total accesses.",
+    question: "Why does the hash-based access pattern perform so much worse?",
     options: [
-      { id: 'capacity', label: "HBM3 has larger capacity than GDDR6X" },
-      { id: 'power', label: "HBM3 uses less power than GDDR6X" },
-      { id: 'bandwidth', label: "AI workloads are memory-bound - 3x bandwidth directly improves inference speed", correct: true },
-      { id: 'latency', label: "HBM3 has lower latency than GDDR6X" },
+      { id: 'a', label: "Hash functions are computationally expensive" },
+      { id: 'b', label: "Random access patterns defeat hardware prefetching and waste cache lines", correct: true },
+      { id: 'c', label: "Hash-based access causes more CPU interrupts" },
+      { id: 'd', label: "The memory controller rejects non-sequential requests" },
     ],
-    explanation: "For memory-bound AI workloads, memory bandwidth directly determines performance. HBM3's 3.35 TB/s vs GDDR6X's 1 TB/s means ~3x faster inference for large models. The cost premium is justified because the GPU would otherwise sit idle waiting for data."
+    explanation: "Hardware prefetchers detect access patterns (sequential, strided) and speculatively load data before it's needed, hiding memory latency. Sequential access lets the prefetcher stay ahead, achieving near-peak bandwidth. Random/hash-based access is unpredictable - the prefetcher can't guess what's needed next, so every access pays full memory latency. Additionally, each random access loads a 64-byte cache line but may only use 8 bytes, wasting 87.5% of memory bandwidth. This is why algorithms are often redesigned to be 'cache-oblivious' or 'cache-friendly.'"
   },
-  // Q10: Synthesis - Memory Hierarchy Trade-offs (Expert)
+  // Q10: Memory latency hiding (Hard)
   {
-    scenario: "A computer architect is designing a new processor. They must choose between: (A) 128KB L1 cache with 2-cycle latency, or (B) 64KB L1 cache with 1-cycle latency.",
-    question: "Why might they choose the smaller, faster option (B)?",
+    scenario: "A GPU architect is comparing two designs for AI inference: Design A has 1000 simple cores with 4-way multithreading, Design B has 250 powerful cores with no multithreading. Both have the same total compute capability and memory bandwidth.",
+    question: "Why might Design A (more simple cores with multithreading) perform better for memory-bound AI workloads?",
     options: [
-      { id: 'cost', label: "Smaller cache is cheaper to manufacture" },
-      { id: 'physics', label: "Larger cache = longer signal paths = higher latency; the speed benefit often outweighs size", correct: true },
-      { id: 'power', label: "Smaller cache uses less power" },
-      { id: 'simple', label: "Smaller cache is simpler to design" },
+      { id: 'a', label: "Simple cores use less power" },
+      { id: 'b', label: "More threads allow the GPU to hide memory latency by switching to ready threads while others wait for data", correct: true },
+      { id: 'c', label: "Design A can fit more data in cache" },
+      { id: 'd', label: "Multithreading increases memory bandwidth" },
     ],
-    explanation: "This is the fundamental physics trade-off! A larger cache requires longer wires for signals to travel, increasing latency. For L1, speed is critical - every instruction accesses L1. A 1-cycle L1 hit rate of 90% beats a 2-cycle hit rate of 95% in most workloads. Size is compensated by L2/L3."
-  }
+    explanation: "Memory-bound workloads spend most time waiting for data. With 4-way multithreading, when Thread 1 stalls waiting for memory, the core instantly switches to Thread 2, 3, or 4 if they're ready. This 'latency hiding' keeps compute units busy despite slow memory. AI inference loads each weight once, uses it briefly, then discards it - there's no temporal locality to exploit via caching. The solution is massive parallelism: enough threads in flight that some are always ready while others wait. This is why GPUs have thousands of threads and why NVIDIA's architecture evolved toward more, simpler cores with high thread counts."
+  },
 ];
 
 const TRANSFER_APPS = [
@@ -348,7 +349,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
 
   const calculateTestScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      const correctOption = TEST_QUESTIONS[index].options.find(o => o.correct);
+      const correctOption = testQuestions[index].options.find(o => o.correct);
       if (answer === correctOption?.id) return score + 1;
       return score;
     }, 0);
@@ -1359,7 +1360,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
   );
 
   const renderTest = () => {
-    const totalQuestions = TEST_QUESTIONS.length;
+    const totalQuestions = testQuestions.length;
 
     if (testSubmitted) {
       const score = calculateTestScore();
@@ -1448,7 +1449,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {TEST_QUESTIONS.map((q, i) => {
+              {testQuestions.map((q, i) => {
                 const correctOption = q.options.find(o => o.correct);
                 const correctId = correctOption?.id;
                 const userAnswer = testAnswers[i];
@@ -1588,7 +1589,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
       );
     }
 
-    const currentQ = TEST_QUESTIONS[currentTestIndex];
+    const currentQ = testQuestions[currentTestIndex];
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>

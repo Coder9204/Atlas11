@@ -506,6 +506,120 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     }
   ];
 
+  // Test questions with real-world scenarios for the Test phase
+  const testQuestions = [
+    {
+      scenario: 'A car is driving on a highway. The air around it creates resistance as the car pushes through.',
+      question: 'What primarily causes the drag force on the car?',
+      options: [
+        { id: 'a', label: 'The weight of the car pressing down on the road' },
+        { id: 'b', label: 'Air molecules colliding with and being deflected by the car surface', correct: true },
+        { id: 'c', label: 'Friction between the tires and the pavement' },
+        { id: 'd', label: 'The engine consuming fuel to maintain speed' }
+      ],
+      explanation: 'Drag force is caused by the interaction between a moving object and the fluid (air) it moves through. As the car travels, air molecules collide with its surface and must be pushed aside, creating pressure differences and friction that resist motion. This is fundamentally different from rolling friction or weight-related forces.'
+    },
+    {
+      scenario: 'A skydiver jumps from a plane and initially accelerates downward. After several seconds, they stop accelerating and fall at a constant speed.',
+      question: 'Why does the skydiver eventually stop accelerating and reach terminal velocity?',
+      options: [
+        { id: 'a', label: 'Gravity becomes weaker as they fall further from the plane' },
+        { id: 'b', label: 'The air becomes thicker closer to the ground' },
+        { id: 'c', label: 'Drag force increases with speed until it equals the gravitational force', correct: true },
+        { id: 'd', label: 'The skydiver runs out of potential energy' }
+      ],
+      explanation: 'As the skydiver accelerates, their velocity increases, causing drag force (proportional to v²) to grow rapidly. Eventually, drag equals the gravitational force (weight), resulting in zero net force and zero acceleration. This constant falling speed is called terminal velocity.'
+    },
+    {
+      scenario: 'A car traveling at 60 mph uses significantly more fuel per mile than when traveling at 30 mph, even though the distance covered is the same.',
+      question: 'Why does fuel efficiency decrease so dramatically at higher speeds?',
+      options: [
+        { id: 'a', label: 'The engine runs less efficiently at higher RPMs' },
+        { id: 'b', label: 'Drag force quadruples when speed doubles, requiring much more power to overcome', correct: true },
+        { id: 'c', label: 'Tire friction increases linearly with speed' },
+        { id: 'd', label: 'The car weighs more at higher speeds due to momentum' }
+      ],
+      explanation: 'Drag force depends on velocity squared (F = ½ρv²CdA). Doubling speed from 30 to 60 mph quadruples the drag force. Power required to overcome drag is even worse—it scales with v³ (force × velocity). This is why highway driving at high speeds dramatically reduces fuel economy.'
+    },
+    {
+      scenario: 'Engineers are designing two vehicles: a boxy delivery truck and a sleek sports car. Both have the same frontal area facing the wind.',
+      question: 'Why does the sports car experience much less drag than the truck at the same speed?',
+      options: [
+        { id: 'a', label: 'The sports car is lower to the ground where wind speeds are lower' },
+        { id: 'b', label: 'The sports car weighs less, so drag affects it less' },
+        { id: 'c', label: 'The streamlined shape has a lower drag coefficient, allowing air to flow smoothly around it', correct: true },
+        { id: 'd', label: 'The sports car engine generates thrust that cancels out drag' }
+      ],
+      explanation: 'The drag coefficient (Cd) measures how aerodynamically efficient a shape is. A streamlined teardrop shape (Cd ≈ 0.04) allows air to flow smoothly with minimal turbulence, while a flat plate perpendicular to flow (Cd ≈ 1.2) creates massive turbulence and pressure drag. Sports cars typically have Cd around 0.25-0.35, while boxy trucks can exceed 0.7.'
+    },
+    {
+      scenario: 'In professional cycling races, riders often form a tight group (peloton) rather than spreading out. The riders behind the leader use 20-40% less energy than the front rider.',
+      question: 'What explains the significant energy savings from drafting behind another cyclist?',
+      options: [
+        { id: 'a', label: 'The lead rider blocks the sun, keeping following riders cooler' },
+        { id: 'b', label: 'Following riders can coast on the wake of air pushed by the leader' },
+        { id: 'c', label: 'The lead rider creates a low-pressure wake zone with reduced air resistance for followers', correct: true },
+        { id: 'd', label: 'The psychological benefit of following reduces perceived effort' }
+      ],
+      explanation: 'The lead cyclist pushes through undisturbed air, creating a turbulent low-pressure zone behind them. Cyclists drafting in this zone encounter less air resistance because the effective velocity of air relative to them is reduced. This phenomenon is used in cycling, NASCAR, and even by migrating birds flying in V-formation.'
+    },
+    {
+      scenario: 'An engineer is studying fluid flow around a small sphere in slow-moving oil versus a large sphere in fast-moving air. They calculate the Reynolds number for each case.',
+      question: 'What does the Reynolds number tell the engineer about drag behavior?',
+      options: [
+        { id: 'a', label: 'The total amount of drag force in Newtons' },
+        { id: 'b', label: 'Whether the flow is laminar (smooth) or turbulent, which affects the drag coefficient', correct: true },
+        { id: 'c', label: 'The speed at which the object will reach terminal velocity' },
+        { id: 'd', label: 'The density of the fluid being used' }
+      ],
+      explanation: 'The Reynolds number (Re = ρvL/μ) is a dimensionless quantity that predicts flow patterns. Low Re (< 2000) indicates laminar flow with predictable, smooth streamlines. High Re (> 4000) indicates turbulent flow with chaotic eddies and vortices. This transition dramatically changes the drag coefficient and how drag scales with velocity.'
+    },
+    {
+      scenario: 'Surprisingly, a golf ball with hundreds of small dimples travels nearly twice as far as a smooth ball hit with the same force.',
+      question: 'How do dimples on a golf ball reduce drag and increase distance?',
+      options: [
+        { id: 'a', label: 'Dimples make the ball lighter, so it flies farther' },
+        { id: 'b', label: 'Dimples store air that provides additional thrust' },
+        { id: 'c', label: 'Dimples trip the boundary layer into turbulence, which delays flow separation and reduces pressure drag', correct: true },
+        { id: 'd', label: 'Dimples create small jets of air that propel the ball forward' }
+      ],
+      explanation: 'At golf ball speeds, smooth spheres have laminar boundary layers that separate early from the surface, creating a large turbulent wake and high pressure drag. Dimples trigger earlier transition to a turbulent boundary layer, which adheres to the surface longer, delays separation, and creates a smaller wake. This counterintuitively reduces overall drag despite increased surface friction.'
+    },
+    {
+      scenario: 'During landing approach, a commercial airplane extends its landing gear. Pilots notice the aircraft immediately slows down significantly even before applying brakes.',
+      question: 'Why does extending the landing gear cause such a dramatic increase in drag?',
+      options: [
+        { id: 'a', label: 'The landing gear adds weight, pulling the plane down faster' },
+        { id: 'b', label: 'The non-streamlined gear creates massive form drag by disrupting airflow and causing turbulence', correct: true },
+        { id: 'c', label: 'The landing gear acts as a brake by touching the air' },
+        { id: 'd', label: 'The gear absorbs heat from the engines, reducing their efficiency' }
+      ],
+      explanation: 'Landing gear are essentially bluff bodies—non-streamlined shapes that create enormous pressure drag. When extended, they disrupt the smooth airflow under the aircraft, creating turbulent wakes and large pressure differentials. This parasitic drag can account for up to 30% of total aircraft drag. Retractable gear was a major innovation in aviation for this reason.'
+    },
+    {
+      scenario: 'A submarine operates at different depths in the ocean. Engineers consider how drag forces change as the submarine dives from 100 meters to 1000 meters depth.',
+      question: 'How does diving deeper affect the drag force on the submarine traveling at the same speed?',
+      options: [
+        { id: 'a', label: 'Drag decreases because water pressure compresses the submarine smaller' },
+        { id: 'b', label: 'Drag stays essentially the same because water density changes very little with depth', correct: true },
+        { id: 'c', label: 'Drag increases dramatically due to higher water pressure at depth' },
+        { id: 'd', label: 'Drag decreases because deeper water has fewer currents' }
+      ],
+      explanation: 'Unlike gases, liquids are nearly incompressible. Water density increases only about 0.5% per 1000 meters of depth due to slight compression. Since drag force depends on fluid density (F = ½ρv²CdA), the drag on a submarine remains essentially constant regardless of depth. The higher pressure at depth does not directly affect drag—it affects hull stress instead.'
+    },
+    {
+      scenario: 'The Hyperloop transportation concept proposes moving passenger pods through tubes with most of the air removed, achieving speeds over 700 mph.',
+      question: 'Why is removing air from the tube essential for the Hyperloop to achieve such high speeds efficiently?',
+      options: [
+        { id: 'a', label: 'Removing air eliminates the need for wheels, reducing friction' },
+        { id: 'b', label: 'Vacuum tubes stay cooler, preventing overheating of the pod' },
+        { id: 'c', label: 'Reducing air density dramatically lowers drag force, which would otherwise be enormous at such speeds', correct: true },
+        { id: 'd', label: 'Without air, the pod can use solar panels more efficiently' }
+      ],
+      explanation: 'Drag force is directly proportional to air density (F = ½ρv²CdA). At 700+ mph, drag in normal atmosphere would be immense—the force scales with velocity squared. By reducing air pressure to about 1/1000th of atmospheric pressure, drag is reduced by the same factor. This makes high-speed travel energy-efficient and prevents the sonic boom issues that plague supersonic aircraft in normal atmosphere.'
+    }
+  ];
+
   const renderPhaseContent = () => {
     switch (phase) {
       // ========== HOOK PHASE ==========

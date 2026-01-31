@@ -359,6 +359,132 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // TEST QUESTIONS - Scenario-based multiple choice for comprehensive assessment
+  // ─────────────────────────────────────────────────────────────────────────────
+  const testQuestions = [
+    // Q1: Core concept - what is memory bandwidth (Easy)
+    {
+      scenario: "A game developer is comparing two graphics cards for their studio. Card A advertises '512 GB/s memory bandwidth' while Card B shows '16 Gbps memory speed'. The developer needs to understand what these numbers actually mean for performance.",
+      question: "What does memory bandwidth measure in a GPU?",
+      options: [
+        { id: 'a', label: "The total amount of VRAM available for storing textures and data" },
+        { id: 'b', label: "The maximum rate at which data can be read from or written to GPU memory per second", correct: true },
+        { id: 'c', label: "The clock frequency at which the memory chips operate" },
+        { id: 'd', label: "The number of memory channels available on the graphics card" }
+      ],
+      explanation: "Memory bandwidth measures the maximum data transfer rate between the GPU and its memory, expressed in GB/s (gigabytes per second). It determines how quickly the GPU can access textures, framebuffers, and other data. Higher bandwidth means more data available to shader cores each second, directly impacting performance in memory-intensive workloads."
+    },
+    // Q2: GDDR vs HBM comparison (Easy-Medium)
+    {
+      scenario: "NVIDIA sells consumer GeForce cards with GDDR6X memory achieving around 1 TB/s bandwidth, while their data center H100 GPU uses HBM3 memory achieving 3.35 TB/s. Both memory types serve different market segments with distinct requirements.",
+      question: "What is the primary architectural difference that allows HBM to achieve higher bandwidth than GDDR?",
+      options: [
+        { id: 'a', label: "HBM uses faster clock speeds, running at 5x the frequency of GDDR chips" },
+        { id: 'b', label: "HBM compresses data more efficiently, fitting more information per transfer" },
+        { id: 'c', label: "HBM stacks memory dies vertically with a much wider bus (1024+ bits vs 256-384 bits)", correct: true },
+        { id: 'd', label: "HBM uses quantum tunneling effects to bypass traditional electrical limitations" }
+      ],
+      explanation: "HBM (High Bandwidth Memory) achieves its bandwidth advantage through vertical die stacking and an extremely wide memory bus. While GDDR6X uses a 256-384 bit bus with high clock speeds, HBM stacks 4-8 memory dies connected by thousands of Through-Silicon Vias (TSVs), enabling a 1024-bit or wider bus. This massive parallelism delivers 3-4x more bandwidth despite running at lower clock speeds than GDDR."
+    },
+    // Q3: Why bandwidth matters for gaming (Medium)
+    {
+      scenario: "A gamer upgrades their monitor from 1080p to 4K resolution and notices their previously smooth 60 FPS gameplay now stutters, even though their GPU's shader cores are only at 70% utilization. The GPU temperature is normal and there's no thermal throttling occurring.",
+      question: "Why does 4K gaming demand significantly more memory bandwidth than 1080p?",
+      options: [
+        { id: 'a', label: "4K monitors use a different display protocol that requires more memory overhead" },
+        { id: 'b', label: "The GPU must decompress 4K textures in real-time, which is memory intensive" },
+        { id: 'c', label: "4K has 4x more pixels, requiring 4x more texture fetches, shader data reads, and framebuffer writes per frame", correct: true },
+        { id: 'd', label: "4K gaming requires loading the entire game into VRAM before each frame" }
+      ],
+      explanation: "4K resolution (3840x2160) contains exactly 4 times the pixels of 1080p (1920x1080). Each pixel requires texture sampling from VRAM, intermediate shader data storage, and final color writes to the framebuffer. With 4x more pixels processed per frame at the same framerate, the memory subsystem must deliver 4x more data. When bandwidth cannot keep up, shader cores idle waiting for data, causing the stuttering despite low GPU utilization."
+    },
+    // Q4: Memory bus width impact (Medium)
+    {
+      scenario: "A GPU manufacturer is designing a mid-range graphics card and must choose between two memory configurations. Option A uses a 128-bit memory bus with 20 Gbps GDDR6X chips. Option B uses a 256-bit memory bus with 14 Gbps GDDR6 chips. Both options have similar manufacturing costs.",
+      question: "Which configuration provides higher memory bandwidth, and why?",
+      options: [
+        { id: 'a', label: "Option A (128-bit at 20 Gbps) because faster memory always outperforms wider buses" },
+        { id: 'b', label: "Option B (256-bit at 14 Gbps) because it delivers 448 GB/s versus 320 GB/s from Option A", correct: true },
+        { id: 'c', label: "They are equal because bus width and speed trade off exactly" },
+        { id: 'd', label: "Cannot be determined without knowing the memory latency specifications" }
+      ],
+      explanation: "Bandwidth = (Bus Width x Data Rate) / 8. Option A: (128 bits x 20 Gbps) / 8 = 320 GB/s. Option B: (256 bits x 14 Gbps) / 8 = 448 GB/s. The wider 256-bit bus in Option B delivers 40% more bandwidth despite using slower memory chips. This demonstrates why GPU designers often prioritize bus width - doubling the bus width doubles bandwidth, while increasing memory speed faces physical and cost limitations."
+    },
+    // Q5: AI/ML workload requirements (Medium-Hard)
+    {
+      scenario: "A machine learning engineer is training a 70-billion parameter language model. Each training step requires loading model weights, computing gradients, and updating parameters. Profiling shows the GPU spends 60% of each training step waiting for memory transfers, with compute units frequently idle.",
+      question: "Why are AI training workloads particularly sensitive to memory bandwidth limitations?",
+      options: [
+        { id: 'a', label: "AI models require error-correcting memory which reduces effective bandwidth" },
+        { id: 'b', label: "Neural network calculations use floating-point math which is memory intensive" },
+        { id: 'c', label: "Large models must stream billions of parameters through memory every forward and backward pass, making bandwidth the primary bottleneck", correct: true },
+        { id: 'd', label: "AI frameworks are poorly optimized and waste bandwidth on unnecessary data copies" }
+      ],
+      explanation: "Large language models store billions of parameters in GPU memory. During each training step, the forward pass reads all parameters to compute activations, and the backward pass reads them again to compute gradients, then writes updated values. A 70B parameter model at FP16 requires reading 140GB of weights per step, plus gradients and activations. Even at 3 TB/s bandwidth, this takes significant time. The compute units can perform trillions of operations per second, but they sit idle waiting for the next batch of parameters to arrive from memory."
+    },
+    // Q6: Memory coalescing (Hard)
+    {
+      scenario: "A CUDA developer notices their kernel runs 10x slower than expected. Analysis reveals that each of 32 threads in a warp is reading a single float from non-contiguous memory addresses scattered across VRAM. The memory controller issues 32 separate memory transactions instead of one combined request.",
+      question: "What memory access optimization technique would dramatically improve this kernel's performance?",
+      options: [
+        { id: 'a', label: "Memory prefetching to load data into cache before it's needed" },
+        { id: 'b', label: "Memory coalescing, where adjacent threads access contiguous memory addresses that combine into fewer wide transactions", correct: true },
+        { id: 'c', label: "Memory compression to reduce the total bytes transferred" },
+        { id: 'd', label: "Memory interleaving to spread accesses across multiple banks" }
+      ],
+      explanation: "Memory coalescing is a critical GPU optimization where threads in a warp access contiguous memory addresses. When 32 threads each request 4-byte floats from addresses 0, 4, 8, 12... the memory controller combines these into a single 128-byte transaction using the full bus width. Scattered accesses force 32 separate transactions, each using only a fraction of the bus width, reducing effective bandwidth by 10-32x. Reorganizing data structures for coalesced access is often the single most impactful GPU optimization."
+    },
+    // Q7: Texture cache optimization (Hard)
+    {
+      scenario: "A graphics programmer is optimizing a terrain rendering shader that samples a large heightmap texture. When the camera is far from the terrain, performance is excellent. But when zoomed in close, framerates drop significantly despite the same number of pixels being rendered. Memory bandwidth utilization spikes to 95%.",
+      question: "What causes this performance degradation and how do texture caches help mitigate it?",
+      options: [
+        { id: 'a', label: "Close-up views require higher resolution textures which are larger to transfer" },
+        { id: 'b', label: "Distant views benefit from spatial locality in texture cache, while close-ups sample sparse texels that cause frequent cache misses and VRAM fetches", correct: true },
+        { id: 'c', label: "The GPU disables texture compression for close-up rendering to improve quality" },
+        { id: 'd', label: "Zoom level affects shader complexity, causing more memory reads per pixel" }
+      ],
+      explanation: "Texture caches exploit spatial locality - when sampling a texel, nearby texels are likely needed soon. From far away, each screen pixel might map to a large area of the texture, and adjacent pixels sample nearby texels, hitting the cache efficiently. When zoomed in, each screen pixel maps to a tiny texture region, and the magnified view means screen-adjacent pixels sample distant texels. This breaks cache locality, causing cache misses that require expensive VRAM fetches. Mipmapping helps by providing lower-resolution texture levels optimized for each view distance."
+    },
+    // Q8: VRAM vs system RAM bandwidth (Hard)
+    {
+      scenario: "A game developer is debugging why their procedurally generated world loads slowly. The generation algorithm runs on the GPU and produces terrain chunks in VRAM. These chunks must then be copied to system RAM for game logic processing, then back to VRAM for rendering. PCIe 4.0 x16 provides 32 GB/s bidirectional bandwidth.",
+      question: "Why is GPU VRAM bandwidth so much higher than the PCIe connection to system memory?",
+      options: [
+        { id: 'a', label: "VRAM uses proprietary protocols while PCIe uses standardized slower protocols" },
+        { id: 'b', label: "VRAM sits millimeters from the GPU die with dedicated wide buses, while PCIe travels centimeters through shared motherboard traces with fewer lanes", correct: true },
+        { id: 'c', label: "VRAM bandwidth numbers are theoretical while PCIe numbers are real-world measurements" },
+        { id: 'd', label: "The CPU intentionally throttles PCIe bandwidth to prioritize its own memory access" }
+      ],
+      explanation: "VRAM achieves 500+ GB/s because memory chips sit millimeters from the GPU die, connected by 256-384 dedicated signal traces on the graphics card PCB. This short distance allows high frequencies and wide buses. PCIe x16 uses only 16 lanes traveling 10+ centimeters through the motherboard to the CPU, shared with other system components. The physical distance introduces signal integrity challenges limiting frequency. This 15-30x bandwidth difference is why GPU algorithms minimize CPU-GPU transfers, keeping data in VRAM as much as possible."
+    },
+    // Q9: Infinity Cache/Smart Access Memory (Hard)
+    {
+      scenario: "AMD's RDNA 3 GPUs feature 96MB of Infinity Cache, a large on-die cache between the shader cores and VRAM. Benchmarks show that at 1080p resolution, the GPU achieves nearly the same performance as a competitor with 50% more raw memory bandwidth. At 4K resolution, the advantage shrinks significantly.",
+      question: "Why does large on-die cache provide more benefit at lower resolutions than at higher resolutions?",
+      options: [
+        { id: 'a', label: "Lower resolutions use simpler shaders that benefit more from caching" },
+        { id: 'b', label: "1080p textures are compressed more efficiently than 4K textures" },
+        { id: 'c', label: "Lower resolutions have smaller working sets that fit in cache, while 4K requires accessing more unique data that exceeds cache capacity", correct: true },
+        { id: 'd', label: "The cache controller is optimized for 1080p frame buffer sizes" }
+      ],
+      explanation: "At 1080p, the framebuffer is ~8MB and frequently accessed textures may total 50-80MB - fitting largely within a 96MB cache. Cache hits avoid VRAM accesses entirely, making raw VRAM bandwidth less important. At 4K, the framebuffer alone is ~32MB, and the larger screen samples more unique texture data. When the working set exceeds cache capacity, cache misses spike, forcing frequent VRAM accesses where raw bandwidth becomes the bottleneck. This is why large caches provide an 'effective bandwidth multiplier' that varies based on workload memory footprint."
+    },
+    // Q10: Future memory technologies (Hard)
+    {
+      scenario: "Memory technology roadmaps show GDDR7 targeting 36 Gbps per pin with PAM3 signaling, HBM4 planning for 6+ TB/s bandwidth per stack, and research into compute-in-memory architectures that perform calculations within memory chips. Each approach addresses different aspects of the bandwidth challenge.",
+      question: "What fundamental limitation drives the continued pursuit of higher memory bandwidth and alternative architectures?",
+      options: [
+        { id: 'a', label: "Marketing pressure to advertise larger numbers on product specifications" },
+        { id: 'b', label: "Software developers writing increasingly inefficient code that wastes bandwidth" },
+        { id: 'c', label: "The growing gap between compute capability (growing ~2x per generation) and memory bandwidth improvement (~1.3x per generation), causing memory to bottleneck performance", correct: true },
+        { id: 'd', label: "Power consumption requirements forcing faster transfers to reduce active time" }
+      ],
+      explanation: "GPU compute performance has grown roughly 2x per generation through more cores and higher frequencies, while memory bandwidth improves only ~1.3x due to physical signaling constraints. This 'memory wall' means each generation becomes more bandwidth-starved relative to compute capability. GDDR7's PAM3 signaling extracts more bits per signal, HBM4 adds more die stacks and width, and compute-in-memory eliminates data movement entirely by computing where data lives. All approaches attack the same fundamental problem: moving data costs more energy and time than computing on it."
+    }
+  ];
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // VISUALIZATION
   // ─────────────────────────────────────────────────────────────────────────────
   const renderBandwidthVisualization = () => {

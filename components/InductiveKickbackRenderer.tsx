@@ -913,6 +913,123 @@ export default function InductiveKickbackRenderer({
   );
 
   // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO-BASED TEST QUESTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const testQuestions = [
+    {
+      scenario: "You're debugging a simple circuit where a 12V relay coil is switched off using a mechanical switch. The switch contacts are showing burn marks after just a few days of use.",
+      question: "What is the most likely cause of the switch contact damage?",
+      options: [
+        { id: 'a', label: "The switch is rated for too low a current", correct: false },
+        { id: 'b', label: "Inductive kickback from the relay coil is arcing across the switch contacts", correct: true },
+        { id: 'c', label: "The 12V power supply is providing too much voltage", correct: false },
+        { id: 'd', label: "Static electricity is building up in the circuit", correct: false },
+      ],
+      explanation: "When current through an inductor (like a relay coil) is suddenly interrupted, the collapsing magnetic field induces a high voltage spike (V = -L di/dt). This 'inductive kickback' can be hundreds of volts, easily arcing across switch contacts and causing burn marks over time.",
+    },
+    {
+      scenario: "An engineer is designing a circuit where an Arduino controls a 24V relay. The Arduino's GPIO pins can only withstand a maximum of 5V.",
+      question: "What component should be added across the relay coil to protect the Arduino?",
+      options: [
+        { id: 'a', label: "A capacitor to store the excess energy", correct: false },
+        { id: 'b', label: "A resistor to limit current flow", correct: false },
+        { id: 'c', label: "A flyback diode oriented reverse-biased across the coil", correct: true },
+        { id: 'd', label: "A fuse to break the circuit during spikes", correct: false },
+      ],
+      explanation: "A flyback diode (also called a freewheeling or snubber diode) is placed reverse-biased across the relay coil. When the switch opens, the diode becomes forward-biased and provides a safe path for the collapsing magnetic field's current, clamping the voltage spike to about 0.7V above the supply voltage instead of hundreds of volts.",
+    },
+    {
+      scenario: "A technician notices that the flyback diode across a motor is installed with the cathode connected to the positive terminal and the anode to the negative terminal of the motor.",
+      question: "What is the purpose of this specific diode orientation?",
+      options: [
+        { id: 'a', label: "To block current flow during normal motor operation while conducting during kickback", correct: true },
+        { id: 'b', label: "To increase the motor's efficiency by reducing resistance", correct: false },
+        { id: 'c', label: "To convert the AC motor current to DC", correct: false },
+        { id: 'd', label: "To prevent the motor from spinning backwards", correct: false },
+      ],
+      explanation: "The flyback diode is reverse-biased during normal operation so it doesn't affect the circuit. When the switch opens and kickback occurs, the inductor's voltage reverses polarity, forward-biasing the diode and allowing current to circulate through it, safely dissipating the stored magnetic energy as heat.",
+    },
+    {
+      scenario: "A robotics student is building an H-bridge motor driver using four MOSFETs to control a DC motor's direction. During testing, one of the MOSFETs fails immediately when the motor direction is reversed quickly.",
+      question: "What most likely caused the MOSFET failure?",
+      options: [
+        { id: 'a', label: "The motor drew too much continuous current", correct: false },
+        { id: 'b', label: "Inductive kickback from the motor exceeded the MOSFET's voltage rating", correct: true },
+        { id: 'c', label: "The PWM frequency was set too high", correct: false },
+        { id: 'd', label: "The gate driver voltage was insufficient", correct: false },
+      ],
+      explanation: "When a motor's direction is reversed quickly, the current through its windings must change direction. This rapid current change (high di/dt) generates a massive voltage spike that can exceed the MOSFET's drain-source breakdown voltage, causing immediate failure. Flyback diodes across each MOSFET are essential for protection.",
+    },
+    {
+      scenario: "A car won't start. The mechanic measures 12V at the ignition coil primary but the spark plugs aren't firing. The ignition coil is supposed to generate around 40,000V for the spark plugs.",
+      question: "How does the ignition coil achieve such a dramatic voltage increase from 12V to 40,000V?",
+      options: [
+        { id: 'a', label: "An internal battery booster multiplies the voltage", correct: false },
+        { id: 'b', label: "The secondary coil has many more turns, and the rapid current interruption creates inductive kickback that is stepped up by the turns ratio", correct: true },
+        { id: 'c', label: "Capacitors store energy and release it all at once", correct: false },
+        { id: 'd', label: "The spark plugs themselves amplify the incoming voltage", correct: false },
+      ],
+      explanation: "The ignition coil is a transformer with the secondary having about 100x more turns than the primary. When current to the primary is suddenly interrupted, inductive kickback creates a voltage spike that is further multiplied by the turns ratio (100:1 becomes 12V x 100 = 1,200V primary spike, stepped up to ~40,000V on the secondary).",
+    },
+    {
+      scenario: "An engineer is designing a snubber circuit for a high-power relay that switches 50 times per second. A simple flyback diode causes the relay to release too slowly, creating timing problems.",
+      question: "What snubber circuit modification would allow faster relay release while still protecting against kickback?",
+      options: [
+        { id: 'a', label: "Remove the diode entirely and accept the voltage spikes", correct: false },
+        { id: 'b', label: "Add a resistor in series with the flyback diode to allow some controlled voltage spike", correct: true },
+        { id: 'c', label: "Replace the diode with a larger capacitor", correct: false },
+        { id: 'd', label: "Use a higher voltage power supply to overwhelm the kickback", correct: false },
+      ],
+      explanation: "An RC snubber or a resistor-diode combination allows a controlled voltage spike (typically limited to 2-3x supply voltage) while speeding up the magnetic field collapse. The resistor dissipates energy faster than a diode alone, reducing the relay's release time. This is a common trade-off between protection level and switching speed.",
+    },
+    {
+      scenario: "A power electronics designer is selecting a MOSFET for a flyback converter that operates from a 48V input. The MOSFET's datasheet shows a maximum Vds rating of 100V.",
+      question: "Why might this MOSFET be inadequate for this application despite seeming to have sufficient margin?",
+      options: [
+        { id: 'a', label: "The MOSFET is too physically large for the circuit board", correct: false },
+        { id: 'b', label: "Inductive kickback spikes from the transformer can exceed twice the input voltage, plus additional ringing", correct: true },
+        { id: 'c', label: "48V systems require special low-voltage MOSFETs", correct: false },
+        { id: 'd', label: "The switching frequency will be too slow with this MOSFET", correct: false },
+      ],
+      explanation: "In flyback converters, the MOSFET sees the input voltage plus the reflected output voltage plus any leakage inductance spikes. A 48V input can easily create 120V+ spikes across the MOSFET. Engineers typically select MOSFETs rated for 2-3x the expected peak voltage, so a 150V-200V rated device would be more appropriate.",
+    },
+    {
+      scenario: "A switching power supply designer is working on a flyback converter for a phone charger. The design uses a transformer with a primary inductance of 500uH and switches at 100kHz.",
+      question: "How does the flyback converter use inductive kickback to transfer energy to the output?",
+      options: [
+        { id: 'a', label: "Energy is transferred continuously while the switch is closed", correct: false },
+        { id: 'b', label: "When the switch opens, the collapsing magnetic field transfers stored energy through the transformer to the secondary winding and output", correct: true },
+        { id: 'c', label: "The transformer steps down AC voltage directly from the wall", correct: false },
+        { id: 'd', label: "Kickback is eliminated by the transformer, allowing smooth DC output", correct: false },
+      ],
+      explanation: "In a flyback converter, energy is stored in the transformer's magnetic field while the switch is closed. When the switch opens, inductive kickback causes the magnetic field to collapse, transferring the stored energy to the secondary winding. This 'flyback' action is what gives the topology its name and enables efficient DC-DC conversion.",
+    },
+    {
+      scenario: "A factory is experiencing mysterious electronic equipment failures. Investigation reveals that large motors and solenoids share power distribution with sensitive control electronics. Failures often occur when motors are turned off.",
+      question: "What electromagnetic phenomenon is most likely causing these failures?",
+      options: [
+        { id: 'a', label: "Radio frequency interference from motor brushes", correct: false },
+        { id: 'b', label: "Ground loops between the motor and control circuits", correct: false },
+        { id: 'c', label: "EMI from inductive kickback coupling into nearby circuits through conducted and radiated emissions", correct: true },
+        { id: 'd', label: "Power supply voltage droop when motors start", correct: false },
+      ],
+      explanation: "Inductive kickback generates high-frequency voltage spikes with fast rise times that radiate electromagnetic interference (EMI) and conduct through shared power lines. These transients can couple into nearby sensitive electronics, causing data corruption, resets, or permanent damage. Proper snubbing and EMI filtering at the source is essential.",
+    },
+    {
+      scenario: "An electric vehicle engineer is designing a regenerative braking system. When the driver releases the accelerator, the motor should slow the car while recovering energy to the battery.",
+      question: "How can the motor's inductive properties be used to recover braking energy?",
+      options: [
+        { id: 'a', label: "By disconnecting the motor and letting it spin freely as a generator", correct: false },
+        { id: 'b', label: "By using controlled switching to route the motor's back-EMF and inductive energy through power electronics back to the battery", correct: true },
+        { id: 'c', label: "By adding extra batteries that only charge during braking", correct: false },
+        { id: 'd', label: "By converting the kinetic energy directly to heat in the motor windings", correct: false },
+      ],
+      explanation: "During regenerative braking, the motor acts as a generator with its own back-EMF. Power electronics actively control the current flow using PWM switching, routing the motor's inductive kickback energy back to the battery rather than dissipating it. This is the inverse of motoring operation and can recover 60-70% of braking energy.",
+    },
+  ];
+
+  // ──────────────────────────────────────────────────────────────────────────
   // PHASE CONTENT
   // ──────────────────────────────────────────────────────────────────────────
 

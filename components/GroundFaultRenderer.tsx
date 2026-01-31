@@ -225,6 +225,133 @@ const TRANSFER_APPS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
+// SCENARIO-BASED TEST QUESTIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const testQuestions = [
+  {
+    // Question 1: Core concept - what is a ground fault (Easy)
+    scenario: "A homeowner is using a power drill in their garage when the drill's cord gets pinched under a heavy toolbox, damaging the insulation. Suddenly, the metal drill casing becomes energized.",
+    question: "What is a ground fault and what happened in this situation?",
+    options: [
+      { id: 'a', label: "A ground fault is when the circuit breaker trips due to overload; the drill drew too much current", correct: false },
+      { id: 'b', label: "A ground fault is current flowing through an unintended path to ground; damaged insulation allowed current to reach the metal casing", correct: true },
+      { id: 'c', label: "A ground fault is when the neutral wire disconnects; the cord damage broke the neutral connection", correct: false },
+      { id: 'd', label: "A ground fault is excessive voltage in the circuit; the damaged cord increased resistance and voltage", correct: false }
+    ],
+    explanation: "A ground fault occurs when electrical current finds an unintended path to ground instead of returning through the neutral conductor. In this case, the damaged insulation created a path for current to flow from the hot wire to the metal drill casing. If a person touches this energized casing while grounded, current could flow through their body to ground, causing electric shock. This is fundamentally different from an overload, which involves excessive current through the intended path."
+  },
+  {
+    // Question 2: GFCI operation principle (Easy-Medium)
+    scenario: "An electrician explains to an apprentice that a GFCI outlet continuously monitors the current flowing through the hot and neutral wires. In normal operation, these currents should be equal.",
+    question: "How does a GFCI detect a ground fault and protect people from electrocution?",
+    options: [
+      { id: 'a', label: "It measures the voltage between hot and ground; if voltage drops below 120V, it trips", correct: false },
+      { id: 'b', label: "It detects when current in the hot wire doesn't equal current in the neutral wire, indicating leakage to ground", correct: true },
+      { id: 'c', label: "It monitors the temperature of the wires; overheating indicates a fault condition", correct: false },
+      { id: 'd', label: "It checks the resistance of the ground wire; high resistance means poor grounding", correct: false }
+    ],
+    explanation: "A GFCI uses a current transformer with both the hot and neutral wires passing through its core. In normal operation, current flowing out through the hot wire equals current returning through the neutral wire, creating equal and opposite magnetic fields that cancel out. If even a small amount of current (as little as 4-6 milliamps) leaks to ground through another path (like a person), the imbalance creates a net magnetic field in the transformer, which triggers the GFCI to trip within about 25 milliseconds - fast enough to prevent lethal shock."
+  },
+  {
+    // Question 3: Why bathrooms need GFCIs (Medium)
+    scenario: "During a home inspection, the inspector notes that the bathroom outlet near the sink is a standard duplex outlet, not a GFCI. They mark this as a safety hazard requiring immediate correction.",
+    question: "Why does the National Electrical Code require GFCI protection in bathrooms and what specific risk does water create?",
+    options: [
+      { id: 'a', label: "Water conducts electricity very well; wet skin has much lower resistance, allowing dangerous current to flow through the body at household voltages", correct: true },
+      { id: 'b', label: "Bathroom appliances like hair dryers use more power than GFCIs in other rooms can handle", correct: false },
+      { id: 'c', label: "Water vapor in bathrooms corrodes standard outlets faster than GFCI outlets", correct: false },
+      { id: 'd', label: "GFCIs prevent water from entering the electrical system and causing short circuits", correct: false }
+    ],
+    explanation: "Dry human skin has relatively high resistance (1,000-100,000 ohms), which limits current flow. However, wet skin can have resistance as low as 1,000 ohms, and water provides an excellent path to grounded plumbing. At 120V with wet skin, Ohm's law shows potentially lethal current can flow: I = 120V / 1000 ohms = 120mA. GFCIs trip at 4-6mA - well below the 30mA threshold where ventricular fibrillation becomes likely - providing critical protection in wet environments where the body's natural resistance is compromised."
+  },
+  {
+    // Question 4: Arc fault vs ground fault (Medium)
+    scenario: "A fire investigator examines an electrical fire that started behind a bedroom wall. They find a damaged wire where the insulation had deteriorated over years, causing intermittent sparking between the hot wire and a nearby metal stud.",
+    question: "Why wouldn't a GFCI have prevented this fire, and what type of protection is designed for this hazard?",
+    options: [
+      { id: 'a', label: "A GFCI would have prevented it; the investigator must have missed signs of GFCI failure", correct: false },
+      { id: 'b', label: "GFCIs detect current imbalance to ground, but arcing between hot and grounded metal creates a parallel fault that may not create enough imbalance; AFCIs detect the unique electrical signature of arcs", correct: true },
+      { id: 'c', label: "GFCIs only work in wet locations; bedroom circuits are not required to have any special protection", correct: false },
+      { id: 'd', label: "GFCIs only protect against high-current faults; low-power arcs require thermal protection from circuit breakers", correct: false }
+    ],
+    explanation: "Arc faults and ground faults are different hazards requiring different protection. A ground fault occurs when current leaks to ground through an unintended path. An arc fault occurs when damaged or deteriorated insulation allows electrical arcing - essentially controlled lightning - which generates intense heat capable of igniting nearby combustibles. Because the arcing current may return through the neutral or equipment ground (not representing an imbalance), GFCIs won't detect it. Arc Fault Circuit Interrupters (AFCIs) use electronic circuits to analyze current waveforms and detect the characteristic signatures of dangerous arcing, typically 8-15 kHz chaotic patterns."
+  },
+  {
+    // Question 5: Ground fault in 3-phase systems (Medium-Hard)
+    scenario: "A maintenance technician at a manufacturing plant notices that a ground fault indicator light has illuminated on a 480V 3-phase motor control center. The equipment is still running normally.",
+    question: "In an industrial 3-phase system with resistance grounding, why might ground fault current be limited and why would the system continue operating despite the fault?",
+    options: [
+      { id: 'a', label: "Three-phase systems are immune to ground faults due to balanced loading between phases", correct: false },
+      { id: 'b', label: "A neutral grounding resistor intentionally limits ground fault current to allow continued operation and time to locate the fault before it causes damage", correct: true },
+      { id: 'c', label: "The fault must be on a non-critical circuit that has been automatically isolated", correct: false },
+      { id: 'd', label: "Ground faults in 3-phase systems only affect lighting circuits, not motor loads", correct: false }
+    ],
+    explanation: "Industrial systems often use resistance grounding or high-resistance grounding (HRG) to limit ground fault current. A typical HRG system might limit fault current to only 5 amps on a 480V system. This prevents the immediate equipment damage and arc flash hazards associated with thousands of amps of bolted fault current, while still providing enough current to be detected by sensitive ground fault relays. The tradeoff is that the system can continue operating with a single ground fault, giving maintenance personnel time to locate and repair the fault during a scheduled shutdown rather than facing an emergency outage."
+  },
+  {
+    // Question 6: High-resistance ground faults (Hard)
+    scenario: "A utility engineer reviews records showing that a distribution feeder experienced a 75% increase in fires over several years. Investigation reveals most fires occurred at locations where tree branches periodically contacted power lines, creating intermittent high-impedance faults.",
+    question: "Why are high-impedance ground faults particularly dangerous, and why don't standard overcurrent protective devices detect them?",
+    options: [
+      { id: 'a', label: "High-impedance faults create excessive voltage that damages equipment before protection can respond", correct: false },
+      { id: 'b', label: "The fault impedance (from poor contact, arcing through air/vegetation, or resistive paths) limits current below the pickup threshold of standard overcurrent relays, while still delivering enough energy to ignite fires", correct: true },
+      { id: 'c', label: "High-impedance faults only occur at extremely high voltages where standard protection doesn't apply", correct: false },
+      { id: 'd', label: "Protective devices are designed for equipment protection only and intentionally ignore ground faults", correct: false }
+    ],
+    explanation: "High-impedance faults (HIFs) occur when a conductor contacts a high-resistance surface like asphalt, concrete, dry sand, or vegetation. The fault impedance might be hundreds or thousands of ohms, limiting current to perhaps 10-50 amps - well below the 400-600 amp pickup of typical feeder overcurrent protection. However, even 10 amps at several thousand volts represents significant power (10A x 7200V = 72kW) concentrated at the fault point. This creates intense local heating capable of igniting vegetation and structures. Detecting HIFs requires specialized relays that analyze current waveform characteristics rather than just magnitude."
+  },
+  {
+    // Question 7: Ground fault relay coordination (Hard)
+    scenario: "An electrical engineer is designing the protection scheme for a hospital's electrical system. They must ensure that a ground fault on a specific branch circuit trips only the local protection, not the main breaker serving the entire emergency power system.",
+    question: "What is ground fault relay coordination, and why is proper time-current coordination critical in this application?",
+    options: [
+      { id: 'a', label: "All ground fault relays should trip simultaneously to ensure the fastest possible fault clearing", correct: false },
+      { id: 'b', label: "Coordination involves setting upstream relays to trip faster than downstream relays to protect main equipment", correct: false },
+      { id: 'c', label: "Downstream relays are set to trip faster and at lower current thresholds than upstream relays, isolating faults at the lowest level while maintaining power to unaffected circuits", correct: true },
+      { id: 'd', label: "Ground fault coordination is only required for residential systems; hospitals use ungrounded systems instead", correct: false }
+    ],
+    explanation: "Ground fault coordination follows the selectivity principle: the protective device closest to the fault should clear it before upstream devices operate. For a hospital emergency system, this might mean: branch circuit GFCI trips at 6mA/25ms, feeder ground fault relay at 100mA/100ms, and main ground fault relay at 1200A/500ms. If a fault occurs in a patient room, only that circuit opens - the operating rooms, ICU, and life support on other feeders continue uninterrupted. Poor coordination could cause a single ground fault to black out the entire emergency system. NEC Article 517 has specific requirements for healthcare facility ground fault protection coordination."
+  },
+  {
+    // Question 8: Isolated ground systems (Hard)
+    scenario: "A data center manager notices that sensitive computer equipment experiences intermittent errors and data corruption. An electrical consultant recommends installing isolated ground receptacles (orange outlets) and a dedicated insulated ground conductor run back to the service entrance.",
+    question: "How do isolated ground systems differ from standard grounding, and what problem do they solve?",
+    options: [
+      { id: 'a', label: "Isolated grounds use a higher-resistance path to limit fault current and prevent equipment damage", correct: false },
+      { id: 'b', label: "The insulated ground conductor provides a dedicated low-noise reference for sensitive electronics, separated from the equipment grounding conductor that may carry noise currents from other loads", correct: true },
+      { id: 'c', label: "Isolated ground systems eliminate the need for GFCIs by providing better shock protection", correct: false },
+      { id: 'd', label: "The orange color indicates the receptacle can handle higher fault currents than standard outlets", correct: false }
+    ],
+    explanation: "In standard wiring, the equipment grounding conductor (EGC) connects all metal enclosures together and back to the panel. This shared conductor can carry electrical noise from motors, variable frequency drives, and switching equipment. This noise appears as voltage differences between the ground reference points of different devices, potentially corrupting digital signals. Isolated ground systems use an additional insulated conductor (the IG) that connects sensitive equipment directly to the grounding point at the service entrance or separately derived system, bypassing the potentially noisy EGC. The receptacle is still bonded to the EGC for safety, but the equipment's electronic ground uses the cleaner IG path."
+  },
+  {
+    // Question 9: Ground fault detection in solar systems (Hard)
+    scenario: "A fire department responds to a roof fire at a commercial building with rooftop solar panels. Investigation reveals that a ground fault in the DC wiring between panels went undetected for months, eventually causing an arc that ignited roofing materials.",
+    question: "What unique challenges do photovoltaic systems present for ground fault detection, and how do modern inverters address this?",
+    options: [
+      { id: 'a', label: "Solar panels only produce DC current which cannot cause ground faults; the fire must have had another cause", correct: false },
+      { id: 'b', label: "PV systems can have distributed ground faults across long string wiring with high impedance, and modern inverters use multiple detection methods including fuse-based, current differential, and insulation monitoring approaches", correct: true },
+      { id: 'c', label: "Ground faults in solar systems are immediately obvious because the panels stop producing power", correct: false },
+      { id: 'd', label: "Solar inverters rely solely on the utility's ground fault protection since PV systems connect to the grid", correct: false }
+    ],
+    explanation: "PV ground fault detection is challenging because: 1) DC arc faults can sustain at lower currents than AC, 2) PV strings may span hundreds of feet across rooftops with many potential fault points, 3) System voltage can exceed 600V DC creating significant arc energy, and 4) A single ground fault on one string may not significantly affect total system output. Modern solutions include: ground fault detection interrupters (GFDIs) using a fuse that opens if ground current exceeds ~5A, differential current sensing comparing string positive and negative currents, insulation resistance monitoring that detects degradation before faults occur, and rapid shutdown systems (required by NEC 2017+) that de-energize conductors within seconds when the inverter detects a problem."
+  },
+  {
+    // Question 10: Safety grounding vs system grounding (Hard)
+    scenario: "An apprentice electrician is confused about why a transformer secondary is bonded to ground at the main panel (system grounding) while also connecting metal enclosures to the same ground (equipment grounding). They ask why both are necessary.",
+    question: "What are the distinct purposes of system grounding and equipment grounding, and why is each essential for electrical safety?",
+    options: [
+      { id: 'a', label: "They serve the same purpose and are redundant; only one type is actually needed but codes require both for liability reasons", correct: false },
+      { id: 'b', label: "System grounding stabilizes voltage relative to earth and provides a fault return path, while equipment grounding ensures metal parts stay at safe potential and provides a low-impedance path to trip protective devices", correct: true },
+      { id: 'c', label: "System grounding is only required for high-voltage systems while equipment grounding is only for low-voltage applications", correct: false },
+      { id: 'd', label: "Equipment grounding handles normal load currents while system grounding only activates during fault conditions", correct: false }
+    ],
+    explanation: "System grounding and equipment grounding serve complementary but distinct safety functions. System grounding (bonding the neutral to ground at the service entrance) establishes the voltage reference between the electrical system and earth, limits voltage during lightning strikes or utility faults, and provides a return path for ground fault current. Equipment grounding (the green or bare conductor connecting metal enclosures) ensures that if a fault energizes an enclosure, there's a low-impedance path back to the source to enable overcurrent devices to trip quickly. Without system grounding, voltage could float unpredictably; without equipment grounding, a faulted enclosure might remain energized indefinitely at lethal potential. Together, they create a coordinated safety system."
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────────────────
 

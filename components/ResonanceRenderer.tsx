@@ -294,18 +294,128 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
     }
   }, [isAtResonance, phase, foundResonance, drivingFrequency, emitEvent]);
 
-  // Test questions
-  const questions = [
-    { question: "What is resonance?", options: [{ text: "Random vibration", correct: false }, { text: "Maximum energy transfer at matching frequencies", correct: true }, { text: "Minimum amplitude", correct: false }, { text: "Constant frequency", correct: false }], explanation: "Resonance occurs when the driving frequency matches the system's natural frequency, causing maximum energy transfer and amplitude." },
-    { question: "A child on a swing has a natural frequency of 0.5 Hz. To push most effectively, at what frequency should you push?", options: [{ text: "0.25 Hz", correct: false }, { text: "0.5 Hz", correct: true }, { text: "1.0 Hz", correct: false }, { text: "2.0 Hz", correct: false }], explanation: "For maximum energy transfer (resonance), the driving frequency must match the natural frequency of 0.5 Hz." },
-    { question: "What happens to resonant frequency when you add mass to an oscillator?", options: [{ text: "Increases", correct: false }, { text: "Decreases", correct: true }, { text: "Stays the same", correct: false }, { text: "Becomes zero", correct: false }], explanation: "From f = (1/2π)√(k/m), increasing mass decreases the natural/resonant frequency." },
-    { question: "Why did the Tacoma Narrows Bridge collapse?", options: [{ text: "Earthquake", correct: false }, { text: "Wind-induced resonance", correct: true }, { text: "Heavy traffic", correct: false }, { text: "Material fatigue", correct: false }], explanation: "Wind created oscillations matching the bridge's natural frequency, causing resonance that amplified until structural failure." },
-    { question: "How does MRI imaging work?", options: [{ text: "X-rays", correct: false }, { text: "Sound waves", correct: false }, { text: "Nuclear magnetic resonance", correct: true }, { text: "Electrical current", correct: false }], explanation: "MRI uses nuclear magnetic resonance - hydrogen nuclei in the body resonate at specific frequencies in a magnetic field." },
-    { question: "A singer shatters a wine glass by singing. What must the singer's frequency match?", options: [{ text: "The room's frequency", correct: false }, { text: "The glass's natural frequency", correct: true }, { text: "440 Hz exactly", correct: false }, { text: "Any high frequency", correct: false }], explanation: "The singer must match the glass's natural frequency to create resonance and accumulate enough energy to shatter it." },
-    { question: "Why do bass speakers need to be larger than treble speakers?", options: [{ text: "They need more power", correct: false }, { text: "Lower frequency = longer wavelength needs larger resonator", correct: true }, { text: "They're louder", correct: false }, { text: "Marketing", correct: false }], explanation: "Lower frequencies require larger resonating chambers. From f = (1/2π)√(k/m), more mass lowers frequency." },
-    { question: "Taipei 101 has a 730-ton ball inside. What is its purpose?", options: [{ text: "Decoration", correct: false }, { text: "Tuned mass damper to prevent resonance", correct: true }, { text: "Electricity generation", correct: false }, { text: "Water storage", correct: false }], explanation: "The tuned mass damper oscillates opposite to building sway, canceling resonant vibrations from wind or earthquakes." },
-    { question: "At resonance, what happens to the phase between driving force and oscillation?", options: [{ text: "In phase", correct: false }, { text: "90° out of phase", correct: true }, { text: "180° out of phase", correct: false }, { text: "Random", correct: false }], explanation: "At resonance, the velocity (not position) is in phase with the driving force, meaning position is 90° behind." },
-    { question: "Why do soldiers break step when crossing bridges?", options: [{ text: "Tradition", correct: false }, { text: "To avoid resonance", correct: true }, { text: "To rest", correct: false }, { text: "Balance", correct: false }], explanation: "Marching in step could match the bridge's natural frequency, causing dangerous resonance amplification." }
+  // Test questions - 10 scenario-based multiple choice questions on resonance
+  const testQuestions = [
+    // 1. Core concept - what is resonance (Easy)
+    {
+      scenario: "A physics student notices that when she hums at a certain pitch in the shower, the sound becomes much louder. The bathroom tiles seem to amplify only that specific note.",
+      question: "What phenomenon is the student experiencing, and why does it only happen at one specific frequency?",
+      options: [
+        { id: 'a', label: "Echo - sound waves bouncing off the tiles multiple times" },
+        { id: 'b', label: "Resonance - the hum matches the natural frequency of the air cavity, causing maximum amplitude buildup", correct: true },
+        { id: 'c', label: "Refraction - sound waves bending around the shower curtain" },
+        { id: 'd', label: "Diffraction - sound spreading out evenly in all directions" }
+      ],
+      explanation: "Resonance occurs when a driving frequency matches a system's natural frequency, causing energy to accumulate and amplitude to maximize. The shower acts as an acoustic resonator with specific natural frequencies. When the student's hum matches one of these frequencies, standing waves form and the sound is dramatically amplified."
+    },
+    // 2. Pushing a swing (Easy-Medium)
+    {
+      scenario: "A parent is pushing their child on a playground swing. The child swings back and forth once every 2 seconds. The parent wants to make the child swing as high as possible.",
+      question: "When should the parent push to achieve maximum swing height most efficiently?",
+      options: [
+        { id: 'a', label: "Push rapidly every half second to add more energy faster" },
+        { id: 'b', label: "Push once every 2 seconds, timed with the swing's natural motion", correct: true },
+        { id: 'c', label: "Push randomly whenever convenient" },
+        { id: 'd', label: "Push once every 4 seconds to let energy build up between pushes" }
+      ],
+      explanation: "Maximum energy transfer occurs when the driving frequency matches the natural frequency (resonance). The swing's natural period is 2 seconds, so pushing every 2 seconds - specifically at the bottom of each swing when moving away - transfers energy most efficiently. Pushing at other frequencies causes the pushes to sometimes work against the motion, wasting energy."
+    },
+    // 3. Breaking glass with sound (Medium)
+    {
+      scenario: "An opera singer demonstrates shattering a wine glass using only her voice. She first taps the glass to hear its ring, then begins singing, gradually increasing volume while holding a specific note.",
+      question: "Why must the singer match the exact pitch of the glass's ring, and why does the glass shatter?",
+      options: [
+        { id: 'a', label: "The high pitch creates air pressure that crushes the glass" },
+        { id: 'b', label: "Sound waves at the glass's natural frequency cause resonance, building vibration amplitude until the glass exceeds its elastic limit and shatters", correct: true },
+        { id: 'c', label: "Any loud enough sound would shatter the glass regardless of pitch" },
+        { id: 'd', label: "The singer's breath creates enough force to break the glass" }
+      ],
+      explanation: "The tapped glass rings at its natural frequency. When the singer matches this frequency exactly, resonance occurs - each sound wave adds energy to the glass's vibration. With sustained input, amplitude grows until the glass flexes beyond its structural limit and shatters. This only works at the resonant frequency; other pitches don't accumulate energy efficiently."
+    },
+    // 4. Tacoma Narrows Bridge collapse (Medium)
+    {
+      scenario: "On November 7, 1940, the Tacoma Narrows Bridge in Washington state began oscillating violently in 40 mph winds - a wind speed the bridge was designed to withstand. Within hours, the bridge twisted apart and collapsed into the river below.",
+      question: "What caused a bridge designed for much stronger winds to fail in relatively moderate conditions?",
+      options: [
+        { id: 'a', label: "The wind force directly overpowered the bridge structure" },
+        { id: 'b', label: "The wind created vortices that excited the bridge at its natural frequency, causing resonant oscillations that grew until structural failure", correct: true },
+        { id: 'c', label: "An earthquake coincidentally occurred at the same time" },
+        { id: 'd', label: "Poor construction materials made the bridge too weak" }
+      ],
+      explanation: "The wind didn't push the bridge directly to failure. Instead, vortex shedding (wind creating alternating low-pressure zones) happened to match the bridge's torsional natural frequency. This caused resonance - each wind cycle added energy, making oscillations grow larger despite the wind being weaker than design limits. The bridge was redesigned with aerodynamic fairings and damping to prevent similar resonance."
+    },
+    // 5. Musical instrument resonance (Medium-Hard)
+    {
+      scenario: "A guitar string vibrates at 330 Hz when plucked. However, when the same string is plucked on an acoustic guitar versus a solid-body electric guitar (unplugged), the acoustic guitar sounds much louder and fuller.",
+      question: "What role does the acoustic guitar's hollow body play in producing this louder, richer sound?",
+      options: [
+        { id: 'a', label: "The hollow body traps air that pushes the sound out more forcefully" },
+        { id: 'b', label: "The body acts as a resonating chamber, amplifying the string's vibrations and enhancing harmonics through acoustic resonance", correct: true },
+        { id: 'c', label: "The wood absorbs unwanted frequencies, making the desired notes clearer" },
+        { id: 'd', label: "The hole allows internal echoes that make the sound seem louder" }
+      ],
+      explanation: "The guitar body is a carefully designed resonator. When the string vibrates, it transfers energy to the bridge and soundboard. The air cavity resonates at multiple frequencies, amplifying the string's fundamental and harmonics. The body's shape and size determine which frequencies are enhanced, giving each guitar its characteristic tone. Electric guitars rely on electromagnetic pickups instead, so they need amplifiers."
+    },
+    // 6. Mechanical resonance avoidance (Hard)
+    {
+      scenario: "A washing machine manufacturer discovers that at 800 RPM spin speed, their new model vibrates so violently it walks across the floor. The chief engineer suggests simply changing the spin speed rather than redesigning the entire drum assembly.",
+      question: "Why would changing the operating speed solve the vibration problem, and what physical principle does this exploit?",
+      options: [
+        { id: 'a', label: "Faster speeds would spin the water out before it can cause vibrations" },
+        { id: 'b', label: "800 RPM matches the drum assembly's natural frequency; operating at a different speed avoids resonance and the associated violent vibrations", correct: true },
+        { id: 'c', label: "Slower speeds use less energy, reducing vibration force" },
+        { id: 'd', label: "The motor performs better at speeds other than 800 RPM" }
+      ],
+      explanation: "The drum assembly has a natural frequency that, when expressed in RPM, equals approximately 800. At this speed, the driving frequency from rotation matches the natural frequency, causing resonance and extreme vibrations. By operating above or below this critical speed, the system avoids resonance. Many machines use variable-speed motors that quickly pass through resonant frequencies during startup to minimize time spent in dangerous resonance conditions."
+    },
+    // 7. NMR/MRI resonance (Hard)
+    {
+      scenario: "A patient lies in an MRI machine, surrounded by a powerful 3-Tesla magnet. Radio waves pulse through their body, and somehow this produces detailed images of internal organs without any surgery or radiation exposure.",
+      question: "What is the role of resonance in MRI imaging, and why must the radio frequency be precisely tuned?",
+      options: [
+        { id: 'a', label: "Radio waves bounce off organs like radar to create images" },
+        { id: 'b', label: "Hydrogen nuclei in the body resonate at a specific frequency determined by the magnetic field; absorbed and re-emitted energy reveals tissue composition", correct: true },
+        { id: 'c', label: "The magnetic field directly photographs the inside of the body" },
+        { id: 'd', label: "Radio waves heat tissues differently based on density" }
+      ],
+      explanation: "MRI exploits Nuclear Magnetic Resonance. In the strong magnetic field, hydrogen nuclei (protons) precess at a frequency proportional to field strength (about 128 MHz at 3T). When radio waves match this Larmor frequency, nuclei absorb energy and flip their spin. As they relax back, they emit detectable signals. Different tissues have different hydrogen concentrations and relaxation times, creating contrast in the final image."
+    },
+    // 8. Acoustic resonance in pipes (Hard)
+    {
+      scenario: "An organ pipe open at both ends produces a fundamental tone of 256 Hz (middle C). When a musician closes one end of the same pipe, the fundamental frequency changes, and the pipe produces different harmonics.",
+      question: "How does closing one end affect the pipe's resonant frequencies?",
+      options: [
+        { id: 'a', label: "The fundamental frequency doubles because sound reflects more efficiently" },
+        { id: 'b', label: "The fundamental frequency halves (drops an octave) and only odd harmonics are produced", correct: true },
+        { id: 'c', label: "The frequency stays the same but the sound becomes quieter" },
+        { id: 'd', label: "The pipe can no longer resonate and produces no tone" }
+      ],
+      explanation: "Open pipes support standing waves with antinodes at both ends, allowing a wavelength of 2L for the fundamental. Closed pipes require a node at the closed end and antinode at the open end, fitting only 1/4 wavelength for the fundamental - half the frequency. Furthermore, closed pipes can only support odd harmonics (1st, 3rd, 5th...) because even harmonics would require an antinode at the closed end, which is physically impossible."
+    },
+    // 9. Electrical resonance in circuits (Hard)
+    {
+      scenario: "A radio receiver uses a tuning circuit with an inductor and capacitor (LC circuit). By adjusting the capacitor, the listener can select different radio stations from the many signals simultaneously present in the air.",
+      question: "How does adjusting the capacitor allow selection of a specific radio frequency?",
+      options: [
+        { id: 'a', label: "The capacitor filters out unwanted frequencies by absorbing them" },
+        { id: 'b', label: "The LC circuit resonates at f = 1/(2pi*sqrt(LC)); adjusting C changes the resonant frequency to match the desired station, amplifying it while rejecting others", correct: true },
+        { id: 'c', label: "Larger capacitors physically block longer radio waves" },
+        { id: 'd', label: "The capacitor stores the radio signal for later playback" }
+      ],
+      explanation: "LC circuits exhibit electrical resonance where energy oscillates between the capacitor's electric field and inductor's magnetic field. At the resonant frequency f = 1/(2pi*sqrt(LC)), the circuit's impedance is minimum (for series) or maximum (for parallel), causing strong current response. By varying C, the resonant frequency shifts. Only signals at the resonant frequency produce significant response, effectively selecting one station from many."
+    },
+    // 10. Damping and Q factor (Hard)
+    {
+      scenario: "An engineer compares two tuning forks: Fork A rings for 30 seconds after being struck, while Fork B's sound dies out in just 3 seconds. Both produce the same frequency note, but Fork B is made of a softer alloy.",
+      question: "What does the difference in ring duration tell us about each fork's Q factor (quality factor), and why does this matter for resonance applications?",
+      options: [
+        { id: 'a', label: "Fork A has lower Q factor because it stores sound longer" },
+        { id: 'b', label: "Fork A has higher Q factor, meaning sharper resonance and less energy loss per cycle; high-Q systems are better for frequency-selective applications", correct: true },
+        { id: 'c', label: "Q factor only applies to electrical circuits, not mechanical systems" },
+        { id: 'd', label: "Both forks have the same Q factor since they produce the same frequency" }
+      ],
+      explanation: "Q factor (quality factor) measures how underdamped an oscillator is - equivalently, how many oscillations occur before energy drops to 1/e of initial value. Fork A's longer ring time means less energy loss per cycle, indicating higher Q. High-Q resonators have very sharp resonance peaks, responding strongly only to frequencies very close to resonance. This is valuable for precise frequency selection (radio tuners, clocks) but makes them more susceptible to unwanted resonance."
+    }
   ];
 
   // Real-world applications with SVG graphics
@@ -1361,7 +1471,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
   // Calculate score
   const calculateScore = (): number => {
     return answers.reduce((score, answer, index) => {
-      return score + (questions[index].options[answer as number]?.correct ? 1 : 0);
+      return score + (testQuestions[index].options[answer as number]?.correct ? 1 : 0);
     }, 0);
   };
   const score = calculateScore();
@@ -1996,7 +2106,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
 
   // TEST
   if (phase === 'test') {
-    const q = questions[testIndex];
+    const q = testQuestions[testIndex];
     const answered = answers[testIndex] !== null;
 
     if (showResult) {
@@ -2035,12 +2145,27 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                 {answers.slice(0, 10).map((a, i) => (
                   <div key={i} style={{
                     width: '10px', height: '10px', borderRadius: '50%',
-                    background: a !== null ? (questions[i].options[a as number]?.correct ? design.colors.success : design.colors.error) :
+                    background: a !== null ? (testQuestions[i].options[a as number]?.correct ? design.colors.success : design.colors.error) :
                                i === testIndex ? design.colors.accentPrimary : design.colors.bgElevated
                   }} />
                 ))}
               </div>
             </div>
+
+            {/* Scenario */}
+            {q.scenario && (
+              <div style={{
+                padding: design.spacing.md,
+                marginBottom: design.spacing.md,
+                borderRadius: design.radius.md,
+                background: design.colors.bgElevated,
+                border: `1px solid ${design.colors.border}`,
+              }}>
+                <p style={{ fontSize: '14px', color: design.colors.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                  {q.scenario}
+                </p>
+              </div>
+            )}
 
             {/* Question */}
             <h3 style={{ fontSize: '20px', fontWeight: 700, color: design.colors.textPrimary, marginBottom: design.spacing.lg, lineHeight: 1.5 }}>
@@ -2079,7 +2204,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
                       zIndex: 10
                     }}
                   >
-                    {option.text}
+                    {option.label}
                   </button>
                 );
               })}

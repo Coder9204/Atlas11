@@ -230,6 +230,123 @@ const quizQuestions = [
 ];
 
 // ============================================================================
+// TEST QUESTIONS - Scenario-based multiple choice for Test phase
+// ============================================================================
+
+const testQuestions = [
+  {
+    scenario: "You are setting up a laser pointer to demonstrate reflection for a science class. The laser beam hits a flat mirror at 35 degrees from the normal line.",
+    question: "At what angle from the normal will the reflected beam travel?",
+    options: [
+      { id: 'a', label: "55 degrees, because the angles must add up to 90 degrees" },
+      { id: 'b', label: "35 degrees, on the opposite side of the normal", correct: true },
+      { id: 'c', label: "70 degrees, because reflection doubles the incident angle" },
+      { id: 'd', label: "35 degrees, on the same side of the normal" }
+    ],
+    explanation: "The Law of Reflection states that the angle of incidence equals the angle of reflection, both measured from the normal (perpendicular line). The reflected ray is always on the opposite side of the normal from the incident ray, so the beam reflects at 35 degrees on the other side."
+  },
+  {
+    scenario: "A child stands 2 meters in front of a large flat mirror in a dance studio. She notices her reflection appears to be standing inside the mirror.",
+    question: "How far behind the mirror surface does her reflection appear to be?",
+    options: [
+      { id: 'a', label: "1 meter, because mirrors cut distances in half" },
+      { id: 'b', label: "4 meters, because the light travels there and back" },
+      { id: 'c', label: "2 meters, the same distance she stands in front", correct: true },
+      { id: 'd', label: "0 meters, because the image is on the mirror surface" }
+    ],
+    explanation: "In a flat mirror, the virtual image always appears at the same distance behind the mirror as the object is in front. Since she stands 2 meters in front, her reflection appears 2 meters behind the mirror surface. This is why your reflection seems to be 'inside' the mirror at a matching distance."
+  },
+  {
+    scenario: "A submarine captain needs to observe ships on the ocean surface while the submarine remains safely underwater. The ship uses a periscope with two mirrors.",
+    question: "At what angle must each periscope mirror be positioned relative to the vertical tube?",
+    options: [
+      { id: 'a', label: "45 degrees, so each mirror turns the light 90 degrees", correct: true },
+      { id: 'b', label: "90 degrees, so the mirrors are horizontal" },
+      { id: 'c', label: "30 degrees, to minimize light loss" },
+      { id: 'd', label: "60 degrees, for optimal viewing angle" }
+    ],
+    explanation: "Periscope mirrors are positioned at 45 degrees to the vertical. When light hits a mirror at 45 degrees from the normal, it reflects at 45 degrees on the other side, creating a 90-degree turn. Two such mirrors redirect light by 180 degrees total, allowing horizontal viewing from a vertical offset."
+  },
+  {
+    scenario: "A highway engineer is designing road signs that will be visible to drivers at night. The signs use retroreflective material containing tiny corner cube reflectors.",
+    question: "Why do corner cube retroreflectors make road signs so effective at night?",
+    options: [
+      { id: 'a', label: "They absorb headlight beams and re-emit the light as a glow" },
+      { id: 'b', label: "They scatter light in all directions so everyone can see them" },
+      { id: 'c', label: "They reflect light directly back toward the car's headlights and driver", correct: true },
+      { id: 'd', label: "They magnify the headlight beams to appear brighter" }
+    ],
+    explanation: "Corner cube retroreflectors use three mutually perpendicular mirrors (like the corner of a room). Through successive reflections, light always returns parallel to its incoming direction, sending headlight beams directly back to the driver. This makes signs appear brilliantly lit without requiring external power."
+  },
+  {
+    scenario: "An art museum displays a painting under special lighting. When viewed from different positions, the painting looks uniformly bright, but a mirror on a nearby wall shows a distinct bright spot that moves as you walk.",
+    question: "What causes this difference between the painting surface and the mirror?",
+    options: [
+      { id: 'a', label: "The painting absorbs all light while the mirror reflects it" },
+      { id: 'b', label: "The painting exhibits diffuse reflection while the mirror exhibits specular reflection", correct: true },
+      { id: 'c', label: "The mirror is curved while the painting is flat" },
+      { id: 'd', label: "The painting is illuminated from multiple angles while the mirror is not" }
+    ],
+    explanation: "Diffuse reflection occurs when light hits a rough surface and scatters in many directions, making the object visible from all angles without bright spots. Specular reflection from smooth surfaces like mirrors reflects light at a single angle (equal to incidence), creating a bright spot only visible from one direction. The painting's textured surface causes diffuse reflection."
+  },
+  {
+    scenario: "A toy kaleidoscope uses two mirrors arranged at 60 degrees to each other. A child looks through it and sees a beautiful symmetrical pattern of colored beads.",
+    question: "How many images of a single bead will the child see in the kaleidoscope?",
+    options: [
+      { id: 'a', label: "2 images, one from each mirror" },
+      { id: 'b', label: "3 images, forming a triangle" },
+      { id: 'c', label: "5 images, forming a hexagonal pattern", correct: true },
+      { id: 'd', label: "Infinite images, like parallel mirrors" }
+    ],
+    explanation: "The number of images formed by two plane mirrors at angle θ is given by (360°/θ) - 1. For mirrors at 60 degrees: (360/60) - 1 = 6 - 1 = 5 images. These 5 images plus the original object create the characteristic 6-fold symmetry seen in kaleidoscopes, forming hexagonal patterns."
+  },
+  {
+    scenario: "A precision manufacturing facility uses a laser alignment system to ensure machine components are perfectly straight. The laser bounces off several mirrors positioned along a 50-meter assembly line.",
+    question: "If the first mirror is misaligned by just 0.5 degrees, how much will the laser beam deviate from its intended path at a target 10 meters away?",
+    options: [
+      { id: 'a', label: "About 8.7 cm, because the reflection angle doubles the error", correct: true },
+      { id: 'b', label: "About 4.4 cm, matching the 0.5-degree error over 10 meters" },
+      { id: 'c', label: "About 17.4 cm, because errors multiply at each reflection" },
+      { id: 'd', label: "Negligible, because 0.5 degrees is too small to matter" }
+    ],
+    explanation: "When a mirror tilts by 0.5 degrees, the reflected beam deviates by 1 degree (double the mirror tilt) because both incident and reflected angles change. Over 10 meters, a 1-degree deviation produces approximately 10 × tan(1°) ≈ 0.087 meters or 8.7 cm displacement. This demonstrates why precision mirror alignment is critical in laser systems."
+  },
+  {
+    scenario: "A solar thermal power plant uses thousands of mirrors (heliostats) to concentrate sunlight onto a central tower. Each heliostat must be precisely angled throughout the day as the sun moves across the sky.",
+    question: "If the sun is at 30 degrees elevation and a heliostat needs to direct light to a tower directly north, where must the mirror's normal point?",
+    options: [
+      { id: 'a', label: "Directly at the sun to maximize light capture" },
+      { id: 'b', label: "Directly at the tower to aim the reflection" },
+      { id: 'c', label: "Halfway between the sun and tower directions", correct: true },
+      { id: 'd', label: "Perpendicular to the ground for stability" }
+    ],
+    explanation: "For light to reflect from sun to tower, the mirror's normal must bisect the angle between incoming sunlight and the desired reflection direction. This is because the angle of incidence equals the angle of reflection, both measured from the normal. The normal points halfway between source and target, requiring continuous adjustment as the sun moves."
+  },
+  {
+    scenario: "A concert hall architect is designing the ceiling to ensure audience members in the back rows can hear the orchestra clearly. Sound waves, like light, follow the law of reflection when bouncing off hard surfaces.",
+    question: "How should the ceiling panels above the stage be angled to direct sound toward the back of the hall?",
+    options: [
+      { id: 'a', label: "Flat and horizontal to reflect sound straight up and back down" },
+      { id: 'b', label: "Tilted downward toward the audience, with the normal pointing between stage and back seats", correct: true },
+      { id: 'c', label: "Curved inward like a bowl to focus sound at one point" },
+      { id: 'd', label: "Angled upward to bounce sound off the back wall first" }
+    ],
+    explanation: "Sound reflects following the same law as light: angle of incidence equals angle of reflection. To direct sound from the stage to the back seats, ceiling panels must be tilted so their normal (perpendicular) bisects the angle between the sound source (stage) and target (back seats). This creates an acoustic reflection path that reinforces direct sound for distant listeners."
+  },
+  {
+    scenario: "Military stealth aircraft are designed to be nearly invisible to radar. Radar works by detecting radio waves that bounce back from objects. The F-117 Nighthawk uses flat, angled surfaces instead of curves.",
+    question: "Why do stealth aircraft use specific angular surfaces rather than smooth curves?",
+    options: [
+      { id: 'a', label: "Angular surfaces absorb more radar energy than curves" },
+      { id: 'b', label: "Flat surfaces at specific angles reflect radar away from the source rather than back to it", correct: true },
+      { id: 'c', label: "Curved surfaces create stronger radar returns due to focusing" },
+      { id: 'd', label: "Angular construction is lighter and more fuel-efficient" }
+    ],
+    explanation: "Stealth design exploits the law of reflection. Curved surfaces always have some area with a normal pointing back toward the radar, creating returns. Flat panels angled strategically ensure their normals never point at the radar source, so reflections are directed harmlessly away. Combined with radar-absorbing materials, this dramatically reduces the aircraft's radar cross-section."
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 

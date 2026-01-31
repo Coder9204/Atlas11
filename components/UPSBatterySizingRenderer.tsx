@@ -546,6 +546,123 @@ export default function UPSBatterySizingRenderer({
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
 
   // ──────────────────────────────────────────────────────────────────────────
+  // TEST QUESTIONS - Scenario-based multiple choice
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const testQuestions = [
+    {
+      scenario: "A small business owner is setting up their first server room and wants to protect against power outages.",
+      question: "What is the primary purpose of a UPS (Uninterruptible Power Supply)?",
+      options: [
+        { id: 'a', label: "To reduce electricity bills by storing cheap off-peak power", correct: false },
+        { id: 'b', label: "To provide immediate backup power during outages until generators start or safe shutdown occurs", correct: true },
+        { id: 'c', label: "To permanently replace grid power with battery power", correct: false },
+        { id: 'd', label: "To increase the voltage supplied to equipment", correct: false },
+      ],
+      explanation: "A UPS provides instant backup power when mains power fails, bridging the gap until generators come online (typically 10-30 seconds) or allowing time for graceful equipment shutdown. It's not designed for long-term power replacement or voltage boosting."
+    },
+    {
+      scenario: "An IT administrator sees a UPS rated at 3000VA but only 2400W. They need to power servers drawing 2000W.",
+      question: "Why is the VA (Volt-Ampere) rating higher than the Watts rating on a UPS?",
+      options: [
+        { id: 'a', label: "VA is the European measurement while Watts is American", correct: false },
+        { id: 'b', label: "VA measures apparent power while Watts measures real power; the difference accounts for power factor", correct: true },
+        { id: 'c', label: "The manufacturer is using marketing tricks to inflate specifications", correct: false },
+        { id: 'd', label: "VA rating is for input power, Watts is for output power", correct: false },
+      ],
+      explanation: "VA (apparent power) and Watts (real power) differ due to power factor. Most IT loads have a power factor of 0.8-0.9, meaning a 3000VA UPS delivers about 2400-2700W of real power. Always size based on Watts for resistive loads or VA for the total load including reactive components."
+    },
+    {
+      scenario: "A data center has a 200Ah battery bank at 48V supporting a 4800W load. The simple calculation suggests 2 hours of runtime.",
+      question: "Using Peukert's Law with an exponent of 1.2, approximately how long will the battery actually last?",
+      options: [
+        { id: 'a', label: "2 hours - the calculation is straightforward", correct: false },
+        { id: 'b', label: "2.5 hours - batteries perform better under load", correct: false },
+        { id: 'c', label: "1.2-1.5 hours - high discharge rate reduces effective capacity", correct: true },
+        { id: 'd', label: "4 hours - Peukert's Law doubles capacity at high discharge", correct: false },
+      ],
+      explanation: "Peukert's Law shows that high discharge rates significantly reduce effective battery capacity. At a 1-hour discharge rate (C/1), a battery typically delivers only 50-75% of its rated capacity compared to the standard C/20 rate. The 2-hour theoretical runtime becomes approximately 1.2-1.5 hours in practice."
+    },
+    {
+      scenario: "A facility manager must choose between lead-acid and lithium-ion batteries for a new UPS installation in a space-constrained data center.",
+      question: "What is a key advantage of lithium-ion batteries over lead-acid for UPS applications?",
+      options: [
+        { id: 'a', label: "Lithium-ion batteries are always cheaper to purchase upfront", correct: false },
+        { id: 'b', label: "Lithium-ion has lower Peukert effect, higher energy density, and longer cycle life", correct: true },
+        { id: 'c', label: "Lithium-ion batteries never require a battery management system", correct: false },
+        { id: 'd', label: "Lead-acid batteries cannot be used in UPS systems", correct: false },
+      ],
+      explanation: "Lithium-ion batteries have a Peukert exponent near 1.05 (vs 1.1-1.3 for lead-acid), meaning they maintain capacity better at high discharge rates. They also offer 3-4x the energy density (smaller footprint), 2-3x longer cycle life, and faster recharge times, though they require sophisticated battery management systems."
+    },
+    {
+      scenario: "A hospital IT director is evaluating UPS topologies for their critical care monitoring systems that cannot tolerate any power interruption.",
+      question: "Which UPS topology provides zero transfer time and continuous power conditioning?",
+      options: [
+        { id: 'a', label: "Standby (offline) UPS - it's the most reliable", correct: false },
+        { id: 'b', label: "Line-interactive UPS - it has automatic voltage regulation", correct: false },
+        { id: 'c', label: "Online double-conversion UPS - load always runs from inverter", correct: true },
+        { id: 'd', label: "All topologies provide zero transfer time", correct: false },
+      ],
+      explanation: "Online double-conversion UPS continuously converts AC to DC to AC, so the load always runs from the inverter with zero transfer time. Line-interactive has 2-4ms transfer time with voltage regulation. Standby UPS has 5-12ms transfer time. For life-critical systems, online topology is essential despite higher cost and lower efficiency."
+    },
+    {
+      scenario: "A UPS battery bank is installed in an equipment room where temperature fluctuates between 15°C (59°F) in winter and 35°C (95°F) in summer.",
+      question: "How does temperature affect lead-acid battery capacity and lifespan?",
+      options: [
+        { id: 'a', label: "Higher temperatures increase both capacity and lifespan", correct: false },
+        { id: 'b', label: "Temperature has no significant effect on sealed batteries", correct: false },
+        { id: 'c', label: "Cold reduces capacity; heat above 25°C cuts lifespan roughly in half per 10°C increase", correct: true },
+        { id: 'd', label: "Batteries should be kept as cold as possible for maximum performance", correct: false },
+      ],
+      explanation: "At 0°C, lead-acid capacity drops to about 80% of rated. More critically, battery life follows the Arrhenius equation: every 10°C above 25°C roughly halves battery lifespan. A battery rated for 5 years at 25°C may last only 2.5 years at 35°C. Optimal range is 20-25°C (68-77°F)."
+    },
+    {
+      scenario: "A UPS vendor recommends limiting battery discharge to 50% depth of discharge (DoD) rather than using the full 100% capacity.",
+      question: "Why does limiting depth of discharge significantly extend battery cycle life?",
+      options: [
+        { id: 'a', label: "It doesn't - this is a sales tactic to sell larger batteries", correct: false },
+        { id: 'b', label: "Shallow discharges cause less mechanical stress and chemical degradation, exponentially increasing cycle life", correct: true },
+        { id: 'c', label: "Batteries can only be discharged to 50% anyway", correct: false },
+        { id: 'd', label: "Limiting DoD only matters for lithium batteries, not lead-acid", correct: false },
+      ],
+      explanation: "Deep discharges cause significant plate sulfation in lead-acid and dendrite formation in lithium. At 50% DoD, a lead-acid battery might deliver 1,200+ cycles versus 300-400 cycles at 100% DoD. The relationship is exponential - a battery cycled at 30% DoD can last 5-10x longer than one cycled at 80% DoD."
+    },
+    {
+      scenario: "A data center engineer needs to configure a 480V battery string using 12V lead-acid batteries, each rated at 100Ah.",
+      question: "How many 12V/100Ah batteries in series are needed, and what is the total string capacity?",
+      options: [
+        { id: 'a', label: "40 batteries in series; 4,000Ah total capacity", correct: false },
+        { id: 'b', label: "40 batteries in series; 100Ah capacity at 480V", correct: true },
+        { id: 'c', label: "4 batteries in series; 100Ah at 48V", correct: false },
+        { id: 'd', label: "40 batteries in parallel; 4,000Ah at 12V", correct: false },
+      ],
+      explanation: "Series connections add voltage while maintaining the same Ah capacity: 480V ÷ 12V = 40 batteries. The string capacity remains 100Ah at 480V (48kWh total). Parallel connections would add capacity at the same voltage. This is why high-voltage UPS systems require many batteries in series strings."
+    },
+    {
+      scenario: "A UPS system is rated at 95% efficiency. The protected load draws exactly 100kW continuously.",
+      question: "How much total power must the UPS draw from the utility or batteries to support this load?",
+      options: [
+        { id: 'a', label: "100kW - efficiency losses are covered by battery reserves", correct: false },
+        { id: 'b', label: "95kW - higher efficiency means less input power needed", correct: false },
+        { id: 'c', label: "105.3kW - the 5% loss means input must exceed output", correct: true },
+        { id: 'd', label: "100.5kW - only 0.5% is actually lost as heat", correct: false },
+      ],
+      explanation: "Efficiency = Output/Input, so Input = Output/Efficiency = 100kW/0.95 = 105.3kW. The 5.3kW difference (5%) is converted to heat, which must be removed by cooling systems. This is why UPS rooms need significant HVAC capacity - a 1MW UPS at 95% efficiency generates 52.6kW of heat continuously."
+    },
+    {
+      scenario: "A Tier III data center architect is designing a 2MW critical load facility with 2N redundant UPS systems and 15-minute battery runtime.",
+      question: "What total UPS capacity and battery runtime should be installed to meet these requirements?",
+      options: [
+        { id: 'a', label: "2MW UPS with 15-minute batteries - matches the load exactly", correct: false },
+        { id: 'b', label: "4MW total UPS (2 x 2MW) with 15-minute batteries on each, accounting for Peukert losses", correct: true },
+        { id: 'c', label: "2MW UPS with 30-minute batteries for safety margin", correct: false },
+        { id: 'd', label: "3MW UPS with 10-minute batteries - generators start faster", correct: false },
+      ],
+      explanation: "2N redundancy means two completely independent UPS systems, each capable of supporting the full load. Total installed UPS capacity is 4MW (2 x 2MW). Each system's batteries must deliver 15 minutes at full load. Battery sizing must include Peukert derating (typically 1.5-2x), aging factor (1.25x), and temperature margin - often resulting in 40-50% more battery capacity than simple calculations suggest."
+    },
+  ];
+
+  // ──────────────────────────────────────────────────────────────────────────
   // RENDER FUNCTIONS
   // ──────────────────────────────────────────────────────────────────────────
 

@@ -33,96 +33,116 @@ const PHASES: Phase[] = [
   'transfer', 'test', 'mastery'
 ];
 
-const TEST_QUESTIONS = [
+const testQuestions = [
   {
-    question: 'What is Poisson\'s ratio?',
+    scenario: 'A materials science student is learning about the fundamental properties that describe how materials deform under load.',
+    question: 'What does Poisson\'s ratio measure in a material?',
     options: [
-      { text: 'The ratio of stress to strain', correct: false },
-      { text: 'The ratio of lateral contraction to axial extension', correct: true },
-      { text: 'The maximum stretch before breaking', correct: false },
-      { text: 'The speed of sound in the material', correct: false }
+      { id: 'a', label: 'The ratio of applied stress to resulting strain (stiffness)', correct: false },
+      { id: 'b', label: 'The ratio of lateral strain to axial strain when a material is stretched or compressed', correct: true },
+      { id: 'c', label: 'The maximum stress a material can withstand before fracturing', correct: false },
+      { id: 'd', label: 'The rate at which a material returns to its original shape after deformation', correct: false }
     ],
+    explanation: 'Poisson\'s ratio (v) specifically measures how much a material contracts in the perpendicular direction when stretched in one direction. When you pull on a material axially, it typically gets thinner laterally. This ratio of lateral strain to axial strain is the defining characteristic that Poisson\'s ratio captures.'
   },
   {
-    question: 'Why does rubber have a Poisson\'s ratio close to 0.5?',
+    scenario: 'You\'re stretching a thick rubber band between your fingers and notice it becomes noticeably thinner as it gets longer.',
+    question: 'Why does the rubber band get so much thinner when stretched compared to a steel wire?',
     options: [
-      { text: 'It\'s very stiff and rigid', correct: false },
-      { text: 'It\'s nearly incompressible - volume stays constant, so it must thin when stretched', correct: true },
-      { text: 'It contains air bubbles that compress', correct: false },
-      { text: 'It\'s made of carbon chains', correct: false }
+      { id: 'a', label: 'Rubber has weak molecular bonds that break easily during stretching', correct: false },
+      { id: 'b', label: 'Rubber has a Poisson\'s ratio near 0.5, meaning it\'s nearly incompressible and must thin significantly to conserve volume', correct: true },
+      { id: 'c', label: 'The air trapped inside rubber escapes when stretched, reducing its width', correct: false },
+      { id: 'd', label: 'Rubber molecules align in the stretch direction, pulling away from the sides', correct: false }
     ],
+    explanation: 'Rubber has a Poisson\'s ratio of approximately 0.49-0.50, which is the theoretical maximum for isotropic materials. This high value means rubber is nearly incompressible - its volume stays almost constant. When you stretch it longer, it must become proportionally thinner to maintain the same volume, resulting in dramatic lateral contraction.'
   },
   {
-    question: 'What\'s special about auxetic materials?',
+    scenario: 'A sommelier explains to a wine enthusiast why cork has been the preferred material for wine bottle stoppers for centuries, while rubber stoppers often cause problems.',
+    question: 'What property makes cork superior to rubber for bottle stoppers?',
     options: [
-      { text: 'They\'re extremely strong and lightweight', correct: false },
-      { text: 'They have negative Poisson\'s ratio - they get WIDER when stretched', correct: true },
-      { text: 'They conduct electricity when stretched', correct: false },
-      { text: 'They become transparent under stress', correct: false }
+      { id: 'a', label: 'Cork is more chemically inert and doesn\'t react with wine', correct: false },
+      { id: 'b', label: 'Cork has a Poisson\'s ratio near zero, so it compresses without bulging and slides easily into bottle necks', correct: true },
+      { id: 'c', label: 'Cork is naturally antimicrobial and prevents wine contamination', correct: false },
+      { id: 'd', label: 'Cork is more porous and allows the wine to breathe properly', correct: false }
     ],
+    explanation: 'Cork has an exceptionally low Poisson\'s ratio (approximately 0), meaning when you compress it to insert into a bottle neck, it doesn\'t bulge outward. Rubber, with v near 0.5, would expand sideways when compressed, making insertion difficult and creating uneven pressure. Cork\'s unique cellular structure allows it to compress uniformly.'
   },
   {
-    question: 'Why are cork stoppers good for wine bottles?',
+    scenario: 'A biomedical engineer is designing a new arterial stent that needs to expand radially when a balloon catheter stretches it lengthwise during deployment.',
+    question: 'What type of material structure would allow the stent to get WIDER when pulled lengthwise?',
     options: [
-      { text: 'Cork is completely waterproof', correct: false },
-      { text: 'Cork has v = 0, so it doesn\'t bulge when compressed into the bottle', correct: true },
-      { text: 'Cork is naturally antibacterial', correct: false },
-      { text: 'Cork is the cheapest available material', correct: false }
+      { id: 'a', label: 'A material with high Young\'s modulus for maximum stiffness', correct: false },
+      { id: 'b', label: 'An auxetic material with negative Poisson\'s ratio that expands laterally when stretched axially', correct: true },
+      { id: 'c', label: 'A superelastic shape-memory alloy that remembers its expanded shape', correct: false },
+      { id: 'd', label: 'A porous foam material that traps air for expansion', correct: false }
     ],
+    explanation: 'Auxetic materials have a negative Poisson\'s ratio, meaning they exhibit the counterintuitive behavior of expanding perpendicular to the direction of stretching. This is achieved through special re-entrant (inward-folding) geometric structures that unfold and expand outward when pulled. This property is invaluable for stents that need to open up when deployed.'
   },
   {
-    question: 'What is the theoretical maximum Poisson\'s ratio for isotropic materials?',
+    scenario: 'An automotive engineer is designing a metal stamping die for car body panels. The steel sheet will be compressed between dies, and the final dimensions must be precise.',
+    question: 'Why must the engineer account for Poisson\'s ratio when designing the stamping die dimensions?',
     options: [
-      { text: '1.0 (materials can double in width)', correct: false },
-      { text: '0.5 (volume conservation limit)', correct: true },
-      { text: '0.3 (typical metal value)', correct: false },
-      { text: 'There is no upper limit', correct: false }
+      { id: 'a', label: 'The steel will spring back after stamping due to elastic recovery', correct: false },
+      { id: 'b', label: 'When compressed vertically, the steel spreads laterally due to Poisson effect, requiring oversized dies to achieve target dimensions', correct: true },
+      { id: 'c', label: 'The steel\'s hardness changes during stamping, affecting final size', correct: false },
+      { id: 'd', label: 'Friction between the die and steel causes unpredictable deformation', correct: false }
     ],
+    explanation: 'Steel has a Poisson\'s ratio of about 0.3, meaning when compressed in one direction, it expands in perpendicular directions. In metal stamping, vertical compression causes the sheet to spread horizontally. Engineers must design dies accounting for this lateral expansion to achieve precise final dimensions, or the parts will be oversized.'
   },
   {
-    question: 'What happens to the volume of rubber when stretched (v = 0.5)?',
+    scenario: 'A researcher is studying a perfectly incompressible material (theoretical v = 0.5) being stretched to 150% of its original length in a tensile test.',
+    question: 'If the material maintains constant volume during stretching, what happens to its cross-sectional area?',
     options: [
-      { text: 'Volume increases significantly', correct: false },
-      { text: 'Volume stays approximately constant', correct: true },
-      { text: 'Volume decreases by half', correct: false },
-      { text: 'Volume oscillates as it stretches', correct: false }
+      { id: 'a', label: 'Cross-sectional area increases by 50% to match the length increase', correct: false },
+      { id: 'b', label: 'Cross-sectional area remains unchanged since the material is incompressible', correct: false },
+      { id: 'c', label: 'Cross-sectional area decreases to approximately 67% of original to maintain constant volume', correct: true },
+      { id: 'd', label: 'Cross-sectional area decreases by 50% to exactly offset the length increase', correct: false }
     ],
+    explanation: 'For an incompressible material, Volume = Length x Area must remain constant. If length increases to 1.5x original, then Area must decrease to 1/1.5 = 0.667 (about 67%) of original. This is why truly incompressible materials with v = 0.5 show such dramatic thinning when stretched - the volume conservation requirement forces significant lateral contraction.'
   },
   {
-    question: 'How do auxetic materials achieve negative Poisson\'s ratio?',
+    scenario: 'A geophysicist is analyzing seismic wave data from an earthquake. P-waves (compression) and S-waves (shear) travel at different speeds through rock, and these speeds depend on elastic properties.',
+    question: 'How does Poisson\'s ratio affect seismic wave propagation through Earth\'s crust?',
     options: [
-      { text: 'By using magnetic particles', correct: false },
-      { text: 'Through re-entrant (inward-pointing) structural geometry', correct: true },
-      { text: 'By mixing two incompatible materials', correct: false },
-      { text: 'Through chemical treatment of normal materials', correct: false }
+      { id: 'a', label: 'Higher Poisson\'s ratio increases both P-wave and S-wave speeds equally', correct: false },
+      { id: 'b', label: 'Poisson\'s ratio determines the ratio of P-wave to S-wave velocities, helping identify rock types and fluid content', correct: true },
+      { id: 'c', label: 'Poisson\'s ratio only affects wave amplitude, not velocity', correct: false },
+      { id: 'd', label: 'Seismic waves are unaffected by Poisson\'s ratio since they travel through solids', correct: false }
     ],
+    explanation: 'The ratio of P-wave to S-wave velocity (Vp/Vs) is directly related to Poisson\'s ratio through elastic wave equations. Rocks saturated with fluids have higher Poisson\'s ratios (approaching 0.5) and thus higher Vp/Vs ratios. Geophysicists use this relationship to identify rock types, detect fluid-filled reservoirs, and locate potential earthquake zones.'
   },
   {
-    question: 'What is a typical Poisson\'s ratio for steel?',
+    scenario: 'An aerospace engineer is designing a carbon fiber composite wing that must be stiff in one direction but flexible in another to optimize aerodynamic performance.',
+    question: 'How can fiber orientation in composite materials be used to achieve different Poisson\'s ratios in different directions?',
     options: [
-      { text: 'Close to 0 (like cork)', correct: false },
-      { text: 'Around 0.3', correct: true },
-      { text: 'Close to 0.5 (like rubber)', correct: false },
-      { text: 'Negative (like auxetics)', correct: false }
+      { id: 'a', label: 'By adding metallic particles aligned with the desired direction of low Poisson\'s ratio', correct: false },
+      { id: 'b', label: 'By orienting fiber layers at specific angles, engineers can create anisotropic materials with direction-dependent Poisson\'s ratios, even achieving negative values', correct: true },
+      { id: 'c', label: 'Poisson\'s ratio is an intrinsic material property that cannot be modified through structural design', correct: false },
+      { id: 'd', label: 'By varying the resin content between fiber layers to create density gradients', correct: false }
     ],
+    explanation: 'Unlike isotropic materials, composites can have different Poisson\'s ratios in different directions (anisotropic behavior). By carefully orienting fiber layers at specific angles (e.g., +/-45 degrees), engineers can design laminates with tailored Poisson\'s ratios in each direction, including negative values. This enables optimization of structural response for specific loading conditions.'
   },
   {
-    question: 'Why are auxetic materials useful in body armor?',
+    scenario: 'A mechanical engineer is designing a thick-walled cylindrical pressure vessel to contain high-pressure gas. The vessel walls experience complex stress states.',
+    question: 'Why is Poisson\'s ratio critical in pressure vessel design calculations?',
     options: [
-      { text: 'They\'re lighter than regular materials', correct: false },
-      { text: 'They expand under impact, spreading force over a larger area', correct: true },
-      { text: 'They\'re completely bulletproof', correct: false },
-      { text: 'They generate heat to warn the wearer', correct: false }
+      { id: 'a', label: 'It determines the color change of the material under pressure for visual inspection', correct: false },
+      { id: 'b', label: 'It affects how hoop stress and axial stress interact, influencing the total strain and potential failure modes in the vessel walls', correct: true },
+      { id: 'c', label: 'It only matters for determining the weight of the pressure vessel', correct: false },
+      { id: 'd', label: 'It controls the rate of gas leakage through the vessel walls', correct: false }
     ],
+    explanation: 'In pressure vessels, walls experience simultaneous hoop (circumferential) and axial stresses. Due to Poisson\'s effect, strain in one direction is influenced by stress in perpendicular directions. The total hoop strain includes both direct hoop stress effects AND Poisson-coupled effects from axial stress. Accurate Poisson\'s ratio values are essential for predicting deformation, fatigue life, and failure pressure.'
   },
   {
-    question: 'In the formula v = -e_lateral/e_axial, what does a positive v indicate?',
+    scenario: 'A quality control engineer needs to verify that a batch of metal alloy meets specifications. They perform a tensile test and measure both length extension and width reduction.',
+    question: 'During the tensile test, the specimen extends 2.0 mm in length (original 100 mm) while its width decreases by 0.12 mm (original 20 mm). What is the Poisson\'s ratio?',
     options: [
-      { text: 'The material expands in all directions', correct: false },
-      { text: 'The material contracts laterally when stretched axially (normal behavior)', correct: true },
-      { text: 'The material is incompressible', correct: false },
-      { text: 'The material has no elasticity', correct: false }
+      { id: 'a', label: '0.15 - the material has unusually low lateral contraction', correct: false },
+      { id: 'b', label: '0.30 - consistent with typical steel or aluminum alloys', correct: true },
+      { id: 'c', label: '0.45 - the material behaves almost like rubber', correct: false },
+      { id: 'd', label: '0.60 - this exceeds the theoretical maximum, indicating measurement error', correct: false }
     ],
+    explanation: 'Poisson\'s ratio = -(lateral strain)/(axial strain). Axial strain = 2.0/100 = 0.020. Lateral strain = -0.12/20 = -0.006 (negative because width decreases). Therefore v = -(-0.006)/(0.020) = 0.30. This value is typical for steel (~0.30) and aluminum (~0.33), confirming the alloy meets expected mechanical behavior for these material classes.'
   }
 ];
 
@@ -659,7 +679,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
   const [currentPhase, setCurrentPhase] = useState<Phase>(phase || 'hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(TEST_QUESTIONS.length).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
@@ -753,7 +773,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
   const submitTest = useCallback(() => {
     let score = 0;
-    TEST_QUESTIONS.forEach((q, i) => {
+    testQuestions.forEach((q, i) => {
       if (testAnswers[i] !== null && q.options[testAnswers[i]!].correct) {
         score++;
       }
@@ -1403,17 +1423,21 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
           {/* Show answers review */}
           <div className="space-y-4 max-w-2xl mx-auto text-left">
-            {TEST_QUESTIONS.map((q, qIndex) => {
+            {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
                 <div key={qIndex} className={`p-4 rounded-xl border-2 ${isCorrect ? 'border-green-500 bg-green-900/20' : 'border-red-500 bg-red-900/20'}`}>
+                  <p className="text-gray-400 text-sm mb-2 italic">{q.scenario}</p>
                   <p className="text-white font-medium mb-2">{qIndex + 1}. {q.question}</p>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} className={`py-1 px-2 rounded ${opt.correct ? 'text-green-400' : userAnswer === oIndex ? 'text-red-400' : 'text-gray-400'}`}>
-                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} {opt.text}
+                    <div key={opt.id} className={`py-1 px-2 rounded ${opt.correct ? 'text-green-400' : userAnswer === oIndex ? 'text-red-400' : 'text-gray-400'}`}>
+                      {opt.correct ? '✓' : userAnswer === oIndex ? '✗' : '○'} ({opt.id}) {opt.label}
                     </div>
                   ))}
+                  <div className="mt-3 p-3 bg-indigo-900/30 rounded-lg border border-indigo-500/20">
+                    <p className="text-indigo-300 text-sm"><strong>Explanation:</strong> {q.explanation}</p>
+                  </div>
                 </div>
               );
             })}
@@ -1424,7 +1448,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
               playSound(passed ? 'complete' : 'click');
               if (passed) nextPhase();
               else {
-                setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null));
+                setTestAnswers(new Array(testQuestions.length).fill(null));
                 setTestSubmitted(false);
               }
             }}
@@ -1445,7 +1469,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
         {/* Progress bar */}
         <div className="flex gap-1 max-w-xl mx-auto">
-          {TEST_QUESTIONS.map((_, i) => (
+          {testQuestions.map((_, i) => (
             <div
               key={i}
               className={`h-2 flex-1 rounded-full transition-all ${
@@ -1457,20 +1481,21 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
         {/* Questions */}
         <div className="space-y-6 max-w-2xl mx-auto">
-          {TEST_QUESTIONS.map((q, qIndex) => (
+          {testQuestions.map((q, qIndex) => (
             <div
               key={qIndex}
               className={`bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-5 border transition-all ${
                 testAnswers[qIndex] !== null ? 'border-indigo-500/50' : 'border-slate-700'
               }`}
             >
+              <p className="text-gray-400 text-sm mb-3 italic">{q.scenario}</p>
               <p className="text-white font-medium mb-4">
                 <span className="text-indigo-400">{qIndex + 1}.</span> {q.question}
               </p>
               <div className="grid grid-cols-1 gap-2">
                 {q.options.map((option, oIndex) => (
                   <button
-                    key={oIndex}
+                    key={option.id}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       handleTestAnswer(qIndex, oIndex);
@@ -1481,7 +1506,8 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
                         : 'bg-slate-800 text-gray-300 hover:bg-slate-700 cursor-pointer'
                     }`}
                   >
-                    {option.text}
+                    <span className="font-medium text-indigo-400 mr-2">({option.id})</span>
+                    {option.label}
                   </button>
                 ))}
               </div>

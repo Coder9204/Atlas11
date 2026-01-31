@@ -1539,6 +1539,122 @@ export default function DiffractionRenderer() {
   );
 
   // =============================================================================
+  // TEST QUESTIONS - SCENARIO-BASED MULTIPLE CHOICE
+  // =============================================================================
+  const testQuestions = [
+    {
+      scenario: "You're at a beach watching ocean waves approach a small gap in a rock formation. Despite the narrow opening, the waves spread out widely on the other side.",
+      question: "Why do waves spread out after passing through a narrow opening?",
+      options: [
+        { id: 'a', label: 'The rocks push the waves outward' },
+        { id: 'b', label: 'Waves naturally bend around obstacles and spread through openings comparable to their wavelength', correct: true },
+        { id: 'c', label: 'The water pressure is higher on the other side' },
+        { id: 'd', label: 'Waves always travel in straight lines' }
+      ],
+      explanation: "Diffraction occurs when waves encounter obstacles or openings comparable to their wavelength. The wave bends around edges and spreads out because each point on the wavefront acts as a source of new wavelets (Huygens' principle). This is why sound can be heard around corners and why ocean waves spread after passing through gaps."
+    },
+    {
+      scenario: "When you tilt a CD or DVD under white light, you see vibrant rainbow patterns shifting across the surface as you change the viewing angle.",
+      question: "What causes the rainbow colors on a CD/DVD surface?",
+      options: [
+        { id: 'a', label: 'The plastic is painted with rainbow colors' },
+        { id: 'b', label: 'Light reflects off different colored layers' },
+        { id: 'c', label: 'The microscopic track grooves act as a diffraction grating, separating wavelengths', correct: true },
+        { id: 'd', label: 'Static electricity attracts different colors' }
+      ],
+      explanation: "CD/DVD surfaces have microscopic spiral tracks spaced about 1.6 micrometers apart (similar to visible light wavelengths). These act as a reflection diffraction grating. Different wavelengths diffract at different angles according to the grating equation, separating white light into its component colors - just like a prism but using interference instead of refraction."
+    },
+    {
+      scenario: "A physicist shines a laser through a single narrow slit and observes a pattern on a distant screen: a bright central band flanked by progressively dimmer bands separated by dark regions.",
+      question: "What determines the width of the central bright band in single-slit diffraction?",
+      options: [
+        { id: 'a', label: 'Only the laser brightness matters' },
+        { id: 'b', label: 'The central band gets wider when the slit is made narrower', correct: true },
+        { id: 'c', label: 'The central band gets narrower when the slit is made narrower' },
+        { id: 'd', label: 'Slit width has no effect on the pattern' }
+      ],
+      explanation: "Counter-intuitively, a narrower slit produces a wider diffraction pattern. The angular width of the central maximum is inversely proportional to slit width (θ ≈ λ/a). When the slit approaches the wavelength of light, diffraction becomes extreme and light spreads nearly hemispherically. This inverse relationship is a fundamental property of wave diffraction."
+    },
+    {
+      scenario: "A microbiologist is frustrated that their optical microscope cannot resolve two bacteria that are only 100 nanometers apart, even with perfect lenses.",
+      question: "What fundamentally limits how small an optical microscope can see?",
+      options: [
+        { id: 'a', label: 'The quality of the glass lenses' },
+        { id: 'b', label: 'Diffraction limits resolution to roughly half the wavelength of light used', correct: true },
+        { id: 'c', label: 'Bacteria are too transparent' },
+        { id: 'd', label: 'The eyepiece magnification is insufficient' }
+      ],
+      explanation: "The diffraction limit (Abbe limit) states that optical instruments cannot resolve details smaller than roughly λ/(2NA), where NA is numerical aperture. For visible light (~500 nm), this limits resolution to about 200-250 nm. This is why electron microscopes (with much smaller wavelengths) are needed to image individual molecules and atoms. The limit exists because light waves spread when passing through the finite aperture of any lens."
+    },
+    {
+      scenario: "A radio engineer notices that AM radio (wavelength ~300 meters) can be received in valleys and behind hills, while FM radio (wavelength ~3 meters) often loses signal in the same locations.",
+      question: "Why do longer wavelength radio waves travel better around obstacles?",
+      options: [
+        { id: 'a', label: 'Longer waves carry more energy' },
+        { id: 'b', label: 'Longer wavelengths diffract more around obstacles comparable to or smaller than their wavelength', correct: true },
+        { id: 'c', label: 'FM radio is absorbed by trees' },
+        { id: 'd', label: 'AM transmitters are more powerful' }
+      ],
+      explanation: "Diffraction is most pronounced when the obstacle size is comparable to or smaller than the wavelength. AM radio waves (~300m) easily diffract around buildings and hills (much smaller than the wavelength), while FM waves (~3m) experience less diffraction around the same obstacles. This is why AM radio provides better coverage in mountainous terrain and urban canyons, though at the cost of lower audio fidelity."
+    },
+    {
+      scenario: "Rosalind Franklin directed X-rays at crystallized DNA and captured a distinctive X-shaped diffraction pattern on photographic film, which was crucial evidence for the double helix structure.",
+      question: "Why are X-rays used instead of visible light to determine molecular structures?",
+      options: [
+        { id: 'a', label: 'X-rays are brighter than visible light' },
+        { id: 'b', label: 'X-ray wavelengths (~0.1 nm) match atomic spacing, enabling diffraction from crystal lattices', correct: true },
+        { id: 'c', label: 'Visible light damages molecular samples' },
+        { id: 'd', label: 'X-rays travel faster through crystals' }
+      ],
+      explanation: "X-ray crystallography works because X-ray wavelengths (0.01-10 nm) are comparable to interatomic distances in crystals (~0.1-0.3 nm). The regular atomic arrangement acts as a three-dimensional diffraction grating, producing characteristic patterns that can be mathematically inverted to reveal atomic positions. Visible light wavelengths (400-700 nm) are thousands of times larger than atomic spacing, making them useless for resolving molecular structure."
+    },
+    {
+      scenario: "A photographer notices that stopping down their lens to f/22 (very small aperture) to maximize depth of field actually makes their images slightly softer than at f/8.",
+      question: "Why does using a very small camera aperture reduce image sharpness?",
+      options: [
+        { id: 'a', label: 'Small apertures let in less light' },
+        { id: 'b', label: 'Diffraction at small apertures spreads light, blurring fine details', correct: true },
+        { id: 'c', label: 'The lens glass is lower quality at the edges' },
+        { id: 'd', label: 'Sensor pixels are too large' }
+      ],
+      explanation: "As aperture decreases, diffraction effects increase. Light passing through a small opening spreads into an Airy disk pattern rather than focusing to a perfect point. When the Airy disk becomes larger than a pixel, resolution is lost. This creates a tradeoff: larger apertures have shallower depth of field but less diffraction, while smaller apertures have greater depth of field but more diffraction softening. The 'diffraction limit' for a camera depends on pixel size and wavelength."
+    },
+    {
+      scenario: "Security holograms on credit cards display three-dimensional images that shift as you tilt the card. These are created by splitting a laser beam and recording the interference pattern on film.",
+      question: "How does a hologram store and reconstruct a 3D image?",
+      options: [
+        { id: 'a', label: 'Tiny lenses molded into the surface' },
+        { id: 'b', label: 'The recorded interference pattern diffracts light to recreate the original wavefront', correct: true },
+        { id: 'c', label: 'Layers of different colored inks' },
+        { id: 'd', label: 'Magnetic particles aligned by the original image' }
+      ],
+      explanation: "Holograms record the interference pattern between light reflected from an object (object beam) and a reference beam. This pattern encodes both amplitude and phase information. When illuminated, the hologram diffracts light according to this pattern, reconstructing the original wavefront. Your eyes perceive this as a 3D image because the reconstructed wavefront contains the same directional information as the original light from the 3D scene."
+    },
+    {
+      scenario: "Materials scientists fire electrons at a thin gold foil and observe a pattern of concentric rings on a detector behind it, similar to X-ray diffraction patterns from crystals.",
+      question: "What does electron diffraction reveal about the nature of electrons?",
+      options: [
+        { id: 'a', label: 'Electrons are deflected by magnetic fields in the gold' },
+        { id: 'b', label: 'Electrons have wave-like properties with wavelengths determined by their momentum', correct: true },
+        { id: 'c', label: 'Electrons bounce off gold atoms randomly' },
+        { id: 'd', label: 'Gold atoms emit new electrons' }
+      ],
+      explanation: "Electron diffraction demonstrates wave-particle duality. De Broglie proposed λ = h/p (wavelength = Planck's constant / momentum). For electrons accelerated through ~100V, wavelengths are ~0.1 nm - perfect for diffracting from atomic lattices. The ring patterns prove electrons interfere like waves, with crystal spacing determinable from the pattern. This confirmed quantum mechanics predictions and earned the 1937 Nobel Prize for Davisson and Germer."
+    },
+    {
+      scenario: "Astronomers use multiple telescopes spread across continents, combining their signals to achieve the resolution of a single telescope thousands of kilometers wide. This technique recently produced the first image of a black hole.",
+      question: "How does combining distant telescopes overcome the diffraction limit of a single telescope?",
+      options: [
+        { id: 'a', label: 'Each telescope captures a different color' },
+        { id: 'b', label: 'The effective aperture becomes the distance between telescopes, dramatically improving angular resolution', correct: true },
+        { id: 'c', label: 'More telescopes collect more light' },
+        { id: 'd', label: 'Computer processing sharpens blurry images' }
+      ],
+      explanation: "Interferometry exploits the fact that angular resolution scales as λ/D, where D is aperture diameter. By correlating signals from telescopes separated by thousands of kilometers, astronomers create a 'synthetic aperture' with resolution matching a planet-sized telescope. The Event Horizon Telescope combined dishes worldwide to achieve micro-arcsecond resolution, sufficient to resolve the event horizon of the M87 black hole 55 million light-years away."
+    }
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
 

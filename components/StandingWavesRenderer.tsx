@@ -215,6 +215,120 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
   ];
 
+  // Test questions - comprehensive scenario-based multiple choice
+  const testQuestions = [
+    {
+      scenario: "A physics student plucks a guitar string and observes that certain points along the string remain completely still while others vibrate with maximum amplitude.",
+      question: "What are these stationary points called, and why do they occur?",
+      options: [
+        { id: 'a', label: 'Antinodes - where constructive interference is maximum' },
+        { id: 'b', label: 'Nodes - where destructive interference creates zero displacement', correct: true },
+        { id: 'c', label: 'Harmonics - where the wave frequency is highest' },
+        { id: 'd', label: 'Resonance points - where energy accumulates' }
+      ],
+      explanation: "Nodes are points where two waves traveling in opposite directions always cancel out through destructive interference, resulting in zero net displacement regardless of time."
+    },
+    {
+      scenario: "A guitarist touches the 12th fret lightly while plucking the string, producing a clear harmonic one octave above the open string's fundamental note.",
+      question: "Which harmonic mode is being isolated by this technique?",
+      options: [
+        { id: 'a', label: 'The fundamental (1st harmonic)' },
+        { id: 'b', label: 'The 2nd harmonic', correct: true },
+        { id: 'c', label: 'The 3rd harmonic' },
+        { id: 'd', label: 'The 4th harmonic' }
+      ],
+      explanation: "The 12th fret is at the string's midpoint. Touching here creates a node that suppresses the fundamental, allowing only the 2nd harmonic (with a node at the center) to resonate, producing a note one octave higher."
+    },
+    {
+      scenario: "A pipe organ has two types of pipes: open pipes (both ends open) and stopped pipes (one end closed). The organist notices that stopped pipes of the same length produce lower notes.",
+      question: "Why do stopped pipes produce lower fundamental frequencies than open pipes of equal length?",
+      options: [
+        { id: 'a', label: 'Stopped pipes have more air resistance' },
+        { id: 'b', label: 'Stopped pipes only support odd harmonics and have wavelength = 4L', correct: true },
+        { id: 'c', label: 'The closed end absorbs sound energy' },
+        { id: 'd', label: 'Air moves slower in stopped pipes' }
+      ],
+      explanation: "A stopped pipe has a node at the closed end and antinode at the open end, so the fundamental wavelength is 4L (vs 2L for open pipes). This longer wavelength means a lower frequency: f = v/4L instead of f = v/2L."
+    },
+    {
+      scenario: "A violin string is 32 cm long with linear mass density 0.5 g/m. When tuned, it produces a fundamental frequency of 440 Hz (A4).",
+      question: "What is the approximate wave speed on this string?",
+      options: [
+        { id: 'a', label: '141 m/s' },
+        { id: 'b', label: '282 m/s', correct: true },
+        { id: 'c', label: '440 m/s' },
+        { id: 'd', label: '564 m/s' }
+      ],
+      explanation: "For a string fixed at both ends, the fundamental has wavelength = 2L = 0.64 m. Using v = f*lambda: v = 440 Hz * 0.64 m = 281.6 m/s, approximately 282 m/s."
+    },
+    {
+      scenario: "An audio engineer is comparing the harmonic content of a flute (approximately an open pipe) and a clarinet (approximately a closed pipe) playing the same fundamental note.",
+      question: "What key difference in harmonic structure will the engineer observe?",
+      options: [
+        { id: 'a', label: 'The flute has no harmonics, only the fundamental' },
+        { id: 'b', label: 'The clarinet has all harmonics (1st, 2nd, 3rd, etc.)' },
+        { id: 'c', label: 'The clarinet emphasizes odd harmonics (1st, 3rd, 5th, etc.)', correct: true },
+        { id: 'd', label: 'Both instruments have identical harmonic structures' }
+      ],
+      explanation: "Closed pipes (like clarinets) can only support standing waves with odd multiples of the fundamental frequency because the closed end must be a node. This gives clarinets their distinctive hollow timbre."
+    },
+    {
+      scenario: "A sound engineer discovers that a 4-meter-wide recording studio has a problematic bass frequency that causes uneven sound levels. The speed of sound is 340 m/s.",
+      question: "What is the frequency of this room mode?",
+      options: [
+        { id: 'a', label: '21.25 Hz' },
+        { id: 'b', label: '42.5 Hz', correct: true },
+        { id: 'c', label: '85 Hz' },
+        { id: 'd', label: '170 Hz' }
+      ],
+      explanation: "Room modes occur when standing waves form between parallel walls. The fundamental mode has wavelength = 2L = 8m. Frequency = v/lambda = 340/8 = 42.5 Hz. This bass frequency will be unnaturally boosted or cancelled at different positions."
+    },
+    {
+      scenario: "A scientist sprinkles fine sand on a vibrating metal plate and observes intricate geometric patterns forming as the plate resonates at different frequencies.",
+      question: "What determines where the sand collects in these Chladni patterns?",
+      options: [
+        { id: 'a', label: 'Sand moves to antinodes where vibration is maximum' },
+        { id: 'b', label: 'Sand moves to nodes where vibration is minimum', correct: true },
+        { id: 'c', label: 'Sand moves randomly due to chaotic vibrations' },
+        { id: 'd', label: 'Sand moves to the edges due to centrifugal force' }
+      ],
+      explanation: "Sand bounces away from vibrating regions (antinodes) and accumulates at nodal lines where the plate remains stationary. Different frequencies produce different mode shapes, revealing the 2D standing wave patterns."
+    },
+    {
+      scenario: "A physicist designs a helium-neon laser with a cavity length of 30 cm. The laser operates at 632.8 nm wavelength.",
+      question: "Approximately how many standing wave modes (longitudinal modes) fit in this cavity?",
+      options: [
+        { id: 'a', label: 'About 475,000' },
+        { id: 'b', label: 'About 950,000', correct: true },
+        { id: 'c', label: 'About 1,900,000' },
+        { id: 'd', label: 'About 63 million' }
+      ],
+      explanation: "For a laser cavity, n*lambda/2 = L, so n = 2L/lambda = 2(0.30 m)/(632.8e-9 m) = 948,000 half-wavelengths. This is why lasers can support many longitudinal modes within their gain bandwidth."
+    },
+    {
+      scenario: "An RF engineer measures the voltage along a transmission line feeding an antenna and finds periodic maxima and minima, indicating the antenna is not perfectly matched.",
+      question: "What is the relationship between adjacent voltage maxima on the line?",
+      options: [
+        { id: 'a', label: 'They are separated by one full wavelength' },
+        { id: 'b', label: 'They are separated by one half wavelength', correct: true },
+        { id: 'c', label: 'They are separated by one quarter wavelength' },
+        { id: 'd', label: 'Their spacing depends on the mismatch ratio' }
+      ],
+      explanation: "Standing waves on transmission lines form the same way as on strings. Voltage maxima (antinodes) are separated by half a wavelength (lambda/2), regardless of the standing wave ratio (SWR)."
+    },
+    {
+      scenario: "In quantum mechanics, an electron is confined to a one-dimensional 'box' of length L. The electron's wavefunction must go to zero at both walls.",
+      question: "Which statement correctly describes the allowed quantum states?",
+      options: [
+        { id: 'a', label: 'The electron can have any energy, but prefers lower states' },
+        { id: 'b', label: 'Only energies where n half-wavelengths fit in the box are allowed', correct: true },
+        { id: 'c', label: 'The electron has no definite position or energy' },
+        { id: 'd', label: 'Quantum effects eliminate standing wave behavior' }
+      ],
+      explanation: "Just like classical standing waves, the quantum wavefunction must satisfy boundary conditions: psi = 0 at both walls. This requires n*lambda/2 = L, quantizing the allowed wavelengths and hence energies: E = n^2*h^2/(8mL^2)."
+    }
+  ];
+
   // Standing wave SVG visualization
   const renderWaveVisualization = () => {
     const stringLength = 400;

@@ -150,6 +150,123 @@ const TEST_QUESTIONS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
+// SCENARIO-BASED TEST QUESTIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const testQuestions = [
+  {
+    scenario: "It's a cold January morning and the indoor heating has been running all night. The relative humidity inside your home has dropped to 15%.",
+    question: "Why does low humidity cause increased static electricity buildup?",
+    options: [
+      { id: 'a', label: "Cold air holds more electrical charge than warm air" },
+      { id: 'b', label: "Dry air is an excellent insulator, preventing charge from dissipating and allowing it to accumulate on surfaces", correct: true },
+      { id: 'c', label: "Low humidity creates more friction between surfaces" },
+      { id: 'd', label: "Water molecules in humid air generate static electricity" }
+    ],
+    explanation: "Dry air acts as an excellent electrical insulator. When humidity is low, there are fewer water molecules in the air to provide a conductive path for static charges to dissipate. This allows electrical charge to accumulate on insulating surfaces like clothing, carpets, and skin until it reaches thousands of volts and discharges as a spark."
+  },
+  {
+    scenario: "You've been walking across a carpeted office floor on a dry winter day. As you reach for the metal doorknob, you see a bright spark jump from your finger and feel a sharp zap.",
+    question: "What voltage level did that static shock likely reach?",
+    options: [
+      { id: 'a', label: "About 12 volts, similar to a car battery" },
+      { id: 'b', label: "Around 120 volts, like a wall outlet" },
+      { id: 'c', label: "Between 3,000 and 25,000 volts", correct: true },
+      { id: 'd', label: "Less than 1 volt, barely enough to feel" }
+    ],
+    explanation: "Visible static sparks and the sensation of a shock typically indicate voltages between 3,000 and 25,000 volts. Humans generally cannot feel discharges below about 3,000V. While the voltage is extremely high, the current is very low (microamps) and the duration is nanoseconds, which is why it's startling but not dangerous to humans. However, these same voltages can instantly destroy sensitive electronics."
+  },
+  {
+    scenario: "A technician is about to replace a RAM module in a server. The data center maintains 50% relative humidity, but the technician skips wearing an ESD wrist strap because 'the humidity is high enough.'",
+    question: "What is the risk of handling the RAM module without ESD protection?",
+    options: [
+      { id: 'a', label: "No risk - 50% humidity completely eliminates static" },
+      { id: 'b', label: "Even unfelt static discharges below 100V can damage sensitive CMOS components in the RAM", correct: true },
+      { id: 'c', label: "The only risk is if the technician feels a shock" },
+      { id: 'd', label: "RAM modules are immune to ESD damage" }
+    ],
+    explanation: "Modern semiconductor components, especially CMOS-based chips like RAM, can be damaged by ESD events as low as 10-100 volts - far below the human perception threshold of ~3,000V. While higher humidity reduces ESD risk, it doesn't eliminate it. This 'latent damage' may not cause immediate failure but can degrade components over time, leading to intermittent errors or premature failure."
+  },
+  {
+    scenario: "At an electronics manufacturing facility, all workers handling circuit boards must wear grounding straps connected to their workstations. A new employee asks why this is necessary when they could just touch a grounded metal surface occasionally.",
+    question: "Why are continuous grounding straps required instead of periodic grounding?",
+    options: [
+      { id: 'a', label: "Grounding straps are more comfortable to wear" },
+      { id: 'b', label: "Periodic grounding is equally effective" },
+      { id: 'c', label: "Continuous grounding prevents charge from ever accumulating, while periodic grounding allows charge to build up between touches", correct: true },
+      { id: 'd', label: "It's purely a regulatory requirement with no technical basis" }
+    ],
+    explanation: "Static charge can build up within seconds of movement. A continuous grounding strap maintains constant electrical connection to ground, ensuring charge dissipates immediately as it forms. Periodic grounding creates windows where charge can accumulate to damaging levels. The strap typically includes a 1-megohm resistor to limit current for safety while still allowing charge to drain continuously."
+  },
+  {
+    scenario: "During winter, a homeowner notices they get shocked frequently when touching metal objects. They consider buying a humidifier but wonder if it could cause problems if humidity gets too high.",
+    question: "What is the optimal indoor humidity range to prevent both static shocks and humidity-related problems?",
+    options: [
+      { id: 'a', label: "10-20% RH - as dry as possible to prevent mold" },
+      { id: 'b', label: "80-90% RH - maximum humidity eliminates all static" },
+      { id: 'c', label: "40-60% RH - balances static prevention with condensation and mold risk", correct: true },
+      { id: 'd', label: "Humidity level doesn't matter for static prevention" }
+    ],
+    explanation: "The 40-60% RH range is optimal for both homes and data centers. Below 40%, static electricity becomes problematic. Above 60%, excess moisture leads to condensation on cold surfaces (windows, pipes, cold walls), promoting mold growth, wood warping, and in electronics environments, corrosion and short circuits. This 'Goldilocks zone' provides enough moisture to dissipate static while avoiding water damage."
+  },
+  {
+    scenario: "A semiconductor cleanroom manufactures microprocessors worth thousands of dollars each. The environmental controls maintain humidity at exactly 45% ±2% RH, with continuous monitoring and backup humidification systems.",
+    question: "Why is such precise humidity control critical in semiconductor manufacturing?",
+    options: [
+      { id: 'a', label: "Worker comfort requires exact humidity levels" },
+      { id: 'b', label: "Precise humidity prevents ESD damage to chips where even minor static can destroy nanometer-scale transistors, while avoiding condensation contamination", correct: true },
+      { id: 'c', label: "It's primarily for reducing static cling on workers' cleanroom suits" },
+      { id: 'd', label: "Humidity variations affect chip coloring and appearance" }
+    ],
+    explanation: "Modern microprocessors have transistors measuring just nanometers across. These microscopic structures can be destroyed by ESD events that humans cannot detect. Simultaneously, any water condensation would introduce contamination particles larger than the chip features. The tight ±2% tolerance ensures the environment stays in the safe zone where both risks are minimized. Ionizing air bars and extensive grounding provide additional protection layers."
+  },
+  {
+    scenario: "An engineer is selecting materials for a product that will be handled frequently. They reference the triboelectric series, which ranks materials by their tendency to gain or lose electrons through friction.",
+    question: "Based on the triboelectric series, which material combination would generate the MOST static electricity when rubbed together?",
+    options: [
+      { id: 'a', label: "Cotton rubbed against cotton" },
+      { id: 'b', label: "Glass (highly positive) rubbed against Teflon (highly negative)", correct: true },
+      { id: 'c', label: "Aluminum rubbed against steel" },
+      { id: 'd', label: "Wood rubbed against paper" }
+    ],
+    explanation: "The triboelectric series ranks materials from most positive (readily loses electrons) to most negative (readily gains electrons). Glass is near the positive end, while Teflon is at the extreme negative end. When materials far apart on this series contact and separate, maximum charge transfer occurs. This is why Teflon-coated surfaces and glass create significant static. Metals don't appear far apart on the series and also conduct, so they generate less problematic static."
+  },
+  {
+    scenario: "A contract manufacturer is setting up a new production line for assembled circuit boards. They need to implement a comprehensive ESD protection program that goes beyond just humidity control.",
+    question: "Which combination provides the most effective ESD protection for electronics manufacturing?",
+    options: [
+      { id: 'a', label: "High humidity (80%) alone is sufficient protection" },
+      { id: 'b', label: "ESD-safe flooring, grounded workstations, wrist straps, ionizers, humidity control (40-60%), and conductive packaging", correct: true },
+      { id: 'c', label: "Rubber-soled shoes and wooden workbenches" },
+      { id: 'd', label: "Air conditioning set to maximum cooling" }
+    ],
+    explanation: "Effective ESD control requires multiple layers: ESD-dissipative flooring prevents charge buildup from walking; grounded workstations and wrist straps keep workers at ground potential; ionizers neutralize charge on insulating surfaces; humidity control (40-60%) aids dissipation; conductive or static-shielding packaging protects components in transit. No single measure is sufficient - the 'defense in depth' approach ensures components remain protected even if one control fails."
+  },
+  {
+    scenario: "At a fuel depot, workers notice static discharge warnings posted everywhere. Before refueling aircraft or transferring fuel between tanks, strict grounding procedures must be followed even on humid summer days.",
+    question: "Why is static electricity particularly dangerous in fuel handling operations?",
+    options: [
+      { id: 'a', label: "Static makes fuel flow more slowly" },
+      { id: 'b', label: "Fuel vapors mixed with air create explosive atmospheres that can be ignited by static sparks as small as 0.2 millijoules", correct: true },
+      { id: 'c', label: "Static electricity changes the chemical composition of fuel" },
+      { id: 'd', label: "It's only a concern for jet fuel, not automotive gasoline" }
+    ],
+    explanation: "Fuel vapors create explosive air-fuel mixtures within specific concentration ranges. These mixtures have extremely low minimum ignition energies - gasoline vapor can ignite from sparks containing less than 0.2 millijoules, far less than a typical static discharge. Fuel flowing through pipes generates static through friction with pipe walls. Bonding (connecting containers electrically) and grounding (connecting to earth) ensure any charge buildup has a safe path to ground rather than sparking across a gap."
+  },
+  {
+    scenario: "An electronics distributor ships sensitive components in special pink or silver bags. A customer asks why they can't just use regular plastic bags, which seem sturdier and cheaper.",
+    question: "What property makes antistatic packaging materials effective at protecting electronics?",
+    options: [
+      { id: 'a', label: "The color of the bag reflects harmful radiation" },
+      { id: 'b', label: "Antistatic materials have surface resistivity that allows charge to dissipate slowly rather than accumulating or discharging rapidly, while static-shielding bags block external fields", correct: true },
+      { id: 'c', label: "The bags are airtight to prevent humidity changes" },
+      { id: 'd', label: "Regular plastic is too thin to protect from physical damage" }
+    ],
+    explanation: "Regular plastic is highly insulating and readily accumulates static charge. Pink antistatic bags contain additives that reduce surface resistivity, allowing charge to dissipate rather than build up - but they don't block external static fields. Silver static-shielding bags (metallized or metal-in construction) create a Faraday cage effect, blocking external electric fields from reaching components inside. The choice depends on protection level needed: antistatic for low-sensitivity parts, static-shielding for high-sensitivity ICs."
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // TRANSFER APPLICATIONS
 // ────────────────────────────────────────────────────────────────────────────
 

@@ -1577,6 +1577,122 @@ export default function DispersionRenderer() {
   );
 
   // =============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice
+  // =============================================================================
+  const testQuestions = [
+    {
+      scenario: "You're watching sunlight pass through a glass prism in your physics lab. The white light entering the prism emerges as a beautiful rainbow of colors spread across the wall.",
+      question: "Why does a glass prism separate white light into a rainbow spectrum?",
+      options: [
+        { id: 'a', label: 'The prism contains colored chemicals that filter the light' },
+        { id: 'b', label: 'Different wavelengths of light refract at different angles due to wavelength-dependent refractive index', correct: true },
+        { id: 'c', label: 'The prism absorbs white light and re-emits it as colored light' },
+        { id: 'd', label: 'Internal reflections inside the prism create interference patterns' }
+      ],
+      explanation: "Dispersion occurs because glass has a slightly different refractive index for each wavelength. Violet light (short wavelength) bends more than red light (long wavelength), causing the colors to fan out into a spectrum. This wavelength-dependent refraction is the fundamental mechanism behind prismatic dispersion."
+    },
+    {
+      scenario: "During a summer rainstorm, the sun breaks through the clouds behind you. Looking toward the rain in front of you, you see a brilliant rainbow arching across the sky.",
+      question: "How do raindrops create a rainbow using the same physics as a prism?",
+      options: [
+        { id: 'a', label: 'Raindrops act as tiny spherical lenses that magnify sunlight' },
+        { id: 'b', label: 'Water vapor in the air scatters blue light more than red' },
+        { id: 'c', label: 'Each raindrop refracts, internally reflects, and disperses sunlight, sending different colors to different angles', correct: true },
+        { id: 'd', label: 'Lightning ionizes the raindrops, making them emit colored light' }
+      ],
+      explanation: "Each raindrop acts like a tiny prism. Sunlight enters, refracts at the air-water interface (dispersing into colors), reflects off the back of the drop, then refracts again upon exit. Different colors exit at slightly different angles (red at ~42 degrees, violet at ~40 degrees), and you see each color from different raindrops at the correct angle."
+    },
+    {
+      scenario: "A jeweler is explaining why diamonds sparkle with rainbow colors (called 'fire') much more brilliantly than glass jewelry. The customer wonders what makes diamonds special.",
+      question: "Why do diamonds display much more 'fire' (rainbow flashes) than ordinary glass?",
+      options: [
+        { id: 'a', label: 'Diamonds are cut with more facets than glass jewelry' },
+        { id: 'b', label: 'Diamond has a much higher dispersion value, spreading colors over wider angles', correct: true },
+        { id: 'c', label: 'Diamonds contain trace elements that emit colored light' },
+        { id: 'd', label: 'The carbon atoms in diamond absorb and re-emit light as colors' }
+      ],
+      explanation: "Diamond has a dispersion of 0.044, about 2.5 times higher than crown glass (0.017). This means the difference in refractive index between red and violet light is much greater, causing colors to spread over much wider angles. Combined with diamond's high refractive index and expert faceting, this creates the spectacular fire effect."
+    },
+    {
+      scenario: "A telecommunications engineer is troubleshooting a fiber optic network. She notices that sharp digital pulses sent over a long fiber arrive spread out and overlapping, causing data errors.",
+      question: "What causes optical pulses to spread out as they travel through fiber optic cables?",
+      options: [
+        { id: 'a', label: 'The fiber gradually absorbs the pulse energy over distance' },
+        { id: 'b', label: 'Different wavelength components of the pulse travel at different speeds due to chromatic dispersion', correct: true },
+        { id: 'c', label: 'Electrical interference from nearby cables distorts the signal' },
+        { id: 'd', label: 'The light bounces too many times off the fiber walls' }
+      ],
+      explanation: "Laser pulses contain a small range of wavelengths. Due to chromatic dispersion in the glass fiber, each wavelength travels at a slightly different velocity. Over long distances (tens of kilometers), this velocity difference causes the pulse to spread in time. This 'pulse broadening' limits data rates in long-haul fiber systems."
+    },
+    {
+      scenario: "An astronomer at a mountaintop observatory notices that stars near the horizon appear slightly elongated vertically with a blue fringe on top and red fringe on bottom.",
+      question: "What causes stars near the horizon to display this colored vertical stretching?",
+      options: [
+        { id: 'a', label: 'The telescope lens has chromatic aberration' },
+        { id: 'b', label: 'Stars emit different colors from different parts of their surface' },
+        { id: 'c', label: 'Atmospheric refraction acts like a vertical prism, dispersing starlight by wavelength', correct: true },
+        { id: 'd', label: 'Moisture in the air creates a rainbow effect around the star' }
+      ],
+      explanation: "Earth's atmosphere acts as a weak prism. Light from stars near the horizon passes through more atmosphere and is refracted upward. Blue light refracts more than red, so the blue image of the star appears slightly higher than the red image, creating a vertically stretched, color-fringed image. This 'atmospheric dispersion' is a significant challenge for high-resolution astronomical imaging."
+    },
+    {
+      scenario: "A network engineer is designing a 400 Gbps data link using optical fiber spanning 80 km between two cities. The system must minimize signal degradation from pulse spreading.",
+      question: "What is the most effective way to compensate for chromatic dispersion in long-haul fiber links?",
+      options: [
+        { id: 'a', label: 'Use thicker optical fibers to reduce light bouncing' },
+        { id: 'b', label: 'Insert dispersion-compensating fiber (DCF) with opposite dispersion characteristics', correct: true },
+        { id: 'c', label: 'Increase the laser power to overcome pulse spreading' },
+        { id: 'd', label: 'Use copper cables for the last kilometer to regenerate the signal' }
+      ],
+      explanation: "Dispersion-compensating fiber (DCF) is engineered with negative dispersion that exactly cancels the positive dispersion of standard transmission fiber. By periodically inserting DCF segments, engineers can reset accumulated dispersion to near zero. Modern systems also use electronic dispersion compensation and chirped fiber Bragg gratings for fine-tuning."
+    },
+    {
+      scenario: "A materials scientist is using white light interferometry to measure surface profiles of precision machined parts with nanometer accuracy. The technique relies on how white light behaves differently from monochromatic laser light.",
+      question: "Why is white light advantageous for interferometric surface measurements compared to monochromatic laser light?",
+      options: [
+        { id: 'a', label: 'White light is brighter and provides better signal strength' },
+        { id: 'b', label: 'The short coherence length of white light provides unambiguous height measurement without fringe-order ambiguity', correct: true },
+        { id: 'c', label: 'White light can penetrate deeper into the material surface' },
+        { id: 'd', label: 'Different colors average out measurement noise' }
+      ],
+      explanation: "Laser light has high coherence and produces interference fringes over large path differences, creating ambiguity in absolute height. White light's broad spectrum gives it a very short coherence length (~1 micrometer), so interference fringes only appear when path lengths match to within this distance. This eliminates the 2-pi phase ambiguity problem and enables unambiguous nanometer-scale surface profiling."
+    },
+    {
+      scenario: "An analytical chemist is designing a spectrometer to identify trace elements in water samples. The design requires separating light into its component wavelengths with high resolution.",
+      question: "How do prism-based spectrometers achieve high wavelength resolution for chemical analysis?",
+      options: [
+        { id: 'a', label: 'By using multiple colored filters in sequence' },
+        { id: 'b', label: 'By using high-dispersion materials and long optical paths to maximize angular separation between wavelengths', correct: true },
+        { id: 'c', label: 'By rapidly spinning the prism to scan through wavelengths' },
+        { id: 'd', label: 'By cooling the prism to absolute zero to reduce thermal noise' }
+      ],
+      explanation: "Spectral resolution depends on angular dispersion and optical path length. High-dispersion materials like flint glass or specialized prisms (Pellin-Broca, Littrow) spread wavelengths over wider angles. Longer paths to the detector translate small angular differences into larger spatial separations. Modern spectrometers often use diffraction gratings for even higher resolution, but prisms excel for their continuous spectrum and freedom from overlapping orders."
+    },
+    {
+      scenario: "A physicist studying exotic optical materials discovers that near certain absorption resonances, blue light actually refracts LESS than red light - the opposite of normal glass behavior.",
+      question: "What is this unusual phenomenon called, and when does it occur?",
+      options: [
+        { id: 'a', label: 'Negative refraction, occurring in metamaterials with negative refractive index' },
+        { id: 'b', label: 'Anomalous dispersion, occurring near absorption bands where refractive index decreases with frequency', correct: true },
+        { id: 'c', label: 'Total internal reflection, occurring when light cannot exit a material' },
+        { id: 'd', label: 'Birefringence, occurring in crystalline materials with two refractive indices' }
+      ],
+      explanation: "Anomalous dispersion occurs near absorption resonances where the refractive index changes rapidly with wavelength. In these spectral regions, dn/d-lambda becomes positive instead of negative, meaning shorter wavelengths refract less than longer wavelengths. This is described by the Kramers-Kronig relations connecting absorption and refractive index. While called 'anomalous,' it's a well-understood consequence of light-matter interaction physics."
+    },
+    {
+      scenario: "An optical engineer is designing a camera lens system that must focus all visible colors to the same point. Simple lenses focus blue light closer than red light, creating blurry, color-fringed images.",
+      question: "How do achromatic lens designs correct for chromatic aberration caused by dispersion?",
+      options: [
+        { id: 'a', label: 'By using only reflective mirrors instead of refractive lenses' },
+        { id: 'b', label: 'By combining positive and negative lenses made from glasses with different dispersion ratios to cancel chromatic errors', correct: true },
+        { id: 'c', label: 'By using a single lens made from zero-dispersion material' },
+        { id: 'd', label: 'By digitally correcting the color fringing in post-processing' }
+      ],
+      explanation: "Achromatic doublets combine a converging lens of crown glass (low dispersion) with a diverging lens of flint glass (high dispersion). The glasses are chosen so their dispersions cancel while their focusing powers add constructively. This brings red and blue light to a common focus. Apochromatic designs use three or more elements with special glasses to correct even more wavelengths, achieving near-perfect color correction for demanding applications like microscopy and astrophotography."
+    }
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
 

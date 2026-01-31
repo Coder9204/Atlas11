@@ -1216,6 +1216,132 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     </div>
   );
 
+  // ===============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ===============================================================================
+  const testQuestions = [
+    // 1. Core concept - how Faraday cages work (Easy)
+    {
+      scenario: "A physics student wraps their phone in aluminum foil as an experiment. When someone tries to call the wrapped phone, the call fails to connect.",
+      question: "What fundamental principle explains why the aluminum foil blocks the phone signal?",
+      options: [
+        { id: 'a', label: "The foil absorbs all electromagnetic energy and converts it to heat" },
+        { id: 'b', label: "Free electrons in the metal redistribute to create an opposing field that cancels the external field inside", correct: true },
+        { id: 'c', label: "The foil reflects radio waves like a mirror reflects light" },
+        { id: 'd', label: "Aluminum is magnetic and attracts the radio signals away from the phone" }
+      ],
+      explanation: "When electromagnetic waves hit a conductor, free electrons in the metal rapidly redistribute themselves. These moving charges create their own electromagnetic field that exactly opposes and cancels the external field inside the enclosure. This is the core principle of Faraday cage shielding - the conductor doesn't simply block or absorb waves, but actively cancels them through charge redistribution."
+    },
+    // 2. Microwave oven door mesh (Easy-Medium)
+    {
+      scenario: "You notice that microwave oven doors have a metal mesh with small holes in the window. You can see your food cooking inside, but the microwaves stay contained.",
+      question: "Why can visible light pass through the mesh while dangerous microwaves cannot escape?",
+      options: [
+        { id: 'a', label: "Microwaves are absorbed by the glass behind the mesh" },
+        { id: 'b', label: "The mesh holes are much smaller than microwave wavelengths (~12 cm) but much larger than light wavelengths (~500 nm)", correct: true },
+        { id: 'c', label: "Microwaves are heavier than light and cannot fit through small holes" },
+        { id: 'd', label: "The mesh is coated with a special microwave-absorbing paint" }
+      ],
+      explanation: "Electromagnetic waves cannot effectively pass through openings much smaller than their wavelength. Microwave ovens use 2.45 GHz waves with a wavelength of about 12 cm. The mesh holes (typically 1-2 mm) are roughly 100 times smaller than this wavelength, blocking the microwaves. However, visible light has wavelengths around 400-700 nanometers - thousands of times smaller than the holes - so it passes through freely, letting you watch your food cook safely."
+    },
+    // 3. Car as lightning protection (Medium)
+    {
+      scenario: "During a severe thunderstorm, a family is driving on an open highway when lightning strikes their car. Despite the dramatic flash and loud bang, everyone inside is unharmed.",
+      question: "Why were the passengers protected from the massive electrical discharge?",
+      options: [
+        { id: 'a', label: "The rubber tires insulated the car from the ground, preventing current flow" },
+        { id: 'b', label: "The metal body acted as a Faraday cage, conducting current around the exterior while keeping the interior field-free", correct: true },
+        { id: 'c', label: "Modern cars have built-in lightning rods that safely ground the electricity" },
+        { id: 'd', label: "The car's battery absorbed the electrical energy from the strike" }
+      ],
+      explanation: "The car's metal body forms a Faraday cage. When lightning strikes, the enormous current flows through the conductive metal shell and continues to ground - but critically, the electric field inside remains zero. The rubber tires actually provide minimal protection (lightning has already jumped miles through air). It's the continuous metal enclosure that protects passengers by keeping all the electrical activity on the exterior surface."
+    },
+    // 4. Cell phone signal blocking (Medium)
+    {
+      scenario: "A hospital installs copper mesh in the walls of a sensitive equipment room to prevent cell phone interference. Staff notice their phones show 'No Service' inside the room but work fine in the hallway.",
+      question: "What determines whether the shielded room will successfully block cell phone signals operating at various frequencies?",
+      options: [
+        { id: 'a', label: "The total weight of copper used in the walls" },
+        { id: 'b', label: "The mesh opening size relative to the wavelength of the cell frequencies being blocked", correct: true },
+        { id: 'c', label: "The color of the copper mesh material" },
+        { id: 'd', label: "The room's distance from the nearest cell tower" }
+      ],
+      explanation: "Cell phone signals range from about 700 MHz to 2.5 GHz, with wavelengths from roughly 12 cm to 43 cm. For effective shielding, mesh openings must be significantly smaller than these wavelengths - typically less than 1/10th the wavelength. A mesh with 1 cm openings would block most cell frequencies effectively. If the openings were larger than the wavelengths, signals would pass through as if the mesh weren't there."
+    },
+    // 5. EMP protection (Medium-Hard)
+    {
+      scenario: "A government data center stores backup systems in a specially designed room to protect against electromagnetic pulse (EMP) attacks. The room features continuous welded steel walls with no windows and specially filtered power and data connections.",
+      question: "Why must EMP protection be more comprehensive than typical RF shielding, with no gaps or unfiltered penetrations?",
+      options: [
+        { id: 'a', label: "EMPs only travel through wires, not through the air" },
+        { id: 'b', label: "EMPs contain an extremely broad spectrum of frequencies, and any gap or unfiltered wire becomes an antenna that conducts energy inside", correct: true },
+        { id: 'c', label: "EMPs are magnetic rather than electric, requiring different shielding" },
+        { id: 'd', label: "EMPs last for several hours and eventually penetrate any normal shielding" }
+      ],
+      explanation: "An EMP generates electromagnetic energy across an enormous frequency range simultaneously - from near-DC to several GHz. This broadband nature means there's no single wavelength to design against. Any gap, seam, or unfiltered conductor acts as an antenna for some portion of this spectrum, coupling destructive energy inside. True EMP protection requires continuous conductive enclosures with filtered penetrations for every wire, treating the entire room as a sealed electromagnetic barrier."
+    },
+    // 6. Mesh hole size and wavelength (Hard)
+    {
+      scenario: "An engineer is designing a ventilated enclosure to shield sensitive equipment from 5 GHz WiFi interference (wavelength = 6 cm). They must choose between mesh with 3 cm holes for maximum airflow or mesh with 3 mm holes that restricts airflow.",
+      question: "Which mesh should the engineer choose, and why?",
+      options: [
+        { id: 'a', label: "The 3 cm mesh, because any metal mesh blocks all radio frequencies equally" },
+        { id: 'b', label: "The 3 mm mesh, because effective shielding requires holes much smaller than the wavelength being blocked", correct: true },
+        { id: 'c', label: "Either mesh works equally well since both contain metal" },
+        { id: 'd', label: "The 3 cm mesh, because larger holes create more reflection surface" }
+      ],
+      explanation: "For effective Faraday cage shielding, openings should be no larger than about 1/10th to 1/20th of the wavelength. For 6 cm waves, this means holes should be 6 mm or smaller. The 3 cm holes (half the wavelength) would allow significant signal leakage - waves can 'see' and pass through openings comparable to their wavelength. The 3 mm mesh (1/20th wavelength) provides approximately 40-60 dB of attenuation. The engineer must accept reduced airflow for proper shielding."
+    },
+    // 7. RFID shielding (Hard)
+    {
+      scenario: "A security researcher demonstrates that they can read someone's contactless credit card data through a wallet using a hidden scanner from 30 cm away. They then show that an RFID-blocking wallet sleeve completely prevents this attack.",
+      question: "What specific property must the RFID-blocking sleeve have to stop the 13.56 MHz signals (wavelength = 22 meters) used by contactless cards?",
+      options: [
+        { id: 'a', label: "It must be thicker than 22 meters to absorb the full wavelength" },
+        { id: 'b', label: "It must form a continuous conductive enclosure around the card, as even small gaps would allow the long-wavelength near-field coupling to occur", correct: true },
+        { id: 'c', label: "It must contain special frequency-tuned crystals that resonate at 13.56 MHz" },
+        { id: 'd', label: "It must be made of magnetic material to attract and trap the radio signals" }
+      ],
+      explanation: "RFID cards operate through near-field magnetic coupling, not far-field radiation. At 13.56 MHz, the 22-meter wavelength means the card and reader interact in the 'near field' where magnetic field coupling dominates. A thin but continuous conductive layer creates eddy currents that oppose and cancel this magnetic coupling. Even a small gap would allow field lines to link through, so complete enclosure is essential despite the long wavelength."
+    },
+    // 8. MRI room shielding (Hard)
+    {
+      scenario: "An MRI facility constructs a special room with continuous copper shielding in all walls, floor, and ceiling. Even the window to the control room uses fine copper mesh embedded in the glass. The door has copper finger stock gaskets that maintain contact when closed.",
+      question: "Why does MRI scanning require such elaborate RF shielding compared to most other medical equipment?",
+      options: [
+        { id: 'a', label: "MRI magnets would attract external metal objects without the copper shielding" },
+        { id: 'b', label: "MRI detects extremely weak RF signals from the body, and external interference would corrupt images; the shielding also prevents the powerful RF pulses from causing external interference", correct: true },
+        { id: 'c', label: "The shielding protects patients from the MRI's X-ray radiation" },
+        { id: 'd', label: "Copper shielding helps cool the superconducting magnets" }
+      ],
+      explanation: "MRI works by detecting tiny RF signals (microvolt level) emitted by hydrogen atoms in the body after excitation by powerful RF pulses. External RF interference - even from distant radio stations or nearby electronics - would overwhelm these delicate signals and create artifacts. Simultaneously, the MRI's own RF transmitter is powerful enough to interfere with nearby equipment. The Faraday cage serves dual purposes: keeping external RF out and containing the MRI's RF inside."
+    },
+    // 9. Anechoic chambers (Hard)
+    {
+      scenario: "A smartphone manufacturer tests their new device in a room with pyramid-shaped foam covering all surfaces. The room is also surrounded by a complete copper Faraday cage. Engineers call this combination an 'anechoic chamber.'",
+      question: "Why does the anechoic chamber need BOTH the Faraday cage (copper enclosure) AND the RF-absorbing foam pyramids?",
+      options: [
+        { id: 'a', label: "The copper blocks external signals while the foam prevents internal signals from reflecting, creating a controlled reflection-free test environment", correct: true },
+        { id: 'b', label: "The foam insulates the room thermally while the copper provides structural support" },
+        { id: 'c', label: "The copper blocks low frequencies and the foam blocks high frequencies" },
+        { id: 'd', label: "The foam is purely decorative while the copper does all the shielding work" }
+      ],
+      explanation: "The Faraday cage isolates the chamber from external electromagnetic interference, creating a controlled environment. However, a bare metal room would cause strong reflections of test signals, making measurements inaccurate. The pyramid-shaped absorbers gradually transition from air to lossy material, absorbing RF energy instead of reflecting it. Together, they create a space that simulates infinite free space - no external interference and no reflections - essential for accurate antenna and emissions testing."
+    },
+    // 10. Electromagnetic compatibility testing (Hard)
+    {
+      scenario: "Before a new electric vehicle can be sold, regulators require EMC (Electromagnetic Compatibility) testing. The vehicle is placed inside a large shielded room and subjected to high-intensity electromagnetic fields while engineers monitor whether its electronic systems malfunction.",
+      question: "What two complementary aspects of EMC does the shielded test chamber enable engineers to evaluate?",
+      options: [
+        { id: 'a', label: "The vehicle's paint durability and its radio reception quality" },
+        { id: 'b', label: "Immunity (whether external fields cause malfunctions) and emissions (whether the vehicle produces interference that could affect other devices)", correct: true },
+        { id: 'c', label: "The vehicle's fuel efficiency and its crash safety rating" },
+        { id: 'd', label: "The vehicle's top speed and its braking distance" }
+      ],
+      explanation: "EMC testing has two sides: immunity and emissions. For immunity testing, the shielded chamber allows engineers to blast the vehicle with intense, controlled electromagnetic fields (simulating radar, radio transmitters, etc.) to verify electronics don't malfunction. For emissions testing, the chamber's isolation ensures that any electromagnetic signals detected come only from the vehicle itself, not external sources. This reveals whether the vehicle might interfere with other devices. The Faraday cage is essential for both: containing test signals in, and keeping environmental noise out."
+    }
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (

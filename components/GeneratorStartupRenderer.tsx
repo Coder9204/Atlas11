@@ -163,6 +163,123 @@ const TRANSFER_APPS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
+// SCENARIO-BASED TEST QUESTIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const testQuestions = [
+  {
+    scenario: 'A technician is explaining to a new hire why data centers need UPS batteries that can bridge 10-15 seconds of load during power outages.',
+    question: 'What is the fundamental principle that explains how generators produce electricity?',
+    options: [
+      { id: 'a', label: 'Chemical reactions in the fuel convert directly to electrical current' },
+      { id: 'b', label: 'Electromagnetic induction - rotating magnetic fields induce current in stationary windings', correct: true },
+      { id: 'c', label: 'Static electricity builds up in the generator housing during rotation' },
+      { id: 'd', label: 'Piezoelectric effect from mechanical vibrations in the engine' },
+    ],
+    explanation: 'Generators work through electromagnetic induction, discovered by Michael Faraday. When a magnetic field rotates past conductive windings (or vice versa), it induces an electrical current. This is why the rotor must spin at a precise speed - the rotation speed directly determines the frequency of the AC output.',
+  },
+  {
+    scenario: 'During a facility tour, an engineer notices that the emergency generator looks almost identical to a large electric motor. A visitor asks if they could be used interchangeably.',
+    question: 'What is the relationship between electric generators and electric motors?',
+    options: [
+      { id: 'a', label: 'They are completely different devices with no common principles' },
+      { id: 'b', label: 'Motors are more efficient because they only convert one form of energy' },
+      { id: 'c', label: 'They are functionally reversible - the same machine can operate as either depending on energy input', correct: true },
+      { id: 'd', label: 'Generators must be much larger than motors for the same power rating' },
+    ],
+    explanation: 'Motors and generators are electromagnetic duals of each other. A motor converts electrical energy to mechanical rotation, while a generator converts mechanical rotation to electrical energy. The same physical machine can often function as either, which is why regenerative braking in electric vehicles can use the drive motor as a generator to recharge batteries.',
+  },
+  {
+    scenario: 'A data center is installing a second backup generator to run in parallel with the existing one. The installation team emphasizes that both generators must be perfectly synchronized before connecting them together.',
+    question: 'What parameters must match during generator synchronization before paralleling with the grid or another generator?',
+    options: [
+      { id: 'a', label: 'Only voltage amplitude needs to match' },
+      { id: 'b', label: 'Frequency, voltage magnitude, phase angle, and phase sequence must all match', correct: true },
+      { id: 'c', label: 'Only frequency needs to match since voltage will self-adjust' },
+      { id: 'd', label: 'Temperature and fuel level are the primary synchronization parameters' },
+    ],
+    explanation: 'Synchronization requires matching frequency (Hz), voltage magnitude, phase angle, and phase sequence. Connecting out-of-phase sources creates a short circuit condition, potentially causing massive current flow, severe mechanical stress on the generator shaft, and catastrophic equipment damage. Modern sync panels use synchroscopes and automatic synchronizers to ensure safe paralleling.',
+  },
+  {
+    scenario: 'A generator maintenance technician notices that the excitation system has failed during routine testing. The diesel engine runs perfectly but the generator produces no output voltage.',
+    question: 'Why is the excitation current critical for generator operation?',
+    options: [
+      { id: 'a', label: 'It preheats the fuel for better combustion efficiency' },
+      { id: 'b', label: 'It creates the magnetic field in the rotor required for electromagnetic induction', correct: true },
+      { id: 'c', label: 'It powers the cooling fans to prevent overheating' },
+      { id: 'd', label: 'It synchronizes the engine speed with the electrical output' },
+    ],
+    explanation: 'The excitation system supplies DC current to the rotor windings, creating the magnetic field essential for electromagnetic induction. Without excitation, the spinning rotor has no magnetic field to induce voltage in the stator windings. Adjusting excitation current also controls the generator output voltage and reactive power capability.',
+  },
+  {
+    scenario: 'During an emergency power transfer, the facility engineer notices the generator circuit breaker trips immediately when closed, even though the generator appears to be running normally at 60Hz.',
+    question: 'What causes dangerous inrush current when a generator connects to a large load?',
+    options: [
+      { id: 'a', label: 'The fuel injection system cannot respond quickly enough' },
+      { id: 'b', label: 'Transformers and motors draw 5-10x rated current during initial magnetization and startup', correct: true },
+      { id: 'c', label: 'The generator windings have not reached operating temperature' },
+      { id: 'd', label: 'Inrush current is a myth; generators can handle any instantaneous load' },
+    ],
+    explanation: 'Inrush current occurs because transformers need to establish their magnetic fields (magnetizing inrush) and motors need to accelerate from standstill (locked rotor current). This initial current can be 5-10 times the normal operating current. Generators must be sized and protected to handle these transients, and load sequencing strategies help manage the cumulative inrush.',
+  },
+  {
+    scenario: 'A power plant operator notices that when a large industrial customer suddenly increases demand, the generator frequency briefly drops from 60.0Hz to 59.5Hz before recovering. The plant manager explains this is the governor system responding.',
+    question: 'How does a governor control system maintain generator frequency under varying loads?',
+    options: [
+      { id: 'a', label: 'It adjusts the number of active magnetic poles in the generator' },
+      { id: 'b', label: 'It senses speed deviation and modulates fuel flow to restore the setpoint speed', correct: true },
+      { id: 'c', label: 'It connects additional generators automatically when load increases' },
+      { id: 'd', label: 'It reduces the load by disconnecting non-critical circuits' },
+    ],
+    explanation: 'The governor is a closed-loop control system that continuously monitors shaft speed (which determines frequency). When load increases, the shaft slows down; the governor responds by increasing fuel flow to add more torque. Modern electronic governors respond within milliseconds and can include droop settings for load sharing between parallel generators.',
+  },
+  {
+    scenario: 'After a complete grid blackout affecting an entire region, certain designated power plants must restart without any external power source to begin rebuilding the grid from scratch.',
+    question: 'What is black start capability and why is it critical for grid restoration?',
+    options: [
+      { id: 'a', label: 'The ability to start generators at night using solar-charged batteries' },
+      { id: 'b', label: 'The ability to start and bring a power plant online without external grid power, using on-site batteries or small auxiliary generators', correct: true },
+      { id: 'c', label: 'Emergency shutdown procedures that protect equipment during blackouts' },
+      { id: 'd', label: 'A testing mode that simulates blackout conditions for training' },
+    ],
+    explanation: 'Black start capability allows designated power plants to restart independently after a complete grid collapse. These plants use large battery banks, compressed air, or small diesel generators to start their main units without grid power. They then energize transmission lines and help restart other plants in a coordinated restoration sequence. Only about 10-15% of plants typically have this capability.',
+  },
+  {
+    scenario: 'The grid operator notices that system frequency has dropped to 59.8Hz during peak demand. They request that several generators increase their output to restore the standard 60Hz frequency.',
+    question: 'What determines the electrical frequency of a power grid, and how is it regulated?',
+    options: [
+      { id: 'a', label: 'Frequency is fixed by the wire gauge and transformer ratios in the grid' },
+      { id: 'b', label: 'The balance between generation and load - excess load causes frequency to drop; excess generation causes it to rise', correct: true },
+      { id: 'c', label: 'Each generator independently sets its own frequency, and they average out' },
+      { id: 'd', label: 'Frequency is regulated by adjusting the grid voltage up or down' },
+    ],
+    explanation: 'Grid frequency reflects the real-time balance between power generation and consumption. When load exceeds generation, generator rotors slow down, reducing frequency. When generation exceeds load, rotors speed up. The formula f = (P × N) / 120 shows that frequency directly depends on rotational speed. Grid operators must continuously balance supply and demand to maintain 60Hz (or 50Hz in some regions).',
+  },
+  {
+    scenario: 'A facility engineer is sizing a new generator and must account for both real power (kW) needs for running equipment and reactive power (kVAR) requirements for motors and transformers.',
+    question: 'How do generators produce reactive power, and why is it important?',
+    options: [
+      { id: 'a', label: 'Reactive power is waste heat that must be dissipated through cooling systems' },
+      { id: 'b', label: 'By adjusting excitation current to create leading or lagging current relationships, supporting voltage levels and motor operation', correct: true },
+      { id: 'c', label: 'Reactive power is stored in batteries and released when needed' },
+      { id: 'd', label: 'Generators cannot produce reactive power; it must come from capacitor banks' },
+    ],
+    explanation: 'Reactive power (VARs) is essential for maintaining voltage levels and supporting inductive loads like motors and transformers. Generators produce reactive power by overexciting or underexciting their field windings, which adjusts the phase relationship between voltage and current. An overexcited generator exports reactive power to the grid; an underexcited one absorbs it. Proper reactive power management prevents voltage collapse.',
+  },
+  {
+    scenario: 'During commissioning of a new data center generator, the protection engineer programs multiple relay settings to trip the generator offline under various fault conditions, even though this causes downtime.',
+    question: 'Why are comprehensive protection schemes necessary for generators despite the risk of unnecessary trips?',
+    options: [
+      { id: 'a', label: 'Protection systems are primarily for regulatory compliance and can be disabled in emergencies' },
+      { id: 'b', label: 'To prevent catastrophic damage from faults - an unprotected fault can destroy a generator in seconds and create safety hazards', correct: true },
+      { id: 'c', label: 'Protection schemes only matter for generators connected to the utility grid' },
+      { id: 'd', label: 'Modern generators are self-protecting and do not require external protection relays' },
+    ],
+    explanation: 'Generator protection schemes guard against overcurrent, overvoltage, reverse power, loss of field, overfrequency, underfrequency, and ground faults. An unprotected fault can cause winding insulation failure, rotor damage, fire, or even explosion within seconds. The cost of occasional nuisance trips is far less than the repair cost and safety risk of an unprotected fault. Protection coordination ensures the right breaker trips first to isolate faults.',
+  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────────────────
 

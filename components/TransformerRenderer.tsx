@@ -168,6 +168,132 @@ const TRANSFER_APPS = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - Scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    // Question 1: Core concept - electromagnetic induction (Easy)
+    scenario: 'A student wraps two separate coils of wire around an iron ring and connects the primary coil to an AC power source.',
+    question: 'What fundamental principle allows voltage to appear in the secondary coil even though the coils are not physically connected?',
+    options: [
+      { id: 'a', label: 'Electric current flows through the iron core from primary to secondary', correct: false },
+      { id: 'b', label: 'Electromagnetic induction - the changing magnetic flux induces an EMF in the secondary', correct: true },
+      { id: 'c', label: 'Static electricity builds up and jumps across the gap', correct: false },
+      { id: 'd', label: 'The iron core acts as a conductor between the two coils', correct: false }
+    ],
+    explanation: 'Electromagnetic induction is the core principle: AC current in the primary creates a changing magnetic field in the iron core. This changing magnetic flux passes through the secondary coil and, according to Faraday\'s Law, induces an electromotive force (EMF) in the secondary - no physical connection needed!'
+  },
+  {
+    // Question 2: Turns ratio and voltage (Easy-Medium)
+    scenario: 'An engineer is designing a doorbell transformer. The wall outlet provides 120V AC, and the doorbell requires 12V AC to operate safely.',
+    question: 'If the primary coil has 500 turns, how many turns should the secondary coil have?',
+    options: [
+      { id: 'a', label: '5000 turns', correct: false },
+      { id: 'b', label: '500 turns', correct: false },
+      { id: 'c', label: '50 turns', correct: true },
+      { id: 'd', label: '250 turns', correct: false }
+    ],
+    explanation: 'Using the transformer equation V2/V1 = N2/N1, we get 12/120 = N2/500. Solving: N2 = 500 x (12/120) = 500 x 0.1 = 50 turns. The 10:1 voltage reduction requires a 10:1 turns ratio reduction.'
+  },
+  {
+    // Question 3: Step-up vs step-down (Medium)
+    scenario: 'A power plant generates electricity at 22,000V. Before transmission over long-distance power lines, the voltage is increased to 400,000V. At your neighborhood substation, it is reduced to 11,000V, then finally to 240V at the pole transformer near your house.',
+    question: 'How many step-up and step-down transformers are used in this power delivery chain?',
+    options: [
+      { id: 'a', label: '1 step-up and 1 step-down transformer', correct: false },
+      { id: 'b', label: '2 step-up and 1 step-down transformer', correct: false },
+      { id: 'c', label: '1 step-up and 2 step-down transformers', correct: true },
+      { id: 'd', label: '2 step-up and 2 step-down transformers', correct: false }
+    ],
+    explanation: 'There is 1 step-up transformer (22kV to 400kV at the power plant) and 2 step-down transformers (400kV to 11kV at the substation, then 11kV to 240V at the pole). Step-up increases voltage; step-down decreases it.'
+  },
+  {
+    // Question 4: Power transmission efficiency (Medium)
+    scenario: 'A rural town is 50km from the nearest power plant. The transmission lines have a total resistance of 10 ohms. The town needs 1 MW of power. An engineer must choose between transmitting at 10,000V or 100,000V.',
+    question: 'Approximately how much power is lost as heat in the transmission lines at each voltage level?',
+    options: [
+      { id: 'a', label: '10,000V loses 100kW; 100,000V loses 10kW', correct: false },
+      { id: 'b', label: '10,000V loses 1MW; 100,000V loses 10kW', correct: false },
+      { id: 'c', label: '10,000V loses 100kW; 100,000V loses 1kW', correct: true },
+      { id: 'd', label: 'Both lose the same power because P = 1MW in both cases', correct: false }
+    ],
+    explanation: 'Power loss = I^2 x R. At 10,000V: I = 1MW/10kV = 100A, so loss = 100^2 x 10 = 100kW. At 100,000V: I = 1MW/100kV = 10A, so loss = 10^2 x 10 = 1kW. Increasing voltage 10x reduces current 10x and losses 100x!'
+  },
+  {
+    // Question 5: Core losses - hysteresis and eddy current (Medium-Hard)
+    scenario: 'A transformer manufacturer notices that their new high-frequency transformer runs much hotter than expected. The core is made from a solid block of iron instead of the usual laminated sheets.',
+    question: 'What is the primary cause of the excessive heat, and how do laminations help?',
+    options: [
+      { id: 'a', label: 'Copper losses in the windings; laminations reduce wire resistance', correct: false },
+      { id: 'b', label: 'Eddy currents circulating in the solid core; laminations break up these current loops', correct: true },
+      { id: 'c', label: 'Air gaps in the core; laminations provide better magnetic contact', correct: false },
+      { id: 'd', label: 'Friction between magnetic domains; laminations act as lubricant layers', correct: false }
+    ],
+    explanation: 'Eddy currents are loops of electric current induced within the core by the changing magnetic field. In a solid core, these currents flow freely and generate significant I^2R heat. Laminating the core (thin insulated sheets) forces eddy currents into smaller loops, dramatically reducing their magnitude and associated power loss.'
+  },
+  {
+    // Question 6: Transformer impedance (Hard)
+    scenario: 'Two identical 100kVA transformers are installed in parallel to share the load at a factory. Transformer A has 4% impedance and Transformer B has 6% impedance. The total load is 180kVA.',
+    question: 'How will the 180kVA load be shared between the two transformers?',
+    options: [
+      { id: 'a', label: 'Each transformer carries 90kVA (equal sharing)', correct: false },
+      { id: 'b', label: 'Transformer A carries 108kVA, Transformer B carries 72kVA', correct: true },
+      { id: 'c', label: 'Transformer A carries 72kVA, Transformer B carries 108kVA', correct: false },
+      { id: 'd', label: 'All 180kVA flows through Transformer A because it has lower impedance', correct: false }
+    ],
+    explanation: 'When transformers operate in parallel, they share load inversely proportional to their impedance. The ratio is 6:4 (or 3:2), so A carries 3/5 of load = 108kVA and B carries 2/5 = 72kVA. Lower impedance means the transformer "accepts" more current - but not all of it.'
+  },
+  {
+    // Question 7: Auto-transformers (Hard)
+    scenario: 'A laboratory needs to reduce 240V to 220V for some imported European equipment. An engineer suggests using an auto-transformer instead of a conventional two-winding transformer rated at 5kVA.',
+    question: 'What is a key advantage of the auto-transformer in this application?',
+    options: [
+      { id: 'a', label: 'It provides better electrical isolation between input and output', correct: false },
+      { id: 'b', label: 'It can handle the 5kVA load with much smaller and lighter construction', correct: true },
+      { id: 'c', label: 'It works with DC as well as AC power', correct: false },
+      { id: 'd', label: 'It completely eliminates core losses', correct: false }
+    ],
+    explanation: 'An auto-transformer uses a single winding with a tap, so part of the power is conducted directly (not transformed). When the voltage ratio is close to 1:1 (like 240V to 220V), only a small fraction of power is actually transformed, allowing a much smaller core and winding. However, there is no electrical isolation between primary and secondary.'
+  },
+  {
+    // Question 8: Three-phase transformer configurations (Hard)
+    scenario: 'A factory receives three-phase power at 11kV and needs 400V for its machinery. The electrical contractor offers either a delta-wye (triangle-star) or wye-wye (star-star) transformer configuration.',
+    question: 'What is a significant advantage of the delta-wye configuration over wye-wye?',
+    options: [
+      { id: 'a', label: 'Delta-wye uses less copper wire in the windings', correct: false },
+      { id: 'b', label: 'Delta-wye suppresses third harmonic currents and provides a neutral for single-phase loads', correct: true },
+      { id: 'c', label: 'Delta-wye allows the transformer to work with DC power', correct: false },
+      { id: 'd', label: 'Delta-wye eliminates the need for a grounding connection', correct: false }
+    ],
+    explanation: 'Delta-wye is popular because the delta primary traps third harmonic currents (preventing them from distorting the supply), while the wye secondary provides a neutral point for supplying single-phase 230V loads alongside three-phase 400V loads. This makes it ideal for mixed industrial and commercial installations.'
+  },
+  {
+    // Question 9: Transformer cooling methods (Hard)
+    scenario: 'A utility company is installing a 50MVA transformer at a major substation. The design team must choose between ONAN (oil natural, air natural) and OFAF (oil forced, air forced) cooling systems.',
+    question: 'Under what operating condition would OFAF cooling be essential?',
+    options: [
+      { id: 'a', label: 'When the transformer operates at very light loads below 20% capacity', correct: false },
+      { id: 'b', label: 'When the transformer must handle sustained loads near or above rated capacity in hot climates', correct: true },
+      { id: 'c', label: 'When the transformer is only used for voltage regulation, not power transfer', correct: false },
+      { id: 'd', label: 'When the transformer is located underground with unlimited ventilation', correct: false }
+    ],
+    explanation: 'OFAF (oil forced, air forced) uses pumps and fans to actively circulate cooling oil and air. This is essential when transformers operate at high loads for extended periods, especially in hot environments, because natural convection (ONAN) cannot remove heat fast enough. OFAF can increase the effective rating of a transformer by 50% or more compared to ONAN.'
+  },
+  {
+    // Question 10: Saturation and inrush current (Hard)
+    scenario: 'A technician energizes a large distribution transformer by closing the circuit breaker. The protection relay detects a current spike of 8-12 times the rated current for about 100 milliseconds, but does not trip the breaker.',
+    question: 'What causes this temporary current spike, and why does the relay not trip?',
+    options: [
+      { id: 'a', label: 'A short circuit in the secondary winding; the relay is faulty', correct: false },
+      { id: 'b', label: 'Magnetizing inrush current due to core saturation; relays are designed with time delays to allow for this', correct: true },
+      { id: 'c', label: 'Capacitor charging current from power factor correction; the relay ignores reactive current', correct: false },
+      { id: 'd', label: 'Eddy currents in the tank; the relay only monitors winding current', correct: false }
+    ],
+    explanation: 'Magnetizing inrush current occurs when a transformer is energized and the core temporarily saturates due to residual magnetism and the point on the voltage wave at switching. This can cause currents 8-15x rated for a few cycles. Protection relays use harmonic restraint or time delays to distinguish inrush from actual faults, preventing nuisance tripping.'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HELPER FUNCTIONS
 // ─────────────────────────────────────────────────────────────────────────────
 function isValidPhase(phase: string): phase is Phase {

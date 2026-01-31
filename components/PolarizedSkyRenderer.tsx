@@ -270,6 +270,145 @@ const applications: Application[] = [
 ];
 
 // =============================================================================
+// TEST QUESTIONS DATA - Scenario-Based Multiple Choice
+// =============================================================================
+interface TestQuestionOption {
+  id: 'a' | 'b' | 'c' | 'd';
+  label: string;
+  correct?: boolean;
+}
+
+interface TestQuestion {
+  scenario: string;
+  question: string;
+  options: TestQuestionOption[];
+  explanation: string;
+}
+
+const testQuestions: TestQuestion[] = [
+  // 1. Core concept - why the sky is polarized (Easy)
+  {
+    scenario: "You're teaching a friend about optics and they ask why the sky appears blue and why sunglasses work better in certain directions.",
+    question: "What physical process causes skylight to become polarized?",
+    options: [
+      { id: 'a', label: "Reflection of sunlight off water vapor droplets in the atmosphere" },
+      { id: 'b', label: "Rayleigh scattering by nitrogen and oxygen molecules that preferentially scatters light perpendicular to the scattering plane", correct: true },
+      { id: 'c', label: "Absorption and re-emission by ozone molecules in the stratosphere" },
+      { id: 'd', label: "Refraction through ice crystals suspended in cirrus clouds" },
+    ],
+    explanation: "Rayleigh scattering occurs when light interacts with particles much smaller than its wavelength, like N2 and O2 molecules. The electric field of scattered light oscillates perpendicular to the scattering plane (the plane containing the sun, molecule, and observer), creating a systematic polarization pattern across the entire sky.",
+  },
+  // 2. Polarized sunglasses effectiveness (Easy-Medium)
+  {
+    scenario: "A photographer notices that when wearing polarized sunglasses and looking at different parts of the clear blue sky, some regions appear much darker than others when tilting their head.",
+    question: "Why do polarized sunglasses reduce glare more effectively when looking at certain parts of the sky?",
+    options: [
+      { id: 'a', label: "The sunglasses block UV radiation which varies across the sky" },
+      { id: 'b', label: "Skylight at 90 degrees from the sun is highly polarized, so aligned polarized lenses can block most of it", correct: true },
+      { id: 'c', label: "The lenses have a gradient tint that matches sky brightness patterns" },
+      { id: 'd', label: "Human eyes are more sensitive to polarized light in peripheral vision" },
+    ],
+    explanation: "Skylight is most strongly polarized at 90 degrees from the sun, where it can reach 75-80% polarization. When polarized sunglasses are oriented perpendicular to this polarization direction, they block most of the polarized light, dramatically darkening that region of the sky. Near the sun or directly opposite it, the light is less polarized, so the effect is reduced.",
+  },
+  // 3. Maximum polarization direction (Medium)
+  {
+    scenario: "An engineer is designing an outdoor optical sensor and needs to account for skylight polarization. The sun is at azimuth 180 degrees (due south) and 45 degrees elevation.",
+    question: "At what position in the sky would the sensor detect maximum polarization?",
+    options: [
+      { id: 'a', label: "Looking directly toward the sun at 180 degrees azimuth" },
+      { id: 'b', label: "Looking at the antisolar point, 180 degrees opposite the sun" },
+      { id: 'c', label: "Along a band 90 degrees from the sun - such as due east, due west, or at the zenith", correct: true },
+      { id: 'd', label: "Near the horizon in all directions equally" },
+    ],
+    explanation: "Maximum polarization occurs along a great circle 90 degrees from the sun. With the sun due south at 45 degrees elevation, maximum polarization would be found due east, due west, at the zenith (if sun were at horizon), and along the entire arc 90 degrees away. At these positions, the scattering geometry produces light polarized perpendicular to the line connecting that point to the sun.",
+  },
+  // 4. Viking sunstone navigation (Medium)
+  {
+    scenario: "Archaeologists discovered calcite crystals (Iceland spar) in Viking shipwrecks. Historical records suggest Vikings sailed across the North Atlantic to Greenland and North America without magnetic compasses, even on overcast days.",
+    question: "How could Vikings have used calcite sunstones to navigate when the sun was hidden by clouds?",
+    options: [
+      { id: 'a', label: "Calcite glows when exposed to the Earth's magnetic field, pointing north" },
+      { id: 'b', label: "Calcite birefringence creates double images that merge when aligned with sky polarization, revealing the sun's position", correct: true },
+      { id: 'c', label: "The crystals reflect starlight that penetrates clouds at night" },
+      { id: 'd', label: "Calcite changes color based on water temperature, indicating latitude" },
+    ],
+    explanation: "Calcite exhibits birefringence - it splits light into two polarized rays. When held up to an overcast sky and rotated, the crystal shows two images of equal brightness only when its optical axis aligns with the polarization direction of skylight. Since the polarization pattern is fixed relative to the sun's position, Vikings could determine where the sun was hidden behind clouds to within a few degrees, enabling accurate open-ocean navigation.",
+  },
+  // 5. Insect navigation using polarization (Medium-Hard)
+  {
+    scenario: "A biologist observing honeybees notices they can navigate accurately back to the hive even when the sun is obscured by a tree line or partial cloud cover, but struggle on heavily overcast or hazy days.",
+    question: "What specialized adaptation allows bees to use sky polarization for navigation?",
+    options: [
+      { id: 'a', label: "Bees have magnetic particles in their abdomens that sense Earth's field" },
+      { id: 'b', label: "Bees memorize landmark patterns and only use polarization as backup" },
+      { id: 'c', label: "Specialized photoreceptors in their compound eyes detect the e-vector orientation of polarized light", correct: true },
+      { id: 'd', label: "Bees communicate sun position through waggle dances and don't need to see the sky" },
+    ],
+    explanation: "Honeybees possess specialized UV-sensitive photoreceptors in the dorsal rim area of their compound eyes that can detect the electric field oscillation direction (e-vector) of polarized light. They memorize the sky's polarization pattern during orientation flights and use it as a celestial compass. This works even when only a small patch of blue sky is visible, but fails on heavily overcast or polluted days when Mie scattering from large particles destroys the polarization pattern.",
+  },
+  // 6. Photography with polarizing filters (Hard)
+  {
+    scenario: "A landscape photographer is shooting a mountain scene at midday with the sun almost directly overhead. They attach a circular polarizing filter to their lens and rotate it while looking through the viewfinder.",
+    question: "In which direction will the polarizing filter have the strongest effect on sky darkness?",
+    options: [
+      { id: 'a', label: "Looking toward the zenith directly above" },
+      { id: 'b', label: "Looking toward the horizon in all directions equally" },
+      { id: 'c', label: "Looking horizontally in any direction, since all horizontal views are roughly 90 degrees from an overhead sun", correct: true },
+      { id: 'd', label: "Looking at the sun through the filter to reduce its intensity" },
+    ],
+    explanation: "With the sun nearly overhead, the 90-degree maximum polarization zone forms a ring around the horizon. Looking horizontally in any direction puts you at approximately 90 degrees from the sun, where polarization is strongest. The polarizing filter can darken these horizontal sky regions significantly (up to 2 stops) while having minimal effect on the zenith (near the sun) or clouds (unpolarized). Photographers must be careful as this can cause uneven sky darkening in wide-angle shots.",
+  },
+  // 7. Atmospheric scattering physics (Hard)
+  {
+    scenario: "An atmospheric physicist measures sky polarization and finds the degree of polarization is only 40% at 90 degrees from the sun, much lower than the theoretical maximum of about 94% for single Rayleigh scattering.",
+    question: "What is the primary reason real-world sky polarization never reaches the theoretical maximum?",
+    options: [
+      { id: 'a', label: "The sun emits partially polarized light that interferes with atmospheric polarization" },
+      { id: 'b', label: "Multiple scattering events and ground reflections mix polarization states, reducing the net polarization", correct: true },
+      { id: 'c', label: "Quantum effects prevent light from being fully polarized at visible wavelengths" },
+      { id: 'd', label: "Earth's magnetic field rotates the polarization direction unpredictably" },
+    ],
+    explanation: "In the real atmosphere, light undergoes multiple scattering events before reaching an observer. Each additional scattering randomizes polarization direction somewhat. Additionally, light reflected from the ground (depolarized) mixes with sky light. Aerosols cause Mie scattering producing unpolarized light. Even on the clearest days, these factors reduce maximum polarization to 70-80%. In typical conditions, 30-50% is common. This reduction is actually useful for monitoring air quality.",
+  },
+  // 8. Polarization at sunrise/sunset (Hard)
+  {
+    scenario: "A researcher notices that the sky polarization pattern looks different at sunset compared to midday. With the sun on the horizon, they observe that the band of maximum polarization now passes through the zenith.",
+    question: "Why does the geometry of sky polarization change so dramatically between midday and sunset?",
+    options: [
+      { id: 'a', label: "The atmosphere is thicker at sunset, changing scattering properties" },
+      { id: 'b', label: "The 90-degree maximum polarization zone always forms a great circle around the sun's position, which changes as the sun moves", correct: true },
+      { id: 'c', label: "Sunset light is redder and red wavelengths have different polarization than blue" },
+      { id: 'd', label: "Humidity increases in the evening, altering the polarization pattern" },
+    ],
+    explanation: "The zone of maximum polarization always lies along a great circle 90 degrees from the sun. At midday with sun high, this zone forms a ring closer to the horizon. At sunset with sun on the horizon, the 90-degree zone passes through the zenith and down to the opposite horizon. This predictable geometric relationship is what makes polarization useful for navigation - no matter where the sun is, the pattern orientation reveals the sun's position.",
+  },
+  // 9. Robotic navigation systems (Hard)
+  {
+    scenario: "Engineers are developing an autonomous drone for polar exploration where GPS signals are unreliable and magnetic compasses are inaccurate near the poles. They consider using sky polarization for navigation.",
+    question: "What key advantage does a polarimetric navigation system offer over GPS or magnetic compasses for polar operations?",
+    options: [
+      { id: 'a', label: "Polarization sensors are smaller and use less power than GPS receivers" },
+      { id: 'b', label: "Sky polarization provides a heading reference independent of magnetic anomalies and doesn't require satellite signals", correct: true },
+      { id: 'c', label: "Polarization works at night using starlight polarization patterns" },
+      { id: 'd', label: "Ice crystals in polar air enhance polarization, making it more accurate" },
+    ],
+    explanation: "Near Earth's magnetic poles, magnetic compasses become unreliable due to the steep inclination of field lines and local anomalies from iron deposits. GPS can have coverage gaps at high latitudes and is vulnerable to jamming or solar interference. Sky polarization provides a stable heading reference as long as any blue sky is visible, derived purely from the sun's position. Modern bio-inspired polarimetric sensors can determine heading to within 1 degree, making them valuable for polar, underwater, and space applications.",
+  },
+  // 10. Polarimetric cloud detection (Hard)
+  {
+    scenario: "A climate scientist uses a satellite-mounted polarimeter to study clouds from above. They notice that liquid water clouds and ice crystal clouds produce distinctly different polarization signatures.",
+    question: "How does polarimetry help distinguish between liquid water clouds and ice crystal clouds from satellite observations?",
+    options: [
+      { id: 'a', label: "Ice clouds polarize light clockwise while water clouds polarize counterclockwise" },
+      { id: 'b', label: "Spherical water droplets and hexagonal ice crystals scatter light at different angles with different polarization characteristics", correct: true },
+      { id: 'c', label: "Water absorbs polarized light while ice reflects it unchanged" },
+      { id: 'd', label: "Temperature differences cause different polarization in thermal infrared emissions" },
+    ],
+    explanation: "Liquid cloud droplets are nearly spherical and exhibit Mie scattering with characteristic rainbow and glory features at specific angles. Ice crystals have hexagonal shapes that produce different angular scattering patterns and polarization signatures, including halos at 22 and 46 degrees. Polarimeters measure the degree and angle of polarization at multiple wavelengths, creating a fingerprint that reveals particle shape, size distribution, and phase (liquid vs ice). This is crucial for climate models since ice and liquid clouds have very different radiative properties.",
+  },
+];
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 export default function PolarizedSkyRenderer({

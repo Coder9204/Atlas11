@@ -1726,6 +1726,132 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     </div>
   );
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ═══════════════════════════════════════════════════════════════════════════
+  const testQuestions = [
+    // Question 1: Core concept - what are standing waves (Easy)
+    {
+      scenario: "You place a bowl of cold soup in a microwave oven without the turntable spinning. After 2 minutes, you notice some spots are scalding hot while others are barely warm.",
+      question: "What fundamental wave phenomenon causes this uneven heating pattern inside the microwave cavity?",
+      options: [
+        { id: 'a', label: "Sound waves from the magnetron create pressure differences in the food" },
+        { id: 'b', label: "Standing waves form when microwaves reflect off metal walls and interfere with incoming waves, creating fixed hot spots (antinodes) and cold spots (nodes)", correct: true },
+        { id: 'c', label: "The magnetron rotates and misses certain areas of the cavity" },
+        { id: 'd', label: "Microwave radiation decays exponentially from the source, heating nearby areas more" }
+      ],
+      explanation: "Standing waves occur when waves traveling in opposite directions (incident and reflected) interfere with each other. In a microwave oven, electromagnetic waves bounce off the metal walls and superimpose with incoming waves. At antinodes, the waves constructively interfere creating maximum electric field strength (hot spots). At nodes, they destructively interfere creating minimum field strength (cold spots). These positions are fixed in space, determined by the wavelength and cavity dimensions."
+    },
+    // Question 2: Hot spots in microwave ovens (Easy-Medium)
+    {
+      scenario: "A food scientist is testing a new microwave oven design. She places a thin layer of thermal-sensitive paper across the entire cavity floor and runs the microwave for 30 seconds. The paper reveals a distinct checkerboard-like pattern of heated and unheated regions.",
+      question: "The distance between adjacent hot spots on the thermal paper is approximately 6.1 cm. What does this measurement reveal about the microwave radiation?",
+      options: [
+        { id: 'a', label: "The magnetron is oscillating at 6.1 GHz" },
+        { id: 'b', label: "The wavelength of the microwave radiation is approximately 12.2 cm, since hot spots (antinodes) are separated by half a wavelength", correct: true },
+        { id: 'c', label: "The cavity is exactly 6.1 cm wide" },
+        { id: 'd', label: "The power output is 6.1 watts per square centimeter" }
+      ],
+      explanation: "In a standing wave, adjacent antinodes (maximum amplitude points) are separated by exactly half a wavelength (λ/2). If the hot spots are 6.1 cm apart, the wavelength is 2 × 6.1 = 12.2 cm. This corresponds to a frequency of f = c/λ = (3×10⁸ m/s)/(0.122 m) ≈ 2.45 GHz, which is the standard operating frequency for household microwave ovens. This frequency was chosen because it efficiently heats water molecules."
+    },
+    // Question 3: Turntable purpose in microwaves (Medium)
+    {
+      scenario: "An engineer is designing a compact microwave for RVs where space is limited. She considers eliminating the turntable to reduce the unit's depth. Her colleague warns this would significantly impact cooking performance.",
+      question: "What is the primary engineering purpose of the rotating turntable in a microwave oven?",
+      options: [
+        { id: 'a', label: "To prevent the food container from melting by distributing heat to the glass plate" },
+        { id: 'b', label: "To move food through the fixed pattern of nodes and antinodes, ensuring all parts receive energy over time for more uniform heating", correct: true },
+        { id: 'c', label: "To create additional microwave radiation through electromagnetic induction" },
+        { id: 'd', label: "To prevent standing waves from forming by breaking up wave reflections" }
+      ],
+      explanation: "The standing wave pattern in a microwave cavity is fixed in space - the positions of nodes and antinodes don't change. By rotating the food, the turntable ensures that all portions of the food pass through both hot spots (antinodes) and cold spots (nodes) over time, resulting in more uniform average heating. Without rotation, food positioned at a node would remain cold while food at an antinode could overheat. Some commercial microwaves use rotating metal 'mode stirrers' instead, which redirect the waves to move the pattern itself."
+    },
+    // Question 4: Waveguide operation (Medium)
+    {
+      scenario: "A telecommunications technician is installing a satellite dish system. The microwave signal from the dish must travel through a rectangular metal tube to reach the receiver electronics. The tube's dimensions are precisely calculated based on the operating frequency.",
+      question: "Why must a waveguide's cross-sectional dimensions be larger than half the wavelength of the signal it carries?",
+      options: [
+        { id: 'a', label: "Smaller dimensions would cause the metal to heat up from eddy currents" },
+        { id: 'b', label: "Below the cutoff dimension, the wave cannot propagate - it becomes evanescent and decays exponentially, unable to sustain the standing wave modes needed for transmission", correct: true },
+        { id: 'c', label: "The signal would travel too fast and create timing errors" },
+        { id: 'd', label: "Smaller guides would amplify the signal beyond safe levels" }
+      ],
+      explanation: "A waveguide supports electromagnetic wave propagation through standing wave patterns across its cross-section. For a wave to propagate, it must 'fit' within the guide - specifically, the guide dimension must be at least λ/2 for the lowest mode (TE₁₀). Below this 'cutoff' dimension, the wave equation solutions become imaginary, meaning the wave amplitude decays exponentially rather than propagating. This is why microwave systems use precisely dimensioned waveguides matched to their operating frequency."
+    },
+    // Question 5: VSWR and impedance matching (Medium-Hard)
+    {
+      scenario: "A radio engineer measures a VSWR (Voltage Standing Wave Ratio) of 3:1 on a transmission line feeding an antenna. She knows that a perfectly matched system would show a VSWR of 1:1 with no standing waves.",
+      question: "What does the 3:1 VSWR measurement indicate about the antenna system, and why is this problematic?",
+      options: [
+        { id: 'a', label: "The antenna is receiving 3 times more signal than expected, which could damage the receiver" },
+        { id: 'b', label: "There is an impedance mismatch causing partial reflection of transmitted power back toward the source; approximately 25% of power is reflected rather than radiated", correct: true },
+        { id: 'c', label: "The transmission line is exactly 3 wavelengths long" },
+        { id: 'd', label: "The antenna is operating at 3 times its designed frequency" }
+      ],
+      explanation: "VSWR measures the ratio of maximum to minimum voltage amplitude in standing waves on a transmission line. A VSWR of 3:1 means Vmax/Vmin = 3. This occurs when there's an impedance mismatch between the line and antenna, causing partial reflection. The reflection coefficient Γ = (VSWR-1)/(VSWR+1) = 2/4 = 0.5, meaning 25% of power (Γ²) is reflected back. This reduces radiated power, can cause heating in the transmission line, and may damage the transmitter. Engineers use matching networks to minimize VSWR, ideally below 1.5:1."
+    },
+    // Question 6: Cavity resonators (Hard)
+    {
+      scenario: "A physicist is designing a microwave cavity resonator for a particle accelerator. The cylindrical metal cavity must resonate at exactly 2.856 GHz to accelerate electron bunches. She must calculate the precise cavity dimensions to achieve resonance.",
+      question: "What fundamental principle determines the resonant frequencies of a microwave cavity, and why is dimensional precision so critical?",
+      options: [
+        { id: 'a', label: "The cavity acts as a simple LC circuit where larger dimensions increase capacitance" },
+        { id: 'b', label: "Resonance occurs only when the cavity dimensions support standing wave patterns with nodes at the conducting walls; even millimeter errors shift the frequency significantly", correct: true },
+        { id: 'c', label: "The resonant frequency depends only on the material of the cavity walls" },
+        { id: 'd', label: "Cavities resonate at all frequencies but amplify the desired one through feedback" }
+      ],
+      explanation: "A cavity resonator is a 3D standing wave system. Electromagnetic waves must satisfy boundary conditions - the electric field tangential to the conducting walls must be zero (nodes). This constraint means only specific wavelengths (and thus frequencies) can form stable standing wave patterns inside. For a cylindrical cavity, resonant frequencies depend on radius and length according to the cavity's mode equations. At 2.856 GHz (λ ≈ 10.5 cm), a 1mm dimensional error shifts the frequency by roughly 10 MHz - significant for particle accelerators requiring precise timing."
+    },
+    // Question 7: Microwave antenna feed design (Hard)
+    {
+      scenario: "An antenna engineer is designing a horn antenna feed for a satellite dish. The feed must efficiently couple microwave energy from a waveguide into free space. She positions the feed at the dish's focal point and adjusts its flare angle.",
+      question: "How do standing wave principles influence the design of the waveguide-to-horn transition in the antenna feed?",
+      options: [
+        { id: 'a', label: "The horn must be exactly one wavelength long to cancel all standing waves" },
+        { id: 'b', label: "The gradual impedance taper from waveguide to free space (377Ω) minimizes reflections and standing waves, maximizing power transfer to the dish", correct: true },
+        { id: 'c', label: "Standing waves in the horn focus the beam more tightly" },
+        { id: 'd', label: "The horn creates beneficial standing waves that increase antenna gain by 3dB" }
+      ],
+      explanation: "When a waveguide (with characteristic impedance around 500Ω for rectangular guides) meets free space (377Ω), the impedance discontinuity causes reflections and standing waves. A horn antenna provides a gradual transition - the flaring geometry slowly transforms the waveguide impedance to match free space. This 'impedance taper' over several wavelengths minimizes reflections, reducing VSWR and maximizing power radiated into free space. Poor transitions create standing waves that reduce efficiency and can damage transmitter components through reflected power."
+    },
+    // Question 8: Transmission line reflections (Hard)
+    {
+      scenario: "A high-frequency circuit designer sends a 1 ns pulse down a 50Ω transmission line. The line is accidentally terminated with a 150Ω resistor instead of the correct 50Ω. She observes the signal on an oscilloscope at the source end.",
+      question: "What will the oscilloscope display show, and why does this occur?",
+      options: [
+        { id: 'a', label: "A single pulse with 3 times the original amplitude" },
+        { id: 'b', label: "The original pulse followed by a smaller reflected pulse (50% amplitude, same polarity) arriving after the round-trip delay, due to the positive reflection coefficient at the mismatched termination", correct: true },
+        { id: 'c', label: "The pulse will be completely absorbed with no reflection" },
+        { id: 'd', label: "A continuous sine wave at the pulse's fundamental frequency" }
+      ],
+      explanation: "When a pulse reaches a mismatched termination, part of it reflects. The reflection coefficient Γ = (ZL-Z0)/(ZL+Z0) = (150-50)/(150+50) = 0.5. This means 50% of the voltage amplitude reflects back with the same polarity. The oscilloscope first shows the outgoing pulse, then after the round-trip propagation delay, the reflected pulse appears. If the source is also mismatched, multiple reflections occur, creating a 'ringing' pattern. This is why proper termination (matched impedance) is critical in high-speed digital circuits to prevent signal integrity issues."
+    },
+    // Question 9: Smith chart basics (Hard)
+    {
+      scenario: "A microwave engineer uses a Smith chart to analyze a transmission line problem. She plots a point at the chart's center, then another point on the right edge of the chart along the real axis.",
+      question: "What do these two points on the Smith chart represent in terms of impedance and standing wave behavior?",
+      options: [
+        { id: 'a', label: "Center represents maximum inductance; right edge represents maximum capacitance" },
+        { id: 'b', label: "Center represents a perfect match (Z = Z₀, VSWR = 1, no reflections); right edge represents an open circuit (Z = ∞, total reflection, VSWR = ∞)", correct: true },
+        { id: 'c', label: "Center represents zero impedance; right edge represents infinite frequency" },
+        { id: 'd', label: "Both points represent the same impedance at different frequencies" }
+      ],
+      explanation: "The Smith chart is a graphical tool for analyzing transmission line impedance and reflections. The center point represents normalized impedance z = 1 (matched load), where Γ = 0 and VSWR = 1 - no standing waves exist. The right edge of the real axis represents z = ∞ (open circuit), where Γ = +1 and all incident power reflects in phase, creating maximum standing waves. The left edge (z = 0, short circuit) has Γ = -1 (phase-inverted reflection). Moving around the chart represents adding transmission line length or reactive components. Engineers use it to design matching networks."
+    },
+    // Question 10: Slotted line measurements (Hard)
+    {
+      scenario: "In a university RF lab, students use a slotted line - a section of transmission line with a narrow slot cut along its length and a movable probe - to measure an unknown load impedance at 3 GHz. They slide the probe along the line, recording voltage readings at each position.",
+      question: "How does the slotted line measurement technique utilize standing waves to determine the unknown load impedance?",
+      options: [
+        { id: 'a', label: "The probe measures the magnetic field, which is constant regardless of standing waves" },
+        { id: 'b', label: "The probe samples the standing wave pattern; the ratio of maximum to minimum voltage gives VSWR, and the position of the first minimum relative to the load reveals the impedance phase angle", correct: true },
+        { id: 'c', label: "The slot creates new standing waves that interfere with the original signal" },
+        { id: 'd', label: "The probe measures the frequency shift caused by the unknown load" }
+      ],
+      explanation: "A slotted line exploits standing wave properties for impedance measurement. When an unknown load creates reflections, standing waves form on the line with a pattern determined by the load. By sliding the probe, students find Vmax and Vmin positions. VSWR = Vmax/Vmin gives the reflection coefficient magnitude |Γ|. The distance from the load to the first voltage minimum (in wavelengths) gives the phase of Γ. Together, these fully characterize the complex reflection coefficient, which can be converted to load impedance using Z_L = Z₀(1+Γ)/(1-Γ). Though network analyzers have largely replaced slotted lines, they remain excellent teaching tools."
+    }
+  ];
+
   const renderTest = () => {
     const currentQuestion = testAnswers.length;
     const question = TEST_QUESTIONS[currentQuestion];

@@ -1155,6 +1155,132 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
   // Debug: Log current phase on every render
   console.log('[Beats] Rendering phase:', phase);
 
+  // ============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice for deep understanding
+  // ============================================================================
+  const testQuestions = [
+    // Q1: Core Concept - Easy
+    {
+      scenario: "You're tuning a guitar and play two strings together. One is at 440 Hz (A4) and the other is slightly out of tune at 444 Hz.",
+      question: "What will you hear?",
+      options: [
+        { id: 'a', label: "A single pure tone at 442 Hz" },
+        { id: 'b', label: "A tone that pulses louder and softer 4 times per second", correct: true },
+        { id: 'c', label: "Two completely separate tones" },
+        { id: 'd', label: "White noise" },
+      ],
+      explanation: "The beat frequency equals the difference between the two frequencies: 444 - 440 = 4 Hz. This creates a pulsating sound that gets louder and softer 4 times per second, which musicians use to tune instruments."
+    },
+    // Q2: Understanding beat frequency formula - Medium
+    {
+      scenario: "A physics student plays two tuning forks simultaneously. One is labeled 512 Hz and the other 520 Hz. She counts the pulsations she hears.",
+      question: "How many beats per second will she count?",
+      options: [
+        { id: 'a', label: "516 beats per second" },
+        { id: 'b', label: "1032 beats per second" },
+        { id: 'c', label: "8 beats per second", correct: true },
+        { id: 'd', label: "4 beats per second" },
+      ],
+      explanation: "Beat frequency is calculated as |f₁ - f₂| = |520 - 512| = 8 Hz. The student will hear 8 distinct pulsations (loudness variations) every second, not a tone at 516 Hz (which is the average perceived pitch)."
+    },
+    // Q3: Practical application - piano tuning - Medium
+    {
+      scenario: "A piano tuner strikes a 440 Hz tuning fork and a piano key simultaneously. She hears 6 beats per second. After tightening the piano string slightly, she now hears 2 beats per second.",
+      question: "What should she do next to achieve perfect tuning?",
+      options: [
+        { id: 'a', label: "Loosen the string significantly" },
+        { id: 'b', label: "Continue tightening the string slightly", correct: true },
+        { id: 'c', label: "The string is now perfectly tuned" },
+        { id: 'd', label: "Replace the tuning fork" },
+      ],
+      explanation: "The beats slowed from 6 to 2 per second, meaning the frequency difference decreased. She's moving in the right direction! She should continue tightening (same direction) until beats disappear completely (0 Hz difference = perfect tune)."
+    },
+    // Q4: Aircraft engine synchronization - Medium-Hard
+    {
+      scenario: "A pilot notices an annoying pulsating drone in the cockpit of a twin-engine aircraft. The left engine runs at 2400 RPM and the right at 2406 RPM.",
+      question: "What is causing the pulsating sound and how many pulses occur per second?",
+      options: [
+        { id: 'a', label: "Engine vibration causing 2403 pulses per second" },
+        { id: 'b', label: "Beat frequency between engine sounds causing 0.1 pulses per second", correct: true },
+        { id: 'c', label: "Propeller interference causing 6 pulses per second" },
+        { id: 'd', label: "Cabin pressure changes causing 40 pulses per second" },
+      ],
+      explanation: "The engines produce sound at 2400/60 = 40 Hz and 2406/60 = 40.1 Hz. Beat frequency = |40.1 - 40| = 0.1 Hz, meaning one pulsation every 10 seconds. Pilots sync engines to eliminate this annoying beat."
+    },
+    // Q5: Medical ultrasound applications - Hard
+    {
+      scenario: "A Doppler ultrasound device transmits at 5 MHz into a blood vessel. The reflected signal from moving blood cells returns at 5.003 MHz.",
+      question: "What information does the 3 kHz beat frequency provide to the doctor?",
+      options: [
+        { id: 'a', label: "The exact location of the blood vessel" },
+        { id: 'b', label: "The velocity of blood flow in the vessel", correct: true },
+        { id: 'c', label: "The diameter of blood cells" },
+        { id: 'd', label: "The oxygen content of the blood" },
+      ],
+      explanation: "The beat frequency (3 kHz = 5.003 MHz - 5 MHz) results from the Doppler shift caused by moving blood cells. Using the Doppler equation, doctors can calculate blood flow velocity from this beat frequency, detecting blockages or abnormal flow patterns."
+    },
+    // Q6: Doppler radar using beats - Hard
+    {
+      scenario: "A police radar gun transmits at 24.150 GHz. When pointed at an approaching car, the returned signal shows a beat frequency of 3,220 Hz.",
+      question: "What physical principle allows the radar to determine the car's speed from this beat frequency?",
+      options: [
+        { id: 'a', label: "The car absorbs specific frequencies based on its speed" },
+        { id: 'b', label: "The Doppler effect shifts the reflected frequency, and the beat frequency is proportional to speed", correct: true },
+        { id: 'c', label: "The radar measures the time delay of the signal" },
+        { id: 'd', label: "The beat frequency equals the car's speed in Hz" },
+      ],
+      explanation: "The Doppler effect shifts the reflected wave's frequency proportionally to the car's velocity. The beat frequency between transmitted and received signals is directly proportional to speed: v = (c × f_beat)/(2 × f_transmitted). This allows precise speed measurement."
+    },
+    // Q7: Interference patterns relationship - Medium
+    {
+      scenario: "Two speakers play tones of 500 Hz and 502 Hz. A student walks between them and notices the sound getting louder and softer as she moves.",
+      question: "What is the relationship between what she hears while stationary versus while walking?",
+      options: [
+        { id: 'a', label: "Walking reveals spatial interference patterns, while standing reveals temporal beats - both from the same wave superposition", correct: true },
+        { id: 'b', label: "Walking creates new frequencies that weren't there before" },
+        { id: 'c', label: "The two effects are completely unrelated phenomena" },
+        { id: 'd', label: "Walking averages out the beats so she hears constant loudness" },
+      ],
+      explanation: "Both effects stem from wave superposition. Temporal beats (2 Hz pulsation when stationary) come from the time-varying phase difference. Spatial variation (loudness changes while walking) comes from position-dependent constructive and destructive interference patterns."
+    },
+    // Q8: Why beats disappear at large frequency differences - Medium
+    {
+      scenario: "A musician plays two notes: one at 262 Hz (middle C) and one at 330 Hz (E above middle C). She expects to hear beats but instead hears two distinct pitches.",
+      question: "Why doesn't she perceive beats between these two frequencies?",
+      options: [
+        { id: 'a', label: "The frequencies are too close together" },
+        { id: 'b', label: "Beats only occur with identical frequencies" },
+        { id: 'c', label: "The 68 Hz beat frequency is too fast to perceive as pulsation; the ear hears it as a separate tone or roughness", correct: true },
+        { id: 'd', label: "Musical notes cannot produce beats" },
+      ],
+      explanation: "Beat frequency = |330 - 262| = 68 Hz. The human ear can only perceive beats as distinct pulsations up to about 15-20 Hz. Above that, the rapid fluctuations are perceived as roughness, then as a separate tone. This is why beats are useful only for small frequency differences."
+    },
+    // Q9: Real-world troubleshooting scenario - Hard
+    {
+      scenario: "A sound engineer notices a 5 Hz wobble in a synthesizer patch using two oscillators. She wants to create a richer, slower 1 Hz pulsation for an ambient pad sound.",
+      question: "How should she adjust the oscillator frequencies?",
+      options: [
+        { id: 'a', label: "Increase both frequencies by the same amount" },
+        { id: 'b', label: "Decrease the frequency difference between oscillators from 5 Hz to 1 Hz", correct: true },
+        { id: 'c', label: "Add a third oscillator at a frequency between the other two" },
+        { id: 'd', label: "Increase the frequency difference to 10 Hz" },
+      ],
+      explanation: "Beat frequency equals the frequency difference between the two oscillators. To slow the pulsation from 5 Hz to 1 Hz, she needs to reduce the frequency difference. For example, if oscillators are at 440 Hz and 445 Hz (5 Hz beats), changing to 440 Hz and 441 Hz gives 1 Hz beats."
+    },
+    // Q10: Advanced synthesis application - Hard
+    {
+      scenario: "An audio researcher is studying binaural beats for meditation apps. She sends 400 Hz to the left ear and 410 Hz to the right ear through headphones.",
+      question: "How does the perception of binaural beats differ from regular acoustic beats?",
+      options: [
+        { id: 'a', label: "Binaural beats are louder than acoustic beats" },
+        { id: 'b', label: "Binaural beats are created by neural processing in the brain rather than physical wave interference in the air", correct: true },
+        { id: 'c', label: "Binaural beats only work with frequencies above 1000 Hz" },
+        { id: 'd', label: "There is no difference; both are identical acoustic phenomena" },
+      ],
+      explanation: "Regular beats occur when two waves physically interfere in the air (superposition). Binaural beats occur when each ear receives a different frequency and the brain 'creates' the beat perception through neural processing. The 10 Hz binaural beat exists only in the listener's perception, not in the physical sound waves."
+    }
+  ];
+
   // ==================== PHASE RENDERS ====================
 
   // HOOK - Premium welcome screen

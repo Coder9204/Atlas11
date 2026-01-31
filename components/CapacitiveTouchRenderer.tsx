@@ -899,6 +899,122 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     </div>
   );
 
+  // ===============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ===============================================================================
+  const testQuestions = [
+    {
+      scenario: "You're using your smartphone to send a text message. When your finger touches the glass screen, the phone instantly knows exactly where you tapped.",
+      question: "How does a capacitive touchscreen detect your finger's location?",
+      options: [
+        { id: 'a', label: 'A camera beneath the screen photographs your finger' },
+        { id: 'b', label: 'Your finger changes the local electric field at the electrode grid intersection', correct: true },
+        { id: 'c', label: 'Pressure sensors detect the force of your tap' },
+        { id: 'd', label: 'Heat from your finger activates thermal sensors' }
+      ],
+      explanation: "Capacitive touchscreens use a grid of transparent electrodes. Your conductive finger couples with the electric field, changing the capacitance at that grid location. The controller chip measures these changes to pinpoint touch coordinates."
+    },
+    {
+      scenario: "On a cold winter day, you try to answer an urgent phone call while wearing your wool gloves, but the touchscreen doesn't respond to your taps.",
+      question: "Why do regular gloves prevent capacitive touchscreen interaction?",
+      options: [
+        { id: 'a', label: 'The gloves are too thick to press hard enough on the screen' },
+        { id: 'b', label: 'Glove material blocks the capacitive coupling between your finger and the electrodes', correct: true },
+        { id: 'c', label: 'Cold temperatures disable the touchscreen sensor' },
+        { id: 'd', label: 'Static electricity from the gloves interferes with the display' }
+      ],
+      explanation: "Capacitive touch requires electrical coupling between your conductive body and the screen's electrodes. Insulating materials like wool or leather block this coupling. Special touchscreen gloves have conductive threads woven into the fingertips to restore the connection."
+    },
+    {
+      scenario: "A graphic designer uses pinch-to-zoom on their tablet while simultaneously rotating an image with two fingers. The device tracks both touch points precisely.",
+      question: "How can capacitive screens detect and track multiple simultaneous touches?",
+      options: [
+        { id: 'a', label: 'The screen rapidly switches between detecting each finger one at a time' },
+        { id: 'b', label: 'Each touch creates a distinct capacitance change at a different grid intersection', correct: true },
+        { id: 'c', label: 'Multiple pressure sensors activate under each finger' },
+        { id: 'd', label: 'The CPU calculates likely touch positions from a single sensor reading' }
+      ],
+      explanation: "In mutual capacitance (projected capacitive) screens, the controller scans all X-Y electrode intersections. Each finger creates a measurable capacitance change at its location, allowing independent tracking of 10+ simultaneous touch points."
+    },
+    {
+      scenario: "An engineer is choosing between surface capacitive and projected capacitive (PCT) technology for a new interactive museum kiosk that will see heavy public use.",
+      question: "What is the key advantage of projected capacitive over surface capacitive touchscreens?",
+      options: [
+        { id: 'a', label: 'Projected capacitive is significantly cheaper to manufacture' },
+        { id: 'b', label: 'Projected capacitive supports multi-touch and works through thicker protective glass', correct: true },
+        { id: 'c', label: 'Surface capacitive has better color reproduction' },
+        { id: 'd', label: 'Surface capacitive screens are more energy efficient' }
+      ],
+      explanation: "Projected capacitive (PCT) uses embedded electrode grids that can sense through 2-3mm of cover glass, enabling robust protective layers for public kiosks. PCT's mutual capacitance scanning enables multi-touch, while surface capacitive only detects single touches."
+    },
+    {
+      scenario: "After washing dishes, you try to use your phone with wet hands. The touchscreen behaves erratically, registering phantom touches and missing your actual taps.",
+      question: "Why does water cause problems for capacitive touchscreens?",
+      options: [
+        { id: 'a', label: 'Water is heavier than air and presses down on the screen' },
+        { id: 'b', label: 'Water conducts electricity and creates false capacitance changes across the screen', correct: true },
+        { id: 'c', label: 'Water droplets refract light and confuse optical sensors' },
+        { id: 'd', label: 'Wet skin loses all electrical conductivity' }
+      ],
+      explanation: "Water is conductive and has a high dielectric constant. Droplets create their own capacitance changes that the screen interprets as touches. Additionally, water can create conductive bridges between your finger and unintended areas, causing erratic behavior."
+    },
+    {
+      scenario: "An artist wants to draw precise lines on their tablet but finds their finger too imprecise. They're researching stylus options and wondering why some work on capacitive screens while others don't.",
+      question: "What enables an active stylus to work with capacitive touchscreens?",
+      options: [
+        { id: 'a', label: 'The stylus tip is made of hard plastic that presses the screen firmly' },
+        { id: 'b', label: 'The stylus contains electronics that generate signals mimicking finger capacitance', correct: true },
+        { id: 'c', label: 'A magnet in the stylus attracts the screen electrodes' },
+        { id: 'd', label: 'The stylus emits infrared light detected by screen sensors' }
+      ],
+      explanation: "Active styluses contain circuitry that generates electrical signals coupling with the screen's electrodes, just like a finger would. Some also transmit pressure and tilt data. Passive capacitive styluses use conductive tips that transfer your body's capacitance."
+    },
+    {
+      scenario: "A factory automation engineer notices that touchscreen control panels near high-voltage motors occasionally register false touches or become unresponsive.",
+      question: "How can electromagnetic interference (EMI) affect capacitive touchscreen performance?",
+      options: [
+        { id: 'a', label: 'EMI permanently magnetizes the screen electrodes' },
+        { id: 'b', label: 'EMI induces noise signals that the controller misinterprets as touch events', correct: true },
+        { id: 'c', label: 'EMI causes the display backlight to flicker' },
+        { id: 'd', label: 'EMI has no effect on capacitive screens since they use DC signals' }
+      ],
+      explanation: "Capacitive touch controllers measure tiny charge changes (femtofarads). Strong EMI from motors, welders, or power lines can induce electrical noise that overwhelms legitimate touch signals, causing false triggers or missed touches. Industrial touchscreens use heavy shielding and noise filtering."
+    },
+    {
+      scenario: "A smartphone manufacturer is designing a new touch controller chip that needs to scan a 1920x1080 touch sensor array at 240Hz while consuming minimal power.",
+      question: "What is the primary challenge in designing high-performance capacitive touch controller chips?",
+      options: [
+        { id: 'a', label: 'Making the chip physically small enough to fit in a phone' },
+        { id: 'b', label: 'Balancing rapid scanning speed, measurement sensitivity, and power consumption', correct: true },
+        { id: 'c', label: 'Ensuring the chip can withstand high temperatures' },
+        { id: 'd', label: 'Programming the chip to recognize different finger sizes' }
+      ],
+      explanation: "Touch controllers must rapidly scan thousands of electrode intersections while detecting femtofarad-level capacitance changes. Higher scan rates improve responsiveness but increase power draw. Advanced controllers use adaptive scanning, sensing only active areas at high rates while idle regions scan slowly."
+    },
+    {
+      scenario: "A luxury car manufacturer wants their dashboard touchscreen to detect when a finger is approaching, before physical contact, to display helpful UI hints.",
+      question: "How can capacitive touchscreens implement hover detection?",
+      options: [
+        { id: 'a', label: 'An infrared proximity sensor mounted beside the screen detects approaching objects' },
+        { id: 'b', label: 'The electric field extends above the screen surface, detecting capacitance changes before contact', correct: true },
+        { id: 'c', label: 'A tiny radar module measures finger distance' },
+        { id: 'd', label: 'The screen camera performs gesture recognition' }
+      ],
+      explanation: "The electric field from screen electrodes extends several millimeters above the glass. By using highly sensitive controllers and signal processing, hover detection senses the approaching finger's capacitive effect before physical contact, enabling gesture previews and 3D interaction."
+    },
+    {
+      scenario: "A company is deploying touchscreen kiosks in an outdoor environment where users may wear thick work gloves and the screens will be exposed to rain, dust, and extreme temperatures.",
+      question: "Which touchscreen technology modification is most critical for reliable industrial outdoor use?",
+      options: [
+        { id: 'a', label: 'Using a brighter display backlight' },
+        { id: 'b', label: 'Implementing glove mode with increased sensitivity and advanced water rejection algorithms', correct: true },
+        { id: 'c', label: 'Adding a physical keyboard backup' },
+        { id: 'd', label: 'Installing a roof to protect from rain' }
+      ],
+      explanation: "Industrial capacitive screens use tunable sensitivity ('glove mode') to detect touches through thick gloves by amplifying signal gain. Water rejection algorithms distinguish rain droplets from intentional touches by analyzing touch shape, duration, and capacitance patterns. Ruggedized cover glass resists scratches and impacts."
+    }
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (

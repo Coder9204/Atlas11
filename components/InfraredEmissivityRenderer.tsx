@@ -1570,6 +1570,120 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
     </div>
   );
 
+  // Scenario-based test questions for comprehensive assessment
+  const testQuestions = [
+    {
+      scenario: "You're learning about thermal radiation in physics class. Your teacher asks you to define a key property of surfaces.",
+      question: "What is emissivity?",
+      options: [
+        { id: 'a', label: "The temperature at which an object starts to glow visibly", correct: false },
+        { id: 'b', label: "A measure of how efficiently a surface emits thermal radiation compared to an ideal blackbody", correct: true },
+        { id: 'c', label: "The amount of heat an object can absorb before melting", correct: false },
+        { id: 'd', label: "The color of an object when viewed under infrared light", correct: false }
+      ],
+      explanation: "Emissivity is a dimensionless ratio (0 to 1) comparing how much thermal radiation a real surface emits versus a perfect blackbody at the same temperature. A blackbody has emissivity of 1.0, while polished metals can have emissivity as low as 0.02."
+    },
+    {
+      scenario: "A building inspector uses a thermal camera to check a warehouse for heat leaks. She points the camera at two pipes carrying hot steam at 150°C - one is painted matte black, the other is bare polished copper.",
+      question: "What will the thermal camera display show?",
+      options: [
+        { id: 'a', label: "Both pipes appear at 150°C since they contain the same temperature steam", correct: false },
+        { id: 'b', label: "The copper pipe appears hotter because metal conducts heat better", correct: false },
+        { id: 'c', label: "The matte black pipe appears much hotter than the copper pipe despite identical actual temperatures", correct: true },
+        { id: 'd', label: "Neither pipe is visible because steam blocks infrared radiation", correct: false }
+      ],
+      explanation: "The matte black pipe has high emissivity (~0.95) and emits IR radiation efficiently, showing close to its true temperature. The polished copper has very low emissivity (~0.03) and mostly reflects the cooler surroundings, appearing much colder than its actual temperature on the thermal camera."
+    },
+    {
+      scenario: "An engineer is designing a cooling system and needs to maximize heat dissipation from a metal heat sink. She's considering different surface treatments.",
+      question: "Why does a matte black surface radiate heat more effectively than a shiny metallic surface at the same temperature?",
+      options: [
+        { id: 'a', label: "Black surfaces absorb more light and therefore must release more heat", correct: false },
+        { id: 'b', label: "Matte black has high emissivity, allowing it to convert thermal energy into infrared radiation more efficiently", correct: true },
+        { id: 'c', label: "Shiny surfaces are better conductors so they keep heat inside", correct: false },
+        { id: 'd', label: "The black paint adds extra thermal mass that stores more heat", correct: false }
+      ],
+      explanation: "High emissivity surfaces like matte black (ε ≈ 0.95) efficiently convert thermal energy into electromagnetic radiation. Shiny metals have low emissivity (ε ≈ 0.05-0.1) and reflect rather than emit IR. By Kirchhoff's law, good absorbers are good emitters - the black surface both absorbs and emits radiation well."
+    },
+    {
+      scenario: "An architect is specifying windows for an energy-efficient office building in a hot climate. The glass manufacturer offers standard glass and 'low-e' coated glass options.",
+      question: "How do low-emissivity (low-e) window coatings help reduce energy costs?",
+      options: [
+        { id: 'a', label: "They block visible light to keep rooms darker and cooler", correct: false },
+        { id: 'b', label: "They reflect infrared radiation, reducing heat transfer through the glass while allowing visible light to pass", correct: true },
+        { id: 'c', label: "They absorb UV rays and convert them to electricity", correct: false },
+        { id: 'd', label: "They make windows thicker to provide better insulation", correct: false }
+      ],
+      explanation: "Low-e coatings are thin metallic or metallic oxide layers that have low emissivity for infrared radiation but high transmissivity for visible light. They reflect thermal radiation back toward its source - keeping heat inside during winter and outside during summer - while still allowing natural daylight to enter."
+    },
+    {
+      scenario: "A maintenance technician is using a handheld infrared thermometer to check motor bearing temperatures. The motor housing is unpainted aluminum with a shiny surface. The display reads 45°C but she suspects the reading is wrong.",
+      question: "What should the technician do to get an accurate temperature reading?",
+      options: [
+        { id: 'a', label: "Move closer to the surface to reduce atmospheric interference", correct: false },
+        { id: 'b', label: "Wait for the motor to cool down before taking measurements", correct: false },
+        { id: 'c', label: "Apply a piece of high-emissivity tape or adjust the emissivity setting on the thermometer to match the surface", correct: true },
+        { id: 'd', label: "Use a higher-powered infrared thermometer with a stronger laser", correct: false }
+      ],
+      explanation: "Low-emissivity surfaces like polished aluminum (ε ≈ 0.05) give inaccurate IR readings because they reflect ambient temperature rather than emit their own. The solution is to either apply high-emissivity tape/paint to create a known emissivity surface, or adjust the thermometer's emissivity setting. The laser in IR thermometers is only for aiming - it doesn't affect measurements."
+    },
+    {
+      scenario: "A hiker gets lost in cold mountains. Search and rescue teaches that emergency space blankets (thin reflective Mylar) can be life-saving. The blanket has a shiny silver side and a colored side.",
+      question: "Why are emergency space blankets effective at preventing hypothermia?",
+      options: [
+        { id: 'a', label: "The shiny material generates heat through a chemical reaction with air", correct: false },
+        { id: 'b', label: "The low-emissivity reflective surface reflects the body's infrared radiation back, reducing radiative heat loss", correct: true },
+        { id: 'c', label: "The blanket blocks wind, which is the only significant source of heat loss", correct: false },
+        { id: 'd', label: "The material absorbs moisture from the air to keep the person dry", correct: false }
+      ],
+      explanation: "Space blankets work primarily by reflecting infrared radiation. The human body constantly emits IR radiation (we lose ~40% of body heat this way). The low-emissivity metallic coating (ε ≈ 0.05) reflects up to 97% of radiated body heat back toward the person, dramatically reducing radiative heat loss in cold environments."
+    },
+    {
+      scenario: "A metallurgist needs to monitor the temperature of molten steel at 1500°C using a non-contact optical pyrometer. The steel surface is oxidized with a layer of slag.",
+      question: "Why must the pyrometer be calibrated for the specific emissivity of the target surface?",
+      options: [
+        { id: 'a', label: "Different metals have different melting points that affect the reading", correct: false },
+        { id: 'b', label: "The pyrometer calculates temperature from detected IR intensity, which depends on both temperature and emissivity", correct: true },
+        { id: 'c', label: "Higher emissivity materials conduct heat faster to the sensor", correct: false },
+        { id: 'd', label: "Emissivity only matters for temperatures below 500°C", correct: false }
+      ],
+      explanation: "Pyrometers measure infrared radiation intensity and use the Stefan-Boltzmann law (P = εσAT⁴) to calculate temperature. Since detected radiation depends on BOTH temperature AND emissivity, an incorrect emissivity setting causes systematic temperature errors. Molten steel with slag (ε ≈ 0.9) vs clean molten steel (ε ≈ 0.4) would give drastically different readings at the same actual temperature."
+    },
+    {
+      scenario: "A building energy auditor is using thermal imaging to inspect a commercial building's exterior walls on a cold winter night. She notices that some wall sections appear warmer than others in the IR image.",
+      question: "What could cause different apparent temperatures on the building exterior?",
+      options: [
+        { id: 'a', label: "Warm spots always indicate missing insulation or thermal bridges allowing heat to escape", correct: false },
+        { id: 'b', label: "Heat leaks, different surface materials with varying emissivities, or reflected thermal radiation from nearby sources", correct: true },
+        { id: 'c', label: "The thermal camera is malfunctioning due to cold weather", correct: false },
+        { id: 'd', label: "Differences in paint color affect how the building absorbs solar heat", correct: false }
+      ],
+      explanation: "Apparent temperature variations can have multiple causes: actual heat loss through poor insulation, different surface materials (glass, metal trim, brick) with different emissivities showing different apparent temperatures, or reflections of thermal radiation from nearby warm objects. A skilled thermographer must consider all factors - checking material emissivities and scanning for reflection sources before concluding heat loss."
+    },
+    {
+      scenario: "NASA engineers are designing the thermal control system for a Mars rover. The rover experiences extreme temperature swings from -125°C at night to +20°C during the day.",
+      question: "How might engineers use emissivity to manage the rover's temperature?",
+      options: [
+        { id: 'a', label: "Paint everything white to reflect sunlight and keep cool", correct: false },
+        { id: 'b', label: "Use selective surfaces with low IR emissivity to reduce radiative heat loss at night and high solar reflectivity to prevent overheating during the day", correct: true },
+        { id: 'c', label: "Cover the rover in high-emissivity black coating to maximize heat absorption", correct: false },
+        { id: 'd', label: "Emissivity doesn't matter in space because there's no air to conduct heat", correct: false }
+      ],
+      explanation: "Spacecraft thermal control uses selective surfaces with carefully chosen optical properties. Multi-layer insulation (MLI) with low-emissivity metallic layers reduces radiative heat loss to cold space. Surfaces can be engineered with different properties for different wavelengths - high solar reflectivity to reject sunlight while having specific IR emissivity to manage thermal radiation exchange."
+    },
+    {
+      scenario: "A quality control engineer monitors steel parts during heat treatment. The parts must reach exactly 850°C for proper hardening. Some parts have oxide scale while others are freshly machined with shiny surfaces.",
+      question: "What challenge does varying surface condition create for non-contact temperature measurement during heat treatment?",
+      options: [
+        { id: 'a', label: "Shiny parts heat up faster than oxidized parts due to better heat conduction", correct: false },
+        { id: 'b', label: "Parts with different emissivities will show different apparent temperatures even at the same actual temperature, requiring compensation or consistent surface preparation", correct: true },
+        { id: 'c', label: "Oxide scale blocks all infrared radiation so those parts cannot be measured", correct: false },
+        { id: 'd', label: "The magnetic properties of steel change with temperature, interfering with IR sensors", correct: false }
+      ],
+      explanation: "Oxidized steel (ε ≈ 0.8-0.9) and bright machined steel (ε ≈ 0.3-0.4) have very different emissivities. At 850°C actual temperature, a pyrometer calibrated for ε = 0.85 would read ~850°C for oxidized parts but might show only ~700°C for shiny parts. Solutions include using blackbody cavities, consistent surface preparation, or multi-wavelength pyrometers that can compensate for unknown emissivity."
+    }
+  ];
+
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();

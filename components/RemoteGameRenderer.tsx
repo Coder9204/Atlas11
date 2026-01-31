@@ -134,6 +134,121 @@ const colors = {
   textMuted: '#64748b',
 };
 
+// === TEST QUESTIONS ===
+
+const testQuestions = [
+  {
+    scenario: "You're playing an online shooter and notice your character seems to teleport or stutter when moving. Your internet speed test shows 100 Mbps download but 85ms ping to the game server.",
+    question: "What is the primary cause of this gameplay issue?",
+    options: [
+      { id: 'a', label: "Insufficient download bandwidth causing slow data transfer" },
+      { id: 'b', label: "Network latency (ping) causing delayed server communication", correct: true },
+      { id: 'c', label: "The game server running out of memory" },
+      { id: 'd', label: "Your graphics card not rendering frames fast enough" }
+    ],
+    explanation: "Network latency (ping) measures the round-trip time for data to travel between your device and the server. At 85ms, there's a noticeable delay between your input and the server's response, causing stuttering. Bandwidth (100 Mbps) is more than sufficient for gaming; latency is the critical factor for real-time responsiveness."
+  },
+  {
+    scenario: "A game development team is designing a multiplayer battle royale game with 100 players. They must decide between peer-to-peer (P2P) networking and a client-server architecture.",
+    question: "Why would client-server architecture be the better choice for this game?",
+    options: [
+      { id: 'a', label: "P2P uses less bandwidth than client-server" },
+      { id: 'b', label: "Client-server provides centralized authority preventing cheating and scales better with many players", correct: true },
+      { id: 'c', label: "P2P requires each player to have a static IP address" },
+      { id: 'd', label: "Client-server games always have lower latency than P2P" }
+    ],
+    explanation: "Client-server architecture maintains a single authoritative game state on the server, making cheating much harder since clients cannot directly manipulate other players' data. With 100 players, P2P would require each client to maintain connections with all others (creating O(n^2) connections), while client-server only needs n connections to the central server."
+  },
+  {
+    scenario: "A competitive fighting game advertises a '128 tick rate server' while another game runs at '30 tick rate.' During gameplay, players notice the 128-tick game feels more responsive to quick inputs.",
+    question: "What does tick rate measure and why does higher tick rate improve responsiveness?",
+    options: [
+      { id: 'a', label: "Tick rate is the frame rate of the game graphics on your screen" },
+      { id: 'b', label: "Tick rate is how many times per second the server updates game state and sends data to clients", correct: true },
+      { id: 'c', label: "Tick rate measures how fast your internet connection downloads data" },
+      { id: 'd', label: "Tick rate is the refresh rate of your monitor in hertz" }
+    ],
+    explanation: "Tick rate is the frequency at which the server processes game logic and sends state updates to clients. At 128 ticks/second, the server updates every ~7.8ms, while 30 ticks/second means updates every ~33ms. Higher tick rates capture player inputs more precisely and reduce the time between an action occurring and other players seeing it."
+  },
+  {
+    scenario: "In an online FPS game, you fire at an enemy who appears stationary on your screen. The shot registers as a hit on your client, but the server rejects it because the enemy had already moved on the server's timeline.",
+    question: "What technique do game servers use to resolve this discrepancy fairly?",
+    options: [
+      { id: 'a', label: "Always trust the client's version of events to reward good aim" },
+      { id: 'b', label: "Lag compensation - the server rewinds time to verify what the shooter saw when they fired", correct: true },
+      { id: 'c', label: "Randomly decide which player wins the conflict" },
+      { id: 'd', label: "Reject all shots that don't match current server state exactly" }
+    ],
+    explanation: "Lag compensation allows the server to 'rewind' the game state to the moment the shooter fired, accounting for their network latency. The server checks if the shot would have hit based on where the target was when the shooter saw them. This creates a fairer experience by not punishing players for unavoidable network delays."
+  },
+  {
+    scenario: "A fighting game uses 'rollback netcode' instead of traditional 'delay-based netcode.' Players praise the game for feeling responsive even with 100ms+ ping opponents.",
+    question: "How does rollback netcode achieve this responsive feel despite high latency?",
+    options: [
+      { id: 'a', label: "It compresses game data to send packets faster" },
+      { id: 'b', label: "It predicts inputs locally, then corrects by rolling back and replaying if predictions were wrong", correct: true },
+      { id: 'c', label: "It reduces the game's frame rate to match the slowest player's connection" },
+      { id: 'd', label: "It increases server tick rate proportionally to player ping" }
+    ],
+    explanation: "Rollback netcode executes game logic immediately using predicted inputs (typically assuming players continue their last action). When actual inputs arrive and differ from predictions, the game 'rolls back' to the divergence point and replays frames with correct inputs. This eliminates input delay at the cost of occasional visual corrections, which most players find preferable to constant input lag."
+  },
+  {
+    scenario: "While watching a replay of your online racing game, you notice other cars move smoothly even though the server only sends position updates 20 times per second. Your game renders at 60 FPS.",
+    question: "What techniques allow smooth motion between the 20Hz server updates?",
+    options: [
+      { id: 'a', label: "The game automatically increases server tick rate during replays" },
+      { id: 'b', label: "Interpolation smooths between past known positions; extrapolation predicts future positions beyond the latest update", correct: true },
+      { id: 'c', label: "Your graphics card generates additional server data" },
+      { id: 'd', label: "The replay file contains all 60 FPS worth of position data" }
+    ],
+    explanation: "Interpolation renders objects at positions between two known server updates, creating smooth motion by blending past states (typically rendering slightly behind real-time). Extrapolation predicts where objects will be beyond the latest received data using velocity and physics. Most games use interpolation for reliability, adding a small visual delay in exchange for smooth, accurate motion."
+  },
+  {
+    scenario: "A player discovers they can modify their game client to report impossibly high damage values. Despite this, the cheat doesn't work in competitive matches on official servers.",
+    question: "What server architecture principle prevents this cheat from working?",
+    options: [
+      { id: 'a', label: "The server encrypts all damage calculations" },
+      { id: 'b', label: "Authoritative servers calculate all game-critical values server-side, treating client data as untrusted input", correct: true },
+      { id: 'c', label: "Other players' clients verify and reject the fake damage" },
+      { id: 'd', label: "The game's anti-cheat scans for memory modifications" }
+    ],
+    explanation: "Authoritative servers never trust clients to report outcomes - they only accept input commands (like 'fire weapon') and calculate results server-side. When the client reports 'I did 9999 damage,' the server ignores this and computes actual damage based on weapon stats, distance, and hit detection it performed itself. The client-reported value is purely for local display prediction."
+  },
+  {
+    scenario: "Two friends try to play a peer-to-peer game together but cannot connect directly. Both are behind home routers using NAT (Network Address Translation). One player eventually hosts successfully after enabling 'UPnP' in their router settings.",
+    question: "What networking challenge did NAT traversal need to overcome?",
+    options: [
+      { id: 'a', label: "NAT blocks all gaming traffic as a security measure" },
+      { id: 'b', label: "Devices behind NAT have private IPs that aren't directly reachable from the internet; techniques like UPnP, STUN, or hole-punching establish connections", correct: true },
+      { id: 'c', label: "NAT slows down internet speed, making gaming impossible" },
+      { id: 'd', label: "Both players needed static IP addresses from their ISP" }
+    ],
+    explanation: "NAT allows multiple devices to share one public IP by assigning private internal addresses (like 192.168.x.x). External devices cannot initiate connections to these private IPs directly. NAT traversal techniques like UPnP (automatic port forwarding), STUN (discovering external IP/port), and UDP hole-punching (coordinated simultaneous outbound packets) enable connections between NAT'd devices."
+  },
+  {
+    scenario: "A mobile game developer needs to reduce bandwidth usage for players on cellular data. The game currently sends complete player state (position, health, inventory, etc.) 30 times per second to all nearby players.",
+    question: "Which optimization strategy would most effectively reduce bandwidth while maintaining gameplay quality?",
+    options: [
+      { id: 'a', label: "Reduce the tick rate to 5 updates per second for all data" },
+      { id: 'b', label: "Use delta compression (only send what changed) and prioritize updates based on relevance and distance", correct: true },
+      { id: 'c', label: "Send data as plain text instead of binary format" },
+      { id: 'd', label: "Disable updates entirely and rely on client prediction" }
+    ],
+    explanation: "Delta compression transmits only values that changed since the last acknowledged update, dramatically reducing packet size when most state is static. Relevance-based prioritization sends frequent updates for nearby/visible players while reducing update rates for distant entities. Combined with quantization (reducing precision) and interest management (only sending relevant data), bandwidth can be reduced 80-90% without perceptible quality loss."
+  },
+  {
+    scenario: "A cloud gaming service like GeForce NOW or Xbox Cloud Gaming lets you play high-end PC games on a basic laptop or phone. Users report the experience feels slightly 'sluggish' compared to local play, even with fast internet.",
+    question: "What fundamental latency challenge makes cloud gaming feel different from local play?",
+    options: [
+      { id: 'a', label: "Cloud servers use slower processors than gaming PCs" },
+      { id: 'b', label: "Every input must travel to the cloud, be processed, rendered, video-encoded, and streamed back, adding unavoidable round-trip delay", correct: true },
+      { id: 'c', label: "Cloud gaming services intentionally add delay to prevent cheating" },
+      { id: 'd', label: "Video compression makes the game run at lower frame rates" }
+    ],
+    explanation: "Cloud gaming adds multiple latency stages: input transmission to server (~5-30ms), server processing and rendering (~8-16ms), video encoding (~2-8ms), transmission back (~5-30ms), and client decoding/display (~2-10ms). Even with excellent infrastructure, total latency typically adds 40-80ms versus local play. This is imperceptible for turn-based games but noticeable in fast-action titles requiring quick reactions."
+  }
+];
+
 // === PROPS ===
 
 interface RemoteGameRendererProps {

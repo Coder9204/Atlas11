@@ -101,100 +101,130 @@ interface StringSizingRendererProps {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// 10-QUESTION TEST DATA
+// 10-QUESTION TEST DATA - Scenario-based multiple choice questions
 // ────────────────────────────────────────────────────────────────────────────
 
-const TEST_QUESTIONS = [
+const testQuestions = [
+  // Question 1: Core concept - string tension and pitch (Easy)
   {
-    question: 'When solar panels are connected in series, what adds up?',
+    scenario: "A guitarist is tuning their instrument and notices that as they tighten the tuning peg, the pitch of the string rises. They wonder about the physics behind this everyday observation.",
+    question: "What physical property of the string changes when you tighten it that causes the pitch to increase?",
     options: [
-      { text: 'Current (amps)', correct: false },
-      { text: 'Voltage (volts)', correct: true },
-      { text: 'Both current and voltage', correct: false },
-      { text: 'Neither - power just increases', correct: false },
+      { id: 'a', label: "The string becomes shorter, reducing the wavelength" },
+      { id: 'b', label: "The tension in the string increases, making it vibrate faster", correct: true },
+      { id: 'c', label: "The string becomes thinner due to stretching" },
+      { id: 'd', label: "The string's material composition changes under stress" }
     ],
+    explanation: "When you tighten a string, you increase its tension. Higher tension means the string has more restoring force when displaced, causing it to vibrate at a higher frequency. The relationship follows the equation f = (1/2L)√(T/μ), where frequency is proportional to the square root of tension. This is why all stringed instruments use tuning pegs or similar mechanisms to adjust pitch."
   },
+  // Question 2: String gauge and tone (Easy-Medium)
   {
-    question: 'Why do inverters have a maximum input voltage limit?',
+    scenario: "A guitar player is comparing two sets of strings: a light gauge set (.009-.042) and a heavy gauge set (.012-.054). They play the same chord on both setups and notice the heavier strings sound fuller and warmer.",
+    question: "Why do heavier gauge strings typically produce a warmer, fuller tone than lighter strings at the same pitch?",
     options: [
-      { text: 'To limit power output', correct: false },
-      { text: 'Higher voltage could damage the inverter electronics', correct: true },
-      { text: 'To match grid frequency', correct: false },
-      { text: 'For billing purposes', correct: false },
+      { id: 'a', label: "Heavier strings are made from higher quality materials" },
+      { id: 'b', label: "Heavier strings move more air and produce stronger lower harmonics due to greater mass", correct: true },
+      { id: 'c', label: "The coating on heavier strings absorbs high frequencies" },
+      { id: 'd', label: "Heavier strings are under less tension, making them vibrate slower" }
     ],
+    explanation: "Heavier strings have more mass per unit length (linear density). To achieve the same pitch as lighter strings, they require more tension. This combination of greater mass and tension allows them to displace more air during vibration and sustain stronger fundamental and lower harmonic frequencies. The increased energy in the string produces a richer, fuller sound with more bass response."
   },
+  // Question 3: Scale length effects (Medium)
   {
-    question: 'What is the MPPT range of an inverter?',
+    scenario: "A musician is comparing a Fender Stratocaster (25.5\" scale length) with a Gibson Les Paul (24.75\" scale length). Both guitars have the same gauge strings, but they feel noticeably different to play.",
+    question: "If both guitars use identical string gauges tuned to the same pitch, how does the shorter scale length of the Gibson affect string tension?",
     options: [
-      { text: 'The temperature range it can operate in', correct: false },
-      { text: 'The voltage window where it can track maximum power', correct: true },
-      { text: 'The maximum panel count', correct: false },
-      { text: 'The warranty period', correct: false },
+      { id: 'a', label: "The Gibson has higher tension because the strings are compressed into a shorter length" },
+      { id: 'b', label: "The Gibson has lower tension because shorter strings need less force to reach the same pitch", correct: true },
+      { id: 'c', label: "Both have identical tension since they're tuned to the same pitch" },
+      { id: 'd', label: "Scale length only affects tone, not tension" }
     ],
+    explanation: "For the same string gauge and pitch, a shorter scale length requires less tension. The frequency equation f = (1/2L)√(T/μ) shows that shorter length (L) allows the same frequency with less tension (T). This is why shorter-scale guitars feel 'slinkier' and are easier to bend strings on. Players who want the feel of a longer scale guitar on a shorter instrument often compensate by using heavier gauge strings."
   },
+  // Question 4: Material properties (Medium)
   {
-    question: 'What happens to solar panel voltage when temperature increases?',
+    scenario: "A classical guitarist switches from traditional nylon strings to carbon fiber (fluorocarbon) treble strings. They immediately notice the new strings feel stiffer and the tone is brighter and more projecting.",
+    question: "What material property primarily explains why carbon fiber strings produce brighter tone than nylon strings of similar gauge?",
     options: [
-      { text: 'Voltage increases significantly', correct: false },
-      { text: 'Voltage decreases significantly', correct: true },
-      { text: 'Voltage stays the same', correct: false },
-      { text: 'Voltage fluctuates randomly', correct: false },
+      { id: 'a', label: "Carbon fiber is more flexible, allowing faster vibrations" },
+      { id: 'b', label: "Carbon fiber has higher density, requiring more tension for the same pitch, which enhances overtones", correct: true },
+      { id: 'c', label: "Carbon fiber reflects sound waves better than nylon" },
+      { id: 'd', label: "Carbon fiber strings are always thinner than nylon strings" }
     ],
+    explanation: "Carbon fiber (fluorocarbon) has approximately 1.8 times the density of nylon. For the same gauge and pitch, this higher density requires significantly more tension. Higher tension strings have less internal damping and support higher frequency harmonics more efficiently, resulting in a brighter, more brilliant tone with greater projection. This is why fluorocarbon strings are popular for players seeking more clarity and volume."
   },
+  // Question 5: Intonation adjustment (Medium-Hard)
   {
-    question: 'Why must you consider the coldest expected temperature when sizing strings?',
+    scenario: "A guitar technician is setting up a new instrument. After tuning the open strings perfectly, they notice that fretted notes, especially higher up the neck, are slightly sharp. They need to adjust the saddle position at the bridge.",
+    question: "In which direction should the saddle be moved to correct fretted notes that play sharp?",
     options: [
-      { text: 'Panels produce more power when cold', correct: false },
-      { text: 'Cold temperatures increase voltage, risking inverter damage', correct: true },
-      { text: 'Cold panels are more fragile', correct: false },
-      { text: 'Installers cannot work in cold weather', correct: false },
+      { id: 'a', label: "Move the saddle toward the nut (shorter scale) to lower the pitch" },
+      { id: 'b', label: "Move the saddle away from the nut (longer scale) to lower the pitch", correct: true },
+      { id: 'c', label: "Raise the saddle height to reduce string tension" },
+      { id: 'd', label: "Lower the saddle height to increase string tension" }
     ],
+    explanation: "When fretted notes are sharp, the vibrating string length is too short relative to the theoretical fret placement. Moving the saddle away from the nut increases the overall scale length, which lengthens each fretted note's vibrating portion. This compensation accounts for the slight stretching that occurs when pressing a string to a fret and the inherent stiffness of real strings. Proper intonation ensures the 12th fret harmonic and 12th fret pressed note match exactly."
   },
+  // Question 6: Drop tuning string selection (Hard)
   {
-    question: 'A panel rated at 40V Voc will produce approximately what voltage at -10C vs 25C?',
+    scenario: "A metal guitarist wants to tune their guitar to Drop C (C-G-C-F-A-D, where the lowest string is a full two steps below standard E). Using their regular .010-.046 string set, the low C string feels extremely loose and lacks definition.",
+    question: "What string gauge range would best address the tension and tone issues for Drop C tuning?",
     options: [
-      { text: 'Lower voltage at -10C', correct: false },
-      { text: 'Same voltage at both temperatures', correct: false },
-      { text: 'Higher voltage at -10C (around 44V)', correct: true },
-      { text: 'Zero voltage at -10C', correct: false },
+      { id: 'a', label: ".009-.042 (lighter gauge) to reduce overall tension" },
+      { id: 'b', label: ".010-.046 (standard gauge) with a wound G string" },
+      { id: 'c', label: ".012-.054 or heavier with emphasis on a thick low string (.054-.060)", correct: true },
+      { id: 'd', label: "The same gauge as standard tuning since pitch doesn't affect playability" }
     ],
+    explanation: "Dropping a string's pitch by two whole steps dramatically reduces its tension (roughly 40% less). To maintain playable tension and clear note definition, significantly heavier gauges are needed. For Drop C, most players use at least a .054 low string, with some preferring .056-.060. The heavier string maintains adequate tension, reduces 'floppiness,' provides better low-end definition, and prevents fret buzz from excessive string excursion during vibration."
   },
+  // Question 7: String vibration physics (Hard)
   {
-    question: 'What does Voc stand for?',
+    scenario: "A physics student observes a bass guitar string vibrating and notices that besides the main vibration along the entire length, there are visible patterns where parts of the string remain nearly stationary while other parts vibrate maximally.",
+    question: "What determines the positions of these stationary points (nodes) on a vibrating string?",
     options: [
-      { text: 'Voltage operating current', correct: false },
-      { text: 'Variable output control', correct: false },
-      { text: 'Open-circuit voltage (no load connected)', correct: true },
-      { text: 'Volts of capacity', correct: false },
+      { id: 'a', label: "Random variations in string thickness create unpredictable node positions" },
+      { id: 'b', label: "Nodes occur at fractional divisions of the string length corresponding to harmonic overtones", correct: true },
+      { id: 'c', label: "Nodes form wherever the string touches the frets during vibration" },
+      { id: 'd', label: "Air pressure differences along the string create node positions" }
     ],
+    explanation: "A vibrating string produces standing waves with nodes (stationary points) and antinodes (maximum displacement). The fundamental frequency has nodes only at the fixed ends. Harmonics create additional nodes at precise fractional positions: the 2nd harmonic has a node at 1/2 the length, the 3rd harmonic at 1/3 and 2/3, and so on. This is why touching a string lightly at these points produces clear harmonics - you damp the fundamental while allowing overtones with nodes at that position to continue."
   },
+  // Question 8: Frequency and mass relationship (Hard)
   {
-    question: 'If you connect too few panels in a string, what happens?',
+    scenario: "A luthier is designing a custom 8-string guitar and needs to calculate the appropriate string gauge for a low F# (23.1 Hz). They know that their .074 gauge string works well for a low B (30.9 Hz) on a 7-string guitar with the same scale length.",
+    question: "Approximately what string gauge would be needed for the low F# if the relationship between frequency and linear density follows f ∝ 1/√μ?",
     options: [
-      { text: 'The inverter runs more efficiently', correct: false },
-      { text: 'String voltage may drop below MPPT range, losing power', correct: true },
-      { text: 'Nothing - fewer panels is always fine', correct: false },
-      { text: 'The panels will overheat', correct: false },
+      { id: 'a', label: "About .080 - slightly heavier than the B string" },
+      { id: 'b', label: "About .090 - moderately heavier" },
+      { id: 'c', label: "About .105 - significantly heavier due to the squared relationship", correct: true },
+      { id: 'd', label: "About .130 - more than double the B string gauge" }
     ],
+    explanation: "Since frequency is inversely proportional to the square root of linear density, and linear density is proportional to the square of diameter, we need μ₂/μ₁ = (f₁/f₂)². The frequency ratio is 30.9/23.1 ≈ 1.34. Squaring this gives 1.79, meaning we need about 1.79× the linear density. Since diameter relates to linear density by d₂/d₁ = √(μ₂/μ₁), we get d₂ = .074 × √1.79 ≈ .099-.105 gauge. This demonstrates why extended range instruments require exponentially thicker strings for each added lower note."
   },
+  // Question 9: Multi-scale instruments (Hard)
   {
-    question: 'What is the typical temperature coefficient for voltage on silicon panels?',
+    scenario: "A progressive metal guitarist is considering a multi-scale (fanned fret) guitar with a 25.5\" scale on the treble side and 27\" scale on the bass side. Traditional straight-fret guitars use a single scale length for all strings.",
+    question: "What is the primary acoustic advantage of using a longer scale length specifically for the bass strings?",
     options: [
-      { text: 'About +0.3%/C (increases with heat)', correct: false },
-      { text: 'About -0.3%/C (decreases with heat)', correct: true },
-      { text: 'About -3%/C', correct: false },
-      { text: 'Temperature has no effect', correct: false },
+      { id: 'a', label: "Longer scale makes bass strings easier to press down against the frets" },
+      { id: 'b', label: "Longer scale allows higher tension on bass strings for improved clarity and tighter low-end response", correct: true },
+      { id: 'c', label: "Longer scale reduces the number of frets needed for the same note range" },
+      { id: 'd', label: "Longer scale increases the sustain of treble strings by sympathetic resonance" }
     ],
+    explanation: "Bass strings benefit from longer scale lengths because achieving proper tension on low-pitched strings requires either heavier gauges or longer lengths. The longer bass-side scale allows optimal tension without excessively heavy strings, resulting in tighter, more articulate low-end with better note definition. Meanwhile, the shorter treble scale keeps high strings comfortable for bending. This is why pianos and harps use progressively longer strings for lower notes - it's a fundamental acoustic principle that multi-scale instruments apply to guitars."
   },
+  // Question 10: String break angle and sustain (Hard)
   {
-    question: 'Why do commercial installations use string sizing software?',
+    scenario: "A guitar builder is designing a headstock and notices that guitars with angled-back headstocks (like Gibson) don't need string trees, while flat headstocks (like Fender) often require string trees or staggered tuners to keep strings properly seated in the nut slots.",
+    question: "How does increasing the string break angle over the nut affect the instrument's tone and sustain?",
     options: [
-      { text: 'Required by law', correct: false },
-      { text: 'To account for local temperature extremes and specific equipment', correct: true },
-      { text: 'Software is cheaper than calculations', correct: false },
-      { text: 'Installers cannot do math', correct: false },
+      { id: 'a', label: "Greater break angle reduces friction, allowing strings to vibrate more freely" },
+      { id: 'b', label: "Greater break angle increases downward pressure on the nut, improving energy transfer and sustain", correct: true },
+      { id: 'c', label: "Greater break angle shortens the vibrating length, raising the pitch" },
+      { id: 'd', label: "Break angle has no effect on tone - it's purely a mechanical consideration for string retention" }
     ],
-  },
+    explanation: "The break angle is the angle at which the string bends over the nut toward the tuning post. A steeper angle increases the downward force pressing the string into the nut slot, creating more solid contact. This improved coupling between string and nut transfers vibration energy more efficiently to the neck and body, enhancing sustain and resonance. However, too steep an angle increases friction and can cause tuning stability issues. The ideal balance provides good energy transfer while maintaining smooth string movement during tuning and bending."
+  }
 ];
 
 // ────────────────────────────────────────────────────────────────────────────

@@ -1787,6 +1787,122 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
     );
   };
 
+  // ============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ============================================================================
+  const testQuestions = [
+    {
+      scenario: "You're building a simple AM radio receiver and need to understand what makes it tune to specific stations instead of picking up all broadcasts at once.",
+      question: "What is LC resonance and why is it essential for radio tuning?",
+      options: [
+        { id: 'a', label: "A phenomenon where inductors and capacitors amplify all frequencies equally" },
+        { id: 'b', label: "A condition where an LC circuit responds maximally to one specific frequency determined by L and C values", correct: true },
+        { id: 'c', label: "A type of interference that occurs when multiple radio stations broadcast simultaneously" },
+        { id: 'd', label: "The resistance that develops in a circuit at high frequencies" }
+      ],
+      explanation: "LC resonance occurs when the inductive reactance equals the capacitive reactance at a specific frequency (f = 1/2pi*sqrt(LC)). At this resonant frequency, energy oscillates efficiently between the inductor's magnetic field and the capacitor's electric field, causing the circuit to respond strongly to that frequency while attenuating others. This selectivity is what allows radios to 'pick' one station from many."
+    },
+    {
+      scenario: "An old car radio has a manual tuning dial that you rotate to find stations. Inside, this dial is connected to a variable capacitor that changes its capacitance as you turn it.",
+      question: "When you turn the dial to tune from a lower frequency station (600 kHz) to a higher frequency station (1400 kHz), what happens to the variable capacitor?",
+      options: [
+        { id: 'a', label: "The capacitance increases, raising the resonant frequency" },
+        { id: 'b', label: "The capacitance decreases, raising the resonant frequency", correct: true },
+        { id: 'c', label: "The capacitance stays the same while the inductance changes" },
+        { id: 'd', label: "The capacitor disconnects and a different circuit takes over" }
+      ],
+      explanation: "Since resonant frequency f = 1/(2pi*sqrt(LC)), decreasing capacitance (C) will increase the resonant frequency. In variable capacitors, rotating the dial moves the overlapping plate area, reducing capacitance. This is why turning the dial clockwise typically tunes to higher frequency stations - you're reducing C to increase f0."
+    },
+    {
+      scenario: "An engineer needs to design an LC circuit that resonates at exactly 1 MHz. She has a 100 microhenry inductor available.",
+      question: "Using the resonance formula f = 1/(2pi*sqrt(LC)), what capacitance value does she need?",
+      options: [
+        { id: 'a', label: "About 253 picofarads (pF)", correct: true },
+        { id: 'b', label: "About 1 microfarad (uF)" },
+        { id: 'c', label: "About 100 nanofarads (nF)" },
+        { id: 'd', label: "About 1 picofarad (pF)" }
+      ],
+      explanation: "Rearranging f = 1/(2pi*sqrt(LC)) gives C = 1/(4pi^2 * f^2 * L). Plugging in f = 1 MHz = 1x10^6 Hz and L = 100 uH = 100x10^-6 H: C = 1/(4 * 9.87 * 10^12 * 10^-4) = 1/(3.95 * 10^9) = 253 pF. This calculation is fundamental for designing tuned circuits in radio and communications equipment."
+    },
+    {
+      scenario: "A radio receiver designer is comparing two LC circuits: one with Q factor of 20 and another with Q factor of 200. Both are tuned to the same frequency.",
+      question: "How does the higher Q factor circuit differ in its ability to select radio stations?",
+      options: [
+        { id: 'a', label: "It has a wider bandwidth, allowing multiple stations to be heard simultaneously" },
+        { id: 'b', label: "It has a narrower bandwidth, providing sharper selectivity to reject adjacent stations", correct: true },
+        { id: 'c', label: "It produces louder audio output from the selected station" },
+        { id: 'd', label: "It consumes less power but has identical selectivity" }
+      ],
+      explanation: "Q factor (Quality factor) determines the sharpness of the resonance peak. Bandwidth = f0/Q, so a higher Q means narrower bandwidth. The Q=200 circuit has a bandwidth 10 times narrower than the Q=20 circuit, making it much better at rejecting signals from adjacent channel stations. However, very high Q can make tuning more difficult and sensitive to component drift."
+    },
+    {
+      scenario: "You're observing an LC tank circuit with an oscilloscope. The circuit was given an initial charge and is now oscillating freely with no external power source.",
+      question: "What is happening to the energy in this tank circuit during each oscillation cycle?",
+      options: [
+        { id: 'a', label: "Energy is being created and destroyed as current flows" },
+        { id: 'b', label: "Energy alternates between electric field energy in the capacitor and magnetic field energy in the inductor", correct: true },
+        { id: 'c', label: "Energy remains constant in the capacitor while the inductor provides amplification" },
+        { id: 'd', label: "Energy is continuously absorbed by the inductor's core material" }
+      ],
+      explanation: "In an ideal LC tank circuit, total energy is conserved but constantly transforms between two forms: when the capacitor is fully charged, all energy is stored in its electric field (E = 1/2 CV^2). As it discharges through the inductor, energy transfers to the magnetic field (E = 1/2 LI^2). This energy 'sloshing' back and forth at the resonant frequency is what creates sustained oscillation - the same principle that makes a pendulum swing."
+    },
+    {
+      scenario: "A digital watch keeps time using a tiny quartz crystal oscillator. The crystal is connected to a small integrated circuit that maintains oscillation at exactly 32.768 kHz.",
+      question: "Why do precision timekeeping devices use quartz crystals instead of simple LC circuits?",
+      options: [
+        { id: 'a', label: "Crystals are cheaper to manufacture than inductors and capacitors" },
+        { id: 'b', label: "Quartz crystals have extremely high Q factors (10,000-100,000+), providing exceptional frequency stability", correct: true },
+        { id: 'c', label: "Crystals can generate their own power through piezoelectric effects" },
+        { id: 'd', label: "LC circuits cannot oscillate at frequencies as low as 32.768 kHz" }
+      ],
+      explanation: "Quartz crystals act as electromechanical resonators with Q factors of 10,000 to over 100,000 - far exceeding typical LC circuits (Q ~ 50-500). This ultra-high Q means the crystal's resonant frequency is extremely stable and precise, drifting only a few parts per million. The piezoelectric effect converts electrical energy to mechanical vibration and back, creating a highly stable oscillator. The 32.768 kHz frequency is chosen because it's 2^15 Hz, easily divided down to 1 Hz for timekeeping."
+    },
+    {
+      scenario: "Engineers are designing a wireless charging pad for smartphones. The charging coil in the pad must transfer power efficiently to the receiving coil inside the phone.",
+      question: "Why is resonant coupling used instead of simple transformer-style inductive coupling for wireless power transfer?",
+      options: [
+        { id: 'a', label: "Resonant coupling looks more impressive to consumers" },
+        { id: 'b', label: "At resonance, energy transfer efficiency is dramatically improved, especially over larger air gaps", correct: true },
+        { id: 'c', label: "Simple inductive coupling would damage the phone's battery" },
+        { id: 'd', label: "Resonant coupling eliminates the need for any coils in the system" }
+      ],
+      explanation: "Resonant wireless power transfer uses matched LC circuits in both transmitter and receiver tuned to the same frequency (typically 100-200 kHz for Qi chargers). At resonance, the magnetic coupling between coils is dramatically enhanced, allowing efficient power transfer even with significant air gaps and misalignment. Non-resonant inductive coupling efficiency drops rapidly with distance, while resonant systems can maintain >80% efficiency across several centimeters."
+    },
+    {
+      scenario: "A telecommunications engineer is designing a bandpass filter for a radio receiver's intermediate frequency (IF) stage. The filter must pass signals at 10.7 MHz while rejecting signals at 10.5 MHz and 10.9 MHz.",
+      question: "What filter topology would best achieve this narrow bandpass characteristic using LC resonance?",
+      options: [
+        { id: 'a', label: "A single parallel LC circuit with moderate Q factor" },
+        { id: 'b', label: "Multiple cascaded LC resonators with coupled resonances for steep rolloff", correct: true },
+        { id: 'c', label: "A series combination of capacitors only" },
+        { id: 'd', label: "A single high-value inductor with no capacitors" }
+      ],
+      explanation: "Professional IF filters use multiple coupled LC resonators (often ceramic or crystal filters with 2-8 poles) to achieve steep rolloff characteristics. A single LC circuit, even with high Q, cannot provide the sharp 'brick wall' response needed to reject adjacent channels just 200 kHz away. Coupled resonators create multiple poles in the transfer function, resulting in much steeper attenuation slopes. This is why quality receivers use multi-pole crystal or ceramic filters in their IF stages."
+    },
+    {
+      scenario: "A power electronics engineer notices that a DC-DC converter is producing unexpected high-frequency noise. Investigation reveals oscillations occurring at 50 MHz, far above the 100 kHz switching frequency.",
+      question: "What is the most likely cause of this parasitic resonance problem?",
+      options: [
+        { id: 'a', label: "The switching frequency is set incorrectly" },
+        { id: 'b', label: "Unintended LC circuits formed by PCB trace inductance and component parasitic capacitances", correct: true },
+        { id: 'c', label: "The output capacitors are too large" },
+        { id: 'd', label: "The input voltage is fluctuating" }
+      ],
+      explanation: "Parasitic resonance is a common problem in power electronics and high-frequency circuits. Every PCB trace has inductance (~1 nH/mm) and every component has parasitic capacitance. These unintended L and C elements form resonant circuits. At 50 MHz, even a few nH of trace inductance combined with pF of parasitic capacitance creates resonance. Solutions include: adding damping resistors, using ferrite beads, optimizing PCB layout to minimize loop inductance, and selecting components with lower parasitic elements."
+    },
+    {
+      scenario: "A ham radio operator is setting up a new antenna for the 20-meter band (14.0-14.35 MHz). The antenna feedpoint shows an impedance of 35 + j25 ohms, but the transmitter expects 50 ohms purely resistive.",
+      question: "How can LC resonance principles be applied to match this antenna to the transmitter?",
+      options: [
+        { id: 'a', label: "Use a longer coaxial cable to absorb the mismatch" },
+        { id: 'b', label: "Use an LC matching network (antenna tuner) to transform impedance and cancel the reactive component", correct: true },
+        { id: 'c', label: "Increase transmitter power to overcome the mismatch" },
+        { id: 'd', label: "The mismatch is acceptable and requires no correction" }
+      ],
+      explanation: "An LC matching network (antenna tuner) uses the resonance principle to transform impedances. The +j25 ohms indicates inductive reactance, which can be cancelled by adding appropriate capacitive reactance. Common topologies include L-networks, Pi-networks, and T-networks using variable inductors and capacitors. At the matched condition, the network resonates to cancel reactive components while transforming the 35-ohm resistive part to 50 ohms, ensuring maximum power transfer to the antenna and protecting the transmitter from reflected power."
+    }
+  ];
+
   const renderTest = () => {
     const questions = [
       {

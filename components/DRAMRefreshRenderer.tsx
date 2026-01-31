@@ -52,128 +52,133 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
-const TEST_QUESTIONS = [
+// Test questions array - 10 scenario-based multiple choice questions
+// covering DRAM refresh and memory topics from easy to hard
+const testQuestions = [
   // Q1: Core Concept - Why DRAM Needs Refresh (Easy)
   {
-    scenario: "You design a memory chip with billions of tiny capacitors, each storing one bit of data as electric charge.",
-    question: "Why does DRAM require periodic refresh cycles?",
+    scenario: "You are building a computer and notice that RAM modules are labeled as 'volatile memory' while SSDs are labeled as 'non-volatile'. When you turn off the computer, the RAM loses all its data instantly.",
+    question: "Why does DRAM require periodic refresh cycles to maintain stored data?",
     options: [
-      { id: 'magnetic', label: "Magnetic fields from nearby components scramble the data" },
-      { id: 'leakage', label: "Capacitors naturally leak charge over time, causing data loss without refresh", correct: true },
-      { id: 'wear', label: "The capacitors physically wear out and need to be recharged" },
-      { id: 'sync', label: "Refresh synchronizes data between different memory banks" },
+      { id: 'a', label: "The magnetic domains in DRAM cells gradually demagnetize over time" },
+      { id: 'b', label: "DRAM stores bits as electrical charge in tiny capacitors that naturally leak over time", correct: true },
+      { id: 'c', label: "The transistors in DRAM wear out and need to be reset periodically" },
+      { id: 'd', label: "Refresh cycles synchronize data between the CPU cache and main memory" },
     ],
-    explanation: "DRAM capacitors are incredibly small (femtofarads) and charge leaks through junction currents and quantum tunneling. Without refresh every 32-64ms, the charge drops below the threshold needed to distinguish 1 from 0."
+    explanation: "DRAM stores each bit as electrical charge in a microscopic capacitor (about 30 femtofarads). Due to leakage currents through the access transistor and other parasitic paths, this charge naturally dissipates within 32-64 milliseconds. Without periodic refresh cycles that read and rewrite each cell, the charge would drop below the threshold needed to distinguish a 1 from a 0, causing data corruption."
   },
-  // Q2: Core Concept - Capacitor Storage (Easy)
+  // Q2: Capacitor Charge Leakage (Easy-Medium)
   {
-    scenario: "A computer engineer is explaining how DRAM stores the binary values 1 and 0 at the hardware level.",
-    question: "How does a single DRAM cell physically represent a binary 1 versus a binary 0?",
+    scenario: "A hardware engineer is debugging a prototype DRAM chip that works perfectly at room temperature (25C) but shows random bit errors when tested in an environmental chamber at 55C.",
+    question: "What causes the charge in DRAM capacitors to leak faster at higher temperatures?",
     options: [
-      { id: 'voltage', label: "High voltage on a wire = 1, low voltage = 0" },
-      { id: 'capacitor', label: "Charged capacitor = 1, discharged capacitor = 0", correct: true },
-      { id: 'magnetic', label: "North magnetic pole = 1, south pole = 0" },
-      { id: 'transistor', label: "Transistor on = 1, transistor off = 0" },
+      { id: 'a', label: "Heat causes the capacitor plates to physically expand and touch, creating short circuits" },
+      { id: 'b', label: "Higher temperatures increase thermal energy, accelerating electron movement through leakage paths", correct: true },
+      { id: 'c', label: "The dielectric material melts at high temperatures, allowing charge to escape" },
+      { id: 'd', label: "Heat damages the refresh circuitry, preventing proper charge restoration" },
     ],
-    explanation: "Each DRAM cell has one transistor and one capacitor. A charged capacitor (above threshold) reads as 1, while a discharged capacitor (below threshold) reads as 0. The transistor acts as a switch to access the capacitor."
+    explanation: "Leakage current in semiconductors follows the Arrhenius equation and roughly doubles for every 10C temperature increase. At higher temperatures, electrons have more thermal energy to overcome potential barriers, increasing subthreshold leakage through the access transistor and junction leakage currents. This can reduce retention time from 64ms at 25C to as little as 16ms at 85C, requiring more frequent refresh cycles."
   },
-  // Q3: Refresh Rate vs Data Integrity (Medium)
+  // Q3: DRAM vs SRAM Tradeoffs (Medium)
   {
-    scenario: "A server administrator notices occasional memory errors. The DRAM is configured with a 64ms refresh interval, but the data center runs hot at 45C.",
-    question: "What is the relationship between refresh rate and data integrity?",
+    scenario: "A computer architect is designing a new processor and must decide how to allocate the limited on-chip area. The L1 cache needs to be extremely fast (sub-nanosecond access), while main memory needs to be large (gigabytes) and cost-effective.",
+    question: "Why do modern CPUs use SRAM for cache but DRAM for main memory?",
     options: [
-      { id: 'faster', label: "Faster refresh rate improves data integrity but consumes more power and bandwidth", correct: true },
-      { id: 'slower', label: "Slower refresh rate improves data integrity by reducing electrical stress" },
-      { id: 'none', label: "Refresh rate has no impact on data integrity, only on speed" },
-      { id: 'random', label: "The relationship is random and depends on manufacturing quality" },
+      { id: 'a', label: "SRAM is faster because it uses 6 transistors per cell with no refresh overhead, while DRAM is denser using only 1 transistor and 1 capacitor per cell", correct: true },
+      { id: 'b', label: "SRAM is more reliable because it stores data magnetically, while DRAM uses less reliable electrical storage" },
+      { id: 'c', label: "DRAM is faster but generates too much heat for on-chip use, so SRAM is used despite being slower" },
+      { id: 'd', label: "SRAM and DRAM have identical performance, but manufacturing constraints require different technologies" },
     ],
-    explanation: "Higher temperatures accelerate charge leakage. If refresh is too slow, capacitors discharge below threshold before the next refresh, causing bit flips. Faster refresh prevents this but steals memory bandwidth and increases power consumption."
+    explanation: "SRAM uses a bistable flip-flop circuit with 6 transistors that actively maintains its state without refresh, enabling access times under 1 nanosecond. However, SRAM cells are approximately 6x larger and more expensive than DRAM cells. DRAM uses just 1 transistor and 1 capacitor per cell, achieving much higher density at lower cost, but requires refresh cycles and has slower access times (tens of nanoseconds). This makes SRAM ideal for small, fast caches and DRAM ideal for large main memory."
   },
-  // Q4: DRAM vs SRAM Comparison (Medium)
+  // Q4: Refresh Rate and Power Consumption (Medium)
   {
-    scenario: "A chip designer must choose between DRAM and SRAM for a CPU cache that needs maximum speed with minimal latency.",
-    question: "Why do CPU caches use SRAM instead of DRAM?",
+    scenario: "A smartphone manufacturer is trying to extend battery life during standby mode. The device has 12GB of LPDDR5 RAM that must retain its contents while the screen is off, but the battery is draining faster than competitors' devices.",
+    question: "How does the DRAM refresh rate affect power consumption in mobile devices?",
     options: [
-      { id: 'cheaper', label: "SRAM is cheaper to manufacture than DRAM" },
-      { id: 'norefresh', label: "SRAM uses flip-flops that hold state without refresh, enabling faster access", correct: true },
-      { id: 'smaller', label: "SRAM cells are smaller, allowing more cache on the chip" },
-      { id: 'power', label: "SRAM uses less power than DRAM" },
+      { id: 'a', label: "Refresh operations consume negligible power since they only involve reading existing data" },
+      { id: 'b', label: "Power consumption is fixed regardless of refresh rate due to constant background leakage" },
+      { id: 'c', label: "Each refresh cycle requires activating rows and rewriting cells, consuming significant power that scales with refresh frequency", correct: true },
+      { id: 'd', label: "Faster refresh rates actually reduce power by preventing charge decay that wastes energy" },
     ],
-    explanation: "SRAM uses 6 transistors per cell in a flip-flop configuration that actively maintains its state without refresh. This eliminates refresh overhead and enables sub-nanosecond access. The tradeoff: SRAM cells are 6x larger and more expensive than DRAM."
+    explanation: "DRAM refresh is a major power consumer, accounting for 15-40% of total DRAM power in idle states. Each refresh cycle activates a row, reads all cells through sense amplifiers, and rewrites the data back - operations that draw substantial current. In standby mode, refresh becomes the dominant power consumer. LPDDR memory addresses this with partial array self-refresh (only refreshing active memory regions) and temperature-compensated refresh (slowing refresh when cool), but refresh overhead remains a key battery life challenge."
   },
-  // Q5: Power Consumption During Refresh (Medium)
+  // Q5: ECC Memory and Error Correction (Medium-Hard)
   {
-    scenario: "A mobile phone engineer is optimizing battery life. The phone has 8GB of LPDDR5 RAM that must remain powered during sleep mode.",
-    question: "How does DRAM refresh impact power consumption?",
+    scenario: "A data center operator notices that their servers with ECC memory log several corrected single-bit errors per day, even though the memory passed all diagnostic tests and operates within temperature specifications. The errors appear randomly across different memory addresses.",
+    question: "What is the primary source of these random single-bit errors in properly functioning ECC memory?",
     options: [
-      { id: 'negligible', label: "Refresh uses negligible power compared to active memory operations" },
-      { id: 'significant', label: "Refresh can consume 15-20% of total DRAM power, significant in idle/sleep modes", correct: true },
-      { id: 'constant', label: "Refresh power is constant regardless of memory size or temperature" },
-      { id: 'zero', label: "Modern DRAM uses zero power for refresh due to self-sustaining circuits" },
+      { id: 'a', label: "Manufacturing defects in the memory chips cause intermittent failures" },
+      { id: 'b', label: "High-energy cosmic rays and alpha particles from packaging materials strike memory cells and flip bits", correct: true },
+      { id: 'c', label: "Electromagnetic interference from nearby servers induces voltage spikes" },
+      { id: 'd', label: "The ECC algorithm itself introduces errors during the correction process" },
     ],
-    explanation: "Refresh requires reading and rewriting every row in memory periodically. In idle modes, refresh becomes the dominant power consumer. LPDDR uses techniques like partial array self-refresh to only refresh active sections, extending battery life."
+    explanation: "Cosmic rays (high-energy particles from space) and alpha particles (emitted by trace radioactive elements in chip packaging) can deposit enough charge in a memory cell to flip a bit instantaneously - an event called a soft error or single-event upset (SEU). These events occur at a rate of roughly 1000-5000 FIT (failures in time per billion hours) per megabit. ECC memory adds extra parity bits that can detect and correct single-bit errors, which is why servers and critical systems require ECC despite the 12.5% memory overhead."
   },
-  // Q6: Temperature Effects (Medium-Hard)
+  // Q6: DDR Memory Timing Parameters (Hard)
   {
-    scenario: "A gaming laptop shows memory errors during intense gaming sessions when internal temperatures reach 85C, but works perfectly at room temperature.",
-    question: "Why does high temperature cause memory errors in DRAM?",
+    scenario: "An overclocker is tuning their DDR5-6000 memory and sees timing parameters listed as CL36-36-36-76. They want to understand what these numbers mean before attempting to tighten them for better performance.",
+    question: "What does the CAS Latency (CL) timing parameter represent in DDR memory specifications?",
     options: [
-      { id: 'expansion', label: "Thermal expansion causes physical damage to memory cells" },
-      { id: 'leakage', label: "Higher temperature exponentially increases charge leakage, reducing retention time", correct: true },
-      { id: 'resistance', label: "Heat increases wire resistance, slowing down data transfer" },
-      { id: 'timing', label: "The memory controller runs slower at high temperatures" },
+      { id: 'a', label: "The number of clock cycles between sending a column address and receiving the first data word", correct: true },
+      { id: 'b', label: "The total time in nanoseconds to complete a full read-write-refresh cycle" },
+      { id: 'c', label: "The maximum number of simultaneous memory accesses the controller can handle" },
+      { id: 'd', label: "The delay between consecutive refresh operations measured in microseconds" },
     ],
-    explanation: "Leakage current follows the Arrhenius equation - it roughly doubles for every 10C increase. At 85C, capacitors may lose charge in 16ms instead of 64ms. If refresh cannot keep up, bits flip. This is why servers use temperature-compensated refresh rates."
+    explanation: "CAS Latency (CL) is the number of clock cycles between the memory controller sending a column address strobe (CAS) command and the memory returning the first word of data. The four timing numbers (CL-tRCD-tRP-tRAS) represent: CL (column access delay), tRCD (row-to-column delay), tRP (row precharge time), and tRAS (row active time). Lower values mean faster access but require higher-quality memory cells. At DDR5-6000, CL36 translates to 12 nanoseconds absolute latency (36 cycles / 3000 MHz effective clock)."
   },
-  // Q7: Burst vs Distributed Refresh (Hard)
+  // Q7: Rowhammer Attack Vulnerability (Hard)
   {
-    scenario: "A memory controller designer must choose between burst refresh (refresh all rows at once) and distributed refresh (spread refreshes evenly over time).",
-    question: "What is the main advantage of distributed refresh over burst refresh?",
+    scenario: "A security researcher discovers that repeatedly accessing specific memory rows on a test system causes bit flips in adjacent rows that their program never directly accessed. This behavior persists across multiple DRAM modules from different manufacturers.",
+    question: "What fundamental DRAM characteristic enables the Rowhammer security vulnerability?",
     options: [
-      { id: 'power', label: "Distributed refresh uses less total power" },
-      { id: 'latency', label: "Distributed refresh avoids long pauses, reducing worst-case memory access latency", correct: true },
-      { id: 'simple', label: "Distributed refresh is simpler to implement in hardware" },
-      { id: 'integrity', label: "Distributed refresh provides better data integrity" },
+      { id: 'a', label: "Software bugs in the memory controller firmware allow unauthorized memory access" },
+      { id: 'b', label: "Repeated row activations cause electromagnetic interference that disturbs charge in physically adjacent rows", correct: true },
+      { id: 'c', label: "The refresh circuit has a bug that skips certain rows under heavy access patterns" },
+      { id: 'd', label: "Memory encryption keys are stored in predictable locations that can be targeted" },
     ],
-    explanation: "Burst refresh pauses all memory access while refreshing every row (potentially milliseconds). Distributed refresh spreads refreshes across time, so at most one row is being refreshed at any moment. This bounds worst-case latency, critical for real-time systems."
+    explanation: "Rowhammer exploits the physical proximity of DRAM cells. When a row is repeatedly activated (hammered), the voltage fluctuations on the wordline and the resulting electromagnetic coupling can disturb charge in physically adjacent rows before they are refreshed. This can flip bits in memory the attacker cannot directly access, potentially bypassing security boundaries. Modern mitigations include Target Row Refresh (TRR), increased refresh rates, and ECC, but the fundamental vulnerability exists because DRAM cells are packed so densely that they electrically interfere with neighbors."
   },
-  // Q8: DDR5 Improvements (Hard)
+  // Q8: Self-Refresh Mode in Mobile Devices (Hard)
   {
-    scenario: "DDR5 memory introduces same-bank refresh, allowing some banks to be refreshed while others remain accessible for read/write operations.",
-    question: "How does DDR5's same-bank refresh improve over DDR4's all-bank refresh?",
+    scenario: "A mobile device enters deep sleep mode to conserve battery. The operating system needs RAM contents preserved but wants to minimize power consumption. The LPDDR5 memory supports multiple power-saving modes including self-refresh.",
+    question: "How does DRAM self-refresh mode differ from normal controller-managed refresh?",
     options: [
-      { id: 'faster', label: "Individual banks refresh faster than all banks together" },
-      { id: 'bandwidth', label: "Memory bandwidth remains partially available during refresh operations", correct: true },
-      { id: 'power', label: "Same-bank refresh eliminates power consumption during refresh" },
-      { id: 'simpler', label: "Same-bank refresh simplifies the memory controller design" },
+      { id: 'a', label: "Self-refresh uses a lower voltage that reduces power but increases error rates" },
+      { id: 'b', label: "The DRAM chip manages its own refresh timing internally, allowing the memory controller to power down", correct: true },
+      { id: 'c', label: "Self-refresh stores data to flash memory and restores it when exiting sleep" },
+      { id: 'd', label: "The refresh rate is eliminated entirely by using backup capacitors to maintain charge" },
     ],
-    explanation: "DDR4 all-bank refresh blocks the entire memory during refresh. DDR5 same-bank refresh only blocks the bank being refreshed - other banks remain accessible. This can recover 5-10% of effective bandwidth that was previously lost to refresh."
+    explanation: "In normal operation, the memory controller issues refresh commands to the DRAM. In self-refresh mode, the DRAM chip activates an internal oscillator and refresh counter to manage its own refresh timing autonomously. This allows the memory controller, memory bus, and associated circuitry to power down completely, dramatically reducing system power. LPDDR further optimizes this with partial array self-refresh (only refreshing memory regions marked as containing data) and temperature-compensated self-refresh (adjusting refresh rate based on on-die temperature sensors)."
   },
-  // Q9: Retention Time Concept (Medium)
+  // Q9: Memory Controller Scheduling (Hard)
   {
-    scenario: "A DRAM specification sheet lists 'retention time: 64ms at 85C' as a key parameter.",
-    question: "What does retention time measure in DRAM specifications?",
+    scenario: "A system architect is optimizing memory performance for a real-time application that requires guaranteed worst-case latency. They notice that memory access times vary significantly depending on the pattern of requests.",
+    question: "Why do memory controllers reorder pending requests rather than processing them in arrival order?",
     options: [
-      { id: 'access', label: "The time required to read data from a memory cell" },
-      { id: 'hold', label: "The maximum time a cell can hold its charge above the detection threshold", correct: true },
-      { id: 'write', label: "The time required to write data to a memory cell" },
-      { id: 'cycle', label: "The minimum time between consecutive memory operations" },
+      { id: 'a', label: "Reordering hides security vulnerabilities by randomizing memory access patterns" },
+      { id: 'b', label: "Grouping accesses to the same row avoids repeated row activation overhead and increases throughput", correct: true },
+      { id: 'c', label: "Processing in arrival order would cause the refresh circuit to skip necessary refresh cycles" },
+      { id: 'd', label: "The memory bus protocol requires requests to be sorted by address before transmission" },
     ],
-    explanation: "Retention time is how long a charged capacitor stays above the threshold voltage needed to read a valid 1. Refresh must occur before retention time expires. Hotter temperatures and faster memory generally have shorter retention times."
+    explanation: "DRAM access involves three phases: row activation (tRCD), column access (CL), and precharge (tRP). If sequential requests target different rows, each requires the full activation-access-precharge cycle. Memory controllers use scheduling algorithms (like FR-FCFS - First Ready, First Come First Served) to reorder requests, grouping those targeting the same open row. This row buffer locality optimization can improve throughput by 2-3x for favorable access patterns, but introduces variable latency that complicates real-time system design."
   },
-  // Q10: Real-World Application - ECC Memory (Expert)
+  // Q10: Future Memory Technologies (Hard)
   {
-    scenario: "A data center uses ECC (Error Correcting Code) memory that can detect and correct single-bit errors. The system logs show occasional corrected errors even with proper refresh timing.",
-    question: "Why do single-bit errors still occur in properly refreshed ECC memory?",
+    scenario: "A research team is evaluating emerging memory technologies to replace DRAM in future systems. They need non-volatile memory with DRAM-like speed and endurance, but without the refresh overhead and volatility limitations.",
+    question: "Which emerging memory technology stores data using magnetic tunnel junctions and offers non-volatility with near-DRAM speeds?",
     options: [
-      { id: 'manufacturing', label: "Manufacturing defects cause some cells to fail randomly" },
-      { id: 'cosmic', label: "Cosmic rays and alpha particles can flip bits between refresh cycles", correct: true },
-      { id: 'software', label: "Software bugs in the memory controller cause bit flips" },
-      { id: 'voltage', label: "Power supply fluctuations corrupt data during read operations" },
+      { id: 'a', label: "Phase-Change Memory (PCM), which uses chalcogenide glass state changes" },
+      { id: 'b', label: "Resistive RAM (ReRAM), which uses metal oxide filament formation" },
+      { id: 'c', label: "Magnetoresistive RAM (MRAM), which uses electron spin orientation in magnetic layers", correct: true },
+      { id: 'd', label: "Ferroelectric RAM (FeRAM), which uses polarization in ferroelectric crystals" },
     ],
-    explanation: "High-energy cosmic rays and alpha particles from packaging materials can deposit enough charge to flip a bit instantly - no refresh can prevent this. ECC memory adds extra bits to detect and correct these random 'soft errors', which is why servers require ECC for reliability."
+    explanation: "MRAM (specifically STT-MRAM - Spin-Transfer Torque MRAM) stores data by orienting the magnetic spin of electrons in a magnetic tunnel junction. It offers non-volatility (data persists without power), near-DRAM read speeds, unlimited write endurance (unlike flash), and no refresh requirement. The tradeoffs include higher write energy than DRAM, larger cell size, and manufacturing complexity. MRAM is already used in some embedded applications and is being developed as a potential DRAM replacement for applications where instant-on capability and data persistence are critical."
   },
 ];
+
+// Legacy constant for backward compatibility
+const TEST_QUESTIONS = testQuestions;
 
 const TRANSFER_APPLICATIONS = [
   {

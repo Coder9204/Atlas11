@@ -185,6 +185,133 @@ const quizQuestions = [
 ];
 
 // ============================================================================
+// TEST QUESTIONS - SCENARIO-BASED MULTIPLE CHOICE
+// ============================================================================
+
+const testQuestions = [
+  // Question 1: Core concept - why the diver sinks when squeezed (Easy)
+  {
+    scenario: "You're demonstrating a Cartesian diver to your younger sibling. They squeeze the plastic bottle and watch the dropper sink to the bottom.",
+    question: "Why does squeezing the bottle cause the diver to sink?",
+    options: [
+      { id: 'a', label: "The squeeze pushes the diver down directly", correct: false },
+      { id: 'b', label: "Increased pressure compresses the air bubble, reducing buoyancy", correct: true },
+      { id: 'c', label: "The water gets heavier when squeezed", correct: false },
+      { id: 'd', label: "The diver absorbs water and becomes heavier", correct: false },
+    ],
+    explanation: "When you squeeze the bottle, you increase the water pressure throughout the container. This higher pressure compresses the air bubble inside the diver (following Boyle's Law). With a smaller air bubble, the diver displaces less water, which means less buoyant force. When buoyancy becomes less than the diver's weight, it sinks."
+  },
+  // Question 2: Boyle's Law relationship (Easy-Medium)
+  {
+    scenario: "A physics student doubles the pressure on a sealed container holding 100 mL of air at constant temperature.",
+    question: "According to Boyle's Law, what will happen to the air volume?",
+    options: [
+      { id: 'a', label: "It will remain at 100 mL", correct: false },
+      { id: 'b', label: "It will increase to 200 mL", correct: false },
+      { id: 'c', label: "It will decrease to 50 mL", correct: true },
+      { id: 'd', label: "It will decrease to 25 mL", correct: false },
+    ],
+    explanation: "Boyle's Law states that at constant temperature, pressure and volume are inversely proportional (P1V1 = P2V2). If pressure doubles, volume must halve to maintain this relationship. So 100 mL at 1 atm becomes 50 mL at 2 atm. This same principle causes the Cartesian diver's air bubble to compress when you squeeze the bottle."
+  },
+  // Question 3: Submarine ballast system (Medium)
+  {
+    scenario: "A submarine captain needs to dive from the surface to a depth of 200 meters. The submarine has ballast tanks that can hold either air or seawater.",
+    question: "What should the captain do to make the submarine descend?",
+    options: [
+      { id: 'a', label: "Pump air into the ballast tanks to increase buoyancy", correct: false },
+      { id: 'b', label: "Release air from ballast tanks and let seawater flood in", correct: true },
+      { id: 'c', label: "Spin the propellers in reverse to push the submarine down", correct: false },
+      { id: 'd', label: "Heat the air inside the submarine to make it denser", correct: false },
+    ],
+    explanation: "Submarines control their depth using the same principle as the Cartesian diver. By releasing compressed air from ballast tanks and allowing seawater to flood in, the submarine becomes denser overall and sinks. To rise, compressed air is pumped back into the tanks, forcing water out and reducing overall density. This is exactly analogous to how squeezing the bottle compresses the diver's air bubble."
+  },
+  // Question 4: Fish swim bladder analogy (Medium)
+  {
+    scenario: "A goldfish in an aquarium wants to move from the bottom to the middle of the tank without using much energy swimming. The fish has a swim bladder - an internal gas-filled organ.",
+    question: "How does the fish achieve neutral buoyancy at a higher depth?",
+    options: [
+      { id: 'a', label: "It fills the swim bladder with water to become lighter", correct: false },
+      { id: 'b', label: "It inflates the swim bladder with gas to increase its volume", correct: true },
+      { id: 'c', label: "It deflates the swim bladder to reduce drag", correct: false },
+      { id: 'd', label: "It changes the density of its scales", correct: false },
+    ],
+    explanation: "Fish use their swim bladder like a built-in Cartesian diver mechanism. To rise, they secrete gas into the swim bladder, increasing its volume. This displaces more water, creating more buoyant force. To descend, they absorb gas from the bladder, reducing volume and buoyancy. This allows fish to hover at any depth without constantly swimming, conserving precious energy."
+  },
+  // Question 5: Neutral buoyancy in scuba diving (Medium-Hard)
+  {
+    scenario: "A scuba diver descends from the surface to 30 meters depth. At this depth, the water pressure is approximately 4 atmospheres (4 times surface pressure). The diver's BCD (Buoyancy Control Device) initially contained 4 liters of air.",
+    question: "What volume will the BCD air occupy at 30 meters, and what must the diver do to maintain neutral buoyancy?",
+    options: [
+      { id: 'a', label: "1 liter; the diver must add more air to the BCD", correct: true },
+      { id: 'b', label: "4 liters; no adjustment needed", correct: false },
+      { id: 'c', label: "16 liters; the diver must release air from the BCD", correct: false },
+      { id: 'd', label: "2 liters; the diver must remove their weight belt", correct: false },
+    ],
+    explanation: "At 30 meters (4 atm), Boyle's Law dictates that the 4 liters of air will compress to 1 liter (4L / 4 = 1L). This dramatic reduction in volume means much less buoyancy. To maintain neutral buoyancy, the diver must add air to the BCD to compensate. This is why proper buoyancy control is a critical skill - divers constantly adjust their BCD during ascent and descent."
+  },
+  // Question 6: Atmospheric pressure effects (Hard)
+  {
+    scenario: "Scientists conduct a Cartesian diver experiment at a high-altitude laboratory in the Andes mountains (3,500 meters elevation) where atmospheric pressure is only about 0.65 atm, compared to 1 atm at sea level.",
+    question: "How will the Cartesian diver behave differently at high altitude compared to sea level?",
+    options: [
+      { id: 'a', label: "The diver will be harder to sink because the starting pressure is lower", correct: false },
+      { id: 'b', label: "The diver will be easier to sink because the air bubble is already more expanded", correct: true },
+      { id: 'c', label: "The diver will behave exactly the same regardless of altitude", correct: false },
+      { id: 'd', label: "The diver will float higher because water is less dense at altitude", correct: false },
+    ],
+    explanation: "At high altitude with lower atmospheric pressure, the air bubble inside the diver is already partially expanded compared to sea level (Boyle's Law in action). This means the diver starts closer to the sinking threshold. When you squeeze the bottle, you need less additional pressure to compress the bubble enough to cause sinking. The margin of buoyancy is smaller, making the diver more sensitive to pressure changes."
+  },
+  // Question 7: Deep sea exploration vessels (Hard)
+  {
+    scenario: "The research submersible Alvin is preparing to dive to 4,000 meters depth in the ocean, where pressure exceeds 400 atmospheres. Engineers must design the vessel to return safely to the surface even if systems fail.",
+    question: "Why do deep-sea submersibles carry droppable iron weights as an emergency backup system?",
+    options: [
+      { id: 'a', label: "The weights help stabilize the vessel during descent", correct: false },
+      { id: 'b', label: "Dropping weights reduces mass, making the vessel positively buoyant so it rises", correct: true },
+      { id: 'c', label: "The weights generate electricity through motion", correct: false },
+      { id: 'd', label: "The weights are used to anchor the vessel to the seafloor", correct: false },
+    ],
+    explanation: "At extreme depths, air-based buoyancy systems face severe challenges - air compresses to nearly nothing at 400 atm. Deep-sea submersibles use syntactic foam (which resists compression) for primary buoyancy, but they also carry droppable iron weights. If all else fails, releasing these weights reduces the vessel's total mass, tipping the balance toward positive buoyancy. This is a fail-safe application of Archimedes' principle: if weight < buoyant force, the vessel rises."
+  },
+  // Question 8: Hot air balloon comparison (Hard)
+  {
+    scenario: "A hot air balloon pilot wants to descend from 2,000 meters to land. Unlike submarines that work in water, hot air balloons achieve buoyancy in air by heating the air inside the envelope.",
+    question: "What principle connects hot air balloon flight to the Cartesian diver, and how does the pilot descend?",
+    options: [
+      { id: 'a', label: "Both rely on Archimedes' principle; the pilot allows air to cool, increasing density", correct: true },
+      { id: 'b', label: "Both rely on Bernoulli's principle; the pilot increases airflow over the balloon", correct: false },
+      { id: 'c', label: "Both rely on Pascal's principle; the pilot compresses the air inside", correct: false },
+      { id: 'd', label: "Both rely on Newton's third law; the pilot vents hot air downward for thrust", correct: false },
+    ],
+    explanation: "Both the Cartesian diver and hot air balloons operate on Archimedes' principle: an object is buoyed up by a force equal to the weight of fluid it displaces. In a balloon, hot air is less dense than cool surrounding air, creating lift. To descend, the pilot allows the air to cool (or opens a vent), which increases the air density inside, reducing the density difference and therefore reducing buoyancy. The diver works similarly - compressing the air bubble makes the diver denser overall."
+  },
+  // Question 9: Density and displacement relationship (Hard)
+  {
+    scenario: "An engineer is designing a new underwater research station. The station has a total volume of 500 cubic meters and must hover at neutral buoyancy at 50 meters depth. Seawater density is 1025 kg/m3.",
+    question: "What total mass must the station have to achieve neutral buoyancy, and what does this tell us about the Cartesian diver?",
+    options: [
+      { id: 'a', label: "512,500 kg; both the station and diver achieve neutral buoyancy when their average density equals the fluid density", correct: true },
+      { id: 'b', label: "500,000 kg; both need to displace their own weight in fluid", correct: false },
+      { id: 'c', label: "1,025 kg; density must equal volume for neutral buoyancy", correct: false },
+      { id: 'd', label: "256,250 kg; the station needs half the water's density to float", correct: false },
+    ],
+    explanation: "For neutral buoyancy, the object must displace exactly its own weight in fluid. Displaced weight = density x volume x g = 1025 kg/m3 x 500 m3 = 512,500 kg. The station must have this mass to hover. This illustrates the Cartesian diver principle: the diver achieves neutral buoyancy when its average density (including the air bubble) equals water density. Compressing the bubble reduces volume without changing mass, increasing average density above water's density, causing sinking."
+  },
+  // Question 10: Engineering applications in marine tech (Hard)
+  {
+    scenario: "A marine robotics company is developing an autonomous underwater vehicle (AUV) that must operate at varying depths from 0 to 500 meters. Traditional ballast systems add weight and complexity. The engineers consider using an oil-based variable buoyancy system.",
+    question: "Why might an oil-based system be superior to an air-based system for deep-diving AUVs?",
+    options: [
+      { id: 'a', label: "Oil is cheaper than compressed air tanks", correct: false },
+      { id: 'b', label: "Oil provides lubrication for the vehicle's moving parts", correct: false },
+      { id: 'c', label: "Oil is nearly incompressible, maintaining consistent volume regardless of depth pressure", correct: true },
+      { id: 'd', label: "Oil absorbs sonar signals, making the AUV stealthier", correct: false },
+    ],
+    explanation: "The Cartesian diver demonstrates a key limitation of air-based buoyancy: air compresses significantly under pressure (Boyle's Law), making buoyancy control increasingly difficult at depth. Oil is nearly incompressible - its volume barely changes even at extreme pressures. By pumping oil between internal reservoirs and an external bladder, AUVs can precisely control displaced volume (and thus buoyancy) regardless of depth. This engineering solution directly addresses the same physics that makes the Cartesian diver work."
+  },
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 

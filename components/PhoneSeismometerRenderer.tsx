@@ -1153,6 +1153,120 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
     );
   };
 
+  // ─── Test Questions for Assessment ───────────────────────────────────────────
+  const testQuestions = [
+    {
+      scenario: "You're developing a fitness app and need to understand how phones detect motion. The app should count steps accurately even when the phone is in different orientations.",
+      question: "How does the MEMS accelerometer in a smartphone fundamentally detect motion and acceleration?",
+      options: [
+        { id: 'a', label: "It uses GPS signals to calculate position changes over time" },
+        { id: 'b', label: "A microscopic proof mass on silicon springs deflects, changing capacitance between electrodes that is converted to an electrical signal", correct: true },
+        { id: 'c', label: "Piezoelectric crystals generate voltage when the phone moves through magnetic fields" },
+        { id: 'd', label: "An internal gyroscope spins and resists changes in orientation" }
+      ],
+      explanation: "MEMS accelerometers contain a tiny proof mass (about a microgram) suspended on microscopic silicon springs. When the phone accelerates, inertia causes the mass to lag behind, changing its position relative to fixed capacitor plates. This capacitance change is measured and converted to an electrical signal representing acceleration. This is Newton's Second Law (F=ma) at the microscale!"
+    },
+    {
+      scenario: "An engineer at a semiconductor company is explaining MEMS technology to new employees. They show a microscope image of an accelerometer chip that's smaller than a grain of rice.",
+      question: "What does MEMS stand for, and why is this technology revolutionary for smartphone sensors?",
+      options: [
+        { id: 'a', label: "Magnetic Electromagnetic Motion System - it uses Earth's magnetic field for detection" },
+        { id: 'b', label: "Micro-Electro-Mechanical System - it combines microscopic mechanical structures with electronics on a single silicon chip", correct: true },
+        { id: 'c', label: "Multi-Element Measurement Sensor - it combines multiple sensor types in one package" },
+        { id: 'd', label: "Motion Energy Monitoring System - it harvests energy from movement" }
+      ],
+      explanation: "MEMS (Micro-Electro-Mechanical Systems) technology allows mechanical structures like springs, masses, and capacitor plates to be fabricated at the microscale using the same processes that make computer chips. This enables incredibly small, low-power, and inexpensive sensors that can detect accelerations as small as 0.001g - sensitive enough to detect earthquakes, footsteps, or even your heartbeat through a table!"
+    },
+    {
+      scenario: "Scientists at UC Berkeley developed the MyShake app, which has been downloaded by millions of users worldwide. During a magnitude 5.1 earthquake in California, the app successfully detected the event and sent warnings.",
+      question: "Why are smartphone-based earthquake detection networks potentially more effective than traditional seismometer stations alone?",
+      options: [
+        { id: 'a', label: "Smartphones have more sensitive accelerometers than professional seismometers" },
+        { id: 'b', label: "The dense geographic distribution of millions of phones provides better coverage, faster detection, and redundancy that fixed stations cannot match", correct: true },
+        { id: 'c', label: "Smartphones can predict earthquakes before they happen using AI" },
+        { id: 'd', label: "Phone networks are immune to damage during earthquakes unlike seismometer stations" }
+      ],
+      explanation: "While individual phones are less sensitive than professional seismometers, the sheer number and geographic distribution of smartphones creates an incredibly dense sensor network. This enables faster detection (phones closer to the epicenter detect it first), better location accuracy through triangulation, and natural redundancy. Traditional seismometer networks have gaps in coverage, but smartphones fill urban areas densely, enabling early warning systems that can alert people seconds before shaking arrives."
+    },
+    {
+      scenario: "During an earthquake, a seismologist notices that their monitoring station recorded two distinct wave arrivals - one at 2:15:03 PM and another at 2:15:18 PM. The first wave caused compression, while the second caused side-to-side shaking.",
+      question: "What explains the two different wave arrivals and their distinct characteristics?",
+      options: [
+        { id: 'a', label: "The first wave was reflected off the Earth's core while the second traveled directly" },
+        { id: 'b', label: "P-waves (primary/compression waves) travel faster through rock and arrive first, while S-waves (secondary/shear waves) travel slower but cause more ground motion", correct: true },
+        { id: 'c', label: "The first wave came from the earthquake's initial rupture and the second from an aftershock" },
+        { id: 'd', label: "Surface waves always split into two components when traveling through different soil types" }
+      ],
+      explanation: "Earthquakes generate multiple wave types. P-waves (Primary) compress and expand rock like sound waves, traveling about 6 km/s through Earth's crust - they arrive first but cause less damage. S-waves (Secondary) shake rock perpendicular to their travel direction at about 3.5 km/s. The time difference between P and S wave arrivals helps seismologists calculate distance to the epicenter. Interestingly, S-waves cannot travel through liquids, which is how scientists discovered Earth's liquid outer core!"
+    },
+    {
+      scenario: "A news reporter announces: 'Today's earthquake measured 6.0 on the Richter scale.' However, scientists increasingly prefer using 'moment magnitude' for large earthquakes instead of the original Richter scale.",
+      question: "What is the key limitation of the Richter scale that led scientists to develop moment magnitude?",
+      options: [
+        { id: 'a', label: "The Richter scale only works for earthquakes in California where it was developed" },
+        { id: 'b', label: "The Richter scale saturates for large earthquakes (above ~7.0) and doesn't accurately represent the total energy released, while moment magnitude accounts for fault area, slip distance, and rock rigidity", correct: true },
+        { id: 'c', label: "The Richter scale requires expensive equipment that most countries cannot afford" },
+        { id: 'd', label: "The Richter scale measures intensity of shaking rather than earthquake size" }
+      ],
+      explanation: "The Richter scale measures the maximum amplitude of seismic waves on a specific seismometer type. However, it 'saturates' for large earthquakes - a magnitude 8.0 and 9.0 might produce similar maximum amplitudes despite the 9.0 releasing 31 times more energy. Moment magnitude (Mw) directly calculates energy by multiplying fault rupture area × average slip distance × rock rigidity. This makes it accurate for all earthquake sizes and comparable worldwide. Both scales are logarithmic - each whole number represents about 31.6 times more energy!"
+    },
+    {
+      scenario: "The MyShake app on your phone suddenly detects vibrations. The app's algorithm must determine within milliseconds whether this is a real earthquake or just someone dropping their phone or a truck driving by.",
+      question: "How do crowdsourced earthquake apps distinguish real earthquakes from false triggers like dropped phones or local vibrations?",
+      options: [
+        { id: 'a', label: "They use machine learning to recognize the 'sound' of earthquakes through the phone's microphone" },
+        { id: 'b', label: "They require spatial and temporal correlation - multiple phones in a geographic region must detect similar signals within a short time window for confirmation", correct: true },
+        { id: 'c', label: "They check the phone's GPS to see if it moved to a new location" },
+        { id: 'd', label: "They measure battery temperature changes caused by seismic energy" }
+      ],
+      explanation: "Single-phone detection is unreliable because many things cause vibrations (dropping phone, walking, traffic). Crowdsourced systems require corroborating evidence: multiple phones in a region must detect characteristic earthquake signatures (specific frequency content, P-wave then S-wave pattern) within a short time window. The system also uses triangulation - if phones detect waves at slightly different times, algorithms can locate the epicenter and verify the detection pattern matches a real propagating earthquake rather than random coincidental triggers."
+    },
+    {
+      scenario: "A data scientist working on an earthquake detection app notices that raw accelerometer data is extremely noisy - it captures footsteps, HVAC vibrations, traffic, and many other non-earthquake sources that create false alarms.",
+      question: "What signal processing technique is most critical for extracting earthquake signals from noisy accelerometer data?",
+      options: [
+        { id: 'a', label: "Amplifying all signals equally to make weak earthquakes detectable" },
+        { id: 'b', label: "Bandpass filtering to isolate the 1-10 Hz frequency range where earthquake energy is concentrated, while rejecting high-frequency human activities and very low-frequency drift", correct: true },
+        { id: 'c', label: "Recording only during nighttime when there's less human activity" },
+        { id: 'd', label: "Using GPS coordinates to ignore data from areas without recent earthquakes" }
+      ],
+      explanation: "Earthquake signals have characteristic frequency content, typically 1-10 Hz for body waves detectable by phones. Human activities like walking (1-2 Hz but with different patterns), typing (10-20 Hz), and electronic noise (60 Hz from power lines) can be filtered out. Bandpass filters allow only frequencies in the earthquake range to pass. Additional algorithms look for the specific pattern of earthquake waves - a P-wave arrival followed by larger S-waves - rather than the impulsive signatures of impacts or the periodic patterns of footsteps."
+    },
+    {
+      scenario: "Three seismometer stations detect an earthquake. Station A recorded the P-wave at 10:00:00, Station B at 10:00:04, and Station C at 10:00:07. Each station is in a different city roughly 50 km apart.",
+      question: "How do seismologists use data from multiple stations to pinpoint an earthquake's epicenter?",
+      options: [
+        { id: 'a', label: "They average the GPS coordinates of all stations that detected the earthquake" },
+        { id: 'b', label: "They use triangulation - the P-S wave time difference at each station gives distance to the epicenter, and three or more distance circles intersect at the epicenter location", correct: true },
+        { id: 'c', label: "They trace the direction each seismometer was pointing when it detected the strongest signal" },
+        { id: 'd', label: "They measure which station recorded the loudest signal, as that station is closest" }
+      ],
+      explanation: "Each station can calculate its distance from the epicenter using the P-S wave time delay (since both waves travel at known but different speeds). This distance defines a circle around each station where the epicenter could be. With three or more stations, these circles intersect at a single point - the epicenter. This is similar to how GPS works! With dense smartphone networks, hundreds of 'stations' provide incredibly precise locations. The different arrival times also help determine earthquake depth."
+    },
+    {
+      scenario: "Mexico City's earthquake early warning system successfully gave residents up to 60 seconds of warning before strong shaking arrived from a magnitude 7.1 earthquake whose epicenter was 120 km away.",
+      question: "How can earthquake early warning systems provide advance notice when earthquakes travel at kilometers per second?",
+      options: [
+        { id: 'a', label: "They predict earthquakes hours in advance by monitoring underground pressure changes" },
+        { id: 'b', label: "Electronic signals travel at light speed (300,000 km/s), while seismic waves travel at only 3-6 km/s, allowing warnings to outrace the shaking to distant cities", correct: true },
+        { id: 'c', label: "They use satellites to detect ground deformation before the waves arrive" },
+        { id: 'd', label: "Underground sensors can feel the earthquake before it reaches the surface" }
+      ],
+      explanation: "Early warning systems exploit the vast speed difference between electronic communications (essentially instantaneous at ~300,000 km/s) and seismic waves (3-8 km/s). Sensors near the epicenter detect P-waves within seconds of rupture and immediately transmit alerts. These warnings arrive at distant cities before the destructive S-waves and surface waves. The warning time depends on distance from epicenter - cities 100 km away might get 20-30 seconds, enough to stop trains, open fire station doors, and alert people to drop, cover, and hold on."
+    },
+    {
+      scenario: "After a moderate earthquake, engineers notice that a 15-story building swayed significantly more than shorter buildings nearby, even though they experienced the same ground shaking. Some items fell from shelves only in certain floors.",
+      question: "What phenomenon explains why certain buildings experience amplified shaking during earthquakes?",
+      options: [
+        { id: 'a', label: "Taller buildings are closer to the earthquake's energy source in the Earth's crust" },
+        { id: 'b', label: "Resonance occurs when the earthquake's dominant frequency matches the building's natural frequency, causing dramatically amplified oscillations", correct: true },
+        { id: 'c', label: "Taller buildings have more windows that let seismic waves enter" },
+        { id: 'd', label: "The building's foundation was improperly constructed" }
+      ],
+      explanation: "Every structure has natural frequencies at which it 'wants' to vibrate - like a tuning fork. For buildings, this depends on height, construction, and materials (roughly 10/N Hz, where N is the number of stories). When earthquake waves contain energy at these frequencies, resonance causes the building to oscillate with amplified motion. A 10-story building (~1 Hz natural frequency) resonates with typical earthquake frequencies. This is why building codes require engineers to analyze resonance and why some earthquakes damage medium-rise buildings more than shorter or taller ones nearby."
+    }
+  ];
+
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">

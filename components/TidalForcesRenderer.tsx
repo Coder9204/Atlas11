@@ -140,6 +140,120 @@ const TEST_QUESTIONS = [
   }
 ];
 
+// Scenario-based test questions with educational explanations
+const testQuestions = [
+  {
+    scenario: "You're standing on a beach watching the tide come in. Your friend says the Moon's gravity is simply pulling the water toward it.",
+    question: "What is the actual cause of tidal forces on Earth?",
+    options: [
+      { id: 'a', label: 'The total gravitational pull of the Moon on the oceans' },
+      { id: 'b', label: 'The DIFFERENCE in gravitational pull across Earth - stronger on the near side, weaker on the far side', correct: true },
+      { id: 'c', label: 'Earth\'s magnetic field interacting with lunar radiation' },
+      { id: 'd', label: 'The centrifugal force from Earth\'s rotation' }
+    ],
+    explanation: "Tidal forces arise from the gradient (difference) in gravitational pull across an extended body. The Moon pulls the near side of Earth more strongly than the center, and the center more strongly than the far side. This differential creates the stretching effect we call tides."
+  },
+  {
+    scenario: "A student notices that coastal towns experience two high tides per day, roughly 12 hours apart. They're puzzled because there's only one Moon.",
+    question: "Why does Earth have TWO tidal bulges instead of just one facing the Moon?",
+    options: [
+      { id: 'a', label: 'The Sun creates the second bulge on the opposite side' },
+      { id: 'b', label: 'Earth\'s rapid rotation flings water outward on both sides' },
+      { id: 'c', label: 'The far side is pulled LESS than Earth\'s center, so it \"falls behind\" creating a second bulge', correct: true },
+      { id: 'd', label: 'Ocean currents redirect water to the opposite side' }
+    ],
+    explanation: "The far-side bulge exists because that water is pulled LESS strongly than Earth's center. Relative to the center, the far-side water effectively \"lags behind\" or bulges outward. This is a consequence of differential gravity - the same physics that creates the near-side bulge also creates the far-side one."
+  },
+  {
+    scenario: "During a full moon, a harbor master notices the tides are exceptionally high. Two weeks later, during the first quarter moon, the tides are much milder.",
+    question: "What explains the difference between spring tides and neap tides?",
+    options: [
+      { id: 'a', label: 'Spring tides occur in springtime when Earth is closer to the Sun' },
+      { id: 'b', label: 'During spring tides, Sun and Moon align, adding their tidal effects; during neap tides, they\'re at right angles and partially cancel', correct: true },
+      { id: 'c', label: 'The Moon\'s distance from Earth varies significantly over two weeks' },
+      { id: 'd', label: 'Ocean temperature changes affect water volume' }
+    ],
+    explanation: "Spring tides occur during new and full moons when the Sun, Moon, and Earth align - their tidal forces ADD together. Neap tides happen at quarter moons when Sun and Moon are at 90 degrees - their tidal forces partially CANCEL. Spring tides can be 20% higher than average; neap tides about 20% lower."
+  },
+  {
+    scenario: "Both the Sun and Moon exert gravitational pull on Earth's oceans. The Sun is far more massive than the Moon.",
+    question: "Despite the Sun being 27 million times more massive, why does the Moon have about twice the tidal influence on Earth?",
+    options: [
+      { id: 'a', label: 'The Moon is made of denser material' },
+      { id: 'b', label: 'The Sun\'s gravity is blocked by Earth\'s magnetic field' },
+      { id: 'c', label: 'Tidal force decreases as 1/r cubed - the Moon\'s proximity matters more than the Sun\'s mass', correct: true },
+      { id: 'd', label: 'The Moon has a special gravitational effect on water' }
+    ],
+    explanation: "Tidal force depends on the GRADIENT of gravity, which falls off as 1/r cubed (not 1/r squared like gravity itself). The Moon is about 390 times closer than the Sun. Though less massive, the Moon's proximity gives it roughly twice the tidal effect: (Sun's mass / Moon's mass) / (Sun's distance / Moon's distance)^3 < 1."
+  },
+  {
+    scenario: "Astronomers studying the Moon notice we always see the same face from Earth. Some people incorrectly claim the Moon doesn't rotate.",
+    question: "Why does the Moon always show the same face to Earth?",
+    options: [
+      { id: 'a', label: 'The Moon stopped rotating billions of years ago' },
+      { id: 'b', label: 'Earth\'s gravity is strong enough to hold one side facing us' },
+      { id: 'c', label: 'Tidal friction synchronized the Moon\'s rotation period to exactly match its orbital period', correct: true },
+      { id: 'd', label: 'The far side is too dark to reflect sunlight' }
+    ],
+    explanation: "The Moon IS rotating - exactly once per orbit (27.3 days). This is called tidal locking. Over billions of years, tidal friction from Earth's gravity slowed the Moon's rotation until it synchronized with its orbit. The Moon rotates, but from Earth we always see the same hemisphere. This happens to many moons in the solar system."
+  },
+  {
+    scenario: "A comet is approaching a massive planet. Mission scientists are calculating whether it will survive the close encounter.",
+    question: "What is the Roche limit and why does it matter for the comet?",
+    options: [
+      { id: 'a', label: 'The minimum safe distance for spacecraft communications' },
+      { id: 'b', label: 'The distance within which tidal forces exceed an object\'s self-gravity, potentially tearing it apart', correct: true },
+      { id: 'c', label: 'The boundary where the planet\'s atmosphere begins' },
+      { id: 'd', label: 'The point where orbital velocity equals escape velocity' }
+    ],
+    explanation: "The Roche limit is the critical distance where tidal forces from a massive body exceed the gravitational self-cohesion of an orbiting object. If the comet passes within this limit, tidal stretching could fragment or destroy it. Saturn's rings likely formed from a moon that ventured inside Saturn's Roche limit and was torn apart."
+  },
+  {
+    scenario: "Jupiter's moon Io has over 400 active volcanoes - more volcanic activity than any other body in our solar system, including Earth.",
+    question: "What powers Io's extreme volcanic activity?",
+    options: [
+      { id: 'a', label: 'Io is very close to the Sun and receives intense solar heating' },
+      { id: 'b', label: 'Io has an extremely large radioactive core' },
+      { id: 'c', label: 'Tidal flexing from Jupiter\'s gravity, amplified by orbital resonance with other moons, continuously heats Io\'s interior', correct: true },
+      { id: 'd', label: 'Chemical reactions from Jupiter\'s radiation belts' }
+    ],
+    explanation: "Io experiences intense tidal heating from Jupiter's enormous gravity. Its slightly elliptical orbit (maintained by orbital resonance with Europa and Ganymede) means the tidal bulge constantly shifts as Io moves closer and farther from Jupiter. This continuous flexing generates friction that heats Io's interior to the melting point, driving its extreme volcanism."
+  },
+  {
+    scenario: "Scientists studying Saturn's moon Enceladus discovered water geysers erupting from cracks in its icy surface, suggesting a subsurface ocean.",
+    question: "How can a small, distant moon maintain liquid water beneath its frozen surface?",
+    options: [
+      { id: 'a', label: 'Radioactive decay in the core provides enough heat' },
+      { id: 'b', label: 'Reflected sunlight from Saturn\'s rings warms the moon' },
+      { id: 'c', label: 'Tidal heating from Saturn, as the moon\'s eccentric orbit causes continuous flexing and internal friction', correct: true },
+      { id: 'd', label: 'Chemical reactions between ice and rock generate heat' }
+    ],
+    explanation: "Enceladus maintains a subsurface ocean through tidal heating. Its eccentric orbit around Saturn causes the moon to flex rhythmically as the tidal bulge shifts. This mechanical deformation generates internal friction and heat, keeping water liquid beneath the ice. Similar tidal heating likely maintains subsurface oceans on Europa and other icy moons."
+  },
+  {
+    scenario: "Geologists have discovered that 620 million years ago, Earth's day was only about 21 hours long. Ancient coral growth rings confirm this shorter day length.",
+    question: "Why is Earth's rotation gradually slowing down?",
+    options: [
+      { id: 'a', label: 'The Sun\'s gravity is gradually capturing Earth' },
+      { id: 'b', label: 'Earth is gaining mass from meteorites' },
+      { id: 'c', label: 'Tidal friction from the Moon transfers Earth\'s rotational energy to the Moon\'s orbit', correct: true },
+      { id: 'd', label: 'Earth\'s core is cooling and contracting' }
+    ],
+    explanation: "Tidal friction acts like a brake on Earth's rotation. The tidal bulges don't point exactly at the Moon because Earth's rotation carries them slightly ahead. The Moon's gravity pulls back on these bulges, slowing Earth's rotation. This angular momentum is transferred to the Moon, which is moving away from Earth at about 3.8 cm per year. Days are lengthening by about 2 milliseconds per century."
+  },
+  {
+    scenario: "Astronomers discover a binary star system where two stars orbit very close to each other. Both stars appear elongated rather than spherical.",
+    question: "What causes the stars in close binary systems to become elongated?",
+    options: [
+      { id: 'a', label: 'Rapid rotation causes centrifugal flattening' },
+      { id: 'b', label: 'Magnetic fields from each star repel material' },
+      { id: 'c', label: 'Intense mutual tidal forces stretch each star toward its companion', correct: true },
+      { id: 'd', label: 'Radiation pressure from each star pushes material outward' }
+    ],
+    explanation: "In close binary systems, each star raises tidal bulges on its companion. The closer the stars, the more extreme the tidal distortion - some binaries have stars so close they share material through their elongated regions. These tidal interactions can transfer mass between stars, affect their evolution, and even cause them to spiral inward or outward over time."
+  }
+];
+
 const TRANSFER_APPS = [
   {
     title: 'Tidal Energy',

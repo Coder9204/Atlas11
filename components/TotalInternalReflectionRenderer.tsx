@@ -314,6 +314,132 @@ const applications: Application[] = [
 ];
 
 // =============================================================================
+// TEST QUESTIONS - Scenario-based multiple choice questions
+// =============================================================================
+const testQuestions = [
+  // 1. Core concept - critical angle (Easy)
+  {
+    scenario: "A scuba diver shines a flashlight upward toward the water's surface. At shallow angles, the light escapes into the air, but as the diver tilts the flashlight more steeply, something surprising happens.",
+    question: "What is the critical angle, and why is it important for total internal reflection?",
+    options: [
+      { id: 'a', label: "The angle at which light enters the water from air" },
+      { id: 'b', label: "The minimum angle at which light is completely reflected back into the denser medium", correct: true },
+      { id: 'c', label: "The angle at which light travels fastest through a medium" },
+      { id: 'd', label: "The angle at which light is absorbed by the water" }
+    ],
+    explanation: "The critical angle is the minimum angle of incidence (measured from the normal) at which total internal reflection occurs. When light traveling in a denser medium (like water) hits the boundary at or above this angle, it cannot escape and is completely reflected back. For water-air, this angle is about 48.6 degrees."
+  },
+  // 2. Fiber optic operation (Easy-Medium)
+  {
+    scenario: "Fiber optic cables carry internet data across oceans at nearly the speed of light. These thin glass strands can bend around corners while keeping the light signal intact for thousands of kilometers.",
+    question: "How does total internal reflection enable fiber optic communication?",
+    options: [
+      { id: 'a', label: "The fiber amplifies the light signal as it travels" },
+      { id: 'b', label: "Light bounces along the fiber core via repeated total internal reflections with virtually no loss", correct: true },
+      { id: 'c', label: "The fiber converts light into electrical signals that travel faster" },
+      { id: 'd', label: "The glass absorbs and re-emits light at each bend" }
+    ],
+    explanation: "Fiber optics work by trapping light inside a high-refractive-index glass core surrounded by lower-index cladding. Light enters at a shallow angle and repeatedly reflects off the core-cladding boundary via TIR. Since TIR reflects 100% of the light (unlike mirrors that absorb some), signals can travel vast distances with minimal loss."
+  },
+  // 3. Diamond brilliance (Medium)
+  {
+    scenario: "Jewelers cut diamonds with precise angles to maximize their 'fire' and 'brilliance.' A well-cut diamond sparkles intensely, while a poorly cut one looks dull despite being the same material.",
+    question: "Why does diamond's small critical angle (24.4 degrees) make it exceptionally brilliant?",
+    options: [
+      { id: 'a', label: "Diamond absorbs more light than other gems" },
+      { id: 'b', label: "Light easily gets trapped inside and bounces multiple times before exiting through the top", correct: true },
+      { id: 'c', label: "Diamond's hardness causes light to vibrate faster" },
+      { id: 'd', label: "The small angle allows more light to escape through the sides" }
+    ],
+    explanation: "Diamond's high refractive index (2.42) creates a very small critical angle of only 24.4 degrees. This means light is easily trapped inside and undergoes multiple internal reflections before finally exiting through the top facets. The brilliant cut is designed to maximize these internal bounces, creating the characteristic sparkle. Lower-index gems let more light leak out the bottom."
+  },
+  // 4. Underwater visibility (Medium)
+  {
+    scenario: "A fish swimming near the surface of a pond looks up and sees a peculiar sight: instead of seeing the sky everywhere above, it sees a bright circular window of sky surrounded by a mirror-like reflection of the underwater world.",
+    question: "What causes this 'Snell's window' phenomenon that fish observe?",
+    options: [
+      { id: 'a', label: "The surface of the water acts like a curved lens" },
+      { id: 'b', label: "Light from above the critical angle undergoes total internal reflection, creating a reflective ring around a viewing cone", correct: true },
+      { id: 'c', label: "Fish eyes have special filters that block certain angles of light" },
+      { id: 'd', label: "Pollution on the water surface creates the mirror effect" }
+    ],
+    explanation: "Looking up from underwater, light from the sky can only enter within a cone defined by the critical angle (about 48.6 degrees for water). Outside this cone, the water surface acts as a perfect mirror due to TIR, reflecting the underwater scene. This creates 'Snell's window' - a circular porthole of sky surrounded by a mirror of the underwater world."
+  },
+  // 5. Prism binoculars (Medium-Hard)
+  {
+    scenario: "High-quality binoculars use Porro prisms made of glass rather than mirrors to fold the light path and correct the image orientation. Bird watchers prefer these for observing in low-light conditions at dawn and dusk.",
+    question: "Why do premium binoculars use TIR prisms instead of mirrors?",
+    options: [
+      { id: 'a', label: "Glass prisms are lighter than mirrors" },
+      { id: 'b', label: "TIR reflects 100% of light with zero absorption, while mirrors lose 4-10% at each reflection", correct: true },
+      { id: 'c', label: "Prisms magnify the image while mirrors only redirect it" },
+      { id: 'd', label: "Mirrors require more frequent cleaning than prisms" }
+    ],
+    explanation: "Mirrors have metallic coatings that absorb some light at each reflection (typically 4-10% per surface). TIR prisms reflect 100% of the light without any coating. Since binoculars use multiple reflections to fold the light path, these losses compound. In dim conditions, this difference is significant - TIR prisms deliver brighter, higher-contrast images."
+  },
+  // 6. Evanescent wave (Hard)
+  {
+    scenario: "Even though total internal reflection is called 'total,' sensitive instruments can detect that a tiny amount of electromagnetic field actually penetrates into the less dense medium for a distance of about one wavelength.",
+    question: "What is this penetrating field called, and why doesn't it violate energy conservation?",
+    options: [
+      { id: 'a', label: "Leakage radiation - it represents energy lost from the system" },
+      { id: 'b', label: "Evanescent wave - it carries no energy away and decays exponentially without propagating", correct: true },
+      { id: 'c', label: "Diffracted light - it bends around the interface edge" },
+      { id: 'd', label: "Scattered light - it bounces off impurities at the surface" }
+    ],
+    explanation: "The evanescent wave is a non-propagating electromagnetic field that extends into the less dense medium during TIR. It decays exponentially with distance (within one wavelength) and doesn't carry energy away - the energy flows parallel to the surface and returns to the denser medium. This 'tunneling' field is real and is exploited in technologies like TIRF microscopy and fiber optic couplers."
+  },
+  // 7. Attenuated total reflectance spectroscopy (Hard)
+  {
+    scenario: "Chemists analyzing solid samples or thick liquids often use ATR (Attenuated Total Reflectance) spectroscopy. The sample is pressed against a crystal, and infrared light is shone through the crystal at an angle that causes TIR.",
+    question: "How does ATR spectroscopy use the evanescent wave to analyze samples?",
+    options: [
+      { id: 'a', label: "The evanescent wave heats the sample, causing it to emit characteristic radiation" },
+      { id: 'b', label: "The evanescent wave penetrates the sample surface, and absorption by the sample attenuates the reflected beam", correct: true },
+      { id: 'c', label: "The sample changes the critical angle, altering the reflection pattern" },
+      { id: 'd', label: "The light passes through the sample and is detected on the other side" }
+    ],
+    explanation: "During TIR, the evanescent wave extends a fraction of a wavelength into the sample pressed against the crystal. If the sample absorbs specific infrared frequencies, the evanescent wave at those frequencies is attenuated, reducing the intensity of the reflected beam. By measuring which frequencies are absorbed, chemists can identify molecular bonds and compounds without preparing thin samples."
+  },
+  // 8. Optical fiber modes (Hard)
+  {
+    scenario: "Telecommunications engineers distinguish between single-mode and multi-mode optical fibers. Single-mode fibers have tiny cores (about 9 micrometers) while multi-mode fibers have larger cores (50-62.5 micrometers).",
+    question: "Why do single-mode fibers enable longer transmission distances than multi-mode fibers?",
+    options: [
+      { id: 'a', label: "Larger cores absorb more light, causing faster signal decay" },
+      { id: 'b', label: "Single-mode fibers allow only one light path, eliminating modal dispersion that blurs signals over distance", correct: true },
+      { id: 'c', label: "Multi-mode fibers have lower refractive indices, making TIR less efficient" },
+      { id: 'd', label: "Single-mode fibers use special glass that amplifies the signal" }
+    ],
+    explanation: "In multi-mode fibers, light can travel via many different paths (modes) that bounce at different angles. These paths have slightly different lengths, causing pulses to spread out over distance (modal dispersion). Single-mode fibers are so narrow that only one mode propagates, eliminating this spreading. This allows signals to travel hundreds of kilometers without significant distortion."
+  },
+  // 9. Fingerprint sensors (Hard)
+  {
+    scenario: "Many smartphones use optical fingerprint sensors. These sensors shine light through a glass prism at an angle that would normally cause total internal reflection. When you press your finger against the glass, a detailed image of your fingerprint ridges appears.",
+    question: "How does touching the prism surface disrupt TIR to create a fingerprint image?",
+    options: [
+      { id: 'a', label: "Body heat from the finger changes the refractive index of the glass" },
+      { id: 'b', label: "Fingerprint ridges make direct contact with the glass, allowing the evanescent wave to couple into the skin and 'frustrating' TIR at those points", correct: true },
+      { id: 'c', label: "The oils on fingerprint ridges absorb all the light that hits them" },
+      { id: 'd', label: "Pressure from the finger compresses the glass, changing its optical properties" }
+    ],
+    explanation: "This is called 'frustrated total internal reflection' (FTIR). When fingerprint ridges touch the prism, the evanescent wave can couple into the skin (which has a higher refractive index than air). This allows light to escape at the contact points, frustrating TIR. The valleys don't touch and maintain TIR. The resulting pattern of reflected vs. escaped light creates a precise fingerprint image."
+  },
+  // 10. Retroreflector design (Hard)
+  {
+    scenario: "Highway signs and bicycle reflectors use corner-cube retroreflectors that send light back toward its source regardless of the angle it arrives from. Apollo astronauts left retroreflector arrays on the Moon that scientists still use today to measure the Earth-Moon distance with millimeter precision.",
+    question: "How do corner-cube retroreflectors use TIR to return light to its source?",
+    options: [
+      { id: 'a', label: "The curved surfaces focus light back toward the source" },
+      { id: 'b', label: "Three mutually perpendicular surfaces use TIR to reflect light exactly back along its incoming path after three bounces", correct: true },
+      { id: 'c', label: "A special coating on the surfaces reverses the direction of light" },
+      { id: 'd', label: "The material absorbs light and re-emits it toward the source" }
+    ],
+    explanation: "A corner-cube retroreflector has three mutually perpendicular surfaces meeting at a corner, like the inside corner of a box. Light entering undergoes TIR off each of the three surfaces. The geometry guarantees that after three reflections, the light exits parallel to its incoming direction, returning to its source. This works for any entry angle, making it perfect for applications where the light source direction varies."
+  }
+];
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 export default function TotalInternalReflectionRenderer(_props: TotalInternalReflectionRendererProps) {

@@ -53,128 +53,131 @@ const PCIE_SPECS = {
   'NVLink 4': { perLane: 50, maxLanes: 18, color: '#10b981' },
 };
 
-const TEST_QUESTIONS = [
-  // Q1: PCIe Generations and Speeds (Easy) - Correct: B
+const testQuestions = [
+  // Q1: Core concept - what is PCIe (Easy)
   {
-    scenario: "Your company is building a new AI training server. The motherboard supports PCIe 4.0 and PCIe 5.0 slots. You need to understand the bandwidth differences.",
-    question: "How does PCIe 5.0 bandwidth compare to PCIe 4.0 for the same lane configuration (e.g., x16)?",
+    scenario: "You're building your first custom PC and encounter the term 'PCIe' repeatedly in motherboard specifications. The manual mentions PCIe slots for graphics cards, SSDs, and expansion cards.",
+    question: "What is PCIe and what role does it play in a computer system?",
     options: [
-      { id: 'same', label: "They have the same bandwidth - only latency improves" },
-      { id: 'double', label: "PCIe 5.0 provides approximately double the bandwidth per lane", correct: true },
-      { id: 'quadruple', label: "PCIe 5.0 provides four times the bandwidth" },
-      { id: 'slight', label: "PCIe 5.0 is only about 20% faster" },
+      { id: 'a', label: "PCIe is a type of memory that stores data temporarily for the CPU" },
+      { id: 'b', label: "PCIe is a high-speed serial interface standard that connects expansion cards (GPUs, SSDs, network cards) to the motherboard", correct: true },
+      { id: 'c', label: "PCIe is a cooling technology that manages heat dissipation across components" },
+      { id: 'd', label: "PCIe is a power delivery standard that supplies electricity to peripherals" },
     ],
-    explanation: "Each PCIe generation roughly doubles the per-lane bandwidth. PCIe 4.0 provides ~2 GB/s per lane, while PCIe 5.0 provides ~4 GB/s per lane. This means a PCIe 5.0 x16 slot offers ~64 GB/s compared to ~32 GB/s for PCIe 4.0 x16."
+    explanation: "PCIe (Peripheral Component Interconnect Express) is the standard high-speed serial interface used to connect expansion cards to a computer's motherboard. It replaced older parallel buses like PCI and AGP, offering much higher bandwidth through point-to-point serial connections. PCIe is used for GPUs, NVMe SSDs, network cards, capture cards, and many other peripherals."
   },
-  // Q2: Lane Configurations (Easy) - Correct: C
+  // Q2: Lane width (x1, x4, x16) (Easy-Medium)
   {
-    scenario: "You're installing an NVIDIA RTX 4090 GPU which requires a PCIe x16 slot. Your motherboard has both x16 and x8 slots available.",
-    question: "What does 'x16' mean in PCIe x16, and what happens if you install a x16 card in a x8 slot?",
+    scenario: "You're installing an NVIDIA RTX 4090 GPU which requires a PCIe x16 slot. Your motherboard has x16, x8, x4, and x1 slots available, and you're wondering if you could use a different slot.",
+    question: "What does the 'x16' designation mean, and what happens if you install a x16 card in an x8 physical slot?",
     options: [
-      { id: 'speed', label: "x16 means 16 GB/s speed; x8 slot won't work at all" },
-      { id: 'version', label: "x16 is the PCIe version; the card will run at x8 version" },
-      { id: 'lanes', label: "x16 means 16 parallel data lanes; the card will work but at half bandwidth", correct: true },
-      { id: 'power', label: "x16 refers to power delivery; the card will run but may throttle" },
+      { id: 'a', label: "x16 means 16 GB/s speed; the card won't physically fit in an x8 slot" },
+      { id: 'b', label: "x16 indicates 16 parallel data lanes; the card will work in an x8 slot but at half the bandwidth", correct: true },
+      { id: 'c', label: "x16 refers to the PCIe generation; the card will run at generation 8 instead" },
+      { id: 'd', label: "x16 specifies power requirements; the card will throttle due to insufficient power" },
     ],
-    explanation: "The 'x' number indicates parallel data lanes. A PCIe x16 card uses 16 lanes simultaneously, like a 16-lane highway. Installing in an x8 slot works (PCIe is backward compatible) but halves your bandwidth since you're only using 8 lanes."
+    explanation: "The 'x' number indicates the number of parallel data lanes. A PCIe x16 connection uses 16 lanes simultaneously, like a 16-lane highway. PCIe cards can operate in slots with fewer lanes than their maximum (backward compatibility), but bandwidth is reduced proportionally. An x16 card in an x8 slot runs at half bandwidth. Physical slot size may or may not match electrical lanes - some x16 physical slots are wired for only x8 or x4."
   },
-  // Q3: Encoding Overhead - 128b/130b (Medium) - Correct: A
+  // Q3: PCIe generations comparison (Medium)
   {
-    scenario: "A colleague claims PCIe 4.0 x16 should provide exactly 32 GB/s, but benchmarks show only ~31.5 GB/s usable bandwidth.",
-    question: "What causes this ~1.5% reduction from the theoretical maximum bandwidth?",
+    scenario: "Your company is upgrading servers and must choose between motherboards supporting PCIe 3.0, 4.0, or 5.0. The price increases significantly with each generation, and you need to justify the expense.",
+    question: "How does bandwidth scale across PCIe generations for the same lane configuration?",
     options: [
-      { id: 'encoding', label: "128b/130b encoding adds 2 overhead bits per 128 data bits for error detection", correct: true },
-      { id: 'cable', label: "Cable resistance reduces signal strength by about 1.5%" },
-      { id: 'driver', label: "GPU drivers reserve 1.5% for system overhead" },
-      { id: 'cooling', label: "Thermal throttling reduces bandwidth in typical conditions" },
+      { id: 'a', label: "Each generation adds approximately 2 GB/s to the total bandwidth" },
+      { id: 'b', label: "Each generation roughly doubles the per-lane bandwidth compared to its predecessor", correct: true },
+      { id: 'c', label: "Bandwidth remains constant; newer generations only reduce latency" },
+      { id: 'd', label: "Each generation increases bandwidth by 50% while reducing power consumption" },
     ],
-    explanation: "PCIe 4.0 and 5.0 use 128b/130b encoding: every 128 bits of data requires 130 bits to transmit (2 extra bits for synchronization and error detection). This gives 128/130 = 98.46% efficiency. Earlier PCIe 3.0 used 8b/10b encoding with only 80% efficiency!"
+    explanation: "Each PCIe generation approximately doubles the per-lane bandwidth. PCIe 3.0 provides ~1 GB/s per lane, PCIe 4.0 provides ~2 GB/s per lane, and PCIe 5.0 provides ~4 GB/s per lane. This means a PCIe 5.0 x16 slot (~64 GB/s) offers 4x the bandwidth of PCIe 3.0 x16 (~16 GB/s). The doubling comes from increased signaling rates: 8 GT/s for 3.0, 16 GT/s for 4.0, and 32 GT/s for 5.0."
   },
-  // Q4: Bandwidth Calculation (Medium) - Correct: D
+  // Q4: Bandwidth calculation (Medium)
   {
-    scenario: "You're calculating the theoretical bandwidth for a new GPU connection. The specs show: PCIe 4.0, x16 configuration, bidirectional communication.",
-    question: "What is the correct formula and approximate total bandwidth for this PCIe 4.0 x16 connection?",
+    scenario: "You're specifying hardware requirements for an AI workstation. The vendor asks whether you need PCIe 4.0 x16 or PCIe 5.0 x8 for the GPU, claiming both have similar total bandwidth.",
+    question: "What is the approximate unidirectional bandwidth for PCIe 4.0 x16 and PCIe 5.0 x8?",
     options: [
-      { id: 'wrong1', label: "4.0 × 16 = 64 GB/s total" },
-      { id: 'wrong2', label: "2 GB/s × 16 lanes = 32 GB/s unidirectional only" },
-      { id: 'wrong3', label: "16 GT/s × 16 lanes × 8 bits = 2048 GB/s" },
-      { id: 'correct', label: "~2 GB/s per lane × 16 lanes = ~32 GB/s each direction (~64 GB/s bidirectional)", correct: true },
+      { id: 'a', label: "PCIe 4.0 x16 = 16 GB/s; PCIe 5.0 x8 = 40 GB/s" },
+      { id: 'b', label: "PCIe 4.0 x16 = 64 GB/s; PCIe 5.0 x8 = 32 GB/s" },
+      { id: 'c', label: "PCIe 4.0 x16 = ~32 GB/s; PCIe 5.0 x8 = ~32 GB/s (approximately equal)", correct: true },
+      { id: 'd', label: "PCIe 4.0 x16 = 128 GB/s; PCIe 5.0 x8 = 64 GB/s" },
     ],
-    explanation: "PCIe 4.0 provides ~2 GB/s per lane (after encoding overhead). With 16 lanes, you get ~32 GB/s in each direction. Since PCIe is full-duplex, total bidirectional bandwidth is ~64 GB/s, though most operations are predominantly one direction."
+    explanation: "Bandwidth calculation: (per-lane bandwidth) x (number of lanes). PCIe 4.0 provides ~2 GB/s per lane, so x16 = ~32 GB/s. PCIe 5.0 provides ~4 GB/s per lane, so x8 = ~32 GB/s. The vendor is correct - both configurations provide similar unidirectional bandwidth. This flexibility allows system designers to trade lane count for generation, useful when lane allocation is constrained."
   },
-  // Q5: Duplex Communication (Medium) - Correct: B
+  // Q5: GPU bottleneck from PCIe (Medium-Hard)
   {
-    scenario: "During deep learning training, your GPU needs to both receive training data from system memory AND send computed gradients back to the CPU for aggregation.",
-    question: "How does PCIe handle simultaneous sending and receiving of data?",
+    scenario: "A gaming enthusiast installed an RTX 4090 in their older PCIe 3.0 x16 motherboard. Benchmarks show the GPU performs at 95-98% of its rated performance compared to a PCIe 4.0 system.",
+    question: "Why does the GPU still achieve near-full performance despite having half the PCIe bandwidth?",
     options: [
-      { id: 'halfduplex', label: "PCIe is half-duplex - it switches between sending and receiving, halving effective throughput" },
-      { id: 'fullduplex', label: "PCIe is full-duplex - dedicated lanes for each direction allow simultaneous bidirectional transfer", correct: true },
-      { id: 'timeshare', label: "PCIe time-shares lanes at nanosecond intervals to simulate bidirectional transfer" },
-      { id: 'buffer', label: "PCIe uses large buffers to queue operations; only one direction active at a time" },
+      { id: 'a', label: "Modern GPUs compress data before sending it over PCIe, effectively doubling bandwidth" },
+      { id: 'b', label: "The GPU has internal caches that store frequently accessed data, reducing PCIe traffic" },
+      { id: 'c', label: "Most GPU workloads are compute-bound, not bandwidth-bound; the GPU processes data faster than PCIe can feed it anyway", correct: true },
+      { id: 'd', label: "PCIe 3.0 automatically overclocks when connected to high-end GPUs" },
     ],
-    explanation: "PCIe is inherently full-duplex with separate transmit and receive pairs in each lane. This means a x16 slot has 16 lanes sending AND 16 lanes receiving simultaneously. During training, the GPU can receive the next batch while sending gradients from the current batch."
+    explanation: "Modern GPUs are primarily compute-bound for most gaming and rendering workloads. Once textures and geometry are loaded into GPU memory (VRAM), the GPU processes this data using its internal memory bandwidth (900+ GB/s on high-end cards). PCIe is mainly used for initial asset loading, frame buffer transfers, and CPU-GPU communication. The internal processing vastly outweighs PCIe transfers, so halving PCIe bandwidth has minimal impact on frame rates."
   },
-  // Q6: Multi-GPU Scaling (Hard) - Correct: C
+  // Q6: NVMe SSD performance (Hard)
   {
-    scenario: "Your AI lab has a server with 8 identical GPUs connected via PCIe. You expect 8x speedup for your training job, but benchmarks show only 5.5x actual speedup.",
-    question: "What is the PRIMARY reason for this sub-linear scaling efficiency?",
+    scenario: "You're comparing NVMe SSDs for a video editing workstation. A PCIe 4.0 x4 SSD advertises 7,000 MB/s read speeds, while a PCIe 3.0 x4 SSD shows 3,500 MB/s.",
+    question: "What primarily determines the maximum theoretical bandwidth for an NVMe SSD, and why can't a PCIe 3.0 x4 SSD exceed ~3,500 MB/s?",
     options: [
-      { id: 'power', label: "Power supply limitations reduce individual GPU performance" },
-      { id: 'memory', label: "Each GPU has less memory available due to system overhead" },
-      { id: 'communication', label: "Gradient synchronization across GPUs creates communication overhead that grows with GPU count", correct: true },
-      { id: 'pcie', label: "PCIe bandwidth is shared equally, giving each GPU only 1/8th the bandwidth" },
+      { id: 'a', label: "The SSD's internal flash memory chips limit speed; PCIe version is irrelevant" },
+      { id: 'b', label: "The PCIe interface creates a hard bandwidth ceiling; PCIe 3.0 x4 maxes out at ~3.9 GB/s theoretical (~3.5 GB/s practical)", correct: true },
+      { id: 'c', label: "NVMe protocol overhead consumes 50% of available bandwidth regardless of PCIe version" },
+      { id: 'd', label: "Operating system drivers artificially limit PCIe 3.0 devices to maintain compatibility" },
     ],
-    explanation: "With data parallelism, GPUs must synchronize gradients after each batch (all-reduce operation). Communication time is largely independent of compute time, so adding GPUs increases sync overhead. This follows Amdahl's Law: the non-parallelizable portion (communication) limits total speedup."
+    explanation: "PCIe creates an absolute bandwidth ceiling for connected devices. PCIe 3.0 x4 provides ~3.94 GB/s theoretical maximum (accounting for 128b/130b encoding). After NVMe protocol overhead and controller inefficiencies, practical limits are ~3.5 GB/s. PCIe 4.0 x4 doubles this to ~7.88 GB/s theoretical, enabling the faster SSDs. This is why cutting-edge SSDs require PCIe 4.0 or 5.0 - the flash chips can actually exceed PCIe 3.0's bandwidth limit."
   },
-  // Q7: NVLink vs PCIe (Hard) - Correct: A
+  // Q7: PCIe switching and routing (Hard)
   {
-    scenario: "NVIDIA's DGX H100 system uses NVLink 4.0 to connect 8 GPUs, achieving 900 GB/s total interconnect bandwidth. A comparable PCIe-only system uses PCIe 5.0 x16.",
-    question: "Why do data centers pay premium prices for NVLink instead of using PCIe for GPU-to-GPU communication?",
+    scenario: "Your server has 4 GPUs, but the CPU only provides 64 PCIe lanes total. The system uses a PCIe switch chip to connect all GPUs with x16 connections each, totaling 64 lanes on the device side.",
+    question: "What is the limitation of using a PCIe switch to expand connectivity beyond the CPU's native lane count?",
     options: [
-      { id: 'bandwidth', label: "NVLink provides 10-14x higher bandwidth (900 GB/s vs ~64 GB/s) enabling efficient large model training", correct: true },
-      { id: 'latency', label: "NVLink has lower latency, but bandwidth is similar to PCIe 5.0" },
-      { id: 'power', label: "NVLink uses significantly less power per GB transferred" },
-      { id: 'cpu', label: "NVLink allows direct GPU-CPU communication, bypassing system memory" },
+      { id: 'a', label: "PCIe switches add 5ms latency to every transaction, making real-time applications impossible" },
+      { id: 'b', label: "All devices behind the switch share the upstream bandwidth to the CPU; 4 GPUs at x16 share only the CPU's available lanes", correct: true },
+      { id: 'c', label: "PCIe switches can only route data between devices, not between devices and the CPU" },
+      { id: 'd', label: "Switches require proprietary drivers that are incompatible with standard PCIe devices" },
     ],
-    explanation: "NVLink's massive bandwidth advantage (900 GB/s vs ~64 GB/s for PCIe 5.0 x16) is crucial for training large language models where GPUs must share billions of parameters. PCIe would create a severe bottleneck during gradient synchronization, making training impractically slow."
+    explanation: "PCIe switches (like PLX/Broadcom chips) allow multiple devices to connect through fewer CPU lanes, but they create a bandwidth bottleneck. If 4 GPUs connect via x16 to a switch, but the switch connects to the CPU via only x16, all four GPUs share that x16 upstream bandwidth. Peer-to-peer traffic between GPUs can use full bandwidth through the switch, but CPU communication is constrained. This is why high-end workstations use CPUs with 128 lanes (like AMD Threadripper)."
   },
-  // Q8: Latency Considerations (Hard) - Correct: D
+  // Q8: CXL and memory expansion (Hard)
   {
-    scenario: "Two systems have identical PCIe bandwidth. System A has 100ns PCIe latency, System B has 500ns. Both transfer 1GB data chunks during training.",
-    question: "For large AI training workloads, which system performs better and why?",
+    scenario: "A new server technology called CXL (Compute Express Link) runs over PCIe 5.0 physical infrastructure. It promises to allow memory expansion and sharing between CPUs and accelerators.",
+    question: "What capability does CXL provide that standard PCIe does not support?",
     options: [
-      { id: 'a_much', label: "System A is 5x faster because latency directly multiplies transfer time" },
-      { id: 'b_better', label: "System B is better because higher latency allows more data buffering" },
-      { id: 'equal', label: "They perform identically since bandwidth is the same" },
-      { id: 'a_slight', label: "System A is slightly better; latency matters for small transfers but bandwidth dominates for large transfers", correct: true },
+      { id: 'a', label: "CXL provides 10x higher bandwidth than PCIe 5.0 using the same physical lanes" },
+      { id: 'b', label: "CXL enables cache-coherent memory access, allowing CPUs and devices to share memory with hardware-managed consistency", correct: true },
+      { id: 'c', label: "CXL eliminates the need for device drivers by implementing a universal hardware interface" },
+      { id: 'd', label: "CXL allows wireless data transmission between PCIe slots without physical connections" },
     ],
-    explanation: "For large transfers, bandwidth dominates total time: 1GB at 32 GB/s = ~31ms transfer time. The 400ns latency difference is negligible (0.001%). However, latency matters for small, frequent transfers like control signals. AI training with large batches is bandwidth-bound, not latency-bound."
+    explanation: "CXL (Compute Express Link) builds on PCIe 5.0's physical layer but adds cache-coherent memory semantics. Standard PCIe treats devices as I/O endpoints requiring explicit DMA transfers. CXL allows devices to participate in the CPU's cache coherency domain, meaning attached memory (like CXL memory expanders or accelerator memory) appears as system memory with hardware-managed consistency. This enables memory pooling, expansion beyond DIMM slot limits, and efficient accelerator memory sharing without software overhead."
   },
-  // Q9: Real-World Application (Expert) - Correct: B
+  // Q9: Encoding overhead (Hard)
   {
-    scenario: "Apple's M3 Max chip uses unified memory architecture where CPU and GPU share 400+ GB/s memory bandwidth. Traditional discrete GPUs use PCIe at ~64 GB/s for CPU-GPU transfers.",
-    question: "Why might a discrete GPU with 900 GB/s memory bandwidth still outperform Apple Silicon for large AI training, despite the PCIe bottleneck?",
+    scenario: "A colleague calculates PCIe 5.0 x16 bandwidth as 32 GT/s x 16 lanes = 512 Gb/s = 64 GB/s. But specification sheets show ~63 GB/s effective bandwidth.",
+    question: "What causes the approximately 1.5% reduction from the raw gigatransfers calculation to actual usable bandwidth?",
     options: [
-      { id: 'compute', label: "Discrete GPUs have faster clock speeds than Apple Silicon" },
-      { id: 'internal', label: "Once data is on GPU, its 900 GB/s internal bandwidth is used repeatedly; PCIe is only needed for initial data loading", correct: true },
-      { id: 'drivers', label: "NVIDIA CUDA drivers are more optimized than Apple Metal" },
-      { id: 'cooling', label: "Better cooling allows sustained higher performance" },
+      { id: 'a', label: "Electrical signal degradation over the physical traces loses approximately 1.5% of data" },
+      { id: 'b', label: "The PCIe controller reserves 1.5% of bandwidth for error correction retransmissions" },
+      { id: 'c', label: "128b/130b encoding adds 2 overhead bits per 128 data bits for synchronization and framing", correct: true },
+      { id: 'd', label: "Operating systems reserve bandwidth for system management interrupts" },
     ],
-    explanation: "Deep learning kernels are compute-bound, not I/O-bound for trained models. Data loaded once (via slow PCIe) is processed through many layers using fast GPU memory bandwidth. The 900 GB/s is used for weight access, activations, and gradients - all happening internally. PCIe only transfers input batches and final outputs."
+    explanation: "PCIe 3.0 and later use 128b/130b encoding: every 128 bits of payload requires 130 bits on the wire (2 extra bits for synchronization and framing). This gives 128/130 = 98.46% efficiency, explaining the ~1.5% overhead. Notably, PCIe 1.0 and 2.0 used 8b/10b encoding with only 80% efficiency (8 data bits per 10 transmitted). The switch to 128b/130b in PCIe 3.0 significantly improved effective bandwidth relative to signaling rate, partially explaining the generational bandwidth jumps."
   },
-  // Q10: System Design (Expert) - Correct: C
+  // Q10: Power delivery over PCIe (Hard)
   {
-    scenario: "You're designing a multi-GPU training system. Budget allows either: (A) 4 GPUs with PCIe 5.0 x16 each, or (B) 8 GPUs with PCIe 4.0 x8 each. Both options have similar total cost.",
-    question: "For training a 70B parameter language model using data parallelism, which configuration likely performs better?",
+    scenario: "You're designing a custom PCIe expansion card. The specification indicates that a x16 slot can provide up to 75W of power directly through the slot connector, but high-power GPUs require additional power cables.",
+    question: "How does PCIe slot power delivery work, and why do powerful GPUs need supplemental power connectors?",
     options: [
-      { id: 'option_a', label: "Option A: Fewer GPUs means less communication overhead" },
-      { id: 'option_b', label: "Option B: More GPUs always train faster regardless of interconnect" },
-      { id: 'depends', label: "Option A: Higher per-GPU bandwidth reduces gradient sync time; 8 GPUs at x8 would bottleneck severely", correct: true },
-      { id: 'same', label: "Both perform similarly since total system bandwidth is comparable" },
+      { id: 'a', label: "PCIe slots only provide 5V power; GPUs need 12V which requires separate cables" },
+      { id: 'b', label: "PCIe power is AC while GPU cores require DC power conversion" },
+      { id: 'c', label: "The 75W slot limit is insufficient for GPUs drawing 300-450W; additional 8-pin connectors each provide up to 150W at 12V", correct: true },
+      { id: 'd', label: "PCIe power fluctuates with data transfer rates, making it unreliable for sustained GPU loads" },
     ],
-    explanation: "Large model training is communication-intensive. Option B's 8 GPUs at PCIe 4.0 x8 (~16 GB/s each) would create severe bottlenecks during all-reduce operations. Option A's 4 GPUs at PCIe 5.0 x16 (~64 GB/s each) provides 4x per-GPU bandwidth, leading to better scaling efficiency despite fewer GPUs."
+    explanation: "PCIe slots provide both 3.3V and 12V power rails, with a maximum combined power of 75W for x16 slots (66W from 12V, 9W from 3.3V). Modern high-end GPUs consume 300-450W under load, far exceeding slot power. Supplemental PCIe power connectors (6-pin = 75W, 8-pin = 150W, 12VHPWR = 600W) connect directly to the PSU to deliver the additional power. The slot power is typically used for initial card detection and low-power states, while heavy computation runs from supplemental power."
   },
 ];
+
+// Legacy alias for backward compatibility
+const TEST_QUESTIONS = testQuestions;
 
 const TRANSFER_APPS = [
   {

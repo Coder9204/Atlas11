@@ -208,6 +208,119 @@ const quizQuestions = [
   },
 ];
 
+const testQuestions = [
+  {
+    scenario: "Water flows steadily through a garden hose. You partially cover the nozzle opening with your thumb, making the opening smaller.",
+    question: "What happens to the water pressure at the narrow opening compared to inside the hose?",
+    options: [
+      { id: 'a', label: 'Pressure increases because water is compressed' },
+      { id: 'b', label: 'Pressure decreases because velocity increases', correct: true },
+      { id: 'c', label: 'Pressure stays the same since water is incompressible' },
+      { id: 'd', label: 'Pressure fluctuates randomly' }
+    ],
+    explanation: "According to Bernoulli's principle, when fluid velocity increases (water speeds up through the narrow opening), pressure decreases. This is the fundamental inverse relationship between pressure and velocity in flowing fluids."
+  },
+  {
+    scenario: "An airplane wing is designed with a curved upper surface and a flatter lower surface. During flight at cruising speed, air flows over both surfaces.",
+    question: "Why does this wing shape generate upward lift?",
+    options: [
+      { id: 'a', label: 'The wing pushes air downward, and Newton\'s third law pushes the wing up' },
+      { id: 'b', label: 'Air travels faster over the curved top, creating lower pressure above', correct: true },
+      { id: 'c', label: 'The curved surface traps air molecules that push upward' },
+      { id: 'd', label: 'Gravity affects the wing less due to its aerodynamic shape' }
+    ],
+    explanation: "Air must travel farther over the curved top surface, so it moves faster. By Bernoulli's principle, faster-moving air has lower pressure. The higher pressure below the wing pushes it upward, generating lift."
+  },
+  {
+    scenario: "A Venturi meter is installed in a water pipe to measure flow rate. The pipe narrows from 10 cm to 5 cm diameter at the throat section.",
+    question: "What happens to the water in the narrow throat section?",
+    options: [
+      { id: 'a', label: 'Velocity decreases and pressure increases' },
+      { id: 'b', label: 'Velocity increases and pressure decreases', correct: true },
+      { id: 'c', label: 'Both velocity and pressure increase' },
+      { id: 'd', label: 'Both velocity and pressure decrease' }
+    ],
+    explanation: "The Venturi effect demonstrates Bernoulli's principle: in the narrow throat, continuity requires velocity to increase (A1v1 = A2v2), and Bernoulli's equation shows that increased velocity means decreased pressure."
+  },
+  {
+    scenario: "A soccer player kicks the ball with the outside of their foot, causing it to spin clockwise (when viewed from above) as it travels forward.",
+    question: "In which direction will the ball curve?",
+    options: [
+      { id: 'a', label: 'It curves to the player\'s left (toward the spin side with faster air)', correct: true },
+      { id: 'b', label: 'It curves to the player\'s right (away from the spin)' },
+      { id: 'c', label: 'It travels straight because spin doesn\'t affect trajectory' },
+      { id: 'd', label: 'It dips downward faster than normal' }
+    ],
+    explanation: "The Magnus effect applies Bernoulli's principle to spinning objects. Clockwise spin creates faster airflow on the left side (lower pressure) and slower flow on the right (higher pressure). The ball curves toward the low-pressure side."
+  },
+  {
+    scenario: "When you take a hot shower, the curtain often billows inward toward you, even though you're not touching it.",
+    question: "What causes the shower curtain to move inward?",
+    options: [
+      { id: 'a', label: 'Static electricity from the water attracts the curtain' },
+      { id: 'b', label: 'Hot steam is denser and pushes the curtain' },
+      { id: 'c', label: 'Moving air from the shower has lower pressure than still air outside', correct: true },
+      { id: 'd', label: 'Temperature difference creates a magnetic effect' }
+    ],
+    explanation: "Hot water creates rising air currents inside the shower. This moving air has lower pressure than the still air outside the curtain. The pressure difference pushes the curtain inward toward the low-pressure zone."
+  },
+  {
+    scenario: "In a traditional carburetor, air flows through a narrowed section called the venturi, where a fuel line opening is positioned.",
+    question: "How does the carburetor draw fuel into the airstream without a pump?",
+    options: [
+      { id: 'a', label: 'Gravity pulls fuel down from the tank above' },
+      { id: 'b', label: 'Engine heat vaporizes the fuel automatically' },
+      { id: 'c', label: 'Fast air in the venturi creates low pressure that sucks fuel up', correct: true },
+      { id: 'd', label: 'Exhaust gases push fuel through the system' }
+    ],
+    explanation: "The carburetor uses the Venturi effect: air accelerates through the narrow section, creating low pressure. This pressure drop draws fuel from the bowl up through the jet and into the airstream, creating the fuel-air mixture for combustion."
+  },
+  {
+    scenario: "A patient has atherosclerosis, where fatty plaques narrow an artery from 8mm to 3mm diameter. Blood continues flowing through the constricted region.",
+    question: "What dangerous condition can Bernoulli's principle predict in this narrowed artery?",
+    options: [
+      { id: 'a', label: 'Blood will stop flowing completely at the narrowing' },
+      { id: 'b', label: 'Higher velocity at the narrowing causes dangerously low pressure on artery walls', correct: true },
+      { id: 'c', label: 'Blood pressure will increase throughout the entire body' },
+      { id: 'd', label: 'Red blood cells will be destroyed by the constriction' }
+    ],
+    explanation: "Blood velocity increases dramatically at the narrowing (continuity equation). By Bernoulli's principle, this high velocity creates low pressure on the artery walls, which can cause the vessel to collapse or promote further plaque rupture."
+  },
+  {
+    scenario: "An HVAC engineer is designing ductwork for a building. A main duct must split into three smaller branch ducts to serve different rooms.",
+    question: "What must the engineer ensure about the combined cross-sectional area of the branch ducts?",
+    options: [
+      { id: 'a', label: 'Branch areas must be smaller to increase air velocity for better distribution' },
+      { id: 'b', label: 'Combined branch area should equal main duct area to maintain pressure balance', correct: true },
+      { id: 'c', label: 'Branch areas don\'t matter because fans control the airflow' },
+      { id: 'd', label: 'Branch areas must be larger to cool the air down' }
+    ],
+    explanation: "By continuity (A1v1 = A2v2) and Bernoulli's equation, if combined branch area equals main duct area, velocity and pressure remain stable. Otherwise, improper sizing causes pressure drops, noise, and inefficient air distribution."
+  },
+  {
+    scenario: "A Formula 1 car's rear wing is mounted upside-down compared to an airplane wing, with the curved surface facing downward.",
+    question: "Why is the wing inverted, and what force does it create?",
+    options: [
+      { id: 'a', label: 'To reduce drag by letting air pass smoothly over the top' },
+      { id: 'b', label: 'To create downforce by generating lower pressure above the wing', correct: true },
+      { id: 'c', label: 'To cool the engine by directing air flow downward' },
+      { id: 'd', label: 'To create lift that makes the car lighter and faster' }
+    ],
+    explanation: "The inverted wing shape makes air travel faster over the top (now curved), creating lower pressure above than below. This pressure difference pushes the wing down, generating downforce that increases tire grip at high speeds."
+  },
+  {
+    scenario: "A hydraulic dam's spillway channels water from the reservoir through a narrow chute before releasing it downstream. Engineers notice cavitation damage on the chute surface.",
+    question: "How does Bernoulli's principle explain the cavitation occurring in the spillway?",
+    options: [
+      { id: 'a', label: 'Slow-moving water creates high pressure that erodes concrete' },
+      { id: 'b', label: 'High velocity water has very low pressure, causing dissolved gas bubbles to form and collapse', correct: true },
+      { id: 'c', label: 'Temperature changes cause the water to freeze and thaw rapidly' },
+      { id: 'd', label: 'Debris in the water physically abrades the surface' }
+    ],
+    explanation: "In the narrow chute, water velocity increases dramatically, causing pressure to drop below the vapor pressure of water (Bernoulli effect). This creates vapor bubbles that violently collapse when pressure recovers downstream, damaging the concrete surface through cavitation."
+  }
+];
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================

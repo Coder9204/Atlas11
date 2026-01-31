@@ -327,6 +327,130 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
     }, 0);
   };
 
+  // Comprehensive testQuestions array covering interconnect topology topics
+  const testQuestions = [
+    // Q1: Core concept - what is network topology (Easy)
+    {
+      scenario: "A startup is designing their first GPU cluster for machine learning workloads. The infrastructure team needs to decide how to connect 16 GPUs together.",
+      question: "What is network topology in the context of interconnected compute systems?",
+      options: [
+        { id: 'a', label: "The physical location of servers in a data center rack" },
+        { id: 'b', label: "The arrangement and pattern of connections between nodes in a network", correct: true },
+        { id: 'c', label: "The speed of individual network cables" },
+        { id: 'd', label: "The operating system running on network switches" },
+      ],
+      explanation: "Network topology defines how nodes (like GPUs or servers) are interconnected. The topology determines communication patterns, latency, bandwidth utilization, and fault tolerance. Different topologies like ring, tree, or mesh have distinct trade-offs for various workloads."
+    },
+    // Q2: Bus vs star topology (Easy-Medium)
+    {
+      scenario: "An engineer is comparing legacy bus topology (where all devices share a single communication line) with star topology (where devices connect to a central switch) for a small training cluster.",
+      question: "Why did star topology largely replace bus topology in modern compute clusters?",
+      options: [
+        { id: 'a', label: "Bus topology uses more cables than star topology" },
+        { id: 'b', label: "Star topology eliminates the single point of failure of the shared bus and allows concurrent communication", correct: true },
+        { id: 'c', label: "Star topology was invented more recently" },
+        { id: 'd', label: "Bus topology requires more expensive hardware" },
+      ],
+      explanation: "In bus topology, all devices share one communication channel, creating contention and a single point of failure. Star topology connects each device to a central switch, enabling multiple simultaneous communications and isolating failures. If one link fails in star, other devices remain connected."
+    },
+    // Q3: Ring topology pros/cons (Medium)
+    {
+      scenario: "NVIDIA's NCCL library uses ring all-reduce for gradient synchronization. In a ring topology, each GPU connects to exactly two neighbors, forming a closed loop.",
+      question: "What is the primary advantage and disadvantage of ring topology for collective operations?",
+      options: [
+        { id: 'a', label: "Advantage: lowest latency; Disadvantage: high cable cost" },
+        { id: 'b', label: "Advantage: bandwidth-optimal utilization; Disadvantage: latency grows linearly with node count (O(N))", correct: true },
+        { id: 'c', label: "Advantage: fault tolerant; Disadvantage: complex routing" },
+        { id: 'd', label: "Advantage: simple wiring; Disadvantage: cannot scale beyond 8 nodes" },
+      ],
+      explanation: "Ring topology achieves optimal bandwidth utilization because every node simultaneously sends and receives, using all links fully. However, a message must traverse N-1 hops to reach all nodes, so latency scales as O(N). This makes ring excellent for bandwidth-bound operations but problematic for latency-sensitive workloads at large scale."
+    },
+    // Q4: Mesh network resilience (Medium)
+    {
+      scenario: "A cloud provider is designing a network for a mission-critical AI inference service. They need the system to remain operational even if multiple network links fail simultaneously.",
+      question: "Why does a full mesh topology provide superior fault tolerance compared to tree or ring topologies?",
+      options: [
+        { id: 'a', label: "Mesh uses higher quality cables that fail less often" },
+        { id: 'b', label: "Mesh has redundant direct paths between every pair of nodes, so failures can be routed around", correct: true },
+        { id: 'c', label: "Mesh topology automatically repairs failed connections" },
+        { id: 'd', label: "Mesh requires fewer total connections than other topologies" },
+      ],
+      explanation: "In a full mesh, every node connects directly to every other node, providing N-1 redundant paths. If one link fails, communication continues via alternative paths. In contrast, ring topology has a single path between nodes (one failure isolates nodes), and tree topology depends on parent links (one failure can disconnect entire subtrees)."
+    },
+    // Q5: Data center spine-leaf architecture (Medium-Hard)
+    {
+      scenario: "Modern hyperscale data centers like those at Google, Meta, and Microsoft use spine-leaf architecture. Leaf switches connect to servers, while spine switches connect all leaf switches together.",
+      question: "What key benefit does spine-leaf architecture provide over traditional three-tier (core-aggregation-access) networks?",
+      options: [
+        { id: 'a', label: "Spine-leaf uses fewer switches overall" },
+        { id: 'b', label: "Spine-leaf provides consistent low latency with equal hop count between any two servers", correct: true },
+        { id: 'c', label: "Spine-leaf only works with specific vendor equipment" },
+        { id: 'd', label: "Spine-leaf eliminates the need for network switches entirely" },
+      ],
+      explanation: "Spine-leaf architecture ensures every server is exactly two hops away from any other server (leaf to spine to leaf), providing predictable, uniform latency. Traditional three-tier networks have variable hop counts (2-6 hops) depending on traffic patterns, causing inconsistent latency. This predictability is crucial for distributed training where synchronization depends on consistent communication times."
+    },
+    // Q6: Fat tree topology in HPC (Hard)
+    {
+      scenario: "The Frontier supercomputer at Oak Ridge National Laboratory uses a fat-tree network topology built with Slingshot interconnect. Each level of the tree has progressively more aggregate bandwidth toward the root.",
+      question: "Why do HPC systems use fat-tree rather than simple tree topology?",
+      options: [
+        { id: 'a', label: "Fat-tree uses less cabling than simple tree" },
+        { id: 'b', label: "Fat-tree eliminates the root bandwidth bottleneck by providing multiple parallel uplinks at each level", correct: true },
+        { id: 'c', label: "Fat-tree has lower latency than simple tree" },
+        { id: 'd', label: "Fat-tree requires fewer switches than simple tree" },
+      ],
+      explanation: "In a simple tree, the root becomes a severe bandwidth bottleneck as all cross-branch traffic must pass through it. Fat-tree solves this by using multiple parallel links (fat pipes) at higher levels, maintaining non-blocking full bisection bandwidth. If leaves have bandwidth B, the aggregate bandwidth at each level equals the total leaf bandwidth, eliminating congestion at higher levels."
+    },
+    // Q7: Torus topology in supercomputers (Hard)
+    {
+      scenario: "Google's TPU v4 pods use a 3D torus topology where each TPU chip connects to 6 neighbors (2 in each dimension). IBM's Blue Gene supercomputers famously used 5D torus networks.",
+      question: "What advantage does torus topology provide for scientific computing and AI workloads compared to fat-tree?",
+      options: [
+        { id: 'a', label: "Torus is simpler to cable and maintain" },
+        { id: 'b', label: "Torus provides natural locality for nearest-neighbor communication patterns common in simulations and convolutions", correct: true },
+        { id: 'c', label: "Torus has higher total bandwidth than fat-tree" },
+        { id: 'd', label: "Torus requires no switches, only direct connections" },
+      ],
+      explanation: "Torus topology excels when workloads have strong spatial locality, like physics simulations (neighboring cells interact) or convolutional neural networks (neighboring pixels). Each node directly connects to its neighbors in multiple dimensions, providing low-latency local communication without traversing switches. Fat-tree is better for arbitrary all-to-all patterns, while torus optimizes for structured, local communication."
+    },
+    // Q8: Network diameter and latency (Hard)
+    {
+      scenario: "An architect is comparing network designs for a 1024-node cluster. Design A (hypercube) has diameter log2(N) = 10 hops. Design B (2D torus) has diameter N^0.5 = 32 hops. Design C (fat-tree) has diameter 2*log2(N) = 20 hops.",
+      question: "How does network diameter affect worst-case communication latency between any two nodes?",
+      options: [
+        { id: 'a', label: "Diameter has no effect on latency; only bandwidth matters" },
+        { id: 'b', label: "Larger diameter means more hops in worst case, directly increasing minimum latency for distant node pairs", correct: true },
+        { id: 'c', label: "Smaller diameter always means lower bandwidth" },
+        { id: 'd', label: "Diameter only affects fault tolerance, not latency" },
+      ],
+      explanation: "Network diameter is the maximum number of hops between any two nodes. Each hop adds latency (switch processing + propagation time). For latency-sensitive operations like barrier synchronization, smaller diameter is crucial. A 32-hop worst case (2D torus) versus 10-hop (hypercube) can mean 3x higher worst-case latency, directly impacting global synchronization performance."
+    },
+    // Q9: Bisection bandwidth (Hard)
+    {
+      scenario: "When evaluating network designs, engineers measure bisection bandwidth: the minimum bandwidth when the network is split into two equal halves. A 64-node fat-tree has full bisection bandwidth of 64 * link_speed, while a 64-node ring has bisection bandwidth of only 2 * link_speed.",
+      question: "Why is bisection bandwidth a critical metric for distributed deep learning training?",
+      options: [
+        { id: 'a', label: "Higher bisection bandwidth reduces power consumption" },
+        { id: 'b', label: "Bisection bandwidth determines the worst-case throughput for all-to-all communication patterns like gradient synchronization", correct: true },
+        { id: 'c', label: "Bisection bandwidth only matters for storage networks" },
+        { id: 'd', label: "Higher bisection bandwidth increases network latency" },
+      ],
+      explanation: "During gradient synchronization, every GPU must exchange data with every other GPU. When split in half, all cross-partition traffic must traverse the bisection. Low bisection bandwidth (like ring's 2 links) becomes a severe bottleneck for N/2 * N/2 communication pairs. Full bisection bandwidth (fat-tree) means the network can sustain all-to-all traffic without congestion, critical for training efficiency."
+    },
+    // Q10: NVLink/NVSwitch topology (Hard)
+    {
+      scenario: "NVIDIA's DGX H100 system connects 8 H100 GPUs using NVSwitch, providing 900 GB/s bidirectional bandwidth per GPU. The NVSwitch acts as a crossbar allowing any GPU to communicate with any other GPU simultaneously at full bandwidth.",
+      question: "What topological property does NVSwitch provide that PCIe-based GPU connections cannot achieve?",
+      options: [
+        { id: 'a', label: "NVSwitch uses optical connections while PCIe uses copper" },
+        { id: 'b', label: "NVSwitch enables non-blocking all-to-all GPU communication at full bandwidth simultaneously", correct: true },
+        { id: 'c', label: "NVSwitch reduces the number of physical connections needed" },
+        { id: 'd', label: "NVSwitch only benefits gaming workloads, not AI training" },
+      ],
+      explanation: "NVSwitch implements a full crossbar (non-blocking switch fabric) where all 8 GPUs can simultaneously send to any 8 destinations at full 900 GB/s each. PCIe topologies create bandwidth bottlenecks when multiple GPUs communicate through shared PCIe switches or CPU bridges. This non-blocking property makes NVSwitch essential for bandwidth-intensive operations like tensor parallelism and gradient all-reduce within a node."
+    },
+  ];
+
   const renderVisualization = () => {
     const width = 500;
     const height = 400;

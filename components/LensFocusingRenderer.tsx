@@ -235,6 +235,130 @@ const quizQuestions = [
   }
 ];
 
+// Test questions with scenarios for Phase 9
+const testQuestions = [
+  // 1. Core concept - how convex lenses focus light (Easy)
+  {
+    scenario: "A child uses a magnifying glass to focus sunlight onto a piece of paper. After holding it at different distances, they find one specific distance where the light forms the smallest, brightest spot.",
+    question: "Why does the light concentrate into a single bright point at this particular distance?",
+    options: [
+      { id: 'a', label: "The glass absorbs light at other distances but releases it all at this point" },
+      { id: 'b', label: "The convex lens bends parallel light rays so they all converge at the focal point", correct: true },
+      { id: 'c', label: "The paper only reflects light when held at the right distance" },
+      { id: 'd', label: "Sunlight naturally concentrates itself when passing through any glass" }
+    ],
+    explanation: "A convex lens has curved surfaces that bend (refract) light rays. Parallel rays from the distant sun are bent inward as they pass through, all converging at a single point called the focal point. This distance from the lens to the focal point is the focal length - a fixed property of each lens determined by its curvature and material."
+  },
+  // 2. Magnifying glass operation (Easy-Medium)
+  {
+    scenario: "A jeweler examines a tiny diamond by holding a magnifying glass close to the gem. The diamond appears much larger and right-side up through the lens.",
+    question: "What optical condition allows the magnifying glass to create this enlarged, upright image?",
+    options: [
+      { id: 'a', label: "The diamond must be placed beyond twice the focal length" },
+      { id: 'b', label: "The diamond is positioned closer to the lens than the focal length, creating a virtual magnified image", correct: true },
+      { id: 'c', label: "The lens flips the image twice so it appears right-side up" },
+      { id: 'd', label: "Only precious gems can be magnified this way due to their crystal structure" }
+    ],
+    explanation: "When an object is placed inside the focal length of a convex lens, the light rays diverge after passing through and cannot form a real image. Instead, your eye traces these diverging rays backward, perceiving a virtual image that appears larger and upright on the same side as the object. This is the fundamental principle behind all magnifying glasses."
+  },
+  // 3. Camera focus mechanism (Medium)
+  {
+    scenario: "A photographer switches from taking a portrait of someone 3 meters away to photographing a mountain on the horizon. They hear the camera lens motor adjusting focus.",
+    question: "What physical change does the camera make to achieve sharp focus on objects at different distances?",
+    options: [
+      { id: 'a', label: "The camera changes the shape of the lens like the human eye does" },
+      { id: 'b', label: "The camera adjusts the distance between the lens and sensor to satisfy the thin lens equation", correct: true },
+      { id: 'c', label: "The camera adds or removes lens elements from the optical path" },
+      { id: 'd', label: "The camera rotates the lens to a different angle" }
+    ],
+    explanation: "The thin lens equation (1/f = 1/d_object + 1/d_image) dictates that for a fixed focal length, changing the object distance requires changing the image distance to maintain focus. Cameras move the lens closer to the sensor for distant objects and farther from the sensor for close objects. The portrait at 3m needs the lens farther out than the mountain at infinity."
+  },
+  // 4. Presbyopia and reading glasses (Medium)
+  {
+    scenario: "A 50-year-old architect who has always had perfect vision notices they must hold blueprints at arm's length to read them clearly. Their eye doctor prescribes +2.0 diopter reading glasses.",
+    question: "What age-related change causes presbyopia, and how do reading glasses correct it?",
+    options: [
+      { id: 'a', label: "The cornea becomes cloudy; glasses filter out scattered light" },
+      { id: 'b', label: "The eye's lens loses flexibility and cannot focus on near objects; converging glasses add the missing focusing power", correct: true },
+      { id: 'c', label: "The retina moves backward; glasses project the image farther into the eye" },
+      { id: 'd', label: "Eye muscles weaken; glasses magnify text so less muscle effort is needed" }
+    ],
+    explanation: "With age, the crystalline lens inside the eye becomes stiffer and cannot change shape as much. This reduces the eye's ability to add focusing power for near objects. Reading glasses with positive diopters (converging lenses) add external focusing power, compensating for what the aging lens can no longer provide. +2.0 diopters means a focal length of 0.5 meters."
+  },
+  // 5. Focal length and field of view (Medium-Hard)
+  {
+    scenario: "A wildlife photographer has two lenses: a 24mm wide-angle and a 400mm telephoto. From the same position, they photograph an elephant. The wide-angle shows the elephant small within a vast savanna, while the telephoto fills the frame with just the elephant's face.",
+    question: "How does focal length determine what portion of a scene the camera captures?",
+    options: [
+      { id: 'a', label: "Longer focal lengths physically zoom by moving the lens forward like a telescope" },
+      { id: 'b', label: "Shorter focal length = wider field of view and less magnification; longer focal length = narrower field and more magnification", correct: true },
+      { id: 'c', label: "Wide-angle lenses have larger glass elements that gather more of the scene" },
+      { id: 'd', label: "Focal length only affects brightness, not field of view" }
+    ],
+    explanation: "Focal length directly determines angular field of view. A short focal length lens bends light more sharply, projecting a wide scene onto the sensor (85° for 24mm). A long focal length bends light gently, projecting a narrow slice of the scene (6° for 400mm). The ratio of focal lengths (400/24 ≈ 17x) roughly equals the magnification difference between the two views."
+  },
+  // 6. Thin lens equation (Hard)
+  {
+    scenario: "An optician tests a lens and finds that when a candle is placed 30 cm from the lens, a sharp image forms on a screen 60 cm on the other side. They need to calculate the lens's focal length for the customer's prescription.",
+    question: "Using the thin lens equation (1/f = 1/d_o + 1/d_i), what is this lens's focal length?",
+    options: [
+      { id: 'a', label: "45 cm - the average of object and image distances" },
+      { id: 'b', label: "20 cm - calculated as 1/f = 1/30 + 1/60 gives f = 20 cm", correct: true },
+      { id: 'c', label: "90 cm - the sum of both distances" },
+      { id: 'd', label: "30 cm - equal to the object distance" }
+    ],
+    explanation: "Applying the thin lens equation: 1/f = 1/30 + 1/60 = 2/60 + 1/60 = 3/60 = 1/20, so f = 20 cm. This means parallel rays would focus at 20 cm from the lens. The equation works because the focal length is a harmonic mean relationship - it's always less than both the object and image distances for a real image formed by a converging lens."
+  },
+  // 7. Compound lens systems (Hard)
+  {
+    scenario: "A microscope uses two converging lenses: an objective lens with f = 4mm positioned near the specimen, and an eyepiece with f = 25mm that the user looks through. The objective creates an intermediate image that the eyepiece then magnifies.",
+    question: "Why does using two lenses in series achieve much higher magnification than either lens alone?",
+    options: [
+      { id: 'a', label: "The lenses add their focal lengths together to create one super-powerful lens" },
+      { id: 'b', label: "The total magnification multiplies: the objective magnifies the specimen, then the eyepiece magnifies that already-enlarged image", correct: true },
+      { id: 'c', label: "Two lenses cancel each other's aberrations, making the image clearer but not larger" },
+      { id: 'd', label: "The second lens reverses the inversion from the first lens" }
+    ],
+    explanation: "In a compound microscope, magnifications multiply rather than add. If the objective creates a 40x magnified real image, and the eyepiece provides 10x magnification of that image, total magnification is 40 × 10 = 400x. This multiplicative effect is why microscopes can achieve magnifications impossible with a single lens - a 400x single lens would need an impractically short focal length."
+  },
+  // 8. Aberration correction (Hard)
+  {
+    scenario: "A telescope designer notices that stars at the edge of the field appear as small colored smears rather than white points. They add a second lens element made of a different type of glass to correct this problem.",
+    question: "What causes this color fringing (chromatic aberration), and how does an achromatic doublet correct it?",
+    options: [
+      { id: 'a', label: "The glass absorbs some colors; adding different glass absorbs complementary colors" },
+      { id: 'b', label: "Different wavelengths refract at different angles; a second lens with opposite dispersion cancels this spreading", correct: true },
+      { id: 'c', label: "Stars emit different colors from different parts; the second lens blocks the edge colors" },
+      { id: 'd', label: "Temperature differences in the glass cause color shifts; the second lens has opposite thermal properties" }
+    ],
+    explanation: "Glass bends blue light more than red light (dispersion), so a simple lens has different focal lengths for different colors - blue focuses closer than red, creating colored fringes. An achromatic doublet pairs a converging lens of crown glass with a diverging lens of flint glass. Flint glass has higher dispersion, so the diverging element cancels the color spreading while preserving most of the converging power."
+  },
+  // 9. Autofocus technology (Hard)
+  {
+    scenario: "A smartphone camera can lock focus on a face in milliseconds, even as the person moves. The phone uses phase-detection autofocus pixels embedded directly in the image sensor.",
+    question: "How do phase-detection autofocus systems determine both the direction and amount of focus adjustment needed?",
+    options: [
+      { id: 'a', label: "They measure the brightness of the image and adjust until it's maximum" },
+      { id: 'b', label: "Paired pixels see light from opposite edges of the lens; the offset between their images indicates focus error direction and magnitude", correct: true },
+      { id: 'c', label: "They emit infrared light and measure the time for it to return from the subject" },
+      { id: 'd', label: "They compare the current image to stored photos of focused faces" }
+    ],
+    explanation: "Phase-detection AF uses pairs of masked pixels that each see only half the lens aperture. When in focus, both halves see the same image. When out of focus, the images from left and right lens halves are offset. The direction of offset indicates whether focus is front or back, and the amount of offset indicates how far. This allows single-shot focus correction instead of hunting back and forth."
+  },
+  // 10. Adaptive optics (Hard)
+  {
+    scenario: "The Keck Observatory uses a laser to create an artificial 'star' in the upper atmosphere. A sensor measures how this point of light is distorted, and a deformable mirror with hundreds of actuators adjusts its shape 1000 times per second.",
+    question: "What fundamental focusing problem does adaptive optics solve, and how?",
+    options: [
+      { id: 'a', label: "It corrects lens manufacturing defects by measuring a reference star" },
+      { id: 'b', label: "It counteracts atmospheric turbulence that randomly bends light, by reshaping the mirror to cancel the distortions in real-time", correct: true },
+      { id: 'c', label: "It compensates for the Earth's rotation by continuously moving the telescope" },
+      { id: 'd', label: "It filters out light pollution from nearby cities" }
+    ],
+    explanation: "Earth's atmosphere has turbulent cells of varying temperature and density that bend light randomly, causing stars to twinkle and blur telescope images. Adaptive optics measures these distortions using a reference point source (laser guide star), then deforms a flexible mirror into a shape that exactly cancels the atmospheric aberrations. This happens hundreds of times per second, restoring near-space-quality images from ground-based telescopes."
+  }
+];
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
@@ -1943,7 +2067,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
   // PHASE 9: TEST - 10 multiple choice questions
   const renderTest = () => {
-    const question = quizQuestions[currentQuestion];
+    const question = testQuestions[currentQuestion];
 
     return (
       <div>
@@ -1954,7 +2078,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           marginBottom: spacing.lg,
         }}>
           <span style={{ color: colors.textSecondary }}>
-            Question {currentQuestion + 1} of {quizQuestions.length}
+            Question {currentQuestion + 1} of {testQuestions.length}
           </span>
           <span style={{ color: colors.success, fontWeight: '600' }}>
             Score: {testScore}/{currentQuestion + (showQuizFeedback ? 1 : 0)}
@@ -1967,6 +2091,19 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           borderRadius: radius.lg,
           marginBottom: spacing.lg,
         }}>
+          {/* Scenario */}
+          <div style={{
+            background: `${colors.primary}15`,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            marginBottom: spacing.lg,
+            borderLeft: `4px solid ${colors.primary}`,
+          }}>
+            <p style={{ color: colors.textSecondary, margin: 0, fontStyle: 'italic' }}>
+              {question.scenario}
+            </p>
+          </div>
+
           <h3 style={{ ...typography.h3, color: colors.text, marginBottom: spacing.lg }}>
             {question.question}
           </h3>
@@ -1974,7 +2111,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = option.correct;
+              const isCorrect = option.correct === true;
               const showResult = showQuizFeedback;
 
               let bgColor = colors.background;
@@ -1995,8 +2132,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
               return (
                 <div
-                  key={index}
-                  onClick={() => handleAnswerSelect(index)}
+                  key={option.id}
+                  onClick={() => !showQuizFeedback && handleAnswerSelect(index)}
                   style={{
                     padding: spacing.md,
                     background: bgColor,
@@ -2006,7 +2143,10 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <span style={{ color: colors.text }}>{option.text}</span>
+                  <span style={{ color: colors.primary, fontWeight: '600', marginRight: spacing.sm }}>
+                    {option.id.toUpperCase()}.
+                  </span>
+                  <span style={{ color: colors.text }}>{option.label}</span>
                   {showResult && isCorrect && <span style={{ marginLeft: 8, color: colors.success }}>Correct</span>}
                   {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8, color: colors.warning }}>X</span>}
                 </div>
@@ -2031,7 +2171,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             renderButton('Submit Answer', handleAnswerSubmit, 'primary', selectedAnswer === null)
           ) : (
             renderButton(
-              currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'See Results',
+              currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'See Results',
               handleNextQuestion
             )
           )}
@@ -2042,7 +2182,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
   // PHASE 10: MASTERY - Congratulations page
   const renderMastery = () => {
-    const percentage = Math.round((testScore / quizQuestions.length) * 100);
+    const percentage = Math.round((testScore / testQuestions.length) * 100);
     const passed = percentage >= 70;
 
     return (
@@ -2071,7 +2211,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             {percentage}%
           </div>
           <p style={{ color: colors.textSecondary, marginBottom: spacing.md }}>
-            {testScore} out of {quizQuestions.length} correct
+            {testScore} out of {testQuestions.length} correct
           </p>
 
           <div style={{

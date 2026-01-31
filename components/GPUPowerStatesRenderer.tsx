@@ -50,126 +50,126 @@ const colors = {
 };
 
 const TEST_QUESTIONS = [
-  // Q1: Core Concept - Clock Gating (Easy) - Correct: A
+  // Q1: Core concept - what are power states (Easy)
   {
-    scenario: "A GPU has millions of transistors, but during a light desktop workload, only 10% of its shader units are actively processing data.",
-    question: "How does the GPU save power for the unused 90% of shader units?",
+    scenario: "You notice your GPU fan speeds up dramatically when you launch a game, but becomes nearly silent when you return to the desktop. Your monitoring software shows the GPU switching between different operating modes.",
+    question: "What are GPU power states and why does the GPU switch between them?",
     options: [
-      { id: 'gating', label: "Clock gating disables clock signals to unused transistors, eliminating switching power", correct: true },
-      { id: 'remove', label: "The GPU physically disconnects unused transistors from the circuit" },
-      { id: 'slow', label: "Unused transistors run at a slower clock speed automatically" },
-      { id: 'same', label: "All transistors consume the same power regardless of activity" },
+      { id: 'a', label: "Power states are predefined operating modes with different voltage, frequency, and power levels that balance performance and efficiency" , correct: true },
+      { id: 'b', label: "Power states are error conditions that indicate the GPU is malfunctioning" },
+      { id: 'c', label: "Power states only control fan speeds and have no effect on GPU performance" },
+      { id: 'd', label: "Power states are fixed settings that users must manually configure in BIOS" }
     ],
-    explanation: "Clock gating stops the clock signal to inactive circuits. Since dynamic power only occurs when transistors switch states, no clock means no switching means no power consumption in those regions."
+    explanation: "GPU power states (like P-states and D-states) are predefined operating configurations that adjust voltage, clock speed, and power consumption based on workload demands. The GPU automatically transitions between states to deliver high performance when needed while conserving energy and reducing heat during lighter tasks."
   },
-  // Q2: Core Concept - Power Formula (Medium) - Correct: C
+  // Q2: Idle vs load power consumption (Easy-Medium)
   {
-    scenario: "An engineer is trying to reduce GPU power consumption. The power formula is P = CV²f, where C is capacitance, V is voltage, and f is frequency.",
-    question: "Which modification would reduce power consumption the MOST?",
+    scenario: "A tech reviewer measures a high-end GPU consuming 25W while displaying a static desktop wallpaper, but jumping to 350W during intensive gaming. The difference is a factor of 14x.",
+    question: "What accounts for this massive difference in power consumption between idle and full load?",
     options: [
-      { id: 'freq', label: "Halving the clock frequency (f) while keeping voltage the same" },
-      { id: 'cap', label: "Reducing capacitance (C) by 25% through smaller transistors" },
-      { id: 'volt', label: "Reducing voltage (V) by 30% while slightly lowering frequency", correct: true },
-      { id: 'both', label: "Doubling frequency while halving voltage" },
+      { id: 'a', label: "At idle, only the display output circuitry is active; at load, billions of transistors switch rapidly at high voltage" , correct: true },
+      { id: 'b', label: "The GPU disables its memory completely when idle, which accounts for most power savings" },
+      { id: 'c', label: "Idle power is a measurement error; GPUs actually consume the same power regardless of activity" },
+      { id: 'd', label: "The cooling fans consume most of the power difference between idle and load" }
     ],
-    explanation: "Voltage is squared in the power equation! Reducing voltage by 30% reduces power by about 51% (0.7² = 0.49). This is why voltage scaling is the most effective power-saving technique."
+    explanation: "At idle, the GPU drops to minimal clock speeds (300-500 MHz) and low voltage, with most compute units clock-gated. During gaming, clocks rise to 2000+ MHz at higher voltages, and billions of transistors switch states billions of times per second. Since dynamic power scales with frequency and voltage squared (P = CV²f), this creates the dramatic difference."
   },
-  // Q3: Core Concept - DVFS (Medium) - Correct: B
+  // Q3: Dynamic voltage/frequency scaling (Medium)
   {
-    scenario: "Your laptop GPU switches between 400 MHz at 0.7V when browsing the web and 2100 MHz at 1.1V when gaming. This happens automatically without user intervention.",
-    question: "What technology enables this automatic adjustment?",
+    scenario: "Your GPU monitoring tool shows constant fluctuations during gaming: clock speeds varying between 1800-2400 MHz and voltage between 0.9-1.1V, updating multiple times per second.",
+    question: "What mechanism allows the GPU to make these rapid adjustments, and why are voltage and frequency changed together?",
     options: [
-      { id: 'manual', label: "Manual power profiles that the operating system switches between" },
-      { id: 'dvfs', label: "Dynamic Voltage and Frequency Scaling (DVFS) that monitors workload in real-time", correct: true },
-      { id: 'fixed', label: "Fixed power states that change only when applications request them" },
-      { id: 'thermal', label: "Thermal throttling that forces lower clocks when the GPU overheats" },
+      { id: 'a', label: "The operating system manually adjusts settings based on CPU usage patterns" },
+      { id: 'b', label: "DVFS (Dynamic Voltage and Frequency Scaling) adjusts both together because higher frequencies require higher voltages for stable operation" , correct: true },
+      { id: 'c', label: "The GPU driver randomly varies settings to prevent overheating" },
+      { id: 'd', label: "Voltage and frequency are independent; they only appear correlated by coincidence" }
     ],
-    explanation: "DVFS continuously monitors GPU workload and adjusts both voltage and frequency together. This saves power during light tasks while providing full performance when needed - all automatically."
+    explanation: "DVFS is a hardware-level power management technique. Higher clock frequencies require higher voltages because transistors need more voltage to switch states quickly enough. The GPU continuously monitors workload, temperature, and power, adjusting both parameters together to find the optimal operating point that maximizes performance within thermal and power constraints."
   },
-  // Q4: Thermal vs Power Limits (Medium-Hard) - Correct: D
+  // Q4: Power limit and throttling (Medium)
   {
-    scenario: "Two identical GPUs are tested: GPU A has a high-end water cooling loop, GPU B has a stock air cooler. Both have a 300W TDP limit and 83°C thermal limit.",
-    question: "Under sustained heavy load, which limit will each GPU hit first?",
+    scenario: "You increase your GPU's power limit from 300W to 350W using overclocking software. During a benchmark, the GPU initially runs faster but after 30 seconds, performance drops back to nearly the same level as before.",
+    question: "Why did increasing the power limit fail to provide sustained performance improvement?",
     options: [
-      { id: 'both_thermal', label: "Both hit thermal limit first - cooling quality doesn't affect this" },
-      { id: 'both_power', label: "Both hit power limit first - TDP is always the primary constraint" },
-      { id: 'a_thermal', label: "GPU A hits thermal first, GPU B hits power first" },
-      { id: 'a_power', label: "GPU A hits power limit first (stays cool enough), GPU B hits thermal limit first", correct: true },
+      { id: 'a', label: "The benchmark software doesn't support higher power limits" },
+      { id: 'b', label: "Power limits have no effect on GPU performance whatsoever" },
+      { id: 'c', label: "The GPU hit its thermal limit; the cooling solution couldn't dissipate the extra heat, triggering thermal throttling" , correct: true },
+      { id: 'd', label: "The motherboard refused to supply more than 300W of power" }
     ],
-    explanation: "With excellent cooling, GPU A stays below 83°C even at 300W, so power is the limit. GPU B's weaker cooling causes temperature to rise faster than power draw, hitting thermal limits before reaching full TDP."
+    explanation: "Increasing the power limit allows higher clocks initially, but those higher clocks generate more heat. If your cooling solution can't handle the extra thermal load, the GPU temperature rises until it hits the thermal limit (typically 83-90°C), triggering automatic clock reduction. Performance becomes cooling-limited rather than power-limited."
   },
-  // Q5: Idle Power States (Medium) - Correct: A
+  // Q5: TDP vs actual power draw (Medium-Hard)
   {
-    scenario: "A GPU at idle displays a static desktop. Monitoring software shows it consuming 15W instead of 0W, with clocks at 300 MHz and voltage at 0.75V.",
-    question: "Why doesn't the GPU consume zero watts at idle?",
+    scenario: "A GPU is marketed with a 320W TDP (Thermal Design Power). During testing, a reviewer measures actual power consumption of 280W in most games, but 380W during a synthetic stress test.",
+    question: "How can the GPU exceed its TDP rating, and what does TDP actually represent?",
     options: [
-      { id: 'leakage', label: "Static leakage current flows through transistors even when not switching, plus display output requires some power", correct: true },
-      { id: 'ready', label: "The GPU keeps all circuits powered on to be ready for instant gaming" },
-      { id: 'error', label: "The monitoring software is incorrect - idle GPUs do consume zero watts" },
-      { id: 'fan', label: "The 15W is entirely consumed by the cooling fans" },
+      { id: 'a', label: "The reviewer's measurements are wrong; GPUs can never exceed TDP" },
+      { id: 'b', label: "TDP is a cooling requirement guideline, not a hard power limit; actual draw depends on workload, boost algorithms, and power limits" , correct: true },
+      { id: 'c', label: "TDP represents maximum power draw, so 380W indicates a defective unit" },
+      { id: 'd', label: "Stress tests force the GPU into an unsafe overclocked state" }
     ],
-    explanation: "Even at idle, transistors have static leakage current (electrons tunneling through thin insulation). Plus, the display engine, memory interface, and video output circuits must remain active. True zero power is impossible while the system is on."
+    explanation: "TDP is the thermal power the cooling system should be designed to dissipate under typical loads - it's a thermal specification, not an electrical limit. Modern GPUs have separate power limits that can exceed TDP during demanding workloads. Boost algorithms may push power higher when thermal headroom exists, which is why well-cooled cards often draw more power than their TDP suggests."
   },
-  // Q6: Boost Clocks (Hard) - Correct: C
+  // Q6: GPU boost algorithms (Hard)
   {
-    scenario: "A GPU has a base clock of 1800 MHz and a boost clock of 2400 MHz. During gaming, you notice it actually runs at 2250 MHz sustained.",
-    question: "Why doesn't the GPU maintain its maximum 2400 MHz boost clock?",
+    scenario: "Two identical GPUs in different systems show different sustained boost clocks: System A maintains 2400 MHz while System B only reaches 2200 MHz. Both GPUs are from the same manufacturing batch and have the same firmware.",
+    question: "What factors do modern GPU boost algorithms consider when determining clock speeds?",
     options: [
-      { id: 'defect', label: "The GPU chip is defective and cannot reach its rated speed" },
-      { id: 'driver', label: "The driver artificially limits boost clocks to extend GPU lifespan" },
-      { id: 'balance', label: "Boost algorithms continuously balance power budget, thermals, and reliability margins", correct: true },
-      { id: 'game', label: "The game doesn't require the full 2400 MHz, so the GPU saves power" },
+      { id: 'a', label: "Only the current temperature - cooler GPUs always clock higher" },
+      { id: 'b', label: "Temperature, power consumption, voltage limits, and current draw across multiple rails - all evaluated simultaneously in real-time" , correct: true },
+      { id: 'c', label: "Only the power limit setting configured by the user" },
+      { id: 'd', label: "The brand of motherboard and power supply in the system" }
     ],
-    explanation: "Boost clocks are opportunistic maximums, not guaranteed speeds. The GPU's firmware constantly evaluates power headroom, temperature trends, and voltage reliability margins. 2250 MHz sustained means the algorithm found the optimal balance point."
+    explanation: "Modern boost algorithms (like NVIDIA's GPU Boost or AMD's PowerTune) continuously evaluate multiple constraints: GPU temperature, power consumption against the power limit, voltage against reliability limits, and current draw on individual power rails. The algorithm finds the highest clock that satisfies ALL constraints simultaneously. System A likely has better cooling and a higher-quality power delivery system."
   },
-  // Q7: Thermal Throttling (Medium) - Correct: B
+  // Q7: Multi-GPU power management (Hard)
   {
-    scenario: "During a stress test, your GPU temperature hits 83°C. The clock speed suddenly drops from 2100 MHz to 1650 MHz, and temperature stabilizes at 82°C.",
-    question: "What mechanism caused this behavior?",
+    scenario: "A workstation with four GPUs for machine learning training draws 600W at idle despite only displaying a basic desktop. When training begins, total system power jumps to 2000W and the room temperature rises noticeably.",
+    question: "What unique power management challenges arise in multi-GPU configurations?",
     options: [
-      { id: 'crash', label: "The GPU detected an error and entered a safe mode" },
-      { id: 'throttle', label: "Thermal throttling reduced clocks to prevent exceeding the temperature limit", correct: true },
-      { id: 'power', label: "Power throttling kicked in because 2100 MHz exceeded the TDP" },
-      { id: 'driver', label: "The graphics driver limited performance to prevent damage" },
+      { id: 'a', label: "Multi-GPU systems have no special challenges; each GPU manages itself independently" },
+      { id: 'b', label: "Coordinated power delivery, thermal management across shared airflow, and aggregate power limits from PSU and circuits become critical constraints" , correct: true },
+      { id: 'c', label: "Only the primary GPU consumes power; secondary GPUs use negligible electricity" },
+      { id: 'd', label: "Multi-GPU setups always run at reduced clocks to prevent overload" }
     ],
-    explanation: "Thermal throttling is a hardware protection mechanism. When temperature approaches the limit (83°C), the GPU automatically reduces voltage and frequency to lower power dissipation and stabilize temperature."
+    explanation: "Multi-GPU systems face compounded challenges: each GPU has idle leakage (explaining high idle power), the PSU must handle aggregate peak loads, thermal solutions must prevent hot GPUs from heating each other, and the electrical circuit must support total current draw. Power management must consider the system holistically, not just individual cards."
   },
-  // Q8: Sleep States and Wake Latency (Hard) - Correct: D
+  // Q8: Laptop GPU power profiles (Hard)
   {
-    scenario: "A mobile GPU supports multiple power states: D0 (active), D1 (light sleep), D2 (deep sleep), and D3 (off). Wake latency increases from D1 (0.1ms) to D3 (50ms).",
-    question: "Why would a system choose D1 over D3 for a GPU that's been idle for 100ms?",
+    scenario: "A gaming laptop offers three GPU modes: 'Silent' (60W), 'Performance' (100W), and 'Turbo' (140W). A user notices that 'Turbo' mode only provides 15% more FPS than 'Performance' mode despite using 40% more power.",
+    question: "Why does the relationship between power and performance become less efficient at higher power levels?",
     options: [
-      { id: 'same', label: "D1 and D3 consume the same power, so latency is the only factor" },
-      { id: 'never', label: "Systems always choose the deepest sleep state for maximum power savings" },
-      { id: 'damage', label: "Entering D3 too frequently causes physical damage to the GPU" },
-      { id: 'tradeoff', label: "The energy saved by D3 over 100ms doesn't offset the wake energy cost and latency penalty", correct: true },
+      { id: 'a', label: "The laptop's software is buggy and doesn't properly utilize the extra power" },
+      { id: 'b', label: "Diminishing returns occur because voltage must increase disproportionately to achieve higher frequencies, and power scales with voltage squared" , correct: true },
+      { id: 'c', label: "The laptop battery limits performance in all modes" },
+      { id: 'd', label: "Turbo mode only affects the CPU, not the GPU" }
     ],
-    explanation: "Deeper sleep states save more power per second but cost energy to enter/exit. For short idle periods, the wake latency penalty and transition energy can exceed the savings. The OS power manager predicts idle duration to choose optimally."
+    explanation: "GPU efficiency follows a curve of diminishing returns. To achieve each incremental MHz increase, voltage must rise, and since power scales with V², small frequency gains require disproportionately large power increases. The sweet spot for efficiency is often at moderate power levels. Laptop profiles offer users the choice between maximum performance (Turbo) and better efficiency (Performance)."
   },
-  // Q9: Power Efficiency Metrics (Hard) - Correct: A
+  // Q9: Undervolting for efficiency (Hard)
   {
-    scenario: "Comparing two GPUs: GPU X delivers 100 FPS at 250W, GPU Y delivers 90 FPS at 180W. A data center is choosing between them for AI training.",
-    question: "Which GPU should the data center choose for 24/7 operation, and why?",
+    scenario: "An enthusiast undervolts their GPU by 100mV while maintaining the same clock speeds. The GPU now runs 8°C cooler and consumes 45W less power, but occasionally crashes in certain applications.",
+    question: "Why does undervolting improve efficiency, and what determines the limit of how far you can undervolt?",
     options: [
-      { id: 'y_efficient', label: "GPU Y - it has better performance per watt (0.5 vs 0.4 FPS/W), reducing electricity costs", correct: true },
-      { id: 'x_fast', label: "GPU X - faster completion means less total energy used" },
-      { id: 'x_fewer', label: "GPU X - fewer GPUs needed means lower hardware costs" },
-      { id: 'same', label: "Both are equivalent - total work done per dollar is the same" },
+      { id: 'a', label: "Undervolting only reduces fan noise; it has no effect on actual power consumption" },
+      { id: 'b', label: "Lower voltage reduces power (P = CV²f), but each chip has a minimum voltage below which transistors fail to switch reliably at the target frequency" , correct: true },
+      { id: 'c', label: "Undervolting damages the GPU over time, causing the crashes" },
+      { id: 'd', label: "The crashes are caused by memory errors unrelated to voltage" }
     ],
-    explanation: "For 24/7 operation, performance-per-watt dominates. GPU Y achieves 0.5 FPS/W vs GPU X's 0.4 FPS/W. Over years of operation, electricity costs often exceed hardware costs. Data centers optimize for efficiency, not peak performance."
+    explanation: "Since power scales with voltage squared, even small voltage reductions yield significant power savings. However, each chip has a minimum voltage threshold for stable operation at a given frequency - below this, transistors cannot switch fast enough, causing computation errors and crashes. The 'silicon lottery' means each chip's minimum stable voltage varies slightly."
   },
-  // Q10: Silicon Quality and Binning (Medium-Hard) - Correct: C
+  // Q10: Data center GPU power management (Hard)
   {
-    scenario: "Two GPUs of the same model have different maximum stable clocks: Card A reaches 2500 MHz at 1.1V, Card B only reaches 2350 MHz at the same voltage.",
-    question: "What causes this variation between identical GPU models?",
+    scenario: "A data center runs 10,000 GPUs for AI training. The facility pays $0.10/kWh for electricity. Engineers discover that reducing GPU clocks by 15% lowers power consumption by 30% while only increasing training time by 18%.",
+    question: "Why might the data center choose to run GPUs at reduced performance, and what metrics drive this decision?",
     options: [
-      { id: 'fake', label: "Card B is a counterfeit with inferior components" },
-      { id: 'worn', label: "Card B was used previously and has degraded over time" },
-      { id: 'silicon', label: "Manufacturing variations in silicon quality create chips with different characteristics", correct: true },
-      { id: 'firmware', label: "Different firmware versions limit Card B's maximum clock" },
+      { id: 'a', label: "Data centers always maximize performance regardless of power costs" },
+      { id: 'b', label: "Performance-per-watt and total cost of ownership matter more than raw speed; lower power reduces electricity costs, cooling costs, and enables higher GPU density" , correct: true },
+      { id: 'c', label: "GPU manufacturers require data centers to undervolt for warranty purposes" },
+      { id: 'd', label: "The reduced clocks only affect gaming workloads, not AI training" }
     ],
-    explanation: "The 'silicon lottery' refers to natural variations in chip manufacturing. Microscopic differences in transistor size, doping levels, and defect density mean every chip has slightly different voltage-frequency characteristics. This is why overclock results vary."
-  },
+    explanation: "At data center scale, electricity becomes a major operational cost. With 10,000 GPUs, a 30% power reduction saves ~1MW, translating to ~$876,000/year in electricity alone, plus reduced cooling costs. The 18% longer training time may be acceptable if total cost per training run decreases. Data centers optimize for TCO (Total Cost of Ownership) and often find the efficiency sweet spot is below maximum performance."
+  }
 ];
 
 const TRANSFER_APPLICATIONS = [

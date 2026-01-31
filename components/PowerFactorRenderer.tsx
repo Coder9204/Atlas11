@@ -198,6 +198,123 @@ const TEST_QUESTIONS = [
 ];
 
 // ────────────────────────────────────────────────────────────────────────────
+// SCENARIO-BASED TEST QUESTIONS (10 questions covering power factor topics)
+// ────────────────────────────────────────────────────────────────────────────
+
+const testQuestions = [
+  {
+    scenario: 'A building maintenance technician is reviewing the electrical panel and notices that the building uses 100 kW of real power but draws 125 kVA from the utility.',
+    question: 'What is the power factor of this building?',
+    options: [
+      { id: 'a', label: '0.5' },
+      { id: 'b', label: '0.8', correct: true },
+      { id: 'c', label: '1.0' },
+      { id: 'd', label: '1.25' },
+    ],
+    explanation: 'Power factor is the ratio of real power (kW) to apparent power (kVA). Here, PF = 100 kW / 125 kVA = 0.8. This means only 80% of the apparent power is doing useful work, while the remaining current is reactive power that oscillates without performing work.',
+  },
+  {
+    scenario: 'An electrical engineer is explaining power consumption to a factory manager. The facility has motors drawing 500 kW real power, 300 kVAR reactive power, and the meter shows 583 kVA apparent power.',
+    question: 'Which relationship correctly describes how these three types of power are related?',
+    options: [
+      { id: 'a', label: 'Apparent = Real + Reactive (linear sum)' },
+      { id: 'b', label: 'Apparent = sqrt(Real^2 + Reactive^2) (vector sum)', correct: true },
+      { id: 'c', label: 'Real = Apparent x Reactive' },
+      { id: 'd', label: 'Reactive = Apparent - Real' },
+    ],
+    explanation: 'Real power and reactive power are 90 degrees out of phase, so they combine as vectors using the Pythagorean theorem. Apparent power = sqrt(500^2 + 300^2) = sqrt(250000 + 90000) = sqrt(340000) = 583 kVA. This is the power triangle relationship.',
+  },
+  {
+    scenario: 'A manufacturing plant receives their monthly electricity bill showing a $2,400 penalty charge. Their average power factor was measured at 0.72, while the utility requires a minimum of 0.90.',
+    question: 'Why do utilities penalize customers with low power factor?',
+    options: [
+      { id: 'a', label: 'Low power factor wastes energy as heat in customer equipment' },
+      { id: 'b', label: 'Reactive current requires larger transformers, cables, and generators without delivering billable energy', correct: true },
+      { id: 'c', label: 'It causes voltage fluctuations that damage utility meters' },
+      { id: 'd', label: 'Government regulations mandate power factor fees' },
+    ],
+    explanation: 'Reactive power does not consume energy but requires the same infrastructure (transformers, cables, switchgear) as real power. A 0.72 PF means the utility must provide 39% more current capacity than if PF were 1.0. This ties up utility assets without generating revenue, so penalties incentivize correction.',
+  },
+  {
+    scenario: 'A plant engineer measures power factor on a 50 HP induction motor under different load conditions. At full load the PF is 0.85, but at 25% load the PF drops to 0.55.',
+    question: 'Why does an induction motor have lower power factor at partial load?',
+    options: [
+      { id: 'a', label: 'The motor runs hotter at light load, increasing resistance' },
+      { id: 'b', label: 'Magnetizing current stays constant while load current decreases, so reactive portion dominates', correct: true },
+      { id: 'c', label: 'Motor slip increases at partial load causing current lag' },
+      { id: 'd', label: 'Light loads cause harmonic distortion that reduces power factor' },
+    ],
+    explanation: 'Induction motors require constant magnetizing current to maintain the rotating magnetic field, regardless of load. At full load, the large in-phase work current dominates. At partial load, work current drops but magnetizing current stays the same, so the ratio of reactive to real current increases, lowering power factor.',
+  },
+  {
+    scenario: 'A facility has a lagging power factor of 0.75 due to numerous motors. An electrical contractor proposes installing a 200 kVAR capacitor bank to improve power factor to 0.95.',
+    question: 'How do capacitors correct lagging power factor?',
+    options: [
+      { id: 'a', label: 'They store energy to reduce peak demand' },
+      { id: 'b', label: 'They filter harmonics that cause power factor problems' },
+      { id: 'c', label: 'They supply leading reactive power that cancels the lagging reactive power from inductors', correct: true },
+      { id: 'd', label: 'They increase voltage to reduce current draw' },
+    ],
+    explanation: 'Capacitors draw current that leads voltage by 90 degrees, while inductors draw current that lags voltage by 90 degrees. When placed in parallel with inductive loads, capacitors supply the reactive current locally instead of drawing it from the utility. The leading and lagging currents cancel, reducing net reactive power.',
+  },
+  {
+    scenario: 'A power systems engineer is analyzing two loads. Load A has current lagging voltage by 30 degrees. Load B has current leading voltage by 30 degrees.',
+    question: 'Which statement correctly describes the power factor characteristic of each load?',
+    options: [
+      { id: 'a', label: 'Load A is leading (capacitive), Load B is lagging (inductive)' },
+      { id: 'b', label: 'Load A is lagging (inductive), Load B is leading (capacitive)', correct: true },
+      { id: 'c', label: 'Both loads have unity power factor since the angles are equal' },
+      { id: 'd', label: 'Power factor cannot be determined from phase angle alone' },
+    ],
+    explanation: 'Lagging power factor means current lags voltage, caused by inductive loads like motors and transformers. Leading power factor means current leads voltage, caused by capacitive loads or over-corrected power factor. Load A (current lags) is inductive/lagging; Load B (current leads) is capacitive/leading.',
+  },
+  {
+    scenario: 'A data center has many switch-mode power supplies and variable frequency drives. Power quality measurements show a displacement power factor of 0.98 but a true power factor of only 0.82.',
+    question: 'What causes the difference between displacement power factor and true power factor?',
+    options: [
+      { id: 'a', label: 'Measurement error in the power analyzer' },
+      { id: 'b', label: 'Harmonic distortion creates non-sinusoidal currents that reduce true power factor', correct: true },
+      { id: 'c', label: 'Voltage fluctuations during the measurement period' },
+      { id: 'd', label: 'Phase imbalance between the three phases' },
+    ],
+    explanation: 'Displacement power factor only considers the phase shift at the fundamental frequency (50/60 Hz). True power factor includes the effect of harmonics, which are multiples of the fundamental frequency. Non-linear loads like VFDs and SMPS draw distorted current, contributing apparent power but not real power, reducing true PF even when displacement PF is high.',
+  },
+  {
+    scenario: 'A utility substation has voltage regulation problems. Engineers install a synchronous condenser, which is essentially a synchronous motor running without mechanical load.',
+    question: 'How does a synchronous condenser provide reactive power support?',
+    options: [
+      { id: 'a', label: 'It stores energy in a flywheel to supply power during voltage dips' },
+      { id: 'b', label: 'By adjusting field excitation, it can operate as either a capacitor or inductor to supply or absorb reactive power', correct: true },
+      { id: 'c', label: 'It generates harmonics that cancel out power factor problems' },
+      { id: 'd', label: 'Its rotating mass filters out voltage transients' },
+    ],
+    explanation: 'A synchronous condenser is a synchronous motor with no mechanical load. When over-excited (high field current), it generates leading reactive power like a capacitor. When under-excited, it absorbs reactive power like an inductor. This adjustable reactive power capability provides dynamic voltage support and power factor correction.',
+  },
+  {
+    scenario: 'A three-phase industrial facility has balanced loads on each phase. Phase A shows 0.82 power factor, Phase B shows 0.82 power factor, and Phase C shows 0.82 power factor.',
+    question: 'What is the overall three-phase power factor of this facility?',
+    options: [
+      { id: 'a', label: 'Cannot be determined without knowing the phase sequence' },
+      { id: 'b', label: '0.82, the same as each individual phase', correct: true },
+      { id: 'c', label: '0.946 (geometric mean of the three phases)' },
+      { id: 'd', label: '2.46 (sum of the three phases)' },
+    ],
+    explanation: 'For a balanced three-phase system where each phase has identical power factor, the overall three-phase power factor equals the individual phase power factor. The power triangles for each phase are identical and simply scale up. With balanced loads at 0.82 PF on each phase, the total system operates at 0.82 PF.',
+  },
+  {
+    scenario: 'A pump system is being upgraded from a fixed-speed motor with direct-on-line starting to a variable frequency drive (VFD) for energy savings. The old motor had 0.87 power factor at full load.',
+    question: 'How does adding a VFD typically affect the power factor seen by the utility?',
+    options: [
+      { id: 'a', label: 'VFDs always improve power factor to near unity' },
+      { id: 'b', label: 'VFDs have no effect on power factor' },
+      { id: 'c', label: 'VFDs maintain high displacement PF but may reduce true PF due to harmonic distortion', correct: true },
+      { id: 'd', label: 'VFDs always reduce power factor to below 0.7' },
+    ],
+    explanation: 'VFDs use a rectifier front-end that typically maintains high displacement power factor (near unity for active front-end designs, or 0.95+ for 6-pulse). However, the rectifier draws non-sinusoidal current containing harmonics, which reduces true power factor. The net effect depends on VFD design and may require harmonic filters to maintain good true power factor.',
+  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // TRANSFER APPLICATIONS
 // ────────────────────────────────────────────────────────────────────────────
 

@@ -1865,6 +1865,132 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
     </div>
   );
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ═══════════════════════════════════════════════════════════════════════════
+  const testQuestions = [
+    // Question 1: Core concept - gyroscopic precession (Easy)
+    {
+      scenario: "A student holds a spinning bicycle wheel by its axle. When she tries to tilt the wheel to the left, she notices the wheel rotates forward instead of simply tilting sideways as expected.",
+      question: "What phenomenon causes the wheel to rotate in an unexpected direction when a tilting force is applied?",
+      options: [
+        { id: 'a', label: "Air resistance pushing against the spinning wheel creates a deflecting force" },
+        { id: 'b', label: "Gyroscopic precession - the wheel rotates perpendicular to the applied torque", correct: true },
+        { id: 'c', label: "The wheel's momentum causes it to continue in its original direction" },
+        { id: 'd', label: "Friction in the axle bearings redirects the force" }
+      ],
+      explanation: "Gyroscopic precession occurs because of the relationship between angular momentum and torque. When you apply a torque to a spinning object, instead of tilting in the direction of the force, it rotates perpendicular to both the spin axis and the applied torque. This is described by the equation τ = dL/dt, where the change in angular momentum is perpendicular to the applied torque."
+    },
+    // Question 2: Bicycle stability (Easy-Medium)
+    {
+      scenario: "A cyclist notices that riding at higher speeds makes the bicycle feel more stable and resistant to falling over. At very low speeds, the same bicycle feels wobbly and requires constant balance corrections.",
+      question: "How do the spinning wheels contribute to bicycle stability at higher speeds?",
+      options: [
+        { id: 'a', label: "Faster wheels generate more air resistance that pushes the bike upright" },
+        { id: 'b', label: "The wheels' angular momentum creates gyroscopic resistance to tilting", correct: true },
+        { id: 'c', label: "Centrifugal force from the wheels pushes outward against the ground" },
+        { id: 'd', label: "Higher speed creates more friction between the tires and road" }
+      ],
+      explanation: "Spinning bicycle wheels have angular momentum (L = Iω), which increases with wheel speed. This angular momentum resists changes to the wheel's orientation due to conservation of angular momentum. When the bike starts to tilt, the gyroscopic effect creates a restoring torque that helps keep the bike upright. While other factors like trail geometry also contribute to bicycle stability, the gyroscopic effect becomes increasingly significant at higher speeds."
+    },
+    // Question 3: Smartphone orientation sensing (Medium)
+    {
+      scenario: "A smartphone game developer notices that the phone can detect rotation even when stationary. The phone uses tiny MEMS gyroscopes that contain vibrating structures instead of spinning wheels, yet still measure rotational motion accurately.",
+      question: "How do MEMS gyroscopes in smartphones detect rotation without using traditional spinning wheels?",
+      options: [
+        { id: 'a', label: "They use GPS signals to calculate the phone's angular position" },
+        { id: 'b', label: "Tiny magnets inside the sensor respond to Earth's magnetic field changes" },
+        { id: 'c', label: "Vibrating structures experience Coriolis forces when rotated, which are measured capacitively", correct: true },
+        { id: 'd', label: "Accelerometers detect the centrifugal force created by rotation" }
+      ],
+      explanation: "MEMS (Micro-Electro-Mechanical Systems) gyroscopes use the Coriolis effect instead of spinning mass. A tiny vibrating structure moves back and forth at a known frequency. When the device rotates, the Coriolis force deflects this vibrating mass perpendicular to both its velocity and the rotation axis. This deflection is detected by measuring capacitance changes between the mass and nearby electrodes, providing precise rotation rate measurements in a chip only millimeters in size."
+    },
+    // Question 4: Ship stabilizers (Medium)
+    {
+      scenario: "A luxury cruise ship crossing the Atlantic Ocean uses massive gyroscopic stabilizers weighing several tons each. During a storm with 15-foot waves, passengers notice the ship remains remarkably level while smaller vessels nearby are rolling dramatically.",
+      question: "How do gyroscopic stabilizers reduce a ship's rolling motion in rough seas?",
+      options: [
+        { id: 'a', label: "The spinning gyroscopes add weight to the bottom of the ship, lowering its center of gravity" },
+        { id: 'b', label: "They pump water between tanks on opposite sides of the ship to counterbalance waves" },
+        { id: 'c', label: "The gyroscopes' precession generates counter-torque that opposes the wave-induced rolling", correct: true },
+        { id: 'd', label: "Gyroscopes create a magnetic field that repels the water beneath the ship" }
+      ],
+      explanation: "Ship gyroscopic stabilizers work by harnessing precession. When waves try to roll the ship, this motion applies a torque to the spinning gyroscope. Due to precession, the gyroscope responds by tilting in a perpendicular direction, which through mechanical linkages generates a counter-torque that opposes the rolling motion. Modern systems actively control the precession rate to maximize the stabilizing effect, reducing roll by up to 90% in some conditions."
+    },
+    // Question 5: Airplane attitude instruments (Medium-Hard)
+    {
+      scenario: "A pilot flying through thick clouds cannot see the horizon, yet the aircraft's attitude indicator (artificial horizon) continues to show the exact orientation of the aircraft relative to the ground. This instrument uses a gyroscope that maintains its orientation regardless of the aircraft's movements.",
+      question: "What property of gyroscopes makes them suitable as a reference for aircraft attitude indicators?",
+      options: [
+        { id: 'a', label: "Gyroscopes align themselves with Earth's magnetic field, always pointing north" },
+        { id: 'b', label: "Rigidity in space - a spinning gyroscope maintains its orientation relative to inertial space", correct: true },
+        { id: 'c', label: "Gyroscopes are connected to GPS satellites that provide real-time orientation data" },
+        { id: 'd', label: "The gyroscope senses air pressure differences to determine aircraft tilt" }
+      ],
+      explanation: "Gyroscopes exhibit 'rigidity in space' - once spinning, they maintain their orientation relative to inertial (fixed) space due to conservation of angular momentum. In an attitude indicator, the gyroscope is initially aligned with the horizon. As the aircraft pitches and rolls, the gyroscope resists these movements, maintaining its original orientation. The aircraft's movement relative to the stable gyroscope is measured and displayed to the pilot as pitch and bank angles."
+    },
+    // Question 6: Control moment gyros in spacecraft (Hard)
+    {
+      scenario: "The International Space Station uses four Control Moment Gyroscopes (CMGs), each containing a 220-pound wheel spinning at 6,600 RPM. To change the station's orientation, motors tilt these spinning wheels rather than firing thrusters, saving precious propellant.",
+      question: "How do Control Moment Gyroscopes generate torque to rotate a spacecraft?",
+      options: [
+        { id: 'a', label: "The spinning wheels create artificial gravity that pulls the spacecraft in the desired direction" },
+        { id: 'b', label: "Tilting the spinning wheel's axis causes precession, transferring angular momentum to the spacecraft", correct: true },
+        { id: 'c', label: "The gyroscopes emit charged particles that push against Earth's magnetic field" },
+        { id: 'd', label: "Changing the wheel's spin speed creates reaction forces on the spacecraft" }
+      ],
+      explanation: "CMGs generate torque through forced precession. When a gimbal motor tilts the axis of the spinning wheel, the gyroscope resists this change and produces a torque perpendicular to both the spin axis and the gimbal axis. This torque is transmitted to the spacecraft, causing it to rotate. CMGs are more efficient than reaction wheels because they produce torque proportional to both the wheel's angular momentum AND the gimbal rate, allowing small motors to generate large torques. The ISS CMGs can produce up to 258 N·m of torque each."
+    },
+    // Question 7: Ring laser gyroscopes (Hard)
+    {
+      scenario: "A commercial airliner's navigation system uses ring laser gyroscopes that have no moving parts whatsoever. Two laser beams travel in opposite directions around a triangular glass path, and the system detects rotation by measuring the difference in the beams' frequencies.",
+      question: "What physical principle allows ring laser gyroscopes to detect rotation using light beams?",
+      options: [
+        { id: 'a', label: "Rotating the gyroscope Doppler-shifts the laser frequency proportional to angular velocity" },
+        { id: 'b', label: "The Sagnac effect - rotation changes the effective path length differently for counter-propagating beams", correct: true },
+        { id: 'c', label: "Photons have angular momentum that transfers to the glass ring during rotation" },
+        { id: 'd', label: "The laser beams bend due to centrifugal force when the gyroscope rotates" }
+      ],
+      explanation: "Ring laser gyroscopes exploit the Sagnac effect. Light traveling in the direction of rotation must travel a slightly longer path to complete the circuit (the detector has moved), while light traveling opposite to rotation travels a shorter path. This path length difference causes a frequency difference between the two beams, which creates an interference pattern. The resulting beat frequency is directly proportional to the rotation rate. With no mechanical parts, RLGs are extremely reliable and accurate, detecting rotation rates as small as 0.001 degrees per hour."
+    },
+    // Question 8: MEMS gyroscope operation (Hard)
+    {
+      scenario: "An engineer designing a drone flight controller selects a MEMS gyroscope that uses a 'tuning fork' design. Two masses vibrate toward and away from each other at 25 kHz. When the drone rotates, sensors detect sideways deflection of these masses.",
+      question: "Why must MEMS gyroscope proof masses be vibrating rather than stationary to detect rotation?",
+      options: [
+        { id: 'a', label: "Vibration heats the masses, making them more sensitive to magnetic field changes" },
+        { id: 'b', label: "Stationary masses would be pulled down by gravity, preventing rotation detection" },
+        { id: 'c', label: "The Coriolis force only acts on moving masses - stationary objects experience no Coriolis effect", correct: true },
+        { id: 'd', label: "Vibration creates resonance that amplifies the electronic measurement signal" }
+      ],
+      explanation: "The Coriolis force is described by F = -2m(ω × v), meaning it only acts on objects that are already moving (velocity v ≠ 0) within a rotating reference frame. If the proof mass were stationary relative to the sensor, there would be no Coriolis force to measure when the device rotates. By keeping the mass vibrating at a known frequency, any rotation produces a measurable Coriolis force perpendicular to the vibration direction. The vibration frequency is chosen to match the mechanical resonance, maximizing sensitivity."
+    },
+    // Question 9: Gyroscopic effects in rotating machinery (Hard)
+    {
+      scenario: "A wind turbine engineer investigates why certain turbine designs experience unexpected stress on their bearings. When the turbine's nacelle yaws (rotates horizontally) to track changing wind directions while the blades are spinning, large gyroscopic loads develop that can damage the yaw bearings.",
+      question: "Why does yawing a spinning wind turbine create damaging gyroscopic loads on the bearings?",
+      options: [
+        { id: 'a', label: "The wind pushes harder on one side of the rotor when it's not facing directly into the wind" },
+        { id: 'b', label: "Yawing applies torque to the spinning rotor, which produces precession forces perpendicular to both the spin and yaw axes", correct: true },
+        { id: 'c', label: "Centrifugal force from the spinning blades increases during yaw maneuvers" },
+        { id: 'd', label: "The generator's magnetic field interacts with Earth's magnetic field during rotation" }
+      ],
+      explanation: "When a spinning rotor is forced to yaw (rotate about a vertical axis), gyroscopic precession creates a pitching moment (torque about the horizontal axis perpendicular to both the spin and yaw). This gyroscopic torque, described by τ = Iω × Ω (where ω is spin rate and Ω is yaw rate), creates bending moments on the main shaft and loads on the bearings that weren't intended in the original design. Large wind turbines with heavy rotors spinning at lower speeds still produce significant gyroscopic moments during rapid yaw maneuvers, requiring careful engineering consideration."
+    },
+    // Question 10: Inertial navigation systems (Hard)
+    {
+      scenario: "A submarine navigating under Arctic ice cannot use GPS, yet its inertial navigation system tracks its position within meters over weeks of underwater travel. The system uses a 'stable platform' with three gyroscopes that maintain their orientation regardless of the submarine's movements.",
+      question: "How does an inertial navigation system use gyroscopes to maintain position accuracy over long periods without external references?",
+      options: [
+        { id: 'a', label: "Gyroscopes measure the submarine's speed through the water, which is integrated to find position" },
+        { id: 'b', label: "The gyroscopes detect changes in water pressure that indicate depth and current direction" },
+        { id: 'c', label: "Gyroscopes maintain a stable reference frame, allowing accelerometers to measure true acceleration for double integration into position", correct: true },
+        { id: 'd', label: "Gyroscopes sense the submarine's distance from the North Pole using Earth's rotation" }
+      ],
+      explanation: "Inertial navigation works by double-integrating acceleration to get position. However, accelerometers measure acceleration in their own reference frame, which tilts with the vehicle. Gyroscopes solve this by maintaining a stable platform that doesn't rotate with the submarine. This allows the accelerometers to measure acceleration in a fixed reference frame. By subtracting gravity (which the system knows based on its gyro-maintained orientation) and double-integrating the remaining acceleration, the system calculates velocity and position. Modern ring laser gyroscopes are so precise that position errors accumulate at only about 1 nautical mile per hour of operation."
+    }
+  ];
+
   // ─── Main Render ───────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {

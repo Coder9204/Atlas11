@@ -914,6 +914,122 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
     </svg>
   );
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ─────────────────────────────────────────────────────────────────────────────
+  const testQuestions = [
+    {
+      scenario: "You place a steel pot on an induction cooktop and turn it on. Within seconds, the pot becomes hot enough to boil water, yet the glass surface of the cooktop remains cool to the touch.",
+      question: "What fundamental principle explains how the pot heats up without direct heat transfer from the cooktop surface?",
+      options: [
+        { id: 'a', label: "Infrared radiation from hidden heating elements beneath the glass" },
+        { id: 'b', label: "A rapidly changing magnetic field induces electric currents (eddy currents) in the metal, which generate heat through electrical resistance (I²R losses)" },
+        { id: 'c', label: "Microwave energy penetrates the pot and excites water molecules inside" },
+        { id: 'd', label: "Static electricity builds up between the cooktop and pot, creating sparks that heat the metal" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "Induction heating works through electromagnetic induction. A coil beneath the cooktop surface carries alternating current, creating a rapidly oscillating magnetic field. When this field passes through a conductive material like steel, it induces circulating electric currents called eddy currents. These currents flow through the metal's electrical resistance, converting electrical energy into heat (P = I²R). The glass cooktop surface stays cool because it's an insulator—no eddy currents form in it."
+    },
+    {
+      scenario: "A home chef purchases an expensive set of pure aluminum cookware for their new induction cooktop. When they try to use the pans, the cooktop doesn't heat them properly and displays an error message.",
+      question: "Why do standard aluminum pans fail to work effectively on induction cooktops?",
+      options: [
+        { id: 'a', label: "Aluminum is too lightweight for the sensors to detect" },
+        { id: 'b', label: "Aluminum is non-magnetic (non-ferromagnetic), resulting in weak magnetic coupling and insufficient eddy current generation for effective heating" },
+        { id: 'c', label: "Aluminum reflects magnetic fields back to the coil, causing interference" },
+        { id: 'd', label: "Aluminum's melting point is too low for induction cooking" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "Induction cooktops require ferromagnetic materials (like iron or steel) for efficient operation. Ferromagnetic materials concentrate magnetic field lines and couple strongly with the oscillating field, producing large eddy currents. Aluminum is non-magnetic—magnetic field lines pass through it without concentration, resulting in weak eddy currents and minimal heating. That's why 'induction-ready' aluminum pans have a ferromagnetic steel or iron plate bonded to the bottom."
+    },
+    {
+      scenario: "A restaurant is evaluating whether to replace their gas stoves with induction cooktops. The energy consultant reports that gas burners transfer only about 40% of their energy to food, while much escapes as waste heat into the kitchen.",
+      question: "What efficiency rating would you expect from induction cooktops, and why?",
+      options: [
+        { id: 'a', label: "About 40-50% efficiency, similar to gas since both ultimately heat the pan" },
+        { id: 'b', label: "About 25-30% efficiency because electromagnetic energy conversion has inherent losses" },
+        { id: 'c', label: "About 80-90% efficiency because heat is generated directly inside the cookware rather than being transferred from an external heat source" },
+        { id: 'd', label: "100% efficiency since magnetic fields don't produce waste heat" }
+      ].map(opt => opt.id === 'c' ? { ...opt, correct: true } : opt),
+      explanation: "Induction cooktops achieve 80-90% energy efficiency because they heat the cookware directly through induced currents. With gas, heat must travel from the flame through air to the pan, and much energy escapes sideways. With electric coils, the element heats up and transfers energy to the pan by conduction. Induction skips these intermediate steps—the pan IS the heating element. The only losses are from imperfect magnetic coupling and resistance in the coil itself."
+    },
+    {
+      scenario: "An engineer is designing an induction heating system for surface hardening of steel gears. She notices that when using high-frequency alternating current (400 kHz), only the outer 0.1mm of the gear teeth heat up, while the core stays cool.",
+      question: "What electromagnetic phenomenon explains why high-frequency induction heating affects only the surface of a conductor?",
+      options: [
+        { id: 'a', label: "The thermal conductivity effect, where heat naturally stays at the surface" },
+        { id: 'b', label: "The skin effect, where alternating currents concentrate near the conductor's surface at high frequencies due to self-inductance" },
+        { id: 'c', label: "The Meissner effect, which expels magnetic fields from the interior" },
+        { id: 'd', label: "The photoelectric effect, where high-frequency waves only penetrate shallow depths" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "The skin effect causes alternating currents to flow primarily near the surface of a conductor. As frequency increases, the skin depth (the depth at which current density falls to 37% of surface value) decreases. At 400 kHz in steel, the skin depth is approximately 0.1mm. This occurs because the magnetic field created by the current induces opposing currents deeper in the conductor, effectively 'pushing' the current to the surface. This phenomenon is deliberately exploited for surface hardening applications."
+    },
+    {
+      scenario: "A manufacturing plant uses induction hardening to treat the teeth of heavy-duty gearboxes. The process heats the gear teeth to 900°C in seconds, then rapidly quenches them, creating a hard wear-resistant surface while the core remains tough and ductile.",
+      question: "Why is induction heating particularly well-suited for surface hardening compared to furnace heating?",
+      options: [
+        { id: 'a', label: "Induction furnaces are cheaper to operate than conventional furnaces" },
+        { id: 'b', label: "Induction heating can selectively heat only the surface layer using high frequencies (skin effect), allowing the core to remain cool and ductile" },
+        { id: 'c', label: "Induction heating produces higher temperatures than any furnace can achieve" },
+        { id: 'd', label: "Induction heating automatically adds carbon to the surface for hardening" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "Induction surface hardening leverages the skin effect to heat only the outer layer of the workpiece. By using high frequencies, engineers can control the heating depth to millimeter precision. The surface reaches austenitizing temperature and is then quenched to form hard martensite, while the core—never heated above its transformation temperature—retains its original tough, ductile microstructure. This creates ideal properties for gears: hard surface for wear resistance, tough core for impact resistance."
+    },
+    {
+      scenario: "A metallurgical engineer must design induction heating systems for two different applications: (1) surface hardening of small precision parts requiring 0.5mm heat penetration, and (2) through-heating of 50mm diameter steel billets for forging.",
+      question: "How should the engineer select the operating frequencies for these two applications?",
+      options: [
+        { id: 'a', label: "Use the same frequency for both; heating depth is controlled by power level, not frequency" },
+        { id: 'b', label: "Use low frequency (1-10 kHz) for surface hardening and high frequency (100+ kHz) for through-heating to maximize efficiency" },
+        { id: 'c', label: "Use high frequency (100-400 kHz) for shallow surface heating and low frequency (1-10 kHz) for deep through-heating of large billets" },
+        { id: 'd', label: "Use microwave frequencies for small parts and radio frequencies for large parts" }
+      ].map(opt => opt.id === 'c' ? { ...opt, correct: true } : opt),
+      explanation: "Frequency selection is critical in induction heating design. The skin depth formula (δ ∝ 1/√f) shows that penetration depth decreases with increasing frequency. For shallow surface hardening (0.5mm), high frequencies (100-400 kHz) concentrate heating at the surface. For through-heating large billets, low frequencies (1-10 kHz) allow currents to penetrate deeper, heating the entire cross-section more uniformly. This is why industrial induction systems offer variable frequency ranges for different applications."
+    },
+    {
+      scenario: "A steel foundry uses a coreless induction furnace to melt 500 kg batches of stainless steel for precision castings. The furnace consists of a water-cooled copper coil surrounding a refractory-lined crucible, with no iron core in the magnetic circuit.",
+      question: "What is the primary advantage of using induction furnaces over fuel-fired furnaces for melting high-purity and specialty alloys?",
+      options: [
+        { id: 'a', label: "Induction furnaces reach melting temperature faster than any other method" },
+        { id: 'b', label: "Induction furnaces can melt larger quantities of metal per batch" },
+        { id: 'c', label: "No combustion gases contact the melt, preventing contamination and oxidation, while electromagnetic stirring ensures homogeneous composition" },
+        { id: 'd', label: "Induction furnaces use less electricity than resistance heating furnaces" }
+      ].map(opt => opt.id === 'c' ? { ...opt, correct: true } : opt),
+      explanation: "Induction furnaces are preferred for high-purity alloys because no fuel combustion products contact the melt. In gas-fired furnaces, combustion gases can introduce hydrogen, oxygen, sulfur, and carbon into the metal. Additionally, the electromagnetic field in induction furnaces creates a stirring action (electromagnetic stirring) that homogenizes temperature and composition throughout the melt. This combination of purity and homogeneity makes induction melting essential for aerospace alloys, medical implants, and other critical applications."
+    },
+    {
+      scenario: "A smartphone placed on a wireless charging pad begins charging. Inside the pad, a coil creates an oscillating magnetic field, and inside the phone, a receiver coil converts this field back into electrical current to charge the battery.",
+      question: "What is the fundamental relationship between wireless charging technology and induction heating?",
+      options: [
+        { id: 'a', label: "They are completely different technologies; wireless charging uses radio waves while induction heating uses magnetic fields" },
+        { id: 'b', label: "Both use electromagnetic induction to transfer energy—wireless charging captures the induced current for useful work while induction heating intentionally converts it to heat" },
+        { id: 'c', label: "Wireless charging is a form of microwave energy transfer, unrelated to induction" },
+        { id: 'd', label: "Induction heating uses DC current while wireless charging uses AC current" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "Wireless charging and induction heating both operate on electromagnetic induction principles—Faraday's law states that a changing magnetic field induces an electromotive force (EMF) in a conductor. The key difference is intent: wireless chargers are designed to maximize efficient power transfer by using resonant frequencies and precise coil alignment, minimizing resistive losses. Induction heaters maximize those same resistive losses (I²R) to generate heat. Both are governed by the same physics, just optimized for opposite outcomes."
+    },
+    {
+      scenario: "A pharmaceutical company uses induction sealing to hermetically seal foil liners onto plastic medicine bottles. The process takes less than one second: bottles pass under an induction head, and the foil liner's aluminum backing heats up, melting a polymer coating that bonds to the bottle rim.",
+      question: "Why is induction sealing preferred over direct heat sealing for tamper-evident pharmaceutical packaging?",
+      options: [
+        { id: 'a', label: "Induction sealing is cheaper because aluminum foil is less expensive than heat-resistant materials" },
+        { id: 'b', label: "Only the conductive foil layer heats (via eddy currents), allowing precise heating without damaging the plastic bottle or its contents" },
+        { id: 'c', label: "Induction sealing creates a stronger chemical bond than thermal sealing" },
+        { id: 'd', label: "Induction sealing sterilizes the seal area with electromagnetic radiation" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "Induction sealing is ideal for packaging because it provides selective, contactless heating. The oscillating magnetic field induces eddy currents only in the conductive aluminum layer of the seal liner, which heats rapidly and melts the polymer adhesive. The plastic bottle and heat-sensitive contents remain cool because they don't support eddy currents. This allows high-speed sealing (thousands of bottles per hour) without heat damage, while creating a tamper-evident hermetic seal that protects product integrity."
+    },
+    {
+      scenario: "A patient with an older metal hip implant (made of cobalt-chromium alloy) is scheduled for an MRI scan. The radiologist expresses concern about the powerful oscillating magnetic fields used in MRI (up to 3 Tesla, switching at audio frequencies during imaging sequences).",
+      question: "What is the primary safety concern regarding metal implants during MRI scans, and how does it relate to induction heating principles?",
+      options: [
+        { id: 'a', label: "The implant will become permanently magnetized, interfering with the MRI images" },
+        { id: 'b', label: "The oscillating magnetic fields can induce eddy currents in conductive implants, potentially causing localized heating of surrounding tissue" },
+        { id: 'c', label: "The implant will be pulled out of the body by the strong static magnetic field" },
+        { id: 'd', label: "Metal implants block MRI radio waves, creating blind spots in the image" }
+      ].map(opt => opt.id === 'b' ? { ...opt, correct: true } : opt),
+      explanation: "MRI-induced heating of metal implants follows the same principles as induction heating. The rapidly switching gradient fields and radiofrequency pulses in MRI can induce eddy currents in conductive implants. These currents generate heat (I²R losses) that could potentially damage surrounding tissue. The severity depends on implant geometry, material conductivity, and MRI parameters. Modern MRI-conditional implants are designed with materials and geometries that minimize eddy current formation. This is why patients must disclose all implants before MRI procedures."
+    }
+  ];
+
   // ─── Phase Renderers ─────────────────────────────────────────────────────────
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">

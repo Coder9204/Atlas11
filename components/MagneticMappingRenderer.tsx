@@ -1520,6 +1520,132 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     </div>
   );
 
+  // ===============================================================================
+  // TEST QUESTIONS - Scenario-based multiple choice questions
+  // ===============================================================================
+  const testQuestions = [
+    // 1. Core concept - Earth's magnetic field (Easy)
+    {
+      scenario: "A hiker pulls out a compass in the wilderness to find their way back to camp. The needle swings and settles pointing in a specific direction.",
+      question: "What causes the compass needle to align itself in a particular direction?",
+      options: [
+        { id: 'a', label: "Gravity pulls the magnetic end of the needle downward toward Earth's core" },
+        { id: 'b', label: "Earth's magnetic field exerts a force on the magnetized needle, aligning it with field lines", correct: true },
+        { id: 'c', label: "The needle is attracted to iron ore deposits in nearby mountains" },
+        { id: 'd', label: "Static electricity from the hiker's body polarizes the needle" }
+      ],
+      explanation: "Earth generates a magnetic field from convection currents in its molten iron outer core. This field extends into space and creates invisible field lines that run from the magnetic south pole to the magnetic north pole. A compass needle is a small magnet that aligns itself with these field lines, with its north-seeking pole pointing toward Earth's magnetic north."
+    },
+    // 2. Compass operation (Easy-Medium)
+    {
+      scenario: "A sailor notices that their ship's compass shows a slightly different reading than expected when they check it against their GPS coordinates for true north.",
+      question: "Why might a compass not point exactly toward true geographic north?",
+      options: [
+        { id: 'a', label: "The compass is defective and needs to be replaced" },
+        { id: 'b', label: "GPS satellites are more accurate than magnetic instruments" },
+        { id: 'c', label: "Magnetic north and true geographic north are at different locations, creating magnetic declination", correct: true },
+        { id: 'd', label: "Ocean water interferes with magnetic readings" }
+      ],
+      explanation: "Earth's magnetic north pole is not at the same location as the geographic North Pole. This angular difference between magnetic north and true north is called magnetic declination (or variation). The declination varies by location and changes slowly over time as the magnetic poles drift. Navigators must account for this offset to plot accurate courses."
+    },
+    // 3. Magnetic declination (Medium)
+    {
+      scenario: "A surveyor in eastern Canada finds that their compass points about 20 degrees west of true north, while a colleague in the western United States reports their compass points about 15 degrees east of true north.",
+      question: "What explains these opposite declination values in different locations?",
+      options: [
+        { id: 'a', label: "Different compass manufacturers calibrate their instruments differently" },
+        { id: 'b', label: "The magnetic north pole is located in the Canadian Arctic, creating varying angular offsets across North America", correct: true },
+        { id: 'c', label: "The Rocky Mountains contain more magnetic rocks than the Appalachians" },
+        { id: 'd', label: "Eastern Canada is closer to the Atlantic Ocean which affects magnetism" }
+      ],
+      explanation: "Since the magnetic north pole is located in the Canadian Arctic (not at the geographic pole), observers at different longitudes see the magnetic pole at different angles relative to true north. From eastern Canada, the magnetic pole lies to the west of true north, causing westward declination. From the western US, the magnetic pole lies to the east of true north, causing eastward declination. This pattern creates an agonic line where declination is zero."
+    },
+    // 4. Magnetic anomaly detection (Medium)
+    {
+      scenario: "A geology team conducting a ground survey notices their magnetometer readings spike significantly when passing over certain areas, even though the surface appears uniform.",
+      question: "What is the most likely cause of these localized magnetic anomalies?",
+      options: [
+        { id: 'a', label: "Underground water sources create magnetic disturbances" },
+        { id: 'b', label: "Subsurface deposits of iron-bearing minerals or ore bodies distort the local magnetic field", correct: true },
+        { id: 'c', label: "Ancient tree roots left magnetic imprints in the soil" },
+        { id: 'd', label: "Solar radiation penetrates deeper in certain spots" }
+      ],
+      explanation: "Magnetic anomalies occur when subsurface materials have different magnetic properties than surrounding rock. Iron ore deposits, volcanic intrusions, and certain metamorphic rocks can be magnetized and create local field disturbances detectable at the surface. This principle underlies magnetic surveys used for mineral exploration, archaeological investigations, and detecting buried structures or unexploded ordnance."
+    },
+    // 5. Indoor positioning using magnetics (Medium-Hard)
+    {
+      scenario: "A smartphone app claims to provide indoor navigation in large buildings where GPS signals cannot penetrate. The developers explain they use the building's magnetic fingerprint.",
+      question: "How can magnetic fields enable indoor positioning without GPS?",
+      options: [
+        { id: 'a', label: "Buildings generate their own magnetic fields from electrical wiring" },
+        { id: 'b', label: "Steel structural elements distort Earth's magnetic field uniquely at each location, creating a mappable signature", correct: true },
+        { id: 'c', label: "Smartphones emit magnetic signals that bounce off walls" },
+        { id: 'd', label: "Indoor lights create magnetic patterns the phone can detect" }
+      ],
+      explanation: "Modern buildings contain steel beams, reinforcement bars, and other ferromagnetic materials that distort Earth's ambient magnetic field in complex but consistent patterns. By pre-mapping these distortions throughout a building, a database of magnetic fingerprints can be created. A smartphone's magnetometer can then match its current readings against this database to determine indoor position with reasonable accuracy."
+    },
+    // 6. Geomagnetic surveys (Hard)
+    {
+      scenario: "An oil exploration company flies a specially equipped aircraft in a grid pattern over a remote region. The aircraft trails a sensor package on a long cable behind it.",
+      question: "Why is the magnetic sensor towed far behind the aircraft rather than mounted directly on it?",
+      options: [
+        { id: 'a', label: "The cable allows the sensor to get closer to the ground for better readings" },
+        { id: 'b', label: "The aircraft's metal components and electrical systems would interfere with sensitive magnetic measurements", correct: true },
+        { id: 'c', label: "Air turbulence is smoother behind the aircraft" },
+        { id: 'd', label: "The cable acts as an antenna to boost signal strength" }
+      ],
+      explanation: "Aircraft contain numerous magnetic noise sources: engines, avionics, structural steel, and electrical systems all create magnetic fields that would contaminate precise geomagnetic measurements. By towing the magnetometer 50-150 meters behind the aircraft on a cable, these interference sources are far enough away that their effects diminish to negligible levels, allowing accurate measurement of subtle geological magnetic anomalies below."
+    },
+    // 7. Paleomagnetism (Hard)
+    {
+      scenario: "Geologists studying ancient lava flows on different continents discovered that the magnetic minerals in these rocks point in unexpected directions - some even appear to show the magnetic pole was once in the southern hemisphere.",
+      question: "What does this evidence of magnetic pole reversals tell us about Earth's magnetic field history?",
+      options: [
+        { id: 'a', label: "The continents have physically rotated 180 degrees over time" },
+        { id: 'b', label: "Earth's magnetic field periodically reverses polarity, with the north and south magnetic poles swapping positions", correct: true },
+        { id: 'c', label: "Ancient volcanic eruptions were more powerful and magnetized rocks differently" },
+        { id: 'd', label: "The measurement techniques cannot be trusted for rocks older than 1 million years" }
+      ],
+      explanation: "When lava cools, iron-bearing minerals align with and record the ambient magnetic field direction. Studying these frozen magnetic signatures reveals that Earth's magnetic field has reversed polarity hundreds of times throughout geologic history, with the most recent reversal occurring about 780,000 years ago. These reversals happen irregularly, taking thousands of years to complete, and leave a distinctive pattern that helps date rock formations worldwide."
+    },
+    // 8. Magnetic navigation in animals (Hard)
+    {
+      scenario: "Researchers discovered that migratory birds become disoriented when exposed to artificial magnetic fields during their journey, but only during cloudy nights when they cannot see the stars.",
+      question: "What does this suggest about how these birds navigate during migration?",
+      options: [
+        { id: 'a', label: "Birds primarily navigate by wind direction and only use magnetism as a backup" },
+        { id: 'b', label: "Birds use multiple navigation systems including magnetic sensing, with magnetoreception being essential when celestial cues are unavailable", correct: true },
+        { id: 'c', label: "The artificial fields caused physical pain that distracted the birds" },
+        { id: 'd', label: "Birds can only sense magnetic fields when it is dark outside" }
+      ],
+      explanation: "Many migratory animals possess magnetoreception - the ability to sense Earth's magnetic field. Research suggests birds may use specialized proteins (cryptochromes) in their eyes or magnetite crystals in their beaks. This magnetic sense works alongside other navigation systems including sun compass, star patterns, and landmarks. When one system is unavailable (like stars on cloudy nights), birds rely more heavily on magnetic navigation, making them vulnerable to artificial field disruption."
+    },
+    // 9. Magnetometer technology (Hard)
+    {
+      scenario: "A quantum physicist explains that modern smartphones contain magnetometers sensitive enough to detect the magnetic field of a refrigerator magnet from several meters away, yet these sensors fit on a tiny chip.",
+      question: "What technology enables such sensitive magnetic field detection in miniature smartphone sensors?",
+      options: [
+        { id: 'a', label: "Tiny spinning compass needles suspended in oil" },
+        { id: 'b', label: "Hall effect or magnetoresistive sensors that detect how magnetic fields affect electrical current flow in semiconductors", correct: true },
+        { id: 'c', label: "Miniaturized superconducting coils cooled by the phone's processor" },
+        { id: 'd', label: "Piezoelectric crystals that vibrate in response to magnetic fields" }
+      ],
+      explanation: "Smartphone magnetometers typically use Hall effect sensors or anisotropic/giant magnetoresistive (AMR/GMR) technology. Hall sensors detect the voltage generated when a magnetic field deflects moving charges in a semiconductor. Magnetoresistive sensors measure how magnetic fields change the electrical resistance of thin films. Both technologies can be manufactured using standard semiconductor processes, enabling extremely small, low-power sensors with sufficient sensitivity for compass and indoor positioning applications."
+    },
+    // 10. Magnetic interference sources (Hard)
+    {
+      scenario: "An engineer troubleshooting a malfunctioning industrial robot discovers the robot's position sensors give erratic readings whenever a nearby conveyor belt motor starts up.",
+      question: "What is causing the magnetic interference with the robot's sensors, and how might it be mitigated?",
+      options: [
+        { id: 'a', label: "The motor vibrations shake the sensors; adding rubber dampening would help" },
+        { id: 'b', label: "Electric motors generate strong alternating magnetic fields that overwhelm nearby sensors; magnetic shielding or distance can reduce interference", correct: true },
+        { id: 'c', label: "The conveyor belt is made of magnetic material that confuses the sensors" },
+        { id: 'd', label: "Power surges when the motor starts affect the sensor's electrical supply" }
+      ],
+      explanation: "Electric motors contain spinning electromagnets that generate powerful, fluctuating magnetic fields extending well beyond the motor housing. These fields can induce currents in nearby sensors or directly interfere with magnetometer readings. Mitigation strategies include increasing distance from interference sources, using mu-metal or other high-permeability shielding around sensitive sensors, implementing software filtering to reject known interference frequencies, or selecting sensor technologies less susceptible to external fields."
+    }
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (

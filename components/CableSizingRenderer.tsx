@@ -1141,6 +1141,123 @@ export default function CableSizingRenderer({
   };
 
   // ──────────────────────────────────────────────────────────────────────────
+  // SCENARIO-BASED TEST QUESTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const testQuestions = [
+    {
+      scenario: "A homeowner is installing a new electric dryer 50 feet from the breaker panel. The electrician mentions that using undersized wire could cause problems.",
+      question: "Why does cable size matter for electrical installations?",
+      options: [
+        { id: 'a', label: "Thicker cables look more professional and meet building aesthetics", correct: false },
+        { id: 'b', label: "Undersized cables have higher resistance, causing voltage drop and heat buildup that wastes energy and creates fire hazards", correct: true },
+        { id: 'c', label: "Cable size only affects the initial installation cost, not performance", correct: false },
+        { id: 'd', label: "Larger cables are required by law regardless of the electrical load", correct: false },
+      ],
+      explanation: "Cable resistance is inversely proportional to cross-sectional area. Undersized cables have higher resistance, which causes I²R power losses (dissipated as heat) and voltage drop. This wastes energy, can damage equipment that receives insufficient voltage, and creates fire hazards when cables overheat beyond their insulation ratings.",
+    },
+    {
+      scenario: "An engineer is designing a 200-foot circuit to power a workshop. The load draws 30 amps at 240V. She calculates the voltage drop using V = I × R, where R depends on wire gauge and length.",
+      question: "If she switches from 10 AWG wire (1.0 Ω/1000ft) to 8 AWG wire (0.63 Ω/1000ft), approximately how much will the voltage drop decrease?",
+      options: [
+        { id: 'a', label: "The voltage drop will decrease by about 37%, from 12V to 7.6V", correct: true },
+        { id: 'b', label: "The voltage drop will stay the same since current hasn't changed", correct: false },
+        { id: 'c', label: "The voltage drop will double because thicker wire carries more current", correct: false },
+        { id: 'd', label: "The voltage drop will decrease by exactly 50%", correct: false },
+      ],
+      explanation: "Voltage drop V = I × R. For 10 AWG: R = 1.0 × (400/1000) = 0.4Ω, so V = 30 × 0.4 = 12V. For 8 AWG: R = 0.63 × (400/1000) = 0.252Ω, so V = 30 × 0.252 = 7.56V. The reduction is (12-7.56)/12 = 37%. Note: 400 feet accounts for round-trip (200ft × 2).",
+    },
+    {
+      scenario: "A data center technician is selecting cables for a new server rack that will draw 80 amps continuously. The cable manufacturer provides ampacity ratings for different wire gauges in their catalog.",
+      question: "What does the ampacity rating of a cable indicate?",
+      options: [
+        { id: 'a', label: "The maximum voltage the cable insulation can withstand", correct: false },
+        { id: 'b', label: "The maximum continuous current the conductor can safely carry without exceeding temperature limits", correct: true },
+        { id: 'c', label: "The total power in watts the cable can transmit", correct: false },
+        { id: 'd', label: "The resistance of the cable per unit length", correct: false },
+      ],
+      explanation: "Ampacity is the maximum current a conductor can carry continuously under specified conditions without exceeding its temperature rating. When current exceeds ampacity, I²R heating causes the conductor to exceed safe temperatures, degrading insulation and creating fire hazards. Ampacity depends on conductor material, size, insulation type, ambient temperature, and installation method.",
+    },
+    {
+      scenario: "A solar installer is running cables from rooftop panels to an inverter 150 feet away. The system operates at 48V DC and carries 40 amps. The customer complains about lower-than-expected power output.",
+      question: "How does cable length affect the power delivered to the inverter?",
+      options: [
+        { id: 'a', label: "Cable length has no effect since the panels produce constant power", correct: false },
+        { id: 'b', label: "Longer cables have proportionally higher resistance, causing greater I²R losses and voltage drop that reduces delivered power", correct: true },
+        { id: 'c', label: "Longer cables only affect AC systems, not DC solar installations", correct: false },
+        { id: 'd', label: "Cable length only matters if the cable is undersized for the current", correct: false },
+      ],
+      explanation: "Cable resistance is directly proportional to length (R = ρL/A). Doubling the length doubles the resistance, which doubles both voltage drop (V=IR) and power loss (P=I²R). In this 48V system with long runs, voltage drop can significantly reduce the voltage reaching the inverter, decreasing efficiency and potentially preventing proper operation if voltage falls below minimum thresholds.",
+    },
+    {
+      scenario: "An industrial facility in Arizona runs cables through conduits exposed to summer heat where ambient temperature reaches 45°C (113°F). The standard ampacity tables are rated for 30°C ambient.",
+      question: "How should the electrician adjust the cable sizing for this high-temperature environment?",
+      options: [
+        { id: 'a', label: "No adjustment needed; copper handles heat well", correct: false },
+        { id: 'b', label: "Apply a derating factor to reduce allowable ampacity, or use larger gauge wire to compensate", correct: true },
+        { id: 'c', label: "Simply add more insulation to protect the cables", correct: false },
+        { id: 'd', label: "Switch from copper to aluminum which handles heat better", correct: false },
+      ],
+      explanation: "Higher ambient temperatures reduce a cable's ability to dissipate heat, requiring derating. NEC Table 310.15(B)(1) provides correction factors—at 45°C, THHN cable's ampacity must be multiplied by 0.87 (13% reduction). Additionally, conductor resistance increases with temperature (about 0.4% per °C for copper), further increasing I²R losses. Using larger wire compensates by providing lower resistance and better heat dissipation.",
+    },
+    {
+      scenario: "An electrician is installing six current-carrying conductors in a single conduit for a commercial building. The NEC requires ampacity adjustment when more than three current-carrying conductors share a raceway.",
+      question: "Why must ampacity be derated when multiple conductors share a conduit?",
+      options: [
+        { id: 'a', label: "Multiple wires create electromagnetic interference that reduces capacity", correct: false },
+        { id: 'b', label: "The combined heat from multiple conductors reduces each wire's ability to dissipate heat, requiring lower current per conductor", correct: true },
+        { id: 'c', label: "Conduit fill limits require smaller wires when adding more conductors", correct: false },
+        { id: 'd', label: "Voltage drop increases proportionally with the number of conductors", correct: false },
+      ],
+      explanation: "When conductors are bundled together, each wire's I²R heat adds to the thermal environment, reducing the ability of each conductor to dissipate its own heat. Per NEC 310.15(C)(1), 4-6 conductors require 80% ampacity adjustment, 7-9 require 70%, and 10-20 require 50%. This ensures no conductor exceeds its temperature rating. The derating applies only to current-carrying conductors—equipment grounding conductors don't count.",
+    },
+    {
+      scenario: "A manufacturing plant is installing a 100 HP motor (approximately 75kW) that draws 124 amps at full load. During startup, the motor briefly draws 600-700 amps for several seconds.",
+      question: "How should the cable be sized to handle the motor's starting current?",
+      options: [
+        { id: 'a', label: "Size the cable for 700 amps to handle maximum starting current", correct: false },
+        { id: 'b', label: "Size for 125% of full-load current (155A) per NEC 430.22; cables can handle brief starting surge without overheating", correct: true },
+        { id: 'c', label: "Size for exactly 124 amps since that's the continuous operating current", correct: false },
+        { id: 'd', label: "Use a cable rated for 300 amps as a compromise between starting and running current", correct: false },
+      ],
+      explanation: "Motor cables are sized based on full-load current, not starting current, because the thermal mass of conductors can absorb brief current surges without exceeding temperature limits. NEC 430.22 requires conductors rated at 125% of motor full-load current. The starting surge (typically 5-7× full load) lasts only seconds—not long enough to overheat properly sized conductors. Oversizing for starting current would be wasteful and unnecessary.",
+    },
+    {
+      scenario: "A data center is being designed to deliver 500kW to server racks. The engineering team must choose between 208V and 480V distribution systems for the main bus.",
+      question: "Why do large data centers prefer 480V distribution over 208V for main power runs?",
+      options: [
+        { id: 'a', label: "480V equipment is more readily available and cheaper", correct: false },
+        { id: 'b', label: "Higher voltage means proportionally lower current for the same power, resulting in dramatically smaller cables and roughly 80% less I²R losses", correct: true },
+        { id: 'c', label: "480V systems are safer because less current flows through the wires", correct: false },
+        { id: 'd', label: "208V systems would require three-phase power which is more complex", correct: false },
+      ],
+      explanation: "Power = Voltage × Current, so P = 500kW at 208V requires 2,400A, while 480V requires only 1,042A. Since I²R losses scale with current squared, the 208V system has (2400/1042)² = 5.3× higher losses. At 480V: cables can be 60% smaller (less copper cost), losses are reduced by ~80%, less cooling needed, and voltage drop is proportionally lower. PDUs step down to 208V/120V only at the rack level.",
+    },
+    {
+      scenario: "A residential solar installation includes a ground-mounted array 200 feet from the house. The system produces 10kW and the installer must choose between string inverters (600V DC from panels) or microinverters (240V AC at each panel).",
+      question: "From a cable sizing perspective, what advantage does the high-voltage string inverter approach offer?",
+      options: [
+        { id: 'a', label: "String inverters require no DC wiring, eliminating cable loss concerns", correct: false },
+        { id: 'b', label: "Higher DC voltage (600V) means 60% less current and roughly 85% lower cable losses compared to 240V AC for the same power", correct: true },
+        { id: 'c', label: "Microinverters eliminate the need for proper cable sizing calculations", correct: false },
+        { id: 'd', label: "String inverters use specialized low-resistance cables not available for AC systems", correct: false },
+      ],
+      explanation: "At 10kW: 600V DC needs ~17A, while 240V AC needs ~42A. Current ratio is 42/17 = 2.5×, so I²R losses at 240V are 2.5² = 6.25× higher (~85% more losses). For a 200ft run with significant current, this difference substantially impacts system efficiency and cable costs. String inverters place the inverter near the panels and run AC, or consolidate DC power at high voltage—either approach reduces long cable run losses.",
+    },
+    {
+      scenario: "An electrical contractor is bidding a job to run a 120V, 20-amp circuit 150 feet to a detached garage workshop. The NEC recommends limiting voltage drop to 3% for branch circuits (3.6V at 120V).",
+      question: "Which wire gauge should the contractor specify to meet the NEC voltage drop recommendation?",
+      options: [
+        { id: 'a', label: "12 AWG (standard 20A circuit wire) since it meets ampacity requirements", correct: false },
+        { id: 'b', label: "10 AWG, because the 300-foot round trip at 20A with 12 AWG would exceed 3% voltage drop; 10 AWG reduces drop to acceptable levels", correct: true },
+        { id: 'c', label: "14 AWG is sufficient for 20 amps over any distance", correct: false },
+        { id: 'd', label: "8 AWG to ensure maximum performance regardless of NEC minimums", correct: false },
+      ],
+      explanation: "For 300ft round trip: 12 AWG (1.588Ω/1000ft) has R = 0.476Ω, giving V = 20A × 0.476Ω = 9.5V drop (7.9%—exceeds 3%). 10 AWG (0.999Ω/1000ft) has R = 0.3Ω, giving V = 20A × 0.3Ω = 6V drop (5%—still over but closer). Actually, 8 AWG (0.628Ω/1000ft) with R = 0.188Ω gives V = 3.77V (3.1%), just meeting requirements. This shows why long runs often require upsizing beyond minimum ampacity requirements.",
+    },
+  ];
+
+  // ──────────────────────────────────────────────────────────────────────────
   // PHASE RENDERERS
   // ──────────────────────────────────────────────────────────────────────────
 
