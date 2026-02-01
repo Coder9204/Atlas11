@@ -195,7 +195,7 @@ const realWorldApps = [
     tagline: 'Nature-Inspired Building Design',
     description: 'Architects use minimal surface principles to design efficient tensile structures like stadium roofs, canopies, and membrane buildings that naturally distribute stress.',
     connection: 'Soap films find the same minimal surfaces that make optimal tension structures. Dip a wire frame model in soap solution, and you get the ideal roof shape!',
-    howItWorks: 'Minimal surfaces have zero mean curvature at every point, meaning they're in perfect tension equilibrium. This makes them ideal for fabric roofs held in tension by cables.',
+    howItWorks: "Minimal surfaces have zero mean curvature at every point, meaning they're in perfect tension equilibrium. This makes them ideal for fabric roofs held in tension by cables.",
     stats: [
       { value: '1972', label: 'Munich Olympic Stadium', icon: '🏟️' },
       { value: '74,000m²', label: 'Roof area', icon: '📐' },

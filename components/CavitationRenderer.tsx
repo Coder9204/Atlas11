@@ -402,21 +402,6 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     }, 0);
   };
 
-  // Premium color palette
-  const colors = {
-    background: '#0F0F1A',
-    card: '#1A1A2E',
-    primary: '#00D4FF',
-    secondary: '#7B68EE',
-    accent: '#FF6B6B',
-    success: '#4ADE80',
-    warning: '#FBBF24',
-    text: '#FFFFFF',
-    textSecondary: '#A0AEC0',
-    bubble: '#60A5FA',
-    collapse: '#F97316'
-  };
-
   // Helper render functions
   const renderProgressBar = () => {
     const currentIndex = PHASE_ORDER.indexOf(phase);

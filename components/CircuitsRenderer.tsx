@@ -122,7 +122,6 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
     return 'hook';
   });
-  const [isMobile, setIsMobile] = useState(false);
 
   // Hook phase
   const [hookStep, setHookStep] = useState(0);

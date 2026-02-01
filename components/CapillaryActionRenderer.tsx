@@ -372,15 +372,7 @@ const CapillaryActionRenderer: React.FC<CapillaryActionRendererProps> = ({
   const [selectedApp, setSelectedApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
-  const [isMobile, setIsMobile] = useState(false);
   const animationRef = useRef<number>();
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   useEffect(() => {
     if (gamePhase && validPhases.includes(gamePhase as Phase) && gamePhase !== phase) {

@@ -466,7 +466,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       options: [
         { id: 'a', text: 'Silver iodide creates water molecules' },
         { id: 'b', text: 'Silver iodide particles serve as ice nuclei, promoting ice crystal formation which leads to precipitation', correct: true },
-        { id: 'c', text: 'The aircraft's heat melts clouds into rain' },
+        { id: 'c', text: "The aircraft's heat melts clouds into rain" },
         { id: 'd', text: 'Silver iodide absorbs water from the ground' }
       ],
       explanation: "Silver iodide has a crystal structure similar to ice, making it an excellent ice nucleus. When released into supercooled clouds (water below 0C but not frozen), it triggers ice crystal formation. Ice crystals grow at the expense of water droplets, eventually becoming heavy enough to fall as precipitation."
@@ -512,7 +512,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       scenario: "During the water cycle, water evaporates from the ocean, rises, forms clouds, and falls as precipitation.",
       question: "What provides the energy for lifting water vapor high enough to form clouds?",
       options: [
-        { id: 'a', text: 'The Moon's gravity' },
+        { id: 'a', text: "The Moon's gravity" },
         { id: 'b', text: 'Solar heating creates convection currents and weather fronts', correct: true },
         { id: 'c', text: 'Ocean currents push water up' },
         { id: 'd', text: 'Magnetic fields' }

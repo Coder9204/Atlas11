@@ -928,20 +928,6 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     </div>
   );
 
-  const colors = {
-    textPrimary: '#f8fafc',
-    textSecondary: '#e2e8f0',
-    textMuted: '#94a3b8',
-    bgPrimary: '#0f172a',
-    bgCard: 'rgba(30, 41, 59, 0.9)',
-    bgDark: 'rgba(15, 23, 42, 0.95)',
-    accent: '#06b6d4',
-    accentGlow: 'rgba(6, 182, 212, 0.4)',
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-  };
-
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',

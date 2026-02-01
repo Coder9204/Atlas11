@@ -25,6 +25,19 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Vendor chunks
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-three': ['three', '@react-three/fiber', '@react-three/drei'],
+            'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+            'vendor-math': ['mathjs'],
+          },
+        },
+      },
+      // Increase chunk size warning limit since we're deliberately splitting
+      chunkSizeWarningLimit: 1000,
     }
   };
 });
