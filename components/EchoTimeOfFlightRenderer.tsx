@@ -145,104 +145,114 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "If you shout at a cliff 170m away, how long until you hear the echo? (Speed of sound ≈ 340 m/s)",
+      scenario: "A hiker shouts toward a cliff face and hears the echo 2 seconds later. The speed of sound in air is approximately 340 m/s.",
+      question: "How far away is the cliff from the hiker?",
       options: [
-        { text: "0.5 seconds", correct: false },
-        { text: "1 second", correct: true },
-        { text: "2 seconds", correct: false },
-        { text: "340 seconds", correct: false }
+        { id: 'a', label: "680 meters - the sound travels 340 m/s for 2 seconds" },
+        { id: 'b', label: "340 meters - the sound travels there and back, so we divide by 2", correct: true },
+        { id: 'c', label: "170 meters - we need to account for sound slowing down" },
+        { id: 'd', label: "1360 meters - sound speeds up on the return trip" }
       ],
-      explanation: "The sound travels to the cliff (170m) and back (170m) = 340m total. At 340 m/s, time = 340/340 = 1 second."
+      explanation: "The sound travels to the cliff AND back in 2 seconds. Total distance = 340 m/s x 2s = 680m. Since this is a round trip, the one-way distance is 680/2 = 340 meters. The formula is: Distance = (Speed x Time) / 2."
     },
     {
-      question: "Why do we divide the total echo time by 2 to find the distance to an object?",
+      scenario: "A fishing boat uses sonar to locate a school of fish. The sonar pulse takes 0.4 seconds to return. Sound travels at 1500 m/s in seawater.",
+      question: "At what depth are the fish swimming?",
       options: [
-        { text: "Sound slows down on the way back", correct: false },
-        { text: "Sound travels there AND back", correct: true },
-        { text: "The echo is quieter", correct: false },
-        { text: "We don't - that's wrong", correct: false }
+        { id: 'a', label: "600 meters" },
+        { id: 'b', label: "300 meters", correct: true },
+        { id: 'c', label: "150 meters" },
+        { id: 'd', label: "1500 meters" }
       ],
-      explanation: "The sound wave travels TO the object and then BACK to you. The total time covers twice the distance, so we divide by 2."
+      explanation: "Using the echo time-of-flight formula: Distance = (Speed x Time) / 2 = (1500 m/s x 0.4s) / 2 = 600/2 = 300 meters. The division by 2 accounts for the sound traveling down to the fish and back up to the boat."
     },
     {
-      question: "Sound travels faster in water than in air. Why?",
+      scenario: "A bat hunting at night sends out ultrasonic clicks to detect prey. It hears an echo from a moth 0.01 seconds after making the click.",
+      question: "How far away is the moth? (Sound speed in air = 340 m/s)",
       options: [
-        { text: "Water is lighter", correct: false },
-        { text: "Water molecules are closer together", correct: true },
-        { text: "Water has more oxygen", correct: false },
-        { text: "It actually travels slower in water", correct: false }
+        { id: 'a', label: "3.4 meters" },
+        { id: 'b', label: "1.7 meters", correct: true },
+        { id: 'c', label: "0.85 meters" },
+        { id: 'd', label: "6.8 meters" }
       ],
-      explanation: "In water, molecules are much closer together than in air. Sound is transmitted through molecular collisions, so denser media transmit sound faster."
+      explanation: "Distance = (Speed x Time) / 2 = (340 m/s x 0.01s) / 2 = 3.4/2 = 1.7 meters. Bats can process these incredibly fast echoes to navigate and hunt in complete darkness with remarkable precision."
     },
     {
-      question: "A bat sends an ultrasonic pulse and hears it return in 0.02 seconds. How far is the insect? (Sound = 340 m/s)",
+      scenario: "A submarine detects another vessel using sonar. The captain notices the echo time is much shorter than it would be if they were using radar in air.",
+      question: "Why does sound-based sonar work better than radar for underwater detection?",
       options: [
-        { text: "6.8 meters", correct: false },
-        { text: "3.4 meters", correct: true },
-        { text: "0.68 meters", correct: false },
-        { text: "0.34 meters", correct: false }
+        { id: 'a', label: "Radar signals are too weak underwater" },
+        { id: 'b', label: "Sound travels well through water while electromagnetic waves are heavily absorbed", correct: true },
+        { id: 'c', label: "Sound travels slower underwater, making it more accurate" },
+        { id: 'd', label: "Submarines cannot generate radar signals" }
       ],
-      explanation: "Total distance = 340 × 0.02 = 6.8m. But this is round-trip, so the insect is 6.8/2 = 3.4 meters away."
+      explanation: "Water is an excellent conductor of sound (1500 m/s, about 4x faster than air) but heavily absorbs electromagnetic radiation like radar. This is why submarines use sonar (sound) for detection while aircraft use radar (radio waves) in air."
     },
     {
-      question: "Why can't we use echo-location to measure the distance to the Moon?",
+      scenario: "An ultrasound technician is imaging a patient's kidney. The ultrasound pulse takes 0.00013 seconds (130 microseconds) to return from the kidney. Sound in body tissue travels at approximately 1540 m/s.",
+      question: "How deep inside the body is the kidney located?",
       options: [
-        { text: "The Moon is too far", correct: false },
-        { text: "There's no air in space for sound to travel", correct: true },
-        { text: "Sound would take too long", correct: false },
-        { text: "We actually can use echoes", correct: false }
+        { id: 'a', label: "20 centimeters" },
+        { id: 'b', label: "10 centimeters", correct: true },
+        { id: 'c', label: "5 centimeters" },
+        { id: 'd', label: "40 centimeters" }
       ],
-      explanation: "Sound needs a medium (like air or water) to travel. Space is a vacuum with no molecules, so sound cannot travel there. We use radio waves instead!"
+      explanation: "Distance = (Speed x Time) / 2 = (1540 m/s x 0.00013s) / 2 = 0.2002/2 = 0.1001 meters = about 10 centimeters. Medical ultrasound uses the same echo principle as sonar but with much higher frequencies for detailed images."
     },
     {
-      question: "Dolphins use echolocation underwater. Why is this effective?",
+      scenario: "A geologist uses seismic equipment to study rock layers underground. She creates a small explosion and detects the echo 4 seconds later. Sound travels through this rock at 5000 m/s.",
+      question: "How deep is the rock layer boundary that reflected the seismic wave?",
       options: [
-        { text: "Dolphins have better ears", correct: false },
-        { text: "Sound travels 4x faster in water, giving quick responses", correct: true },
-        { text: "Water amplifies sound", correct: false },
-        { text: "Dolphins can see sound", correct: false }
+        { id: 'a', label: "20,000 meters" },
+        { id: 'b', label: "10,000 meters", correct: true },
+        { id: 'c', label: "5,000 meters" },
+        { id: 'd', label: "2,500 meters" }
       ],
-      explanation: "Sound travels about 4 times faster in water (~1500 m/s) than air (~340 m/s). This means dolphins get rapid echo responses for precise navigation."
+      explanation: "Distance = (Speed x Time) / 2 = (5000 m/s x 4s) / 2 = 20,000/2 = 10,000 meters (10 km). Seismic surveys use this principle to map underground structures, including finding oil and gas deposits."
     },
     {
-      question: "An ultrasound machine measures a fetus at 0.1 seconds echo time. If sound in body tissue is ~1540 m/s, how deep is the image?",
+      scenario: "Dolphins use echolocation to navigate murky waters where visibility is near zero. A dolphin clicks and receives an echo in 0.002 seconds.",
+      question: "How far away is the object the dolphin detected? (Sound in water = 1500 m/s)",
       options: [
-        { text: "154 meters", correct: false },
-        { text: "77 meters", correct: false },
-        { text: "7.7 cm", correct: true },
-        { text: "15.4 cm", correct: false }
+        { id: 'a', label: "3 meters" },
+        { id: 'b', label: "1.5 meters", correct: true },
+        { id: 'c', label: "0.75 meters" },
+        { id: 'd', label: "6 meters" }
       ],
-      explanation: "Distance = (1540 × 0.1) / 2 = 77m... wait, that's too far! Actually 0.1 seconds = 100ms. For medical ultrasound, typical times are microseconds. 0.0001s × 1540 / 2 = 7.7cm."
+      explanation: "Distance = (Speed x Time) / 2 = (1500 m/s x 0.002s) / 2 = 3/2 = 1.5 meters. Dolphins can build detailed 'sound pictures' of their environment using these rapid echo calculations, detecting fish, obstacles, and even the texture of objects."
     },
     {
-      question: "Why do bats use ultrasonic (high frequency) sounds for echolocation?",
+      scenario: "A parking sensor in a car beeps faster as you approach a wall. The sensor emits ultrasonic pulses and measures the return time.",
+      question: "If the echo time decreases from 0.006 seconds to 0.002 seconds, how has the distance to the wall changed?",
       options: [
-        { text: "They can't hear low sounds", correct: false },
-        { text: "Higher frequencies give more detail/resolution", correct: true },
-        { text: "Low sounds are too loud", correct: false },
-        { text: "Insects can't hear ultrasound", correct: false }
+        { id: 'a', label: "The car moved from about 1m to about 0.33m from the wall", correct: true },
+        { id: 'b', label: "The car moved from about 2m to about 0.67m from the wall" },
+        { id: 'c', label: "The car is now twice as close to the wall" },
+        { id: 'd', label: "The distance didn't change, only the beep frequency" }
       ],
-      explanation: "Higher frequency sounds have shorter wavelengths, which can detect smaller objects and provide more detailed 'images' of the environment."
+      explanation: "At 0.006s: Distance = (340 x 0.006) / 2 = 1.02m. At 0.002s: Distance = (340 x 0.002) / 2 = 0.34m. The echo time is directly proportional to distance, so as you get closer, the echo returns faster, and the sensor beeps more frequently to warn you."
     },
     {
-      question: "A ship's sonar detects a submarine with a 4-second echo time. How deep is the sub? (Sound in water ≈ 1500 m/s)",
+      scenario: "Scientists want to measure the distance to the Moon. They consider using sound but ultimately choose to bounce laser pulses off reflectors left by astronauts.",
+      question: "Why can't scientists use sound echoes to measure the distance to the Moon?",
       options: [
-        { text: "6000 meters", correct: false },
-        { text: "3000 meters", correct: true },
-        { text: "1500 meters", correct: false },
-        { text: "750 meters", correct: false }
+        { id: 'a', label: "Sound would take too long to reach the Moon" },
+        { id: 'b', label: "Sound requires a medium to travel through, and space is a vacuum", correct: true },
+        { id: 'c', label: "The Moon absorbs all sound waves" },
+        { id: 'd', label: "Sound echoes only work for distances under 1000 km" }
       ],
-      explanation: "Total distance = 1500 × 4 = 6000m. Divide by 2 for one-way distance: 6000/2 = 3000 meters deep."
+      explanation: "Sound is a mechanical wave that requires molecules to propagate - it travels through collisions between particles. Space is a vacuum with virtually no molecules, so sound cannot travel through it. Light (electromagnetic waves) can travel through vacuum, which is why laser ranging works."
     },
     {
-      question: "Why does thunder seem to 'roll' and last several seconds?",
+      scenario: "A researcher is comparing sonar systems for a deep-sea exploration vehicle. She tests systems using different sound frequencies - some very high (ultrasonic) and some lower.",
+      question: "What is the trade-off between using high-frequency versus low-frequency sonar?",
       options: [
-        { text: "Lightning is very long", correct: false },
-        { text: "Sound echoes off clouds and terrain", correct: false },
-        { text: "Thunder is actually multiple sounds", correct: false },
-        { text: "All of the above", correct: true }
+        { id: 'a', label: "High frequency travels farther but gives less detail" },
+        { id: 'b', label: "High frequency gives more detail but is absorbed faster, limiting range", correct: true },
+        { id: 'c', label: "Low frequency is better in all situations" },
+        { id: 'd', label: "Frequency doesn't affect sonar performance" }
       ],
-      explanation: "Thunder rolls because: the lightning bolt is long (sound from different parts arrives at different times), sound echoes off terrain and clouds, and multiple return strokes can occur!"
+      explanation: "Higher frequency sound waves have shorter wavelengths, allowing them to detect smaller objects and provide finer detail (better resolution). However, high frequencies are absorbed more quickly by water, limiting their range. Low frequencies travel farther but with less detail. This is why bats use high-frequency ultrasound for precise insect detection at short range."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

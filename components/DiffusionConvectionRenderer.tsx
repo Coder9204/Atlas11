@@ -154,104 +154,114 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "What is the primary driving force behind diffusion?",
+      scenario: "You place a drop of food coloring in a glass of perfectly still room-temperature water and watch it slowly spread without stirring.",
+      question: "What physical process is causing the food coloring to spread?",
       options: [
-        { text: "Temperature differences", correct: false },
-        { text: "Random molecular motion", correct: true },
-        { text: "Gravity", correct: false },
-        { text: "Pressure differences", correct: false }
+        { id: 'a', label: "Convection currents in the water" },
+        { id: 'b', label: "Diffusion - random molecular motion spreading molecules from high to low concentration", correct: true },
+        { id: 'c', label: "Gravity pulling the dye downward" },
+        { id: 'd', label: "Chemical reactions between dye and water" }
       ],
-      explanation: "Diffusion occurs due to random molecular motion (Brownian motion). Molecules naturally spread from high to low concentration areas through this random movement."
+      explanation: "In still, uniform-temperature water, diffusion is the primary mechanism. Molecules are in constant random motion (Brownian motion), and over time this causes them to spread from areas of high concentration to low concentration until evenly distributed."
     },
     {
-      question: "Why does dye spread faster in hot water than cold water?",
+      scenario: "A chef notices that when they add cream to hot coffee, it mixes almost instantly, but when added to iced coffee, the cream forms visible swirls for much longer.",
+      question: "Why does the cream mix faster in hot coffee?",
       options: [
-        { text: "Hot water is thinner", correct: false },
-        { text: "Convection currents carry the dye", correct: true },
-        { text: "Hot water has more oxygen", correct: false },
-        { text: "Dye dissolves better when hot", correct: false }
+        { id: 'a', label: "Hot liquids are less viscous and allow faster movement" },
+        { id: 'b', label: "Temperature gradients create convection currents that rapidly transport and mix the cream", correct: true },
+        { id: 'c', label: "Hot coffee chemically reacts with cream" },
+        { id: 'd', label: "Steam from the hot coffee pushes the cream around" }
       ],
-      explanation: "In hot water, temperature gradients create convection currents that actively transport the dye throughout the liquid, much faster than diffusion alone."
+      explanation: "In hot coffee, temperature differences between the cream and coffee create convection currents - bulk fluid movements that rapidly transport and mix materials. This is much faster than diffusion alone, which dominates in the cold coffee with minimal temperature gradients."
     },
     {
-      question: "What creates convection currents in a fluid?",
+      scenario: "A lava lamp sits on a desk, with colorful blobs constantly rising from the bottom, reaching the top, then sinking back down.",
+      question: "What drives the continuous rising and sinking motion in the lava lamp?",
       options: [
-        { text: "Magnetic fields", correct: false },
-        { text: "Temperature differences causing density changes", correct: true },
-        { text: "Wind from outside", correct: false },
-        { text: "Chemical reactions", correct: false }
+        { id: 'a', label: "Magnets hidden in the base alternating polarity" },
+        { id: 'b', label: "The light bulb heats the wax, making it less dense so it rises; it cools at the top and sinks", correct: true },
+        { id: 'c', label: "Air bubbles forming and popping in the wax" },
+        { id: 'd', label: "Electric currents flowing through the liquid" }
       ],
-      explanation: "Convection occurs because warm fluid is less dense and rises, while cooler fluid sinks. This creates circular current patterns that transport heat and matter."
+      explanation: "This is convection in action. The heat source at the bottom warms the wax, causing it to expand and become less dense than the surrounding liquid. Buoyancy forces push it upward. At the top, away from the heat, it cools, contracts, becomes denser, and sinks - creating the mesmerizing cycle."
     },
     {
-      question: "In which scenario would you expect pure diffusion (no convection)?",
+      scenario: "A biologist is studying how oxygen reaches cells deep inside the human body after entering through the lungs.",
+      question: "How does oxygen primarily travel from the lungs to distant tissues?",
       options: [
-        { text: "Boiling water", correct: false },
-        { text: "A uniformly heated room-temperature liquid", correct: true },
-        { text: "A pot on a stove", correct: false },
-        { text: "Ocean near the equator", correct: false }
+        { id: 'a', label: "Purely by diffusion through body tissues" },
+        { id: 'b', label: "Convection via blood circulation carries it most of the way, then diffusion moves it into cells", correct: true },
+        { id: 'c', label: "Nerve signals direct oxygen to where it's needed" },
+        { id: 'd', label: "Lymphatic system transport" }
       ],
-      explanation: "Pure diffusion dominates when there are no temperature gradients. In a uniformly heated liquid, there's no density difference to drive convection."
+      explanation: "Both processes work together. Blood circulation (convection) rapidly transports oxygen throughout the body. At the capillary level, oxygen then diffuses from the blood (high concentration) into the cells (low concentration). This combination is far more efficient than diffusion alone."
     },
     {
-      question: "Which process is faster for spreading substances through a liquid?",
+      scenario: "Perfume is sprayed in one corner of a completely still, air-conditioned room with uniform temperature. After several minutes, people across the room can smell it.",
+      question: "What is the primary mechanism spreading the perfume scent in this scenario?",
       options: [
-        { text: "Diffusion", correct: false },
-        { text: "Convection", correct: true },
-        { text: "They're equally fast", correct: false },
-        { text: "It depends on the substance", correct: false }
+        { id: 'a', label: "Air currents from the AC system" },
+        { id: 'b', label: "Diffusion - random molecular motion carrying scent molecules through the air", correct: true },
+        { id: 'c', label: "Perfume molecules are attracted to human noses" },
+        { id: 'd', label: "Convection from body heat of people in the room" }
       ],
-      explanation: "Convection is much faster because it involves bulk fluid movement, transporting large amounts of material simultaneously. Diffusion relies on slow random molecular motion."
+      explanation: "In a still room with uniform temperature, there are no significant air currents to drive convection. The scent spreads through diffusion - perfume molecules randomly collide with air molecules and gradually spread from high concentration (near the spray) to low concentration (across the room). This is relatively slow."
     },
     {
-      question: "In a lava lamp, what causes the colored blobs to rise and fall?",
+      scenario: "An oceanographer is studying how the Gulf Stream moves warm water from the Gulf of Mexico toward Europe, moderating the climate there.",
+      question: "What type of heat transfer mechanism best describes ocean currents like the Gulf Stream?",
       options: [
-        { text: "Magnets in the base", correct: false },
-        { text: "Convection from the heated bottom", correct: true },
-        { text: "Air bubbles", correct: false },
-        { text: "Chemical reactions", correct: false }
+        { id: 'a', label: "Radiation - heat energy traveling as electromagnetic waves" },
+        { id: 'b', label: "Convection - bulk fluid movement transporting thermal energy", correct: true },
+        { id: 'c', label: "Conduction - heat transfer through direct molecular contact" },
+        { id: 'd', label: "Diffusion - random spreading of heat molecules" }
       ],
-      explanation: "The lava lamp works by convection. The light bulb heats the wax at the bottom, making it less dense so it rises. At the top, it cools, becomes denser, and sinks."
+      explanation: "Ocean currents are large-scale convection. Warm water (which is less dense) moves in bulk, transporting enormous amounts of thermal energy across vast distances. This is far more efficient than molecular diffusion for moving heat over such scales."
     },
     {
-      question: "Ocean currents that distribute heat around the planet are an example of:",
+      scenario: "A researcher is comparing how quickly a drop of ink spreads in cold water (5C) versus hot water (80C), with both containers kept completely still.",
+      question: "Even without convection, why does the ink spread faster in the hot water?",
       options: [
-        { text: "Diffusion", correct: false },
-        { text: "Convection", correct: true },
-        { text: "Conduction", correct: false },
-        { text: "Radiation", correct: false }
+        { id: 'a', label: "Hot water has less surface tension" },
+        { id: 'b', label: "Higher temperature means faster molecular motion, increasing the rate of diffusion", correct: true },
+        { id: 'c', label: "Ink is more soluble in hot water" },
+        { id: 'd', label: "Hot water has more dissolved gases that help spread the ink" }
       ],
-      explanation: "Ocean currents are massive convection systems driven by temperature and salinity differences. They transport enormous amounts of heat from the equator to the poles."
+      explanation: "Temperature directly affects molecular kinetic energy. In hotter water, molecules move faster and collide more frequently, causing the ink molecules to spread more rapidly through random motion. This is why diffusion rate increases with temperature."
     },
     {
-      question: "Why are radiators typically placed near the floor in buildings?",
+      scenario: "In a traditional hot air balloon, a burner heats the air inside the envelope, causing the balloon to rise.",
+      question: "What physical principle allows the hot air balloon to rise?",
       options: [
-        { text: "They're easier to install there", correct: false },
-        { text: "Warm air rises, creating room-wide convection", correct: true },
-        { text: "Heat travels downward", correct: false },
-        { text: "It's a safety requirement", correct: false }
+        { id: 'a', label: "The fire pushes the balloon upward" },
+        { id: 'b', label: "Heated air expands and becomes less dense than surrounding cool air, creating buoyancy", correct: true },
+        { id: 'c', label: "Hot air molecules are lighter than cold air molecules" },
+        { id: 'd', label: "The envelope fabric repels cold air" }
       ],
-      explanation: "Low-placed radiators heat the air near the floor. This warm air rises, creating convection currents that circulate heat throughout the entire room."
+      explanation: "This is the same principle that drives convection. When air is heated, molecules move faster and spread apart, decreasing the air's density. The less dense hot air inside the balloon is buoyed upward by the denser cool air surrounding it, just like warm water rising in a pot."
     },
     {
-      question: "What happens to the rate of diffusion as temperature increases?",
+      scenario: "A pharmaceutical company needs to design a drug patch that releases medication slowly through the skin over 24 hours.",
+      question: "What transport mechanism does the drug patch primarily rely on to deliver medication through skin?",
       options: [
-        { text: "It decreases", correct: false },
-        { text: "It stays the same", correct: false },
-        { text: "It increases", correct: true },
-        { text: "It stops completely", correct: false }
+        { id: 'a', label: "Convection through blood vessels in the patch" },
+        { id: 'b', label: "Diffusion - drug molecules move from high concentration in the patch to lower concentration in the body", correct: true },
+        { id: 'c', label: "Osmosis pulling water and drugs through the skin" },
+        { id: 'd', label: "Active transport requiring ATP energy" }
       ],
-      explanation: "Higher temperature means faster molecular motion, which speeds up diffusion. However, in liquids, convection often dominates when temperature gradients exist."
+      explanation: "Transdermal patches rely on diffusion. The drug is at high concentration in the patch and moves through the skin toward lower concentration in the body. The patch design controls the diffusion rate to achieve steady, extended drug delivery over time."
     },
     {
-      question: "The smell of perfume spreading across a still room is primarily due to:",
+      scenario: "Atmospheric scientists observe that the Earth's mantle, despite being mostly solid, flows very slowly over millions of years, driving plate tectonics.",
+      question: "What type of flow describes the slow movement of Earth's mantle material?",
       options: [
-        { text: "Convection in air", correct: false },
-        { text: "Diffusion of molecules", correct: true },
-        { text: "Air conditioning", correct: false },
-        { text: "Gravity pulling scent down", correct: false }
+        { id: 'a', label: "Diffusion of rock molecules through the solid mantle" },
+        { id: 'b', label: "Convection - hot material rises, cools, and sinks in vast circulation patterns", correct: true },
+        { id: 'c', label: "Magnetic field forces moving iron-rich rock" },
+        { id: 'd', label: "Tidal forces from the moon stirring the mantle" }
       ],
-      explanation: "In still air without temperature gradients, perfume spreads primarily through diffusion - random molecular motion gradually carrying scent molecules throughout the room."
+      explanation: "The mantle undergoes extremely slow convection over geological timescales. Hot material from near the core rises, spreads as it cools, then sinks back down. This convection is believed to be a major driver of plate tectonics, causing continents to move over millions of years."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

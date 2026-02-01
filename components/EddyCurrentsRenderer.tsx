@@ -132,104 +132,114 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "What causes eddy currents to form in a conductor?",
+      scenario: "A science teacher drops a strong magnet through a vertical copper tube and a vertical PVC plastic tube of the same dimensions. Students observe that the magnet falls much slower through the copper tube.",
+      question: "Why does the magnet fall slowly through the copper tube but quickly through the plastic tube?",
       options: [
-        { text: "Static electric charge", correct: false },
-        { text: "Changing magnetic field", correct: true },
-        { text: "Temperature difference", correct: false },
-        { text: "Direct current", correct: false }
+        { id: 'a', label: "Copper is magnetic and attracts the magnet, slowing it down" },
+        { id: 'b', label: "The changing magnetic field induces eddy currents in copper, which create an opposing magnetic field", correct: true },
+        { id: 'c', label: "Air resistance is higher inside copper tubes" },
+        { id: 'd', label: "Copper tubes have more friction on their inner surface" }
       ],
-      explanation: "Eddy currents are induced in conductors when they experience a changing magnetic field, following Faraday's Law of electromagnetic induction."
+      explanation: "As the magnet falls, its magnetic field passes through the copper (a conductor), inducing circular eddy currents. By Lenz's Law, these currents create a magnetic field that opposes the change - in this case, opposing the magnet's motion. Plastic is non-conductive, so no eddy currents form."
     },
     {
-      question: "According to Lenz's Law, eddy currents create a magnetic field that:",
+      scenario: "A roller coaster uses electromagnetic brakes at the end of the ride. Unlike traditional friction brakes, these never need pad replacements despite hundreds of daily stops.",
+      question: "How do electromagnetic brakes stop the roller coaster without physical contact?",
       options: [
-        { text: "Enhances the original change", correct: false },
-        { text: "Opposes the change that created them", correct: true },
-        { text: "Has no effect", correct: false },
-        { text: "Points in the same direction", correct: false }
+        { id: 'a', label: "They shoot compressed air at the wheels" },
+        { id: 'b', label: "Strong magnets pass near conducting fins, inducing eddy currents that oppose the motion", correct: true },
+        { id: 'c', label: "Electric shocks slow down the cars" },
+        { id: 'd', label: "Reverse motors push against the wheels" }
       ],
-      explanation: "Lenz's Law states that induced currents always create a magnetic field that opposes the change in magnetic flux that induced them."
+      explanation: "Electromagnetic brakes work by passing conductors (metal fins on the coaster) through a magnetic field. This induces eddy currents that create an opposing magnetic force, slowing the vehicle. Since there's no physical contact, there's no wear - making them ideal for high-use applications like roller coasters and high-speed trains."
     },
     {
-      question: "Why does a magnet fall slowly through a copper tube?",
+      scenario: "An induction cooktop heats a steel pan placed on its surface, but when someone tries to use a glass pot, it doesn't heat up at all.",
+      question: "Why does the induction cooktop only heat metal cookware?",
       options: [
-        { text: "Air resistance", correct: false },
-        { text: "Friction", correct: false },
-        { text: "Eddy currents create opposing magnetic field", correct: true },
-        { text: "Gravity is weaker inside tubes", correct: false }
+        { id: 'a', label: "Metal pots are darker and absorb more heat" },
+        { id: 'b', label: "The cooktop uses a rapidly changing magnetic field to induce eddy currents, which only form in conductors", correct: true },
+        { id: 'c', label: "Glass pots reflect the infrared heat from the cooktop" },
+        { id: 'd', label: "Metal pots make better contact with the heating surface" }
       ],
-      explanation: "As the magnet falls, it induces eddy currents in the copper. These currents create a magnetic field opposing the magnet's motion, acting as a brake."
+      explanation: "Induction cooktops generate a rapidly alternating magnetic field. When a metal pan is placed above, this changing field induces eddy currents in the pan. The pan's electrical resistance converts these currents into heat. Glass is non-conductive, so no eddy currents can form, and it remains cool."
     },
     {
-      question: "Eddy currents convert kinetic energy into:",
+      scenario: "Engineers designing electric power transformers notice significant energy is being lost as heat in the iron core. They propose a solution to reduce these losses.",
+      question: "How do engineers reduce eddy current losses in transformer cores?",
       options: [
-        { text: "Nuclear energy", correct: false },
-        { text: "Chemical energy", correct: false },
-        { text: "Heat energy", correct: true },
-        { text: "Light energy", correct: false }
+        { id: 'a', label: "Use solid copper cores instead of iron" },
+        { id: 'b', label: "Laminate the core with thin insulated sheets to break up eddy current paths", correct: true },
+        { id: 'c', label: "Make the core smaller" },
+        { id: 'd', label: "Run the transformer at higher frequency" }
       ],
-      explanation: "The resistance of the conductor causes eddy currents to dissipate energy as heat. This is how electromagnetic braking works - motion energy becomes thermal energy."
+      explanation: "Laminated cores consist of thin iron sheets coated with insulation stacked together. This breaks up the large circular paths that eddy currents would follow in a solid core, forcing them into smaller, weaker loops. This dramatically reduces energy losses while maintaining the magnetic properties needed for the transformer."
     },
     {
-      question: "Which material would produce the STRONGEST eddy currents?",
+      scenario: "A metal detector at an airport beeps when someone walks through with a metal belt buckle, but not when they have a plastic comb in their pocket.",
+      question: "How does the metal detector distinguish between metal and non-metal objects?",
       options: [
-        { text: "Wood", correct: false },
-        { text: "Glass", correct: false },
-        { text: "Copper", correct: true },
-        { text: "Plastic", correct: false }
+        { id: 'a', label: "It weighs the person and detects heavier objects" },
+        { id: 'b', label: "The detector's magnetic field induces eddy currents only in metals, which are then detected", correct: true },
+        { id: 'c', label: "It uses X-rays to see inside pockets" },
+        { id: 'd', label: "Metal reflects radio waves while plastic absorbs them" }
       ],
-      explanation: "Copper is an excellent electrical conductor, so it allows large eddy currents to flow. Non-conductors like wood, glass, and plastic cannot support eddy currents."
+      explanation: "Metal detectors emit a changing magnetic field. When metal passes through, eddy currents are induced in the metal object. These eddy currents create their own magnetic field, which is detected by the sensor. Non-conductive materials like plastic cannot support eddy currents, so they don't trigger the detector."
     },
     {
-      question: "To reduce unwanted eddy currents in transformers, engineers use:",
+      scenario: "A physicist notices that when she moves a magnet toward a copper plate, she feels resistance, as if something is pushing back. When she pulls the magnet away, she again feels resistance.",
+      question: "What explains this resistance to both approaching and retreating the magnet?",
       options: [
-        { text: "Solid metal cores", correct: false },
-        { text: "Laminated (layered) cores", correct: true },
-        { text: "Rubber insulation", correct: false },
-        { text: "Larger wires", correct: false }
+        { id: 'a', label: "Copper naturally repels all magnets" },
+        { id: 'b', label: "Eddy currents always create a field that opposes any change in magnetic flux (Lenz's Law)", correct: true },
+        { id: 'c', label: "Air pressure between the magnet and copper" },
+        { id: 'd', label: "Static electricity building up on the copper surface" }
       ],
-      explanation: "Laminated cores (thin sheets with insulation between them) break up the path for eddy currents, reducing their magnitude and the energy lost as heat."
+      explanation: "Lenz's Law states that induced currents always oppose the change that created them. When approaching, eddy currents create a repelling field. When retreating, they create an attracting field. Either way, the eddy currents resist the change in magnetic flux, creating the felt resistance."
     },
     {
-      question: "Electromagnetic brakes are preferred over friction brakes because they:",
+      scenario: "High-speed trains like the Shinkansen use regenerative braking combined with electromagnetic brakes. Engineers observe the electromagnetic braking force is stronger at higher speeds.",
+      question: "Why does electromagnetic braking force increase with the train's speed?",
       options: [
-        { text: "Are cheaper", correct: false },
-        { text: "Don't wear out from contact", correct: true },
-        { text: "Are heavier", correct: false },
-        { text: "Work only at high speeds", correct: false }
+        { id: 'a', label: "The magnets get hotter at high speed and become stronger" },
+        { id: 'b', label: "Faster motion means faster-changing magnetic flux, inducing stronger eddy currents", correct: true },
+        { id: 'c', label: "Wind resistance adds to the braking force" },
+        { id: 'd', label: "The train's weight increases with speed" }
       ],
-      explanation: "Electromagnetic brakes have no physical contact, so there's no wear on brake pads. They're ideal for applications needing frequent, reliable braking."
+      explanation: "The strength of induced eddy currents depends on how quickly the magnetic flux changes (Faraday's Law). At higher speeds, the rate of change of magnetic flux is greater, inducing larger eddy currents and therefore a stronger opposing magnetic force. This makes electromagnetic brakes particularly effective for slowing high-speed vehicles."
     },
     {
-      question: "If a magnet moves FASTER through a conductor, the eddy currents will be:",
+      scenario: "A renewable energy company is testing a new type of generator. When they spin a copper disk between strong magnets, they can extract electrical current, but the disk gets warm during operation.",
+      question: "Why does the spinning copper disk heat up during electricity generation?",
       options: [
-        { text: "Weaker", correct: false },
-        { text: "The same", correct: false },
-        { text: "Stronger", correct: true },
-        { text: "Zero", correct: false }
+        { id: 'a', label: "Friction between the disk and the magnets" },
+        { id: 'b', label: "Eddy currents flowing through the disk's resistance convert energy to heat", correct: true },
+        { id: 'c', label: "The magnets emit infrared radiation" },
+        { id: 'd', label: "Chemical reactions in the copper" }
       ],
-      explanation: "Faster motion means a faster rate of change of magnetic flux, which induces stronger eddy currents. This is why magnetic braking force increases with speed."
+      explanation: "When eddy currents flow through a conductor, they encounter electrical resistance. According to Joule heating (P = I²R), this resistance converts electrical energy into heat. This is the same principle that makes induction cooktops work - it's useful for cooking but represents energy loss in generators and transformers."
     },
     {
-      question: "Induction cooktops use eddy currents to:",
+      scenario: "A factory uses an electromagnetic sorting system to separate aluminum cans from non-metallic waste on a conveyor belt without any physical contact.",
+      question: "How can the electromagnetic system push aluminum cans off the belt if aluminum is not magnetic?",
       options: [
-        { text: "Cool food", correct: false },
-        { text: "Generate electricity", correct: false },
-        { text: "Heat metal pans directly", correct: true },
-        { text: "Create magnetic fields in food", correct: false }
+        { id: 'a', label: "Aluminum becomes temporarily magnetized by the strong field" },
+        { id: 'b', label: "Eddy currents induced in the aluminum create a field that is repelled by the source magnets", correct: true },
+        { id: 'c', label: "The system uses static electricity to attract the cans" },
+        { id: 'd', label: "High-frequency vibrations shake the cans off the belt" }
       ],
-      explanation: "Induction cooktops create a rapidly changing magnetic field that induces eddy currents in metal cookware. The pan's resistance converts these currents to heat."
+      explanation: "Although aluminum is not ferromagnetic (not attracted to magnets), it is an excellent conductor. When aluminum passes through a changing magnetic field, eddy currents are induced. These currents create their own magnetic field that interacts with the source field, generating a repulsive force that pushes the cans off the belt."
     },
     {
-      question: "The phenomenon where eddy currents oppose the motion that creates them is a consequence of:",
+      scenario: "A physics student wonders why Lenz's Law states that eddy currents must oppose the change that creates them, rather than enhancing it.",
+      question: "What fundamental physical principle requires eddy currents to oppose rather than enhance the change?",
       options: [
-        { text: "Newton's Laws", correct: false },
-        { text: "Conservation of energy", correct: true },
-        { text: "Relativity", correct: false },
-        { text: "Quantum mechanics", correct: false }
+        { id: 'a', label: "Newton's third law of motion" },
+        { id: 'b', label: "Conservation of energy - enhancing the change would create energy from nothing", correct: true },
+        { id: 'c', label: "The uncertainty principle" },
+        { id: 'd', label: "The principle of least action" }
       ],
-      explanation: "Lenz's Law is a consequence of energy conservation. If eddy currents enhanced motion instead of opposing it, we could create energy from nothing - violating conservation!"
+      explanation: "If eddy currents enhanced the motion that creates them, a falling magnet would accelerate faster through a copper tube, gaining kinetic energy without any input - a violation of energy conservation. Lenz's Law is essentially a statement of energy conservation applied to electromagnetic induction."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

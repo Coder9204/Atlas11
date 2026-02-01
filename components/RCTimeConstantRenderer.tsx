@@ -208,104 +208,114 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "The time constant τ (tau) of an RC circuit equals:",
+      scenario: "A photographer takes a photo with flash, then immediately tries to take another shot. The flash doesn't fire, and a small indicator light on the camera is blinking. After waiting a few seconds, the light turns solid and the flash is ready again.",
+      question: "What determines how long the photographer must wait between flash photos?",
       options: [
-        { text: "R + C", correct: false },
-        { text: "R - C", correct: false },
-        { text: "R × C", correct: true },
-        { text: "R / C", correct: false }
+        { id: 'a', label: "The camera's processor speed for saving images" },
+        { id: 'b', label: "The RC time constant of the flash charging circuit determines how quickly the capacitor recharges", correct: true },
+        { id: 'c', label: "The flash bulb needs time to cool down" },
+        { id: 'd', label: "The battery voltage needs to stabilize" }
       ],
-      explanation: "The time constant τ = R × C (resistance times capacitance). It has units of time (seconds when R is in ohms and C is in farads)."
+      explanation: "Camera flashes use a capacitor that must charge through a resistor before firing. The RC time constant (τ = R × C) determines charging speed. After about 5 time constants (5τ), the capacitor reaches 99% charge. Larger capacitors or higher resistance means longer wait times between shots."
     },
     {
-      question: "After one time constant (1τ), a charging capacitor reaches approximately:",
+      scenario: "An audio engineer adjusts the bass knob on a mixing console. As they turn it down, the low rumbling sounds in the recording become quieter while the vocals and high-pitched instruments remain unchanged.",
+      question: "How does the RC time constant relate to audio filtering?",
       options: [
-        { text: "50% of final voltage", correct: false },
-        { text: "63% of final voltage", correct: true },
-        { text: "86% of final voltage", correct: false },
-        { text: "100% of final voltage", correct: false }
+        { id: 'a', label: "RC circuits can only affect volume, not frequency" },
+        { id: 'b', label: "The time constant τ = RC determines the cutoff frequency; frequencies below 1/(2πRC) pass through a low-pass filter", correct: true },
+        { id: 'c', label: "Audio filtering uses digital processing, not RC circuits" },
+        { id: 'd', label: "The bass knob adjusts speaker size" }
       ],
-      explanation: "After 1τ, the capacitor charges to (1 - e⁻¹) ≈ 63.2% of the supply voltage. This is a fundamental property of exponential charging."
+      explanation: "The cutoff frequency of an RC filter is f = 1/(2πRC). Low-pass filters allow frequencies below this cutoff to pass while attenuating higher frequencies. By changing R or C, engineers control which frequencies pass through. Bass controls use this principle to boost or cut low frequencies."
     },
     {
-      question: "A capacitor is considered 'fully charged' after approximately:",
+      scenario: "A hospital defibrillator technician is testing the device. The charging indicator shows the capacitor filling: 25%... 50%... 75%... but each additional 25% takes longer than the previous one to reach.",
+      question: "Why does the capacitor charge quickly at first but slow down as it fills?",
       options: [
-        { text: "1 time constant", correct: false },
-        { text: "2 time constants", correct: false },
-        { text: "5 time constants", correct: true },
-        { text: "10 time constants", correct: false }
+        { id: 'a', label: "The battery gets tired and delivers less power" },
+        { id: 'b', label: "As the capacitor charges, the voltage difference decreases, reducing current flow and slowing the charging rate", correct: true },
+        { id: 'c', label: "The resistor heats up and increases resistance" },
+        { id: 'd', label: "The display is showing incorrect percentages" }
       ],
-      explanation: "After 5τ, the capacitor reaches about 99.3% of its final value. For practical purposes, this is considered fully charged."
+      explanation: "Charging current depends on the voltage difference between the supply and capacitor (I = V/R). Initially, this difference is large, so current flows quickly. As the capacitor charges, the difference shrinks, reducing current. This creates the characteristic exponential curve: rapid initial charging that gradually slows, approaching but never quite reaching full voltage."
     },
     {
-      question: "What happens if you increase the resistance in an RC circuit?",
+      scenario: "An electronics hobbyist builds two circuits: one with a 1kΩ resistor and 100μF capacitor, another with a 10kΩ resistor and 100μF capacitor. When powered on simultaneously, the first circuit's LED lights up much sooner.",
+      question: "How does the resistance value affect the charging time?",
       options: [
-        { text: "Charging gets faster", correct: false },
-        { text: "Charging gets slower", correct: true },
-        { text: "Maximum voltage increases", correct: false },
-        { text: "Nothing changes", correct: false }
+        { id: 'a', label: "Higher resistance makes the circuit charge faster" },
+        { id: 'b', label: "Resistance doesn't affect charging time, only capacitance does" },
+        { id: 'c', label: "Higher resistance limits current flow, increasing the time constant and slowing charging", correct: true },
+        { id: 'd', label: "The LED brightness affects charging time" }
       ],
-      explanation: "Higher resistance means less current can flow, so it takes longer to charge the capacitor. τ = RC, so larger R means larger τ."
+      explanation: "The time constant τ = R × C. With the same capacitor (100μF), the first circuit has τ = 1kΩ × 100μF = 0.1 seconds, while the second has τ = 10kΩ × 100μF = 1 second. Higher resistance limits current flow, so it takes longer to transfer the same amount of charge to the capacitor. The second circuit takes 10 times longer to reach the same charge level."
     },
     {
-      question: "The charging curve of a capacitor is:",
+      scenario: "A power supply engineer designs a circuit to smooth the 60 Hz ripple from rectified AC. She calculates that she needs the capacitor to hold its charge for at least 8 milliseconds between power peaks.",
+      question: "What RC time constant should she choose to minimize voltage droop?",
       options: [
-        { text: "Linear", correct: false },
-        { text: "Exponential", correct: true },
-        { text: "Parabolic", correct: false },
-        { text: "Sinusoidal", correct: false }
+        { id: 'a', label: "The time constant should be much smaller than 8ms so the capacitor responds quickly" },
+        { id: 'b', label: "The time constant should be much larger than 8ms so the capacitor holds charge longer with less decay", correct: true },
+        { id: 'c', label: "The time constant should equal exactly 8ms" },
+        { id: 'd', label: "Time constant doesn't affect voltage smoothing" }
       ],
-      explanation: "Capacitor charging follows an exponential curve: V(t) = V₀(1 - e^(-t/τ)). It rises quickly at first, then slows as it approaches the supply voltage."
+      explanation: "During discharge, voltage decays as V = V₀e^(-t/τ). If τ is much larger than the discharge time, the exponential term stays close to 1, meaning minimal voltage drop. For example, if τ = 80ms and discharge time is 8ms, voltage only drops to e^(-0.1) ≈ 90% of peak. Larger τ means smoother, more stable DC output."
     },
     {
-      question: "During discharge, capacitor voltage:",
+      scenario: "A student measures voltage across a charging capacitor in a lab. At t = 0, V = 0V. At t = 2 seconds (one time constant), V = 6.3V. The power supply is 10V.",
+      question: "What voltage should the student expect at t = 4 seconds (two time constants)?",
       options: [
-        { text: "Decreases linearly", correct: false },
-        { text: "Decreases exponentially", correct: true },
-        { text: "Increases exponentially", correct: false },
-        { text: "Stays constant", correct: false }
+        { id: 'a', label: "8.6V, because the capacitor reaches about 86% of supply voltage after 2τ", correct: true },
+        { id: 'b', label: "12.6V, because voltage doubles each time constant" },
+        { id: 'c', label: "7.5V, because charging is linear" },
+        { id: 'd', label: "10V, because the capacitor is fully charged after 2τ" }
       ],
-      explanation: "Discharging follows an exponential decay: V(t) = V₀e^(-t/τ). The voltage drops quickly at first, then more slowly."
+      explanation: "After 2 time constants, V = V₀(1 - e^(-2)) = 10V × 0.865 ≈ 8.6V. The charging follows: 1τ = 63%, 2τ = 86%, 3τ = 95%, 4τ = 98%, 5τ = 99%. Each time constant adds a decreasing percentage, not a fixed amount, which is characteristic of exponential behavior."
     },
     {
-      question: "If R = 10kΩ and C = 100μF, what is the time constant?",
+      scenario: "A burglar alarm designer needs a delay circuit. When a door opens, the homeowner has 30 seconds to enter their code before the alarm sounds. The designer uses an RC circuit where the alarm triggers when the capacitor reaches 8V from a 10V supply.",
+      question: "If the required delay is 30 seconds, approximately what should the time constant be?",
       options: [
-        { text: "1 millisecond", correct: false },
-        { text: "10 milliseconds", correct: false },
-        { text: "100 milliseconds", correct: false },
-        { text: "1 second", correct: true }
+        { id: 'a', label: "30 seconds exactly" },
+        { id: 'b', label: "About 6 seconds, because the alarm needs to trigger before 30 seconds" },
+        { id: 'c', label: "About 19 seconds, because 8V (80%) is reached at approximately 1.6 time constants", correct: true },
+        { id: 'd', label: "About 150 seconds, because we need the circuit to be slow" }
       ],
-      explanation: "τ = RC = 10,000Ω × 0.0001F = 1 second. Remember to convert units: 100μF = 100 × 10⁻⁶F = 0.0001F."
+      explanation: "To find when V reaches 8V (80% of 10V), we solve: 0.8 = 1 - e^(-t/τ), giving e^(-t/τ) = 0.2, so t/τ = 1.6. If t = 30 seconds, then τ = 30/1.6 ≈ 19 seconds. This shows how RC circuits can be designed for specific timing applications by choosing appropriate R and C values."
     },
     {
-      question: "Why can't a capacitor charge instantly to the supply voltage?",
+      scenario: "A medical device technician notices that an older defibrillator takes 15 seconds to charge while a newer model with the same energy capacity charges in only 5 seconds.",
+      question: "What circuit change most likely enabled the faster charging in the new model?",
       options: [
-        { text: "The battery is too weak", correct: false },
-        { text: "Resistance limits current flow", correct: true },
-        { text: "Capacitors are defective", correct: false },
-        { text: "It's a software limitation", correct: false }
+        { id: 'a', label: "The new model uses a higher voltage battery" },
+        { id: 'b', label: "The new model uses lower resistance in the charging circuit, reducing the time constant", correct: true },
+        { id: 'c', label: "The new model has a larger capacitor" },
+        { id: 'd', label: "The new model uses AC instead of DC" }
       ],
-      explanation: "The resistor limits current flow. Initially, current is high but decreases as the capacitor charges. The gradual current flow causes gradual charging."
+      explanation: "Since τ = RC, reducing R reduces the time constant and speeds up charging. If both defibrillators store the same energy (same capacitor), the newer model achieves faster charging by using a lower resistance path (perhaps through improved components or power electronics). Full charge in 5 seconds vs 15 seconds means the time constant is roughly 3 times smaller."
     },
     {
-      question: "In a camera flash, a large capacitor is used to:",
+      scenario: "An electric car owner plugs in their vehicle overnight. The dashboard shows charging slowing down as the battery approaches full. At 80%, charging is rapid; at 95%, it crawls; reaching 100% takes almost as long as going from 0% to 80%.",
+      question: "How does RC charging behavior relate to this battery charging pattern?",
       options: [
-        { text: "Store and quickly release energy", correct: true },
-        { text: "Filter noise", correct: false },
-        { text: "Regulate voltage", correct: false },
-        { text: "Convert AC to DC", correct: false }
+        { id: 'a', label: "Battery charging is unrelated to RC circuits" },
+        { id: 'b', label: "The exponential charging curve means each additional percentage takes longer as the battery fills, similar to how a capacitor approaches but never quite reaches full voltage", correct: true },
+        { id: 'c', label: "The charger intentionally slows down to save electricity" },
+        { id: 'd', label: "The battery gets heavier as it charges, slowing the process" }
       ],
-      explanation: "Camera flash capacitors slowly charge from the battery, then rapidly discharge to produce an intense flash of light in milliseconds."
+      explanation: "While batteries are more complex than capacitors, the charging behavior follows similar exponential principles. As the battery fills, the voltage difference driving current decreases, slowing charge transfer. Going from 63% to 86% (one additional τ) takes as long as going from 0% to 63%. This is why manufacturers often quote '80% charge in X minutes' rather than full charge times."
     },
     {
-      question: "After 2 time constants, a charging capacitor reaches approximately:",
+      scenario: "A guitarist testing amplifier settings plays a sustained note and then suddenly mutes the strings. With one amp setting, the sound cuts off instantly. With another setting, the sound fades out gradually over about half a second.",
+      question: "What does the difference in sound decay reveal about the RC filter in each setting?",
       options: [
-        { text: "63%", correct: false },
-        { text: "75%", correct: false },
-        { text: "86%", correct: true },
-        { text: "95%", correct: false }
+        { id: 'a', label: "The instant cutoff has a very small time constant (fast discharge), while the gradual fade has a larger time constant (slow discharge)", correct: true },
+        { id: 'b', label: "The gradual fade uses digital effects, not RC circuits" },
+        { id: 'c', label: "The instant cutoff has no capacitors in the circuit" },
+        { id: 'd', label: "The difference is in the speaker, not the amplifier" }
       ],
-      explanation: "After 2τ: V = V₀(1 - e⁻²) ≈ 86.5%. The percentages at each τ: 63% (1τ), 86% (2τ), 95% (3τ), 98% (4τ), 99% (5τ)."
+      explanation: "The discharge time constant determines how quickly stored energy drains from the circuit. A small τ means rapid discharge (instant cutoff). A larger τ means the capacitor holds charge longer, releasing energy gradually (gradual fade). Audio engineers manipulate RC values to create different sonic characteristics, from snappy attacks to smooth, sustained tones."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

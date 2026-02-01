@@ -160,104 +160,114 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "According to Ohm's Law, if you double the voltage across a resistor, the current will:",
+      scenario: "You're helping your friend troubleshoot why their string of holiday lights went completely dark after one bulb burned out.",
+      question: "Why did all the lights go out when just one bulb failed?",
       options: [
-        { text: "Stay the same", correct: false },
-        { text: "Double", correct: true },
-        { text: "Halve", correct: false },
-        { text: "Quadruple", correct: false }
+        { id: 'a', label: "The power surge from the broken bulb damaged all other bulbs" },
+        { id: 'b', label: "In a series circuit, current has only one path, so a break stops all current flow", correct: true },
+        { id: 'c', label: "The remaining bulbs couldn't handle the extra voltage" },
+        { id: 'd', label: "Modern lights are designed to all fail together for safety" }
       ],
-      explanation: "Ohm's Law: V = IR. If R is constant and V doubles, then I must also double to maintain the equation."
+      explanation: "In a series circuit, there's only one path for current to flow. When one bulb burns out, it creates an open circuit, breaking the path and stopping current to all bulbs. This is why newer holiday lights often use parallel wiring."
     },
     {
-      question: "What is the unit of electrical resistance?",
+      scenario: "An electrician is installing outlets in a new house and wants each outlet to work independently of the others.",
+      question: "Which circuit configuration should the electrician use?",
       options: [
-        { text: "Volt", correct: false },
-        { text: "Ampere", correct: false },
-        { text: "Ohm", correct: true },
-        { text: "Watt", correct: false }
+        { id: 'a', label: "Series circuit - it uses less wire" },
+        { id: 'b', label: "Parallel circuit - each outlet gets full voltage and operates independently", correct: true },
+        { id: 'c', label: "Alternating series and parallel for efficiency" },
+        { id: 'd', label: "It doesn't matter as long as the wire is thick enough" }
       ],
-      explanation: "Resistance is measured in Ohms (Ω), named after Georg Ohm who discovered the relationship V = IR."
+      explanation: "Parallel circuits are used in home wiring because each outlet receives the full voltage (120V or 240V), and unplugging or turning off one device doesn't affect others. This is essential for practical household electrical systems."
     },
     {
-      question: "In a series circuit, if one bulb burns out, what happens?",
+      scenario: "A phone charger is rated for 5V and 2A. You want to calculate how much power it delivers to charge your phone.",
+      question: "What is the power output of this charger?",
       options: [
-        { text: "Other bulbs get brighter", correct: false },
-        { text: "Other bulbs go out too", correct: true },
-        { text: "Other bulbs stay the same", correct: false },
-        { text: "The battery overheats", correct: false }
+        { id: 'a', label: "7 Watts (5V + 2A)" },
+        { id: 'b', label: "2.5 Watts (5V / 2A)" },
+        { id: 'c', label: "10 Watts (5V x 2A)", correct: true },
+        { id: 'd', label: "0.4 Watts (2A / 5V)" }
       ],
-      explanation: "In a series circuit, there's only one path for current. If one component breaks, the circuit is broken and all components stop working."
+      explanation: "Electrical power is calculated as P = V x I (voltage times current). So 5V x 2A = 10 Watts. This formula is fundamental in electrical engineering and helps you understand why fast chargers use higher voltages or currents."
     },
     {
-      question: "The total resistance in a parallel circuit is:",
+      scenario: "You're designing a dimmer switch for a lamp that uses a 120V power supply. The lamp draws 0.5A at full brightness.",
+      question: "What is the resistance of the lamp filament?",
       options: [
-        { text: "Equal to the sum of all resistances", correct: false },
-        { text: "Greater than the largest resistance", correct: false },
-        { text: "Less than the smallest resistance", correct: true },
-        { text: "Always zero", correct: false }
+        { id: 'a', label: "60 Ohms (120V / 0.5A / 4)" },
+        { id: 'b', label: "240 Ohms (120V / 0.5A)", correct: true },
+        { id: 'c', label: "120.5 Ohms (120V + 0.5A)" },
+        { id: 'd', label: "60.25 Ohms (120V x 0.5A / 1000)" }
       ],
-      explanation: "In parallel, 1/R_total = 1/R1 + 1/R2 + ... This always results in a total resistance LESS than any individual resistance."
+      explanation: "Using Ohm's Law (V = IR), we can solve for R = V/I = 120V / 0.5A = 240 Ohms. This relationship between voltage, current, and resistance is the foundation of circuit analysis."
     },
     {
-      question: "Current in a series circuit:",
+      scenario: "A car battery provides 12V to start the engine. If the starter motor has a resistance of 0.1 Ohms, you need to find the current draw.",
+      question: "How much current flows through the starter motor?",
       options: [
-        { text: "Is different through each component", correct: false },
-        { text: "Is the same through all components", correct: true },
-        { text: "Only flows through the battery", correct: false },
-        { text: "Flows backwards", correct: false }
+        { id: 'a', label: "1.2 Amperes" },
+        { id: 'b', label: "12 Amperes" },
+        { id: 'c', label: "120 Amperes", correct: true },
+        { id: 'd', label: "0.12 Amperes" }
       ],
-      explanation: "In a series circuit, there's only one path, so all components must carry the same current. Current is conserved!"
+      explanation: "Using Ohm's Law, I = V/R = 12V / 0.1 Ohms = 120 Amperes. This is why car starter motors require thick cables - they carry enormous currents for brief periods. The low resistance allows high current to produce the power needed to turn the engine."
     },
     {
-      question: "Power in an electrical circuit is calculated as:",
+      scenario: "You have two 100-Ohm resistors and need to create a circuit with less total resistance than either individual resistor.",
+      question: "How should you connect the resistors to achieve this?",
       options: [
-        { text: "P = V + I", correct: false },
-        { text: "P = V - I", correct: false },
-        { text: "P = V × I", correct: true },
-        { text: "P = V / I", correct: false }
+        { id: 'a', label: "Connect them in series to get 200 Ohms total" },
+        { id: 'b', label: "Connect them in parallel to get 50 Ohms total", correct: true },
+        { id: 'c', label: "Stack them on top of each other" },
+        { id: 'd', label: "It's impossible - combined resistance is always higher" }
       ],
-      explanation: "Electrical power P = VI (voltage times current). This can also be written as P = I²R or P = V²/R."
+      explanation: "In parallel, 1/R_total = 1/R1 + 1/R2 = 1/100 + 1/100 = 2/100, so R_total = 50 Ohms. Parallel resistance is always less than the smallest individual resistance because current has multiple paths to flow through."
     },
     {
-      question: "In a parallel circuit, what stays the same across all branches?",
+      scenario: "A technician notices that when she adds more resistors in series to a circuit with constant voltage, the ammeter reading decreases.",
+      question: "Why does current decrease when more resistance is added in series?",
       options: [
-        { text: "Current", correct: false },
-        { text: "Resistance", correct: false },
-        { text: "Voltage", correct: true },
-        { text: "Power", correct: false }
+        { id: 'a', label: "The battery is getting weaker" },
+        { id: 'b', label: "According to Ohm's Law, I = V/R, so more resistance means less current", correct: true },
+        { id: 'c', label: "Electrons get tired traveling through more resistors" },
+        { id: 'd', label: "The ammeter is malfunctioning from heat" }
       ],
-      explanation: "In parallel, all branches connect directly to the power source, so they all have the same voltage across them."
+      explanation: "Ohm's Law states V = IR, or rearranged, I = V/R. With constant voltage, increasing resistance directly decreases current. Think of it like water flowing through a pipe - more obstacles (resistance) means less flow (current)."
     },
     {
-      question: "What happens to circuit current if you increase resistance (keeping voltage constant)?",
+      scenario: "An engineer is testing a circuit and measures 3A of current through three resistors connected in series. Each resistor is 4 Ohms.",
+      question: "What is the voltage of the power supply?",
       options: [
-        { text: "Current increases", correct: false },
-        { text: "Current decreases", correct: true },
-        { text: "Current stays the same", correct: false },
-        { text: "Current reverses direction", correct: false }
+        { id: 'a', label: "12V (3A x 4Ω)" },
+        { id: 'b', label: "36V (3A x 12Ω)", correct: true },
+        { id: 'c', label: "4V (12Ω / 3A)" },
+        { id: 'd', label: "1.33V (4Ω / 3A)" }
       ],
-      explanation: "From V = IR, if V is constant and R increases, I must decrease. Higher resistance means less current flows."
+      explanation: "In series, total resistance is the sum: 4 + 4 + 4 = 12 Ohms. Using V = IR: V = 3A x 12Ω = 36V. Series resistances add up because current must flow through each one consecutively."
     },
     {
-      question: "A 12V battery pushes current through a 6Ω resistor. The current is:",
+      scenario: "You're comparing two flashlights: one uses batteries in series (higher voltage), the other uses batteries in parallel (same voltage, longer life).",
+      question: "What advantage does connecting batteries in parallel provide?",
       options: [
-        { text: "2 A", correct: true },
-        { text: "6 A", correct: false },
-        { text: "72 A", correct: false },
-        { text: "0.5 A", correct: false }
+        { id: 'a', label: "Higher voltage output" },
+        { id: 'b', label: "Brighter light immediately" },
+        { id: 'c', label: "Same voltage but longer battery life due to shared current load", correct: true },
+        { id: 'd', label: "Faster charging capability" }
       ],
-      explanation: "Using Ohm's Law: I = V/R = 12V / 6Ω = 2 Amperes."
+      explanation: "Batteries in parallel maintain the same voltage but combine their capacity. The current draw is shared among batteries, so each battery depletes more slowly. This is used when you need longer runtime without increasing voltage."
     },
     {
-      question: "Why do household circuits use parallel wiring instead of series?",
+      scenario: "A laboratory power supply shows 24V and 2A when connected to a heating element. The element is used to maintain temperature in an experiment.",
+      question: "How much power is the heating element consuming?",
       options: [
-        { text: "It's cheaper", correct: false },
-        { text: "Each device can operate independently", correct: true },
-        { text: "It uses less wire", correct: false },
-        { text: "It's more dangerous", correct: false }
+        { id: 'a', label: "12 Watts (24V / 2A)" },
+        { id: 'b', label: "26 Watts (24V + 2A)" },
+        { id: 'c', label: "48 Watts (24V x 2A)", correct: true },
+        { id: 'd', label: "6 Watts (24V / 2A / 2)" }
       ],
-      explanation: "Parallel wiring lets each device operate independently - turning off a lamp doesn't affect your TV. Each gets full voltage!"
+      explanation: "Power P = V x I = 24V x 2A = 48 Watts. This power is converted to heat in the element. Understanding power consumption helps in designing efficient heating systems and calculating energy costs."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

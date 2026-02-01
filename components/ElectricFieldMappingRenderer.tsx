@@ -143,104 +143,114 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "Electric field lines always point:",
+      scenario: "An engineer is designing a particle accelerator and needs to predict how a proton (positive charge) will move when placed in an electric field between two charged plates.",
+      question: "In which direction will the proton move relative to the electric field lines?",
       options: [
-        { text: "Toward positive charges", correct: false },
-        { text: "Away from positive charges", correct: true },
-        { text: "In circles around charges", correct: false },
-        { text: "Randomly in all directions", correct: false }
+        { id: 'a', label: "Perpendicular to the field lines" },
+        { id: 'b', label: "In the same direction as the field lines (toward the negative plate)", correct: true },
+        { id: 'c', label: "Opposite to the field lines (toward the positive plate)" },
+        { id: 'd', label: "It will spiral in circles around the field lines" }
       ],
-      explanation: "Electric field lines point AWAY from positive charges and TOWARD negative charges. The field shows the direction a positive test charge would move."
+      explanation: "Electric field lines show the direction a positive test charge would move. Since field lines point from positive to negative, a proton (positive) follows the field lines toward the negative plate. Electrons (negative) would move opposite to the field lines."
     },
     {
-      question: "What does the density of field lines indicate?",
+      scenario: "A physicist draws electric field lines around a point charge and notices that the lines are much denser near the charge and spread out farther away.",
+      question: "What does the varying density of field lines indicate about the electric field?",
       options: [
-        { text: "The charge's color", correct: false },
-        { text: "The field strength", correct: true },
-        { text: "The temperature", correct: false },
-        { text: "The magnetic field", correct: false }
+        { id: 'a', label: "The field changes direction at different distances" },
+        { id: 'b', label: "The field is stronger where lines are denser (closer to the charge)", correct: true },
+        { id: 'c', label: "There are more charges closer to the center" },
+        { id: 'd', label: "The field oscillates between strong and weak" }
       ],
-      explanation: "Where field lines are closer together (denser), the electric field is stronger. Sparse lines indicate a weaker field."
+      explanation: "Field line density represents field strength. Where lines are close together, the field is strong; where they spread apart, the field is weaker. This follows from E = kq/r² - the field decreases with the square of distance, so fewer lines pass through a given area at greater distances."
     },
     {
-      question: "Can electric field lines ever cross each other?",
+      scenario: "A student drawing electric field maps wonders whether field lines from different charges could ever intersect at a single point.",
+      question: "Why can electric field lines never cross each other?",
       options: [
-        { text: "Yes, at high voltages", correct: false },
-        { text: "Yes, between like charges", correct: false },
-        { text: "No, never", correct: true },
-        { text: "Only in magnetic fields", correct: false }
+        { id: 'a', label: "It would require infinite energy at the crossing point" },
+        { id: 'b', label: "At any point in space, the field can only have one direction; crossing would imply two directions", correct: true },
+        { id: 'c', label: "Magnetic fields prevent electric field lines from crossing" },
+        { id: 'd', label: "They can cross, but only at very high voltages" }
       ],
-      explanation: "Electric field lines NEVER cross because at any point in space, the field can only point in one direction. Crossing would mean two directions at once!"
+      explanation: "Electric field lines represent the direction a positive test charge would move at each point. If lines crossed, a charge at the intersection would have two possible directions - which is physically impossible. The field at any point must be unique, so lines never cross."
     },
     {
-      question: "What is the formula for electric field strength from a point charge?",
+      scenario: "You're standing 2 meters from a charged sphere and measure the electric field strength. You then move to 4 meters from the same sphere.",
+      question: "How does the electric field strength at 4 meters compare to the field at 2 meters?",
       options: [
-        { text: "E = kq/r", correct: false },
-        { text: "E = kq/r²", correct: true },
-        { text: "E = kq²/r", correct: false },
-        { text: "E = kr/q", correct: false }
+        { id: 'a', label: "Half as strong" },
+        { id: 'b', label: "One-quarter as strong", correct: true },
+        { id: 'c', label: "One-eighth as strong" },
+        { id: 'd', label: "The same strength" }
       ],
-      explanation: "The electric field E = kq/r², where k is Coulomb's constant, q is the charge, and r is the distance from the charge."
+      explanation: "Electric field follows an inverse-square law: E = kq/r². When you double the distance (2m to 4m), the field becomes (1/2)² = 1/4 as strong. This is why the field drops off rapidly with distance from a point charge."
     },
     {
-      question: "In a uniform electric field (like between parallel plates), the field lines are:",
+      scenario: "A capacitor consists of two parallel metal plates - one positive, one negative - separated by a small gap. An electronics engineer needs to know what the electric field looks like between them.",
+      question: "What is the pattern of electric field lines between the parallel plates of a charged capacitor?",
       options: [
-        { text: "Curved", correct: false },
-        { text: "Parallel and equally spaced", correct: true },
-        { text: "Radiating outward", correct: false },
-        { text: "Converging inward", correct: false }
+        { id: 'a', label: "Field lines curve from one plate to the other" },
+        { id: 'b', label: "Field lines are parallel and evenly spaced, pointing from positive to negative plate", correct: true },
+        { id: 'c', label: "Field lines radiate outward from the center" },
+        { id: 'd', label: "There is no field between the plates" }
       ],
-      explanation: "A uniform field has parallel, equally-spaced field lines. This occurs between parallel charged plates (like in a capacitor)."
+      explanation: "Between parallel charged plates, the electric field is uniform - equal in strength and direction everywhere. This creates parallel, evenly-spaced field lines pointing from the positive plate to the negative plate. This uniform field is useful in many applications like particle acceleration."
     },
     {
-      question: "The electric field is a vector quantity, meaning it has:",
+      scenario: "A water molecule (H2O) has a slightly positive side (the hydrogen atoms) and a slightly negative side (the oxygen atom), forming what chemists call a polar molecule.",
+      question: "What type of charge arrangement does a water molecule represent?",
       options: [
-        { text: "Only magnitude", correct: false },
-        { text: "Only direction", correct: false },
-        { text: "Both magnitude and direction", correct: true },
-        { text: "Neither magnitude nor direction", correct: false }
+        { id: 'a', label: "A monopole - a single concentrated charge" },
+        { id: 'b', label: "A dipole - separated positive and negative charges", correct: true },
+        { id: 'c', label: "A quadrupole - four alternating charges" },
+        { id: 'd', label: "A neutral arrangement with no electric properties" }
       ],
-      explanation: "The electric field is a vector - it has both magnitude (strength) and direction (the way it points at each location)."
+      explanation: "A dipole consists of equal positive and negative charges separated by a distance. Water molecules are permanent dipoles - the oxygen end is slightly negative while the hydrogen end is slightly positive. This dipole nature explains water's remarkable properties as a solvent."
     },
     {
-      question: "What happens to the electric field strength when you double the distance from a charge?",
+      scenario: "Lightning rods are designed to protect buildings by providing a path for lightning to reach the ground. The rod is pointed with a sharp tip at the top.",
+      question: "Why does the sharp tip of a lightning rod create a strong local electric field?",
       options: [
-        { text: "It doubles", correct: false },
-        { text: "It halves", correct: false },
-        { text: "It becomes 1/4 as strong", correct: true },
-        { text: "It stays the same", correct: false }
+        { id: 'a', label: "Sharp points attract more dust particles that carry charge" },
+        { id: 'b', label: "Electric charges concentrate at points, creating intense fields that help initiate controlled discharge", correct: true },
+        { id: 'c', label: "The metal is more conductive at the tip" },
+        { id: 'd', label: "Sharp tips are higher and closer to the clouds" }
       ],
-      explanation: "Since E ∝ 1/r², doubling the distance reduces the field to (1/2)² = 1/4 of its original strength."
+      explanation: "Charges on a conductor concentrate at points or sharp edges, creating very strong local electric fields. This intense field at the lightning rod tip ionizes nearby air, creating a conductive path for lightning to follow safely to ground rather than striking the building randomly."
     },
     {
-      question: "An electric dipole consists of:",
+      scenario: "A researcher places a positive test charge between two positive charges of equal magnitude. She notices the test charge is pushed directly toward the midpoint between the two charges, then deflected away.",
+      question: "At the exact midpoint between two equal positive charges, what is the net electric field?",
       options: [
-        { text: "Two positive charges", correct: false },
-        { text: "Two negative charges", correct: false },
-        { text: "One positive and one negative charge", correct: true },
-        { text: "A single neutral particle", correct: false }
+        { id: 'a', label: "Maximum field pointing toward one of the charges" },
+        { id: 'b', label: "Zero - the two fields cancel out exactly", correct: true },
+        { id: 'c', label: "Double the field of a single charge" },
+        { id: 'd', label: "The field points perpendicular to the line connecting the charges" }
       ],
-      explanation: "A dipole consists of equal and opposite charges (one positive, one negative) separated by a distance, like the two poles of a magnet."
+      explanation: "At the midpoint between two equal positive charges, the electric field from each charge has the same magnitude but points in opposite directions (both away from their source). These vectors cancel exactly, resulting in zero net field at the midpoint."
     },
     {
-      question: "Where is the electric field strongest near a point charge?",
+      scenario: "An atmospheric scientist is studying how charged particles in clouds create lightning. She knows that electric breakdown of air occurs when the field strength exceeds about 3 million V/m.",
+      question: "What happens when the electric field strength in air exceeds the breakdown threshold?",
       options: [
-        { text: "Far away from the charge", correct: false },
-        { text: "Close to the charge", correct: true },
-        { text: "At infinity", correct: false },
-        { text: "Exactly at the center", correct: false }
+        { id: 'a', label: "The field lines become curved" },
+        { id: 'b', label: "Air molecules become ionized, making air conductive, and a spark or lightning occurs", correct: true },
+        { id: 'c', label: "The charges neutralize themselves instantly" },
+        { id: 'd', label: "The field reverses direction" }
       ],
-      explanation: "The field is strongest closest to the charge (E = kq/r²). As you move away, the field weakens rapidly."
+      explanation: "When the electric field is strong enough, it rips electrons from air molecules (ionization). This creates free charges that can carry current - air becomes conductive. The sudden discharge of charge through this ionized path is what we see as a spark or lightning bolt."
     },
     {
-      question: "Electric field lines around a positive charge:",
+      scenario: "An engineer is designing a Van de Graaff generator for a science museum and needs to understand the field around the spherical dome when it's fully charged.",
+      question: "How does the electric field behave outside a charged conducting sphere?",
       options: [
-        { text: "Form closed loops", correct: false },
-        { text: "Point inward toward the charge", correct: false },
-        { text: "Radiate outward from the charge", correct: true },
-        { text: "Are parallel to each other", correct: false }
+        { id: 'a', label: "The field is zero outside the sphere" },
+        { id: 'b', label: "The field behaves as if all charge were concentrated at the center of the sphere", correct: true },
+        { id: 'c', label: "The field only exists on the surface of the sphere" },
+        { id: 'd', label: "The field is uniform in all directions outside" }
       ],
-      explanation: "Field lines radiate outward from positive charges (like rays from the sun) because positive test charges would be pushed away."
+      explanation: "Outside a uniformly charged conducting sphere, the electric field is identical to that of a point charge located at the sphere's center (with the same total charge). This is a consequence of Gauss's Law and spherical symmetry. It's why field calculations for charged spheres are often simplified using point-charge formulas."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

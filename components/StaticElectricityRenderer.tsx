@@ -212,104 +212,114 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "What happens when you rub a balloon on your hair?",
+      scenario: "You walk across a carpeted floor in wool socks on a dry winter day, then reach for a metal doorknob. A visible spark jumps from your finger to the knob with a sharp zap.",
+      question: "What caused the spark to jump from your finger to the doorknob?",
       options: [
-        { text: "Nothing happens", correct: false },
-        { text: "Electrons transfer from hair to balloon", correct: true },
-        { text: "Protons transfer", correct: false },
-        { text: "The balloon heats up", correct: false }
+        { id: 'a', label: "The metal doorknob contains stored electricity" },
+        { id: 'b', label: "Friction with the carpet transferred electrons to your body, creating a charge imbalance that discharged when grounded through the doorknob", correct: true },
+        { id: 'c', label: "The cold winter air generates electricity" },
+        { id: 'd', label: "Your body heat created the spark" }
       ],
-      explanation: "Rubbing transfers electrons from your hair to the balloon. Hair loses electrons (becomes positive), balloon gains electrons (becomes negative)."
+      explanation: "Walking on carpet creates friction that transfers electrons from the carpet to your body (or vice versa, depending on materials). This builds up a static charge on your body. When you touch the conductive doorknob, the accumulated charge rapidly discharges to ground, creating the spark you see and feel."
     },
     {
-      question: "What does Coulomb's Law tell us about electric force?",
+      scenario: "A child at a science museum rubs a balloon on their hair and then holds it near the wall. The balloon sticks to the wall without any tape or glue, seemingly defying gravity.",
+      question: "Why does the charged balloon stick to an electrically neutral wall?",
       options: [
-        { text: "Force increases with distance", correct: false },
-        { text: "Force depends on charge amount and distance", correct: true },
-        { text: "Only positive charges create force", correct: false },
-        { text: "Force is always attractive", correct: false }
+        { id: 'a', label: "The balloon becomes magnetic when charged" },
+        { id: 'b', label: "The wall has an opposite charge that attracts the balloon" },
+        { id: 'c', label: "The charged balloon induces a temporary charge separation in the wall, with opposite charges moving closer to create attraction", correct: true },
+        { id: 'd', label: "Static electricity makes objects lighter so they can float" }
       ],
-      explanation: "Coulomb's Law states that electric force is proportional to the product of charges and inversely proportional to the square of the distance between them."
+      explanation: "The negatively charged balloon doesn't attract a charged wall - the wall is neutral. However, the balloon's electric field causes polarization in the wall material, pushing electrons away and leaving positive charges closer to the balloon's surface. This induced charge separation creates a net attractive force, allowing the balloon to stick."
     },
     {
-      question: "Two negatively charged objects will:",
+      scenario: "At a gas station, warning signs advise customers to touch their car before handling the gas pump nozzle. Despite this warning, a driver exits their car wearing a synthetic jacket and immediately grabs the pump.",
+      question: "Why is touching the car first important when refueling?",
       options: [
-        { text: "Attract each other", correct: false },
-        { text: "Repel each other", correct: true },
-        { text: "Have no interaction", correct: false },
-        { text: "Create a spark", correct: false }
+        { id: 'a', label: "It prevents the car from rolling away" },
+        { id: 'b', label: "Sliding across car seats can build static charge; touching the car grounds you, preventing a spark that could ignite fuel vapors", correct: true },
+        { id: 'c', label: "It activates the pump's electronic sensor" },
+        { id: 'd', label: "It cools your hands to prevent fuel evaporation" }
       ],
-      explanation: "Like charges repel! Two negative charges push away from each other, just as two positive charges would."
+      explanation: "Sliding across car seats, especially synthetic materials, can transfer thousands of volts of static charge to your body. Gasoline vapor is highly flammable. If you grab the metal pump nozzle while charged, the discharge spark could ignite the vapors. Touching the car first safely grounds your body, dissipating the charge."
     },
     {
-      question: "Why does a charged balloon attract neutral paper pieces?",
+      scenario: "Two pith balls hang from threads. When both are touched with the same charged rod, they swing apart from each other and remain separated at an angle.",
+      question: "According to the principles of electric charge, why do the pith balls repel each other?",
       options: [
-        { text: "Paper has hidden charges", correct: false },
-        { text: "Induction creates temporary charge separation", correct: true },
-        { text: "Paper is always attracted to plastic", correct: false },
-        { text: "Magic", correct: false }
+        { id: 'a', label: "They both received the same type of charge from the rod, and like charges repel", correct: true },
+        { id: 'b', label: "The charged rod magnetized them with the same poles" },
+        { id: 'c', label: "They are now lighter and float apart" },
+        { id: 'd', label: "Air currents from the rod push them apart" }
       ],
-      explanation: "The balloon's negative charge induces (causes) a temporary charge separation in the paper - positive charges move closer to the balloon, creating attraction."
+      explanation: "When both pith balls are touched with the same charged rod, they acquire the same type of charge (either both positive or both negative). Coulomb's Law tells us that like charges repel each other with a force proportional to the product of their charges. This repulsive force pushes the balls apart."
     },
     {
-      question: "What is the unit of electric charge?",
+      scenario: "A coal power plant uses electrostatic precipitators to clean exhaust gases. Smoke particles pass through a chamber with charged plates, and 99.9% of particles are removed before the gas exits the smokestack.",
+      question: "How do electrostatic precipitators use electric charge to clean the air?",
       options: [
-        { text: "Volt", correct: false },
-        { text: "Coulomb", correct: true },
-        { text: "Ampere", correct: false },
-        { text: "Watt", correct: false }
+        { id: 'a', label: "The charged plates burn the smoke particles" },
+        { id: 'b', label: "Smoke particles receive charge and are attracted to oppositely charged collector plates where they accumulate", correct: true },
+        { id: 'c', label: "The electric field blows particles out a side vent" },
+        { id: 'd', label: "Charged plates dissolve the smoke into harmless gases" }
       ],
-      explanation: "Electric charge is measured in Coulombs (C), named after Charles-Augustin de Coulomb who discovered the force law for charges."
+      explanation: "Corona discharge gives smoke particles an electric charge. These charged particles are then attracted to large collector plates with opposite charge, following Coulomb's Law. The particles stick to the plates while clean gas passes through. Periodically, the plates are rapped to shake off collected particles for disposal."
     },
     {
-      question: "In the equation F = kq₁q₂/r², what happens if you double the distance?",
+      scenario: "A physics student measures the force between two charged spheres placed 10 cm apart. When she moves them to 20 cm apart (double the distance), she notices the force drops significantly.",
+      question: "According to Coulomb's Law (F = kq₁q₂/r²), what happens to the force when distance doubles?",
       options: [
-        { text: "Force doubles", correct: false },
-        { text: "Force halves", correct: false },
-        { text: "Force becomes 1/4", correct: true },
-        { text: "Force stays the same", correct: false }
+        { id: 'a', label: "The force is reduced by half" },
+        { id: 'b', label: "The force is reduced to one-quarter of the original value", correct: true },
+        { id: 'c', label: "The force remains the same" },
+        { id: 'd', label: "The force increases by a factor of four" }
       ],
-      explanation: "Since force depends on 1/r², doubling the distance makes the force 1/(2)² = 1/4 of the original force."
+      explanation: "Coulomb's Law shows that force is inversely proportional to distance squared (1/r²). When distance doubles (r becomes 2r), the force becomes 1/(2)² = 1/4 of the original force. This inverse-square relationship means force drops off quickly with distance, which is why static electricity effects are strongest at close range."
     },
     {
-      question: "Which statement about electrons and protons is correct?",
+      scenario: "A painter uses an electrostatic spray gun to coat car parts. The paint particles are given a negative charge while the car part is grounded. The painter notices the paint evenly coats even the back side of complex shapes.",
+      question: "How does electrostatic charging improve paint coverage?",
       options: [
-        { text: "They have the same mass", correct: false },
-        { text: "Electrons are positive, protons negative", correct: false },
-        { text: "They have opposite charges of equal magnitude", correct: true },
-        { text: "Protons can move freely in solids", correct: false }
+        { id: 'a', label: "Charged paint is thinner and spreads more easily" },
+        { id: 'b', label: "Charged paint particles are attracted to the grounded metal, following electric field lines to reach all surfaces including hidden areas", correct: true },
+        { id: 'c', label: "The charge heats the paint, making it more liquid" },
+        { id: 'd', label: "Static electricity makes the paint more colorful" }
       ],
-      explanation: "Electrons (negative) and protons (positive) have exactly equal but opposite charges. However, electrons are much lighter and more mobile."
+      explanation: "Negatively charged paint particles are attracted to the grounded (effectively positive) metal surface. Electric field lines curve around edges and reach hidden surfaces. The paint follows these field lines, coating areas that normal spray would miss. This 'wraparound' effect reduces waste and ensures complete coverage."
     },
     {
-      question: "Static electricity is called 'static' because:",
+      scenario: "A semiconductor factory requires workers to wear special grounding straps connected to their wrists. Before handling any microchips, they must touch a grounding pad. The factory's floors are made of special conductive material.",
+      question: "Why are such extreme measures necessary to control static electricity around microchips?",
       options: [
-        { text: "It doesn't exist", correct: false },
-        { text: "Charges stay in place rather than flowing", correct: true },
-        { text: "It only works with plastic", correct: false },
-        { text: "It was discovered at a static location", correct: false }
+        { id: 'a', label: "Static electricity makes chips run slower" },
+        { id: 'b', label: "Microchip transistors are so small that even small static discharges (as low as 100V) can destroy them, while humans can carry 25,000V", correct: true },
+        { id: 'c', label: "Static electricity erases the programs stored on chips" },
+        { id: 'd', label: "The grounding prevents workers from getting shocked" }
       ],
-      explanation: "Static electricity involves charges that accumulate and stay in place on objects, unlike current electricity where charges flow continuously."
+      explanation: "Modern microchips have transistors measured in nanometers, with insulating layers only atoms thick. A static discharge of just 100V can punch through these layers, destroying the chip. Humans can accumulate 25,000V without feeling it. ESD (electrostatic discharge) protection is essential because the damage is invisible but fatal to sensitive electronics."
     },
     {
-      question: "Lightning is an example of:",
+      scenario: "During a thunderstorm, a massive bolt of lightning strikes from a cloud to the ground. The bolt is visible for less than a second but carries enormous energy, superheating the air to 30,000K.",
+      question: "What process creates the charge separation that makes lightning possible?",
       options: [
-        { text: "Magnetic force", correct: false },
-        { text: "Static discharge", correct: true },
-        { text: "Nuclear reaction", correct: false },
-        { text: "Chemical reaction", correct: false }
+        { id: 'a', label: "The sun charges clouds with radiation" },
+        { id: 'b', label: "Collisions between ice particles and water droplets in turbulent clouds separate positive and negative charges", correct: true },
+        { id: 'c', label: "Radio waves from the ground ionize cloud particles" },
+        { id: 'd', label: "Wind blowing through clouds generates electricity like a turbine" }
       ],
-      explanation: "Lightning is a massive static discharge - charges built up in clouds suddenly flow to the ground, neutralizing the charge difference."
+      explanation: "Inside thunderclouds, violent updrafts cause ice crystals and water droplets to collide repeatedly. Through triboelectric charging, smaller ice particles become positively charged and rise to the cloud top, while larger particles become negative and sink to the bottom. This creates an enormous charge separation (millions of volts), which eventually overcomes air's resistance and discharges as lightning."
     },
     {
-      question: "The triboelectric series tells us:",
+      scenario: "A researcher places a glass rod rubbed with silk near a suspended charged pith ball. The ball is attracted and swings toward the rod. She then brings a rubber rod rubbed with fur near the same ball, and it swings away.",
+      question: "What can we conclude about the charges involved in this experiment?",
       options: [
-        { text: "How much objects weigh", correct: false },
-        { text: "Which materials gain or lose electrons when rubbed", correct: true },
-        { text: "The speed of electricity", correct: false },
-        { text: "Color of charged objects", correct: false }
+        { id: 'a', label: "Glass and rubber have the same charge but different strengths" },
+        { id: 'b', label: "The glass rod and rubber rod have opposite charges; the pith ball's charge is the same as the rubber rod's (they repel) and opposite to the glass rod's (they attract)", correct: true },
+        { id: 'c', label: "Only the rubber rod is truly charged" },
+        { id: 'd', label: "Pith balls are attracted to glass but repelled by rubber regardless of charge" }
       ],
-      explanation: "The triboelectric series ranks materials by their tendency to gain or lose electrons when rubbed against each other."
+      explanation: "When glass is rubbed with silk, it becomes positively charged (loses electrons). When rubber is rubbed with fur, it becomes negatively charged (gains electrons). The pith ball's behavior shows it has a negative charge: it's attracted to positive (opposite) glass and repelled by negative (same) rubber. This demonstrates the fundamental rule: opposite charges attract, like charges repel."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

@@ -69,104 +69,114 @@ export default function InertiaRenderer({ onGameEvent, gamePhase }: InertiaRende
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "According to Newton's First Law, what happens to an object at rest with no forces acting on it?",
+      scenario: "A grocery store clerk is trying to push two shopping carts across the store. One cart is empty, while the other is fully loaded with heavy items like water bottles and canned goods.",
+      question: "Why does the fully loaded cart require more effort to start moving and stop?",
       options: [
-        { text: "It starts moving slowly", correct: false },
-        { text: "It stays at rest", correct: true },
-        { text: "It floats upward", correct: false },
-        { text: "It shrinks", correct: false }
+        { id: 'a', label: "The loaded cart has more friction with the floor" },
+        { id: 'b', label: "The loaded cart has more mass, giving it greater inertia to resist changes in motion", correct: true },
+        { id: 'c', label: "The wheels on the loaded cart are smaller" },
+        { id: 'd', label: "Gravity pulls harder on the loaded cart sideways" }
       ],
-      explanation: "Newton's First Law (Law of Inertia) states that an object at rest stays at rest unless acted upon by an external force."
+      explanation: "Inertia is directly proportional to mass. The loaded cart has more mass, so it has greater resistance to changes in its state of motion. This means more force is needed to accelerate it from rest and more force is needed to bring it to a stop."
     },
     {
-      question: "What is inertia?",
+      scenario: "During a football game, a 250-pound linebacker tries to tackle a 220-pound running back who is sprinting at full speed. The running back manages to break through the tackle attempt.",
+      question: "How does inertia explain why a moving player is harder to stop than a stationary one?",
       options: [
-        { text: "A type of energy", correct: false },
-        { text: "Resistance to change in motion", correct: true },
-        { text: "A force that pushes objects", correct: false },
-        { text: "The speed of an object", correct: false }
+        { id: 'a', label: "Moving players generate a force field" },
+        { id: 'b', label: "The running back's motion gives him momentum, and his inertia resists the change the tackle tries to impose", correct: true },
+        { id: 'c', label: "Players weigh less when moving" },
+        { id: 'd', label: "The tackle creates more friction" }
       ],
-      explanation: "Inertia is the tendency of an object to resist changes in its state of motion. More mass = more inertia."
+      explanation: "An object in motion tends to stay in motion due to inertia. The running back's body resists the change in motion that the tackle attempts to create. Combined with his momentum (mass times velocity), his inertia makes him harder to stop than if he were standing still."
     },
     {
-      question: "A heavy object has more inertia than a light object. This means:",
+      scenario: "A magician performs the classic tablecloth trick, yanking a tablecloth from under dishes, glasses, and silverware without disturbing them. The audience gasps as everything remains in place.",
+      question: "What principle of physics allows the dishes to stay in place when the cloth is pulled quickly?",
       options: [
-        { text: "It's harder to start or stop the heavy object", correct: true },
-        { text: "The heavy object moves faster", correct: false },
-        { text: "The heavy object floats better", correct: false },
-        { text: "The light object is stronger", correct: false }
+        { id: 'a', label: "The dishes stick to the table with static electricity" },
+        { id: 'b', label: "The friction is too low to move the dishes" },
+        { id: 'c', label: "The dishes' inertia keeps them at rest while the quick pull minimizes friction transfer time", correct: true },
+        { id: 'd', label: "Air pressure holds the dishes down" }
       ],
-      explanation: "More mass means more inertia, which means more resistance to changes in motion - harder to speed up, slow down, or change direction."
+      explanation: "The dishes have inertia - the tendency to remain at rest. When the tablecloth is pulled quickly, friction acts for such a short time that it cannot overcome the dishes' inertia. If pulled slowly, friction would have time to transfer motion to the dishes, causing them to move."
     },
     {
-      question: "When a bus suddenly stops, passengers lurch forward because:",
+      scenario: "An astronaut on the International Space Station pushes off a wall to float across the cabin to another module. Once moving, she continues gliding without any additional effort.",
+      question: "Why does the astronaut continue moving without pushing again?",
       options: [
-        { text: "The bus pushes them forward", correct: false },
-        { text: "Their bodies continue moving due to inertia", correct: true },
-        { text: "Gravity changes direction", correct: false },
-        { text: "The air pushes them", correct: false }
+        { id: 'a', label: "The space station's rotation propels her forward" },
+        { id: 'b', label: "In the microgravity environment with no friction, her inertia keeps her moving at constant velocity", correct: true },
+        { id: 'c', label: "Air currents from the ventilation system push her along" },
+        { id: 'd', label: "Magnetic forces in space pull her forward" }
       ],
-      explanation: "The passengers' bodies were moving with the bus. When the bus stops, their bodies continue moving forward due to inertia."
+      explanation: "Newton's First Law states that an object in motion stays in motion unless acted upon by an external force. In the space station, there's no significant friction or air resistance to slow the astronaut down, so her inertia keeps her moving at a constant velocity until she grabs something to stop."
     },
     {
-      question: "Why do seatbelts save lives in car crashes?",
+      scenario: "A driver in a car suddenly slams on the brakes to avoid hitting a deer. The coffee cup on the dashboard flies forward and spills all over the windshield.",
+      question: "What caused the coffee cup to fly forward when the car stopped?",
       options: [
-        { text: "They make the car stronger", correct: false },
-        { text: "They provide the force to stop your body's inertia", correct: true },
-        { text: "They slow down the crash", correct: false },
-        { text: "They make you lighter", correct: false }
+        { id: 'a', label: "The brakes pushed the cup forward" },
+        { id: 'b', label: "The cup's inertia caused it to continue moving forward while the car decelerated", correct: true },
+        { id: 'c', label: "The windshield created suction pulling the cup" },
+        { id: 'd', label: "Gravity shifted due to the car's sudden stop" }
       ],
-      explanation: "In a crash, the car stops but your body keeps moving due to inertia. Seatbelts provide the external force to safely stop your body."
+      explanation: "The coffee cup was moving forward with the car. When the brakes were applied, the car slowed down but the cup, due to its inertia, continued moving forward at its original speed. From inside the car, it appears the cup flew forward, but actually the car slowed while the cup maintained its motion."
     },
     {
-      question: "An object in motion will stay in motion unless:",
+      scenario: "A figure skater spins on the ice and then brings her arms close to her body. Even though she's not pushing with her skates, her spinning speed increases dramatically.",
+      question: "Although this involves rotational motion, how does inertia relate to objects maintaining their state of motion?",
       options: [
-        { text: "It gets tired", correct: false },
-        { text: "An external force acts on it", correct: true },
-        { text: "It runs out of energy", correct: false },
-        { text: "Gravity pulls it down", correct: false }
+        { id: 'a', label: "Her skates generate more power when arms are tucked" },
+        { id: 'b', label: "Objects naturally tend to maintain their motion; without external torque, the skater's angular momentum is conserved", correct: true },
+        { id: 'c', label: "The ice creates less friction when she tucks in" },
+        { id: 'd', label: "Her body weight shifts to make her spin faster" }
       ],
-      explanation: "Newton's First Law states that objects in motion stay in motion in a straight line unless acted upon by an external force."
+      explanation: "Newton's First Law applies to rotational motion too - a spinning object tends to keep spinning. When the skater pulls in her arms, she's reducing her rotational inertia (moment of inertia), and to conserve angular momentum, her rotation speed must increase. No external force started or stopped her spin."
     },
     {
-      question: "In space (no friction or air resistance), a thrown ball will:",
+      scenario: "A delivery truck driver is transporting a large refrigerator that isn't strapped down. When the driver turns sharply to the left, the refrigerator slides to the right side of the truck bed.",
+      question: "Why did the refrigerator move to the right when the truck turned left?",
       options: [
-        { text: "Stop after a few seconds", correct: false },
-        { text: "Keep moving forever at constant speed", correct: true },
-        { text: "Speed up over time", correct: false },
-        { text: "Fall to the ground", correct: false }
+        { id: 'a', label: "The truck pushed the refrigerator to the right" },
+        { id: 'b', label: "Centrifugal force threw it outward" },
+        { id: 'c', label: "The refrigerator's inertia kept it moving in a straight line while the truck turned beneath it", correct: true },
+        { id: 'd', label: "The truck bed tilted to the right" }
       ],
-      explanation: "With no external forces (no friction, no air resistance), the ball's inertia keeps it moving forever at constant velocity."
+      explanation: "The refrigerator was moving forward in a straight line with the truck. When the truck turned left, the refrigerator's inertia kept it moving in its original straight path. From the truck driver's perspective, the refrigerator appeared to slide right, but it was actually the truck that moved left while the refrigerator continued straight."
     },
     {
-      question: "The tablecloth trick works because:",
+      scenario: "A bowling ball and a tennis ball are both placed on a smooth table. A child tries to flick each ball with the same finger force. The tennis ball shoots across the table while the bowling ball barely moves.",
+      question: "Why did the same force produce such different results for the two balls?",
       options: [
-        { text: "The dishes are glued down", correct: false },
-        { text: "The dishes' inertia keeps them in place during the quick pull", correct: true },
-        { text: "Magic holds the dishes", correct: false },
-        { text: "The tablecloth is slippery", correct: false }
+        { id: 'a', label: "The tennis ball has less friction with the table" },
+        { id: 'b', label: "The bowling ball has much more mass and therefore more inertia, resisting the change in motion more than the lighter tennis ball", correct: true },
+        { id: 'c', label: "The tennis ball is more aerodynamic" },
+        { id: 'd', label: "The bowling ball absorbed the force internally" }
       ],
-      explanation: "When pulled quickly, friction doesn't have time to transfer motion to the dishes. Their inertia keeps them nearly stationary."
+      explanation: "Inertia is proportional to mass. The bowling ball has much greater mass than the tennis ball, so it has much greater inertia. The same force applied to both produces less acceleration in the more massive object because F = ma; with greater mass, acceleration decreases for the same force."
     },
     {
-      question: "If you're in a car making a sharp right turn, you feel pushed to the left. This is because:",
+      scenario: "During a train ride, a passenger is standing in the aisle. When the train starts moving forward, the passenger stumbles backward. When the train stops, the passenger lurches forward.",
+      question: "What principle explains the passenger's movements in both situations?",
       options: [
-        { text: "The door pushes you", correct: false },
-        { text: "Your body's inertia resists the change in direction", correct: true },
-        { text: "Gravity shifts", correct: false },
-        { text: "The air moves you", correct: false }
+        { id: 'a', label: "The train's vibrations push the passenger around" },
+        { id: 'b', label: "Air currents in the train car move the passenger" },
+        { id: 'c', label: "The passenger's inertia causes their body to resist changes in motion - staying still when the train starts and staying in motion when it stops", correct: true },
+        { id: 'd', label: "The passenger's shoes have poor grip on the floor" }
       ],
-      explanation: "Your body 'wants' to continue in a straight line (inertia). The car turns right, but your body initially continues straight."
+      explanation: "When the train accelerates forward, the passenger's body, due to inertia, tends to stay at rest, making them feel pushed backward relative to the train. When the train decelerates, the passenger's body tends to stay in motion at the previous speed, making them feel pushed forward. Both are manifestations of Newton's First Law."
     },
     {
-      question: "Newton's First Law is also called the Law of:",
+      scenario: "NASA's Voyager 1 spacecraft, launched in 1977, is now over 15 billion miles from Earth and still traveling at about 38,000 mph despite not having used its engines for decades.",
+      question: "How can Voyager 1 keep traveling without any propulsion?",
       options: [
-        { text: "Gravity", correct: false },
-        { text: "Motion", correct: false },
-        { text: "Inertia", correct: true },
-        { text: "Energy", correct: false }
+        { id: 'a', label: "Solar wind continues to push it outward" },
+        { id: 'b', label: "In the vacuum of space with virtually no external forces, its inertia keeps it moving at a constant velocity indefinitely", correct: true },
+        { id: 'c', label: "Gravity from distant stars pulls it forward" },
+        { id: 'd', label: "Its nuclear power source provides continuous thrust" }
       ],
-      explanation: "Newton's First Law is called the Law of Inertia because it describes how objects resist changes to their state of motion."
+      explanation: "Newton's First Law perfectly applies in space. Once Voyager was set in motion, it continues moving because there are virtually no external forces to slow it down - no air resistance, no friction. Its inertia keeps it traveling at constant velocity. The spacecraft will continue moving through space essentially forever unless it encounters something."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

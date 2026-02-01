@@ -153,104 +153,114 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "In convection, why does warm fluid rise?",
+      scenario: "You're heating a pot of soup on the stove and notice the vegetables near the bottom keep rising to the surface before sinking back down.",
+      question: "What causes this circular movement of the vegetables in the soup?",
       options: [
-        { text: "It weighs more", correct: false },
-        { text: "It is less dense", correct: true },
-        { text: "It moves faster", correct: false },
-        { text: "It is more viscous", correct: false }
+        { id: 'a', label: "Magnetic forces from the metal pot" },
+        { id: 'b', label: "The soup near the bottom becomes less dense when heated and rises, while cooler soup sinks", correct: true },
+        { id: 'c', label: "Steam bubbles pushing the vegetables upward" },
+        { id: 'd', label: "The stirring motion you created earlier" }
       ],
-      explanation: "Warm fluid expands and becomes less dense than the surrounding cooler fluid. Buoyancy forces push the less dense fluid upward."
+      explanation: "This is convection in action. When fluid is heated, it expands and becomes less dense. The buoyant force pushes this warm, less dense fluid upward. As it rises and moves away from the heat source, it cools, becomes denser, and sinks back down, creating a continuous circular current."
     },
     {
-      question: "What happens to fluid molecules when heated?",
+      scenario: "On a sunny beach day, you notice a steady breeze blowing from the ocean toward the land during the afternoon.",
+      question: "Why does this sea breeze occur?",
       options: [
-        { text: "They slow down", correct: false },
-        { text: "They move faster and spread apart", correct: true },
-        { text: "They bond together", correct: false },
-        { text: "They become heavier", correct: false }
+        { id: 'a', label: "The ocean pushes air toward land with its waves" },
+        { id: 'b', label: "Land heats up faster than water, causing hot air to rise and cooler ocean air to flow in", correct: true },
+        { id: 'c', label: "The moon's gravity pulls air toward the shore" },
+        { id: 'd', label: "Trees on land attract the ocean air" }
       ],
-      explanation: "Heat increases the kinetic energy of molecules, causing them to move faster and spread apart, decreasing the fluid's density."
+      explanation: "Land has a lower specific heat capacity than water, so it heats up faster under the sun. The hot air over land rises, creating a low-pressure zone. Cooler, denser air from over the ocean flows in to replace it, creating a sea breeze. This is atmospheric convection."
     },
     {
-      question: "What drives a convection current?",
+      scenario: "An engineer is designing a home heating system and needs to decide where to place the heating vents.",
+      question: "Where should the heating vents be placed for most efficient room heating through convection?",
       options: [
-        { text: "Magnetic forces", correct: false },
-        { text: "Temperature differences", correct: true },
-        { text: "Electric current", correct: false },
-        { text: "Sound waves", correct: false }
+        { id: 'a', label: "On the ceiling, since heat rises" },
+        { id: 'b', label: "Near the floor, so warm air rises and circulates throughout the room", correct: true },
+        { id: 'c', label: "In the middle of the wall for even distribution" },
+        { id: 'd', label: "Behind furniture where they're hidden" }
       ],
-      explanation: "Convection currents are driven by temperature differences that create density differences in the fluid."
+      explanation: "Heating vents placed near the floor allow warm air to rise naturally due to convection. As it rises, cooler air near the floor moves toward the vent to be heated, creating a continuous circulation that heats the entire room efficiently."
     },
     {
-      question: "In a pot of boiling water, where does the coolest water sink?",
+      scenario: "Geologists are studying Earth's interior and observe that the tectonic plates move slowly over millions of years.",
+      question: "What drives the movement of tectonic plates according to convection theory?",
       options: [
-        { text: "Near the heat source", correct: false },
-        { text: "Along the sides", correct: true },
-        { text: "In the center only", correct: false },
-        { text: "It doesn't sink", correct: false }
+        { id: 'a', label: "The rotation of the Earth spinning the plates" },
+        { id: 'b', label: "Hot mantle material rises, spreads, cools, and sinks, dragging plates along", correct: true },
+        { id: 'c', label: "Ocean water pressure pushing on the continents" },
+        { id: 'd', label: "The gravitational pull of the moon" }
       ],
-      explanation: "Water cools along the sides of the pot (away from heat) and sinks back down, completing the convection cycle."
+      explanation: "The Earth's mantle undergoes slow convection. Extremely hot material near the core rises toward the surface, spreads laterally as it cools, then sinks back down. This convection current in the mantle is believed to be a major driving force behind plate tectonics."
     },
     {
-      question: "What type of heat transfer is convection?",
+      scenario: "A chef notices that the top of their oven is much hotter than the bottom, even though the heating element is at the bottom.",
+      question: "Why is the top of the oven hotter than the bottom?",
       options: [
-        { text: "Transfer through electromagnetic waves", correct: false },
-        { text: "Transfer through direct contact", correct: false },
-        { text: "Transfer through fluid movement", correct: true },
-        { text: "Transfer through a vacuum", correct: false }
+        { id: 'a', label: "Heat from the element radiates upward only" },
+        { id: 'b', label: "Hot air is less dense and rises, accumulating at the top of the enclosed space", correct: true },
+        { id: 'c', label: "Cold air from outside leaks in at the bottom" },
+        { id: 'd', label: "The oven door blocks heat at the bottom" }
       ],
-      explanation: "Convection is heat transfer through the bulk movement of fluids (liquids or gases), carrying thermal energy with them."
+      explanation: "Even though the heating element is at the bottom, the hot air it creates is less dense and rises to the top of the oven. This is why convection ovens have fans to circulate the air and create more even temperatures throughout."
     },
     {
-      question: "Why do convection currents form circular patterns?",
+      scenario: "Astronauts on the International Space Station are conducting experiments and notice that a candle flame behaves very differently in microgravity.",
+      question: "Why would convection-driven processes behave differently in the absence of gravity?",
       options: [
-        { text: "The earth's rotation", correct: false },
-        { text: "Continuous heating and cooling cycle", correct: true },
-        { text: "Magnetic fields", correct: false },
-        { text: "Pressure differences only", correct: false }
+        { id: 'a', label: "Fire cannot exist without gravity" },
+        { id: 'b', label: "Without gravity, there's no buoyancy force to make less dense warm fluid rise", correct: true },
+        { id: 'c', label: "Space has too much radiation for convection" },
+        { id: 'd', label: "Oxygen doesn't work the same way in space" }
       ],
-      explanation: "Hot fluid rises, cools at the top, becomes denser, sinks, gets heated again - creating a continuous circular flow pattern."
+      explanation: "Convection relies on buoyancy, which requires gravity. In microgravity, warm, less dense fluid doesn't rise because there's no gravitational force creating the density-driven flow. In space, a candle flame is spherical because hot gases don't rise - they simply diffuse outward equally in all directions."
     },
     {
-      question: "In atmospheric convection, what causes sea breezes?",
+      scenario: "Weather forecasters are tracking the formation of a thunderstorm on a hot summer day.",
+      question: "How does convection contribute to thunderstorm formation?",
       options: [
-        { text: "Moon's gravity", correct: false },
-        { text: "Land heats faster than water", correct: true },
-        { text: "Ocean currents", correct: false },
-        { text: "Cloud formation", correct: false }
+        { id: 'a', label: "Lightning creates convection currents in clouds" },
+        { id: 'b', label: "The sun heats the ground, warm air rises rapidly, cools, and water vapor condenses into storm clouds", correct: true },
+        { id: 'c', label: "Cold fronts blow convection upward" },
+        { id: 'd', label: "Thunder shakes the air creating circulation" }
       ],
-      explanation: "During the day, land heats faster than water. Hot air over land rises, and cooler air from over the sea flows in to replace it."
+      explanation: "Strong surface heating creates powerful convection. Very warm, moist air rises rapidly, cooling as it ascends. When it cools enough, water vapor condenses, releasing heat energy that fuels further rising. This strong convective updraft creates the towering cumulonimbus clouds associated with thunderstorms."
     },
     {
-      question: "What would happen to convection if gravity were eliminated?",
+      scenario: "A homeowner is trying to understand why their upstairs is always warmer than their downstairs during summer.",
+      question: "What explains this temperature difference between floors?",
       options: [
-        { text: "It would speed up", correct: false },
-        { text: "It would stop", correct: true },
-        { text: "No change", correct: false },
-        { text: "It would reverse", correct: false }
+        { id: 'a', label: "The roof absorbs heat and transfers it directly to the upstairs" },
+        { id: 'b', label: "Warm air is less dense and naturally rises, accumulating on upper floors", correct: true },
+        { id: 'c', label: "Air conditioning units work better on lower floors" },
+        { id: 'd', label: "Windows upstairs let in more sunlight" }
       ],
-      explanation: "Convection depends on buoyancy, which requires gravity. Without gravity, density differences wouldn't cause fluid movement."
+      explanation: "Warm air is less dense than cool air and rises due to buoyancy. In a multi-story home, this means warm air naturally accumulates on upper floors while cooler, denser air settles on lower floors. This is why good HVAC design accounts for convection patterns in buildings."
     },
     {
-      question: "Which is NOT an example of convection?",
+      scenario: "A scientist is observing the sun and notices that its surface shows distinct granulation patterns - bright centers with darker edges.",
+      question: "What causes these granulation patterns on the sun's surface?",
       options: [
-        { text: "Boiling water", correct: false },
-        { text: "Sea breeze", correct: false },
-        { text: "Sunlight warming Earth", correct: true },
-        { text: "Home radiator heating", correct: false }
+        { id: 'a', label: "Magnetic storms creating visible patterns" },
+        { id: 'b', label: "Convection cells where hot plasma rises in the center and cooler plasma sinks at the edges", correct: true },
+        { id: 'c', label: "Nuclear explosions on the surface" },
+        { id: 'd', label: "Sunspots spreading across the surface" }
       ],
-      explanation: "Sunlight warming Earth is radiation, not convection. It doesn't require a medium and travels through the vacuum of space."
+      explanation: "Solar granulation is convection on a massive scale. Hot plasma from the sun's interior rises to the surface (appearing as bright granule centers), releases heat, cools, and sinks back down at the edges (appearing darker). Each granule is about the size of Texas!"
     },
     {
-      question: "In a convection oven, how is food cooked more evenly?",
+      scenario: "An engineer is designing a passive cooling system for a building in a hot climate without using electricity.",
+      question: "How can convection be used for passive cooling?",
       options: [
-        { text: "Higher temperatures", correct: false },
-        { text: "Circulating hot air", correct: true },
-        { text: "Microwave radiation", correct: false },
-        { text: "Infrared heat only", correct: false }
+        { id: 'a', label: "Paint the roof white to reflect heat" },
+        { id: 'b', label: "Create openings at different heights so hot air rises and exits while cool air enters below", correct: true },
+        { id: 'c', label: "Use thick walls to block all air movement" },
+        { id: 'd', label: "Install mirrors to redirect sunlight" }
       ],
-      explanation: "Convection ovens use fans to circulate hot air, ensuring even heat distribution around the food from all sides."
+      explanation: "Stack ventilation uses convection for cooling. Hot air inside rises and exits through openings near the ceiling, creating negative pressure that draws cooler outside air in through lower openings. This creates continuous air circulation without any mechanical systems, using only the natural tendency of warm air to rise."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);

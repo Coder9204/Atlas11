@@ -179,104 +179,114 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhas
   // Test phase
   const [testQuestions] = useState([
     {
-      question: "According to Newton's Third Law, when you push against a wall, what happens?",
+      scenario: "A SpaceX Falcon 9 rocket launches from Cape Canaveral, producing a massive plume of fire and exhaust gases shooting downward as the rocket accelerates upward toward space.",
+      question: "What force causes the rocket to accelerate upward according to Newton's Third Law?",
       options: [
-        { text: "Nothing, the wall doesn't move", correct: false },
-        { text: "The wall pushes back on you with equal force", correct: true },
-        { text: "The wall absorbs your force", correct: false },
-        { text: "Your force disappears", correct: false }
+        { id: 'a', label: "The exhaust gases pushing against the launch pad" },
+        { id: 'b', label: "The rocket pushes exhaust gases downward, and the gases push the rocket upward with an equal and opposite force", correct: true },
+        { id: 'c', label: "The fuel burning creates an upward explosion" },
+        { id: 'd', label: "Air pressure beneath the rocket lifts it up" }
       ],
-      explanation: "Newton's Third Law states that for every action, there's an equal and opposite reaction. When you push on the wall, it pushes back on you with equal force!"
+      explanation: "Newton's Third Law states that for every action, there is an equal and opposite reaction. The rocket expels exhaust gases at high velocity downward (action), and those gases exert an equal force upward on the rocket (reaction). This works even in the vacuum of space because the rocket pushes against its own exhaust, not the ground or air."
     },
     {
-      question: "Why does a balloon rocket move forward when air escapes backward?",
+      scenario: "A competitive swimmer pushes off the pool wall at the start of a race. The wall is solid concrete and doesn't move, yet the swimmer shoots through the water at high speed.",
+      question: "How does Newton's Third Law explain the swimmer's motion if the wall doesn't move?",
       options: [
-        { text: "The air pushes on the ground", correct: false },
-        { text: "The air resistance pulls it forward", correct: false },
-        { text: "The escaping air pushes the balloon forward (reaction)", correct: true },
-        { text: "Magic", correct: false }
+        { id: 'a', label: "The water behind the swimmer pushes them forward" },
+        { id: 'b', label: "The swimmer pushes on the wall (action), and the wall pushes back on the swimmer with equal force (reaction), accelerating them forward", correct: true },
+        { id: 'c', label: "The swimmer's legs store energy that releases when straightened" },
+        { id: 'd', label: "The wall absorbs the push and converts it to forward motion" }
       ],
-      explanation: "The balloon pushes air out (action), and the air pushes the balloon forward (reaction). This is Newton's Third Law in action!"
+      explanation: "The swimmer exerts a force on the wall, and by Newton's Third Law, the wall exerts an equal and opposite force on the swimmer. The wall doesn't move because it's attached to the massive pool structure, but the swimmer, being much lighter and free to move, accelerates rapidly in the opposite direction."
     },
     {
-      question: "If a larger balloon has more air, what happens compared to a smaller balloon?",
+      scenario: "A hunter fires a shotgun while not bracing properly. The gun kicks backward sharply, bruising the hunter's shoulder. The shotgun slug travels forward at 1,500 feet per second.",
+      question: "Why does the gun recoil backward when the bullet is fired forward?",
       options: [
-        { text: "It goes slower", correct: false },
-        { text: "It goes the same distance", correct: false },
-        { text: "It can travel farther due to longer thrust", correct: true },
-        { text: "Size doesn't matter", correct: false }
+        { id: 'a', label: "The explosion pushes in all directions including backward" },
+        { id: 'b', label: "Air rushing into the barrel pushes the gun back" },
+        { id: 'c', label: "The gun exerts a forward force on the bullet, and the bullet exerts an equal backward force on the gun", correct: true },
+        { id: 'd', label: "The noise of the shot creates a shockwave that pushes the gun" }
       ],
-      explanation: "More air means the balloon can push air out for a longer time, providing thrust for longer and thus traveling farther."
+      explanation: "The gun pushes the bullet forward with great force, and by Newton's Third Law, the bullet pushes the gun backward with equal force. The bullet accelerates more because it has less mass (F=ma, same force, smaller mass means greater acceleration). The recoil is the reaction force that the shooter must absorb."
     },
     {
-      question: "When you swim, you push water backward. What is the reaction force?",
+      scenario: "An ice skater stands still on a frozen pond and pushes a heavy crate away from herself. As the crate slides away, the skater notices she is also moving - in the opposite direction.",
+      question: "What explains why both the skater and the crate move in opposite directions?",
       options: [
-        { text: "The water disappears", correct: false },
-        { text: "The water pushes you forward", correct: true },
-        { text: "Gravity pulls you down", correct: false },
-        { text: "Nothing happens", correct: false }
+        { id: 'a', label: "The ice is too slippery to stay in place" },
+        { id: 'b', label: "When the skater pushes the crate (action), the crate pushes back on the skater (reaction) with equal force, causing both to move", correct: true },
+        { id: 'c', label: "The wind created by pushing the crate blows the skater backward" },
+        { id: 'd', label: "The crate's momentum transfers to the skater" }
       ],
-      explanation: "When you push water backward (action), the water pushes you forward (reaction). This is how you propel yourself through water!"
+      explanation: "Newton's Third Law applies to both objects. The skater pushes on the crate, and the crate pushes back on the skater with an equal and opposite force. On the low-friction ice, neither can resist this force, so both move. The skater moves slower because she has more mass than the crate would accelerate from the same force."
     },
     {
-      question: "A gun recoils (kicks back) when fired because:",
+      scenario: "A squid jets through the ocean by forcefully expelling water from its body cavity through a siphon. Marine biologists observe that the squid can rapidly change direction by adjusting which way the siphon points.",
+      question: "How does Newton's Third Law explain the squid's propulsion?",
       options: [
-        { text: "The gun is afraid of the noise", correct: false },
-        { text: "The bullet pushes the gun backward (reaction)", correct: true },
-        { text: "Air pressure pushes the gun", correct: false },
-        { text: "The explosion happens twice", correct: false }
+        { id: 'a', label: "The squid grabs the water with its tentacles and pulls itself forward" },
+        { id: 'b', label: "Ocean currents assist the squid's movement" },
+        { id: 'c', label: "The squid pushes water out in one direction, and the water pushes the squid in the opposite direction", correct: true },
+        { id: 'd', label: "The squid uses its fins to swim like a fish" }
       ],
-      explanation: "The gun pushes the bullet forward (action), and the bullet pushes the gun backward (reaction). The gun recoils due to Newton's Third Law."
+      explanation: "The squid expels water at high velocity through its siphon (action force on the water). By Newton's Third Law, the water exerts an equal and opposite force on the squid (reaction). This is the same principle rockets use - jet propulsion. By pointing the siphon different directions, the squid controls its direction of travel."
     },
     {
-      question: "Why do rockets work in the vacuum of space where there's nothing to push against?",
+      scenario: "A rowboat sits still on a calm lake. When the rower pulls the oars through the water, the boat moves forward. A physics student on shore wonders why pushing water backward makes the boat go forward.",
+      question: "According to Newton's Third Law, what causes the boat to move forward?",
       options: [
-        { text: "They can't work in space", correct: false },
-        { text: "They push against their own exhaust gases", correct: true },
-        { text: "Space isn't really a vacuum", correct: false },
-        { text: "They use solar wind", correct: false }
+        { id: 'a', label: "The oars lever the boat forward like a catapult" },
+        { id: 'b', label: "The oars push water backward (action), and the water pushes forward on the oars and boat (reaction)", correct: true },
+        { id: 'c', label: "The oars create a vacuum in front of the boat that pulls it forward" },
+        { id: 'd', label: "The rower's weight shifts forward, pulling the boat along" }
       ],
-      explanation: "Rockets push exhaust gases out (action), and those gases push the rocket forward (reaction). They don't need anything external to push against!"
+      explanation: "When the oars push water backward, Newton's Third Law means the water pushes forward on the oars with equal force. This reaction force is transmitted through the oars to the boat, propelling it forward. The harder and faster the water is pushed back, the stronger the forward reaction force."
     },
     {
-      question: "If action and reaction forces are equal, why do objects move?",
+      scenario: "Two astronauts are floating in the International Space Station. They face each other, place their palms together, and push. Both astronauts float backward away from each other.",
+      question: "Why do both astronauts move even though they're pushing against each other?",
       options: [
-        { text: "They're not really equal", correct: false },
-        { text: "The forces act on different objects", correct: true },
-        { text: "One force is always stronger", correct: false },
-        { text: "Movement is an illusion", correct: false }
+        { id: 'a', label: "The air in the station pushes them apart" },
+        { id: 'b', label: "They both exert equal forces on each other; each astronaut feels the reaction force from the other and accelerates backward", correct: true },
+        { id: 'c', label: "The station's rotation flings them apart" },
+        { id: 'd', label: "Magnetic forces in their suits repel each other" }
       ],
-      explanation: "Action and reaction forces act on DIFFERENT objects. When you push a cart, you push on the cart (it accelerates) while the cart pushes on you (but you're more massive)."
+      explanation: "When astronaut A pushes on astronaut B, by Newton's Third Law, astronaut B pushes back on astronaut A with equal force. Each astronaut experiences a force pushing them backward. In the weightless environment with no friction to resist, both accelerate away from each other."
     },
     {
-      question: "When a bird flaps its wings downward, what is the reaction?",
+      scenario: "A fire hose sprays water at very high pressure. Firefighters must brace themselves and sometimes require multiple people to hold the hose steady, or it will whip around dangerously.",
+      question: "What causes the fire hose to push backward so forcefully?",
       options: [
-        { text: "The air pushes the bird up", correct: true },
-        { text: "The bird gets tired", correct: false },
-        { text: "Nothing, birds are too light", correct: false },
-        { text: "Gravity increases", correct: false }
+        { id: 'a', label: "The water pressure builds up inside the hose and pushes outward in all directions" },
+        { id: 'b', label: "The hose pushes water forward at high speed (action), and the water pushes backward on the hose (reaction) with equal force", correct: true },
+        { id: 'c', label: "Air mixed with the water creates thrust" },
+        { id: 'd', label: "The pump vibrations cause the hose to shake" }
       ],
-      explanation: "The bird pushes air downward (action), and the air pushes the bird upward (reaction). This is how birds generate lift with each wing stroke!"
+      explanation: "As water accelerates out of the nozzle, the hose exerts a forward force on the water. Newton's Third Law dictates that the water exerts an equal backward force on the hose. The more water expelled per second and the faster it travels, the greater this reaction force becomes, requiring firefighters to brace against it."
     },
     {
-      question: "A person standing on a skateboard throws a heavy ball forward. What happens?",
+      scenario: "A helicopter hovers motionless in the air. Its rotor blades spin rapidly, pushing air downward. A physics student asks why pushing air down keeps the helicopter up.",
+      question: "How does Newton's Third Law explain how a helicopter generates lift?",
       options: [
-        { text: "Nothing", correct: false },
-        { text: "The person rolls backward", correct: true },
-        { text: "The ball stops mid-air", correct: false },
-        { text: "The skateboard breaks", correct: false }
+        { id: 'a', label: "The spinning blades create a vacuum above the helicopter" },
+        { id: 'b', label: "The rotor pushes air downward (action), and the air pushes upward on the rotor (reaction), creating lift equal to the helicopter's weight", correct: true },
+        { id: 'c', label: "The engine's power directly lifts the helicopter" },
+        { id: 'd', label: "Air pressure is higher beneath the rotors naturally" }
       ],
-      explanation: "When the person pushes the ball forward (action), the ball pushes the person backward (reaction), causing them to roll backward on the skateboard."
+      explanation: "The helicopter's rotors push air downward with considerable force (action). By Newton's Third Law, the air pushes upward on the rotors (reaction) with equal force. When this upward force equals the helicopter's weight, it hovers. Pushing more air down faster creates more lift, allowing the helicopter to ascend."
     },
     {
-      question: "If you're floating in space and throw your tool kit away from you, what happens?",
+      scenario: "A tennis player serves the ball with great force. Slow-motion replay shows that at the moment of contact, both the racket and the ball compress slightly before the ball rockets off the strings.",
+      question: "What forces are acting between the racket and the ball at impact?",
       options: [
-        { text: "You stay still", correct: false },
-        { text: "You move in the opposite direction", correct: true },
-        { text: "You start spinning randomly", correct: false },
-        { text: "The tool kit comes back", correct: false }
+        { id: 'a', label: "Only the racket exerts force on the ball" },
+        { id: 'b', label: "The racket exerts force on the ball to accelerate it forward, and the ball exerts an equal force back on the racket", correct: true },
+        { id: 'c', label: "The strings store energy like a trampoline and release it" },
+        { id: 'd', label: "The ball bounces off the racket without exerting any force on it" }
       ],
-      explanation: "When you push the tool kit away (action), it pushes you in the opposite direction (reaction). This is how astronauts can move in the weightlessness of space!"
+      explanation: "Newton's Third Law applies at every collision. The racket pushes forward on the ball with great force (accelerating the ball from rest to over 100 mph). The ball simultaneously pushes backward on the racket with equal force. This is why players feel the impact in their arm - it's the reaction force from accelerating the ball."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
