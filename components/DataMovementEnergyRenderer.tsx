@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// Data Movement Energy - Complete 10-Phase Game
+// Why moving data costs more energy than computing
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface DataMovementEnergyRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A data center engineer notices that their AI training servers consume 80% of their power moving data between memory and processors, not performing actual calculations.",
+    question: "Why does data movement dominate energy consumption in modern computing?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "Poor power management in modern CPUs" },
+      { id: 'b', label: "Moving electrons across chip distances requires more energy than switching transistors for computation", correct: true },
+      { id: 'c', label: "Memory chips are inherently inefficient" },
+      { id: 'd', label: "Software is poorly optimized for energy efficiency" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "A 64-bit floating-point operation uses about 20 picojoules, but fetching that data from DRAM uses 1,000-10,000x more energy. The physical act of moving electrons across millimeters to centimeters dominates the energy budget, not the computation itself."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "A programmer optimizes their matrix multiplication by processing data in small tiles that fit in L1 cache rather than streaming through the entire matrix repeatedly.",
+    question: "Why does tiled/blocked algorithm design save energy?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "Smaller tiles use fewer CPU instructions" },
+      { id: 'b', label: "Data reuse in fast, low-energy cache reduces expensive DRAM accesses", correct: true },
+      { id: 'c', label: "Tiles allow parallel processing that saves power" },
+      { id: 'd', label: "The CPU can turn off unused cores while processing tiles" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "Tiled algorithms maximize data reuse within the cache hierarchy. By processing a small tile multiple times while it's in L1/L2 cache (at ~1-10 pJ/access), we avoid repeated trips to DRAM (at ~10,000-20,000 pJ/access). The same computation uses 100-1000x less energy."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A chip designer compares two memory hierarchies: one with large L3 cache and one with direct DRAM access. The L3 version uses 5x less total energy for typical workloads.",
+    question: "What principle explains the energy advantage of deeper cache hierarchies?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "L3 cache operates at lower voltage than DRAM" },
+      { id: 'b', label: "Locality of reference means most accesses hit nearby, low-energy cache levels", correct: true },
+      { id: 'c', label: "DRAM requires constant refresh cycles that waste power" },
+      { id: 'd', label: "Cache controllers are more energy-efficient than memory controllers" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Programs exhibit temporal and spatial locality - data used once is likely used again soon, and nearby data is likely accessed together. Cache hierarchies exploit this: 90%+ of accesses can hit L1/L2 cache at 1-10 pJ, avoiding the 10,000+ pJ cost of DRAM."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "An AI accelerator design team considers two architectures: one with centralized memory and one with memory distributed near each processing unit. The distributed design uses 10x less energy.",
+    question: "What is this distributed memory approach called, and why is it more efficient?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "Near-memory computing - shorter wire distances mean less energy per bit moved", correct: true },
+      { id: 'b', label: "Parallel memory - more channels mean faster transfers" },
+      { id: 'c', label: "Unified memory - shared access reduces redundant copies" },
+      { id: 'd', label: "Virtual memory - OS manages placement for efficiency" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "Near-memory (or near-data) computing places processing elements close to memory. Energy to move data scales with distance - moving a bit 1mm costs ~100x less than moving it 1cm. By processing data where it lives, we minimize the expensive long-distance data movement."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "A smartphone SoC architect discovers that video processing consumes 50mW when done on the main CPU but only 5mW when done on a dedicated video engine with local memory.",
+    question: "What explains this 10x energy difference for the same computation?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "The video engine uses newer transistor technology" },
+      { id: 'b', label: "CPUs waste power on branch prediction and out-of-order execution" },
+      { id: 'c', label: "The dedicated engine keeps data in local SRAM, avoiding external memory traffic", correct: true },
+      { id: 'd', label: "Video workloads are inherently more efficient" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "Dedicated accelerators win primarily by minimizing data movement. A video engine with local SRAM buffers keeps frame data on-chip, avoiding costly external DRAM accesses. The CPU must stream data through the memory hierarchy repeatedly, paying the energy cost each time."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A neural network inference runs 100x more efficiently on a TPU than a GPU, despite both having similar computational throughput in FLOPS.",
+    question: "What architectural difference primarily accounts for the TPU's energy efficiency?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "TPUs use lower-precision arithmetic" },
+      { id: 'b', label: "TPUs have systolic arrays that stream data through computations with minimal memory access", correct: true },
+      { id: 'c', label: "TPUs run at lower clock frequencies" },
+      { id: 'd', label: "TPUs have better cooling systems" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "TPU systolic arrays pass data directly between processing elements without returning to memory. Each weight and activation is reused across many computations as it flows through the array. This maximizes computation per memory access - the key to energy efficiency."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "A supercomputer simulation shows that interconnect (data movement between nodes) consumes 40% of total power, while actual computation is only 25%.",
+    question: "What is this computational scaling challenge called?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "Amdahl's Law - serial bottlenecks limit scaling" },
+      { id: 'b', label: "The Memory Wall - memory bandwidth can't keep pace with compute", correct: true },
+      { id: 'c', label: "Moore's Law - transistors are hitting physical limits" },
+      { id: 'd', label: "Dennard Scaling - voltage reduction has stopped" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "The Memory Wall describes how processor speeds improved faster than memory speeds, creating a bandwidth bottleneck. Modern systems are 'data-starved' - they spend more time (and energy) waiting for and moving data than computing. This is a fundamental limit on scaling."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "A database query on a 1TB dataset completes in 10ms with in-memory processing but would take 100 seconds moving data to a traditional CPU.",
+    question: "What technology enables this 10,000x speedup?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "Flash storage acceleration" },
+      { id: 'b', label: "In-memory computing - processing data directly in the memory array", correct: true },
+      { id: 'c', label: "Massive parallelization across thousands of cores" },
+      { id: 'd', label: "Query compilation to machine code" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "In-memory (or processing-in-memory) computing performs operations like search, filter, and aggregation directly within the memory chips. This eliminates the data movement bottleneck entirely - data doesn't travel to processors; computation comes to the data."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A machine learning engineer compares training a model with batch size 32 vs batch size 1024. The larger batch uses only 2x more energy despite 32x more samples.",
+    question: "Why does larger batch processing improve energy efficiency?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "Larger batches allow more data parallelism" },
+      { id: 'b', label: "Model weights are loaded once and reused across all samples in the batch", correct: true },
+      { id: 'c', label: "Memory controllers optimize for sequential access" },
+      { id: 'd', label: "GPUs are designed for large batch workloads" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "With batch size 1, model weights must be loaded from memory for each sample. With batch size 1024, the same weights are loaded once and reused 1024 times. This amortizes the expensive memory access cost across many computations - a direct application of data reuse for energy efficiency."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A chip designer proposes adding 3D-stacked HBM (High Bandwidth Memory) to their processor, quadrupling memory bandwidth while using less energy per bit than standard DRAM.",
+    question: "Why does 3D stacking improve energy efficiency despite adding more transistors?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "Vertical connections are shorter than horizontal ones on a traditional chip", correct: true },
+      { id: 'b', label: "HBM uses newer, more efficient memory cell designs" },
+      { id: 'c', label: "3D stacking allows better heat dissipation" },
+      { id: 'd', label: "Stacked chips share power delivery infrastructure" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "3D stacking reduces wire length dramatically. Traditional packages route signals centimeters across PCBs; HBM stacks memory directly on the processor with micron-scale vertical connections. Energy per bit drops 5-10x because electrons travel 1000x shorter distances."
   }
 ];
 
@@ -170,75 +170,75 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '🧠',
+    title: 'AI Accelerators & TPUs',
+    short: 'Energy-efficient neural networks',
+    tagline: 'Training AI without melting the planet',
+    description: 'AI accelerators like Google TPUs and custom chips achieve 10-100x better energy efficiency than GPUs by minimizing data movement. Systolic arrays, on-chip memory, and optimized dataflows keep data close to computation.',
+    connection: 'Neural networks perform billions of multiply-accumulate operations per inference. By designing architectures that reuse weights and activations locally, accelerators achieve orders of magnitude better performance per watt.',
+    howItWorks: 'TPUs use systolic arrays where data flows through a grid of processing elements, with each weight used across multiple computations. Large on-chip SRAM stores activations locally. This minimizes expensive DRAM access to initial weight loading only.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '420 TOPS/W', label: 'TPU v4 efficiency', icon: '⚡' },
+      { value: '90%', label: 'Energy in compute, not memory', icon: '📊' },
+      { value: '100x', label: 'Better than CPU for AI', icon: '🚀' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
-    color: '#10B981'
-  },
-  {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
-    stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
-    ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
-    stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
-    ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['Google TPU', 'Apple Neural Engine', 'Tesla Dojo', 'Cerebras Wafer Scale Engine'],
+    companies: ['Google', 'Apple', 'NVIDIA', 'Tesla'],
+    futureImpact: 'Analog in-memory computing will enable AI inference at 1000x better efficiency by computing directly in memory arrays without digital data movement.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '📱',
+    title: 'Mobile SoC Design',
+    short: 'All-day battery from smart memory use',
+    tagline: 'Watts saved, hours gained',
+    description: 'Mobile chips achieve all-day battery life by aggressively minimizing data movement. Dedicated accelerators, heterogeneous cores, and smart memory hierarchies ensure data stays close to where it\'s needed.',
+    connection: 'A smartphone performs constant video, image, and sensor processing. Each unnecessary memory access drains battery. Modern SoCs include dozens of specialized engines, each with local memory, to process data without touching main memory.',
+    howItWorks: 'Camera ISPs buffer frames in local SRAM. Video encoders have dedicated line buffers. Neural engines keep models on-chip. Big/little CPU cores share L3 cache. Every subsystem minimizes external memory traffic.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '5W', label: 'Average SoC power', icon: '🔋' },
+      { value: '90%', label: 'Workloads on accelerators', icon: '⚙️' },
+      { value: '20hr', label: 'Battery life enabled', icon: '📱' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['Apple A-series', 'Qualcomm Snapdragon', 'Samsung Exynos', 'Google Tensor'],
+    companies: ['Apple', 'Qualcomm', 'Samsung', 'Google'],
+    futureImpact: 'Chiplet designs will integrate specialized processing tiles with minimal-energy interconnects, enabling week-long battery life for AR glasses and wearables.',
+    color: '#10B981'
+  },
+  {
+    icon: '🖥️',
+    title: 'Data Center Efficiency',
+    short: 'Megawatts saved through architecture',
+    tagline: 'Greening the cloud through design',
+    description: 'Hyperscale data centers consume 1-2% of global electricity. Optimizing data movement - from chip architecture to network topology - is the primary lever for reducing this footprint while meeting exponentially growing demand.',
+    connection: 'Every search query, video stream, and AI response requires data movement across memory hierarchies and network links. Reducing energy per bit moved directly translates to reduced carbon emissions and operating costs.',
+    howItWorks: 'Custom chips (Google TPUs, AWS Graviton) optimize for specific workloads. CXL memory pooling reduces redundant copies. Smart NICs offload network processing. Optical interconnects replace power-hungry electrical links.',
+    stats: [
+      { value: '1.1 PUE', label: 'Best-in-class efficiency', icon: '📊' },
+      { value: '30%', label: 'Power to data movement', icon: '⚡' },
+      { value: '$500M/yr', label: 'Energy cost at scale', icon: '💰' }
+    ],
+    examples: ['Google custom TPU servers', 'AWS Nitro System', 'Microsoft Azure FPGA', 'Meta MTIA'],
+    companies: ['Google', 'AWS', 'Microsoft', 'Meta'],
+    futureImpact: 'Photonic computing and optical interconnects will reduce data movement energy by 100x, enabling sustainable growth of AI and cloud services.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔬',
+    title: 'Scientific Computing & HPC',
+    short: 'Exascale efficiency breakthroughs',
+    tagline: 'More science per joule',
+    description: 'Exascale supercomputers must deliver 10x performance of previous generations while staying under 30MW power. This requires fundamental rethinking of data movement at every level, from chip to system.',
+    connection: 'Scientific simulations (climate, physics, genomics) move petabytes of data per run. The memory wall limits how fast computations can complete. Near-memory processing and optimized data layouts are essential for exascale.',
+    howItWorks: 'HBM stacks memory directly on compute dies. Network-on-chip replaces buses. 3D packaging shortens interconnects. Software optimizations like loop tiling and data layout transformations minimize memory traffic.',
+    stats: [
+      { value: '52 GFLOPS/W', label: 'Frontier efficiency', icon: '⚡' },
+      { value: '21MW', label: 'Frontier total power', icon: '🔌' },
+      { value: '10x', label: 'Improvement per decade', icon: '📈' }
+    ],
+    examples: ['Frontier (Oak Ridge)', 'Aurora (Argonne)', 'El Capitan (LLNL)', 'Fugaku (RIKEN)'],
+    companies: ['HPE/Cray', 'Intel', 'AMD', 'NVIDIA'],
+    futureImpact: 'Quantum-classical hybrid systems will offload specific computations to near-absolute-zero quantum processors, while neuromorphic systems will handle AI workloads at biological efficiency levels.',
     color: '#F59E0B'
   }
 ];
@@ -246,7 +246,7 @@ const realWorldApps = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const DataMovementEnergyRenderer: React.FC<DataMovementEnergyRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [dataReusesFactor, setDataReuseFactor] = useState(1); // 1-100 reuses
+  const [memoryLevel, setMemoryLevel] = useState(3); // 0=Register, 1=L1, 2=L2, 3=L3, 4=DRAM
+  const [dataVolume, setDataVolume] = useState(1); // MB of data
+  const [showOptimized, setShowOptimized] = useState(false);
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +298,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#06B6D4', // Cyan for data/energy theme
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -333,6 +312,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     textSecondary: '#9CA3AF',
     textMuted: '#6B7280',
     border: '#2a2a3a',
+    register: '#10B981', // Green - lowest energy
+    l1Cache: '#22D3EE', // Cyan
+    l2Cache: '#3B82F6', // Blue
+    l3Cache: '#8B5CF6', // Purple
+    dram: '#F59E0B', // Orange/Yellow - highest energy
   };
 
   const typo = {
@@ -343,6 +327,42 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
   };
 
+  // Memory hierarchy data - energy per 64-bit access in picojoules
+  const memoryHierarchy = [
+    { name: 'Register', energy: 0.1, latency: 0, color: colors.register, size: '~1 KB' },
+    { name: 'L1 Cache', energy: 1, latency: 1, color: colors.l1Cache, size: '32-64 KB' },
+    { name: 'L2 Cache', energy: 10, latency: 10, color: colors.l2Cache, size: '256 KB-1 MB' },
+    { name: 'L3 Cache', energy: 50, latency: 40, color: colors.l3Cache, size: '8-64 MB' },
+    { name: 'DRAM', energy: 10000, latency: 100, color: colors.dram, size: '8-128 GB' },
+  ];
+
+  // Calculate energy costs
+  const calculateEnergy = useCallback((level: number, volumeMB: number, reuses: number) => {
+    const bitsPerMB = 8 * 1024 * 1024;
+    const accessesPerLoad = volumeMB * bitsPerMB / 64; // 64-bit accesses
+    const energyPerAccess = memoryHierarchy[level].energy;
+
+    // Without optimization: fetch from specified level each time
+    const unoptimizedEnergy = accessesPerLoad * energyPerAccess * reuses;
+
+    // With optimization: fetch once to register, reuse from there
+    const optimizedEnergy = accessesPerLoad * energyPerAccess + // Initial fetch
+                           accessesPerLoad * memoryHierarchy[0].energy * (reuses - 1); // Reuses from register
+
+    return {
+      unoptimized: unoptimizedEnergy,
+      optimized: optimizedEnergy,
+      savings: ((unoptimizedEnergy - optimizedEnergy) / unoptimizedEnergy) * 100
+    };
+  }, []);
+
+  const energyCalc = calculateEnergy(memoryLevel, dataVolume, dataReusesFactor);
+
+  // Compute energy for a single FP64 operation (about 20 pJ)
+  const computeEnergy = 20; // pJ per FP64 operation
+  const computeOpsPerMB = 1024 * 1024 / 8; // FP64 operations possible with 1MB
+  const totalComputeEnergy = computeOpsPerMB * dataVolume * computeEnergy;
+
   // Phase navigation
   const phaseOrder: Phase[] = validPhases;
   const phaseLabels: Record<Phase, string> = {
@@ -351,7 +371,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Optimization Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +383,176 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
-
-  const freqStatus = getFrequencyStatus();
-
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
-
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+  // Memory Hierarchy Visualization Component
+  const MemoryHierarchyVisualization = ({ showDataFlow = true, highlightLevel = -1 }) => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 300 : 380;
+    const centerX = width / 2;
+    const startY = 40;
+    const levelHeight = (height - 80) / 5;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
-        ))}
-
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
+        {/* CPU at top */}
+        <rect
+          x={centerX - 40}
+          y={10}
+          width={80}
+          height={25}
+          rx={4}
+          fill={colors.accent}
+          style={{ filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.5))' }}
         />
+        <text x={centerX} y={27} fill="white" fontSize="12" fontWeight="600" textAnchor="middle">CPU</text>
 
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
+        {/* Memory hierarchy layers */}
+        {memoryHierarchy.map((level, i) => {
+          const layerWidth = 60 + i * 40;
+          const y = startY + i * levelHeight;
+          const isHighlighted = highlightLevel === i || highlightLevel === -1;
 
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
+          return (
+            <g key={level.name} style={{ opacity: isHighlighted ? 1 : 0.3 }}>
+              {/* Layer rectangle */}
+              <rect
+                x={centerX - layerWidth / 2}
+                y={y}
+                width={layerWidth}
+                height={levelHeight - 10}
+                rx={6}
+                fill={`${level.color}22`}
+                stroke={level.color}
+                strokeWidth={highlightLevel === i ? 3 : 1}
+                style={highlightLevel === i ? { filter: `drop-shadow(0 0 10px ${level.color})` } : {}}
+              />
+
+              {/* Level name */}
+              <text
+                x={centerX}
+                y={y + levelHeight / 2 - 5}
+                fill={level.color}
+                fontSize={isMobile ? "11" : "13"}
+                fontWeight="600"
+                textAnchor="middle"
+              >
+                {level.name}
+              </text>
+
+              {/* Energy cost */}
+              <text
+                x={centerX}
+                y={y + levelHeight / 2 + 10}
+                fill={colors.textSecondary}
+                fontSize={isMobile ? "9" : "10"}
+                textAnchor="middle"
+              >
+                {level.energy < 1 ? `${level.energy} pJ` : level.energy >= 1000 ? `${(level.energy/1000).toFixed(0)}k pJ` : `${level.energy} pJ`}/access
+              </text>
+
+              {/* Size indicator */}
+              <text
+                x={centerX + layerWidth / 2 + 8}
+                y={y + levelHeight / 2}
+                fill={colors.textMuted}
+                fontSize="9"
+                textAnchor="start"
+              >
+                {level.size}
+              </text>
+
+              {/* Data flow animation */}
+              {showDataFlow && highlightLevel >= i && (
+                <circle
+                  cx={centerX}
+                  cy={y + (animationFrame % 30) * (levelHeight / 30)}
+                  r={3}
+                  fill={colors.accent}
+                  style={{
+                    filter: 'drop-shadow(0 0 4px rgba(6, 182, 212, 0.8))',
+                    opacity: 0.8
+                  }}
+                />
+              )}
+            </g>
+          );
+        })}
+
+        {/* Energy scale legend */}
+        <g transform={`translate(${width - 90}, 50)`}>
+          <text x={0} y={0} fill={colors.textMuted} fontSize="9">Energy Scale</text>
+          <rect x={0} y={8} width={12} height={12} fill={colors.register} rx={2} />
+          <text x={16} y={18} fill={colors.textMuted} fontSize="8">Low</text>
+          <rect x={0} y={24} width={12} height={12} fill={colors.dram} rx={2} />
+          <text x={16} y={34} fill={colors.textMuted} fontSize="8">High</text>
+        </g>
+      </svg>
+    );
+  };
+
+  // Energy comparison bar chart
+  const EnergyComparisonChart = () => {
+    const width = isMobile ? 300 : 400;
+    const height = 180;
+    const barHeight = 35;
+    const maxEnergy = Math.max(energyCalc.unoptimized, totalComputeEnergy);
+
+    const computeBarWidth = (totalComputeEnergy / maxEnergy) * (width - 120);
+    const moveBarWidth = (energyCalc.unoptimized / maxEnergy) * (width - 120);
+    const optimizedMoveWidth = (energyCalc.optimized / maxEnergy) * (width - 120);
+
+    const formatEnergy = (pj: number) => {
+      if (pj >= 1e12) return `${(pj/1e12).toFixed(1)} J`;
+      if (pj >= 1e9) return `${(pj/1e9).toFixed(1)} mJ`;
+      if (pj >= 1e6) return `${(pj/1e6).toFixed(1)} uJ`;
+      if (pj >= 1e3) return `${(pj/1e3).toFixed(1)} nJ`;
+      return `${pj.toFixed(0)} pJ`;
+    };
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px', padding: '16px' }}>
+        {/* Compute energy bar */}
+        <text x={10} y={20} fill={colors.textSecondary} fontSize="11">Compute Energy</text>
+        <rect x={10} y={28} width={computeBarWidth} height={barHeight} rx={4} fill={colors.success} />
+        <text x={computeBarWidth + 16} y={50} fill={colors.success} fontSize="11" fontWeight="600">
+          {formatEnergy(totalComputeEnergy)}
         </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
+
+        {/* Data movement energy bar */}
+        <text x={10} y={85} fill={colors.textSecondary} fontSize="11">
+          Data Movement {showOptimized ? '(Optimized)' : '(Naive)'}
+        </text>
+        <rect
+          x={10}
+          y={93}
+          width={showOptimized ? optimizedMoveWidth : moveBarWidth}
+          height={barHeight}
+          rx={4}
+          fill={showOptimized ? colors.accent : colors.warning}
+        />
+        <text
+          x={(showOptimized ? optimizedMoveWidth : moveBarWidth) + 16}
+          y={115}
+          fill={showOptimized ? colors.accent : colors.warning}
+          fontSize="11"
+          fontWeight="600"
+        >
+          {formatEnergy(showOptimized ? energyCalc.optimized : energyCalc.unoptimized)}
         </text>
 
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
-          </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
-        </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        {/* Ratio indicator */}
+        <text x={10} y={160} fill={colors.textMuted} fontSize="10">
+          Data movement is {((showOptimized ? energyCalc.optimized : energyCalc.unoptimized) / totalComputeEnergy).toFixed(0)}x compute energy
+        </text>
       </svg>
     );
   };
@@ -534,7 +606,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -570,12 +642,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          🔌💾
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          The Hidden Cost of Data Movement
         </h1>
 
         <p style={{
@@ -584,7 +656,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "What if I told you that <span style={{ color: colors.accent }}>moving a number</span> from memory to the CPU uses 1000x more energy than actually <span style={{ color: colors.success }}>computing with it</span>?"
         </p>
 
         <div style={{
@@ -596,10 +668,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "In modern computing, we don't have a compute problem—we have a data movement problem. Every byte we move costs precious energy."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — The Memory Wall Problem
           </p>
         </div>
 
@@ -607,7 +679,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Discover the Energy Cost
         </button>
 
         {renderNavDots()}
@@ -618,9 +690,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Computing uses most energy—CPUs are power-hungry processors' },
+      { id: 'b', text: 'Moving data uses more energy—distance and capacitance dominate' },
+      { id: 'c', text: 'They use about the same energy—both involve transistor switching' },
     ];
 
     return (
@@ -640,12 +712,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            When a CPU multiplies two numbers, what uses more energy: the multiplication itself, or fetching those numbers from memory?
           </h2>
 
           {/* Simple diagram */}
@@ -658,23 +730,23 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '48px' }}>💾</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Memory</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>→ ???</div>
               <div style={{
                 background: colors.accent + '33',
                 padding: '20px 30px',
                 borderRadius: '8px',
                 border: `2px solid ${colors.accent}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '32px' }}>⚙️</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>CPU</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '48px' }}>✖️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Multiply</p>
               </div>
             </div>
           </div>
@@ -721,7 +793,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              See the Reality
             </button>
           )}
         </div>
@@ -731,7 +803,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Memory Hierarchy
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,160 +815,132 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Explore the Memory Hierarchy
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust where data comes from and see how energy cost explodes
           </p>
 
-          {/* Main visualization */}
-          <div style={{
-            background: colors.bgCard,
-            borderRadius: '16px',
-            padding: '24px',
-            marginBottom: '24px',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
-            </div>
-
-            {/* Generation slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
-              </div>
-            </div>
-
-            {/* Status display */}
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '24px' }}>
+            {/* Memory hierarchy visualization */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '16px',
+              flex: 1,
             }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
-                }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
+              <MemoryHierarchyVisualization showDataFlow={true} highlightLevel={memoryLevel} />
+            </div>
+
+            {/* Controls */}
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '16px',
+              padding: '24px',
+              flex: 1,
+            }}>
+              {/* Memory level slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Memory Level</span>
+                  <span style={{
+                    ...typo.small,
+                    color: memoryHierarchy[memoryLevel].color,
+                    fontWeight: 600
+                  }}>
+                    {memoryHierarchy[memoryLevel].name}
+                  </span>
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
+                <input
+                  type="range"
+                  min="0"
+                  max="4"
+                  step="1"
+                  value={memoryLevel}
+                  onChange={(e) => setMemoryLevel(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.register }}>Register</span>
+                  <span style={{ ...typo.small, color: colors.dram }}>DRAM</span>
+                </div>
               </div>
+
+              {/* Data volume slider */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Data Volume</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataVolume} MB</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value={dataVolume}
+                  onChange={(e) => setDataVolume(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+              </div>
+
+              {/* Energy display */}
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
+                <div style={{ ...typo.small, color: colors.textMuted, marginBottom: '8px' }}>
+                  Energy per Access
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{
+                  ...typo.h2,
+                  color: memoryHierarchy[memoryLevel].color,
+                  marginBottom: '8px'
+                }}>
+                  {memoryHierarchy[memoryLevel].energy >= 1000
+                    ? `${(memoryHierarchy[memoryLevel].energy/1000).toFixed(0)}k pJ`
+                    : `${memoryHierarchy[memoryLevel].energy} pJ`}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>
+                  {memoryLevel === 0 ? 'Baseline' :
+                    `${(memoryHierarchy[memoryLevel].energy / memoryHierarchy[0].energy).toFixed(0)}x more than register`}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {/* Key insight */}
+          {memoryLevel >= 4 && (
             <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
               borderRadius: '12px',
               padding: '16px',
-              marginBottom: '24px',
+              marginTop: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                DRAM access uses 100,000x more energy than a register access!
               </p>
             </div>
           )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
-            style={{ ...primaryButtonStyle, width: '100%' }}
+            style={{ ...primaryButtonStyle, width: '100%', marginTop: '24px' }}
           >
-            Understand the Physics →
+            Understand the Physics
           </button>
         </div>
 
@@ -917,7 +961,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            Why Does Distance Cost So Much?
           </h2>
 
           <div style={{
@@ -926,18 +970,22 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <MemoryHierarchyVisualization showDataFlow={false} highlightLevel={-1} />
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>Energy = Capacitance x Voltage^2 x Distance</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
+                Moving electrons through <span style={{ color: colors.accent }}>wires</span> requires charging capacitance along the entire path. Longer wires = more capacitance = more energy.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                A <span style={{ color: colors.register }}>register</span> is micrometers away. <span style={{ color: colors.dram }}>DRAM</span> is centimeters away—10,000x farther!
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                This is why the <span style={{ color: colors.warning, fontWeight: 600 }}>memory hierarchy</span> exists: keep frequently-used data close to save energy.
               </p>
             </div>
           </div>
@@ -950,16 +998,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              A floating-point multiply uses ~20 picojoules. Fetching the operands from DRAM uses ~20,000 picojoules. The compute is essentially free—it's the data movement that costs!
             </p>
           </div>
 
@@ -967,7 +1009,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Data Reuse
           </button>
         </div>
 
@@ -979,9 +1021,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'Fetch from DRAM each time—memory is designed for repeated access' },
+      { id: 'b', text: 'Load once to cache/register and reuse—amortize the fetch cost' },
+      { id: 'c', text: 'It doesn\'t matter—modern CPUs optimize this automatically' },
     ];
 
     return (
@@ -1001,12 +1043,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              New Variable: Data Reuse
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            If you need to use the same data 100 times, what's the most energy-efficient approach?
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1049,7 +1091,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See the Impact
             </button>
           )}
         </div>
@@ -1071,10 +1113,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Data Reuse Optimization
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Compare naive vs. optimized data access patterns
           </p>
 
           <div style={{
@@ -1083,27 +1125,18 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
-            </div>
-
-            {/* Renewable penetration slider */}
+            {/* Sliders */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Data Reuse Factor</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataReusesFactor}x reuses</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
+                min="1"
+                max="100"
+                value={dataReusesFactor}
+                onChange={(e) => setDataReuseFactor(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1113,18 +1146,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Memory Source</span>
+                <span style={{ ...typo.small, color: memoryHierarchy[memoryLevel].color, fontWeight: 600 }}>
+                  {memoryHierarchy[memoryLevel].name}
+                </span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                min="0"
+                max="4"
+                step="1"
+                value={memoryLevel}
+                onChange={(e) => setMemoryLevel(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1134,7 +1169,27 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Battery toggle */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Data Volume</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{dataVolume} MB</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="100"
+                value={dataVolume}
+                onChange={(e) => setDataVolume(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Optimization toggle */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -1142,15 +1197,15 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               gap: '12px',
               marginBottom: '24px',
             }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Naive Access</span>
               <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
+                onClick={() => setShowOptimized(!showOptimized)}
                 style={{
                   width: '60px',
                   height: '30px',
                   borderRadius: '15px',
                   border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
+                  background: showOptimized ? colors.success : colors.border,
                   cursor: 'pointer',
                   position: 'relative',
                   transition: 'background 0.3s',
@@ -1163,43 +1218,27 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   background: 'white',
                   position: 'absolute',
                   top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
+                  left: showOptimized ? '33px' : '3px',
                   transition: 'left 0.3s',
                 }} />
               </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
+              <span style={{
+                ...typo.small,
+                color: showOptimized ? colors.success : colors.textSecondary,
+                fontWeight: showOptimized ? 600 : 400
+              }}>
+                Data Reuse Optimized
               </span>
             </div>
 
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
-              </div>
+            {/* Energy comparison chart */}
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <EnergyComparisonChart />
             </div>
           </div>
 
-          {batteryResponse && (
+          {/* Savings display */}
+          {showOptimized && energyCalc.savings > 10 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -1208,8 +1247,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
+              <p style={{ ...typo.h3, color: colors.success, margin: 0 }}>
+                {energyCalc.savings.toFixed(0)}% Energy Savings!
+              </p>
+              <p style={{ ...typo.small, color: colors.textSecondary, marginTop: '8px' }}>
+                By loading data once and reusing it {dataReusesFactor} times from registers
               </p>
             </div>
           )}
@@ -1218,7 +1260,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand the Implications
           </button>
         </div>
 
@@ -1239,7 +1281,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Strategies to Beat the Memory Wall
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1292,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>🧱</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Tiled/Blocked Algorithms</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                Process data in <span style={{ color: colors.accent }}>small tiles</span> that fit in cache. Matrix multiplication can be 10x more efficient when blocked to L1 cache size.
               </p>
             </div>
 
@@ -1265,11 +1307,26 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>📍</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Near-Memory Computing</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                Place compute <span style={{ color: colors.accent }}>next to memory</span>. HBM stacks memory on processors. PIM (Processing-in-Memory) adds logic to memory chips.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🔄</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Systolic Arrays</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Data <span style={{ color: colors.accent }}>flows through</span> processing elements, being reused at each step. TPUs achieve 10-100x efficiency gains with this architecture.
               </p>
             </div>
 
@@ -1280,11 +1337,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>🧠</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>In-Memory Computing</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                Perform computation <span style={{ color: colors.success }}>directly in the memory array</span>. Eliminates data movement entirely for operations like search and matrix multiply.
               </p>
             </div>
           </div>
@@ -1293,7 +1350,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications →
+            See Real-World Applications
           </button>
         </div>
 
@@ -1360,7 +1417,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    ✓
+                    +
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1398,7 +1455,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                How Data Movement Efficiency Connects:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1430,7 +1487,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              Take the Knowledge Test
             </button>
           )}
         </div>
@@ -1467,7 +1524,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered the energy cost of data movement!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1476,7 +1533,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 onClick={() => { playSound('complete'); nextPhase(); }}
                 style={primaryButtonStyle}
               >
-                Complete Lesson →
+                Complete Lesson
               </button>
             ) : (
               <button
@@ -1610,7 +1667,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               >
-                ← Previous
+                Previous
               </button>
             )}
             {currentQuestion < 9 ? (
@@ -1628,7 +1685,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1689,11 +1746,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          Data Movement Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand why data movement dominates computing energy costs and how architects design systems to minimize it.
         </p>
 
         <div style={{
@@ -1708,14 +1765,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'Memory hierarchy energy costs scale with distance',
+              'Data movement uses 100-10,000x more energy than compute',
+              'Data reuse through caching saves massive energy',
+              'Tiled algorithms exploit locality for efficiency',
+              'Near-memory and in-memory computing eliminate movement',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ color: colors.success }}>+</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -1756,4 +1813,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default DataMovementEnergyRenderer;

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// MPPT (Maximum Power Point Tracking) - Complete 10-Phase Game
+// Why solar controllers matter for harvesting maximum energy
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface MPPTRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A homeowner notices their solar panels produce 300W at noon but only 180W in the late afternoon, even though sunlight intensity only dropped by 30%.",
+    question: "Why might power drop more than expected as sunlight decreases?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "The panels are physically damaged by afternoon heat" },
+      { id: 'b', label: "Without MPPT, the operating point moves away from maximum power", correct: true },
+      { id: 'c', label: "Electrons move slower in the afternoon" },
+      { id: 'd', label: "The inverter automatically reduces output for safety" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "Solar panels have a specific voltage-current relationship (I-V curve) that shifts with light intensity. Without MPPT actively tracking the new maximum power point, a fixed-voltage system operates at a suboptimal point, losing more power than the reduction in sunlight would suggest."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "An engineer compares two identical solar installations: one with a simple PWM charge controller, the other with an MPPT controller. The MPPT system harvests 25% more energy.",
+    question: "What allows the MPPT controller to extract more power?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "It uses higher quality wiring that reduces resistance" },
+      { id: 'b', label: "It actively finds and tracks the voltage where power output is maximum", correct: true },
+      { id: 'c', label: "It stores extra energy in internal capacitors" },
+      { id: 'd', label: "It runs the panels at higher temperature for more efficiency" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "MPPT controllers continuously adjust the operating voltage to find the Maximum Power Point on the I-V curve. PWM controllers simply connect panels directly to batteries, often operating far from the optimal point, especially when battery voltage doesn't match panel MPP voltage."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A solar panel is rated for 40V at maximum power, but it's connected to a 12V battery system. The panel produces far less power than expected.",
+    question: "What's causing the power loss?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "The battery is forcing the panel to operate at 12V instead of its optimal 40V", correct: true },
+      { id: 'b', label: "12V batteries cannot accept solar power" },
+      { id: 'c', label: "The panel rating is only valid in laboratory conditions" },
+      { id: 'd', label: "Voltage differences always cause power loss" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "When a panel's MPP voltage (40V) differs significantly from battery voltage (12V), a direct connection forces the panel to operate at 12V—far from its optimal point. An MPPT controller solves this by converting the panel's high voltage to the battery's voltage while preserving power."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "On a partly cloudy day, solar output fluctuates rapidly as clouds pass. An MPPT controller adjusts its operating point every few seconds.",
+    question: "Why does the MPPT need to continuously adjust rather than staying at a fixed point?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "To prevent the panels from overheating" },
+      { id: 'b', label: "Because the I-V curve and MPP location shift with changing irradiance", correct: true },
+      { id: 'c', label: "To synchronize with the AC grid frequency" },
+      { id: 'd', label: "Clouds change the color of sunlight, requiring recalibration" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "The I-V curve of a solar panel changes shape and the MPP shifts location whenever irradiance changes. MPPT algorithms (like Perturb & Observe or Incremental Conductance) continuously probe the curve to find the new maximum power point as conditions change."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "A data center's rooftop solar system uses string inverters with MPPT. When one panel in a string is shaded, the entire string's output drops dramatically.",
+    question: "Why does shading one panel affect the whole string so severely?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "The MPPT controller turns off the entire string for safety" },
+      { id: 'b', label: "In a series string, current is limited by the weakest panel, and MPPT can only optimize for one operating point", correct: true },
+      { id: 'c', label: "Shade creates electrical interference that disrupts other panels" },
+      { id: 'd', label: "The inverter cannot handle mixed voltage inputs" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "In a series string, all panels share the same current. When one panel is shaded, its maximum current drops, limiting the entire string. The MPPT finds a compromise point, but significant power is lost. Solutions include microinverters, power optimizers, or bypass diodes."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A solar installer offers two system options: one large MPPT tracker for all panels, or multiple smaller trackers with panels grouped by orientation. The multi-tracker option costs 20% more.",
+    question: "When would the multi-tracker option provide better energy harvest?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "When panels face different directions and receive sunlight at different intensities", correct: true },
+      { id: 'b', label: "Only when the total system size exceeds 10kW" },
+      { id: 'c', label: "When the battery bank is larger than 20kWh" },
+      { id: 'd', label: "The single tracker is always better due to lower system losses" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "When panels face different directions (e.g., east and west roof sections), they have different I-V curves and MPP locations at any given time. Separate MPPT trackers can optimize each group independently, while a single tracker must compromise. This can yield 10-25% more energy."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "An off-grid cabin's MPPT controller displays 'Bulk', 'Absorption', and 'Float' charging stages. During 'Float' mode, the panels produce far below their potential power.",
+    question: "Why does the MPPT allow the panels to underperform during Float mode?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "The MPPT controller is malfunctioning" },
+      { id: 'b', label: "Float mode means batteries are full; MPPT reduces power to prevent overcharging", correct: true },
+      { id: 'c', label: "Float mode is for nighttime operation only" },
+      { id: 'd', label: "The panels are too cold to operate at full power" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "MPPT controllers integrate battery charging logic. When batteries reach full charge, the controller moves away from MPP intentionally, reducing power flow to maintain float voltage and prevent overcharging. The 'lost' power isn't really lost—there's simply nowhere to put it."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "A solar panel's specification sheet shows Vmp=37V (voltage at max power) and Voc=45V (open circuit voltage). The MPPT controller operates the panel at 37V.",
+    question: "What would happen if the controller operated the panel at 45V instead?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "Power output would increase by 22%" },
+      { id: 'b', label: "Power output would be zero because current is zero at Voc", correct: true },
+      { id: 'c', label: "The panel would overheat and shut down" },
+      { id: 'd', label: "The same power would be produced at higher efficiency" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "At open circuit voltage (Voc), no current flows—the panel produces no power (P = V × I = 45V × 0A = 0W). The maximum power point (Vmp=37V) is where the product of voltage and current is highest. Operating at Voc means zero power output."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A solar installation in Phoenix, Arizona shows 15% less power output in summer compared to spring, despite having more intense sunlight in summer.",
+    question: "What causes this counterintuitive seasonal performance?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "Summer sunlight has less energy due to atmospheric changes" },
+      { id: 'b', label: "Higher temperatures reduce panel voltage and efficiency, and shift the MPP", correct: true },
+      { id: 'c', label: "The MPPT controller slows down in hot weather" },
+      { id: 'd', label: "Dust accumulation is worse in summer" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "Solar panel efficiency drops with temperature—typically 0.3-0.5% per degree Celsius above 25°C. In Phoenix summer (panel temps of 60-70°C), this means 10-20% efficiency loss. The MPP voltage also decreases with temperature, requiring MPPT to track a moving target."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A researcher tests an MPPT algorithm by covering a solar panel with a blanket and watching the controller's response. The operating voltage oscillates wildly before settling.",
+    question: "What MPPT algorithm behavior is the researcher observing?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "The controller is broken and needs replacement" },
+      { id: 'b', label: "Perturb & Observe algorithm hunting for the new MPP after a sudden change", correct: true },
+      { id: 'c', label: "Electromagnetic interference from the blanket material" },
+      { id: 'd', label: "Battery voltage fluctuations affecting the measurement" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Perturb & Observe (P&O) MPPT works by slightly changing voltage, measuring power change, and adjusting direction. When conditions change suddenly, the algorithm must search for the new MPP, causing visible oscillation. More advanced algorithms (like Incremental Conductance) converge faster."
   }
 ];
 
@@ -170,75 +170,75 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '🏠',
+    title: 'Residential Solar Systems',
+    short: 'Maximizing rooftop solar harvest',
+    tagline: 'Every watt counts for your electricity bill',
+    description: 'Home solar installations use MPPT charge controllers or inverters to extract maximum power from rooftop panels. With varying roof orientations, shading from trees, and changing weather, MPPT can improve energy harvest by 20-30% compared to simpler PWM controllers.',
+    connection: 'Residential systems face constantly changing conditions—morning shade, afternoon clouds, seasonal sun angles. MPPT continuously adjusts the operating point to maximize power as the I-V curve shifts throughout the day.',
+    howItWorks: 'String inverters with MPPT track the combined curve of series-connected panels. Microinverters provide panel-level MPPT, eliminating mismatch losses. Modern systems achieve 97-99% MPPT efficiency.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '25-30%', label: 'More energy vs PWM', icon: '⚡' },
+      { value: '99%', label: 'MPPT tracking efficiency', icon: '📈' },
+      { value: '$400/yr', label: 'Typical savings', icon: '💰' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
+    examples: ['Enphase microinverters', 'SolarEdge optimizers', 'Victron MPPT controllers', 'Tesla Powerwall integration'],
+    companies: ['Enphase', 'SolarEdge', 'SMA', 'Victron'],
+    futureImpact: 'AI-powered MPPT algorithms will predict weather and pre-position operating points, reducing tracking losses to near zero.',
     color: '#10B981'
   },
   {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
+    icon: '🚗',
+    title: 'Electric Vehicle Solar Charging',
+    short: 'Solar-to-EV power optimization',
+    tagline: 'Sun-powered miles on demand',
+    description: 'Solar carports and home charging systems use MPPT to convert variable solar output into EV charging. Advanced systems coordinate solar MPPT with EV battery management for seamless energy transfer.',
+    connection: 'EV batteries require specific voltage and current profiles. MPPT enables solar panels (with varying output) to charge batteries efficiently by continuously finding the optimal power point and converting it to the required charging parameters.',
+    howItWorks: 'Solar charge controllers with MPPT feed power to a DC-DC converter that matches EV battery voltage. Smart systems shift charging to solar peak hours and reduce grid draw when clouds pass.',
     stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
+      { value: '1000mi', label: 'Free solar miles/year', icon: '🚗' },
+      { value: '50%', label: 'Charging cost reduction', icon: '💵' },
+      { value: '2-5kW', label: 'Typical carport size', icon: '☀️' }
     ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
+    examples: ['Tesla Solar + Powerwall', 'Wallbox Quasar V2G', 'Zappi solar diverter', 'SolarEdge EV charger'],
+    companies: ['Tesla', 'Wallbox', 'myenergi', 'SolarEdge'],
+    futureImpact: 'Vehicle-to-grid (V2G) systems will use bidirectional MPPT, making EVs into mobile solar batteries that stabilize the grid.',
     color: '#3B82F6'
   },
   {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
+    icon: '🛰️',
+    title: 'Spacecraft Power Systems',
+    short: 'Solar arrays in the harshest environment',
+    tagline: 'No second chances in space',
+    description: 'Satellites and space probes use sophisticated MPPT to harvest power from solar arrays in extreme conditions—temperature swings of 200°C, radiation damage, and varying sun distance. Reliability is critical with no possibility of repair.',
+    connection: 'Space solar arrays experience dramatic I-V curve changes as they rotate, heat/cool, and degrade from radiation. MPPT must track these changes precisely while operating on minimal computing resources and maximum reliability.',
+    howItWorks: 'Sequential switching shunt regulators or series regulators with MPPT manage power from multi-junction solar cells. Redundant controllers ensure continuous operation. Some use fixed setpoints with periodic optimization to reduce complexity.',
     stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
+      { value: '30%', label: 'Solar cell efficiency', icon: '⚡' },
+      { value: '15+ years', label: 'Operational lifetime', icon: '🛰️' },
+      { value: '-150 to +150°C', label: 'Temperature range', icon: '🌡️' }
     ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['ISS solar arrays', 'Mars rovers', 'Starlink satellites', 'James Webb Space Telescope'],
+    companies: ['Boeing', 'Lockheed Martin', 'Airbus', 'SpaceX'],
+    futureImpact: 'Lunar and Mars bases will use autonomous MPPT systems that self-calibrate as panels degrade over decades without human intervention.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🏭',
+    title: 'Utility-Scale Solar Farms',
+    short: 'Megawatts of optimized power',
+    tagline: 'Grid-scale efficiency at every moment',
+    description: 'Large solar farms use thousands of MPPT trackers to optimize hundreds of megawatts. Advanced algorithms coordinate across the entire plant, managing partial shading, soiling, and equipment variations to maximize revenue.',
+    connection: 'At utility scale, even 1% efficiency improvement means millions of dollars. MPPT systems must handle massive panel arrays with varying conditions while maintaining grid stability and power quality requirements.',
+    howItWorks: 'Central inverters combine MPPT with grid-tie functions, matching DC input to AC grid requirements. String-level monitoring identifies underperforming sections. Machine learning predicts optimal setpoints based on weather forecasts.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '500MW', label: 'Largest solar farms', icon: '⚡' },
+      { value: '$50M/yr', label: 'Value of 1% efficiency gain', icon: '💰' },
+      { value: '99.5%', label: 'System availability', icon: '📊' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['Bhadla Solar Park', 'Tengger Desert Solar', 'Solar Star California', 'Benban Solar Park'],
+    companies: ['First Solar', 'JinkoSolar', 'LONGi', 'Trina Solar'],
+    futureImpact: 'AI-driven plant optimization will use satellite imagery and weather AI to predictively position MPPT across entire regions, creating virtual power plants.',
     color: '#F59E0B'
   }
 ];
@@ -246,7 +246,7 @@ const realWorldApps = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const MPPTRenderer: React.FC<MPPTRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [irradiance, setIrradiance] = useState(1000); // W/m²
+  const [temperature, setTemperature] = useState(25); // °C
+  const [loadResistance, setLoadResistance] = useState(5); // Ohms
+  const [mpptEnabled, setMpptEnabled] = useState(false);
+  const [operatingVoltage, setOperatingVoltage] = useState(17);
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +299,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#F59E0B', // Solar/energy yellow-orange
+    accentGlow: 'rgba(245, 158, 11, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -351,7 +331,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Temperature Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +343,180 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate I-V curve based on conditions
+  const calculateIV = useCallback((voltage: number) => {
+    // Simplified solar cell model
+    const Isc = 9 * (irradiance / 1000); // Short circuit current scales with irradiance
+    const Voc = 21 - 0.04 * (temperature - 25); // Open circuit voltage decreases with temp
+    const n = 1.3; // Ideality factor
+    const Vt = 0.026 * (273 + temperature) / 298; // Thermal voltage
 
-  const freqStatus = getFrequencyStatus();
+    if (voltage >= Voc) return 0;
+    if (voltage <= 0) return Isc;
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    // Simplified single-diode model
+    const current = Isc * (1 - Math.exp((voltage - Voc) / (n * Vt * 10)));
+    return Math.max(0, current);
+  }, [irradiance, temperature]);
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+  // Find MPP
+  const findMPP = useCallback(() => {
+    let maxPower = 0;
+    let mppVoltage = 0;
+    for (let v = 0; v <= 22; v += 0.1) {
+      const i = calculateIV(v);
+      const p = v * i;
+      if (p > maxPower) {
+        maxPower = p;
+        mppVoltage = v;
+      }
+    }
+    return { voltage: mppVoltage, power: maxPower, current: calculateIV(mppVoltage) };
+  }, [calculateIV]);
+
+  const mpp = findMPP();
+
+  // Current operating point
+  const currentCurrent = calculateIV(operatingVoltage);
+  const currentPower = operatingVoltage * currentCurrent;
+  const efficiency = mpp.power > 0 ? (currentPower / mpp.power) * 100 : 0;
+
+  // MPPT auto-tracking
+  useEffect(() => {
+    if (mpptEnabled && phase === 'play') {
+      const interval = setInterval(() => {
+        setOperatingVoltage(v => {
+          const target = mpp.voltage;
+          const diff = target - v;
+          return v + diff * 0.1; // Smooth tracking
+        });
+      }, 100);
+      return () => clearInterval(interval);
+    }
+  }, [mpptEnabled, mpp.voltage, phase]);
+
+  // I-V Curve SVG Component
+  const IVCurveVisualization = ({ showMPP = true, showOperatingPoint = true, interactive = false }) => {
+    const width = isMobile ? 320 : 450;
+    const height = isMobile ? 220 : 280;
+    const padding = { top: 20, right: 30, bottom: 40, left: 50 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    // Generate curve points
+    const curvePoints: { x: number; y: number; v: number; i: number; p: number }[] = [];
+    for (let v = 0; v <= 22; v += 0.5) {
+      const i = calculateIV(v);
+      const x = padding.left + (v / 22) * plotWidth;
+      const y = padding.top + plotHeight - (i / 10) * plotHeight;
+      curvePoints.push({ x, y, v, i, p: v * i });
+    }
+
+    // Power curve points
+    const powerPoints = curvePoints.map(pt => ({
+      x: pt.x,
+      y: padding.top + plotHeight - (pt.p / 200) * plotHeight,
+      p: pt.p
+    }));
+
+    const curvePath = curvePoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
+    ).join(' ');
+
+    const powerPath = powerPoints.map((pt, i) =>
+      `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`
+    ).join(' ');
+
+    // Operating point position
+    const opX = padding.left + (operatingVoltage / 22) * plotWidth;
+    const opY = padding.top + plotHeight - (currentCurrent / 10) * plotHeight;
+
+    // MPP position
+    const mppX = padding.left + (mpp.voltage / 22) * plotWidth;
+    const mppY = padding.top + plotHeight - (mpp.current / 10) * plotHeight;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
+          <g key={`grid-${frac}`}>
+            <line
+              x1={padding.left}
+              y1={padding.top + frac * plotHeight}
+              x2={padding.left + plotWidth}
+              y2={padding.top + frac * plotHeight}
+              stroke={colors.border}
+              strokeDasharray="3,3"
+            />
+            <line
+              x1={padding.left + frac * plotWidth}
+              y1={padding.top}
+              x2={padding.left + frac * plotWidth}
+              y2={padding.top + plotHeight}
+              stroke={colors.border}
+              strokeDasharray="3,3"
+            />
+          </g>
         ))}
 
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
-        />
+        {/* Axes */}
+        <line x1={padding.left} y1={padding.top + plotHeight} x2={padding.left + plotWidth} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
 
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
+        {/* Axis labels */}
+        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Voltage (V)</text>
+        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Current (A)</text>
 
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
-        </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
+        {/* Power curve (dashed) */}
+        <path d={powerPath} fill="none" stroke={colors.warning} strokeWidth="2" strokeDasharray="5,5" opacity="0.6" />
 
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
+        {/* I-V curve */}
+        <path d={curvePath} fill="none" stroke={colors.accent} strokeWidth="3" />
 
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
+        {/* MPP marker */}
+        {showMPP && (
+          <g>
+            <circle cx={mppX} cy={mppY} r="8" fill={colors.success} stroke="white" strokeWidth="2" />
+            <text x={mppX + 12} y={mppY - 8} fill={colors.success} fontSize="11" fontWeight="600">
+              MPP: {mpp.power.toFixed(0)}W
+            </text>
           </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
+        )}
+
+        {/* Operating point */}
+        {showOperatingPoint && (
+          <g>
+            <circle
+              cx={opX}
+              cy={opY}
+              r="10"
+              fill={efficiency > 95 ? colors.success : efficiency > 80 ? colors.warning : colors.error}
+              stroke="white"
+              strokeWidth="2"
+              style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.3))' }}
+            />
+            {/* Vertical line to show voltage */}
+            <line x1={opX} y1={opY} x2={opX} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeDasharray="3,3" />
+          </g>
+        )}
+
+        {/* Legend */}
+        <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
+          <rect x="0" y="0" width="12" height="3" fill={colors.accent} />
+          <text x="18" y="4" fill={colors.textSecondary} fontSize="10">I-V Curve</text>
+          <rect x="0" y="12" width="12" height="3" fill={colors.warning} opacity="0.6" />
+          <text x="18" y="16" fill={colors.textSecondary} fontSize="10">Power</text>
         </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
     );
   };
@@ -534,7 +570,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #D97706)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -570,12 +606,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          ☀️⚡
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          Maximum Power Point Tracking
         </h1>
 
         <p style={{
@@ -584,7 +620,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "If sunlight doubles, does power double? The answer reveals why <span style={{ color: colors.accent }}>smart controllers</span> extract 25% more energy from the same panels."
         </p>
 
         <div style={{
@@ -596,10 +632,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "Every solar panel has a sweet spot—a specific voltage where it produces maximum power. Miss it, and you leave watts on the table."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — Solar Engineering Principle
           </p>
         </div>
 
@@ -607,7 +643,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Find the Sweet Spot →
         </button>
 
         {renderNavDots()}
@@ -618,9 +654,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Power increases linearly with voltage—higher voltage always means more power' },
+      { id: 'b', text: 'There\'s one optimal voltage where power peaks, and it\'s different from max voltage' },
+      { id: 'c', text: 'Power stays constant regardless of the load connected' },
     ];
 
     return (
@@ -645,7 +681,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A solar panel is rated at 100W. As you change the load resistance, how does power output behave?
           </h2>
 
           {/* Simple diagram */}
@@ -658,8 +694,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '48px' }}>☀️</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Sunlight</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{
@@ -668,13 +704,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 borderRadius: '8px',
                 border: `2px solid ${colors.accent}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '32px' }}>⬛</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Solar Panel</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '48px' }}>❓</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Power Output?</p>
               </div>
             </div>
           </div>
@@ -731,7 +767,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive I-V Curve
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +779,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Find the Maximum Power Point
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust the operating voltage to find where power output is highest
           </p>
 
           {/* Main visualization */}
@@ -757,80 +793,73 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <IVCurveVisualization showMPP={false} showOperatingPoint={true} interactive={true} />
             </div>
 
-            {/* Generation slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
+            {/* Voltage slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Operating Voltage</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{operatingVoltage.toFixed(1)}V</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                min="0"
+                max="22"
+                step="0.5"
+                value={operatingVoltage}
+                onChange={(e) => setOperatingVoltage(parseFloat(e.target.value))}
+                disabled={mpptEnabled}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
-                  cursor: 'pointer',
+                  background: `linear-gradient(to right, ${colors.accent} ${(operatingVoltage / 22) * 100}%, ${colors.border} ${(operatingVoltage / 22) * 100}%)`,
+                  cursor: mpptEnabled ? 'not-allowed' : 'pointer',
+                  opacity: mpptEnabled ? 0.5 : 1,
                 }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
-              </div>
             </div>
 
-            {/* Status display */}
+            {/* MPPT toggle */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              marginBottom: '24px',
+            }}>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Manual Control</span>
+              <button
+                onClick={() => setMpptEnabled(!mpptEnabled)}
+                style={{
+                  width: '60px',
+                  height: '30px',
+                  borderRadius: '15px',
+                  border: 'none',
+                  background: mpptEnabled ? colors.success : colors.border,
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.3s',
+                }}
+              >
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  position: 'absolute',
+                  top: '3px',
+                  left: mpptEnabled ? '33px' : '3px',
+                  transition: 'left 0.3s',
+                }} />
+              </button>
+              <span style={{ ...typo.small, color: mpptEnabled ? colors.success : colors.textSecondary, fontWeight: mpptEnabled ? 600 : 400 }}>
+                MPPT Auto
+              </span>
+            </div>
+
+            {/* Power output display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -842,8 +871,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{currentPower.toFixed(1)}W</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current Power</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.success }}>{mpp.power.toFixed(1)}W</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Maximum Available</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -853,31 +891,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               }}>
                 <div style={{
                   ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
+                  color: efficiency > 95 ? colors.success : efficiency > 80 ? colors.warning : colors.error
                 }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
+                  {efficiency.toFixed(0)}%
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
               </div>
             </div>
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {efficiency > 95 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -887,7 +911,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+                🎯 You found the Maximum Power Point! Notice how it's not at the highest voltage.
               </p>
             </div>
           )}
@@ -896,7 +920,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Understand Why →
           </button>
         </div>
 
@@ -917,7 +941,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            Why Does a "Sweet Spot" Exist?
           </h2>
 
           <div style={{
@@ -926,18 +950,22 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <IVCurveVisualization showMPP={true} showOperatingPoint={false} />
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>Power = Voltage × Current</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
+                At <span style={{ color: colors.accent }}>low voltage</span>: Current is high, but V×I is still small.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                At <span style={{ color: colors.accent }}>high voltage</span>: Current drops rapidly, so V×I becomes small again.
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                The <span style={{ color: colors.success, fontWeight: 600 }}>Maximum Power Point (MPP)</span> is where the product V×I reaches its peak—typically around 80% of the open circuit voltage.
               </p>
             </div>
           </div>
@@ -950,16 +978,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              💡 Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              Without MPPT, a battery or load forces the panel to operate at a fixed voltage—often far from the optimal point. MPPT controllers actively adjust the operating point to always stay at peak power.
             </p>
           </div>
 
@@ -967,7 +989,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Temperature Effects →
           </button>
         </div>
 
@@ -979,9 +1001,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'The entire curve shifts down and left—less current AND less voltage' },
+      { id: 'b', text: 'Only current changes; voltage stays the same' },
+      { id: 'c', text: 'The MPP voltage decreases, requiring MPPT to track a new point' },
     ];
 
     return (
@@ -1001,12 +1023,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              🌡️ New Variable: Temperature
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            On a hot summer day (45°C panel temperature), what happens to the I-V curve?
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1049,7 +1071,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See the Temperature Effect →
             </button>
           )}
         </div>
@@ -1071,10 +1093,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Temperature & Irradiance Effects
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Adjust conditions and watch the I-V curve change
           </p>
 
           <div style={{
@@ -1084,26 +1106,27 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <IVCurveVisualization showMPP={true} showOperatingPoint={true} />
             </div>
 
-            {/* Renewable penetration slider */}
+            {/* Temperature slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>🌡️ Panel Temperature</span>
+                <span style={{
+                  ...typo.small,
+                  color: temperature > 40 ? colors.error : temperature > 30 ? colors.warning : colors.success,
+                  fontWeight: 600
+                }}>
+                  {temperature}°C
+                </span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
+                min="0"
+                max="70"
+                value={temperature}
+                onChange={(e) => setTemperature(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1111,20 +1134,25 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Cold (0°C)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Hot (70°C)</span>
+              </div>
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
+            {/* Irradiance slider */}
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Sunlight Intensity</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{irradiance} W/m²</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                min="100"
+                max="1200"
+                step="50"
+                value={irradiance}
+                onChange={(e) => setIrradiance(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1132,44 +1160,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               />
-            </div>
-
-            {/* Battery toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
-              <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
-              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Cloudy</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Full Sun</span>
+              </div>
             </div>
 
             {/* Stats */}
@@ -1184,8 +1178,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{ ...typo.h3, color: colors.success }}>{mpp.power.toFixed(0)}W</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Max Power</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1193,32 +1187,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{mpp.voltage.toFixed(1)}V</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>MPP Voltage</div>
               </div>
             </div>
           </div>
-
-          {batteryResponse && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand the Physics →
           </button>
         </div>
 
@@ -1239,7 +1218,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Why MPPT Never Stops Tracking
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1229,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>🌡️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Temperature Effect</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                Higher temperatures <span style={{ color: colors.error }}>decrease voltage</span> by ~0.4%/°C. A panel at 60°C loses about 14% of its voltage compared to 25°C—shifting the MPP left on the curve.
               </p>
             </div>
 
@@ -1265,11 +1244,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>☀️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Irradiance Effect</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                Lower light <span style={{ color: colors.warning }}>decreases current</span> proportionally. At 500 W/m², current is roughly half of full sun—but voltage only drops slightly. The MPP power drops significantly.
               </p>
             </div>
 
@@ -1280,11 +1259,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>🎯</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>MPPT Algorithms</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                <strong>Perturb & Observe:</strong> Slightly changes voltage, measures power change, and adjusts. Simple but can oscillate around MPP.
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '8px', marginBottom: 0 }}>
+                <strong>Incremental Conductance:</strong> Uses dI/dV to detect MPP precisely. Faster convergence, better for varying conditions.
               </p>
             </div>
           </div>
@@ -1398,7 +1380,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                How MPPT Connects:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1467,7 +1449,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered Maximum Power Point Tracking!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1689,11 +1671,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          MPPT Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand how Maximum Power Point Tracking works and why it's essential for efficient solar energy harvesting.
         </p>
 
         <div style={{
@@ -1708,11 +1690,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'I-V curves and power optimization',
+              'Why MPP exists at a specific voltage',
+              'Temperature and irradiance effects',
+              'How MPPT algorithms track changing conditions',
+              'Real-world applications from homes to space',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1756,4 +1738,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default MPPTRenderer;

@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// Attention Memory Scaling - Complete 10-Phase Game
+// Why transformer memory grows quadratically with sequence length
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface AttentionMemoryRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A research team fine-tunes a language model on documents. With 1,000 tokens, it uses 2GB of GPU memory. When they try 4,000 tokens, the training crashes with an out-of-memory error.",
+    question: "Why does quadrupling the sequence length cause a memory crash, not just 4x more usage?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "The model weights get larger with longer sequences" },
+      { id: 'b', label: "Attention memory scales O(n^2), so 4x length means 16x memory for attention", correct: true },
+      { id: 'c', label: "Longer sequences require more model layers" },
+      { id: 'd', label: "GPU memory fragmentation becomes worse with longer sequences" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "Self-attention computes relationships between every pair of tokens. With n tokens, this creates an n×n attention matrix. Doubling the sequence quadruples memory; quadrupling it increases memory by 16x. This O(n²) scaling is the fundamental bottleneck in transformer memory."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "An AI company claims their new model can process 1 million token contexts, while GPT-4's context is 128K tokens. The new model requires specialized memory-efficient techniques.",
+    question: "What makes processing 1 million tokens fundamentally challenging?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "The vocabulary would need to be 8x larger" },
+      { id: 'b', label: "A standard attention matrix would need 1 trillion entries, requiring terabytes of memory", correct: true },
+      { id: 'c', label: "The model would need 8x more layers" },
+      { id: 'd', label: "Training data for long contexts doesn't exist" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "With 1M tokens, a standard attention matrix has 1M × 1M = 1 trillion entries. At 2 bytes per entry (FP16), that's 2TB just for one attention layer. Long-context models use techniques like Flash Attention, sparse attention, or sliding windows to avoid materializing the full matrix."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A developer notices that GPT-4 with 32 attention heads processes 4K tokens using 2GB for attention. They wonder how the heads affect total memory.",
+    question: "If the model had 64 heads instead of 32, how would attention memory change?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "Memory would double because there are twice as many heads" },
+      { id: 'b', label: "Memory stays roughly the same; more heads means smaller head dimension, total stays similar", correct: true },
+      { id: 'c', label: "Memory would halve because work is distributed across more heads" },
+      { id: 'd', label: "Memory would quadruple because heads interact with each other" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Multi-head attention splits the embedding dimension across heads. With d_model=1024 and 32 heads, each head has dimension 32. With 64 heads, each has dimension 16. Total attention memory is roughly n² × d_model, independent of head count, because head_dim × num_heads = d_model."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "A machine learning engineer profiles their transformer and finds that attention uses 8GB while the feed-forward network uses only 1GB during a forward pass with 8K tokens.",
+    question: "Why does attention dominate memory usage at long sequence lengths?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "The feed-forward network is poorly optimized" },
+      { id: 'b', label: "Attention stores n² relationships while feed-forward processes tokens independently (n × d)", correct: true },
+      { id: 'c', label: "Feed-forward layers use more efficient data types" },
+      { id: 'd', label: "Attention layers have more parameters" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "Feed-forward layers process each token independently, using O(n × d) memory. Attention must compute and store all pairwise relationships, using O(n²) memory. As sequences get longer, the n² term dominates, making attention the memory bottleneck."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "A company develops Flash Attention, which computes exact attention with 10x less memory. They claim it doesn't approximate or lose any information.",
+    question: "How can Flash Attention use less memory while computing exact attention?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "It uses lower precision numbers (INT8 instead of FP16)" },
+      { id: 'b', label: "It processes blocks of the attention matrix sequentially, never storing the full n×n matrix", correct: true },
+      { id: 'c', label: "It skips attention computation for unimportant tokens" },
+      { id: 'd', label: "It stores attention weights on CPU memory instead of GPU" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "Flash Attention is IO-aware: instead of materializing the full n×n attention matrix in GPU memory (which is slow to access), it computes attention in blocks that fit in fast SRAM cache. It's mathematically identical but processes tiles sequentially, dramatically reducing peak memory."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A researcher experiments with sparse attention, where each token only attends to 256 nearby tokens plus 64 global tokens, regardless of sequence length.",
+    question: "How does this sparse attention pattern affect memory scaling?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "Memory still scales O(n²) but with a smaller constant" },
+      { id: 'b', label: "Memory now scales O(n × 320) = O(n), enabling much longer sequences", correct: true },
+      { id: 'c', label: "Memory becomes O(log n) due to hierarchical attention" },
+      { id: 'd', label: "Memory becomes constant regardless of sequence length" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "With fixed local window (256) and global tokens (64), each token attends to at most 320 tokens regardless of sequence length. Total memory is O(n × 320) = O(n), not O(n²). This enables processing 100K+ tokens but may miss long-range dependencies the global tokens don't capture."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "When training a transformer on 2K-token sequences, batch size is 32. Increasing to 8K-token sequences forces the team to reduce batch size to 2 to fit in GPU memory.",
+    question: "Why does longer sequence length require such drastic batch size reduction?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "Longer sequences need more gradient checkpointing" },
+      { id: 'b', label: "Memory for attention scales with batch × n², so 4x length with same batch needs 16x memory", correct: true },
+      { id: 'c', label: "Optimizer states grow proportionally with sequence length" },
+      { id: 'd', label: "Gradient accumulation becomes less efficient" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "Attention memory per example is O(n²). With batch_size B and sequence length n, total attention memory is O(B × n²). Going from 2K to 8K (4x) requires 16x more memory per example. To maintain same total memory, batch must drop by 16x (32 → 2)."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "An engineer compares KV-cache memory during inference. For a 7B model generating text, the cache uses 500MB at 1K tokens but 8GB at 16K tokens.",
+    question: "Why does the KV-cache grow linearly with context length during inference?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "The model weights need to be duplicated for each token" },
+      { id: 'b', label: "Each new token's keys and values must be stored for all future tokens to attend to", correct: true },
+      { id: 'c', label: "Inference uses higher precision than training" },
+      { id: 'd', label: "The KV-cache stores the full attention matrices" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "During autoregressive generation, we cache the keys (K) and values (V) for all previous tokens so we don't recompute them. Memory is O(n × layers × d_model × 2), which is linear in sequence length. This is separate from the O(n²) attention computation memory."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A team uses gradient checkpointing to train on 16K-token sequences. Training is 30% slower but uses 4x less memory.",
+    question: "What tradeoff does gradient checkpointing make to reduce memory?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "It uses lower precision for backward pass computations" },
+      { id: 'b', label: "It discards intermediate activations and recomputes them during backward pass", correct: true },
+      { id: 'c', label: "It processes different layers on different GPUs" },
+      { id: 'd', label: "It approximates gradients instead of computing exactly" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "Gradient checkpointing saves memory by not storing all intermediate activations (like attention matrices). During backward pass, it recomputes them from saved 'checkpoints'. This trades 30-40% more compute time for 3-4x less activation memory, enabling longer sequences."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A paper proposes 'Linear Attention' that replaces softmax attention with a kernel function, achieving O(n) memory. However, language modeling quality drops by 5%.",
+    question: "What fundamental capability does linear attention sacrifice?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "The ability to process multiple sequences in a batch" },
+      { id: 'b', label: "The ability to compute exact pairwise token interactions; approximations lose fine-grained context", correct: true },
+      { id: 'c', label: "The ability to use pre-trained weights" },
+      { id: 'd', label: "The ability to generate text autoregressively" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Standard attention computes exact softmax over all n² pairs, allowing precise focus on specific tokens. Linear attention approximates this with kernel features, avoiding the n×n matrix. While O(n) memory, it can't represent arbitrary attention patterns as precisely, hurting tasks requiring exact long-range retrieval."
   }
 ];
 
@@ -170,75 +170,75 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '📚',
+    title: 'Long Document Understanding',
+    short: 'Processing entire books and codebases',
+    tagline: 'When context is measured in chapters, not paragraphs',
+    description: 'Legal documents, research papers, and codebases often span hundreds of pages. Understanding them requires models that can hold entire documents in context, connecting references across thousands of paragraphs.',
+    connection: 'A 300-page legal document has ~150K tokens. Standard attention would need 22.5 billion attention weights per layer. Memory-efficient techniques like Flash Attention and sparse patterns make this tractable.',
+    howItWorks: 'Models like Claude, GPT-4, and Gemini use hierarchical attention, sliding windows, and memory-efficient kernels to process 100K+ tokens. They trade some long-range precision for dramatic memory savings.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '200K+', label: 'Token context windows', icon: '📖' },
+      { value: '100x', label: 'Memory reduction with Flash Attention', icon: '💾' },
+      { value: '95%', label: 'Quality retention vs full attention', icon: '✨' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
-    color: '#10B981'
-  },
-  {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
-    stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
-    ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
-    stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
-    ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['Contract analysis', 'Codebase Q&A', 'Research synthesis', 'Book summarization'],
+    companies: ['Anthropic', 'OpenAI', 'Google DeepMind', 'Cohere'],
+    futureImpact: 'Future models may maintain million-token contexts, enabling AI assistants that remember your entire work history.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🎬',
+    title: 'Video Understanding',
+    short: 'Hours of video in a single model call',
+    tagline: 'Every frame tells part of the story',
+    description: 'Video transformers process sequences of image patches from multiple frames. A 1-hour video at 1 FPS with 256 patches per frame creates 921K tokens—pushing attention memory to the extreme.',
+    connection: 'Video attention matrices grow as (frames × patches)². For 3,600 frames × 256 patches, that\'s 850 billion attention weights. Without memory-efficient attention, this would require 1.7TB per layer.',
+    howItWorks: 'Video models use factorized attention (spatial within frames, temporal across frames), sparse patterns, and aggressive frame sampling. Flash Attention enables processing 10x longer videos in the same memory.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '1M+', label: 'Tokens in hour-long video', icon: '🎞️' },
+      { value: '10x', label: 'Video length increase with FlashAttn', icon: '⚡' },
+      { value: '60%', label: 'Compute saved with factorized attention', icon: '🔧' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['Movie summarization', 'Sports analysis', 'Surveillance review', 'Tutorial understanding'],
+    companies: ['Google', 'Meta', 'Runway', 'Twelve Labs'],
+    futureImpact: 'Real-time video understanding will enable AI directors, automated sports commentary, and continuous life-logging assistants.',
+    color: '#EC4899'
+  },
+  {
+    icon: '🧬',
+    title: 'Genomic Sequence Analysis',
+    short: 'DNA sequences with billions of base pairs',
+    tagline: 'Finding patterns across the human genome',
+    description: 'The human genome has 3 billion base pairs. Understanding gene regulation requires attention over extremely long sequences to find distant regulatory elements that affect gene expression.',
+    connection: 'Even processing 100K base pairs requires 10 billion attention computations per layer. Full genome analysis at single-nucleotide resolution is computationally prohibitive without sparse or hierarchical attention.',
+    howItWorks: 'Genomic transformers use multi-scale attention (local for nearby bases, sparse for distant interactions) and learned attention patterns based on biological priors like chromatin structure.',
+    stats: [
+      { value: '3B', label: 'Base pairs in human genome', icon: '🧬' },
+      { value: '100K', label: 'Typical sequence window', icon: '📊' },
+      { value: '1000x', label: 'Range increase with sparse attention', icon: '🔬' }
+    ],
+    examples: ['Variant effect prediction', 'Gene expression modeling', 'Protein structure', 'Drug target discovery'],
+    companies: ['DeepMind', 'Insilico Medicine', 'Recursion', 'Genentech'],
+    futureImpact: 'Full-genome attention could enable personalized medicine based on your complete genetic context.',
+    color: '#10B981'
+  },
+  {
+    icon: '💬',
+    title: 'Conversational AI Memory',
+    short: 'Remembering months of conversation history',
+    tagline: 'An AI that truly knows your context',
+    description: 'Ideal AI assistants would remember all past conversations—potentially millions of tokens spanning months. This requires both efficient attention for processing and smart retrieval for accessing relevant history.',
+    connection: 'A year of daily conversations might be 10M tokens. Standard attention would need 100 trillion weights per layer—impossible. Long-term memory requires hierarchical storage with retrieval-augmented generation.',
+    howItWorks: 'Production systems combine limited working context (200K tokens) with vector databases for long-term memory. The model retrieves relevant past conversations rather than attending to everything directly.',
+    stats: [
+      { value: '200K', label: 'Active context tokens', icon: '🧠' },
+      { value: '10M+', label: 'Retrievable memory tokens', icon: '💾' },
+      { value: '100ms', label: 'Memory retrieval latency', icon: '⚡' }
+    ],
+    examples: ['Personal AI assistants', 'Customer support continuity', 'Healthcare history', 'Educational tutoring'],
+    companies: ['Anthropic', 'OpenAI', 'Inflection AI', 'Character.AI'],
+    futureImpact: 'AI companions with perfect memory of your preferences, projects, and conversations will transform personal productivity.',
     color: '#F59E0B'
   }
 ];
@@ -246,7 +246,7 @@ const realWorldApps = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const AttentionMemoryRenderer: React.FC<AttentionMemoryRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [sequenceLength, setSequenceLength] = useState(512);
+  const [numHeads, setNumHeads] = useState(8);
+  const [embeddingDim, setEmbeddingDim] = useState(512);
+  const [useFlashAttention, setUseFlashAttention] = useState(false);
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +298,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#8B5CF6', // Purple for AI/attention theme
+    accentGlow: 'rgba(139, 92, 246, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -351,7 +330,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Multi-Head Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,127 +342,47 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate memory usage
+  const calculateMemory = useCallback(() => {
+    // Attention matrix size: n^2 per head, but head_dim = embedding_dim / num_heads
+    // Total attention memory: n^2 * num_heads * (head_dim) for Q, K, V projections
+    // Simplified: attention scores are n^2, and we have num_heads of them
+    const n = sequenceLength;
+    const attentionMatrixSize = n * n; // entries per head
+    const totalAttentionEntries = attentionMatrixSize * numHeads;
 
-  const freqStatus = getFrequencyStatus();
+    // Memory in bytes (assuming FP16 = 2 bytes)
+    const bytesPerEntry = 2;
+    const attentionMemoryBytes = totalAttentionEntries * bytesPerEntry;
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    // KV cache memory: 2 * n * embedding_dim * num_layers (assume 12 layers)
+    const numLayers = 12;
+    const kvCacheBytes = 2 * n * embeddingDim * numLayers * bytesPerEntry;
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+    // Flash Attention reduces peak memory by ~10x by not materializing full attention matrix
+    const flashReduction = useFlashAttention ? 0.1 : 1;
+    const peakAttentionMemory = attentionMemoryBytes * flashReduction;
 
-    return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+    return {
+      attentionMemoryMB: (peakAttentionMemory / (1024 * 1024)),
+      kvCacheMB: (kvCacheBytes / (1024 * 1024)),
+      totalMB: ((peakAttentionMemory + kvCacheBytes) / (1024 * 1024)),
+      attentionEntries: totalAttentionEntries,
+      scalingFactor: n * n, // O(n^2)
+    };
+  }, [sequenceLength, numHeads, embeddingDim, useFlashAttention]);
 
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
-        ))}
-
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
-        />
-
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
-
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
-        </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
-
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
-          </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
-        </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-      </svg>
-    );
-  };
+  const memory = calculateMemory();
 
   // Progress bar component
   const renderProgressBar = () => (
@@ -534,7 +433,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #7C3AED)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -544,6 +443,172 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     cursor: 'pointer',
     boxShadow: `0 4px 20px ${colors.accentGlow}`,
     transition: 'all 0.2s ease',
+  };
+
+  // Attention Matrix Visualization Component
+  const AttentionMatrixVisualization = ({ size = 300, showAnimation = true }: { size?: number; showAnimation?: boolean }) => {
+    const gridSize = Math.min(sequenceLength, 32); // Cap visual grid at 32x32
+    const cellSize = size / gridSize;
+    const actualRatio = sequenceLength / gridSize;
+
+    // Generate attention pattern (simplified - diagonal dominant with some random attention)
+    const getAttentionValue = (i: number, j: number) => {
+      const distance = Math.abs(i - j);
+      const baseAttention = Math.exp(-distance * 0.3);
+      // Add some "interesting" attention patterns
+      const globalToken = (i === 0 || j === 0) ? 0.5 : 0;
+      const periodicAttention = Math.sin((i + j) * 0.5 + animationFrame * 0.05) * 0.2 + 0.2;
+      return Math.min(1, baseAttention + globalToken + (showAnimation ? periodicAttention : 0.2));
+    };
+
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <svg width={size + 60} height={size + 60} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+          {/* Axis labels */}
+          <text x={size / 2 + 30} y={20} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+            Keys (tokens to attend to)
+          </text>
+          <text x={15} y={size / 2 + 30} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 15, ${size / 2 + 30})`}>
+            Queries (tokens)
+          </text>
+
+          {/* Grid */}
+          <g transform="translate(30, 30)">
+            {Array.from({ length: gridSize }).map((_, i) => (
+              Array.from({ length: gridSize }).map((_, j) => {
+                const value = getAttentionValue(i, j);
+                const intensity = Math.floor(value * 255);
+                return (
+                  <rect
+                    key={`${i}-${j}`}
+                    x={j * cellSize}
+                    y={i * cellSize}
+                    width={cellSize - 1}
+                    height={cellSize - 1}
+                    fill={`rgb(${intensity * 0.55}, ${intensity * 0.36}, ${intensity})`}
+                    style={{ transition: 'fill 0.1s' }}
+                  />
+                );
+              })
+            ))}
+
+            {/* Grid border */}
+            <rect x={0} y={0} width={size} height={size} fill="none" stroke={colors.border} strokeWidth="2" />
+          </g>
+
+          {/* Scale indicator */}
+          {actualRatio > 1 && (
+            <text x={size / 2 + 30} y={size + 50} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+              Showing {gridSize}x{gridSize} of {sequenceLength}x{sequenceLength} matrix
+            </text>
+          )}
+        </svg>
+
+        {/* Memory indicator */}
+        <div style={{
+          marginTop: '12px',
+          padding: '8px 16px',
+          background: colors.bgSecondary,
+          borderRadius: '8px',
+          display: 'inline-block',
+        }}>
+          <span style={{ ...typo.small, color: colors.textMuted }}>Matrix size: </span>
+          <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>
+            {sequenceLength.toLocaleString()} x {sequenceLength.toLocaleString()} = {(sequenceLength * sequenceLength).toLocaleString()} entries
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // Memory Growth Chart
+  const MemoryGrowthChart = () => {
+    const width = isMobile ? 320 : 450;
+    const height = 200;
+    const padding = { top: 20, right: 20, bottom: 40, left: 60 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    // Generate data points for O(n^2) and O(n) scaling
+    const maxSeq = 4096;
+    const dataPoints: { n: number; quadratic: number; linear: number }[] = [];
+    for (let n = 256; n <= maxSeq; n += 256) {
+      dataPoints.push({
+        n,
+        quadratic: (n * n) / (maxSeq * maxSeq), // Normalize to 0-1
+        linear: n / maxSeq
+      });
+    }
+
+    const currentPoint = {
+      n: sequenceLength,
+      quadratic: (sequenceLength * sequenceLength) / (maxSeq * maxSeq),
+      linear: sequenceLength / maxSeq
+    };
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Grid */}
+        {[0.25, 0.5, 0.75, 1].map(frac => (
+          <line
+            key={frac}
+            x1={padding.left}
+            y1={padding.top + (1 - frac) * plotHeight}
+            x2={padding.left + plotWidth}
+            y2={padding.top + (1 - frac) * plotHeight}
+            stroke={colors.border}
+            strokeDasharray="3,3"
+          />
+        ))}
+
+        {/* Axes */}
+        <line x1={padding.left} y1={padding.top + plotHeight} x2={padding.left + plotWidth} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+
+        {/* Axis labels */}
+        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="12" textAnchor="middle">Sequence Length</text>
+        <text x={12} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform={`rotate(-90, 12, ${padding.top + plotHeight / 2})`}>Memory</text>
+
+        {/* Linear scaling line (O(n)) - dashed */}
+        <path
+          d={dataPoints.map((pt, i) =>
+            `${i === 0 ? 'M' : 'L'} ${padding.left + (pt.n / maxSeq) * plotWidth} ${padding.top + (1 - pt.linear) * plotHeight}`
+          ).join(' ')}
+          fill="none"
+          stroke={colors.success}
+          strokeWidth="2"
+          strokeDasharray="5,5"
+        />
+
+        {/* Quadratic scaling line (O(n^2)) */}
+        <path
+          d={dataPoints.map((pt, i) =>
+            `${i === 0 ? 'M' : 'L'} ${padding.left + (pt.n / maxSeq) * plotWidth} ${padding.top + (1 - pt.quadratic) * plotHeight}`
+          ).join(' ')}
+          fill="none"
+          stroke={colors.error}
+          strokeWidth="3"
+        />
+
+        {/* Current position marker */}
+        <circle
+          cx={padding.left + (currentPoint.n / maxSeq) * plotWidth}
+          cy={padding.top + (1 - currentPoint.quadratic) * plotHeight}
+          r="8"
+          fill={colors.accent}
+          stroke="white"
+          strokeWidth="2"
+        />
+
+        {/* Legend */}
+        <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
+          <rect x="0" y="0" width="15" height="3" fill={colors.error} />
+          <text x="20" y="4" fill={colors.textSecondary} fontSize="10">O(n^2) Attention</text>
+          <rect x="0" y="14" width="15" height="3" fill={colors.success} strokeDasharray="3,3" />
+          <text x="20" y="18" fill={colors.textSecondary} fontSize="10">O(n) Linear</text>
+        </g>
+      </svg>
+    );
   };
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -570,12 +635,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          🧠
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          Attention Memory Scaling
         </h1>
 
         <p style={{
@@ -584,7 +649,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "Why can't AI models just remember everything? The answer lies in <span style={{ color: colors.accent }}>quadratic memory</span>—and it's why your context window has limits."
         </p>
 
         <div style={{
@@ -596,10 +661,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "When sequence length doubles, attention memory doesn't just double—it quadruples. This O(n^2) scaling is the fundamental bottleneck of transformers."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — Attention Is All You Need (Vaswani et al., 2017)
           </p>
         </div>
 
@@ -607,7 +672,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Explore the Memory Wall →
         </button>
 
         {renderNavDots()}
@@ -618,9 +683,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Memory doubles with sequence length—straightforward linear scaling' },
+      { id: 'b', text: 'Memory quadruples when length doubles—each token must attend to all others' },
+      { id: 'c', text: 'Memory stays constant—only the weights need to be stored' },
     ];
 
     return (
@@ -640,12 +705,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A transformer processes 1,000 tokens using 100MB for attention. If you double to 2,000 tokens, how much memory does attention need?
           </h2>
 
           {/* Simple diagram */}
@@ -658,23 +723,15 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📝</div>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>1,000 tokens</p>
+                <p style={{ ...typo.small, color: colors.accent }}>100MB</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '32px', marginBottom: '8px' }}>📚</div>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>2,000 tokens</p>
+                <p style={{ ...typo.small, color: colors.warning }}>???</p>
               </div>
             </div>
           </div>
@@ -721,7 +778,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              See How Memory Actually Grows →
             </button>
           )}
         </div>
@@ -731,7 +788,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Attention Matrix
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +800,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Watch Attention Memory Explode
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust sequence length and watch the attention matrix—and memory usage—grow
           </p>
 
           {/* Main visualization */}
@@ -757,80 +814,37 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <AttentionMatrixVisualization size={isMobile ? 250 : 300} />
             </div>
 
-            {/* Generation slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
+            {/* Sequence length slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength.toLocaleString()} tokens</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                min="128"
+                max="4096"
+                step="128"
+                value={sequenceLength}
+                onChange={(e) => setSequenceLength(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
+                  background: `linear-gradient(to right, ${colors.accent} ${((sequenceLength - 128) / (4096 - 128)) * 100}%, ${colors.border} ${((sequenceLength - 128) / (4096 - 128)) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>128</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>4096</span>
               </div>
             </div>
 
-            {/* Status display */}
+            {/* Memory stats */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -842,8 +856,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.error }}>{memory.attentionMemoryMB.toFixed(1)}MB</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Attention Memory</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{(sequenceLength * sequenceLength / 1000000).toFixed(2)}M</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Matrix Entries</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -853,41 +876,27 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               }}>
                 <div style={{
                   ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
+                  color: sequenceLength > 2048 ? colors.error : sequenceLength > 1024 ? colors.warning : colors.success
                 }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
+                  O(n^2)
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Scaling</div>
               </div>
             </div>
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {sequenceLength >= 2048 && (
             <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.warning}22`,
+              border: `1px solid ${colors.warning}`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+              <p style={{ ...typo.body, color: colors.warning, margin: 0 }}>
+                Notice how doubling from 1024 to 2048 tokens quadrupled the matrix size!
               </p>
             </div>
           )}
@@ -896,7 +905,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Understand the Math →
           </button>
         </div>
 
@@ -917,7 +926,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            Why Attention Scales Quadratically
           </h2>
 
           <div style={{
@@ -926,18 +935,22 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <MemoryGrowthChart />
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>Self-attention computes: Attention(Q, K, V) = softmax(QK^T / sqrt(d_k))V</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
+                The <span style={{ color: colors.error }}>QK^T term</span> creates an n×n matrix where every token "looks at" every other token.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                With <span style={{ color: colors.accent }}>n tokens</span>, we compute n^2 attention scores.
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                Double the tokens? <span style={{ color: colors.error, fontWeight: 600 }}>Quadruple the memory.</span> This is why context windows have limits.
               </p>
             </div>
           </div>
@@ -950,16 +963,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              At 100K tokens, the attention matrix has 10 billion entries. At 1M tokens, it has 1 trillion entries. This is why "just add more context" isn't simple—memory grows explosively.
             </p>
           </div>
 
@@ -967,7 +974,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Multi-Head Attention →
           </button>
         </div>
 
@@ -979,9 +986,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'Memory multiplies by number of heads—8 heads = 8x memory' },
+      { id: 'b', text: 'Memory stays similar—heads divide the embedding dimension, trading width for count' },
+      { id: 'c', text: 'Memory decreases—heads process in parallel, sharing memory' },
     ];
 
     return (
@@ -1001,12 +1008,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              New Variable: Multi-Head Attention
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            GPT-4 uses 96 attention heads. How does adding more heads affect memory usage?
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1049,7 +1056,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              Experiment with Multi-Head →
             </button>
           )}
         </div>
@@ -1061,6 +1068,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
+    const headDim = embeddingDim / numHeads;
+
     return (
       <div style={{
         minHeight: '100vh',
@@ -1071,10 +1080,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Multi-Head Attention Memory
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Adjust heads and embedding dimension to see how memory changes
           </p>
 
           <div style={{
@@ -1083,74 +1092,75 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
-            </div>
-
-            {/* Renewable penetration slider */}
+            {/* Sliders */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Sequence Length</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{sequenceLength} tokens</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                min="256"
+                max="4096"
+                step="256"
+                value={sequenceLength}
+                onChange={(e) => setSequenceLength(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
               />
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Heads</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{numHeads} heads</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                min="1"
+                max="32"
+                step="1"
+                value={numHeads}
+                onChange={(e) => setNumHeads(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
               />
             </div>
 
-            {/* Battery toggle */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Embedding Dimension</span>
+                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{embeddingDim}</span>
+              </div>
+              <input
+                type="range"
+                min="256"
+                max="2048"
+                step="256"
+                value={embeddingDim}
+                onChange={(e) => setEmbeddingDim(parseInt(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Flash Attention toggle */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '12px',
               marginBottom: '24px',
+              padding: '16px',
+              background: colors.bgSecondary,
+              borderRadius: '12px',
             }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Standard Attention</span>
               <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
+                onClick={() => setUseFlashAttention(!useFlashAttention)}
                 style={{
                   width: '60px',
                   height: '30px',
                   borderRadius: '15px',
                   border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
+                  background: useFlashAttention ? colors.success : colors.border,
                   cursor: 'pointer',
                   position: 'relative',
                   transition: 'background 0.3s',
@@ -1163,16 +1173,16 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   background: 'white',
                   position: 'absolute',
                   top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
+                  left: useFlashAttention ? '33px' : '3px',
                   transition: 'left 0.3s',
                 }} />
               </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
+              <span style={{ ...typo.small, color: useFlashAttention ? colors.success : colors.textSecondary, fontWeight: useFlashAttention ? 600 : 400 }}>
+                Flash Attention
               </span>
             </div>
 
-            {/* Stats */}
+            {/* Stats grid */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(2, 1fr)',
@@ -1184,8 +1194,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{headDim}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Head Dimension</div>
+                <div style={{ ...typo.small, color: colors.textMuted, fontSize: '10px' }}>(d_model / heads)</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1193,32 +1204,38 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: useFlashAttention ? colors.success : colors.error }}>
+                  {memory.attentionMemoryMB.toFixed(1)}MB
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Attention Memory</div>
+                {useFlashAttention && <div style={{ ...typo.small, color: colors.success, fontSize: '10px' }}>10x reduction!</div>}
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.warning }}>{memory.kvCacheMB.toFixed(1)}MB</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>KV Cache</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.textPrimary }}>{memory.totalMB.toFixed(1)}MB</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Total Memory</div>
               </div>
             </div>
           </div>
-
-          {batteryResponse && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand Memory-Efficient Techniques →
           </button>
         </div>
 
@@ -1239,7 +1256,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Breaking the Quadratic Barrier
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1251,10 +1268,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Flash Attention</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                <span style={{ color: colors.success }}>Exact attention</span>, but never materializes the full n×n matrix. Processes in tiles that fit in fast GPU SRAM cache. <span style={{ color: colors.success }}>10x memory reduction</span> with no accuracy loss.
               </p>
             </div>
 
@@ -1265,11 +1282,26 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>🪟</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Sliding Window Attention</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                Each token only attends to nearby tokens (e.g., 4K window). Memory becomes <span style={{ color: colors.success }}>O(n × window_size)</span> = O(n). Trades long-range precision for linear scaling.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🗜️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>KV-Cache Compression</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                During generation, compress old keys/values or evict less important tokens. Enables <span style={{ color: colors.success }}>much longer contexts</span> at inference time with minor quality trade-offs.
               </p>
             </div>
 
@@ -1280,11 +1312,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>🔬</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Linear Attention (Research)</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                Replace softmax with kernel functions for true <span style={{ color: colors.success }}>O(n) memory</span>. Still an active research area—current methods trade 5-10% quality for linear scaling.
               </p>
             </div>
           </div>
@@ -1293,7 +1325,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications →
+            See Real-World Impact →
           </button>
         </div>
 
@@ -1398,7 +1430,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                Memory Challenge:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1457,7 +1489,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? '🎉' : '📚'}
+              {passed ? '🧠' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1467,7 +1499,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered Attention Memory Scaling!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1689,11 +1721,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          Attention Memory Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand why attention memory scales quadratically and how modern techniques overcome this fundamental challenge.
         </p>
 
         <div style={{
@@ -1708,11 +1740,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'O(n^2) attention memory scaling',
+              'Why context windows have limits',
+              'Multi-head attention memory breakdown',
+              'Flash Attention and sparse patterns',
+              'Real-world applications from documents to DNA',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1756,4 +1788,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default AttentionMemoryRenderer;

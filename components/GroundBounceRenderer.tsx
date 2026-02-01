@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// Ground Bounce (Simultaneous Switching Noise) - Complete 10-Phase Game
+// Why digital circuits suffer from noise when multiple outputs switch together
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface GroundBounceRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A 32-bit data bus on a microcontroller switches from 0x00000000 to 0xFFFFFFFF. The designer notices random bit errors on other signals during this transition.",
+    question: "What is the most likely cause of these bit errors?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "Software bugs in the firmware" },
+      { id: 'b', label: "Ground bounce from all 32 outputs switching simultaneously, corrupting signal integrity", correct: true },
+      { id: 'c', label: "Insufficient power supply voltage" },
+      { id: 'd', label: "Clock frequency is too high" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "When all 32 outputs switch at once, the combined current surge (di/dt) through the package inductance creates a voltage spike on the internal ground (V = L × di/dt). This raises the chip's ground relative to the board ground, causing other outputs to appear at wrong logic levels."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "An engineer reduces ground bounce by 75% simply by changing when outputs switch. No hardware changes were made.",
+    question: "What technique did the engineer most likely use?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "Adding decoupling capacitors" },
+      { id: 'b', label: "Staggering output transitions so fewer switch simultaneously", correct: true },
+      { id: 'c', label: "Reducing the supply voltage" },
+      { id: 'd', label: "Using thicker PCB traces" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "Ground bounce is proportional to di/dt - the rate of current change. By staggering outputs (adding small delays between transitions), fewer outputs switch at the same instant, reducing the total di/dt and therefore the ground bounce voltage."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "Two identical chips are compared: one in a DIP package (through-hole) and one in a BGA package (ball grid array). The BGA exhibits much less ground bounce.",
+    question: "Why does the BGA package have better ground bounce performance?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "BGA packages use higher quality silicon" },
+      { id: 'b', label: "BGA packages have much shorter lead lengths, resulting in lower inductance", correct: true },
+      { id: 'c', label: "BGA packages run cooler, reducing noise" },
+      { id: 'd', label: "BGA packages have built-in filtering" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Inductance is proportional to lead length. DIP packages have long leads (often 5-10mm), while BGA packages have short solder balls (<1mm). Since V = L × di/dt, lower inductance means less ground bounce for the same switching current."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "A high-speed FPGA design works perfectly on the bench but fails randomly in production. Analysis shows the failure rate correlates with simultaneous output switching patterns.",
+    question: "What should the designer check first?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "The FPGA firmware for timing violations" },
+      { id: 'b', label: "Power and ground plane design and decoupling capacitor placement", correct: true },
+      { id: 'c', label: "The quality of the FPGA chips" },
+      { id: 'd', label: "The ambient temperature in production" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "Production boards may have different power/ground plane impedances or decoupling capacitor placement than bench prototypes. These affect how quickly charge can be supplied during switching, directly impacting ground bounce magnitude."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "An ASIC designer needs to drive 64 outputs that must all change simultaneously. The estimated ground bounce exceeds the noise margin.",
+    question: "Which design change would most effectively reduce ground bounce?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "Use slower slew rate output drivers", correct: true },
+      { id: 'b', label: "Increase the output drive strength" },
+      { id: 'c', label: "Reduce the number of ground pins" },
+      { id: 'd', label: "Use higher supply voltage" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "Slew rate directly affects di/dt. Slower rising/falling edges mean lower di/dt, which reduces V = L × di/dt. Many chips offer programmable slew rate control specifically for managing ground bounce vs. speed tradeoffs."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A memory controller experiences data corruption when reading from DRAM. The problem is worse when reading long sequential bursts.",
+    question: "How does simultaneous switching noise (SSN) cause this corruption?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "The DRAM chips overheat during long reads" },
+      { id: 'b', label: "Multiple data bits transitioning together cause ground bounce that corrupts the strobe signal timing", correct: true },
+      { id: 'c', label: "The memory controller runs out of buffer space" },
+      { id: 'd', label: "Sequential reads cause address line crosstalk" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "During burst reads, many data bits change simultaneously. The resulting ground bounce affects the data strobe (DQS) timing, causing the controller to sample data at the wrong moment. This is why modern DDR uses differential signaling and careful SSN management."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "A board designer adds 10 extra ground pins to a connector between two boards. Ground bounce problems decrease significantly.",
+    question: "Why did adding ground pins help reduce ground bounce?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "More ground pins provide a better thermal path" },
+      { id: 'b', label: "Parallel ground pins reduce total inductance (L_total = L/n for n parallel paths)", correct: true },
+      { id: 'c', label: "Extra pins increase the connector's voltage rating" },
+      { id: 'd', label: "More ground pins filter out high-frequency noise" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "Inductance adds in parallel like resistors: L_total = L/n. By adding 10 ground pins, the effective inductance drops to 1/11 of the original. Since V = L × di/dt, lower inductance means proportionally less ground bounce."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "An oscilloscope measurement shows the chip's ground pin bouncing 800mV during output switching. The logic threshold is at 50% of 3.3V supply.",
+    question: "Why is this 800mV ground bounce dangerous?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "It might damage the chip from overvoltage" },
+      { id: 'b', label: "A low output (0V internal) appears as 0.8V externally, which is close to the 1.65V threshold and reduces noise margin", correct: true },
+      { id: 'c', label: "The power supply might shut down" },
+      { id: 'd', label: "The oscilloscope might give false readings" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "When the chip's ground bounces up by 800mV, all outputs referenced to that ground also rise by 800mV. A logic low (0V internal) becomes 0.8V external. With a 1.65V threshold, the noise margin is reduced from 1.65V to only 0.85V, making false triggering possible."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A designer uses V = L × di/dt to calculate expected ground bounce. With L = 5nH and di/dt = 100mA/ns, the result is 500mV.",
+    question: "If the number of simultaneously switching outputs doubles, what happens to ground bounce?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "It stays at 500mV because inductance doesn't change" },
+      { id: 'b', label: "It roughly doubles to 1V because di/dt doubles", correct: true },
+      { id: 'c', label: "It drops to 250mV due to current sharing" },
+      { id: 'd', label: "It quadruples to 2V due to nonlinear effects" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "More switching outputs means more total current change (higher di/dt). If each output contributes 100mA/ns and you double the outputs, di/dt becomes 200mA/ns. V = L × di/dt = 5nH × 200mA/ns = 1000mV = 1V."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A CPU design team implements 'ground bounce aware' place-and-route software. Critical signals are routed near power/ground pins.",
+    question: "Why does placing critical signals near power/ground pins help?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "Power pins provide shielding from electromagnetic interference" },
+      { id: 'b', label: "Signals near ground pins see less effective inductance due to shorter return current paths", correct: true },
+      { id: 'c', label: "Power pins run cooler, improving signal integrity" },
+      { id: 'd', label: "It makes the chip easier to manufacture" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "The inductance seen by a signal depends on the return current path. Signals near ground pins have shorter return paths with lower inductance. This reduces V = L × di/dt for those critical signals, improving noise immunity."
   }
 ];
 
@@ -170,75 +170,75 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '💻',
+    title: 'High-Speed Processors',
+    short: 'Managing SSN in modern CPUs',
+    tagline: 'Billions of transistors, millions of simultaneous switches',
+    description: 'Modern CPUs contain billions of transistors that can switch simultaneously. Ground bounce management is critical in the power delivery network and I/O interfaces. Without careful design, CPUs would be limited to much lower frequencies.',
+    connection: 'When a CPU executes an instruction, thousands of transistors may switch simultaneously. The package and die must be designed with ground bounce in mind - using multiple power/ground planes, careful bump placement, and on-die decoupling capacitors.',
+    howItWorks: 'CPUs use multi-layer packages with dedicated power/ground planes to minimize inductance. On-die capacitors (MIM capacitors) provide local charge storage. Critical paths are placed near power/ground bumps. Slew rate control limits di/dt.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '<50mV', label: 'Max ground bounce target', icon: '⚡' },
+      { value: '1000+', label: 'Power/ground bumps', icon: '🔌' },
+      { value: '10+ layers', label: 'Package substrate', icon: '📊' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
-    color: '#10B981'
-  },
-  {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
-    stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
-    ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
+    examples: ['Intel Core processors', 'AMD Ryzen CPUs', 'Apple M-series chips', 'ARM Cortex processors'],
+    companies: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
+    futureImpact: 'As transistors shrink and speeds increase, ground bounce becomes more challenging. 3D packaging and chiplet architectures require new SSN management strategies.',
     color: '#3B82F6'
   },
   {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
+    icon: '🎮',
+    title: 'DDR Memory Interfaces',
+    short: 'Ensuring data integrity at high speeds',
+    tagline: 'Every bit matters at 5+ Gbps',
+    description: 'DDR5 memory operates at over 5 GT/s with 64-bit wide data buses. Simultaneous switching of 64 data bits plus address and control signals creates massive ground bounce challenges that require sophisticated mitigation.',
+    connection: 'Memory interfaces are extremely sensitive to ground bounce because timing margins are measured in picoseconds. Ground bounce on DQS (data strobe) signals causes the memory controller to sample data at the wrong moment, corrupting reads.',
+    howItWorks: 'DDR interfaces use differential signaling for strobes, on-die termination (ODT), and careful impedance matching. Write leveling and read training compensate for signal skew. Multiple Vss balls minimize package inductance.',
     stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
+      { value: '5600+', label: 'MT/s transfer rate', icon: '🚀' },
+      { value: '<100ps', label: 'Timing margin', icon: '⏱️' },
+      { value: '64-bit', label: 'Data bus width', icon: '📡' }
     ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['DDR5 DIMM modules', 'LPDDR5 in smartphones', 'GDDR6 graphics memory', 'HBM for AI accelerators'],
+    companies: ['Samsung', 'Micron', 'SK Hynix', 'JEDEC'],
+    futureImpact: 'DDR6 and beyond will push data rates higher, requiring even tighter SSN control. New architectures like processing-in-memory may reduce data movement and associated switching noise.',
+    color: '#10B981'
+  },
+  {
+    icon: '📡',
+    title: 'High-Speed SerDes',
+    short: 'Multi-gigabit serial links',
+    tagline: 'Clean signals at 100+ Gbps',
+    description: 'Serializer/Deserializer (SerDes) circuits convert parallel data to high-speed serial streams. PCIe 5.0 runs at 32 GT/s per lane. Ground bounce from parallel-to-serial conversion can inject jitter and corrupt data.',
+    connection: 'SerDes operates at the edge of what silicon can achieve. Even small ground bounce creates jitter that closes the eye diagram. The parallel interface inside the SerDes must be carefully designed to minimize SSN during the serialization process.',
+    howItWorks: 'SerDes uses equalization, clock and data recovery (CDR), and forward error correction (FEC). The serializer staggers bit transitions. Low-inductance flip-chip packages minimize ground bounce. Differential signaling rejects common-mode noise.',
+    stats: [
+      { value: '112 Gbps', label: 'Per-lane speed (PAM4)', icon: '⚡' },
+      { value: '<1ps RMS', label: 'Jitter budget', icon: '📈' },
+      { value: '10^-15', label: 'Target BER', icon: '🎯' }
+    ],
+    examples: ['PCIe Gen 5/6', 'USB4', '400G Ethernet', 'Thunderbolt 4'],
+    companies: ['Broadcom', 'Marvell', 'Intel', 'Synopsys'],
+    futureImpact: '224 Gbps SerDes is in development, pushing ground bounce requirements to new extremes. Optical interconnects may eventually replace electrical links for the highest speeds.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🔋',
+    title: 'Power Management ICs',
+    short: 'Switching regulators and ground bounce',
+    tagline: 'High current, high di/dt challenges',
+    description: 'DC-DC converters switch amps of current at MHz frequencies. The power stage creates extreme di/dt that can corrupt sensitive analog circuits on the same die. Managing ground bounce is essential for mixed-signal integration.',
+    connection: 'In a buck converter, the high-side switch turning off and low-side turning on creates a di/dt of hundreds of amps per microsecond. Without careful layout, this ground bounce couples into feedback networks and causes instability.',
+    howItWorks: 'PMICs use separate ground domains (PGND for power, AGND for analog). Kelvin sensing ensures accurate voltage measurement. Guard rings and deep trenches isolate sensitive circuits. Soft switching reduces di/dt.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '100A+', label: 'Switched current', icon: '⚡' },
+      { value: '1MHz+', label: 'Switching frequency', icon: '🔄' },
+      { value: '<1mV', label: 'Ripple target', icon: '📊' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['Phone charger ICs', 'CPU voltage regulators', 'Battery management', 'LED drivers'],
+    companies: ['Texas Instruments', 'Analog Devices', 'Infineon', 'Monolithic Power'],
+    futureImpact: 'GaN and SiC power devices switch faster than silicon, creating even higher di/dt. New circuit topologies and packaging approaches will be needed to manage ground bounce.',
     color: '#F59E0B'
   }
 ];
@@ -246,7 +246,7 @@ const realWorldApps = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const GroundBounceRenderer: React.FC<GroundBounceRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [numOutputs, setNumOutputs] = useState(8); // Number of switching outputs
+  const [packageInductance, setPackageInductance] = useState(5); // nH
+  const [slewRate, setSlewRate] = useState(1); // V/ns (affects di/dt)
+  const [isSimulating, setIsSimulating] = useState(false);
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
+  const [switchPhase, setSwitchPhase] = useState(0); // 0-100 for animation
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +299,29 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
+  // Simulation animation
   useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
+    if (isSimulating) {
+      const timer = setInterval(() => {
+        setSwitchPhase(p => {
+          if (p >= 100) {
+            setIsSimulating(false);
+            return 0;
+          }
+          return p + 2;
+        });
+      }, 30);
+      return () => clearInterval(timer);
     }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
+  }, [isSimulating]);
 
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#EF4444', // Red for warning/noise theme
+    accentGlow: 'rgba(239, 68, 68, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -333,6 +329,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     textSecondary: '#9CA3AF',
     textMuted: '#6B7280',
     border: '#2a2a3a',
+    signal: '#3B82F6', // Blue for digital signals
+    ground: '#10B981', // Green for ground
+    noise: '#F59E0B', // Yellow/orange for noise
   };
 
   const typo = {
@@ -351,7 +350,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Package Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +362,318 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate ground bounce voltage: V = L × di/dt
+  // di/dt depends on: number of outputs × current per output × slew rate
+  const calculateGroundBounce = useCallback(() => {
+    const currentPerOutput = 20; // mA per output (typical CMOS drive)
+    const totalCurrent = numOutputs * currentPerOutput; // mA
+    const diDt = (totalCurrent * slewRate) / 1; // mA/ns = A/us
+    const bounceVoltage = packageInductance * diDt / 1000; // V = nH × mA/ns = mV, convert to V
+    return {
+      bounceVoltage: bounceVoltage,
+      totalCurrent: totalCurrent,
+      diDt: diDt,
+      isSafe: bounceVoltage < 0.4, // Less than 400mV noise margin for 3.3V logic
+    };
+  }, [numOutputs, packageInductance, slewRate]);
 
-  const freqStatus = getFrequencyStatus();
+  const bounceData = calculateGroundBounce();
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+  // Ground Bounce Visualization Component
+  const GroundBounceVisualization = ({ showAnimation = true }: { showAnimation?: boolean }) => {
+    const width = isMobile ? 340 : 500;
+    const height = isMobile ? 280 : 350;
+    const padding = { top: 30, right: 20, bottom: 50, left: 60 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+    // Calculate time points for the waveforms
+    const timePoints = 100;
+    const switchTime = 30; // When the switching happens (30% through)
+    const settleTime = 70; // When things settle (70% through)
+
+    // Generate output signal waveform
+    const getOutputSignal = (t: number) => {
+      if (t < switchTime) return 0;
+      if (t > settleTime) return 3.3;
+      const progress = (t - switchTime) / (settleTime - switchTime);
+      return 3.3 * Math.min(1, progress * 2);
+    };
+
+    // Generate ground bounce waveform
+    const getGroundBounce = (t: number) => {
+      if (t < switchTime || t > settleTime + 10) return 0;
+      const relativeT = t - switchTime;
+      const peakTime = 5; // Peak bounce happens quickly
+      const decay = Math.exp(-relativeT / 15);
+      const bounce = bounceData.bounceVoltage * Math.sin((relativeT / peakTime) * Math.PI) * decay;
+      return Math.max(0, bounce);
+    };
+
+    // Get effective output (internal signal + ground bounce)
+    const getEffectiveOutput = (t: number) => {
+      return getOutputSignal(t) + getGroundBounce(t);
+    };
+
+    // Animation progress
+    const animProgress = showAnimation ? switchPhase : 100;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
         {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
+          <g key={`grid-${frac}`}>
+            <line
+              x1={padding.left}
+              y1={padding.top + frac * plotHeight}
+              x2={padding.left + plotWidth}
+              y2={padding.top + frac * plotHeight}
+              stroke={colors.border}
+              strokeDasharray="3,3"
+              opacity={0.5}
+            />
+          </g>
         ))}
 
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
+        {/* Axes */}
+        <line
+          x1={padding.left}
+          y1={padding.top + plotHeight}
+          x2={padding.left + plotWidth}
+          y2={padding.top + plotHeight}
+          stroke={colors.textSecondary}
+          strokeWidth="2"
+        />
+        <line
+          x1={padding.left}
+          y1={padding.top}
+          x2={padding.left}
+          y2={padding.top + plotHeight}
+          stroke={colors.textSecondary}
+          strokeWidth="2"
         />
 
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
-
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
+        {/* Axis labels */}
+        <text
+          x={padding.left + plotWidth / 2}
+          y={height - 10}
+          fill={colors.textSecondary}
+          fontSize="12"
+          textAnchor="middle"
+        >
+          Time (ns)
         </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
+        <text
+          x={15}
+          y={padding.top + plotHeight / 2}
+          fill={colors.textSecondary}
+          fontSize="12"
+          textAnchor="middle"
+          transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}
+        >
+          Voltage (V)
         </text>
 
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
+        {/* Y-axis scale */}
+        <text x={padding.left - 8} y={padding.top + 4} fill={colors.textMuted} fontSize="10" textAnchor="end">4V</text>
+        <text x={padding.left - 8} y={padding.top + plotHeight / 2} fill={colors.textMuted} fontSize="10" textAnchor="end">2V</text>
+        <text x={padding.left - 8} y={padding.top + plotHeight} fill={colors.textMuted} fontSize="10" textAnchor="end">0V</text>
+
+        {/* Logic threshold line */}
+        <line
+          x1={padding.left}
+          y1={padding.top + plotHeight - (1.65 / 4) * plotHeight}
+          x2={padding.left + plotWidth}
+          y2={padding.top + plotHeight - (1.65 / 4) * plotHeight}
+          stroke={colors.warning}
+          strokeDasharray="5,5"
+          opacity={0.6}
+        />
+        <text
+          x={padding.left + plotWidth - 5}
+          y={padding.top + plotHeight - (1.65 / 4) * plotHeight - 5}
+          fill={colors.warning}
+          fontSize="10"
+          textAnchor="end"
+        >
+          Threshold (1.65V)
+        </text>
+
+        {/* Ideal ground line */}
+        <line
+          x1={padding.left}
+          y1={padding.top + plotHeight}
+          x2={padding.left + plotWidth}
+          y2={padding.top + plotHeight}
+          stroke={colors.ground}
+          strokeWidth="2"
+          opacity={0.3}
+        />
+
+        {/* Ground bounce waveform */}
+        <path
+          d={Array.from({ length: Math.min(timePoints, animProgress) }, (_, i) => {
+            const t = i;
+            const bounce = getGroundBounce(t);
+            const x = padding.left + (t / timePoints) * plotWidth;
+            const y = padding.top + plotHeight - (bounce / 4) * plotHeight;
+            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+          }).join(' ')}
+          fill="none"
+          stroke={colors.noise}
+          strokeWidth="3"
+          opacity={0.8}
+        />
+
+        {/* Output signal waveform */}
+        <path
+          d={Array.from({ length: Math.min(timePoints, animProgress) }, (_, i) => {
+            const t = i;
+            const signal = getOutputSignal(t);
+            const x = padding.left + (t / timePoints) * plotWidth;
+            const y = padding.top + plotHeight - (signal / 4) * plotHeight;
+            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+          }).join(' ')}
+          fill="none"
+          stroke={colors.signal}
+          strokeWidth="2"
+        />
+
+        {/* Effective output (with bounce) */}
+        {bounceData.bounceVoltage > 0.1 && (
+          <path
+            d={Array.from({ length: Math.min(timePoints, animProgress) }, (_, i) => {
+              const t = i;
+              const effective = getEffectiveOutput(t);
+              const x = padding.left + (t / timePoints) * plotWidth;
+              const y = padding.top + plotHeight - (effective / 4) * plotHeight;
+              return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+            }).join(' ')}
+            fill="none"
+            stroke={colors.error}
+            strokeWidth="2"
+            strokeDasharray="4,2"
+            opacity={0.8}
+          />
+        )}
+
+        {/* Legend */}
+        <g transform={`translate(${padding.left + 10}, ${padding.top + 10})`}>
+          <rect x="0" y="0" width="12" height="3" fill={colors.signal} />
+          <text x="18" y="4" fill={colors.textSecondary} fontSize="10">Output Signal</text>
+          <rect x="0" y="14" width="12" height="3" fill={colors.noise} />
+          <text x="18" y="18" fill={colors.textSecondary} fontSize="10">Ground Bounce</text>
+          {bounceData.bounceVoltage > 0.1 && (
+            <>
+              <rect x="0" y="28" width="12" height="3" fill={colors.error} opacity={0.8} />
+              <text x="18" y="32" fill={colors.textSecondary} fontSize="10">Effective Output</text>
+            </>
+          )}
         </g>
 
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
+        {/* Bounce peak annotation */}
+        {animProgress > 40 && bounceData.bounceVoltage > 0.1 && (
+          <g>
+            <circle
+              cx={padding.left + (35 / 100) * plotWidth}
+              cy={padding.top + plotHeight - (bounceData.bounceVoltage / 4) * plotHeight}
+              r="6"
+              fill={colors.noise}
+              stroke="white"
+              strokeWidth="2"
+            />
+            <text
+              x={padding.left + (35 / 100) * plotWidth + 10}
+              y={padding.top + plotHeight - (bounceData.bounceVoltage / 4) * plotHeight}
+              fill={colors.noise}
+              fontSize="11"
+              fontWeight="600"
+            >
+              {(bounceData.bounceVoltage * 1000).toFixed(0)}mV
+            </text>
           </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
-        </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        )}
+      </svg>
+    );
+  };
+
+  // Output switching visualization
+  const OutputsVisualization = () => {
+    const width = isMobile ? 340 : 400;
+    const height = 160;
+    const outputWidth = Math.min(30, (width - 80) / numOutputs - 4);
+    const startX = (width - (numOutputs * (outputWidth + 4) - 4)) / 2;
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Chip outline */}
+        <rect
+          x={20}
+          y={20}
+          width={width - 40}
+          height={60}
+          fill={colors.bgSecondary}
+          stroke={colors.border}
+          strokeWidth="2"
+          rx="4"
+        />
+        <text x={width / 2} y={50} fill={colors.textSecondary} fontSize="12" textAnchor="middle">
+          IC Package (L = {packageInductance}nH)
+        </text>
+
+        {/* Output pins */}
+        {Array.from({ length: numOutputs }, (_, i) => {
+          const x = startX + i * (outputWidth + 4);
+          const isHigh = switchPhase > 30 + i * 2; // Slight stagger in visualization
+          return (
+            <g key={i}>
+              {/* Pin */}
+              <rect
+                x={x}
+                y={80}
+                width={outputWidth}
+                height={40}
+                fill={isHigh ? colors.signal : colors.bgSecondary}
+                stroke={colors.border}
+                strokeWidth="1"
+                rx="2"
+              />
+              {/* Current arrow when switching */}
+              {isSimulating && switchPhase > 25 && switchPhase < 60 && (
+                <path
+                  d={`M ${x + outputWidth / 2} 90 L ${x + outputWidth / 2} 115`}
+                  stroke={colors.noise}
+                  strokeWidth="2"
+                  markerEnd="url(#arrowhead)"
+                  opacity={(1 - (switchPhase - 30) / 30)}
+                />
+              )}
+            </g>
+          );
+        })}
+
+        {/* Arrow marker definition */}
+        <defs>
+          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <polygon points="0 0, 6 3, 0 6" fill={colors.noise} />
+          </marker>
+        </defs>
+
+        {/* Ground rail */}
+        <rect x={20} y={130} width={width - 40} height={20} fill={colors.ground} opacity={0.3} rx="2" />
+        <text x={width / 2} y={145} fill={colors.textSecondary} fontSize="10" textAnchor="middle">
+          Ground Rail ({bounceData.bounceVoltage > 0.1 ? `bouncing ${(bounceData.bounceVoltage * 1000).toFixed(0)}mV` : 'stable'})
+        </text>
       </svg>
     );
   };
@@ -534,7 +727,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -568,14 +761,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <div style={{
           fontSize: '64px',
           marginBottom: '24px',
-          animation: 'pulse 2s infinite',
+          animation: 'shake 0.5s infinite',
         }}>
           ⚡🔌
         </div>
-        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+        <style>{`@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          Ground Bounce: The Hidden Noise
         </h1>
 
         <p style={{
@@ -584,7 +777,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "When 32 outputs switch at once, why does the chip sometimes lie about its own signals? The answer involves <span style={{ color: colors.accent }}>invisible inductance</span> and the speed of electrons."
         </p>
 
         <div style={{
@@ -595,11 +788,19 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '500px',
           border: `1px solid ${colors.border}`,
         }}>
+          <div style={{
+            fontFamily: 'monospace',
+            fontSize: isMobile ? '14px' : '16px',
+            color: colors.accent,
+            marginBottom: '12px',
+          }}>
+            V = L × di/dt
+          </div>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "Every wire has inductance. When current changes fast, voltage appears. When millions of transistors switch together... chaos."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — Digital Design Principle
           </p>
         </div>
 
@@ -607,7 +808,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Discover the Problem →
         </button>
 
         {renderNavDots()}
@@ -618,9 +819,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Nothing special - ground is always at 0V by definition' },
+      { id: 'b', text: 'The chip\'s internal ground voltage spikes, making outputs appear at wrong levels' },
+      { id: 'c', text: 'The supply voltage drops, slowing down the chip' },
     ];
 
     return (
@@ -640,12 +841,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A microcontroller switches all 32 data outputs from LOW to HIGH simultaneously. What happens to the ground reference inside the chip?
           </h2>
 
           {/* Simple diagram */}
@@ -657,24 +858,28 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             textAlign: 'center',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{
-                background: colors.accent + '33',
+                background: colors.bgSecondary,
                 padding: '20px 30px',
                 borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
+                border: `2px solid ${colors.signal}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '24px', marginBottom: '8px' }}>IC</div>
+                <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                  {[1,2,3,4,5,6,7,8].map(i => (
+                    <div key={i} style={{
+                      width: '16px',
+                      height: '20px',
+                      background: colors.signal,
+                      borderRadius: '2px',
+                    }} />
+                  ))}
+                </div>
+                <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>32 outputs switching</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '36px' }}>❓</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>What happens<br/>to ground?</p>
               </div>
             </div>
           </div>
@@ -731,7 +936,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Ground Bounce Simulator
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +948,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Ground Bounce Simulator
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust the number of switching outputs and watch ground bounce grow
           </p>
 
           {/* Main visualization */}
@@ -756,81 +961,82 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+              <OutputsVisualization />
+            </div>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <GroundBounceVisualization />
             </div>
 
-            {/* Generation slider */}
+            {/* Number of outputs slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Number of Switching Outputs</span>
+                <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
+                min="1"
+                max="32"
+                value={numOutputs}
+                onChange={(e) => setNumOutputs(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
+                  background: `linear-gradient(to right, ${colors.signal} ${(numOutputs / 32) * 100}%, ${colors.border} ${(numOutputs / 32) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
             </div>
 
-            {/* Load slider */}
+            {/* Slew rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Slew Rate (Speed)</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                min="0.1"
+                max="3"
+                step="0.1"
+                value={slewRate}
+                onChange={(e) => setSlewRate(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Slow</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Fast</span>
               </div>
             </div>
 
-            {/* Status display */}
+            {/* Simulate button */}
+            <button
+              onClick={() => { playSound('click'); setSwitchPhase(0); setIsSimulating(true); }}
+              disabled={isSimulating}
+              style={{
+                width: '100%',
+                padding: '14px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isSimulating ? colors.border : colors.signal,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: isSimulating ? 'not-allowed' : 'pointer',
+                marginBottom: '20px',
+              }}
+            >
+              {isSimulating ? 'Simulating...' : 'Trigger Switching Event'}
+            </button>
+
+            {/* Results display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -842,8 +1048,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.noise }}>{(bounceData.bounceVoltage * 1000).toFixed(0)}mV</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Ground Bounce</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.signal }}>{bounceData.totalCurrent}mA</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Total Current</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -853,23 +1068,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               }}>
                 <div style={{
                   ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
+                  color: bounceData.isSafe ? colors.success : colors.error
                 }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
+                  {bounceData.isSafe ? 'SAFE' : 'DANGER'}
                 </div>
                 <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
               </div>
@@ -877,17 +1078,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {bounceData.bounceVoltage > 0.4 && (
             <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                Ground bounce exceeds safe limits! This could cause bit errors.
               </p>
             </div>
           )}
@@ -896,7 +1097,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Understand Why →
           </button>
         </div>
 
@@ -917,7 +1118,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            The Physics of Ground Bounce
           </h2>
 
           <div style={{
@@ -926,18 +1127,25 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{
+              fontFamily: 'monospace',
+              fontSize: isMobile ? '24px' : '32px',
+              color: colors.accent,
+              textAlign: 'center',
+              marginBottom: '24px',
+            }}>
+              V = L × di/dt
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>L (Inductance):</strong> Every wire and lead has inductance. Package pins might have 5-15nH each.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                <strong style={{ color: colors.textPrimary }}>di/dt (Current change rate):</strong> When outputs switch from LOW to HIGH, current surges through the ground pin. More outputs = more current change.
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                <strong style={{ color: colors.textPrimary }}>V (Voltage spike):</strong> The faster the current changes through the inductance, the larger the voltage spike on the ground rail.
               </p>
             </div>
           </div>
@@ -950,24 +1158,46 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              When the chip's internal ground bounces up by 500mV, a logic LOW (0V internal) appears as 500mV to the outside world. With noise margins already tight, this can cause the receiving chip to misread the signal as HIGH!
             </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>More Outputs</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>= Higher di/dt</div>
+              <div style={{ ...typo.small, color: colors.error }}>= More bounce</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '32px', marginBottom: '8px' }}>Faster Edges</div>
+              <div style={{ ...typo.small, color: colors.textSecondary }}>= Higher di/dt</div>
+              <div style={{ ...typo.small, color: colors.error }}>= More bounce</div>
+            </div>
           </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Package Effects →
           </button>
         </div>
 
@@ -979,9 +1209,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'Package type doesn\'t matter - inductance is the same for all packages' },
+      { id: 'b', text: 'Smaller packages with shorter leads have less inductance and less ground bounce' },
+      { id: 'c', text: 'Larger packages have more room for decoupling, so they have less noise' },
     ];
 
     return (
@@ -1001,13 +1231,43 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              New Variable: Package Type
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            An engineer switches from a DIP package (long leads) to a BGA package (short solder balls). How does ground bounce change?
           </h2>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '16px',
+            marginBottom: '24px',
+          }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>📦</div>
+              <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>DIP Package</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>~10mm lead length</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>~10nH per pin</div>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🔲</div>
+              <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 600 }}>BGA Package</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>~0.5mm ball height</div>
+              <div style={{ ...typo.small, color: colors.textMuted }}>~0.5nH per ball</div>
+            </div>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1049,7 +1309,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See the Package Effect →
             </button>
           )}
         </div>
@@ -1071,10 +1331,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Package Inductance Lab
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Adjust package inductance and see the dramatic effect on ground bounce
           </p>
 
           <div style={{
@@ -1084,26 +1344,28 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <GroundBounceVisualization showAnimation={false} />
             </div>
 
-            {/* Renewable penetration slider */}
+            {/* Package inductance slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Package Inductance (L)</span>
+                <span style={{
+                  ...typo.small,
+                  color: packageInductance > 8 ? colors.error : packageInductance > 3 ? colors.warning : colors.success,
+                  fontWeight: 600
+                }}>
+                  {packageInductance} nH
+                </span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
+                min="0.5"
+                max="15"
+                step="0.5"
+                value={packageInductance}
+                onChange={(e) => setPackageInductance(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1111,20 +1373,25 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.success }}>BGA (0.5nH)</span>
+                <span style={{ ...typo.small, color: colors.warning }}>QFP (5nH)</span>
+                <span style={{ ...typo.small, color: colors.error }}>DIP (15nH)</span>
+              </div>
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
+            {/* Number of outputs slider */}
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Simultaneous Switching Outputs</span>
+                <span style={{ ...typo.small, color: colors.signal, fontWeight: 600 }}>{numOutputs}</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                min="1"
+                max="64"
+                value={numOutputs}
+                onChange={(e) => setNumOutputs(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1134,42 +1401,26 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Battery toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
-              <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
+            {/* Slew rate slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Edge Slew Rate</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{slewRate} V/ns</span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="3"
+                step="0.1"
+                value={slewRate}
+                onChange={(e) => setSlewRate(parseFloat(e.target.value))}
                 style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
                   cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
                 }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
-              </span>
+              />
             </div>
 
             {/* Stats */}
@@ -1184,8 +1435,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{
+                  ...typo.h3,
+                  color: bounceData.isSafe ? colors.success : colors.error
+                }}>
+                  {(bounceData.bounceVoltage * 1000).toFixed(0)}mV
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Ground Bounce</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1193,32 +1449,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{bounceData.diDt.toFixed(1)} A/μs</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>di/dt</div>
               </div>
             </div>
           </div>
-
-          {batteryResponse && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand the Solutions →
           </button>
         </div>
 
@@ -1239,7 +1480,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Strategies to Reduce Ground Bounce
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1491,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>📦</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Use Low-Inductance Packages</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                BGA and flip-chip packages have much shorter connections than DIP or QFP. A 20x reduction in inductance means 20x less ground bounce for the same switching activity.
               </p>
             </div>
 
@@ -1265,11 +1506,26 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>⏱️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Stagger Output Transitions</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                Instead of switching all outputs simultaneously, add small delays. If 32 outputs switch in 8 groups of 4, di/dt drops to 1/8th. Many FPGAs have programmable output delays for this.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🐢</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Reduce Slew Rate</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Slower rising/falling edges mean lower di/dt. Most I/O standards offer programmable drive strength and slew rate. Trade off switching speed for cleaner signals.
               </p>
             </div>
 
@@ -1280,11 +1536,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>🔌</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Add More Ground Pins</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                Parallel inductances add like parallel resistors: L_total = L/n. Adding 4 ground pins reduces effective inductance to 1/4. Modern chips dedicate 30-50% of pins to power/ground!
               </p>
             </div>
           </div>
@@ -1398,7 +1654,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                Ground Bounce Connection:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1467,7 +1723,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered Ground Bounce and Signal Integrity!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1689,11 +1945,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          Ground Bounce Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand how simultaneous switching noise works and why it's critical for high-speed digital design.
         </p>
 
         <div style={{
@@ -1708,11 +1964,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'V = L × di/dt - the ground bounce equation',
+              'Why simultaneous switching multiplies the problem',
+              'Package inductance is the limiting factor',
+              'Staggering and slew rate control strategies',
+              'Real-world applications from CPUs to DDR memory',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1756,4 +2012,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default GroundBounceRenderer;

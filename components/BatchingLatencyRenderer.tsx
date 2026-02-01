@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// Batching vs Latency - Complete 10-Phase Game
+// Understanding the tradeoff between throughput and response time in ML inference
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface BatchingLatencyRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A chatbot API processes requests one at a time. Users report fast responses (50ms), but during peak hours, the GPU utilization drops to only 15%, and the system can't handle the load.",
+    question: "What is causing the low GPU utilization despite high demand?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "The GPU is overheating and throttling performance" },
+      { id: 'b', label: "Processing single requests doesn't fully utilize GPU parallel processing capability", correct: true },
+      { id: 'c', label: "Network latency is the bottleneck, not GPU speed" },
+      { id: 'd', label: "The model is too small for the GPU" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "GPUs excel at parallel processing. When handling one request at a time, most of the GPU's parallel cores sit idle. Batching multiple requests together allows the GPU to process them simultaneously, dramatically improving utilization and throughput."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "An ML team switches from batch size 1 to batch size 32. GPU utilization jumps from 15% to 85%, but average latency increases from 50ms to 400ms.",
+    question: "Why did latency increase despite better GPU utilization?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "Larger batches cause memory fragmentation" },
+      { id: 'b', label: "The first requests in a batch must wait for the batch to fill before processing begins", correct: true },
+      { id: 'c', label: "The GPU is now overloaded" },
+      { id: 'd', label: "Batch processing uses a slower algorithm" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "With batching, early-arriving requests must wait in a queue until the batch is full (or a timeout occurs). This 'queuing delay' adds to total latency. The tradeoff is higher throughput at the cost of individual request latency."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A real-time fraud detection system has a strict 100ms SLA. The ML team wants to improve throughput but finds that batch size 16 causes 120ms p99 latency.",
+    question: "What strategy could maintain the SLA while still improving throughput?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "Use dynamic batching with a maximum wait time of 50ms", correct: true },
+      { id: 'b', label: "Use batch size 64 to process more requests at once" },
+      { id: 'c', label: "Remove the SLA requirement" },
+      { id: 'd', label: "Process fraud checks asynchronously" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Dynamic batching with a timeout allows the system to process smaller batches when traffic is low (maintaining low latency) and larger batches during high traffic (improving throughput), while never exceeding the maximum wait time that would violate the SLA."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "According to Little's Law: L = λW (queue length = arrival rate × wait time). A system receives 100 requests/second and each request waits 200ms on average.",
+    question: "How many requests are in the queue on average?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "5 requests" },
+      { id: 'b', label: "20 requests", correct: true },
+      { id: 'c', label: "50 requests" },
+      { id: 'd', label: "200 requests" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "Using Little's Law: L = λW = 100 requests/sec × 0.2 sec = 20 requests. This fundamental queuing theory result helps engineers understand the relationship between arrival rate, latency, and queue depth in batching systems."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "An image classification service uses batch size 8. At 3 AM, only 2 requests arrive per second. Many requests experience 3-4 second latencies waiting for the batch to fill.",
+    question: "What mechanism would solve this low-traffic latency problem?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "Increase batch size to accumulate more requests" },
+      { id: 'b', label: "A batch timeout that processes partial batches after a maximum wait", correct: true },
+      { id: 'c', label: "Disable the service during off-peak hours" },
+      { id: 'd', label: "Use a faster GPU" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "A batch timeout ensures that even if a batch isn't full, it will be processed after a maximum wait time. This prevents indefinite waiting during low-traffic periods while still allowing efficient batching during high-traffic times."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A translation API uses an encoder-decoder transformer. The team notices that input sequences of varying lengths in the same batch cause significant padding waste.",
+    question: "What technique minimizes this padding overhead in batched inference?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "Use a fixed sequence length for all inputs" },
+      { id: 'b', label: "Bucket inputs by similar length before batching", correct: true },
+      { id: 'c', label: "Process only maximum-length sequences" },
+      { id: 'd', label: "Disable batching for transformers" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "Length bucketing groups inputs of similar lengths together, minimizing padding. For example, short sentences are batched together, and long sentences are batched together. This improves GPU efficiency by reducing wasted computation on padding tokens."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "A serving system uses continuous batching (iteration-level batching) for an LLM. Unlike traditional batching, new requests can join mid-generation.",
+    question: "What is the primary advantage of continuous batching over static batching for LLMs?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "It uses less GPU memory" },
+      { id: 'b', label: "Sequences completing early free up slots for new requests, improving overall throughput", correct: true },
+      { id: 'c', label: "It produces higher quality outputs" },
+      { id: 'd', label: "It eliminates the need for a request queue" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "In static batching, all sequences must complete before new ones start. With continuous batching, when a sequence finishes generating, a new request immediately takes its slot. This keeps the GPU busy and significantly improves throughput, especially for variable-length outputs."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "An ML platform sees these metrics: p50 latency = 80ms, p99 latency = 450ms. The team suspects batching is causing the tail latency.",
+    question: "Why does batching cause such high p99 latency compared to p50?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "1% of GPU cores are faulty" },
+      { id: 'b', label: "Requests arriving just after a batch dispatches must wait for an entire new batch cycle", correct: true },
+      { id: 'c', label: "99th percentile requests have larger inputs" },
+      { id: 'd', label: "The model is non-deterministic" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "The worst-case scenario is a request arriving just after a batch starts processing. It must wait for the current batch to complete, then wait for enough new requests to fill the next batch. This creates high tail latency even though average latency is reasonable."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A recommendation system serves 10,000 requests/second. The team debates between GPU inference (supports batching, higher latency) and CPU inference (no batching, lower latency per request).",
+    question: "Under what condition would GPU with batching be more cost-effective?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "When request volume is consistently high and latency requirements are relaxed", correct: true },
+      { id: 'b', label: "When each request requires sub-10ms latency" },
+      { id: 'c', label: "When traffic is highly variable" },
+      { id: 'd', label: "When the model is very small" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "GPUs shine with high throughput requirements and relaxed latency constraints. Batching amortizes the GPU's fixed costs across many requests. For strict latency requirements or low/variable traffic, CPUs may be more cost-effective despite lower per-request efficiency."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A voice assistant has a 300ms end-to-end latency budget. The audio processing takes 50ms, and network round-trip is 80ms. The team must allocate the remaining budget for ML inference.",
+    question: "What is the maximum batch wait time the team can use without violating the latency budget?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "300ms" },
+      { id: 'b', label: "170ms" },
+      { id: 'c', label: "Less than 170ms to leave room for inference computation", correct: true },
+      { id: 'd', label: "80ms" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Budget remaining = 300ms - 50ms - 80ms = 170ms. But this must cover BOTH batch wait time AND model inference time. If inference takes 50ms, the maximum batch wait is about 120ms. Always leave headroom for actual computation, not just queuing."
   }
 ];
 
@@ -170,83 +170,83 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '🤖',
+    title: 'LLM Chat Inference',
+    short: 'Serving conversational AI at scale',
+    tagline: 'Making ChatGPT fast for millions',
+    description: 'Large Language Models like GPT and Claude serve millions of concurrent users. Dynamic batching and continuous batching are essential to keep GPU utilization high while maintaining acceptable response times for interactive conversations.',
+    connection: 'Chat applications need low latency for natural conversations but high throughput for cost efficiency. Continuous batching allows new prompts to join ongoing generation, maximizing GPU utilization while keeping first-token latency low.',
+    howItWorks: 'Requests enter a queue and are grouped by compatible parameters. Continuous batching (vLLM, TensorRT-LLM) processes at the token level, inserting new sequences as others complete. KV-cache sharing reduces memory overhead across batched sequences.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '10x', label: 'Throughput with batching', icon: '🚀' },
+      { value: '<1s', label: 'First token latency goal', icon: '⚡' },
+      { value: '80%+', label: 'Target GPU utilization', icon: '📊' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
+    examples: ['ChatGPT serving infrastructure', 'Claude API batching', 'Llama inference servers', 'Hugging Face TGI'],
+    companies: ['OpenAI', 'Anthropic', 'Meta', 'Hugging Face'],
+    futureImpact: 'Speculative decoding and advanced scheduling will push throughput even higher while maintaining sub-second latency for real-time applications.',
     color: '#10B981'
   },
   {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
+    icon: '🎮',
+    title: 'Real-Time Game AI',
+    short: 'NPCs that think in milliseconds',
+    tagline: 'Intelligence at 60 FPS',
+    description: 'Modern games use ML for NPC behavior, physics prediction, and content generation. These systems must deliver results within a single frame (16ms at 60 FPS) while processing hundreds of game entities simultaneously.',
+    connection: 'Games naturally batch AI requests for all NPCs in a scene. The challenge is balancing batch size against the strict frame-time budget. Dynamic batching based on scene complexity keeps frame rates smooth.',
+    howItWorks: 'Entity states are gathered each frame and batched for inference. Priority queues ensure player-facing NPCs get processed first. Level-of-detail reduces inference complexity for distant entities.',
     stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
+      { value: '16ms', label: 'Max frame budget', icon: '🎯' },
+      { value: '100+', label: 'NPCs per batch', icon: '🤖' },
+      { value: '60 FPS', label: 'Target frame rate', icon: '🖥️' }
     ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
-    stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
-    ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['Enemy AI pathfinding', 'Physics simulation ML', 'Procedural animation', 'Dynamic difficulty'],
+    companies: ['NVIDIA', 'Unity', 'Epic Games', 'EA'],
+    futureImpact: 'On-device inference with specialized NPUs will enable more sophisticated game AI while maintaining strict latency requirements.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🏦',
+    title: 'Financial Trading ML',
+    short: 'Microseconds matter for markets',
+    tagline: 'Where latency equals money',
+    description: 'High-frequency trading systems use ML for price prediction, risk assessment, and order routing. Latency requirements are extreme—microseconds, not milliseconds—often making batching impractical.',
+    connection: 'Trading ML often sacrifices throughput for minimal latency. Each microsecond of delay can cost millions. Systems may use specialized hardware (FPGAs) instead of GPUs to avoid batching overhead entirely.',
+    howItWorks: 'Predictions are made on streaming market data with ultra-low latency. Model architectures are simplified to reduce inference time. Batching is typically only used for end-of-day analytics, not live trading.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '<1ms', label: 'Inference latency', icon: '⚡' },
+      { value: '$M+', label: 'Cost per ms delay', icon: '💰' },
+      { value: '1', label: 'Typical batch size', icon: '📊' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['Price prediction models', 'Risk scoring systems', 'Order routing ML', 'Fraud detection'],
+    companies: ['Jane Street', 'Two Sigma', 'Citadel', 'Renaissance'],
+    futureImpact: 'Custom silicon for ML inference will continue to push latency lower, potentially enabling micro-batching even in ultra-low-latency scenarios.',
     color: '#F59E0B'
+  },
+  {
+    icon: '🚗',
+    title: 'Autonomous Vehicle Perception',
+    short: 'Seeing the road in real-time',
+    tagline: 'Safety-critical ML at the edge',
+    description: 'Self-driving cars run multiple ML models (object detection, lane tracking, prediction) that must process sensor data in real-time. Batching across cameras and time steps maximizes throughput within strict latency budgets.',
+    connection: 'AV systems batch across multiple cameras and sensor types. A single inference pass processes 8+ camera views simultaneously. Temporal batching also processes consecutive frames together for temporal consistency.',
+    howItWorks: 'Sensor data from cameras, LiDAR, and radar is synchronized and batched. Spatial batching combines multiple camera views. Temporal batching includes recent frames for motion understanding. All within 50-100ms total cycle time.',
+    stats: [
+      { value: '50ms', label: 'Perception cycle time', icon: '⏱️' },
+      { value: '8+', label: 'Camera views batched', icon: '📷' },
+      { value: '99.99%', label: 'Required reliability', icon: '✅' }
+    ],
+    examples: ['Multi-camera object detection', 'LiDAR point cloud processing', 'Trajectory prediction', 'Scene understanding'],
+    companies: ['Waymo', 'Tesla', 'Cruise', 'Mobileye'],
+    futureImpact: 'Custom automotive AI chips will enable higher throughput with guaranteed latency, supporting more sophisticated perception models.',
+    color: '#3B82F6'
   }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const BatchingLatencyRenderer: React.FC<BatchingLatencyRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [batchSize, setBatchSize] = useState(4);
+  const [requestRate, setRequestRate] = useState(20); // requests per second
+  const [processingTime, setProcessingTime] = useState(50); // ms per batch
+  const [batchTimeout, setBatchTimeout] = useState(100); // max wait time ms
+  const [dynamicBatching, setDynamicBatching] = useState(false);
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
+  // Queue simulation state
+  const [queue, setQueue] = useState<{ id: number; arrivedAt: number }[]>([]);
+  const [processing, setProcessing] = useState<{ id: number; arrivedAt: number }[]>([]);
+  const [completed, setCompleted] = useState<{ id: number; latency: number }[]>([]);
+  const [isSimulationRunning, setIsSimulationRunning] = useState(false);
+  const nextRequestId = useRef(0);
+  const lastProcessingStart = useRef(0);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +307,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#6366F1', // Indigo for ML/tech theme
+    accentGlow: 'rgba(99, 102, 241, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -351,7 +339,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Dynamic Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +351,301 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate metrics
+  const calculateMetrics = useCallback(() => {
+    // Throughput: how many requests can be processed per second
+    // With batching: batch_size / (processing_time / 1000) = requests per second capacity
+    const throughput = (batchSize / (processingTime / 1000));
 
-  const freqStatus = getFrequencyStatus();
+    // Average latency: queue wait + processing time
+    // Queue wait depends on batch size and arrival rate
+    const avgBatchFormTime = dynamicBatching
+      ? Math.min(batchSize / requestRate * 1000, batchTimeout)
+      : (batchSize / requestRate) * 1000;
+    const avgLatency = avgBatchFormTime / 2 + processingTime;
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    // GPU utilization: depends on how well we can keep the GPU busy
+    // At batch size 1, utilization is low; at higher batch sizes, better utilization
+    const baseUtilization = Math.min(100, 15 + (batchSize - 1) * 10);
+    const trafficFactor = Math.min(1, requestRate / (throughput * 0.8));
+    const gpuUtilization = baseUtilization * trafficFactor;
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+    // Queue depth using Little's Law: L = lambda * W
+    const queueDepth = requestRate * (avgLatency / 1000);
+
+    return { throughput, avgLatency, gpuUtilization, queueDepth };
+  }, [batchSize, requestRate, processingTime, dynamicBatching, batchTimeout]);
+
+  const metrics = calculateMetrics();
+
+  // Simulation logic
+  useEffect(() => {
+    if (!isSimulationRunning || phase !== 'play') return;
+
+    // Add new requests at the request rate
+    const requestInterval = setInterval(() => {
+      const now = Date.now();
+      setQueue(q => [...q, { id: nextRequestId.current++, arrivedAt: now }]);
+    }, 1000 / requestRate);
+
+    // Process batches
+    const processInterval = setInterval(() => {
+      const now = Date.now();
+
+      setQueue(q => {
+        if (q.length === 0) return q;
+
+        const canProcess = q.length >= batchSize ||
+          (dynamicBatching && q.length > 0 && (now - q[0].arrivedAt) >= batchTimeout);
+
+        if (canProcess && now - lastProcessingStart.current >= processingTime) {
+          const batchToProcess = q.slice(0, Math.min(batchSize, q.length));
+          const remaining = q.slice(batchToProcess.length);
+
+          setProcessing(batchToProcess);
+          lastProcessingStart.current = now;
+
+          setTimeout(() => {
+            const completedBatch = batchToProcess.map(req => ({
+              id: req.id,
+              latency: Date.now() - req.arrivedAt
+            }));
+            setCompleted(c => [...c.slice(-20), ...completedBatch]);
+            setProcessing([]);
+          }, processingTime);
+
+          return remaining;
+        }
+
+        return q;
+      });
+    }, 20);
+
+    return () => {
+      clearInterval(requestInterval);
+      clearInterval(processInterval);
+    };
+  }, [isSimulationRunning, phase, requestRate, batchSize, processingTime, dynamicBatching, batchTimeout]);
+
+  // Reset simulation when parameters change
+  useEffect(() => {
+    if (phase === 'play' || phase === 'twist_play') {
+      setQueue([]);
+      setProcessing([]);
+      setCompleted([]);
+      nextRequestId.current = 0;
+      lastProcessingStart.current = 0;
+    }
+  }, [batchSize, requestRate, processingTime, dynamicBatching, batchTimeout, phase]);
+
+  // Batching Visualization Component
+  const BatchingVisualization = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 200 : 250;
+
+    const queueWidth = 120;
+    const gpuWidth = 150;
+    const completedWidth = 100;
+
+    const requestSize = 12;
+    const maxVisibleRequests = 8;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Queue area */}
+        <rect x="20" y="40" width={queueWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x="20 + 60" y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Request Queue</text>
+
+        {/* Queue requests */}
+        {queue.slice(0, maxVisibleRequests).map((req, i) => (
+          <g key={req.id}>
+            <rect
+              x={30 + (i % 4) * (requestSize + 4)}
+              y={50 + Math.floor(i / 4) * (requestSize + 4)}
+              width={requestSize}
+              height={requestSize}
+              rx="2"
+              fill={colors.warning}
+              opacity={0.8 + (Math.sin(animationFrame * 0.1 + i) * 0.2)}
+            />
+          </g>
+        ))}
+        {queue.length > maxVisibleRequests && (
+          <text x="80" y={height - 50} fill={colors.textMuted} fontSize="10" textAnchor="middle">
+            +{queue.length - maxVisibleRequests} more
+          </text>
+        )}
+
+        {/* Arrow from queue to GPU */}
+        <path d={`M ${20 + queueWidth + 10} ${height / 2} L ${20 + queueWidth + 40} ${height / 2}`} stroke={colors.accent} strokeWidth="2" markerEnd="url(#arrowhead)" />
         <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill={colors.accent} />
+          </marker>
         </defs>
 
-        {/* Grid lines */}
+        {/* GPU Processing area */}
+        <rect x={20 + queueWidth + 50} y="40" width={gpuWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={processing.length > 0 ? colors.success : colors.border} strokeWidth={processing.length > 0 ? "2" : "1"} />
+        <text x={20 + queueWidth + 50 + gpuWidth / 2} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">GPU Batch Processing</text>
+
+        {/* Processing requests */}
+        {processing.map((req, i) => (
+          <g key={req.id}>
+            <rect
+              x={20 + queueWidth + 60 + (i % 4) * (requestSize + 8)}
+              y={60 + Math.floor(i / 4) * (requestSize + 8)}
+              width={requestSize + 4}
+              height={requestSize + 4}
+              rx="3"
+              fill={colors.success}
+              style={{
+                animation: 'pulse 0.5s infinite',
+                transformOrigin: 'center'
+              }}
+            />
+          </g>
+        ))}
+        {processing.length === 0 && (
+          <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height / 2} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+            Waiting for batch...
+          </text>
+        )}
+
+        {/* Arrow from GPU to completed */}
+        <path d={`M ${20 + queueWidth + 50 + gpuWidth + 10} ${height / 2} L ${20 + queueWidth + 50 + gpuWidth + 40} ${height / 2}`} stroke={colors.success} strokeWidth="2" markerEnd="url(#arrowhead2)" />
+        <defs>
+          <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill={colors.success} />
+          </marker>
+        </defs>
+
+        {/* Completed area */}
+        <rect x={width - completedWidth - 20} y="40" width={completedWidth} height={height - 80} rx="8" fill={colors.bgSecondary} stroke={colors.border} strokeWidth="1" />
+        <text x={width - completedWidth / 2 - 20} y="30" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Completed</text>
+
+        {/* Completed count */}
+        <text x={width - completedWidth / 2 - 20} y={height / 2} fill={colors.success} fontSize="24" fontWeight="bold" textAnchor="middle">
+          {completed.length}
+        </text>
+        <text x={width - completedWidth / 2 - 20} y={height / 2 + 20} fill={colors.textMuted} fontSize="11" textAnchor="middle">
+          requests
+        </text>
+
+        {/* Batch size indicator */}
+        <text x={20 + queueWidth + 50 + gpuWidth / 2} y={height - 30} fill={colors.accent} fontSize="11" textAnchor="middle">
+          Batch Size: {batchSize}
+        </text>
+      </svg>
+    );
+  };
+
+  // Latency vs Throughput Chart
+  const LatencyThroughputChart = () => {
+    const width = isMobile ? 320 : 400;
+    const height = isMobile ? 180 : 220;
+    const padding = { top: 30, right: 40, bottom: 40, left: 50 };
+    const plotWidth = width - padding.left - padding.right;
+    const plotHeight = height - padding.top - padding.bottom;
+
+    // Generate data points for different batch sizes
+    const dataPoints = [];
+    for (let bs = 1; bs <= 32; bs *= 2) {
+      const tp = (bs / (processingTime / 1000));
+      const lat = (bs / requestRate) * 500 + processingTime;
+      dataPoints.push({ batchSize: bs, throughput: tp, latency: lat });
+    }
+
+    const maxThroughput = Math.max(...dataPoints.map(d => d.throughput));
+    const maxLatency = Math.max(...dataPoints.map(d => d.latency));
+
+    // Current operating point
+    const currentTp = metrics.throughput;
+    const currentLat = metrics.avgLatency;
+
+    return (
+      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Grid */}
         {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
+          <g key={`grid-${frac}`}>
+            <line
+              x1={padding.left}
+              y1={padding.top + frac * plotHeight}
+              x2={padding.left + plotWidth}
+              y2={padding.top + frac * plotHeight}
+              stroke={colors.border}
+              strokeDasharray="3,3"
+            />
+          </g>
         ))}
 
-        {/* Frequency waveform */}
+        {/* Axes */}
+        <line x1={padding.left} y1={padding.top + plotHeight} x2={padding.left + plotWidth} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+        <line x1={padding.left} y1={padding.top} x2={padding.left} y2={padding.top + plotHeight} stroke={colors.textSecondary} strokeWidth="2" />
+
+        {/* Axis labels */}
+        <text x={padding.left + plotWidth / 2} y={height - 8} fill={colors.textSecondary} fontSize="11" textAnchor="middle">Throughput (req/s)</text>
+        <text x={15} y={padding.top + plotHeight / 2} fill={colors.textSecondary} fontSize="11" textAnchor="middle" transform={`rotate(-90, 15, ${padding.top + plotHeight / 2})`}>Latency (ms)</text>
+
+        {/* Tradeoff curve */}
         <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
+          d={dataPoints.map((pt, i) => {
+            const x = padding.left + (pt.throughput / maxThroughput) * plotWidth;
+            const y = padding.top + plotHeight - (pt.latency / maxLatency) * plotHeight;
+            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+          }).join(' ')}
           fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
+          stroke={colors.accent}
+          strokeWidth="2"
+          strokeDasharray="5,5"
         />
 
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
+        {/* Data points */}
+        {dataPoints.map((pt, i) => {
+          const x = padding.left + (pt.throughput / maxThroughput) * plotWidth;
+          const y = padding.top + plotHeight - (pt.latency / maxLatency) * plotHeight;
+          return (
+            <g key={i}>
+              <circle cx={x} cy={y} r="6" fill={colors.bgCard} stroke={colors.accent} strokeWidth="2" />
+              <text x={x} y={y - 10} fill={colors.textMuted} fontSize="9" textAnchor="middle">b={pt.batchSize}</text>
+            </g>
+          );
+        })}
 
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
+        {/* Current operating point */}
+        <circle
+          cx={padding.left + (currentTp / maxThroughput) * plotWidth}
+          cy={padding.top + plotHeight - (currentLat / maxLatency) * plotHeight}
+          r="8"
+          fill={colors.success}
+          stroke="white"
+          strokeWidth="2"
+          style={{ filter: 'drop-shadow(0 0 8px rgba(16, 185, 129, 0.5))' }}
+        />
+        <text
+          x={padding.left + (currentTp / maxThroughput) * plotWidth + 12}
+          y={padding.top + plotHeight - (currentLat / maxLatency) * plotHeight - 5}
+          fill={colors.success}
+          fontSize="10"
+          fontWeight="600"
+        >
+          Current
         </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
 
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
+        {/* Legend */}
+        <g transform={`translate(${padding.left + 10}, ${padding.top + 5})`}>
+          <text fill={colors.textMuted} fontSize="10">Higher is better (Throughput)</text>
+          <text y="12" fill={colors.textMuted} fontSize="10">Lower is better (Latency)</text>
         </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
-          </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
-        </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
     );
   };
@@ -534,7 +699,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #4F46E5)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -570,12 +735,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          <span role="img" aria-label="batch">📦</span><span role="img" aria-label="clock">⏱️</span>
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          Batching vs Latency
         </h1>
 
         <p style={{
@@ -584,7 +749,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "Why do ML services sometimes feel instant and other times take seconds? The answer lies in <span style={{ color: colors.accent }}>batching</span>—a tradeoff that powers every AI system at scale."
         </p>
 
         <div style={{
@@ -596,10 +761,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "You can have it fast, or you can have it cheap—but batching lets you find the sweet spot in between."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — ML Infrastructure Wisdom
           </p>
         </div>
 
@@ -607,7 +772,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Explore the Tradeoff
         </button>
 
         {renderNavDots()}
@@ -618,9 +783,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Latency stays the same—batching only affects throughput' },
+      { id: 'b', text: 'Latency increases because requests wait in a queue for the batch to fill' },
+      { id: 'c', text: 'Latency decreases because GPUs are more efficient with batches' },
     ];
 
     return (
@@ -640,12 +805,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            An ML service switches from processing one request at a time to batching 8 requests together. What happens to individual request latency?
           </h2>
 
           {/* Simple diagram */}
@@ -658,23 +823,23 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '48px' }}>1x</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Single Request</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
               <div style={{
                 background: colors.accent + '33',
                 padding: '20px 30px',
                 borderRadius: '8px',
                 border: `2px solid ${colors.accent}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '32px' }}>8x</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Batch of 8</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '48px' }}>?</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Latency Change?</p>
               </div>
             </div>
           </div>
@@ -721,7 +886,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              See What Happens
             </button>
           )}
         </div>
@@ -731,7 +896,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Batching Simulation
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +908,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Batching Simulation
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust batch size and see how it affects throughput and latency
           </p>
 
           {/* Main visualization */}
@@ -757,84 +922,100 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <BatchingVisualization />
             </div>
 
-            {/* Generation slider */}
+            {/* Batch size slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Batch Size</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize} requests</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
+                min="1"
+                max="16"
+                step="1"
+                value={batchSize}
+                onChange={(e) => setBatchSize(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
+                  background: `linear-gradient(to right, ${colors.accent} ${(batchSize / 16) * 100}%, ${colors.border} ${(batchSize / 16) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
             </div>
 
-            {/* Load slider */}
+            {/* Request rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                min="5"
+                max="100"
+                step="5"
+                value={requestRate}
+                onChange={(e) => setRequestRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
             </div>
 
-            {/* Inertia slider */}
+            {/* Processing time slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Processing Time per Batch</span>
+                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{processingTime} ms</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                min="20"
+                max="200"
+                step="10"
+                value={processingTime}
+                onChange={(e) => setProcessingTime(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
-              </div>
             </div>
 
-            {/* Status display */}
+            {/* Simulation controls */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <button
+                onClick={() => setIsSimulationRunning(!isSimulationRunning)}
+                style={{
+                  background: isSimulationRunning ? colors.error : colors.success,
+                  color: 'white',
+                  border: 'none',
+                  padding: '12px 32px',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {isSimulationRunning ? 'Stop Simulation' : 'Start Simulation'}
+              </button>
+            </div>
+
+            {/* Metrics display */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
             }}>
               <div style={{
                 background: colors.bgSecondary,
@@ -842,8 +1023,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{metrics.throughput.toFixed(0)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>(req/s)</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: metrics.avgLatency > 500 ? colors.error : metrics.avgLatency > 200 ? colors.warning : colors.success }}>
+                  {metrics.avgLatency.toFixed(0)}ms
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -853,11 +1046,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               }}>
                 <div style={{
                   ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
+                  color: metrics.gpuUtilization > 70 ? colors.success : metrics.gpuUtilization > 40 ? colors.warning : colors.error
                 }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
+                  {metrics.gpuUtilization.toFixed(0)}%
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>GPU Utilization</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -865,19 +1058,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{metrics.queueDepth.toFixed(1)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Queue Depth</div>
               </div>
             </div>
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {batchSize >= 8 && metrics.gpuUtilization > 60 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -887,16 +1075,16 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+                Notice how larger batches increase throughput but also increase latency. This is the core tradeoff!
               </p>
             </div>
           )}
 
           <button
-            onClick={() => { playSound('success'); nextPhase(); }}
+            onClick={() => { playSound('success'); setIsSimulationRunning(false); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Understand Why
           </button>
         </div>
 
@@ -917,7 +1105,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            The Batching-Latency Tradeoff
           </h2>
 
           <div style={{
@@ -926,18 +1114,22 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <LatencyThroughputChart />
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>Why does this tradeoff exist?</strong>
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
+                <span style={{ color: colors.accent }}>GPUs are parallel processors.</span> They have thousands of cores designed to work on many operations simultaneously. Processing one request uses only a fraction of this capacity.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                <span style={{ color: colors.accent }}>Batching amortizes overhead.</span> Each GPU operation has fixed costs (memory transfers, kernel launches). Larger batches spread this overhead across more requests.
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                <span style={{ color: colors.warning }}>But waiting has a cost.</span> To form a batch, early-arriving requests must wait for later ones. This queue time adds directly to latency.
               </p>
             </div>
           </div>
@@ -950,16 +1142,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Little's Law
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              <strong>L = lambda x W</strong> — The average number of items in a queue equals the arrival rate times the average wait time. This fundamental relationship governs all batching systems.
             </p>
           </div>
 
@@ -967,7 +1153,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Dynamic Batching
           </button>
         </div>
 
@@ -979,9 +1165,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'Use the same batch size regardless of traffic—consistency is key' },
+      { id: 'b', text: 'Use dynamic batching: small batches when traffic is low, large when high' },
+      { id: 'c', text: 'Always use the largest possible batch size for maximum efficiency' },
     ];
 
     return (
@@ -1001,12 +1187,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              New Challenge: Variable Traffic
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            Traffic varies from 10 req/s at night to 500 req/s during peak hours. How should the batching strategy adapt?
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1049,7 +1235,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              Explore Dynamic Batching
             </button>
           )}
         </div>
@@ -1059,7 +1245,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // TWIST PLAY PHASE
+  // TWIST PLAY PHASE - Dynamic Batching
   if (phase === 'twist_play') {
     return (
       <div style={{
@@ -1071,10 +1257,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Dynamic Batching with Timeout
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Enable dynamic batching and adjust the timeout to see how it balances throughput and latency
           </p>
 
           <div style={{
@@ -1083,58 +1269,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
-            </div>
-
-            {/* Renewable penetration slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Battery toggle */}
+            {/* Dynamic batching toggle */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -1142,15 +1277,15 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               gap: '12px',
               marginBottom: '24px',
             }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
+              <span style={{ ...typo.small, color: colors.textSecondary }}>Static Batching</span>
               <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
+                onClick={() => setDynamicBatching(!dynamicBatching)}
                 style={{
                   width: '60px',
                   height: '30px',
                   borderRadius: '15px',
                   border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
+                  background: dynamicBatching ? colors.success : colors.border,
                   cursor: 'pointer',
                   position: 'relative',
                   transition: 'background 0.3s',
@@ -1163,16 +1298,87 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   background: 'white',
                   position: 'absolute',
                   top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
+                  left: dynamicBatching ? '33px' : '3px',
                   transition: 'left 0.3s',
                 }} />
               </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
+              <span style={{ ...typo.small, color: dynamicBatching ? colors.success : colors.textSecondary, fontWeight: dynamicBatching ? 600 : 400 }}>
+                Dynamic Batching
               </span>
             </div>
 
-            {/* Stats */}
+            {/* Batch timeout slider (only visible when dynamic) */}
+            {dynamicBatching && (
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Max Wait Time (Timeout)</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{batchTimeout} ms</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="500"
+                  step="10"
+                  value={batchTimeout}
+                  onChange={(e) => setBatchTimeout(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>Low latency (10ms)</span>
+                  <span style={{ ...typo.small, color: colors.textMuted }}>High throughput (500ms)</span>
+                </div>
+              </div>
+            )}
+
+            {/* Other sliders */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Max Batch Size</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{batchSize}</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="32"
+                step="1"
+                value={batchSize}
+                onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Request Rate</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{requestRate} req/s</span>
+              </div>
+              <input
+                type="range"
+                min="5"
+                max="200"
+                step="5"
+                value={requestRate}
+                onChange={(e) => setRequestRate(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Metrics display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(2, 1fr)',
@@ -1184,8 +1390,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{ ...typo.h3, color: colors.success }}>{metrics.throughput.toFixed(0)} req/s</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Max Throughput</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1193,23 +1399,24 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: metrics.avgLatency > 300 ? colors.error : metrics.avgLatency > 150 ? colors.warning : colors.success }}>
+                  {metrics.avgLatency.toFixed(0)} ms
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Avg Latency</div>
               </div>
             </div>
           </div>
 
-          {batteryResponse && (
+          {dynamicBatching && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
               borderRadius: '12px',
               padding: '16px',
               marginBottom: '24px',
-              textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
+                Dynamic batching with timeout ensures requests never wait forever, even during low traffic!
               </p>
             </div>
           )}
@@ -1218,7 +1425,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand the Strategies
           </button>
         </div>
 
@@ -1239,7 +1446,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Advanced Batching Strategies
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1457,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>time</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Timeout-Based Batching</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                Process batches when full OR when a <span style={{ color: colors.accent }}>maximum wait time</span> expires. This prevents indefinite waiting during low traffic while still achieving efficiency during high traffic.
               </p>
             </div>
 
@@ -1265,11 +1472,26 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>loop</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Continuous Batching (LLMs)</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                For auto-regressive models, <span style={{ color: colors.success }}>new requests can join mid-generation</span>. When a sequence finishes, its slot is immediately filled. This maximizes GPU utilization for variable-length outputs.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>layers</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Length Bucketing</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Group inputs by similar length before batching to <span style={{ color: colors.warning }}>minimize padding waste</span>. Short sequences are batched together, long sequences together. Reduces wasted computation on padding tokens.
               </p>
             </div>
 
@@ -1280,11 +1502,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>target</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>SLA-Constrained Batching</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                When you have a latency SLA (e.g., p99 &lt; 200ms), work backwards: <strong>Max batch wait = SLA - processing time - safety margin</strong>. The SLA constrains your maximum batch size.
               </p>
             </div>
           </div>
@@ -1293,7 +1515,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications →
+            See Real-World Applications
           </button>
         </div>
 
@@ -1360,7 +1582,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    ✓
+                    check
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1398,7 +1620,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                Batching Strategy:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1430,7 +1652,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              Take the Knowledge Test
             </button>
           )}
         </div>
@@ -1457,7 +1679,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? '🎉' : '📚'}
+              {passed ? 'trophy' : 'books'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1467,7 +1689,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered the batching-latency tradeoff!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1476,7 +1698,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 onClick={() => { playSound('complete'); nextPhase(); }}
                 style={primaryButtonStyle}
               >
-                Complete Lesson →
+                Complete Lesson
               </button>
             ) : (
               <button
@@ -1610,7 +1832,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               >
-                ← Previous
+                Previous
               </button>
             )}
             {currentQuestion < 9 ? (
@@ -1628,7 +1850,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1684,16 +1906,16 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'bounce 1s infinite',
         }}>
-          🏆
+          <span role="img" aria-label="trophy">🏆</span>
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          Batching Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand the fundamental tradeoff between batching and latency that powers every ML system at scale.
         </p>
 
         <div style={{
@@ -1708,14 +1930,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'Why batching increases throughput but adds latency',
+              'Little\'s Law: L = lambda x W for queue analysis',
+              'Dynamic batching with timeouts',
+              'Continuous batching for LLMs',
+              'SLA-constrained batching strategies',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ color: colors.success }}>check</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -1756,4 +1978,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default BatchingLatencyRenderer;

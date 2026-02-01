@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// Chiller COP (Coefficient of Performance) - Complete 10-Phase Game
+// Understanding how chillers work and what affects their efficiency
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface ChillerCOPRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A building's chiller is running with a COP of 5.0, meaning it produces 5 units of cooling for every 1 unit of electricity consumed. The facilities manager wants to understand the efficiency.",
+    question: "What does a COP of 5.0 tell us about energy usage?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "The chiller wastes 5 times more energy than it uses" },
+      { id: 'b', label: "The chiller moves 5 units of heat for every 1 unit of electrical work input", correct: true },
+      { id: 'c', label: "The chiller is 500% efficient, violating thermodynamics" },
+      { id: 'd', label: "The chiller uses 5 kW to produce 1 kW of cooling" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "COP measures the ratio of useful cooling (heat removed) to work input. A COP of 5 means for every 1 kW of electricity, the chiller moves 5 kW of heat from inside to outside. This doesn't violate thermodynamics because we're moving heat, not creating it."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "On a hot summer day (35°C outdoor temperature), a chiller struggles to maintain its usual COP. The condenser temperature rises to 45°C while the evaporator stays at 7°C.",
+    question: "Why does hot weather reduce chiller efficiency?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "The refrigerant evaporates too quickly in hot weather" },
+      { id: 'b', label: "Higher condenser temperature increases the temperature lift, requiring more compressor work", correct: true },
+      { id: 'c', label: "The electricity supply becomes less stable in summer" },
+      { id: 'd', label: "Air conditioning units draw too much power from the grid" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "Temperature lift (Tcond - Tevap) is the key factor. Higher outdoor temps mean the condenser must operate at higher temperature to reject heat. Greater temperature lift = more compressor work = lower COP. This is why chillers are less efficient on the hottest days when cooling is most needed."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A chiller plant has two options: run one large chiller at 100% capacity, or run two smaller chillers at 50% capacity each. Both provide the same total cooling.",
+    question: "Which configuration typically achieves better COP?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "One large chiller - economies of scale improve efficiency" },
+      { id: 'b', label: "Two smaller chillers at 50% - partial load operation often improves COP", correct: true },
+      { id: 'c', label: "Both are identical since they provide the same cooling" },
+      { id: 'd', label: "Depends entirely on the outdoor temperature" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Many chillers operate more efficiently at partial load (40-70%) than at full load. This is due to reduced compressor work and better heat transfer at lower loads. Running two chillers at 50% often achieves 10-20% better combined COP than one at 100%."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "An engineer proposes raising the chilled water supply temperature from 6°C to 8°C. Building occupants won't notice the difference because the building's cooling coils are oversized.",
+    question: "How will this change affect chiller COP?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "COP will decrease because the water is warmer" },
+      { id: 'b', label: "COP will increase because a higher evaporator temperature reduces the temperature lift", correct: true },
+      { id: 'c', label: "COP will stay the same since the cooling load hasn't changed" },
+      { id: 'd', label: "COP will fluctuate unpredictably with warmer water" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "Raising chilled water temperature increases evaporator temperature, which reduces the temperature lift. Every 1°C increase in evaporator temperature can improve COP by 2-4%. This is a key optimization strategy called 'chilled water reset.'"
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "A data center chiller operates with condenser water at 32°C. During winter, the cooling tower can produce 18°C water instead.",
+    question: "What happens to chiller COP when using the colder condenser water?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "COP decreases because the chiller works harder against cold water" },
+      { id: 'b', label: "COP increases dramatically because lower condenser temperature reduces temperature lift", correct: true },
+      { id: 'c', label: "COP stays the same because refrigerant properties don't change" },
+      { id: 'd', label: "The chiller should be shut off and free cooling used instead" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "Lower condenser water temperature directly reduces the temperature lift, improving COP. Dropping from 32°C to 18°C condenser water can improve COP by 50% or more. This is why condenser water reset and free cooling strategies are so valuable."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A hospital's chiller system shows COP dropping from 5.5 to 4.2 over several months. Cooling capacity remains adequate, but energy bills have increased.",
+    question: "What is the most likely cause of this efficiency degradation?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "The refrigerant is wearing out and needs replacement" },
+      { id: 'b', label: "Fouling in the condenser or evaporator tubes is reducing heat transfer", correct: true },
+      { id: 'c', label: "The compressor motor is consuming less power" },
+      { id: 'd', label: "Outdoor temperatures have increased year-round" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "Tube fouling (scale, biofilm, or debris) reduces heat transfer efficiency, forcing the chiller to work with larger temperature differences. This increases compressor work and reduces COP. Regular tube cleaning can restore 10-20% of lost efficiency."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "A centrifugal chiller operates at 30% of its design capacity during mild weather. The operator notices the COP is lower than expected.",
+    question: "Why might efficiency suffer at very low loads?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "The refrigerant charge becomes insufficient at low loads" },
+      { id: 'b', label: "Compressor efficiency drops when operating far from its design point; surge or cycling may occur", correct: true },
+      { id: 'c', label: "The evaporator freezes at low loads" },
+      { id: 'd', label: "Chilled water flow rate becomes too high" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "Centrifugal chillers have an optimal operating range (typically 40-80% load). At very low loads, they may approach surge conditions, require excessive guide vane closure, or cycle on/off, all of which reduce efficiency. VFD-equipped chillers handle low loads better."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "Two identical buildings in different cities have the same cooling load. Building A is in Phoenix (hot, dry) and Building B is in Miami (hot, humid). Both use water-cooled chillers.",
+    question: "Which building's chiller likely achieves better COP?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "Building A in Phoenix - dry air cools the condenser better" },
+      { id: 'b', label: "Building B in Miami - humidity helps the cooling process" },
+      { id: 'c', label: "Building A in Phoenix - lower wet-bulb temperature allows lower condenser water temperature", correct: true },
+      { id: 'd', label: "Both achieve the same COP since they have the same cooling load" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "Cooling tower performance depends on wet-bulb temperature, not dry-bulb. Phoenix's dry climate means lower wet-bulb temperatures, allowing the cooling tower to produce colder condenser water. This reduces temperature lift and improves chiller COP."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A facilities manager is comparing two chiller options: an air-cooled chiller (COP 3.0) and a water-cooled chiller (COP 5.5). The water-cooled system costs more and requires a cooling tower.",
+    question: "Why is the water-cooled chiller more efficient?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "Water conducts heat better than air, enabling lower condenser temperatures and smaller temperature lift", correct: true },
+      { id: 'b', label: "Water-cooled systems use larger compressors that are inherently more efficient" },
+      { id: 'c', label: "Air-cooled systems waste energy running condenser fans" },
+      { id: 'd', label: "Water-cooled chillers use more refrigerant, which increases capacity" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "Water-cooled condensers can operate at temperatures closer to ambient wet-bulb (often 27-32°C) versus air-cooled at dry-bulb + 10-15°C (often 40-50°C on hot days). The lower condenser temperature dramatically reduces temperature lift and improves COP."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A building automation system shows that reducing chiller load from 80% to 60% improved COP from 5.0 to 5.8, but further reducing to 40% dropped COP to 5.2.",
+    question: "What explains this non-linear relationship between load and efficiency?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "Measurement error in the building automation system" },
+      { id: 'b', label: "Chillers have an optimal efficiency point; too high or too low load reduces COP", correct: true },
+      { id: 'c', label: "The refrigerant works best at exactly 60% load" },
+      { id: 'd', label: "Building occupancy affects chiller efficiency directly" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Chillers have part-load efficiency curves that peak around 40-70% load. At high loads, greater heat transfer rates require larger temperature differences. At very low loads, compressor efficiency drops and parasitic losses become proportionally larger. The sweet spot is in between."
   }
 ];
 
@@ -170,83 +170,83 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '🏢',
+    title: 'Commercial Building HVAC',
+    short: 'Keeping offices comfortable efficiently',
+    tagline: 'Where comfort meets cost control',
+    description: 'Large commercial buildings rely on central chiller plants to provide cooling. Understanding COP is crucial for managing millions of dollars in annual energy costs while maintaining occupant comfort.',
+    connection: 'Building operators use COP monitoring to optimize chiller staging, implement chilled water reset strategies, and schedule maintenance. A 10% improvement in COP can save $50,000-200,000 annually in a large building.',
+    howItWorks: 'Chiller plants typically include multiple chillers that stage on/off based on load. Building automation systems monitor COP in real-time and adjust setpoints, sequences, and schedules to maximize efficiency while meeting cooling demands.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '40%', label: 'Of building energy is HVAC', icon: '⚡' },
+      { value: '5-7', label: 'Typical chiller COP range', icon: '📊' },
+      { value: '$0.10/ton-hr', label: 'Typical cooling cost', icon: '💰' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
+    examples: ['Empire State Building', 'Taipei 101', 'Burj Khalifa', 'Marina Bay Sands'],
+    companies: ['Trane', 'Carrier', 'York', 'Daikin'],
+    futureImpact: 'AI-driven predictive optimization will continuously adjust chiller operations based on weather forecasts, occupancy patterns, and electricity prices.',
     color: '#10B981'
   },
   {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
+    icon: '🖥️',
+    title: 'Data Center Cooling',
+    short: 'Removing megawatts of heat',
+    tagline: 'Where efficiency is measured in PUE',
+    description: 'Data centers are among the most energy-intensive buildings on Earth, with cooling consuming 30-50% of total facility power. Chiller COP directly impacts Power Usage Effectiveness (PUE).',
+    connection: 'Data center operators obsess over chiller COP because every point of improvement reduces operating costs and carbon footprint. A hyperscale data center might save $10 million annually from a 0.5 COP improvement.',
+    howItWorks: 'Modern data centers use multiple cooling strategies: raised floor cooling, hot/cold aisle containment, economizers, and high-efficiency chillers. Chilled water temperatures are carefully optimized (often 12-18°C) to balance IT equipment needs with chiller efficiency.',
     stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
+      { value: '1.1-1.4', label: 'Target PUE range', icon: '📈' },
+      { value: '100MW+', label: 'Hyperscale DC cooling load', icon: '❄️' },
+      { value: '3-5%', label: 'Global electricity for data centers', icon: '🌍' }
     ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
+    examples: ['Google data centers', 'Microsoft Azure', 'Amazon AWS', 'Meta AI clusters'],
+    companies: ['Vertiv', 'Schneider Electric', 'Stulz', 'Emerson'],
+    futureImpact: 'Liquid cooling and direct chip cooling will reduce chiller loads, while AI will optimize the remaining air cooling for maximum efficiency.',
     color: '#3B82F6'
   },
   {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
+    icon: '🏥',
+    title: 'Healthcare Facilities',
+    short: 'Critical cooling for patient care',
+    tagline: 'Where reliability meets efficiency',
+    description: 'Hospitals require precise temperature and humidity control for patient comfort, infection control, and medical equipment operation. Chiller systems must be efficient while maintaining 24/7 reliability.',
+    connection: 'Healthcare facilities have strict environmental requirements that limit aggressive efficiency strategies. However, proper COP optimization through staging, reset strategies, and maintenance can achieve 15-25% energy savings without compromising care.',
+    howItWorks: 'Hospital chiller plants typically feature N+1 redundancy with multiple chillers. Load varies significantly by zone (operating rooms vs. patient rooms) and time of day, requiring sophisticated staging and control strategies.',
     stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
+      { value: '2.5x', label: 'More energy than office buildings', icon: '⚡' },
+      { value: '24/7', label: 'Critical cooling requirement', icon: '🏥' },
+      { value: '68-75°F', label: 'Typical OR temperature range', icon: '🌡️' }
     ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
-    color: '#8B5CF6'
+    examples: ['Mayo Clinic', 'Cleveland Clinic', 'Johns Hopkins Hospital', 'Singapore General Hospital'],
+    companies: ['Johnson Controls', 'Siemens', 'Honeywell', 'Daikin'],
+    futureImpact: 'Predictive maintenance and real-time optimization will reduce energy costs while maintaining the reliability critical for patient care.',
+    color: '#EF4444'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🏭',
+    title: 'Industrial Process Cooling',
+    short: 'Precision cooling for manufacturing',
+    tagline: 'Where process quality depends on temperature',
+    description: 'Industrial facilities use chillers for process cooling in manufacturing, food processing, and pharmaceuticals. Precise temperature control is often more critical than in comfort cooling applications.',
+    connection: 'Industrial chillers often operate at lower temperatures than comfort cooling, which increases temperature lift and reduces COP. However, the high continuous loads make efficiency improvements extremely valuable.',
+    howItWorks: 'Process chillers may operate at very low temperatures (-10°C to 7°C) depending on the application. Multiple chillers often serve different temperature requirements, with sophisticated controls optimizing the overall plant efficiency.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '-40°C to 20°C', label: 'Process temperature range', icon: '🌡️' },
+      { value: '2-4', label: 'Low-temp chiller COP', icon: '📊' },
+      { value: '20-50%', label: 'Of factory energy for cooling', icon: '🏭' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
-    color: '#F59E0B'
+    examples: ['Pharmaceutical manufacturing', 'Semiconductor fabs', 'Food processing plants', 'Chemical production'],
+    companies: ['GEA', 'Carrier', 'Bitzer', 'Mayekawa'],
+    futureImpact: 'Natural refrigerants and magnetic bearing compressors will enable higher efficiency at low temperatures while reducing environmental impact.',
+    color: '#8B5CF6'
   }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const ChillerCOPRenderer: React.FC<ChillerCOPRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [condenserTemp, setCondenserTemp] = useState(35); // °C
+  const [evaporatorTemp, setEvaporatorTemp] = useState(7); // °C
+  const [loadPercentage, setLoadPercentage] = useState(80); // %
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,33 +297,18 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#06B6D4', // Cyan for cooling
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
+    cold: '#3B82F6',
+    hot: '#EF4444',
     textPrimary: '#FFFFFF',
     textSecondary: '#9CA3AF',
     textMuted: '#6B7280',
@@ -350,8 +330,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_predict: 'Partial Load',
+    twist_play: 'Load Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +343,113 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate COP based on conditions
+  const calculateCOP = useCallback((Tcond: number, Tevap: number, load: number) => {
+    // Ideal Carnot COP = Tevap / (Tcond - Tevap)
+    // Convert to Kelvin
+    const TcondK = Tcond + 273.15;
+    const TevapK = Tevap + 273.15;
+    const carnotCOP = TevapK / (TcondK - TevapK);
 
-  const freqStatus = getFrequencyStatus();
+    // Real chillers achieve 50-70% of Carnot COP
+    // Efficiency varies with load (peaks around 50-70% load)
+    const loadFactor = 1 - 0.3 * Math.pow((load - 60) / 60, 2); // Peaks at 60% load
+    const realCOP = carnotCOP * 0.6 * Math.max(0.5, loadFactor);
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    return Math.max(2, Math.min(8, realCOP));
+  }, []);
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+  // Current COP and related values
+  const temperatureLift = condenserTemp - evaporatorTemp;
+  const currentCOP = calculateCOP(condenserTemp, evaporatorTemp, loadPercentage);
+  const coolingCapacity = loadPercentage * 10; // kW (baseline 1000 kW at 100%)
+  const compressorPower = coolingCapacity / currentCOP;
+
+  // Chiller Cycle Visualization Component
+  const ChillerCycleVisualization = ({ showFlow = true }) => {
+    const width = isMobile ? 320 : 450;
+    const height = isMobile ? 280 : 350;
+
+    // Animation for refrigerant flow
+    const flowOffset = (animationFrame * 2) % 40;
 
     return (
-      <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <svg width={width} height={height} viewBox="0 0 450 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Background */}
+        <rect x="0" y="0" width="450" height="350" fill={colors.bgCard} rx="12" />
 
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
-          />
-        ))}
+        {/* Evaporator (left side - cold) */}
+        <rect x="30" y="120" width="100" height="110" rx="8" fill={`${colors.cold}22`} stroke={colors.cold} strokeWidth="2" />
+        <text x="80" y="145" fill={colors.cold} fontSize="12" fontWeight="600" textAnchor="middle">EVAPORATOR</text>
+        <text x="80" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">{evaporatorTemp}°C</text>
+        {/* Cooling coils */}
+        <path d="M 45 180 Q 55 185 65 180 Q 75 175 85 180 Q 95 185 105 180 Q 115 175 115 180" fill="none" stroke={colors.cold} strokeWidth="2" />
+        <path d="M 45 200 Q 55 205 65 200 Q 75 195 85 200 Q 95 205 105 200 Q 115 195 115 200" fill="none" stroke={colors.cold} strokeWidth="2" />
+        <text x="80" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Absorbs heat</text>
 
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
-        />
+        {/* Condenser (right side - hot) */}
+        <rect x="320" y="120" width="100" height="110" rx="8" fill={`${colors.hot}22`} stroke={colors.hot} strokeWidth="2" />
+        <text x="370" y="145" fill={colors.hot} fontSize="12" fontWeight="600" textAnchor="middle">CONDENSER</text>
+        <text x="370" y="165" fill={colors.textSecondary} fontSize="11" textAnchor="middle">{condenserTemp}°C</text>
+        {/* Heat rejection fins */}
+        <path d="M 335 180 Q 345 185 355 180 Q 365 175 375 180 Q 385 185 395 180 Q 405 175 405 180" fill="none" stroke={colors.hot} strokeWidth="2" />
+        <path d="M 335 200 Q 345 205 355 200 Q 365 195 375 200 Q 385 205 395 200 Q 405 195 405 200" fill="none" stroke={colors.hot} strokeWidth="2" />
+        <text x="370" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">Rejects heat</text>
 
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
+        {/* Compressor (top) */}
+        <circle cx="225" cy="60" r="35" fill={`${colors.warning}22`} stroke={colors.warning} strokeWidth="2" />
+        <text x="225" y="55" fill={colors.warning} fontSize="12" fontWeight="600" textAnchor="middle">COMPRESSOR</text>
+        <text x="225" y="72" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{compressorPower.toFixed(0)} kW</text>
 
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
-        </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
+        {/* Expansion valve (bottom) */}
+        <rect x="200" y="280" width="50" height="30" rx="4" fill={`${colors.accent}22`} stroke={colors.accent} strokeWidth="2" />
+        <text x="225" y="300" fill={colors.accent} fontSize="10" fontWeight="600" textAnchor="middle">EXP VALVE</text>
 
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
+        {/* Refrigerant flow lines */}
+        {/* Evaporator to Compressor (low pressure gas - blue) */}
+        <path d="M 130 150 L 190 95" fill="none" stroke={colors.cold} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
+        <polygon points="185,100 195,90 190,105" fill={colors.cold} />
+
+        {/* Compressor to Condenser (high pressure gas - red) */}
+        <path d="M 260 95 L 320 150" fill="none" stroke={colors.hot} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
+        <polygon points="315,145 325,155 310,155" fill={colors.hot} />
+
+        {/* Condenser to Expansion Valve (high pressure liquid) */}
+        <path d="M 370 230 L 370 260 L 250 295" fill="none" stroke={colors.warning} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
+        <polygon points="255,290 245,300 255,300" fill={colors.warning} />
+
+        {/* Expansion Valve to Evaporator (low pressure liquid - cyan) */}
+        <path d="M 200 295 L 80 295 L 80 230" fill="none" stroke={colors.accent} strokeWidth="3" strokeDasharray={showFlow ? "8,4" : "0"} strokeDashoffset={showFlow ? -flowOffset : 0} />
+        <polygon points="75,235 85,235 80,225" fill={colors.accent} />
+
+        {/* Temperature lift indicator */}
+        <line x1="225" y1="130" x2="225" y2="180" stroke={colors.textSecondary} strokeWidth="1" strokeDasharray="4,4" />
+        <text x="225" y="160" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Lift: {temperatureLift}°C</text>
+
+        {/* COP display */}
+        <rect x="175" y="200" width="100" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
+        <text x="225" y="220" fill={colors.textSecondary} fontSize="10" textAnchor="middle">COP</text>
+        <text x="225" y="240" fill={colors.success} fontSize="18" fontWeight="700" textAnchor="middle">{currentCOP.toFixed(2)}</text>
+
+        {/* Heat flow arrows */}
+        <g transform="translate(10, 175)">
+          <text x="0" y="0" fill={colors.cold} fontSize="18">❄️</text>
+          <text x="0" y="15" fill={colors.textMuted} fontSize="9">Q_cold</text>
         </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
+        <g transform="translate(425, 175)">
+          <text x="0" y="0" fill={colors.hot} fontSize="18">🔥</text>
+          <text x="0" y="15" fill={colors.textMuted} fontSize="9">Q_hot</text>
         </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
-          </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
-        </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
     );
   };
@@ -534,7 +503,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -570,12 +539,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          ❄️⚡
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          Chiller Coefficient of Performance
         </h1>
 
         <p style={{
@@ -584,7 +553,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "A chiller uses 1 kW of electricity to remove 5 kW of heat. That's not magic—it's <span style={{ color: colors.accent }}>thermodynamics</span>. Understanding COP reveals why some chillers cost twice as much to operate as others."
         </p>
 
         <div style={{
@@ -596,10 +565,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "The key to efficient cooling isn't working harder—it's working smarter by minimizing the temperature lift."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — HVAC Engineering Principle
           </p>
         </div>
 
@@ -607,7 +576,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Explore Chiller Efficiency →
         </button>
 
         {renderNavDots()}
@@ -618,9 +587,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'COP stays the same—it depends only on the chiller design' },
+      { id: 'b', text: 'COP increases because there\'s less difference between hot and cold sides' },
+      { id: 'c', text: 'COP decreases because the condenser can\'t reject heat as effectively' },
     ];
 
     return (
@@ -645,37 +614,31 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A chiller operates with a COP of 5.5 when outdoor temperature is 25°C. If outdoor temperature rises to 40°C, what happens to COP?
           </h2>
 
-          {/* Simple diagram */}
+          {/* Visual */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '16px',
             padding: '24px',
             marginBottom: '24px',
-            textAlign: 'center',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '20px',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{
-                background: colors.accent + '33',
-                padding: '20px 30px',
-                borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
-              }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
-              </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
-              </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px' }}>🌤️</div>
+              <p style={{ ...typo.small, color: colors.textPrimary }}>25°C Outdoor</p>
+              <p style={{ ...typo.h3, color: colors.success }}>COP = 5.5</p>
+            </div>
+            <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px' }}>☀️🔥</div>
+              <p style={{ ...typo.small, color: colors.textPrimary }}>40°C Outdoor</p>
+              <p style={{ ...typo.h3, color: colors.textMuted }}>COP = ?</p>
             </div>
           </div>
 
@@ -731,7 +694,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Chiller Cycle
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +706,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            The Refrigeration Cycle
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust temperatures and watch how COP changes
           </p>
 
           {/* Main visualization */}
@@ -757,127 +720,106 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <ChillerCycleVisualization showFlow={true} />
             </div>
 
-            {/* Generation slider */}
+            {/* Condenser temperature slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>🔥 Condenser Temperature</span>
+                <span style={{
+                  ...typo.small,
+                  color: condenserTemp > 40 ? colors.error : condenserTemp > 32 ? colors.warning : colors.success,
+                  fontWeight: 600
+                }}>
+                  {condenserTemp}°C
+                </span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
+                min="25"
+                max="50"
+                value={condenserTemp}
+                onChange={(e) => setCondenserTemp(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Cool Day</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Hot Day</span>
               </div>
             </div>
 
-            {/* Status display */}
+            {/* Evaporator temperature slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>❄️ Evaporator Temperature</span>
+                <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>{evaporatorTemp}°C</span>
+              </div>
+              <input
+                type="range"
+                min="2"
+                max="15"
+                value={evaporatorTemp}
+                onChange={(e) => setEvaporatorTemp(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Very Cold</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Warmer</span>
+              </div>
+            </div>
+
+            {/* Results display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              gap: '12px',
             }}>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
+                borderTop: `3px solid ${colors.warning}`,
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Temperature Lift</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{temperatureLift}°C</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
+                borderTop: `3px solid ${colors.success}`,
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
-                }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>COP</div>
+                <div style={{ ...typo.h3, color: colors.success }}>{currentCOP.toFixed(2)}</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
+                borderTop: `3px solid ${colors.accent}`,
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Efficiency</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{(currentCOP / 6 * 100).toFixed(0)}%</div>
               </div>
             </div>
           </div>
 
-          {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {/* Discovery insight */}
+          {temperatureLift < 25 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -887,7 +829,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+                💡 Lower temperature lift = higher COP! You found the efficiency sweet spot.
               </p>
             </div>
           )}
@@ -917,7 +859,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            The Science of COP
           </h2>
 
           <div style={{
@@ -928,17 +870,46 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>COP = Q_cooling / W_compressor</strong>
               </p>
-              <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
-              </p>
-              <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
-              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  padding: '16px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.accent}`,
+                }}>
+                  <h4 style={{ color: colors.accent, margin: '0 0 8px 0' }}>What is COP?</h4>
+                  <p style={{ margin: 0, color: colors.textSecondary }}>
+                    Coefficient of Performance measures how much cooling you get for each unit of electricity used. A COP of 5 means you get 5 kW of cooling for every 1 kW of power consumed.
+                  </p>
+                </div>
+
+                <div style={{
+                  background: colors.bgSecondary,
+                  padding: '16px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.warning}`,
+                }}>
+                  <h4 style={{ color: colors.warning, margin: '0 0 8px 0' }}>Temperature Lift Matters</h4>
+                  <p style={{ margin: 0, color: colors.textSecondary }}>
+                    The difference between condenser and evaporator temperature (lift) directly affects efficiency. Smaller lift = less work for the compressor = higher COP.
+                  </p>
+                </div>
+
+                <div style={{
+                  background: colors.bgSecondary,
+                  padding: '16px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.success}`,
+                }}>
+                  <h4 style={{ color: colors.success, margin: '0 0 8px 0' }}>The Carnot Limit</h4>
+                  <p style={{ margin: 0, color: colors.textSecondary }}>
+                    Thermodynamics sets a maximum possible COP (Carnot COP). Real chillers achieve 50-70% of this theoretical maximum due to real-world losses.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -950,16 +921,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              💡 Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              Chillers don't create cooling from electricity—they <strong>move heat</strong> from inside to outside. COP &gt; 1 is possible because we're leveraging thermodynamics, not violating it!
             </p>
           </div>
 
@@ -967,7 +932,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Partial Load Effects →
           </button>
         </div>
 
@@ -979,9 +944,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'COP decreases—running at partial load wastes energy' },
+      { id: 'b', text: 'COP stays the same—efficiency is constant regardless of load' },
+      { id: 'c', text: 'COP often increases at moderate partial loads (40-70%)' },
     ];
 
     return (
@@ -1001,13 +966,79 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              📊 New Variable: Partial Load Operation
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            A chiller runs at 60% of its rated capacity instead of 100%. What happens to its COP?
           </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '20px',
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'space-around',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '20px',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: `conic-gradient(${colors.accent} 100%, ${colors.border} 100%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto',
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  background: colors.bgCard,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: colors.accent,
+                }}>100%</div>
+              </div>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Full Load</p>
+            </div>
+            <div style={{ fontSize: '24px', color: colors.textMuted }}>vs</div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: `conic-gradient(${colors.success} 60%, ${colors.border} 60%)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto',
+              }}>
+                <div style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  background: colors.bgCard,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  color: colors.success,
+                }}>60%</div>
+              </div>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Partial Load</p>
+            </div>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1049,7 +1080,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See the Load Curve →
             </button>
           )}
         </div>
@@ -1061,6 +1092,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
+    // Calculate part-load efficiency curve
+    const loadPoints = [20, 30, 40, 50, 60, 70, 80, 90, 100];
+    const copValues = loadPoints.map(load => calculateCOP(condenserTemp, evaporatorTemp, load));
+    const maxCOP = Math.max(...copValues);
+    const optimalLoad = loadPoints[copValues.indexOf(maxCOP)];
+
     return (
       <div style={{
         minHeight: '100vh',
@@ -1071,10 +1108,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Part-Load Efficiency Curve
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            See how COP varies with cooling load
           </p>
 
           <div style={{
@@ -1083,48 +1120,77 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+            {/* Part-load curve visualization */}
+            <div style={{ marginBottom: '24px' }}>
+              <svg width="100%" height="200" viewBox="0 0 400 200" style={{ maxWidth: '400px', margin: '0 auto', display: 'block' }}>
+                {/* Grid */}
+                {[0, 25, 50, 75, 100].map(x => (
+                  <line key={`v${x}`} x1={50 + x * 3} y1="20" x2={50 + x * 3} y2="170" stroke={colors.border} strokeDasharray="3,3" />
+                ))}
+                {[0, 25, 50, 75, 100].map((_, i) => (
+                  <line key={`h${i}`} x1="50" y1={20 + i * 37.5} x2="350" y2={20 + i * 37.5} stroke={colors.border} strokeDasharray="3,3" />
+                ))}
+
+                {/* Axes */}
+                <line x1="50" y1="170" x2="350" y2="170" stroke={colors.textSecondary} strokeWidth="2" />
+                <line x1="50" y1="20" x2="50" y2="170" stroke={colors.textSecondary} strokeWidth="2" />
+
+                {/* Axis labels */}
+                <text x="200" y="195" fill={colors.textSecondary} fontSize="12" textAnchor="middle">Load (%)</text>
+                <text x="15" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle" transform="rotate(-90, 15, 100)">COP</text>
+
+                {/* COP curve */}
+                <path
+                  d={loadPoints.map((load, i) => {
+                    const x = 50 + (load - 20) * (300 / 80);
+                    const y = 170 - ((copValues[i] - 2) / 6) * 150;
+                    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                  }).join(' ')}
+                  fill="none"
+                  stroke={colors.accent}
+                  strokeWidth="3"
+                />
+
+                {/* Data points */}
+                {loadPoints.map((load, i) => {
+                  const x = 50 + (load - 20) * (300 / 80);
+                  const y = 170 - ((copValues[i] - 2) / 6) * 150;
+                  return (
+                    <circle
+                      key={load}
+                      cx={x}
+                      cy={y}
+                      r={load === loadPercentage ? 8 : 4}
+                      fill={load === optimalLoad ? colors.success : load === loadPercentage ? colors.warning : colors.accent}
+                    />
+                  );
+                })}
+
+                {/* Current operating point */}
+                <line
+                  x1={50 + (loadPercentage - 20) * (300 / 80)}
+                  y1="20"
+                  x2={50 + (loadPercentage - 20) * (300 / 80)}
+                  y2="170"
+                  stroke={colors.warning}
+                  strokeWidth="2"
+                  strokeDasharray="5,5"
+                />
+              </svg>
             </div>
 
-            {/* Renewable penetration slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
-              </div>
-              <input
-                type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load variation slider */}
+            {/* Load slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Cooling Load</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{loadPercentage}%</span>
               </div>
               <input
                 type="range"
                 min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                max="100"
+                value={loadPercentage}
+                onChange={(e) => setLoadPercentage(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1134,72 +1200,44 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Battery toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
-              <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
-              </span>
-            </div>
-
-            {/* Stats */}
+            {/* Results */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
             }}>
               <div style={{
                 background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
+                borderRadius: '12px',
+                padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current Load</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{loadPercentage}%</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
+                borderRadius: '12px',
+                padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Current COP</div>
+                <div style={{ ...typo.h3, color: colors.success }}>{currentCOP.toFixed(2)}</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Optimal Load</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{optimalLoad}%</div>
               </div>
             </div>
           </div>
 
-          {batteryResponse && (
+          {/* Insight */}
+          {loadPercentage >= 50 && loadPercentage <= 70 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -1209,7 +1247,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
+                💡 You're in the sweet spot! This is why running 2 chillers at 50% is often better than 1 at 100%.
               </p>
             </div>
           )}
@@ -1218,7 +1256,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand Why →
           </button>
         </div>
 
@@ -1239,7 +1277,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Optimizing Chiller Efficiency
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1288,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>📊</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Part-Load Efficiency</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                Chillers often achieve <strong>peak efficiency at 40-70% load</strong>. At full load, larger temperature differentials reduce COP. At very low loads, compressor efficiency drops and parasitic losses dominate.
               </p>
             </div>
 
@@ -1265,11 +1303,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>🌡️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Temperature Reset Strategies</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                <strong>Chilled water reset:</strong> Raise supply temp when possible (2-4% COP gain per °C).
+              </p>
+              <p style={{ ...typo.body, color: colors.textSecondary, marginTop: '8px', marginBottom: 0 }}>
+                <strong>Condenser water reset:</strong> Lower condenser temp when cooling towers allow (3-5% COP gain per °C).
               </p>
             </div>
 
@@ -1280,11 +1321,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Staging Strategy</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                Run multiple chillers at partial load rather than fewer at full load. Two chillers at 50% can use <strong>10-20% less energy</strong> than one at 100% for the same cooling output.
               </p>
             </div>
           </div>
@@ -1398,7 +1439,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                How COP Optimization Applies:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1453,10 +1494,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           {renderProgressBar()}
 
           <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
-            <div style={{
-              fontSize: '80px',
-              marginBottom: '24px',
-            }}>
+            <div style={{ fontSize: '80px', marginBottom: '24px' }}>
               {passed ? '🎉' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
@@ -1466,16 +1504,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               {testScore} / 10
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
-              {passed
-                ? 'You understand grid frequency control!'
-                : 'Review the concepts and try again.'}
+              {passed ? 'You\'ve mastered Chiller COP!' : 'Review the concepts and try again.'}
             </p>
 
             {passed ? (
-              <button
-                onClick={() => { playSound('complete'); nextPhase(); }}
-                style={primaryButtonStyle}
-              >
+              <button onClick={() => { playSound('complete'); nextPhase(); }} style={primaryButtonStyle}>
                 Complete Lesson →
               </button>
             ) : (
@@ -1509,7 +1542,6 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         {renderProgressBar()}
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
-          {/* Progress */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -1525,17 +1557,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  background: i === currentQuestion
-                    ? colors.accent
-                    : testAnswers[i]
-                      ? colors.success
-                      : colors.border,
+                  background: i === currentQuestion ? colors.accent : testAnswers[i] ? colors.success : colors.border,
                 }} />
               ))}
             </div>
           </div>
 
-          {/* Scenario */}
           <div style={{
             background: colors.bgCard,
             borderRadius: '12px',
@@ -1548,12 +1575,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
           </div>
 
-          {/* Question */}
           <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
             {question.question}
           </h3>
 
-          {/* Options */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
             {question.options.map(opt => (
               <button
@@ -1588,14 +1613,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 }}>
                   {opt.id.toUpperCase()}
                 </span>
-                <span style={{ color: colors.textPrimary, ...typo.small }}>
-                  {opt.label}
-                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>{opt.label}</span>
               </button>
             ))}
           </div>
 
-          {/* Navigation */}
           <div style={{ display: 'flex', gap: '12px' }}>
             {currentQuestion > 0 && (
               <button
@@ -1679,21 +1701,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
       }}>
         {renderProgressBar()}
 
-        <div style={{
-          fontSize: '100px',
-          marginBottom: '24px',
-          animation: 'bounce 1s infinite',
-        }}>
+        <div style={{ fontSize: '100px', marginBottom: '24px', animation: 'bounce 1s infinite' }}>
           🏆
         </div>
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          Chiller COP Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand the thermodynamics behind chiller efficiency and how to optimize cooling systems for maximum performance.
         </p>
 
         <div style={{
@@ -1708,11 +1726,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'COP = Cooling / Work input',
+              'Lower temperature lift = higher COP',
+              'Part-load efficiency optimization',
+              'Temperature reset strategies',
+              'Real-world chiller applications',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1736,14 +1754,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           >
             Play Again
           </button>
-          <a
-            href="/"
-            style={{
-              ...primaryButtonStyle,
-              textDecoration: 'none',
-              display: 'inline-block',
-            }}
-          >
+          <a href="/" style={{ ...primaryButtonStyle, textDecoration: 'none', display: 'inline-block' }}>
             Return to Dashboard
           </a>
         </div>
@@ -1756,4 +1767,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default ChillerCOPRenderer;

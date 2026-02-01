@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
+// Pressure Drop in Fluid Systems - Complete 10-Phase Game
+// Understanding how pipe diameter, flow rate, length, and roughness affect pressure loss
+// -----------------------------------------------------------------------------
 
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface PressureDropRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -49,204 +49,204 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
   } catch { /* Audio not available */ }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // TEST QUESTIONS - 10 scenario-based multiple choice questions
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A building engineer notices that water flow to the top floor is weak. The plumber suggests either doubling the pump pressure or replacing the 1-inch pipes with 2-inch pipes.",
+    question: "If the pipe diameter is doubled, how does the pressure drop change (assuming the same flow rate)?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "Pressure drop is cut in half" },
+      { id: 'b', label: "Pressure drop drops to 1/4 of original" },
+      { id: 'c', label: "Pressure drop drops to 1/16 of original", correct: true },
+      { id: 'd', label: "Pressure drop stays the same" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "Pressure drop is proportional to 1/D^5 (from Darcy-Weisbach: ΔP ∝ L/D × V², and V ∝ 1/D² for constant flow). Doubling diameter: (1/2)^5 = 1/32, but accounting for velocity reduction, the net effect is approximately 1/16. Pipe diameter has a dramatic effect on pressure drop!"
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "An HVAC technician is sizing ductwork for a new building. They can use either 100 feet of 12-inch diameter duct or 100 feet of 10-inch duct.",
+    question: "Approximately how much more pressure drop will the smaller duct have?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "20% more (proportional to diameter difference)" },
+      { id: 'b', label: "44% more (based on area ratio)" },
+      { id: 'c', label: "About 2.5 times more (fifth power relationship)", correct: true },
+      { id: 'd', label: "10 times more" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "For the same airflow, pressure drop scales roughly as (D₁/D₂)^5. (12/10)^5 = 1.2^5 ≈ 2.49. The 10-inch duct will have about 2.5 times the pressure drop of the 12-inch duct—a huge penalty for a seemingly small size reduction."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A factory's compressed air system experiences excessive pressure drop. A consultant recommends reducing the flow rate from 100 CFM to 80 CFM.",
+    question: "By what factor will the pressure drop decrease?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "By 20% (linear with flow)" },
+      { id: 'b', label: "By 36% (squared relationship)", correct: true },
+      { id: 'c', label: "By 49% (cubed relationship)" },
+      { id: 'd', label: "By 59% (fifth power relationship)" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Pressure drop is proportional to velocity squared, and velocity is proportional to flow rate. So ΔP ∝ Q². At 80% flow: 0.8² = 0.64, meaning pressure drop is 64% of original—a 36% reduction for 20% less flow."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "A hospital is designing a new medical gas piping system. The original design uses 200 feet of pipe, but budget constraints might require extending the run to 300 feet.",
+    question: "How will the pressure drop change with the longer pipe run?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "Increase by 50% (proportional to length)", correct: true },
+      { id: 'b', label: "Increase by 125% (squared relationship)" },
+      { id: 'c', label: "Increase by 237% (cubed relationship)" },
+      { id: 'd', label: "Stay approximately the same" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "Pressure drop is directly proportional to pipe length (ΔP ∝ L). Increasing from 200 to 300 feet (1.5×) means pressure drop increases by 50%. Unlike diameter, length has a simple linear relationship with pressure drop."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "An engineer is comparing pressure drop in two identical pipe sections: one brand new with smooth interior, the other 20 years old with corroded, rough walls.",
+    question: "What effect does the increased wall roughness have?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "Minimal effect—roughness is negligible in most systems" },
+      { id: 'b', label: "Increases friction factor, potentially doubling or tripling pressure drop", correct: true },
+      { id: 'c', label: "Decreases pressure drop by creating turbulence that aids flow" },
+      { id: 'd', label: "Only affects flow at very high velocities" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "Wall roughness significantly increases the friction factor in the Darcy-Weisbach equation. Corroded pipes can have 2-5× higher friction factors than new pipes, directly multiplying pressure drop. This is why pipe maintenance and material selection matter."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A building's HVAC air filter has been in service for 6 months without replacement. The building automation system shows supply fan working harder than when the filter was new.",
+    question: "Why does the fan need to work harder as the filter ages?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "The filter media shrinks over time, reducing flow area" },
+      { id: 'b', label: "Dust accumulation increases filter resistance, raising system pressure drop", correct: true },
+      { id: 'c', label: "The fan motor degrades with age" },
+      { id: 'd', label: "Air temperature changes affect fan performance" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "As filters load with particles, their pressure drop increases significantly—sometimes 2-4× the clean filter drop. This is why filter pressure monitoring is standard practice. A loaded filter forces the fan to work harder to maintain airflow."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "A piping system has a long straight run followed by several elbows, tees, and valves. The total pipe length is 50 feet.",
+    question: "How should fittings be accounted for in pressure drop calculations?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "Ignore fittings—they have negligible impact" },
+      { id: 'b', label: "Add equivalent length for each fitting; total effective length may be 2-3× the physical pipe length", correct: true },
+      { id: 'c', label: "Subtract from pressure drop since fittings smooth the flow" },
+      { id: 'd', label: "Multiply the pipe pressure drop by 10% per fitting" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "Fittings create local turbulence and pressure losses. Each fitting has an 'equivalent length' of straight pipe. A 90° elbow might equal 30 pipe diameters of straight pipe. In systems with many fittings, fitting losses often exceed straight pipe losses."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "A process engineer is designing a chemical transfer system. At startup, flow will be 50 GPM, but after 2 years, demand will increase to 100 GPM using the same pipes.",
+    question: "How will the future pressure drop compare to the initial pressure drop?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "Double (linear relationship)" },
+      { id: 'b', label: "Quadruple (flow squared)", correct: true },
+      { id: 'c', label: "8 times higher (flow cubed)" },
+      { id: 'd', label: "16 times higher (flow to the fourth power)" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "Since ΔP ∝ V² and V ∝ Q (for fixed pipe size), doubling flow rate quadruples pressure drop. This is critical for system design—the engineer must size the pump and pipes for future flow rates, not just initial conditions."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A cleanroom designer must choose between running one large 18-inch duct or two parallel 12-inch ducts to deliver the same total airflow.",
+    question: "Which option will have lower pressure drop?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "One large 18-inch duct—less surface area means less friction" },
+      { id: 'b', label: "Two parallel 12-inch ducts—splitting flow reduces velocity in each", correct: true },
+      { id: 'c', label: "Both are equivalent since they carry the same air" },
+      { id: 'd', label: "Cannot determine without knowing the exact flow rate" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "Two 12\" ducts have a combined area of 2×π×6² = 226 in², while one 18\" duct has π×9² = 254 in². However, pressure drop scales with V². Splitting flow between two ducts means each carries half the flow at much lower velocity, dramatically reducing total pressure drop."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A facilities manager notices that after installing new high-efficiency air filters, the building's HVAC system cannot achieve design airflow even with fans at maximum speed.",
+    question: "What is the most likely cause and solution?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "Filters are defective; replace with original type" },
+      { id: 'b', label: "The high-efficiency filters have higher pressure drop; system needs rebalancing or fan upgrade", correct: true },
+      { id: 'c', label: "Ductwork has collapsed somewhere in the system" },
+      { id: 'd', label: "Fan motors have reached end of life" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Higher efficiency filters (like HEPA) have significantly higher pressure drop than standard filters. The system curve shifts up, reducing the operating point airflow. Solutions include upgrading fans, adding filter area, or using multiple filter stages."
   }
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // REAL WORLD APPLICATIONS - 4 detailed applications
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '🏥',
+    title: 'Hospital HVAC Systems',
+    short: 'Critical air quality and pressure control',
+    tagline: 'Where airflow saves lives',
+    description: 'Hospitals require precise pressure relationships between spaces—operating rooms positive to corridors, isolation rooms negative. Understanding pressure drop is essential to maintain these life-critical pressure differentials.',
+    connection: 'Every duct run, filter, and fitting contributes to system pressure drop. HVAC engineers must calculate total system pressure drop to size fans that can maintain required airflows and pressure differentials under all filter loading conditions.',
+    howItWorks: 'Supply and exhaust fans are sized with significant safety margins. Pressure drop monitoring on filters triggers replacements. Variable speed drives adjust fan speeds to maintain airflows as filter resistance increases over time.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '15-25 ACH', label: 'OR air changes/hour', icon: '🔄' },
+      { value: '+0.01"', label: 'Typical OR pressure', icon: '📊' },
+      { value: '99.97%', label: 'HEPA efficiency', icon: '🛡️' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
+    examples: ['Operating room ventilation', 'Isolation room control', 'Pharmacy clean rooms', 'Laboratory fume hoods'],
+    companies: ['Trane', 'Carrier', 'Johnson Controls', 'Price Industries'],
+    futureImpact: 'Smart building systems will use AI to predict filter loading and optimize fan speeds, reducing energy while maintaining critical pressures.',
     color: '#10B981'
   },
   {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
+    icon: '🏭',
+    title: 'Industrial Piping Systems',
+    short: 'Moving fluids efficiently at scale',
+    tagline: 'Every psi costs money',
+    description: 'Chemical plants, refineries, and manufacturing facilities move massive quantities of fluids through miles of piping. Pressure drop calculations determine pump sizing, pipe diameters, and operating costs that can reach millions of dollars annually.',
+    connection: 'The Darcy-Weisbach equation governs all industrial piping design. Engineers balance capital costs (larger pipes cost more) against operating costs (smaller pipes need bigger pumps). Optimal designs minimize lifecycle costs.',
+    howItWorks: 'Process engineers use sophisticated software to model pressure drop through entire systems, accounting for fluid properties, temperatures, pipe materials, fittings, and elevation changes. Pumps are sized to overcome total system pressure drop.',
     stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
+      { value: '$5M+', label: 'Annual pumping costs', icon: '💰' },
+      { value: '20-40%', label: 'Energy savings potential', icon: '⚡' },
+      { value: '1000s mi', label: 'Pipeline lengths', icon: '📏' }
     ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
+    examples: ['Oil pipelines', 'Chemical transfer', 'Water treatment', 'Steam distribution'],
+    companies: ['Emerson', 'Flowserve', 'Grundfos', 'KSB'],
+    futureImpact: 'Digital twins of piping systems will enable real-time optimization, detecting developing blockages before they cause failures.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🌬️',
+    title: 'Building Ventilation Design',
+    short: 'Balancing comfort, efficiency, and air quality',
+    tagline: 'The art of moving air',
+    description: 'Commercial buildings use extensive ductwork networks to deliver conditioned air. Pressure drop calculations determine duct sizes, fan selections, and energy consumption. Poor design leads to uncomfortable spaces and wasted energy.',
+    connection: 'Every turn, damper, diffuser, and straight duct section contributes to total system pressure drop. Engineers use pressure drop to balance airflows, ensure proper ventilation rates, and minimize fan energy consumption.',
+    howItWorks: 'Design starts with required airflows, then ducts are sized to limit velocity and pressure drop. The system curve (pressure vs. flow) is plotted against fan curves to find the operating point. VAV systems adjust dynamically.',
+    stats: [
+      { value: '0.08"/100ft', label: 'Typical design friction', icon: '📐' },
+      { value: '30-50%', label: 'HVAC energy from fans', icon: '💨' },
+      { value: '15-20cfm', label: 'Per person fresh air', icon: '👤' }
+    ],
+    examples: ['Office buildings', 'Schools and universities', 'Shopping centers', 'Data centers'],
+    companies: ['Titus', 'Krueger', 'Greenheck', 'Systemair'],
+    futureImpact: 'Demand-controlled ventilation using CO2 and occupancy sensors will optimize airflows in real-time, dramatically reducing pressure drop and energy use.',
     color: '#3B82F6'
   },
   {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
+    icon: '🚰',
+    title: 'Plumbing System Design',
+    short: 'Reliable water delivery to every fixture',
+    tagline: 'Pressure where you need it',
+    description: 'From skyscrapers to hospitals, plumbing systems must deliver adequate water pressure to every fixture. Pressure drop calculations ensure the top floor shower works as well as the ground floor, even during peak demand.',
+    connection: 'Water velocity, pipe material, fittings, and elevation all contribute to pressure loss. Plumbing engineers size pipes to limit velocity (noise and erosion) while maintaining adequate pressure at the furthest fixtures.',
+    howItWorks: 'Engineers calculate pressure drop from the water main to each fixture, accounting for static head (elevation), friction losses, and fitting losses. Booster pumps are added when city pressure is insufficient.',
     stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
+      { value: '20-80 psi', label: 'Fixture pressure range', icon: '💧' },
+      { value: '8 fps', label: 'Max velocity (copper)', icon: '⚡' },
+      { value: '4-8 psi', label: 'Typical floor loss', icon: '📉' }
     ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['High-rise buildings', 'Hospital medical gas', 'Fire sprinkler systems', 'Irrigation systems'],
+    companies: ['Watts', 'Zurn', 'Sloan', 'Chicago Faucets'],
+    futureImpact: 'Smart water systems will monitor pressure throughout buildings, detecting leaks and optimizing pump operations in real-time.',
     color: '#8B5CF6'
-  },
-  {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
-    stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
-    ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
-    color: '#F59E0B'
   }
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 // MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+// -----------------------------------------------------------------------------
+const PressureDropRenderer: React.FC<PressureDropRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [pipeDiameter, setPipeDiameter] = useState(4); // inches
+  const [flowRate, setFlowRate] = useState(50); // GPM or CFM
+  const [pipeLength, setPipeLength] = useState(100); // feet
+  const [roughness, setRoughness] = useState(1); // multiplier (1 = smooth, 3 = rough)
+  const [filterLoading, setFilterLoading] = useState(0); // 0-100%
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,29 +299,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
+    accent: '#3B82F6', // Blue for fluid/water
     accentGlow: 'rgba(59, 130, 246, 0.3)',
     success: '#10B981',
     error: '#EF4444',
@@ -350,8 +330,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     predict: 'Predict',
     play: 'Experiment',
     review: 'Understanding',
-    twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_predict: 'Filter Effects',
+    twist_play: 'System Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +343,185 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate pressure drop using simplified Darcy-Weisbach
+  const calculatePressureDrop = useCallback(() => {
+    // Simplified calculation for educational purposes
+    // ΔP ∝ f × (L/D) × (ρV²/2)
+    // V ∝ Q/D² for circular pipe
 
-  const freqStatus = getFrequencyStatus();
+    const velocity = flowRate / (pipeDiameter * pipeDiameter); // simplified velocity
+    const basePressureDrop = roughness * (pipeLength / pipeDiameter) * (velocity * velocity) / 1000;
+    const filterDrop = filterLoading * 0.5; // Up to 0.5 inches WC from filter
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    return {
+      pipeDrop: basePressureDrop,
+      filterDrop: filterDrop,
+      totalDrop: basePressureDrop + filterDrop,
+      velocity: velocity * 10 // scaled for display
+    };
+  }, [pipeDiameter, flowRate, pipeLength, roughness, filterLoading]);
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+  const pressureData = calculatePressureDrop();
+
+  // Pipe System Visualization
+  const PipeVisualization = ({ showFlow = true, showPressure = true }) => {
+    const width = isMobile ? 340 : 500;
+    const height = isMobile ? 200 : 240;
+    const pipeY = height / 2;
+    const pipeHeight = Math.max(20, pipeDiameter * 5);
+
+    // Animated flow particles
+    const particles = [];
+    for (let i = 0; i < 8; i++) {
+      const offset = ((animationFrame * flowRate / 50 * 2) + i * 50) % (width - 80);
+      const yOffset = Math.sin((animationFrame + i * 30) * 0.1) * (pipeHeight / 4 - 2);
+      particles.push({ x: 40 + offset, y: pipeY + yOffset, opacity: 0.6 + Math.random() * 0.4 });
+    }
+
+    // Pressure gradient (higher at inlet, lower at outlet)
+    const pressureColor = (x: number) => {
+      const ratio = x / (width - 80);
+      const r = Math.round(59 + ratio * 180);
+      const g = Math.round(130 - ratio * 80);
+      const b = Math.round(246 - ratio * 150);
+      return `rgb(${r},${g},${b})`;
+    };
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        {/* Pressure gauge at inlet */}
+        <g transform="translate(20, 30)">
+          <circle cx="0" cy="0" r="18" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
+          <text x="0" y="5" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="600">
+            {(pressureData.totalDrop + 30).toFixed(1)}
+          </text>
+          <text x="0" y="35" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI in</text>
+        </g>
+
+        {/* Pressure gauge at outlet */}
+        <g transform={`translate(${width - 20}, 30)`}>
+          <circle cx="0" cy="0" r="18" fill={colors.bgSecondary} stroke={colors.success} strokeWidth="2" />
+          <text x="0" y="5" fill={colors.textPrimary} fontSize="10" textAnchor="middle" fontWeight="600">
+            30.0
+          </text>
+          <text x="0" y="35" fill={colors.textMuted} fontSize="9" textAnchor="middle">PSI out</text>
+        </g>
+
+        {/* Pipe body with gradient */}
         <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
+          <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={colors.accent} />
+            <stop offset="100%" stopColor={colors.success} />
           </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          <linearGradient id="pipeShading" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.2)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="100%" stopColor="rgba(0,0,0,0.3)" />
+          </linearGradient>
         </defs>
 
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
+        {/* Pipe outer */}
+        <rect
+          x="40"
+          y={pipeY - pipeHeight / 2 - 4}
+          width={width - 80}
+          height={pipeHeight + 8}
+          rx="4"
+          fill={colors.border}
+        />
+
+        {/* Pipe inner with pressure gradient */}
+        <rect
+          x="44"
+          y={pipeY - pipeHeight / 2}
+          width={width - 88}
+          height={pipeHeight}
+          rx="2"
+          fill="url(#pipeGradient)"
+          opacity="0.3"
+        />
+
+        {/* Pipe shading for 3D effect */}
+        <rect
+          x="44"
+          y={pipeY - pipeHeight / 2}
+          width={width - 88}
+          height={pipeHeight}
+          rx="2"
+          fill="url(#pipeShading)"
+        />
+
+        {/* Roughness visualization (inner texture) */}
+        {roughness > 1.5 && (
+          <g>
+            {Array.from({ length: Math.floor((width - 88) / 15) }, (_, i) => (
+              <rect
+                key={i}
+                x={44 + i * 15}
+                y={pipeY - pipeHeight / 2}
+                width="2"
+                height={pipeHeight}
+                fill={colors.bgSecondary}
+                opacity={roughness > 2 ? 0.5 : 0.3}
+              />
+            ))}
+          </g>
+        )}
+
+        {/* Flow particles */}
+        {showFlow && particles.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r={3 + flowRate / 50}
+            fill="white"
+            opacity={p.opacity * (flowRate / 100)}
           />
         ))}
 
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
-        />
-
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
-
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
-        </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
-
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
+        {/* Pressure drop indicator bar */}
+        {showPressure && (
+          <g>
+            <rect
+              x="44"
+              y={height - 35}
+              width={width - 88}
+              height="8"
+              rx="4"
+              fill={colors.bgSecondary}
+            />
+            <rect
+              x="44"
+              y={height - 35}
+              width={Math.min((pressureData.totalDrop / 5) * (width - 88), width - 88)}
+              height="8"
+              rx="4"
+              fill={pressureData.totalDrop > 3 ? colors.error : pressureData.totalDrop > 1.5 ? colors.warning : colors.success}
+            />
+            <text x={width / 2} y={height - 10} fill={colors.textSecondary} fontSize="11" textAnchor="middle">
+              Pressure Drop: {pressureData.totalDrop.toFixed(2)} PSI
+            </text>
           </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
+        )}
+
+        {/* Diameter indicator */}
+        <g transform={`translate(${width / 2}, ${pipeY})`}>
+          <line x1="-30" y1={-pipeHeight / 2 - 8} x2="-30" y2={pipeHeight / 2 + 8} stroke={colors.textMuted} strokeWidth="1" />
+          <line x1="-35" y1={-pipeHeight / 2 - 8} x2="-25" y2={-pipeHeight / 2 - 8} stroke={colors.textMuted} strokeWidth="1" />
+          <line x1="-35" y1={pipeHeight / 2 + 8} x2="-25" y2={pipeHeight / 2 + 8} stroke={colors.textMuted} strokeWidth="1" />
+          <text x="-45" y="4" fill={colors.textMuted} fontSize="10" textAnchor="end">{pipeDiameter}"</text>
         </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
     );
   };
@@ -546,9 +587,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     transition: 'all 0.2s ease',
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------------
   // PHASE RENDERS
-  // ─────────────────────────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------------
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -570,12 +611,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          🔧💧
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          Pressure Drop in Fluid Systems
         </h1>
 
         <p style={{
@@ -584,7 +625,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "Double the pipe diameter and pressure drop doesn't halve—it drops to <span style={{ color: colors.success }}>1/16th</span>. This fifth-power relationship governs everything from hospital ventilation to oil pipelines."
         </p>
 
         <div style={{
@@ -596,10 +637,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "Understanding pressure drop is the key to designing efficient fluid systems. Get it wrong, and you'll waste energy, money, and compromise performance."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — Fluid Systems Engineering Principle
           </p>
         </div>
 
@@ -607,7 +648,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Explore Pressure Drop →
         </button>
 
         {renderNavDots()}
@@ -618,9 +659,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Pressure drop increases linearly—double flow means double the drop' },
+      { id: 'b', text: 'Pressure drop increases with flow squared—double flow means 4× the drop' },
+      { id: 'c', text: 'Pressure drop stays roughly constant regardless of flow rate' },
     ];
 
     return (
@@ -640,12 +681,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A pipe system has a certain pressure drop at 50 GPM. What happens if you double the flow rate to 100 GPM?
           </h2>
 
           {/* Simple diagram */}
@@ -658,8 +699,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '48px' }}>💧</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>50 GPM</p>
+                <p style={{ ...typo.small, color: colors.accent }}>1 PSI drop</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{
@@ -668,13 +710,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 borderRadius: '8px',
                 border: `2px solid ${colors.accent}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '32px' }}>🔧</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Same Pipe</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '48px' }}>💧💧</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>100 GPM</p>
+                <p style={{ ...typo.small, color: colors.warning }}>? PSI drop</p>
               </div>
             </div>
           </div>
@@ -731,7 +774,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Pressure Drop
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +786,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Explore Pressure Drop
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust pipe diameter and flow rate to see how pressure drop changes
           </p>
 
           {/* Main visualization */}
@@ -757,80 +800,54 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <PipeVisualization />
             </div>
 
-            {/* Generation slider */}
+            {/* Diameter slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}" ({(pipeDiameter * 25.4).toFixed(0)}mm)</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
+                min="1"
+                max="8"
+                step="0.5"
+                value={pipeDiameter}
+                onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
             </div>
 
-            {/* Load slider */}
+            {/* Flow rate slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
               </div>
               <input
                 type="range"
                 min="10"
                 max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                step="5"
+                value={flowRate}
+                onChange={(e) => setFlowRate(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
-              </div>
             </div>
 
-            {/* Status display */}
+            {/* Results display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -841,43 +858,41 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
+                borderTop: `3px solid ${colors.accent}`,
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{pressureData.velocity.toFixed(1)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Velocity (ft/s)</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
+                borderTop: `3px solid ${colors.warning}`,
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
-                }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{pressureData.pipeDrop.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Pressure Drop (PSI)</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
                 borderRadius: '12px',
                 padding: '16px',
                 textAlign: 'center',
+                borderTop: `3px solid ${pressureData.totalDrop > 2 ? colors.error : colors.success}`,
               }}>
                 <div style={{
                   ...typo.h3,
-                  color: freqStatus.color
+                  color: pressureData.totalDrop > 2 ? colors.error : colors.success
                 }}>
-                  {freqStatus.status}
+                  {pressureData.totalDrop > 2 ? 'HIGH' : pressureData.totalDrop > 1 ? 'MODERATE' : 'LOW'}
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Drop Rating</div>
               </div>
             </div>
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {pipeDiameter >= 6 && flowRate <= 40 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -887,7 +902,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+                Notice how a larger diameter dramatically reduces pressure drop—even at the same flow rate!
               </p>
             </div>
           )}
@@ -917,7 +932,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            The Darcy-Weisbach Equation
           </h2>
 
           <div style={{
@@ -926,19 +941,46 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            {/* Formula display */}
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.h3, color: colors.accent, fontFamily: 'monospace', margin: 0 }}>
+                ΔP = f × (L/D) × (ρV²/2)
+              </p>
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
-              <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
-              </p>
-              <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
-              </p>
-              <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
-              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{
+                  background: colors.bgSecondary,
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.accent}`,
+                }}>
+                  <strong style={{ color: colors.accent }}>f</strong> - Friction factor (depends on roughness and Reynolds number)
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.warning}`,
+                }}>
+                  <strong style={{ color: colors.warning }}>L/D</strong> - Length divided by diameter (longer pipe or smaller diameter = more drop)
+                </div>
+                <div style={{
+                  background: colors.bgSecondary,
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  borderLeft: `3px solid ${colors.success}`,
+                }}>
+                  <strong style={{ color: colors.success }}>V²</strong> - Velocity squared (this is why flow rate matters so much!)
+                </div>
+              </div>
             </div>
           </div>
 
@@ -950,24 +992,21 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Key Insights
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
-            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, margin: 0, paddingLeft: '20px' }}>
+              <li style={{ marginBottom: '8px' }}>Pressure drop ∝ <strong>flow rate²</strong> — double flow = 4× drop</li>
+              <li style={{ marginBottom: '8px' }}>Pressure drop ∝ <strong>1/diameter⁵</strong> (roughly) — double diameter = 1/32× drop</li>
+              <li style={{ marginBottom: '8px' }}>Pressure drop ∝ <strong>length</strong> — simple linear relationship</li>
+              <li>Roughness increases the friction factor, multiplying all losses</li>
+            </ul>
           </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Filter Effects →
           </button>
         </div>
 
@@ -979,9 +1018,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'Filter pressure drop stays constant—they are designed for consistent performance' },
+      { id: 'b', text: 'Filter pressure drop decreases as dust fills gaps in the media' },
+      { id: 'c', text: 'Filter pressure drop increases as dust accumulates, potentially doubling or tripling' },
     ];
 
     return (
@@ -1001,13 +1040,55 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              New Variable: Filter Loading
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            An air filter starts with a clean pressure drop of 0.2" WC. After 6 months of operation, what happens to the pressure drop?
           </h2>
+
+          {/* Filter diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: '80px',
+                  height: '100px',
+                  background: 'linear-gradient(to bottom, #ddd 0%, #fff 100%)',
+                  border: `2px solid ${colors.border}`,
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <span style={{ color: colors.textMuted, fontSize: '12px' }}>Clean</span>
+                </div>
+                <p style={{ ...typo.small, color: colors.success, marginTop: '8px' }}>0.2" WC</p>
+              </div>
+              <div style={{ fontSize: '32px', color: colors.textMuted }}>→</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{
+                  width: '80px',
+                  height: '100px',
+                  background: 'linear-gradient(to bottom, #888 0%, #aaa 100%)',
+                  border: `2px solid ${colors.border}`,
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                  <span style={{ color: colors.textPrimary, fontSize: '12px' }}>Loaded</span>
+                </div>
+                <p style={{ ...typo.small, color: colors.warning, marginTop: '8px' }}>? WC</p>
+              </div>
+            </div>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
             {options.map(opt => (
@@ -1049,7 +1130,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See Filter Effects →
             </button>
           )}
         </div>
@@ -1071,10 +1152,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Complete System Pressure Drop
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Explore how all factors combine: diameter, length, roughness, and filter loading
           </p>
 
           <div style={{
@@ -1084,98 +1165,109 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <PipeVisualization />
             </div>
 
-            {/* Renewable penetration slider */}
+            {/* All sliders */}
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+              {/* Diameter */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Diameter</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{pipeDiameter}"</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="8"
+                  step="0.5"
+                  value={pipeDiameter}
+                  onChange={(e) => setPipeDiameter(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Flow rate */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Flow Rate</span>
+                  <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{flowRate} GPM</span>
+                </div>
+                <input
+                  type="range"
+                  min="10"
+                  max="100"
+                  step="5"
+                  value={flowRate}
+                  onChange={(e) => setFlowRate(parseInt(e.target.value))}
+                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Length */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Length</span>
+                  <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{pipeLength} ft</span>
+                </div>
+                <input
+                  type="range"
+                  min="25"
+                  max="200"
+                  step="25"
+                  value={pipeLength}
+                  onChange={(e) => setPipeLength(parseInt(e.target.value))}
+                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                />
+              </div>
+
+              {/* Roughness */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Pipe Roughness</span>
+                  <span style={{ ...typo.small, color: roughness > 2 ? colors.error : colors.success, fontWeight: 600 }}>
+                    {roughness <= 1.5 ? 'Smooth' : roughness <= 2.5 ? 'Moderate' : 'Rough'}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="3"
+                  step="0.5"
+                  value={roughness}
+                  onChange={(e) => setRoughness(parseFloat(e.target.value))}
+                  style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                />
+              </div>
+            </div>
+
+            {/* Filter loading slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Filter Loading</span>
+                <span style={{
+                  ...typo.small,
+                  color: filterLoading > 0.7 ? colors.error : filterLoading > 0.4 ? colors.warning : colors.success,
+                  fontWeight: 600
+                }}>
+                  {(filterLoading * 100).toFixed(0)}% loaded
+                </span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
+                min="0"
+                max="1"
+                step="0.1"
+                value={filterLoading}
+                onChange={(e) => setFilterLoading(parseFloat(e.target.value))}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', cursor: 'pointer' }}
               />
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Battery toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
-              <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
-              </span>
-            </div>
-
-            {/* Stats */}
+            {/* Results breakdown */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '12px',
             }}>
               <div style={{
@@ -1184,8 +1276,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{pressureData.pipeDrop.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Pipe Drop (PSI)</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1193,32 +1285,46 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.warning }}>{pressureData.filterDrop.toFixed(2)}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Filter Drop (PSI)</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  ...typo.h3,
+                  color: pressureData.totalDrop > 3 ? colors.error : colors.success
+                }}>
+                  {pressureData.totalDrop.toFixed(2)}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Total Drop (PSI)</div>
               </div>
             </div>
-          </div>
 
-          {batteryResponse && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
-              </p>
-            </div>
-          )}
+            {/* Warning for high drop */}
+            {pressureData.totalDrop > 3 && (
+              <div style={{
+                background: `${colors.error}22`,
+                borderRadius: '8px',
+                padding: '12px',
+                marginTop: '16px',
+                textAlign: 'center',
+              }}>
+                <p style={{ ...typo.small, color: colors.error, margin: 0 }}>
+                  Warning: High pressure drop! Consider larger pipes, lower flow, or filter replacement.
+                </p>
+              </div>
+            )}
+          </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand System Design →
           </button>
         </div>
 
@@ -1239,7 +1345,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            System Design Principles
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1356,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>📏</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Size Pipes Generously</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                The dramatic effect of diameter (roughly 5th power) means slightly larger pipes can drastically reduce pump energy costs. A <span style={{ color: colors.success }}>20% larger diameter can reduce pressure drop by 60%</span>.
               </p>
             </div>
 
@@ -1265,11 +1371,26 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>🔄</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Plan for Filter Loading</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                Design systems with <span style={{ color: colors.warning }}>2-3× the clean filter pressure drop</span> as headroom. Filter pressure monitoring prevents surprises and optimizes replacement schedules.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>⚖️</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Balance Capital vs Operating Cost</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Larger pipes cost more upfront but save pump energy forever. <span style={{ color: colors.accent }}>Lifecycle cost analysis</span> often favors larger pipes, especially for systems running continuously.
               </p>
             </div>
 
@@ -1280,11 +1401,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Key Takeaway</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                Pressure drop is non-negotiable physics. Understanding it lets you design systems that are efficient, reliable, and cost-effective over their entire lifespan.
               </p>
             </div>
           </div>
@@ -1398,7 +1519,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                How Pressure Drop Applies:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1467,7 +1588,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered Pressure Drop in Fluid Systems!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1689,11 +1810,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          Pressure Drop Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand how pressure drop affects fluid system design and can apply this knowledge to create efficient, reliable systems.
         </p>
 
         <div style={{
@@ -1708,11 +1829,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'Darcy-Weisbach equation fundamentals',
+              'Flow rate squared relationship',
+              'Dramatic effect of pipe diameter',
+              'Filter loading and maintenance',
+              'Real-world system design principles',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1756,4 +1877,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default PressureDropRenderer;

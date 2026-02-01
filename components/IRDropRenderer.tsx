@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// IR Drop (Voltage Drop) - Complete 10-Phase Game
+// Why power distribution design matters for chip reliability
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface IRDropRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A chip designer notices that logic gates far from the power bumps are failing during high-activity periods, while identical gates near the power bumps work perfectly.",
+    question: "What is the most likely cause of this location-dependent failure?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "The distant gates are manufactured with defects" },
+      { id: 'b', label: "IR drop reduces voltage below the minimum operating level for distant gates", correct: true },
+      { id: 'c', label: "Heat from nearby gates causes thermal runaway" },
+      { id: 'd', label: "Clock signals arrive late to distant gates" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "Current flowing through the power grid's resistance causes voltage drop (V = IR). Gates far from power sources see more cumulative resistance, resulting in lower supply voltage. When voltage drops below the minimum operating threshold, gates fail to switch correctly."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "An engineer is designing a power grid for a high-performance processor. Doubling the metal width for power rails increases manufacturing cost but the design team insists it's necessary.",
+    question: "Why does wider metal reduce IR drop problems?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "Wider metal carries more voltage" },
+      { id: 'b', label: "Wider metal has lower resistance (R = rho * L / A), reducing V = IR drop", correct: true },
+      { id: 'c', label: "Wider metal prevents electromigration only" },
+      { id: 'd', label: "Wider metal improves clock distribution" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "Resistance is inversely proportional to cross-sectional area (R = rho * L / A). Doubling the width doubles the area, cutting resistance in half. With half the resistance, the voltage drop (V = IR) is also halved for the same current, ensuring more stable supply voltage."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A mobile processor shows 50mV average IR drop during normal operation but experiences 200mV peak drops during burst computations that last only a few nanoseconds.",
+    question: "What type of IR drop is causing the 200mV peak?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "Static IR drop from steady-state current" },
+      { id: 'b', label: "Dynamic IR drop from sudden current surges and inductance effects", correct: true },
+      { id: 'c', label: "Manufacturing variation in the power grid" },
+      { id: 'd', label: "Temperature-induced resistance changes" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "Dynamic IR drop occurs during rapid current changes. When many circuits switch simultaneously, the sudden current demand creates voltage droops due to both resistive drops and inductive effects (V = L * dI/dt). These transient peaks can be 3-5x worse than static IR drop."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "Two identical chip designs use different power grid densities: Design A has power stripes every 10um, Design B has stripes every 20um. Design B shows twice the IR drop.",
+    question: "Why does power grid density affect IR drop so dramatically?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "Denser grids use thicker metal" },
+      { id: 'b', label: "Denser grids provide more parallel paths, reducing effective resistance", correct: true },
+      { id: 'c', label: "Denser grids block signal routing" },
+      { id: 'd', label: "Denser grids increase capacitance which filters noise" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "A denser power grid creates more parallel paths from power sources to each circuit. Parallel resistances combine to create lower total resistance (1/R_total = 1/R1 + 1/R2 + ...). Additionally, current distributes across more paths, reducing current per path and thus voltage drop."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "A chip's power grid simulation shows acceptable IR drop at room temperature (25C), but the chip fails in production testing at 85C operating temperature.",
+    question: "Why does higher temperature worsen IR drop?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "Higher temperature increases current consumption only" },
+      { id: 'b', label: "Metal resistance increases with temperature, increasing V = IR drop", correct: true },
+      { id: 'c', label: "Higher temperature causes power supply voltage to decrease" },
+      { id: 'd', label: "Thermal expansion breaks power grid connections" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "Metal resistance increases with temperature (approximately 0.4%/C for copper). At 85C vs 25C, that's a 60C difference, meaning roughly 24% higher resistance. This directly increases IR drop by the same percentage, potentially pushing marginal designs over the edge."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A design team adds decoupling capacitors near high-activity circuit blocks. Dynamic IR drop improves significantly but static IR drop remains unchanged.",
+    question: "Why do decoupling capacitors help only dynamic IR drop?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "Capacitors reduce resistance of the power grid" },
+      { id: 'b', label: "Capacitors store charge and supply current during fast transients, reducing voltage droops", correct: true },
+      { id: 'c', label: "Capacitors filter out high-frequency noise from power supplies" },
+      { id: 'd', label: "Capacitors increase the power grid's thermal conductivity" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "Decoupling capacitors act as local charge reservoirs. During sudden current demands, they provide charge instantly (faster than current can flow from distant power sources), smoothing voltage dips. For steady-state (static) current, they don't help because they're not discharging - the current must still flow through resistive paths."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "An ASIC designer places the highest-current-consuming blocks (like memory controllers) at the chip's periphery near power bumps. Critics say this wastes valuable center space.",
+    question: "What is the power distribution advantage of this placement strategy?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "Peripheral placement makes the chip easier to test" },
+      { id: 'b', label: "High-current blocks near power sources minimize IR drop for those blocks", correct: true },
+      { id: 'c', label: "This placement improves signal integrity only" },
+      { id: 'd', label: "Peripheral blocks run cooler due to edge heat dissipation" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "By placing high-current blocks near power bumps/rings, the current travels through minimal resistance before reaching those circuits. This reduces IR drop for the most power-hungry components. The remaining (lower-current) circuits in the center tolerate their higher resistance paths better."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "A processor's voltage regulator supplies 1.0V, but IR drop analysis shows some regions receive only 0.85V. The minimum operating voltage for the logic is 0.9V.",
+    question: "What solutions could address this 150mV IR drop problem?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "Reduce clock frequency only" },
+      { id: 'b', label: "Add power bumps closer to affected areas, widen metal, or increase supply voltage", correct: true },
+      { id: 'c', label: "Use smaller transistors that require less current" },
+      { id: 'd', label: "Move all logic to a single location" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "Multiple strategies help: Adding power sources (bumps) closer to problem areas reduces path length and resistance. Widening metal reduces resistance directly. Increasing supply voltage (to 1.1V) means the 150mV drop still leaves 0.95V > 0.9V minimum. Often a combination is used."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A chip design uses a mesh power grid with power bumps on a 200um pitch. Simulation shows worst-case IR drop of 80mV. When bump pitch is reduced to 100um, IR drop improves to 35mV.",
+    question: "Why doesn't halving the bump pitch simply halve the IR drop?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "Power bumps have their own internal resistance" },
+      { id: 'b', label: "The relationship is roughly quadratic - halving pitch quarters the maximum distance to a bump", correct: true },
+      { id: 'c', label: "Bump inductance limits improvement" },
+      { id: 'd', label: "More bumps reduce total current capacity" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "With 100um pitch, the maximum distance from any point to a power bump is roughly 70um (diagonal to center of a grid square). With 200um pitch, that maximum distance is about 140um. IR drop scales with this distance, so denser bumps provide better-than-linear improvement."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A graphics processor with thousands of identical shader cores shows that cores in the chip center consistently run 5% slower than edge cores, even though they're the same design.",
+    question: "What power distribution phenomenon explains this performance difference?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "Center cores are thermally throttled" },
+      { id: 'b', label: "Higher IR drop in the center reduces voltage, slowing transistor switching", correct: true },
+      { id: 'c', label: "Clock skew delays signals to center cores" },
+      { id: 'd', label: "Manufacturing variations affect center cores more" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Cores in the chip center are farthest from peripheral power sources, experiencing maximum IR drop. Lower voltage means slower transistor switching (delay scales with ~1/V). A 10% voltage reduction can cause 10-15% speed reduction. This creates performance asymmetry across identical cores."
   }
 ];
 
@@ -170,75 +170,75 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '💻',
+    title: 'High-Performance Processors',
+    short: 'CPU and GPU power delivery',
+    tagline: 'Every millivolt matters at 5GHz',
+    description: 'Modern processors consume 100-300W through billions of transistors switching billions of times per second. Power delivery networks must maintain stable voltage despite massive current fluctuations. IR drop directly limits maximum clock frequency and power density.',
+    connection: 'At high frequencies, even 50mV of IR drop can cause setup time violations in critical paths. Processor designers spend significant effort on power grid design, using multiple metal layers, power bumps on fine pitch, and sophisticated simulation to ensure every transistor receives adequate voltage.',
+    howItWorks: 'CPUs use hierarchical power distribution: motherboard VRMs provide bulk power, package-level power planes distribute it, and on-die mesh grids deliver it to transistors. Multiple voltage domains allow critical paths to receive higher voltage margins.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '<50mV', label: 'Target IR drop', icon: '⚡' },
+      { value: '1000+', label: 'Power bumps per chip', icon: '🔌' },
+      { value: '10+ layers', label: 'Metal for power', icon: '📊' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
-    color: '#10B981'
-  },
-  {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
-    stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
-    ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
+    examples: ['Intel Core Ultra processors', 'AMD Ryzen 9000 series', 'Apple M4 chips', 'NVIDIA Blackwell GPUs'],
+    companies: ['Intel', 'AMD', 'Apple', 'NVIDIA'],
+    futureImpact: 'Chiplet architectures will require innovative power delivery across package boundaries, with embedded voltage regulators and advanced package-level power distribution.',
     color: '#3B82F6'
   },
   {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
+    icon: '📱',
+    title: 'Mobile SoC Design',
+    short: 'Smartphone and tablet chips',
+    tagline: 'Maximum performance per milliwatt',
+    description: 'Mobile chips must deliver desktop-class performance while running on battery power. IR drop management is critical because lower supply voltages (0.5-0.9V) have tighter margins, and battery voltage drops during discharge add another variable.',
+    connection: 'Mobile SoCs operate at lower voltages where the same absolute IR drop represents a larger percentage loss. A 50mV drop at 0.7V supply is 7% loss, versus only 5% at 1.0V. This makes power grid efficiency even more critical for battery life.',
+    howItWorks: 'Mobile chips use dense power grids with fine-pitch bumps, aggressive voltage scaling, and multiple power domains. Dynamic voltage and frequency scaling (DVFS) adjusts supply voltage based on workload, but IR drop limits must be respected at each voltage level.',
     stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
+      { value: '0.5-0.9V', label: 'Operating voltage', icon: '🔋' },
+      { value: '<5%', label: 'Allowed IR drop', icon: '📉' },
+      { value: '100um', label: 'Bump pitch', icon: '⚙️' }
     ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['Apple A18 Bionic', 'Qualcomm Snapdragon 8 Gen 4', 'Google Tensor G5', 'MediaTek Dimensity 9400'],
+    companies: ['Apple', 'Qualcomm', 'Google', 'MediaTek'],
+    futureImpact: 'On-chip voltage regulators and energy harvesting will work alongside traditional power grids to maximize battery life while maintaining performance.',
+    color: '#10B981'
+  },
+  {
+    icon: '🧠',
+    title: 'AI Accelerators',
+    short: 'Neural network hardware',
+    tagline: 'Powering the intelligence revolution',
+    description: 'AI chips like TPUs and neural processing units perform massive parallel computations with synchronized switching patterns. This creates severe dynamic IR drop challenges as thousands of multiply-accumulate units activate simultaneously.',
+    connection: 'Neural network inference involves matrix operations where entire rows/columns of processing elements switch together. This correlated switching creates worst-case dynamic IR drop. Designers must add significant decoupling capacitance and stagger operations to manage voltage droops.',
+    howItWorks: 'AI accelerators use thick power meshes, extensive on-chip decoupling, and sometimes deliberately desynchronize operations to spread current demand over time. Some use programmable power gating to limit simultaneous active regions.',
+    stats: [
+      { value: '500W+', label: 'Peak power draw', icon: '⚡' },
+      { value: '95%', label: 'Power delivery efficiency', icon: '📊' },
+      { value: '10000+', label: 'Processing elements', icon: '🧮' }
+    ],
+    examples: ['Google TPU v5', 'NVIDIA H200', 'AMD MI350', 'Intel Gaudi 3'],
+    companies: ['Google', 'NVIDIA', 'AMD', 'Intel'],
+    futureImpact: 'Near-memory computing and 3D-stacked architectures will bring power delivery directly to compute layers, dramatically reducing IR drop for AI workloads.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🚗',
+    title: 'Automotive Electronics',
+    short: 'Vehicle computing platforms',
+    tagline: 'Reliability at extreme temperatures',
+    description: 'Automotive chips must operate reliably from -40C to 150C ambient temperature. This extreme range causes 80%+ variation in metal resistance, dramatically changing IR drop characteristics between cold morning starts and hot engine compartment operation.',
+    connection: 'Automotive IR drop design must account for worst-case temperature resistance. A power grid that works perfectly at 25C may fail at 150C due to doubled metal resistance. Safety-critical systems like ADAS require guaranteed voltage margins across all conditions.',
+    howItWorks: 'Automotive chips use conservative power grid design with extra margin, temperature-aware voltage scaling, and redundant power delivery paths. Some use on-chip temperature sensors to adjust operating voltage dynamically.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '-40 to 150C', label: 'Operating range', icon: '🌡️' },
+      { value: '15+ years', label: 'Reliability target', icon: '⏱️' },
+      { value: '100mV+', label: 'Voltage margin', icon: '📐' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['Tesla FSD computer', 'Mobileye EyeQ6', 'Qualcomm Snapdragon Ride', 'NVIDIA DRIVE Thor'],
+    companies: ['Tesla', 'Mobileye', 'Qualcomm', 'NVIDIA'],
+    futureImpact: 'Fully autonomous vehicles will require even more reliable power delivery as computing demands increase while safety requirements become more stringent.',
     color: '#F59E0B'
   }
 ];
@@ -246,7 +246,7 @@ const realWorldApps = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const IRDropRenderer: React.FC<IRDropRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [currentDraw, setCurrentDraw] = useState(50); // mA per cell
+  const [metalThickness, setMetalThickness] = useState(2); // um
+  const [gridDensity, setGridDensity] = useState(5); // stripes per 100um
+  const [distanceFromBump, setDistanceFromBump] = useState(50); // um
+  const [temperature, setTemperature] = useState(25); // Celsius
   const [animationFrame, setAnimationFrame] = useState(0);
-
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +299,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#EF4444', // Red for voltage/power theme
+    accentGlow: 'rgba(239, 68, 68, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -351,7 +331,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Temperature Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,124 +343,217 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate IR drop based on parameters
+  const calculateIRDrop = useCallback((x: number, y: number) => {
+    // Distance from nearest power source (assuming bumps at corners and center)
+    const gridSize = 100;
+    const bumpPositions = [
+      { x: 0, y: 0 },
+      { x: gridSize, y: 0 },
+      { x: 0, y: gridSize },
+      { x: gridSize, y: gridSize },
+      { x: gridSize / 2, y: gridSize / 2 },
+    ];
 
-  const freqStatus = getFrequencyStatus();
+    const minDistance = Math.min(...bumpPositions.map(b =>
+      Math.sqrt(Math.pow(x - b.x, 2) + Math.pow(y - b.y, 2))
+    ));
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    // Resistance model: R = rho * L / (W * T)
+    const resistivity = 1.7e-8 * (1 + 0.004 * (temperature - 25)); // Copper with temp coefficient
+    const effectiveResistance = (resistivity * minDistance * 1e-6) / (metalThickness * 1e-6 * gridDensity * 10 * 1e-6);
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+    // V = IR
+    const drop = currentDraw * 1e-3 * effectiveResistance * 1000; // in mV
+    return Math.min(drop, 200); // Cap at 200mV for visualization
+  }, [currentDraw, metalThickness, gridDensity, temperature]);
+
+  // Calculate average and max IR drop
+  const calculateStats = useCallback(() => {
+    let maxDrop = 0;
+    let totalDrop = 0;
+    let count = 0;
+
+    for (let x = 10; x <= 90; x += 10) {
+      for (let y = 10; y <= 90; y += 10) {
+        const drop = calculateIRDrop(x, y);
+        maxDrop = Math.max(maxDrop, drop);
+        totalDrop += drop;
+        count++;
+      }
+    }
+
+    return {
+      maxDrop,
+      avgDrop: totalDrop / count,
+      efficiency: Math.max(0, 100 - (maxDrop / 10)) // Simplified efficiency metric
+    };
+  }, [calculateIRDrop]);
+
+  const stats = calculateStats();
+
+  // Power Grid Visualization Component
+  const PowerGridVisualization = ({ showHeatmap = true, interactive = false }) => {
+    const width = isMobile ? 320 : 450;
+    const height = isMobile ? 320 : 450;
+    const padding = 40;
+    const gridSize = width - 2 * padding;
+
+    // Generate heatmap data
+    const heatmapCells: { x: number; y: number; drop: number }[] = [];
+    const cellSize = gridSize / 10;
+
+    for (let i = 0; i < 10; i++) {
+      for (let j = 0; j < 10; j++) {
+        const x = (i + 0.5) * 10;
+        const y = (j + 0.5) * 10;
+        heatmapCells.push({
+          x: padding + i * cellSize,
+          y: padding + j * cellSize,
+          drop: calculateIRDrop(x * 10, y * 10)
+        });
+      }
+    }
+
+    // Color scale for voltage drop (green = low, yellow = medium, red = high)
+    const getColor = (drop: number) => {
+      const normalized = Math.min(drop / 100, 1);
+      if (normalized < 0.3) {
+        // Green to yellow
+        const t = normalized / 0.3;
+        return `rgb(${Math.round(34 + t * 211)}, ${Math.round(197 - t * 38)}, ${Math.round(94 - t * 94)})`;
+      } else {
+        // Yellow to red
+        const t = (normalized - 0.3) / 0.7;
+        return `rgb(${Math.round(245 - t * 6)}, ${Math.round(159 - t * 91)}, ${Math.round(t * 68)})`;
+      }
+    };
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+        {/* Grid background */}
+        <rect x={padding} y={padding} width={gridSize} height={gridSize} fill={colors.bgSecondary} stroke={colors.border} strokeWidth="2" />
 
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
+        {/* Heatmap cells */}
+        {showHeatmap && heatmapCells.map((cell, i) => (
+          <rect
+            key={i}
+            x={cell.x}
+            y={cell.y}
+            width={cellSize - 1}
+            height={cellSize - 1}
+            fill={getColor(cell.drop)}
+            opacity="0.8"
           />
         ))}
 
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
-        />
+        {/* Power grid lines (vertical) */}
+        {Array.from({ length: gridDensity + 1 }).map((_, i) => {
+          const x = padding + (i * gridSize) / gridDensity;
+          return (
+            <line
+              key={`v-${i}`}
+              x1={x}
+              y1={padding}
+              x2={x}
+              y2={padding + gridSize}
+              stroke={colors.accent}
+              strokeWidth={metalThickness / 2}
+              opacity="0.7"
+            />
+          );
+        })}
 
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
+        {/* Power grid lines (horizontal) */}
+        {Array.from({ length: gridDensity + 1 }).map((_, i) => {
+          const y = padding + (i * gridSize) / gridDensity;
+          return (
+            <line
+              key={`h-${i}`}
+              x1={padding}
+              y1={y}
+              x2={padding + gridSize}
+              y2={y}
+              stroke={colors.accent}
+              strokeWidth={metalThickness / 2}
+              opacity="0.7"
+            />
+          );
+        })}
 
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
-        </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
-
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
-        </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
+        {/* Power bumps */}
+        {[
+          { x: padding, y: padding },
+          { x: padding + gridSize, y: padding },
+          { x: padding, y: padding + gridSize },
+          { x: padding + gridSize, y: padding + gridSize },
+          { x: padding + gridSize / 2, y: padding + gridSize / 2 },
+        ].map((pos, i) => (
+          <g key={`bump-${i}`}>
+            <circle
+              cx={pos.x}
+              cy={pos.y}
+              r="12"
+              fill={colors.success}
+              stroke="white"
+              strokeWidth="2"
+            />
+            <text x={pos.x} y={pos.y + 4} fill="white" fontSize="10" textAnchor="middle" fontWeight="bold">
+              V+
+            </text>
           </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
+        ))}
+
+        {/* Animated current flow */}
+        {showHeatmap && (
+          <g opacity="0.6">
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i * Math.PI / 4) + (animationFrame * 0.05);
+              const centerX = padding + gridSize / 2;
+              const centerY = padding + gridSize / 2;
+              const r = 30 + (animationFrame % 60);
+              return (
+                <circle
+                  key={`flow-${i}`}
+                  cx={centerX + Math.cos(angle) * r}
+                  cy={centerY + Math.sin(angle) * r}
+                  r="3"
+                  fill={colors.warning}
+                  opacity={1 - (r - 30) / 60}
+                />
+              );
+            })}
+          </g>
+        )}
+
+        {/* Legend */}
+        <g transform={`translate(${padding}, ${height - 25})`}>
+          <defs>
+            <linearGradient id="legendGradient">
+              <stop offset="0%" stopColor={getColor(0)} />
+              <stop offset="30%" stopColor={getColor(30)} />
+              <stop offset="100%" stopColor={getColor(100)} />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="100" height="12" fill="url(#legendGradient)" rx="2" />
+          <text x="0" y="-3" fill={colors.textSecondary} fontSize="10">0mV</text>
+          <text x="100" y="-3" fill={colors.textSecondary} fontSize="10" textAnchor="end">100mV+</text>
         </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+
+        {/* Title */}
+        <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="600">
+          Power Grid Voltage Drop Heatmap
+        </text>
       </svg>
     );
   };
@@ -534,7 +607,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #DC2626)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -575,7 +648,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          IR Drop: The Hidden Voltage Thief
         </h1>
 
         <p style={{
@@ -584,7 +657,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "Why do chips fail when they're physically perfect? Because <span style={{ color: colors.accent }}>voltage never reaches them intact</span>. Every millimeter of wire steals power."
         </p>
 
         <div style={{
@@ -596,10 +669,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "V = IR isn't just a formula—it's the reason your processor throttles, your phone heats up, and billion-dollar chips sometimes fail."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — Power Integrity Engineering
           </p>
         </div>
 
@@ -607,7 +680,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Explore the Voltage Drop →
         </button>
 
         {renderNavDots()}
@@ -618,9 +691,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'Voltage is the same everywhere—wires just carry it without loss' },
+      { id: 'b', text: 'Voltage drops proportionally to distance and current (V = IR)', correct: true as const },
+      { id: 'c', text: 'Only the power supply voltage matters, not the wiring' },
     ];
 
     return (
@@ -640,12 +713,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A chip receives 1.0V from its power supply. What voltage do circuits at the center of the chip actually see?
           </h2>
 
           {/* Simple diagram */}
@@ -658,23 +731,24 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '48px' }}>🔌</div>
+                <p style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>1.0V Supply</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{
                 background: colors.accent + '33',
                 padding: '20px 30px',
                 borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
+                border: `2px dashed ${colors.accent}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '24px', color: colors.textMuted }}>~~~~~</div>
+                <p style={{ ...typo.small, color: colors.textSecondary }}>Wire Resistance</p>
               </div>
               <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '48px' }}>💻</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Circuit</p>
+                <p style={{ ...typo.small, color: colors.warning }}>???V</p>
               </div>
             </div>
           </div>
@@ -731,7 +805,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive Power Grid
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +817,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Explore the Power Grid
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust parameters to see how IR drop changes across the chip
           </p>
 
           {/* Main visualization */}
@@ -757,80 +831,77 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <PowerGridVisualization showHeatmap={true} interactive={true} />
             </div>
 
-            {/* Generation slider */}
+            {/* Current draw slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Current Draw</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{currentDraw}mA per cell</span>
               </div>
               <input
                 type="range"
                 min="10"
                 max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                step="5"
+                value={currentDraw}
+                onChange={(e) => setCurrentDraw(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
+                  background: `linear-gradient(to right, ${colors.accent} ${(currentDraw - 10) / 90 * 100}%, ${colors.border} ${(currentDraw - 10) / 90 * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
-              </div>
             </div>
 
-            {/* Status display */}
+            {/* Metal thickness slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Metal Thickness</span>
+                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{metalThickness}um</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                step="0.5"
+                value={metalThickness}
+                onChange={(e) => setMetalThickness(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Grid density slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Grid Density</span>
+                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{gridDensity} stripes</span>
+              </div>
+              <input
+                type="range"
+                min="2"
+                max="10"
+                step="1"
+                value={gridDensity}
+                onChange={(e) => setGridDensity(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Stats display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -842,8 +913,19 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: stats.maxDrop > 50 ? colors.error : stats.maxDrop > 30 ? colors.warning : colors.success }}>
+                  {stats.maxDrop.toFixed(1)}mV
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Max IR Drop</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>{stats.avgDrop.toFixed(1)}mV</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Average Drop</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -853,31 +935,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               }}>
                 <div style={{
                   ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
+                  color: stats.efficiency > 95 ? colors.success : stats.efficiency > 90 ? colors.warning : colors.error
                 }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
+                  {stats.efficiency.toFixed(0)}%
                 </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '12px',
-                padding: '16px',
-                textAlign: 'center',
-              }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Grid Efficiency</div>
               </div>
             </div>
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {stats.maxDrop < 30 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -887,7 +955,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+                Excellent! You've minimized IR drop. Notice how thicker metal and denser grids help!
               </p>
             </div>
           )}
@@ -917,7 +985,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            The Physics of IR Drop
           </h2>
 
           <div style={{
@@ -926,18 +994,29 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '20px',
+              marginBottom: '20px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.h2, color: colors.accent, margin: 0 }}>V = I × R</p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>Ohm's Law - The foundation of IR drop</p>
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>Every wire has resistance (R)</strong> — even the best copper conductors. When current (I) flows through this resistance, voltage drops.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
+                <span style={{ color: colors.accent }}>More current</span> = More voltage drop
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                <span style={{ color: colors.accent }}>Longer distance</span> = Higher resistance = More drop
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                <span style={{ color: colors.success }}>Thicker/wider metal</span> = Lower resistance = Less drop
               </p>
             </div>
           </div>
@@ -950,16 +1029,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              In a chip, circuits far from power sources see less voltage. If the drop is too large, transistors switch slowly or fail entirely. That's why power grid design is critical for chip performance.
             </p>
           </div>
 
@@ -967,7 +1040,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Temperature Effects →
           </button>
         </div>
 
@@ -979,9 +1052,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'IR drop stays the same—temperature only affects transistors, not wires' },
+      { id: 'b', text: 'IR drop decreases because hot metal conducts better' },
+      { id: 'c', text: 'IR drop increases because metal resistance rises with temperature', correct: true as const },
     ];
 
     return (
@@ -1001,12 +1074,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.warning}44`,
           }}>
             <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+              New Variable: Temperature
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            A chip heats up from 25C to 85C during heavy computation. What happens to IR drop?
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1049,7 +1122,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See the Temperature Effect →
             </button>
           )}
         </div>
@@ -1071,10 +1144,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Temperature & IR Drop
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            See how temperature affects power distribution
           </p>
 
           <div style={{
@@ -1084,26 +1157,53 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <PowerGridVisualization showHeatmap={true} />
             </div>
 
-            {/* Renewable penetration slider */}
+            {/* Temperature slider */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Chip Temperature</span>
+                <span style={{
+                  ...typo.small,
+                  color: temperature > 70 ? colors.error : temperature > 50 ? colors.warning : colors.success,
+                  fontWeight: 600
+                }}>
+                  {temperature}°C
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-40"
+                max="125"
+                value={temperature}
+                onChange={(e) => setTemperature(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Cold (-40C)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>Hot (125C)</span>
+              </div>
+            </div>
+
+            {/* Distance from bump slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Distance from Power Bump</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{distanceFromBump}um</span>
               </div>
               <input
                 type="range"
                 min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
+                max="100"
+                step="5"
+                value={distanceFromBump}
+                onChange={(e) => setDistanceFromBump(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1113,112 +1213,32 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Battery toggle */}
+            {/* Resistance change indicator */}
             <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
-              <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
-                style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
-                  cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
-                }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
-              </span>
-            </div>
-
-            {/* Stats */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-            }}>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
-              </div>
-              <div style={{
-                background: colors.bgSecondary,
-                borderRadius: '8px',
-                padding: '12px',
-                textAlign: 'center',
-              }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
-              </div>
-            </div>
-          </div>
-
-          {batteryResponse && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
+              background: colors.bgSecondary,
+              borderRadius: '8px',
               padding: '16px',
-              marginBottom: '24px',
               textAlign: 'center',
             }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                Resistance change from 25C: <span style={{
+                  color: temperature > 25 ? colors.error : colors.success,
+                  fontWeight: 600
+                }}>
+                  {temperature > 25 ? '+' : ''}{((temperature - 25) * 0.4).toFixed(0)}%
+                </span>
+              </p>
+              <p style={{ ...typo.small, color: colors.textMuted, marginTop: '4px' }}>
+                Copper: ~0.4%/C temperature coefficient
               </p>
             </div>
-          )}
+          </div>
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand Static vs Dynamic IR Drop →
           </button>
         </div>
 
@@ -1239,7 +1259,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            Static vs Dynamic IR Drop
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1270,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>📊</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Static IR Drop</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                Steady-state voltage drop from average current draw. Predictable and easier to model. Depends on <span style={{ color: colors.accent }}>grid resistance</span> and <span style={{ color: colors.accent }}>average current</span>.
               </p>
             </div>
 
@@ -1265,11 +1285,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>⚡</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Dynamic IR Drop</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                Transient voltage droops from <span style={{ color: colors.warning }}>sudden current surges</span>. Can be 3-5x worse than static drop. Includes <span style={{ color: colors.warning }}>inductive effects (V = L * dI/dt)</span>. Hardest to design for.
               </p>
             </div>
 
@@ -1280,12 +1300,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.success}33`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Design Solutions</h3>
               </div>
-              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
-              </p>
+              <div style={{ ...typo.body, color: colors.textSecondary }}>
+                <p style={{ marginBottom: '8px' }}><strong>For Static Drop:</strong> More power bumps, wider metal, denser grids</p>
+                <p style={{ margin: 0 }}><strong>For Dynamic Drop:</strong> Decoupling capacitors, staggered switching, power gating</p>
+              </div>
             </div>
           </div>
 
@@ -1360,7 +1381,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                     fontSize: '12px',
                     lineHeight: '18px',
                   }}>
-                    ✓
+                    checkmark
                   </div>
                 )}
                 <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
@@ -1398,7 +1419,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                How IR Drop Matters:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1457,7 +1478,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               fontSize: '80px',
               marginBottom: '24px',
             }}>
-              {passed ? '🎉' : '📚'}
+              {passed ? '🏆' : '📚'}
             </div>
             <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
               {passed ? 'Excellent!' : 'Keep Learning!'}
@@ -1467,7 +1488,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered IR Drop concepts!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1610,7 +1631,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               >
-                ← Previous
+                Previous
               </button>
             )}
             {currentQuestion < 9 ? (
@@ -1628,7 +1649,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1689,11 +1710,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          IR Drop Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand how voltage drops in power distribution networks and why it matters for chip design.
         </p>
 
         <div style={{
@@ -1708,14 +1729,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'V = IR and Ohm\'s Law in chip design',
+              'How distance affects voltage drop',
+              'Temperature effects on metal resistance',
+              'Static vs dynamic IR drop',
+              'Power grid design strategies',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ color: colors.success }}>Checkmark</span>
                 <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
               </div>
             ))}
@@ -1756,4 +1777,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default IRDropRenderer;

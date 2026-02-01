@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Grid Frequency Control - Complete 10-Phase Game
-// Why maintaining 50/60Hz is critical for grid stability
+// GPU Occupancy - Complete 10-Phase Game
+// Understanding how resource allocation affects parallel computing performance
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface GameEvent {
@@ -18,7 +18,7 @@ export interface GameEvent {
   timestamp: number;
 }
 
-interface GridFrequencyRendererProps {
+interface GPUOccupancyRendererProps {
   onGameEvent?: (event: GameEvent) => void;
   gamePhase?: string;
 }
@@ -54,114 +54,114 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ─────────────────────────────────────────────────────────────────────────────
 const testQuestions = [
   {
-    scenario: "At 6 PM on a hot summer day, millions of people arrive home and turn on their air conditioners simultaneously. Grid operators notice the frequency dropping from 60.00 Hz to 59.92 Hz within seconds.",
-    question: "What does this frequency drop indicate about the grid?",
+    scenario: "A developer's CUDA kernel uses 64 registers per thread with 256 threads per block. The GPU's SM has 65,536 registers total and can run up to 2,048 threads simultaneously.",
+    question: "Why might this kernel achieve only 25% occupancy?",
     options: [
-      { id: 'a', label: "Power plants are generating too much electricity" },
-      { id: 'b', label: "Demand suddenly exceeded supply, causing generators to slow down", correct: true },
-      { id: 'c', label: "Transmission lines are overheating from excess current" },
-      { id: 'd', label: "Frequency sensors are malfunctioning due to the heat" }
+      { id: 'a', label: "The GPU is overheating and throttling performance" },
+      { id: 'b', label: "256 threads x 64 registers = 16,384 registers per block, limiting to 4 blocks and 1,024 threads (50% of 2,048)", correct: true },
+      { id: 'c', label: "The kernel has too many conditional branches" },
+      { id: 'd', label: "256 threads is below the minimum block size requirement" }
     ],
-    explanation: "Grid frequency is a real-time indicator of supply-demand balance. When demand exceeds supply, the extra load acts as a brake on generators, causing them to slow down. Each 0.01 Hz drop represents a significant power imbalance that must be corrected immediately."
+    explanation: "With 64 registers per thread and 256 threads, each block uses 16,384 registers. The SM's 65,536 registers can fit only 4 such blocks (4 x 16,384 = 65,536). That's 4 x 256 = 1,024 active threads, which is 50% of the 2,048 maximum. Register pressure directly limits occupancy."
   },
   {
-    scenario: "A natural gas power plant is about to connect to the grid. Operators carefully monitor oscilloscopes showing the generator's output voltage waveform compared to the grid waveform, waiting for the peaks to align perfectly.",
-    question: "Why must generators synchronize before connecting to the grid?",
+    scenario: "A machine learning engineer notices their matrix multiplication kernel runs faster at 50% occupancy than a modified version at 100% occupancy.",
+    question: "What could explain this counterintuitive result?",
     options: [
-      { id: 'a', label: "To ensure billing meters record power correctly" },
-      { id: 'b', label: "Connecting out of phase would cause massive current surges and potential equipment damage", correct: true },
-      { id: 'c', label: "Synchronization is only required for renewable energy sources" },
-      { id: 'd', label: "It allows the generator cooling systems to stabilize" }
+      { id: 'a', label: "The GPU benchmarking tool is malfunctioning" },
+      { id: 'b', label: "Higher occupancy always means better performance" },
+      { id: 'c', label: "The 50% occupancy version uses more registers per thread, enabling more data reuse and fewer memory accesses", correct: true },
+      { id: 'd', label: "The 100% version has compiler bugs" }
     ],
-    explanation: "Generators must match the grid's frequency, voltage, and phase angle before connecting. An out-of-phase connection creates a near short-circuit condition, causing destructive current surges that can damage generator windings, trip protective breakers, and send destabilizing waves through the entire grid."
+    explanation: "Sometimes lower occupancy with more registers per thread allows keeping more data in fast registers instead of slow memory. This register-heavy approach can reduce memory bandwidth pressure, making the kernel faster despite fewer active warps."
   },
   {
-    scenario: "A large industrial facility unexpectedly shuts down, removing 500 MW of load from the grid. Within milliseconds, all generators across the region automatically begin reducing their power output without any human intervention.",
-    question: "What mechanism causes generators to automatically reduce output when load drops?",
+    scenario: "A physics simulation kernel allocates 48KB of shared memory per block. The SM has 96KB of shared memory total and supports up to 32 warps.",
+    question: "What is the maximum occupancy this kernel can achieve?",
     options: [
-      { id: 'a', label: "Smart meters send instant signals to all power plants" },
-      { id: 'b', label: "Droop control - generators reduce output as frequency rises above the setpoint", correct: true },
-      { id: 'c', label: "Generators physically cannot spin faster than their rated frequency" },
-      { id: 'd', label: "Operators at each plant manually adjust output in real time" }
+      { id: 'a', label: "100% - shared memory doesn't affect occupancy" },
+      { id: 'b', label: "50% - only 2 blocks can fit due to shared memory limits", correct: true },
+      { id: 'c', label: "75% - shared memory is compressed automatically" },
+      { id: 'd', label: "25% - each block needs dedicated L2 cache" }
     ],
-    explanation: "Droop control is a decentralized stability mechanism where each generator automatically adjusts its power output based on frequency deviation. A typical 5% droop setting means the generator reduces output by 100% if frequency rises 5% above nominal. This provides automatic load balancing without communication delays."
+    explanation: "With 48KB per block and 96KB total, only 2 blocks can run simultaneously on the SM. If each block has, say, 512 threads (16 warps), that's 32 warps total, which could be 100%. But if blocks are smaller or other limits apply, shared memory becomes the bottleneck at 50%."
   },
   {
-    scenario: "Two islands have identical peak demand. Island A uses diesel generators, while Island B replaced 80% of generation with solar panels and batteries. During a sudden 10% load increase, Island A's frequency drops to 59.5 Hz, but Island B's drops to 58.5 Hz.",
-    question: "Why does Island B experience a larger frequency drop despite having modern equipment?",
+    scenario: "A developer profiles their CUDA kernel and sees that memory latency is causing significant stalls. The kernel currently has 25% occupancy.",
+    question: "How can increasing occupancy help with memory latency?",
     options: [
-      { id: 'a', label: "Solar panels produce lower quality electricity than diesel generators" },
-      { id: 'b', label: "Island B has less rotational inertia to resist frequency changes", correct: true },
-      { id: 'c', label: "Batteries cannot respond to load changes as quickly as generators" },
-      { id: 'd', label: "Diesel generators are inherently more efficient than solar systems" }
+      { id: 'a', label: "More warps give the scheduler threads to execute while others wait for memory", correct: true },
+      { id: 'b', label: "Higher occupancy increases memory bandwidth" },
+      { id: 'c', label: "More threads make memory requests faster" },
+      { id: 'd', label: "Occupancy has no relationship to memory latency" }
     ],
-    explanation: "Rotational inertia from spinning generator masses acts as an energy buffer, resisting sudden frequency changes. Solar inverters provide no physical inertia. This is why high-renewable grids need synthetic inertia from batteries or must maintain some synchronous generators to prevent dangerous frequency swings."
+    explanation: "When warps stall waiting for memory, the GPU scheduler switches to other ready warps. With more active warps (higher occupancy), there's a better chance of finding work to hide memory latency. This is called latency hiding through occupancy."
   },
   {
-    scenario: "After a major transmission line failure during peak demand, frequency drops to 58.8 Hz. Automated systems begin disconnecting neighborhoods from the grid in a predetermined sequence, prioritizing hospitals and emergency services.",
-    question: "What is the purpose of under-frequency load shedding (UFLS)?",
+    scenario: "An image processing kernel uses 128 threads per block. The GPU requires blocks to be allocated in multiples of 32 threads (warp size).",
+    question: "What would happen if someone changed the block size to 100 threads?",
     options: [
-      { id: 'a', label: "To punish areas that use excessive electricity" },
-      { id: 'b', label: "To prevent total grid collapse by sacrificing some loads to stabilize frequency", correct: true },
-      { id: 'c', label: "To reduce electricity bills during emergency situations" },
-      { id: 'd', label: "To test the grid's resilience during routine maintenance" }
+      { id: 'a', label: "The GPU would crash" },
+      { id: 'b', label: "Performance would improve due to smaller blocks" },
+      { id: 'c', label: "Each block would waste 28 threads (4 warps allocated, but 28 slots unused)", correct: true },
+      { id: 'd', label: "The runtime would automatically round up to 128" }
     ],
-    explanation: "UFLS is a last-resort protection mechanism. If frequency falls too low, generators can be damaged and trip offline, causing cascading failures. By automatically disconnecting predetermined loads in stages, UFLS restores supply-demand balance and prevents a total blackout that would affect everyone."
+    explanation: "GPUs allocate threads in warp-sized chunks (32). A block of 100 threads needs 4 warps (128 thread slots), but 28 are wasted. This reduces effective occupancy and wastes SM resources. Block sizes should be multiples of 32 for efficiency."
   },
   {
-    scenario: "California's grid operator notices frequency volatility has increased significantly on days with high solar generation, especially during the 'duck curve' transition when solar output drops rapidly at sunset.",
-    question: "Why do high levels of solar generation create frequency stability challenges?",
+    scenario: "A real-time graphics engine runs multiple different shaders. Some achieve 90% occupancy while others only reach 30%.",
+    question: "What's the most likely reason for this variation?",
     options: [
-      { id: 'a', label: "Solar panels generate electricity at a variable frequency" },
-      { id: 'b', label: "Solar displaces synchronous generators, reducing system inertia and requiring faster ramping", correct: true },
-      { id: 'c', label: "Solar electricity is fundamentally incompatible with AC grids" },
-      { id: 'd', label: "Clouds cause solar panels to generate excessive power surges" }
+      { id: 'a', label: "Graphics drivers randomly assign resources" },
+      { id: 'b', label: "Different shaders have different register and shared memory requirements", correct: true },
+      { id: 'c', label: "The 30% shaders are running on damaged SM units" },
+      { id: 'd', label: "Occupancy is determined by shader complexity only" }
     ],
-    explanation: "Solar generation through inverters provides no rotational inertia. As solar displaces conventional generators during the day, system inertia decreases. When solar drops rapidly at sunset, remaining generators must ramp up quickly. Low inertia combined with fast ramps creates frequency volatility requiring careful management."
+    explanation: "Each shader compiles to different resource requirements. Complex shaders with many variables use more registers, limiting active warps. Simple shaders need fewer resources and can achieve higher occupancy. The compiler's register allocation significantly impacts achievable occupancy."
   },
   {
-    scenario: "Engineers design a microgrid for a remote island that will operate independently. They debate using traditional 'grid-following' inverters versus newer 'grid-forming' inverters for the battery storage system.",
-    question: "What is the key advantage of grid-forming inverters for this application?",
+    scenario: "A developer uses the CUDA Occupancy Calculator and finds that reducing registers from 64 to 48 per thread would increase theoretical occupancy from 50% to 75%.",
+    question: "What tradeoff should the developer consider before making this change?",
     options: [
-      { id: 'a', label: "Grid-forming inverters are simply more efficient" },
-      { id: 'b', label: "Grid-forming inverters can establish frequency independently without external reference", correct: true },
-      { id: 'c', label: "Grid-following inverters are too expensive for island applications" },
-      { id: 'd', label: "Grid-forming technology only works with wind turbines" }
+      { id: 'a', label: "Lower registers always mean slower code due to register spilling", correct: true },
+      { id: 'b', label: "There is no tradeoff; higher occupancy is always better" },
+      { id: 'c', label: "The change requires rewriting the entire kernel" },
+      { id: 'd', label: "Register count cannot be changed" }
     ],
-    explanation: "Grid-following inverters synchronize to an existing frequency reference and cannot operate without one. Grid-forming inverters can create their own voltage and frequency reference, acting like a synchronous generator. For islanded microgrids or grids with 100% inverter-based resources, grid-forming capability is essential."
+    explanation: "Forcing fewer registers may cause register spilling - the compiler stores excess values in slow local memory. This adds memory accesses that can hurt performance more than the occupancy gain helps. The optimal point depends on the specific kernel's memory access patterns."
   },
   {
-    scenario: "A power system engineer detects a 0.3 Hz oscillation in power flow between the Eastern and Western regions of a large interconnected grid. The oscillation grows larger over several minutes before damping controls activate.",
-    question: "What causes these inter-area oscillations in large power grids?",
+    scenario: "Two kernels process the same data. Kernel A has 100% occupancy with heavy memory bottlenecks. Kernel B has 50% occupancy but is compute-bound.",
+    question: "Which kernel design principle does Kernel B exemplify?",
     options: [
-      { id: 'a', label: "Faulty frequency sensors creating false oscillating readings" },
-      { id: 'b', label: "Groups of generators in different regions swinging against each other through weak interconnections", correct: true },
-      { id: 'c', label: "Synchronized switching of millions of household appliances" },
-      { id: 'd', label: "Natural resonance in the transformer winding configurations" }
+      { id: 'a', label: "Kernel B is poorly optimized and should be fixed" },
+      { id: 'b', label: "Trading occupancy for instruction-level parallelism and register utilization", correct: true },
+      { id: 'c', label: "Kernel B uses half the GPU for thermal management" },
+      { id: 'd', label: "50% occupancy means 50% of the code is disabled" }
     ],
-    explanation: "Inter-area oscillations occur when clusters of generators in different regions exchange power in an oscillatory pattern. Weak transmission ties between regions and insufficient damping allow these low-frequency (0.1-1 Hz) oscillations to develop. Without proper Power System Stabilizers, oscillations can grow and cause widespread outages."
+    explanation: "Kernel B trades warp-level parallelism (occupancy) for better instruction-level parallelism and data locality through registers. When compute units are fully utilized (compute-bound), more occupancy wouldn't help - you need to optimize arithmetic throughput instead."
   },
   {
-    scenario: "After a complete regional blackout, operators begin restoration. They start a hydroelectric plant using its own auxiliary power, then carefully energize transmission lines section by section while monitoring frequency closely.",
-    question: "Why is frequency control especially critical during black start recovery?",
+    scenario: "A new GPU architecture increases register file size from 64K to 256K registers per SM while keeping max threads at 2,048.",
+    question: "How does this architectural change affect occupancy-limited kernels?",
     options: [
-      { id: 'a', label: "Electricity costs more during blackout recovery operations" },
-      { id: 'b', label: "The isolated system has minimal inertia; load pickup must be carefully balanced to prevent frequency collapse", correct: true },
-      { id: 'c', label: "Frequency meters require recalibration after extended outages" },
-      { id: 'd', label: "Black start generators operate at different frequencies than normal" }
+      { id: 'a', label: "No effect - register count doesn't matter" },
+      { id: 'b', label: "Register-heavy kernels can now achieve higher occupancy with the same code", correct: true },
+      { id: 'c', label: "All kernels automatically reach 100% occupancy" },
+      { id: 'd', label: "Performance decreases due to larger register addressing" }
     ],
-    explanation: "During black start, the grid rebuilds from scratch with just one or a few generators. This tiny system has very little inertia, so any load-generation mismatch causes large frequency swings. Operators must carefully balance each load pickup with generation increases. Connecting too much load too quickly can collapse frequency and restart the blackout."
+    explanation: "With 4x more registers per SM, kernels that were previously register-limited can now fit more blocks. A kernel using 64 registers/thread limited to 25% occupancy (1,024 threads) might now achieve 100% (2,048 threads) on the new architecture."
   },
   {
-    scenario: "A hospital's backup power system includes a diesel generator and a battery system. During a grid outage, the generator starts but takes 15 seconds to reach stable output, while the battery instantly covers the hospital's critical loads.",
-    question: "Why do batteries respond so much faster than diesel generators?",
+    scenario: "A deep learning framework reports that a convolution kernel achieves only 15% occupancy but still reaches 80% of theoretical compute throughput.",
+    question: "What does this tell us about occupancy as a performance metric?",
     options: [
-      { id: 'a', label: "Diesel fuel is slow to ignite and combust" },
-      { id: 'b', label: "Batteries have no mechanical inertia to overcome; electronic power conversion is nearly instantaneous", correct: true },
-      { id: 'c', label: "Batteries store higher quality electricity than generators produce" },
-      { id: 'd', label: "Diesel generators are designed to start slowly for safety" }
+      { id: 'a', label: "The performance measurement is incorrect" },
+      { id: 'b', label: "Occupancy is a poor indicator of performance when kernels are compute-bound with high ILP", correct: true },
+      { id: 'c', label: "15% occupancy means 15% of GPU is being used" },
+      { id: 'd', label: "Convolution kernels don't benefit from parallelism" }
     ],
-    explanation: "Diesel generators must physically accelerate their rotating mass, build up combustion pressure, and synchronize before delivering power. Batteries use solid-state power electronics that can switch in milliseconds. This speed advantage makes batteries essential for frequency regulation, providing 'synthetic inertia' faster than any mechanical system."
+    explanation: "Occupancy measures potential parallelism, not actual performance. A kernel with low occupancy but high instruction-level parallelism (ILP) and efficient register use can keep compute units busy. Performance depends on whether you're memory-bound or compute-bound, not just occupancy."
   }
 ];
 
@@ -170,75 +170,75 @@ const testQuestions = [
 // ─────────────────────────────────────────────────────────────────────────────
 const realWorldApps = [
   {
-    icon: '🔋',
-    title: 'Grid-Scale Battery Storage',
-    short: 'Instant frequency response without spinning mass',
-    tagline: 'Batteries react in milliseconds, not seconds',
-    description: 'Battery storage systems like Tesla Megapack can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation through power electronics.',
-    connection: 'The frequency droop you explored shows how generators slow under load. Batteries provide "synthetic inertia" by mimicking generator response curves electronically, but 10-100x faster than any spinning machine.',
-    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops below 60 Hz, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond before problems develop.',
+    icon: '🤖',
+    title: 'Deep Learning Training',
+    short: 'Optimizing neural network training',
+    tagline: 'Maximize GPU utilization for faster AI',
+    description: 'Training large neural networks requires running thousands of parallel operations. GPU occupancy optimization ensures that matrix multiplications, convolutions, and activation functions fully utilize available compute resources, reducing training time from weeks to days.',
+    connection: 'Deep learning frameworks like PyTorch and TensorFlow carefully tune kernel launches to balance occupancy with register usage. Too many registers per thread reduces occupancy; too few causes register spilling. The sweet spot varies by operation type.',
+    howItWorks: 'Frameworks use autotuning to find optimal block sizes and register usage for each operation type and GPU architecture. Tensor cores in modern GPUs add another dimension, as they have different occupancy characteristics than regular CUDA cores.',
     stats: [
-      { value: '<50 ms', label: 'Response time', icon: '⚡' },
-      { value: '100 GW', label: 'Global capacity', icon: '🔋' },
-      { value: '$15B/yr', label: 'Market value', icon: '💰' }
+      { value: '10-50x', label: 'Speedup vs CPU', icon: '🚀' },
+      { value: '70-95%', label: 'Target occupancy', icon: '📊' },
+      { value: '$1M+', label: 'Training cost savings', icon: '💰' }
     ],
-    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid FFR', 'Germany frequency reserves'],
-    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
-    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience during extreme weather events.',
+    examples: ['PyTorch cudnn autotuning', 'TensorFlow XLA compilation', 'NVIDIA cuDNN library', 'Custom CUDA kernels'],
+    companies: ['NVIDIA', 'Google', 'Meta', 'OpenAI'],
+    futureImpact: 'AI compilers will automatically generate kernels with optimal occupancy for each model architecture, eliminating manual tuning.',
     color: '#10B981'
   },
   {
-    icon: '🌊',
-    title: 'Renewable Integration',
-    short: 'Managing frequency with variable wind and solar',
-    tagline: 'When the sun sets, frequency management gets challenging',
-    description: 'Solar and wind naturally provide no inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability or face more frequent blackouts and voltage instability.',
-    connection: 'Traditional grids relied on kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and basic wind turbines provide no equivalent - this is the core challenge of the energy transition.',
-    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced wind turbines now provide synthetic inertia by controlling rotor speed.',
+    icon: '🎮',
+    title: 'Real-Time Graphics Rendering',
+    short: 'Smooth 120fps gaming and VR',
+    tagline: 'Every millisecond counts for immersion',
+    description: 'Modern games render millions of pixels per frame with complex lighting, shadows, and effects. GPU occupancy determines how efficiently shaders execute, directly impacting frame rates and visual quality at high resolutions.',
+    connection: 'Game engines optimize shader occupancy by managing register pressure and shared memory usage. Ray tracing shaders often have lower occupancy due to divergent execution paths, requiring careful balancing with traditional rasterization workloads.',
+    howItWorks: 'Graphics APIs like DirectX 12 and Vulkan give developers fine-grained control over resource allocation. Shader compilers optimize for occupancy while preserving visual quality. Async compute allows mixing high and low occupancy workloads.',
     stats: [
-      { value: '30%', label: 'Renewable share', icon: '☀️' },
-      { value: '90%', label: '2050 target', icon: '🎯' },
-      { value: '50%', label: 'Inertia reduction', icon: '📉' }
+      { value: '120fps', label: '8ms per frame', icon: '🖥️' },
+      { value: '4K', label: '8M pixels/frame', icon: '📺' },
+      { value: '50+', label: 'Draw calls/ms', icon: '🎨' }
     ],
-    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT challenges', 'Denmark 100% renewable days'],
-    companies: ['Orsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
-    futureImpact: 'Grid-forming inverters will enable 100% renewable grids without any conventional generators, using software to create stable voltage and frequency.',
-    color: '#3B82F6'
-  },
-  {
-    icon: '🔄',
-    title: 'Continental Interconnections',
-    short: 'Synchronizing entire continents through massive links',
-    tagline: 'One regions surplus is anothers salvation',
-    description: 'AC interconnectors synchronize entire power grids - Europe operates as one synchronized system with over 500 GW capacity. HVDC links connect asynchronous grids, enabling power sharing across different frequency zones.',
-    connection: 'Synchronized grids share inertia - when demand spikes in Germany, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency response.',
-    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing controlled power flow. Back-to-back HVDC links connect different frequency systems (50 Hz Europe to 60 Hz UK).',
-    stats: [
-      { value: '500+ GW', label: 'European grid', icon: '⚡' },
-      { value: '2 GW', label: 'UK-France link', icon: '🔗' },
-      { value: '$100B', label: 'HVDC investment', icon: '💰' }
-    ],
-    examples: ['European continental grid', 'US Eastern/Western ties', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
-    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
-    futureImpact: 'Intercontinental supergrids will balance solar across time zones - morning sun in Asia powers evening demand in Europe, enabling 24/7 renewable energy.',
+    examples: ['Unreal Engine 5 Nanite', 'Ray tracing denoising', 'VR reprojection', 'DLSS upscaling'],
+    companies: ['NVIDIA', 'AMD', 'Epic Games', 'Unity'],
+    futureImpact: 'AI-driven graphics will dynamically adjust shader complexity and occupancy based on scene content and target framerate.',
     color: '#8B5CF6'
   },
   {
-    icon: '⏰',
-    title: 'Electric Clocks & Time Standards',
-    short: 'Why your oven clock drifts with grid frequency',
-    tagline: 'Power grids are surprisingly accurate clocks',
-    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks gradually drift. This creates a fascinating link between power and time.',
-    connection: 'The small frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run the grid slightly fast or slow to correct accumulated drift.',
-    howItWorks: 'Synchronous clocks count zero-crossings of the AC waveform. At exactly 60 Hz, theyre perfectly accurate. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule time error corrections to compensate.',
+    icon: '🔬',
+    title: 'Scientific Simulation',
+    short: 'Molecular dynamics and climate modeling',
+    tagline: 'Simulating reality at atomic scale',
+    description: 'Scientific simulations model physical phenomena using millions of interacting particles or grid cells. GPU occupancy optimization allows researchers to simulate larger systems or achieve finer resolution within computational budgets.',
+    connection: 'Particle simulations use shared memory for neighbor lists, limiting blocks per SM. Researchers trade occupancy for data locality - keeping particle data in fast shared memory reduces global memory accesses that would stall computation.',
+    howItWorks: 'Simulation codes use domain decomposition to assign spatial regions to thread blocks. Register usage is tuned for the number of interacting forces. Occupancy calculators help find optimal parameters for each GPU architecture.',
     stats: [
-      { value: '±30 sec', label: 'Max time error', icon: '⏱️' },
-      { value: '3,600', label: 'Cycles/minute', icon: '🔄' },
-      { value: 'Millions', label: 'Affected clocks', icon: '⏰' }
+      { value: '10B+', label: 'Particles simulated', icon: '⚛️' },
+      { value: '1000x', label: 'Speedup vs CPU', icon: '⚡' },
+      { value: 'ns', label: 'Femtosecond timesteps', icon: '⏱️' }
     ],
-    examples: ['Kitchen oven clocks', 'Vintage alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
-    companies: ['NERC', 'ENTSO-E', 'PJM', 'National Grid'],
-    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations while ending a century-old tradition.',
+    examples: ['GROMACS molecular dynamics', 'LAMMPS simulations', 'Weather prediction models', 'Plasma physics codes'],
+    companies: ['Oak Ridge Lab', 'CERN', 'Max Planck', 'NOAA'],
+    futureImpact: 'Exascale computing will enable real-time digital twins of complex systems, from drug interactions to global weather.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💹',
+    title: 'Financial Computing',
+    short: 'Risk analysis and trading',
+    tagline: 'Microseconds mean millions',
+    description: 'Financial institutions use GPUs for Monte Carlo simulations, options pricing, and real-time risk analysis. High occupancy ensures that thousands of market scenarios are evaluated simultaneously, enabling faster and more accurate decisions.',
+    connection: 'Monte Carlo simulations are embarrassingly parallel - perfect for high occupancy. But complex derivatives pricing requires more registers for intermediate calculations, creating occupancy tradeoffs similar to scientific computing.',
+    howItWorks: 'Financial kernels generate random numbers, simulate market movements, and aggregate results. Register usage is minimized for random number generators to maximize occupancy. Reduction operations use shared memory efficiently.',
+    stats: [
+      { value: '1M+', label: 'Scenarios/second', icon: '📈' },
+      { value: '<1ms', label: 'Pricing latency', icon: '⏰' },
+      { value: '$10B', label: 'Daily risk calculated', icon: '🏦' }
+    ],
+    examples: ['Monte Carlo VaR', 'Options Greeks calculation', 'Portfolio optimization', 'Fraud detection ML'],
+    companies: ['Goldman Sachs', 'JPMorgan', 'Citadel', 'Two Sigma'],
+    futureImpact: 'Quantum-GPU hybrid systems will enable real-time portfolio optimization across millions of correlated assets.',
     color: '#F59E0B'
   }
 ];
@@ -246,7 +246,7 @@ const realWorldApps = [
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEvent, gamePhase }) => {
+const GPUOccupancyRenderer: React.FC<GPUOccupancyRendererProps> = ({ onGameEvent, gamePhase }) => {
   type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
@@ -263,15 +263,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
-  const [generationOutput, setGenerationOutput] = useState(50); // % of max
-  const [loadDemand, setLoadDemand] = useState(50); // % of max
-  const [systemInertia, setSystemInertia] = useState(50); // % - represents spinning mass
-  const [frequency, setFrequency] = useState(60); // Hz
+  const [registersPerThread, setRegistersPerThread] = useState(32);
+  const [sharedMemoryPerBlock, setSharedMemoryPerBlock] = useState(16); // KB
+  const [threadsPerBlock, setThreadsPerBlock] = useState(256);
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Twist phase - renewable scenario
-  const [renewablePenetration, setRenewablePenetration] = useState(20); // %
-  const [batteryResponse, setBatteryResponse] = useState(false);
+  // SM Configuration (based on typical modern GPU)
+  const smConfig = {
+    maxRegisters: 65536,
+    maxSharedMemory: 96, // KB
+    maxThreadsPerSM: 2048,
+    maxBlocksPerSM: 32,
+    maxWarpsPerSM: 64,
+    warpSize: 32
+  };
 
   // Test state
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -302,30 +307,13 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     return () => clearInterval(timer);
   }, []);
 
-  // Calculate frequency based on supply/demand/inertia
-  useEffect(() => {
-    const imbalance = generationOutput - loadDemand;
-    // Higher inertia = slower frequency change
-    const inertiaFactor = 0.5 + (systemInertia / 100) * 1.5; // 0.5 to 2.0
-    // Battery compensation in twist phase
-    let compensation = 0;
-    if (batteryResponse && phase === 'twist_play') {
-      compensation = -imbalance * 0.7; // Batteries compensate 70%
-    }
-    const effectiveImbalance = imbalance + compensation;
-    // Frequency deviation: roughly 0.02 Hz per 1% imbalance, modulated by inertia
-    const deviation = (effectiveImbalance * 0.02) / inertiaFactor;
-    const newFreq = Math.max(57, Math.min(63, 60 + deviation));
-    setFrequency(newFreq);
-  }, [generationOutput, loadDemand, systemInertia, batteryResponse, phase]);
-
   // Premium design colors
   const colors = {
     bgPrimary: '#0a0a0f',
     bgSecondary: '#12121a',
     bgCard: '#1a1a24',
-    accent: '#3B82F6', // Electric blue
-    accentGlow: 'rgba(59, 130, 246, 0.3)',
+    accent: '#06B6D4', // Cyan for GPU/tech theme
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
     success: '#10B981',
     error: '#EF4444',
     warning: '#F59E0B',
@@ -333,6 +321,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     textSecondary: '#9CA3AF',
     textMuted: '#6B7280',
     border: '#2a2a3a',
+    warpActive: '#22D3EE',
+    warpInactive: '#374151',
+    registerColor: '#8B5CF6',
+    sharedMemColor: '#F472B6',
   };
 
   const typo = {
@@ -351,7 +343,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     play: 'Experiment',
     review: 'Understanding',
     twist_predict: 'New Variable',
-    twist_play: 'Renewable Grid',
+    twist_play: 'Shared Memory Lab',
     twist_review: 'Deep Insight',
     transfer: 'Real World',
     test: 'Knowledge Test',
@@ -363,125 +355,188 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     isNavigating.current = true;
     playSound('transition');
     setPhase(p);
-    if (onGameEvent) {
-      onGameEvent({
-        eventType: 'phase_changed',
-        gameType: 'grid-frequency',
-        gameTitle: 'Grid Frequency Control',
-        details: { phase: p },
-        timestamp: Date.now()
-      });
-    }
     setTimeout(() => { isNavigating.current = false; }, 300);
-  }, [onGameEvent]);
+  }, []);
 
   const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, goToPhase, phaseOrder]);
+  }, [phase, goToPhase]);
 
-  // Get frequency status
-  const getFrequencyStatus = () => {
-    if (frequency >= 59.95 && frequency <= 60.05) return { status: 'Normal', color: colors.success };
-    if (frequency >= 59.5 && frequency <= 60.5) return { status: 'Warning', color: colors.warning };
-    return { status: 'Critical', color: colors.error };
-  };
+  // Calculate occupancy based on resources
+  const calculateOccupancy = useCallback(() => {
+    const warpsPerBlock = Math.ceil(threadsPerBlock / smConfig.warpSize);
+    const registersPerBlock = registersPerThread * threadsPerBlock;
+    const sharedMemPerBlockBytes = sharedMemoryPerBlock * 1024;
 
-  const freqStatus = getFrequencyStatus();
+    // Limits based on different resources
+    const blocksByRegisters = Math.floor(smConfig.maxRegisters / registersPerBlock);
+    const blocksBySharedMem = Math.floor((smConfig.maxSharedMemory * 1024) / sharedMemPerBlockBytes);
+    const blocksByThreads = Math.floor(smConfig.maxThreadsPerSM / threadsPerBlock);
+    const blocksByBlockLimit = smConfig.maxBlocksPerSM;
+    const blocksByWarps = Math.floor(smConfig.maxWarpsPerSM / warpsPerBlock);
 
-  // Grid Visualization SVG Component
-  const GridVisualization = () => {
-    const width = isMobile ? 340 : 480;
-    const height = isMobile ? 260 : 320;
+    const maxBlocks = Math.min(
+      blocksByRegisters,
+      blocksBySharedMem,
+      blocksByThreads,
+      blocksByBlockLimit,
+      blocksByWarps
+    );
 
-    // Frequency wave parameters
-    const wavelength = 60 / frequency * 40;
+    const activeWarps = maxBlocks * warpsPerBlock;
+    const occupancy = (activeWarps / smConfig.maxWarpsPerSM) * 100;
+
+    // Determine limiting factor
+    let limitingFactor = 'blocks';
+    const minBlocks = Math.min(blocksByRegisters, blocksBySharedMem, blocksByThreads, blocksByBlockLimit, blocksByWarps);
+    if (minBlocks === blocksByRegisters) limitingFactor = 'registers';
+    else if (minBlocks === blocksBySharedMem) limitingFactor = 'shared_memory';
+    else if (minBlocks === blocksByThreads) limitingFactor = 'threads';
+    else if (minBlocks === blocksByWarps) limitingFactor = 'warps';
+
+    return {
+      occupancy: Math.min(100, Math.max(0, occupancy)),
+      activeWarps: Math.min(smConfig.maxWarpsPerSM, activeWarps),
+      activeBlocks: Math.min(smConfig.maxBlocksPerSM, maxBlocks),
+      limitingFactor,
+      blocksByRegisters,
+      blocksBySharedMem,
+      blocksByThreads,
+      registersUsed: maxBlocks * registersPerBlock,
+      sharedMemUsed: maxBlocks * sharedMemoryPerBlock,
+    };
+  }, [registersPerThread, sharedMemoryPerBlock, threadsPerBlock, smConfig]);
+
+  const occupancyData = calculateOccupancy();
+
+  // SM Visualization Component
+  const SMVisualization = () => {
+    const width = isMobile ? 320 : 500;
+    const height = isMobile ? 300 : 350;
+    const warpsPerRow = 8;
+    const warpRows = 8;
+    const warpWidth = (width - 40) / warpsPerRow;
+    const warpHeight = (height - 120) / warpRows;
 
     return (
       <svg width={width} height={height} style={{ background: colors.bgCard, borderRadius: '12px' }}>
-        <defs>
-          <linearGradient id="freqWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={freqStatus.color} stopOpacity="0.8" />
-            <stop offset="50%" stopColor={freqStatus.color} stopOpacity="1" />
-            <stop offset="100%" stopColor={freqStatus.color} stopOpacity="0.8" />
-          </linearGradient>
-          <filter id="glowFilter">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+        {/* Title */}
+        <text x={width / 2} y={25} fill={colors.textPrimary} fontSize="14" fontWeight="600" textAnchor="middle">
+          Streaming Multiprocessor (SM) - Warp Allocation
+        </text>
 
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-          <line
-            key={`h-${frac}`}
-            x1="40"
-            y1={30 + frac * 80}
-            x2={width - 20}
-            y2={30 + frac * 80}
-            stroke={colors.border}
-            strokeDasharray="3,3"
+        {/* Warps Grid */}
+        {Array.from({ length: smConfig.maxWarpsPerSM }).map((_, i) => {
+          const row = Math.floor(i / warpsPerRow);
+          const col = i % warpsPerRow;
+          const x = 20 + col * warpWidth;
+          const y = 45 + row * warpHeight;
+          const isActive = i < occupancyData.activeWarps;
+          const pulsePhase = (animationFrame + i * 3) % 60;
+          const pulseOpacity = isActive ? 0.7 + 0.3 * Math.sin(pulsePhase * 0.1) : 0.3;
+
+          return (
+            <g key={i}>
+              <rect
+                x={x + 2}
+                y={y + 2}
+                width={warpWidth - 4}
+                height={warpHeight - 4}
+                rx="4"
+                fill={isActive ? colors.warpActive : colors.warpInactive}
+                opacity={pulseOpacity}
+                stroke={isActive ? colors.accent : 'transparent'}
+                strokeWidth="1"
+              />
+              {isActive && (
+                <text
+                  x={x + warpWidth / 2}
+                  y={y + warpHeight / 2 + 4}
+                  fill={colors.bgPrimary}
+                  fontSize="10"
+                  fontWeight="600"
+                  textAnchor="middle"
+                >
+                  W{i}
+                </text>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Legend */}
+        <g transform={`translate(20, ${height - 50})`}>
+          <rect x="0" y="0" width="16" height="16" rx="3" fill={colors.warpActive} />
+          <text x="22" y="12" fill={colors.textSecondary} fontSize="11">Active Warp</text>
+          <rect x="100" y="0" width="16" height="16" rx="3" fill={colors.warpInactive} opacity="0.3" />
+          <text x="122" y="12" fill={colors.textSecondary} fontSize="11">Inactive Warp</text>
+        </g>
+
+        {/* Occupancy Bar */}
+        <g transform={`translate(20, ${height - 25})`}>
+          <rect x="0" y="0" width={width - 40} height="12" rx="6" fill={colors.border} />
+          <rect
+            x="0"
+            y="0"
+            width={(width - 40) * (occupancyData.occupancy / 100)}
+            height="12"
+            rx="6"
+            fill={occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error}
           />
-        ))}
-
-        {/* Frequency waveform */}
-        <path
-          d={(() => {
-            let path = 'M 40 70';
-            for (let x = 0; x <= width - 60; x += 2) {
-              const phase = (x / wavelength + animationFrame * 0.1) * Math.PI * 2;
-              const y = 70 + Math.sin(phase) * 30;
-              path += ` L ${40 + x} ${y}`;
-            }
-            return path;
-          })()}
-          fill="none"
-          stroke="url(#freqWaveGrad)"
-          strokeWidth="3"
-          filter="url(#glowFilter)"
-        />
-
-        {/* 60 Hz reference line */}
-        <line x1="40" y1="70" x2={width - 20} y2="70" stroke={colors.textMuted} strokeDasharray="5,5" strokeWidth="1" />
-        <text x="45" y="62" fill={colors.textMuted} fontSize="10">60 Hz Reference</text>
-
-        {/* Frequency display */}
-        <rect x={width/2 - 60} y={height - 100} width="120" height="50" rx="8" fill={colors.bgSecondary} stroke={freqStatus.color} strokeWidth="2" />
-        <text x={width/2} y={height - 72} textAnchor="middle" fill={freqStatus.color} fontSize="24" fontWeight="bold">
-          {frequency.toFixed(2)} Hz
-        </text>
-        <text x={width/2} y={height - 56} textAnchor="middle" fill={freqStatus.color} fontSize="12">
-          {freqStatus.status}
-        </text>
-
-        {/* Supply/Demand indicators */}
-        <g transform={`translate(60, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.success + '33'} />
-          <rect x="0" y="0" width={generationOutput * 0.8} height="20" rx="4" fill={colors.success} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Gen: {generationOutput}%</text>
+          <text x={(width - 40) / 2} y="10" fill={colors.textPrimary} fontSize="9" fontWeight="600" textAnchor="middle">
+            {occupancyData.occupancy.toFixed(0)}% Occupancy
+          </text>
         </g>
-        <g transform={`translate(${width - 140}, ${height - 35})`}>
-          <rect x="0" y="0" width="80" height="20" rx="4" fill={colors.error + '33'} />
-          <rect x="0" y="0" width={loadDemand * 0.8} height="20" rx="4" fill={colors.error} />
-          <text x="40" y="14" textAnchor="middle" fill="white" fontSize="10" fontWeight="600">Load: {loadDemand}%</text>
-        </g>
-
-        {/* Inertia indicator (spinning generator icon) */}
-        <g transform={`translate(${width/2}, 140)`}>
-          <circle cx="0" cy="0" r="25" fill={colors.bgSecondary} stroke={colors.accent} strokeWidth="2" />
-          <g style={{ transformOrigin: 'center', animation: `spin ${3 / (systemInertia / 50)}s linear infinite` }}>
-            <line x1="-15" y1="0" x2="15" y2="0" stroke={colors.accent} strokeWidth="3" />
-            <line x1="0" y1="-15" x2="0" y2="15" stroke={colors.accent} strokeWidth="3" />
-          </g>
-          <text x="0" y="40" textAnchor="middle" fill={colors.textSecondary} fontSize="10">Inertia: {systemInertia}%</text>
-        </g>
-        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </svg>
+    );
+  };
+
+  // Resource Bars Component
+  const ResourceBars = () => {
+    const registerUsage = (occupancyData.registersUsed / smConfig.maxRegisters) * 100;
+    const sharedMemUsage = (occupancyData.sharedMemUsed / smConfig.maxSharedMemory) * 100;
+    const threadUsage = (occupancyData.activeWarps * 32 / smConfig.maxThreadsPerSM) * 100;
+
+    const bars = [
+      { label: 'Registers', usage: registerUsage, color: colors.registerColor, limiting: occupancyData.limitingFactor === 'registers' },
+      { label: 'Shared Mem', usage: sharedMemUsage, color: colors.sharedMemColor, limiting: occupancyData.limitingFactor === 'shared_memory' },
+      { label: 'Threads', usage: threadUsage, color: colors.accent, limiting: occupancyData.limitingFactor === 'threads' },
+    ];
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+        {bars.map((bar, i) => (
+          <div key={i}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+              <span style={{
+                ...typo.small,
+                color: bar.limiting ? bar.color : colors.textSecondary,
+                fontWeight: bar.limiting ? 600 : 400
+              }}>
+                {bar.label} {bar.limiting && '(Limiting)'}
+              </span>
+              <span style={{ ...typo.small, color: colors.textMuted }}>{bar.usage.toFixed(0)}%</span>
+            </div>
+            <div style={{
+              height: '8px',
+              background: colors.border,
+              borderRadius: '4px',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.min(100, bar.usage)}%`,
+                background: bar.color,
+                borderRadius: '4px',
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </div>
+        ))}
+      </div>
     );
   };
 
@@ -534,7 +589,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
   // Primary button style
   const primaryButtonStyle: React.CSSProperties = {
-    background: `linear-gradient(135deg, ${colors.accent}, #2563EB)`,
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
     color: 'white',
     border: 'none',
     padding: isMobile ? '14px 28px' : '16px 32px',
@@ -570,12 +625,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           marginBottom: '24px',
           animation: 'pulse 2s infinite',
         }}>
-          ⚡🔌
+          <span role="img" aria-label="GPU">🖥️</span><span role="img" aria-label="Lightning">⚡</span>
         </div>
         <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
-          Grid Frequency Control
+          GPU Occupancy
         </h1>
 
         <p style={{
@@ -584,7 +639,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           maxWidth: '600px',
           marginBottom: '32px',
         }}>
-          "When you flip on your AC, the entire power grid slows down by a tiny fraction. Why <span style={{ color: colors.accent }}>60 Hz matters</span> and how the grid keeps it stable is one of engineering's greatest achievements."
+          "Why doesn't doubling threads double performance? The secret lies in <span style={{ color: colors.accent }}>occupancy</span>—the art of keeping a GPU fully busy."
         </p>
 
         <div style={{
@@ -596,10 +651,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           border: `1px solid ${colors.border}`,
         }}>
           <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
-            "The grid operates at exactly 60 Hz (or 50 Hz in Europe). Deviate too far, and blackouts cascade across entire regions. It's a constant balancing act happening millions of times per second."
+            "A GPU with 10,000 cores running at 10% occupancy is like a highway with 100 lanes but only 10 cars—you're wasting potential."
           </p>
           <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
-            — Power Systems Engineering
+            — GPU Optimization Principle
           </p>
         </div>
 
@@ -607,7 +662,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           onClick={() => { playSound('click'); nextPhase(); }}
           style={primaryButtonStyle}
         >
-          Explore Grid Frequency →
+          Explore Occupancy
         </button>
 
         {renderNavDots()}
@@ -618,9 +673,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // PREDICT PHASE
   if (phase === 'predict') {
     const options = [
-      { id: 'a', text: 'Frequency increases—more demand means faster spinning generators' },
-      { id: 'b', text: 'Frequency decreases—the load acts like a brake on generators', correct: true },
-      { id: 'c', text: 'Frequency stays exactly at 60 Hz—automatic controls prevent any change' },
+      { id: 'a', text: 'More registers per thread always means faster execution' },
+      { id: 'b', text: 'There\'s a tradeoff—more registers per thread can reduce the number of active threads' },
+      { id: 'c', text: 'Register count has no effect on performance' },
     ];
 
     return (
@@ -640,12 +695,12 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             border: `1px solid ${colors.accent}44`,
           }}>
             <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
-              🤔 Make Your Prediction
+              Make Your Prediction
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            At 6 PM, millions of people arrive home and turn on their air conditioners simultaneously. What happens to grid frequency?
+            A CUDA kernel uses many variables (stored in registers). What happens as you increase registers per thread?
           </h2>
 
           {/* Simple diagram */}
@@ -658,23 +713,23 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏭</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Power Plants</p>
+                <div style={{ fontSize: '48px' }}>🧵</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Threads</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>+</div>
               <div style={{
-                background: colors.accent + '33',
+                background: colors.registerColor + '33',
                 padding: '20px 30px',
                 borderRadius: '8px',
-                border: `2px solid ${colors.accent}`,
+                border: `2px solid ${colors.registerColor}`,
               }}>
-                <div style={{ fontSize: '32px' }}>60 Hz</div>
-                <p style={{ ...typo.small, color: colors.textPrimary }}>Grid Frequency</p>
+                <div style={{ fontSize: '32px' }}>📦</div>
+                <p style={{ ...typo.small, color: colors.textPrimary }}>Registers</p>
               </div>
-              <div style={{ fontSize: '24px', color: colors.textMuted }}>→</div>
+              <div style={{ fontSize: '24px', color: colors.textMuted }}>=</div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px' }}>🏠❄️</div>
-                <p style={{ ...typo.small, color: colors.textMuted }}>Homes + AC</p>
+                <div style={{ fontSize: '48px' }}>❓</div>
+                <p style={{ ...typo.small, color: colors.textMuted }}>Occupancy?</p>
               </div>
             </div>
           </div>
@@ -721,7 +776,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              Test My Prediction →
+              Test My Prediction
             </button>
           )}
         </div>
@@ -731,7 +786,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
     );
   }
 
-  // PLAY PHASE - Interactive Grid Frequency Simulator
+  // PLAY PHASE - Interactive SM Visualization
   if (phase === 'play') {
     return (
       <div style={{
@@ -743,10 +798,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            Grid Frequency Simulator
+            Maximize GPU Occupancy
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            Balance generation and load to maintain 60 Hz. Adjust inertia to see its stabilizing effect.
+            Adjust registers per thread and see how it affects active warps
           </p>
 
           {/* Main visualization */}
@@ -757,84 +812,72 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <SMVisualization />
             </div>
 
-            {/* Generation slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏭 Generation Output</span>
-                <span style={{ ...typo.small, color: colors.success, fontWeight: 600 }}>{generationOutput}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={generationOutput}
-                onChange={(e) => setGenerationOutput(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.success} ${((generationOutput - 20) / 60) * 100}%, ${colors.border} ${((generationOutput - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Load slider */}
-            <div style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Load Demand</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
-              </div>
-              <input
-                type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
-                style={{
-                  width: '100%',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.error} ${((loadDemand - 20) / 60) * 100}%, ${colors.border} ${((loadDemand - 20) / 60) * 100}%)`,
-                  cursor: 'pointer',
-                }}
-              />
-            </div>
-
-            {/* Inertia slider */}
+            {/* Registers slider */}
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>⚙️ System Inertia (Spinning Mass)</span>
-                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{systemInertia}%</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Registers per Thread</span>
+                <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="100"
-                value={systemInertia}
-                onChange={(e) => setSystemInertia(parseInt(e.target.value))}
+                min="16"
+                max="128"
+                step="8"
+                value={registersPerThread}
+                onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
                   borderRadius: '4px',
-                  background: `linear-gradient(to right, ${colors.accent} ${((systemInertia - 10) / 90) * 100}%, ${colors.border} ${((systemInertia - 10) / 90) * 100}%)`,
+                  background: `linear-gradient(to right, ${colors.registerColor} ${((registersPerThread - 16) / 112) * 100}%, ${colors.border} ${((registersPerThread - 16) / 112) * 100}%)`,
                   cursor: 'pointer',
                 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
-                <span style={{ ...typo.small, color: colors.textMuted }}>Low (Renewable)</span>
-                <span style={{ ...typo.small, color: colors.textMuted }}>High (Fossil)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>16 (light)</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>128 (heavy)</span>
               </div>
             </div>
 
-            {/* Status display */}
+            {/* Threads per block slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Threads per Block</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
+              </div>
+              <input
+                type="range"
+                min="32"
+                max="1024"
+                step="32"
+                value={threadsPerBlock}
+                onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: `linear-gradient(to right, ${colors.accent} ${((threadsPerBlock - 32) / 992) * 100}%, ${colors.border} ${((threadsPerBlock - 32) / 992) * 100}%)`,
+                  cursor: 'pointer',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ ...typo.small, color: colors.textMuted }}>32</span>
+                <span style={{ ...typo.small, color: colors.textMuted }}>1024</span>
+              </div>
+            </div>
+
+            {/* Resource bars */}
+            <ResourceBars />
+
+            {/* Stats display */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '16px',
+              marginTop: '24px',
             }}>
               <div style={{
                 background: colors.bgSecondary,
@@ -842,8 +885,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
+                  {occupancyData.occupancy.toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -851,13 +896,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: generationOutput > loadDemand ? colors.success : generationOutput < loadDemand ? colors.error : colors.textPrimary
-                }}>
-                  {generationOutput > loadDemand ? 'Surplus' : generationOutput < loadDemand ? 'Deficit' : 'Balanced'}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Balance</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeWarps}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Active Warps</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -865,19 +905,14 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '16px',
                 textAlign: 'center',
               }}>
-                <div style={{
-                  ...typo.h3,
-                  color: freqStatus.color
-                }}>
-                  {freqStatus.status}
-                </div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Status</div>
+                <div style={{ ...typo.h3, color: colors.registerColor }}>{occupancyData.activeBlocks}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Active Blocks</div>
               </div>
             </div>
           </div>
 
           {/* Discovery prompt */}
-          {Math.abs(generationOutput - loadDemand) <= 2 && (
+          {occupancyData.occupancy >= 75 && (
             <div style={{
               background: `${colors.success}22`,
               border: `1px solid ${colors.success}`,
@@ -887,7 +922,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               textAlign: 'center',
             }}>
               <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🎯 Perfect balance! Notice how frequency stays near 60 Hz when generation matches load.
+                Great occupancy! But notice how reducing registers increases active warps. There's a tradeoff here.
               </p>
             </div>
           )}
@@ -896,7 +931,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Physics →
+            Understand the Tradeoff
           </button>
         </div>
 
@@ -917,7 +952,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            Why Frequency = Balance
+            The Occupancy Equation
           </h2>
 
           <div style={{
@@ -926,18 +961,30 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             padding: '24px',
             marginBottom: '24px',
           }}>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.h3, color: colors.accent, margin: 0 }}>
+                Occupancy = Active Warps / Max Warps
+              </p>
+            </div>
+
             <div style={{ ...typo.body, color: colors.textSecondary }}>
               <p style={{ marginBottom: '16px' }}>
-                <strong style={{ color: colors.textPrimary }}>Generation = Load → 60 Hz Stable</strong>
+                <strong style={{ color: colors.textPrimary }}>Warps</strong> are groups of 32 threads that execute together. The SM schedules warps, not individual threads.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.error }}>load exceeds generation</span>: Generators slow down, frequency drops below 60 Hz. This is dangerous—equipment malfunctions, motors run slower.
+                <span style={{ color: colors.registerColor }}>Registers</span>: Each thread needs registers for local variables. More registers per thread = fewer threads fit.
               </p>
               <p style={{ marginBottom: '16px' }}>
-                When <span style={{ color: colors.success }}>generation exceeds load</span>: Generators speed up, frequency rises above 60 Hz. This can damage sensitive equipment.
+                <span style={{ color: colors.sharedMemColor }}>Shared Memory</span>: Fast memory shared within a block. More per block = fewer blocks fit.
               </p>
               <p>
-                <span style={{ color: colors.accent, fontWeight: 600 }}>Inertia</span> from spinning generators resists sudden changes. More spinning mass = more stability. This is why renewable grids face new challenges.
+                <span style={{ color: colors.accent }}>Thread Count</span>: Max 2,048 threads per SM. Block size × blocks must fit.
               </p>
             </div>
           </div>
@@ -950,16 +997,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
-              💡 Key Insight: Frequency Response Hierarchy
+              Key Insight
             </h3>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Primary Response (0-30 sec):</strong> Generator inertia and droop control automatically stabilize frequency.
-            </p>
-            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '8px' }}>
-              <strong>Secondary Response (30 sec - 10 min):</strong> Automatic Generation Control adjusts power plants.
-            </p>
             <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-              <strong>Tertiary Response (10+ min):</strong> Operators dispatch additional generation or shed load.
+              Higher occupancy helps <strong>hide memory latency</strong>—while some warps wait for memory, others can execute. But sometimes lower occupancy with more registers is faster due to reduced memory accesses!
             </p>
           </div>
 
@@ -967,7 +1008,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Explore the Renewable Challenge →
+            Explore Shared Memory
           </button>
         </div>
 
@@ -979,9 +1020,9 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     const options = [
-      { id: 'a', text: 'Frequency becomes more stable—solar panels produce cleaner electricity' },
-      { id: 'b', text: 'Frequency becomes less stable—solar provides no spinning inertia', correct: true },
-      { id: 'c', text: 'No change—inverters perfectly replicate generator behavior' },
+      { id: 'a', text: 'Shared memory has no effect on occupancy—it\'s separate from registers' },
+      { id: 'b', text: 'More shared memory per block means fewer blocks can fit on the SM' },
+      { id: 'c', text: 'Shared memory only affects performance, not occupancy' },
     ];
 
     return (
@@ -994,19 +1035,19 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <div style={{
-            background: `${colors.warning}22`,
+            background: `${colors.sharedMemColor}22`,
             borderRadius: '12px',
             padding: '16px',
             marginBottom: '24px',
-            border: `1px solid ${colors.warning}44`,
+            border: `1px solid ${colors.sharedMemColor}44`,
           }}>
-            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
-              🌞 New Variable: Renewable Energy
+            <p style={{ ...typo.small, color: colors.sharedMemColor, margin: 0 }}>
+              New Variable: Shared Memory
             </p>
           </div>
 
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
-            As solar panels replace coal plants (80% renewable penetration), what happens to grid frequency stability?
+            A kernel uses 48KB of shared memory per block. The SM has 96KB total. What happens?
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
@@ -1015,8 +1056,8 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 key={opt.id}
                 onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
                 style={{
-                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
-                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  background: twistPrediction === opt.id ? `${colors.sharedMemColor}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.sharedMemColor : colors.border}`,
                   borderRadius: '12px',
                   padding: '16px 20px',
                   textAlign: 'left',
@@ -1028,7 +1069,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   width: '28px',
                   height: '28px',
                   borderRadius: '50%',
-                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  background: twistPrediction === opt.id ? colors.sharedMemColor : colors.bgSecondary,
                   color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
                   textAlign: 'center',
                   lineHeight: '28px',
@@ -1049,7 +1090,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={primaryButtonStyle}
             >
-              See the Renewable Grid →
+              See the Shared Memory Effect
             </button>
           )}
         </div>
@@ -1071,10 +1112,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-            High-Renewable Grid Simulation
+            Three Resource Limits
           </h2>
           <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
-            See how battery storage provides synthetic inertia
+            Adjust all three parameters and see which becomes the bottleneck
           </p>
 
           <div style={{
@@ -1084,26 +1125,24 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             marginBottom: '24px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
-              <GridVisualization />
+              <SMVisualization />
             </div>
 
-            {/* Renewable penetration slider */}
+            {/* All three sliders */}
             <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>☀️ Renewable Penetration</span>
-                <span style={{ ...typo.small, color: colors.warning, fontWeight: 600 }}>{renewablePenetration}%</span>
+                <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'registers' ? colors.registerColor : colors.textSecondary }}>
+                  Registers per Thread {occupancyData.limitingFactor === 'registers' && '(Limiting)'}
+                </span>
+                <span style={{ ...typo.small, color: colors.registerColor, fontWeight: 600 }}>{registersPerThread}</span>
               </div>
               <input
                 type="range"
-                min="10"
-                max="90"
-                value={renewablePenetration}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value);
-                  setRenewablePenetration(val);
-                  // Reduce inertia as renewables increase
-                  setSystemInertia(Math.max(10, 100 - val));
-                }}
+                min="16"
+                max="128"
+                step="8"
+                value={registersPerThread}
+                onChange={(e) => setRegistersPerThread(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1113,18 +1152,20 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Load variation slider */}
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ ...typo.small, color: colors.textSecondary }}>🏠 Sudden Load Change</span>
-                <span style={{ ...typo.small, color: colors.error, fontWeight: 600 }}>{loadDemand}%</span>
+                <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'shared_memory' ? colors.sharedMemColor : colors.textSecondary }}>
+                  Shared Memory per Block (KB) {occupancyData.limitingFactor === 'shared_memory' && '(Limiting)'}
+                </span>
+                <span style={{ ...typo.small, color: colors.sharedMemColor, fontWeight: 600 }}>{sharedMemoryPerBlock}KB</span>
               </div>
               <input
                 type="range"
-                min="20"
-                max="80"
-                value={loadDemand}
-                onChange={(e) => setLoadDemand(parseInt(e.target.value))}
+                min="4"
+                max="96"
+                step="4"
+                value={sharedMemoryPerBlock}
+                onChange={(e) => setSharedMemoryPerBlock(parseInt(e.target.value))}
                 style={{
                   width: '100%',
                   height: '8px',
@@ -1134,49 +1175,37 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               />
             </div>
 
-            {/* Battery toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '12px',
-              marginBottom: '24px',
-            }}>
-              <span style={{ ...typo.small, color: colors.textSecondary }}>No Battery</span>
-              <button
-                onClick={() => setBatteryResponse(!batteryResponse)}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: occupancyData.limitingFactor === 'threads' ? colors.accent : colors.textSecondary }}>
+                  Threads per Block {occupancyData.limitingFactor === 'threads' && '(Limiting)'}
+                </span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{threadsPerBlock}</span>
+              </div>
+              <input
+                type="range"
+                min="32"
+                max="1024"
+                step="32"
+                value={threadsPerBlock}
+                onChange={(e) => setThreadsPerBlock(parseInt(e.target.value))}
                 style={{
-                  width: '60px',
-                  height: '30px',
-                  borderRadius: '15px',
-                  border: 'none',
-                  background: batteryResponse ? colors.success : colors.border,
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
                   cursor: 'pointer',
-                  position: 'relative',
-                  transition: 'background 0.3s',
                 }}
-              >
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  background: 'white',
-                  position: 'absolute',
-                  top: '3px',
-                  left: batteryResponse ? '33px' : '3px',
-                  transition: 'left 0.3s',
-                }} />
-              </button>
-              <span style={{ ...typo.small, color: batteryResponse ? colors.success : colors.textSecondary, fontWeight: batteryResponse ? 600 : 400 }}>
-                🔋 Battery FFR
-              </span>
+              />
             </div>
+
+            <ResourceBars />
 
             {/* Stats */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(2, 1fr)',
               gap: '12px',
+              marginTop: '20px',
             }}>
               <div style={{
                 background: colors.bgSecondary,
@@ -1184,8 +1213,10 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: colors.accent }}>{systemInertia}%</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>System Inertia</div>
+                <div style={{ ...typo.h3, color: occupancyData.occupancy > 75 ? colors.success : occupancyData.occupancy > 50 ? colors.warning : colors.error }}>
+                  {occupancyData.occupancy.toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Occupancy</div>
               </div>
               <div style={{
                 background: colors.bgSecondary,
@@ -1193,32 +1224,17 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 padding: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ ...typo.h3, color: freqStatus.color }}>{frequency.toFixed(2)} Hz</div>
-                <div style={{ ...typo.small, color: colors.textMuted }}>Frequency</div>
+                <div style={{ ...typo.h3, color: colors.accent }}>{occupancyData.activeBlocks}</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Blocks per SM</div>
               </div>
             </div>
           </div>
-
-          {batteryResponse && (
-            <div style={{
-              background: `${colors.success}22`,
-              border: `1px solid ${colors.success}`,
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '24px',
-              textAlign: 'center',
-            }}>
-              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
-                🔋 Battery responds in milliseconds, providing synthetic inertia to stabilize frequency!
-              </p>
-            </div>
-          )}
 
           <button
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            Understand the Solution →
+            Understand the Tradeoffs
           </button>
         </div>
 
@@ -1239,7 +1255,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
 
         <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
           <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
-            The Future of Grid Stability
+            The Occupancy Paradox
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
@@ -1250,11 +1266,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>⚡</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Synthetic Inertia</h3>
+                <span style={{ fontSize: '24px' }}>100%</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>High Occupancy Isn't Always Best</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                Batteries and inverters can mimic spinning mass through fast power injection. Response time: <span style={{ color: colors.success }}>20-50 milliseconds</span> vs 2-10 seconds for gas turbines.
+                More active warps help hide memory latency. But if you're <span style={{ color: colors.accent }}>compute-bound</span> (math is the bottleneck), extra warps don't help—they just compete for the same ALUs.
               </p>
             </div>
 
@@ -1265,26 +1281,41 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔌</span>
-                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Grid-Forming Inverters</h3>
+                <span style={{ fontSize: '24px' }}>📦</span>
+                <h3 style={{ ...typo.h3, color: colors.registerColor, margin: 0 }}>Register Tradeoff</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                New inverter technology can establish grid frequency independently, not just follow it. This enables <span style={{ color: colors.accent }}>100% inverter-based grids</span> without any synchronous generators.
+                More registers = more data in fast storage = fewer memory loads. Sometimes <span style={{ color: colors.registerColor }}>50% occupancy with heavy register use</span> beats 100% occupancy with register spilling to slow memory.
               </p>
             </div>
 
             <div style={{
-              background: `${colors.success}11`,
+              background: colors.bgCard,
               borderRadius: '12px',
               padding: '20px',
-              border: `1px solid ${colors.success}33`,
+              border: `1px solid ${colors.border}`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '24px' }}>🔄</span>
-                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>Under-Frequency Load Shedding</h3>
+                <span style={{ fontSize: '24px' }}>🎯</span>
+                <h3 style={{ ...typo.h3, color: colors.sharedMemColor, margin: 0 }}>Shared Memory Strategy</h3>
               </div>
               <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
-                As a last resort, automated systems disconnect non-critical loads when frequency drops below 59 Hz. This prevents total grid collapse by sacrificing some consumers to save the rest.
+                Shared memory enables <span style={{ color: colors.sharedMemColor }}>data reuse</span> within a block. Using more shared memory reduces blocks but can dramatically cut global memory bandwidth—a worthy tradeoff for many algorithms.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.warning}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.warning}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>💡</span>
+                <h3 style={{ ...typo.h3, color: colors.warning, margin: 0 }}>The Real Metric</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Profile, don't guess.</strong> Use NVIDIA Nsight or AMD ROCm profiler to find your actual bottleneck. Optimize for throughput, not occupancy percentage.
               </p>
             </div>
           </div>
@@ -1293,7 +1324,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             onClick={() => { playSound('success'); nextPhase(); }}
             style={{ ...primaryButtonStyle, width: '100%' }}
           >
-            See Real-World Applications →
+            See Real-World Applications
           </button>
         </div>
 
@@ -1398,7 +1429,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               marginBottom: '16px',
             }}>
               <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
-                How Frequency Control Connects:
+                How Occupancy Matters:
               </h4>
               <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
                 {app.connection}
@@ -1430,7 +1461,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
               onClick={() => { playSound('success'); nextPhase(); }}
               style={{ ...primaryButtonStyle, width: '100%' }}
             >
-              Take the Knowledge Test →
+              Take the Knowledge Test
             </button>
           )}
         </div>
@@ -1467,7 +1498,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
             </p>
             <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
               {passed
-                ? 'You understand grid frequency control!'
+                ? 'You\'ve mastered GPU Occupancy optimization!'
                 : 'Review the concepts and try again.'}
             </p>
 
@@ -1476,7 +1507,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                 onClick={() => { playSound('complete'); nextPhase(); }}
                 style={primaryButtonStyle}
               >
-                Complete Lesson →
+                Complete Lesson
               </button>
             ) : (
               <button
@@ -1610,7 +1641,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   cursor: 'pointer',
                 }}
               >
-                ← Previous
+                Previous
               </button>
             )}
             {currentQuestion < 9 ? (
@@ -1628,7 +1659,7 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
                   fontWeight: 600,
                 }}
               >
-                Next →
+                Next
               </button>
             ) : (
               <button
@@ -1689,11 +1720,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
         <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
 
         <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
-          Grid Frequency Master!
+          GPU Occupancy Master!
         </h1>
 
         <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
-          You now understand how power grids maintain precise frequency and why it matters for modern electricity systems.
+          You now understand how GPU occupancy works and how to optimize parallel computing performance through resource allocation.
         </p>
 
         <div style={{
@@ -1708,11 +1739,11 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
             {[
-              'Frequency reflects real-time supply/demand balance',
-              'Inertia from spinning generators resists changes',
-              'Primary, secondary, and tertiary frequency response',
-              'Why renewables create stability challenges',
-              'How batteries provide synthetic inertia',
+              'Occupancy = active warps / max warps',
+              'Register pressure limits active threads',
+              'Shared memory limits blocks per SM',
+              'Higher occupancy hides memory latency',
+              '100% occupancy isn\'t always optimal',
             ].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <span style={{ color: colors.success }}>✓</span>
@@ -1756,4 +1787,4 @@ const GridFrequencyRenderer: React.FC<GridFrequencyRendererProps> = ({ onGameEve
   return null;
 };
 
-export default GridFrequencyRenderer;
+export default GPUOccupancyRenderer;

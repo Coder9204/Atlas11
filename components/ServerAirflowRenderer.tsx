@@ -2,147 +2,288 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-const realWorldApps = [
-   {
-      icon: '🏢',
-      title: 'Hyperscale Data Centers',
-      short: 'Cooling at massive scale',
-      tagline: 'Millions of servers, billions in cooling',
-      description: 'Tech giants like Google, Amazon, and Microsoft operate data centers with 100,000+ servers each. Advanced airflow management, hot aisle containment, and free cooling save hundreds of millions in energy costs annually.',
-      connection: 'The hot/cold aisle separation principle scales to warehouse-sized facilities. Hot aisle containment can improve PUE by 0.1-0.2 points, saving millions of dollars per year per facility.',
-      howItWorks: 'Computational Fluid Dynamics (CFD) modeling optimizes tile placement and CRAC positioning. Real-time sensors adjust airflow dynamically. Some facilities use outside air or evaporative cooling when conditions permit.',
-      stats: [
-         { value: '1.1', label: 'Best PUE achieved', icon: '⚡' },
-         { value: '500MW', label: 'Largest facilities', icon: '🔌' },
-         { value: '$5B+', label: 'Annual cooling cost', icon: '💰' }
-      ],
-      examples: ['Google data centers', 'AWS regions', 'Microsoft Azure', 'Meta facilities'],
-      companies: ['Google', 'Amazon', 'Microsoft', 'Meta'],
-      futureImpact: 'AI workloads are driving liquid cooling adoption, as GPU clusters generate 10x the heat density of traditional servers.',
-      color: '#3B82F6'
-   },
-   {
-      icon: '💧',
-      title: 'Liquid Cooling Systems',
-      short: 'Beyond air cooling',
-      tagline: 'Water is 25x better than air',
-      description: 'High-performance computing and AI training clusters generate heat densities that air cannot handle. Direct-to-chip liquid cooling and immersion cooling are becoming essential for modern data centers.',
-      connection: 'When airflow alone cannot remove enough heat (above ~30kW per rack), liquid cooling takes over. Water has 25x the heat capacity of air, enabling much higher power densities.',
-      howItWorks: 'Cold plates attach directly to CPUs and GPUs, circulating coolant that absorbs heat. Facility water systems or cooling distribution units (CDUs) reject this heat. Some systems immerse entire servers in dielectric fluid.',
-      stats: [
-         { value: '100kW+', label: 'Per-rack density', icon: '🔥' },
-         { value: '25x', label: 'Water vs air efficiency', icon: '💧' },
-         { value: '40%', label: 'Energy savings', icon: '⚡' }
-      ],
-      examples: ['NVIDIA DGX clusters', 'Supercomputers', 'Crypto mining', 'AI training farms'],
-      companies: ['Asetek', 'CoolIT', 'GRC', 'LiquidCool Solutions'],
-      futureImpact: 'Most new AI data centers will be designed for liquid cooling from the start, fundamentally changing facility architecture.',
-      color: '#06B6D4'
-   },
-   {
-      icon: '🌡️',
-      title: 'Free Cooling & Economizers',
-      short: 'Using outdoor air',
-      tagline: 'Nature as your air conditioner',
-      description: 'In cool climates, outside air can directly cool data centers for much of the year. Economizer systems switch between mechanical cooling and free cooling based on outdoor conditions.',
-      connection: 'When outdoor air is cooler than return air temperature, it makes no sense to run compressors. Airside economizers bring in filtered outside air; waterside economizers use cooling towers.',
-      howItWorks: 'Sensors monitor outdoor temperature and humidity. When conditions are favorable, dampers open to bring in outside air while exhaust fans remove hot air. Evaporative cooling extends free cooling hours.',
-      stats: [
-         { value: '5000+', label: 'Free cooling hours/yr', icon: '🌬️' },
-         { value: '50%', label: 'Energy reduction', icon: '⚡' },
-         { value: '18-27°C', label: 'ASHRAE range', icon: '🌡️' }
-      ],
-      examples: ['Nordic data centers', 'Mountain locations', 'Coastal facilities', 'Underground sites'],
-      companies: ['Facebook Lulea', 'Google Finland', 'Microsoft Dublin', 'Verne Global'],
-      futureImpact: 'Climate change may reduce free cooling hours in some regions, driving data centers toward colder locations or alternative cooling methods.',
-      color: '#10B981'
-   },
-   {
-      icon: '🔧',
-      title: 'Blanking Panel Systems',
-      short: 'Simple but critical',
-      tagline: 'The $2 part that saves thousands',
-      description: 'Empty rack slots without blanking panels allow hot exhaust air to recirculate to server intakes. This simple $2 piece of metal can prevent thousands of dollars in cooling waste and equipment failures.',
-      connection: 'The physics is straightforward: air takes the path of least resistance. A 2U gap in a rack provides a shortcut for hot air to bypass the intended airflow path, raising intake temperatures by 5-10°C.',
-      howItWorks: 'Blanking panels block unused rack spaces, forcing all air through active equipment. Brush grommets seal cable openings. Rack-level containment systems provide additional isolation.',
-      stats: [
-         { value: '10°C', label: 'Potential temp rise', icon: '🌡️' },
-         { value: '$2-5', label: 'Panel cost', icon: '💵' },
-         { value: '15%', label: 'Cooling waste', icon: '📉' }
-      ],
-      examples: ['Enterprise data centers', 'Colocation facilities', 'Telecom sites', 'Edge deployments'],
-      companies: ['APC', 'Eaton', 'Vertiv', 'Chatsworth'],
-      futureImpact: 'Smart blanking panels with sensors can detect airflow issues and alert operators before problems escalate.',
-      color: '#F59E0B'
-   }
-];
+// ─────────────────────────────────────────────────────────────────────────────
+// Server Airflow Management - Complete 10-Phase Game
+// Teaching hot aisle/cold aisle containment in data centers
+// ─────────────────────────────────────────────────────────────────────────────
 
-type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-
-interface ServerAirflowRendererProps {
-  gamePhase?: Phase; // Optional for resume functionality
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+    'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+    'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+    'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected';
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-// Phase order and labels for navigation
-const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-const phaseLabels: Record<Phase, string> = {
-  hook: 'Introduction',
-  predict: 'Predict',
-  play: 'Experiment',
-  review: 'Understanding',
-  twist_predict: 'New Variable',
-  twist_play: 'Explore Twist',
-  twist_review: 'Deep Insight',
-  transfer: 'Real World',
-  test: 'Knowledge Test',
-  mastery: 'Mastery'
+interface ServerAirflowRendererProps {
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string;
+}
+
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
-const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
-  gamePhase,
-  onCorrectAnswer,
-  onIncorrectAnswer
-}) => {
-  // Internal phase state management
+// ─────────────────────────────────────────────────────────────────────────────
+// TEST QUESTIONS - 10 scenario-based multiple choice questions
+// ─────────────────────────────────────────────────────────────────────────────
+const testQuestions = [
+  {
+    scenario: "A data center manager notices that servers in the middle of a rack row run 8°C hotter than servers at the ends, even though all receive the same airflow from the raised floor.",
+    question: "What is the most likely cause of this temperature difference?",
+    options: [
+      { id: 'a', label: "The middle servers have older, less efficient processors" },
+      { id: 'b', label: "Hot exhaust air is recirculating from the hot aisle back to server intakes", correct: true },
+      { id: 'c', label: "The CRAC units are too far from the middle racks" },
+      { id: 'd', label: "Network cables are blocking airflow to middle servers" }
+    ],
+    explanation: "Without proper containment or with gaps in the rack, hot exhaust air from the hot aisle can recirculate over the top of racks or through empty rack spaces. This 'short-cycling' mixes hot and cold air, raising inlet temperatures especially in the middle of rows where the effect accumulates."
+  },
+  {
+    scenario: "An engineer removes two servers from a rack for maintenance and forgets to install blanking panels. The next day, three adjacent servers shut down from thermal throttling.",
+    question: "Why did leaving empty rack spaces cause overheating?",
+    options: [
+      { id: 'a', label: "The empty spaces created electromagnetic interference" },
+      { id: 'b', label: "Hot air shortcuts through the gaps, raising cold aisle temperature at server intakes", correct: true },
+      { id: 'c', label: "The rack's power distribution became unbalanced" },
+      { id: 'd', label: "The servers' fans sped up and created turbulence" }
+    ],
+    explanation: "Air follows the path of least resistance. An empty 2U gap in a rack provides an easy shortcut for hot exhaust air (35-45°C) to flow back to the cold aisle, raising intake temperatures. This can cause a 5-10°C temperature rise at adjacent server inlets, triggering thermal protection."
+  },
+  {
+    scenario: "A new data center achieves a PUE of 1.8, but after installing hot aisle containment, PUE drops to 1.4. The IT load hasn't changed.",
+    question: "Why did containment improve PUE so dramatically?",
+    options: [
+      { id: 'a', label: "Containment reduces the number of servers needed" },
+      { id: 'b', label: "Separating hot and cold air allows CRAC units to operate more efficiently at higher return temperatures", correct: true },
+      { id: 'c', label: "Containment generates electricity from the temperature difference" },
+      { id: 'd', label: "The plastic panels reflect heat back into the servers" }
+    ],
+    explanation: "PUE (Power Usage Effectiveness) measures total facility power divided by IT power. With containment, CRAC units receive pure hot air (not mixed), allowing them to run at higher return temperatures with better thermodynamic efficiency. Less cooling power is needed for the same heat removal, improving PUE."
+  },
+  {
+    scenario: "A facility uses CFD (Computational Fluid Dynamics) modeling before installing new racks. The simulation shows a 'hot spot' forming 6 feet above the floor in one area.",
+    question: "What physical phenomenon is CFD predicting?",
+    options: [
+      { id: 'a', label: "Electrical resistance heating the air" },
+      { id: 'b', label: "Thermal stratification where hot air rises and pools at ceiling level", correct: true },
+      { id: 'c', label: "Air friction from excessive fan speeds" },
+      { id: 'd', label: "Condensation forming from temperature gradients" }
+    ],
+    explanation: "CFD models solve the Navier-Stokes equations for fluid flow and heat transfer. Hot air is less dense and rises (buoyancy), creating thermal stratification. Without proper exhaust or containment, hot air accumulates at ceiling level, which can then recirculate down to server intakes if CRAC placement isn't optimized."
+  },
+  {
+    scenario: "A colocation facility has perforated floor tiles throughout the entire raised floor. Some tiles blow cold air forcefully while others barely move air at all.",
+    question: "What causes this uneven airflow distribution?",
+    options: [
+      { id: 'a', label: "Some tiles are defective" },
+      { id: 'b', label: "Variations in underfloor static pressure due to cable obstructions and distance from CRAC units", correct: true },
+      { id: 'c', label: "The CRAC units are fighting each other" },
+      { id: 'd', label: "Servers are pulling air at different rates" }
+    ],
+    explanation: "The raised floor acts as a pressurized plenum. Airflow through perforated tiles depends on the local static pressure, which varies based on distance from CRAC supply, cable obstructions, and whether tiles are near walls or open areas. CFD modeling helps optimize tile placement and predict these pressure variations."
+  },
+  {
+    scenario: "A data center in Arizona operates efficiently in winter but struggles with cooling in summer even though IT load is constant. CRAC units run at maximum capacity.",
+    question: "What strategy would most improve summer performance?",
+    options: [
+      { id: 'a', label: "Add more servers to increase heat output" },
+      { id: 'b', label: "Raise the cold aisle setpoint temperature per ASHRAE guidelines to reduce the cooling delta-T", correct: true },
+      { id: 'c', label: "Install more floor tiles to increase airflow" },
+      { id: 'd', label: "Turn off some servers to reduce heat" }
+    ],
+    explanation: "ASHRAE has expanded allowable inlet temperatures to 27°C (80°F) for most equipment. By raising the cold aisle setpoint, you reduce the temperature difference (delta-T) that CRAC units must achieve. This makes economizer modes more effective and reduces compressor work. Modern servers tolerate these higher temperatures without performance loss."
+  },
+  {
+    scenario: "A hyperscale data center operates with cold aisle containment at 27°C inlet temperature and achieves a PUE of 1.12. A traditional enterprise data center runs at 18°C inlet and achieves PUE of 1.8.",
+    question: "Why does the higher temperature operation achieve better efficiency?",
+    options: [
+      { id: 'a', label: "Higher temperatures make servers run faster" },
+      { id: 'b', label: "Warmer setpoints enable more free cooling hours and reduce compressor work", correct: true },
+      { id: 'c', label: "The hyperscale center has better servers" },
+      { id: 'd', label: "Lower temperatures cause ice buildup on coils" }
+    ],
+    explanation: "When the cold aisle setpoint is 27°C, outside air (via economizers) can directly cool the data center whenever ambient temperature is below ~24°C. At 18°C setpoint, mechanical cooling is needed unless it's very cold outside. Higher setpoints dramatically expand free cooling hours, which is why hyperscalers prefer warmer operation."
+  },
+  {
+    scenario: "An IT manager notices that after adding blanking panels, the CRAC unit fans automatically slowed down while maintaining the same cold aisle temperature.",
+    question: "What explains this automatic adjustment?",
+    options: [
+      { id: 'a', label: "The blanking panels blocked sensors" },
+      { id: 'b', label: "Eliminating bypass airflow means less total CFM is needed to deliver the same cooling to servers", correct: true },
+      { id: 'c', label: "The CRAC compressors failed" },
+      { id: 'd', label: "Blanking panels generate their own cooling effect" }
+    ],
+    explanation: "Without blanking panels, cold air 'bypasses' servers by flowing through empty rack spaces directly to the hot aisle. This wasted airflow doesn't do useful cooling work. With panels installed, all cold air goes through servers, so the CRAC variable-speed fans can slow down while still meeting the cooling demand—saving significant energy."
+  },
+  {
+    scenario: "During a CFD analysis, an engineer discovers that 40% of the cold air from CRAC units returns to the units without passing through any servers.",
+    question: "What is this phenomenon called and why is it problematic?",
+    options: [
+      { id: 'a', label: "Thermal runaway—it causes fires" },
+      { id: 'b', label: "Bypass airflow—it wastes cooling capacity and increases energy consumption", correct: true },
+      { id: 'c', label: "Pressure equalization—it's normal and expected" },
+      { id: 'd', label: "Cold pooling—it overcools some servers" }
+    ],
+    explanation: "Bypass airflow is conditioned air that returns to CRAC units without absorbing heat from IT equipment. It represents wasted energy—the air was cooled but didn't do useful work. Common causes include poorly placed perforated tiles, gaps under/around racks, and cable cutouts. Reducing bypass is one of the highest-ROI efficiency improvements."
+  },
+  {
+    scenario: "A new GPU cluster generates 50kW per rack—five times the heat density of traditional servers. Standard raised-floor cooling cannot keep inlet temperatures below 35°C despite maximum fan speeds.",
+    question: "What fundamental cooling approach change is needed?",
+    options: [
+      { id: 'a', label: "Add more raised floor perforated tiles" },
+      { id: 'b', label: "Transition to liquid cooling, which has 25x the heat capacity of air", correct: true },
+      { id: 'c', label: "Install larger blanking panels" },
+      { id: 'd', label: "Move the racks closer to CRAC units" }
+    ],
+    explanation: "Air cooling has practical limits around 20-30kW per rack. Beyond this, the volume of air required becomes impractical. Water has 25 times the volumetric heat capacity of air, so direct-to-chip liquid cooling or immersion cooling becomes necessary for high-density AI/GPU clusters. This represents a fundamental shift in data center design."
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS - 4 detailed applications
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🏢',
+    title: 'Hyperscale Data Centers',
+    short: 'Cooling at massive scale',
+    tagline: 'Millions of servers, billions in cooling costs',
+    description: 'Tech giants like Google, Amazon, and Microsoft operate data centers with 100,000+ servers each. Advanced airflow management, hot aisle containment, and free cooling save hundreds of millions in energy costs annually.',
+    connection: 'The hot/cold aisle separation principle scales to warehouse-sized facilities. Hot aisle containment can improve PUE by 0.1-0.2 points, saving millions of dollars per year per facility.',
+    howItWorks: 'Computational Fluid Dynamics (CFD) modeling optimizes tile placement and CRAC positioning. Real-time sensors adjust airflow dynamically. Some facilities use outside air or evaporative cooling when conditions permit, with automated dampers switching between modes.',
+    stats: [
+      { value: '1.1', label: 'Best PUE achieved', icon: '⚡' },
+      { value: '500MW', label: 'Largest facilities', icon: '🔌' },
+      { value: '$5B+', label: 'Annual cooling cost', icon: '💰' }
+    ],
+    examples: ['Google data centers', 'AWS regions', 'Microsoft Azure', 'Meta facilities'],
+    companies: ['Google', 'Amazon', 'Microsoft', 'Meta'],
+    futureImpact: 'AI workloads are driving liquid cooling adoption, as GPU clusters generate 10x the heat density of traditional servers. Hyperscalers are redesigning facilities from the ground up for liquid-cooled AI infrastructure.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💧',
+    title: 'Liquid Cooling Systems',
+    short: 'Beyond air cooling limits',
+    tagline: 'Water is 25x better than air',
+    description: 'High-performance computing and AI training clusters generate heat densities that air cannot handle. Direct-to-chip liquid cooling and immersion cooling are becoming essential for modern data centers pushing beyond 30kW per rack.',
+    connection: 'When airflow alone cannot remove enough heat (above ~30kW per rack), liquid cooling takes over. Water has 25x the heat capacity of air, enabling much higher power densities while maintaining safe operating temperatures.',
+    howItWorks: 'Cold plates attach directly to CPUs and GPUs, circulating coolant that absorbs heat. Facility water systems or cooling distribution units (CDUs) reject this heat to the atmosphere. Some systems immerse entire servers in dielectric fluid for maximum heat transfer.',
+    stats: [
+      { value: '100kW+', label: 'Per-rack density', icon: '🔥' },
+      { value: '25x', label: 'Water vs air efficiency', icon: '💧' },
+      { value: '40%', label: 'Energy savings', icon: '⚡' }
+    ],
+    examples: ['NVIDIA DGX clusters', 'Supercomputers', 'AI training farms', 'HPC centers'],
+    companies: ['Asetek', 'CoolIT', 'GRC', 'LiquidCool Solutions'],
+    futureImpact: 'Most new AI data centers will be designed for liquid cooling from the start, fundamentally changing facility architecture. Warm water cooling at 45°C enables direct heat rejection without chillers.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🌡️',
+    title: 'Free Cooling & Economizers',
+    short: 'Using outdoor air intelligently',
+    tagline: 'Nature as your air conditioner',
+    description: 'In cool climates, outside air can directly cool data centers for much of the year. Economizer systems switch between mechanical cooling and free cooling based on outdoor conditions, dramatically reducing energy consumption.',
+    connection: 'When outdoor air is cooler than the return air temperature, it makes no thermodynamic sense to run energy-intensive compressors. Airside economizers bring in filtered outside air; waterside economizers use cooling towers.',
+    howItWorks: 'Sensors monitor outdoor temperature and humidity continuously. When conditions are favorable, dampers open to bring in outside air while exhaust fans remove hot air. Evaporative cooling extends free cooling hours in dry climates by adding moisture to lower air temperature.',
+    stats: [
+      { value: '5000+', label: 'Free cooling hours/yr', icon: '🌬️' },
+      { value: '50%', label: 'Energy reduction', icon: '⚡' },
+      { value: '18-27°C', label: 'ASHRAE inlet range', icon: '🌡️' }
+    ],
+    examples: ['Nordic data centers', 'Mountain locations', 'Coastal facilities', 'Underground sites'],
+    companies: ['Facebook Lulea', 'Google Finland', 'Microsoft Dublin', 'Verne Global'],
+    futureImpact: 'Climate change may reduce free cooling hours in some regions, driving data centers toward colder locations or alternative cooling methods. Facilities are being built in Iceland and Scandinavia specifically for year-round free cooling.',
+    color: '#10B981'
+  },
+  {
+    icon: '📋',
+    title: 'Blanking Panels & Sealing',
+    short: 'Simple parts, massive impact',
+    tagline: 'The $2 part that saves thousands',
+    description: 'Empty rack slots without blanking panels allow hot exhaust air to recirculate to server intakes. This simple $2 piece of metal can prevent thousands of dollars in cooling waste and equipment failures—one of the highest-ROI efficiency improvements.',
+    connection: 'The physics is straightforward: air takes the path of least resistance. A 2U gap in a rack provides a shortcut for hot air to bypass the intended airflow path, raising intake temperatures by 5-10°C and wasting cooling capacity.',
+    howItWorks: 'Blanking panels block unused rack spaces, forcing all air through active equipment. Brush grommets seal cable openings while allowing cables to pass. Rack-level containment systems provide additional isolation. Foam gaskets seal gaps between racks.',
+    stats: [
+      { value: '10°C', label: 'Potential temp rise', icon: '🌡️' },
+      { value: '$2-5', label: 'Panel cost each', icon: '💵' },
+      { value: '15%', label: 'Cooling waste eliminated', icon: '📉' }
+    ],
+    examples: ['Enterprise data centers', 'Colocation facilities', 'Telecom central offices', 'Edge deployments'],
+    companies: ['APC/Schneider', 'Eaton', 'Vertiv', 'Chatsworth'],
+    futureImpact: 'Smart blanking panels with integrated sensors can detect airflow issues and temperature anomalies, alerting operators before problems escalate. Automated systems may adjust airflow based on real-time conditions.',
+    color: '#F59E0B'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({ onGameEvent, gamePhase }) => {
+  type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
   const getInitialPhase = (): Phase => {
-    if (gamePhase && phaseOrder.includes(gamePhase)) {
-      return gamePhase;
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
     }
     return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
-  const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
-  const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
+  const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showTwistFeedback, setShowTwistFeedback] = useState(false);
-  const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
-  const [showTestResults, setShowTestResults] = useState(false);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
-  const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Game-specific state
-  const [serverLoad, setServerLoad] = useState(70); // percent
-  const [fanSpeed, setFanSpeed] = useState(50); // percent CFM
+  // Simulation state
+  const [fanSpeed, setFanSpeed] = useState(70); // percent
+  const [serverLoad, setServerLoad] = useState(60); // percent
   const [blankingPanels, setBlankingPanels] = useState(true);
-  const [raisedFloorOpen, setRaisedFloorOpen] = useState(50); // percent tile openness
   const [hotAisleContainment, setHotAisleContainment] = useState(false);
+  const [raisedFloorOpenness, setRaisedFloorOpenness] = useState(50); // percent
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  const lastClickRef = useRef(0);
+  // Test state
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [testSubmitted, setTestSubmitted] = useState(false);
+  const [testScore, setTestScore] = useState(0);
+
+  // Transfer state
+  const [selectedApp, setSelectedApp] = useState(0);
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
+
+  // Navigation ref
   const isNavigating = useRef(false);
 
-  // Sync phase with gamePhase prop changes (for resume functionality)
-  useEffect(() => {
-    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
-      setPhase(gamePhase);
-    }
-  }, [gamePhase, phase]);
-
-  // Check for mobile
+  // Responsive design
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -150,1247 +291,1695 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
-  const typo = {
-    title: isMobile ? '28px' : '36px',
-    heading: isMobile ? '20px' : '24px',
-    bodyLarge: isMobile ? '16px' : '18px',
-    body: isMobile ? '14px' : '16px',
-    small: isMobile ? '12px' : '14px',
-    label: isMobile ? '10px' : '12px',
-    pagePadding: isMobile ? '16px' : '24px',
-    cardPadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '16px' : '20px',
-    elementGap: isMobile ? '8px' : '12px',
+  // Animation loop
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setAnimationFrame(f => f + 1);
+    }, 50);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Premium design colors
+  const colors = {
+    bgPrimary: '#0a0a0f',
+    bgSecondary: '#12121a',
+    bgCard: '#1a1a24',
+    accent: '#06B6D4', // Cyan for cooling theme
+    accentGlow: 'rgba(6, 182, 212, 0.3)',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    hot: '#EF4444',
+    cold: '#3B82F6',
+    textPrimary: '#FFFFFF',
+    textSecondary: '#9CA3AF',
+    textMuted: '#6B7280',
+    border: '#2a2a3a',
   };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setAnimationFrame(f => (f + 1) % 360);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
+  const typo = {
+    h1: { fontSize: isMobile ? '28px' : '36px', fontWeight: 800, lineHeight: 1.2 },
+    h2: { fontSize: isMobile ? '22px' : '28px', fontWeight: 700, lineHeight: 1.3 },
+    h3: { fontSize: isMobile ? '18px' : '22px', fontWeight: 600, lineHeight: 1.4 },
+    body: { fontSize: isMobile ? '15px' : '17px', fontWeight: 400, lineHeight: 1.6 },
+    small: { fontSize: isMobile ? '13px' : '14px', fontWeight: 400, lineHeight: 1.5 },
+  };
 
-  const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
-    if (typeof window === 'undefined') return;
-    try {
-      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      const sounds = {
-        click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
-        success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
-        failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
-        transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
-        complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
-      };
-      const sound = sounds[type];
-      oscillator.frequency.value = sound.freq;
-      oscillator.type = sound.type;
-      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + sound.duration);
-    } catch { /* Audio not available */ }
-  }, []);
+  // Phase navigation
+  const phaseOrder: Phase[] = validPhases;
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Containment Lab',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
 
-  // Calculate airflow and temperatures
-  const calcAirflowMetrics = useCallback(() => {
-    const heatGenerated = serverLoad * 10; // kW simplified
-    const effectiveCFM = fanSpeed * 20; // simplified CFM
-
-    // Blanking panel effect - without them, hot air recirculates
-    const recirculationFactor = blankingPanels ? 0.1 : 0.5;
-
-    // Raised floor pressure effect
-    const pressureDrop = (100 - raisedFloorOpen) * 0.02;
-
-    // Hot aisle containment reduces mixing
-    const containmentBonus = hotAisleContainment ? 0.3 : 0;
-
-    // Calculate temps
-    const coolingEfficiency = (effectiveCFM / 1000) * (1 - recirculationFactor - pressureDrop + containmentBonus);
-    const coldAisleTemp = 18 + (1 - coolingEfficiency) * 5;
-    const hotAisleTemp = coldAisleTemp + (heatGenerated / Math.max(1, effectiveCFM)) * 50;
-
-    // Delta T across servers
-    const deltaT = hotAisleTemp - coldAisleTemp;
-
-    return {
-      heatGenerated,
-      effectiveCFM,
-      coldAisleTemp: Math.max(18, Math.min(30, coldAisleTemp)),
-      hotAisleTemp: Math.max(25, Math.min(50, hotAisleTemp)),
-      deltaT,
-      recirculationPercent: recirculationFactor * 100,
-      staticPressure: 0.05 + raisedFloorOpen * 0.001 // inches WC
-    };
-  }, [serverLoad, fanSpeed, blankingPanels, raisedFloorOpen, hotAisleContainment]);
-
-  const metrics = calcAirflowMetrics();
-
-  // Navigation functions
   const goToPhase = useCallback((p: Phase) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
     if (isNavigating.current) return;
-
-    lastClickRef.current = now;
     isNavigating.current = true;
-
-    setPhase(p);
     playSound('transition');
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, []);
 
-    setTimeout(() => { isNavigating.current = false; }, 400);
-  }, [playSound]);
-
-  const goToNextPhase = useCallback(() => {
+  const nextPhase = useCallback(() => {
     const currentIndex = phaseOrder.indexOf(phase);
     if (currentIndex < phaseOrder.length - 1) {
       goToPhase(phaseOrder[currentIndex + 1]);
     }
   }, [phase, goToPhase]);
 
-  const goToPrevPhase = useCallback(() => {
-    const currentIndex = phaseOrder.indexOf(phase);
-    if (currentIndex > 0) {
-      goToPhase(phaseOrder[currentIndex - 1]);
-    }
-  }, [phase, goToPhase]);
+  // Calculate airflow and temperatures
+  const calculateMetrics = useCallback(() => {
+    // Base heat generation from server load
+    const heatGenerated = serverLoad * 0.8; // kW per rack simplified
 
-  // Premium color palette
-  const colors = {
-    primary: '#3b82f6', // blue-500
-    primaryDark: '#2563eb', // blue-600
-    accent: '#06b6d4', // cyan-500
-    success: '#10b981', // emerald-500
-    bgDark: '#020617', // slate-950
-    bgCard: '#0f172a', // slate-900
-    bgCardLight: '#1e293b', // slate-800
-    border: '#334155', // slate-700
-    textPrimary: '#f8fafc', // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b', // slate-500
-  };
+    // Effective cooling based on fan speed and floor openness
+    const coolingCapacity = (fanSpeed / 100) * (raisedFloorOpenness / 100) * 100;
 
-  // Progress bar renderer
-  const renderProgressBar = () => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: isMobile ? '8px 12px' : '10px 16px',
-        backgroundColor: colors.bgCard,
-        borderBottom: `1px solid ${colors.border}`,
-        gap: '8px'
-      }}>
-        {/* Back button */}
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
-            border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
-            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
-            cursor: currentIdx > 0 ? 'pointer' : 'default',
-            opacity: currentIdx > 0 ? 1 : 0.4,
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>&#8592;</span>
-        </button>
+    // Recirculation factor - without blanking panels, hot air shortcuts back
+    const recirculationFactor = blankingPanels ? 0.05 : 0.40;
 
-        {/* Progress dots */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
-          {phaseOrder.map((p, i) => (
-            <button
-              key={p}
-              onClick={() => i <= currentIdx && goToPhase(p)}
-              style={{
-                width: i === currentIdx ? '20px' : '10px',
-                height: '10px',
-                borderRadius: '5px',
-                border: 'none',
-                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
-                cursor: i <= currentIdx ? 'pointer' : 'default',
-                transition: 'all 0.2s',
-                opacity: i > currentIdx ? 0.5 : 1
-              }}
-              title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
-            />
-          ))}
-        </div>
+    // Containment bonus - reduces mixing
+    const containmentBonus = hotAisleContainment ? 0.25 : 0;
 
-        {/* Phase counter */}
-        <span style={{
-          fontSize: '11px',
-          fontWeight: 700,
-          color: colors.primary,
-          padding: '4px 8px',
-          borderRadius: '6px',
-          backgroundColor: `${colors.primary}15`
-        }}>
-          {currentIdx + 1}/{phaseOrder.length}
-        </span>
-      </div>
-    );
-  };
+    // Calculate temperatures
+    const baseColdAisle = 18;
+    const recirculationPenalty = recirculationFactor * 15;
+    const containmentBenefit = containmentBonus * 5;
+    const coldAisleTemp = baseColdAisle + recirculationPenalty - containmentBenefit;
 
-  // Bottom navigation bar renderer
-  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
-    const currentIdx = phaseOrder.indexOf(phase);
-    const canGoBack = currentIdx > 0;
+    // Delta-T depends on heat load and airflow
+    const deltaT = (heatGenerated * 10) / Math.max(coolingCapacity / 2, 1);
+    const hotAisleTemp = coldAisleTemp + Math.min(deltaT, 30);
+
+    // PUE estimation
+    const basePUE = 2.0;
+    const efficiencyGains = (blankingPanels ? 0.2 : 0) + (hotAisleContainment ? 0.3 : 0) + (raisedFloorOpenness > 40 ? 0.1 : 0);
+    const pue = Math.max(1.1, basePUE - efficiencyGains);
+
+    return {
+      coldAisleTemp: Math.max(15, Math.min(35, coldAisleTemp)),
+      hotAisleTemp: Math.max(25, Math.min(55, hotAisleTemp)),
+      deltaT: hotAisleTemp - coldAisleTemp,
+      recirculationPercent: recirculationFactor * 100,
+      bypassPercent: Math.max(0, (100 - raisedFloorOpenness) * 0.3),
+      pue,
+      coolingEfficiency: Math.max(0, 100 - recirculationFactor * 100 - (100 - raisedFloorOpenness) * 0.2)
+    };
+  }, [serverLoad, fanSpeed, blankingPanels, hotAisleContainment, raisedFloorOpenness]);
+
+  const metrics = calculateMetrics();
+
+  // Data Center Visualization Component
+  const DataCenterVisualization = () => {
+    const width = isMobile ? 340 : 500;
+    const height = isMobile ? 280 : 350;
+
+    const coldColor = colors.cold;
+    const hotColor = colors.hot;
+    const warmColor = '#F59E0B';
+
+    // Animation offset for airflow
+    const flowOffset = (animationFrame * 2) % 40;
 
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: isMobile ? '12px' : '12px 16px',
-        borderTop: `1px solid ${colors.border}`,
-        backgroundColor: colors.bgCard,
-        gap: '12px'
-      }}>
-        <button
-          onClick={goToPrevPhase}
-          style={{
-            padding: isMobile ? '10px 16px' : '10px 20px',
-            borderRadius: '10px',
-            fontWeight: 600,
-            fontSize: isMobile ? '13px' : '14px',
-            backgroundColor: colors.bgCardLight,
-            color: colors.textSecondary,
-            border: `1px solid ${colors.border}`,
-            cursor: canGoBack ? 'pointer' : 'not-allowed',
-            opacity: canGoBack ? 1 : 0.3,
-            minHeight: '44px'
-          }}
-          disabled={!canGoBack}
-        >
-          &#8592; Back
-        </button>
+      <svg width={width} height={height} viewBox="0 0 500 350" style={{ background: colors.bgCard, borderRadius: '12px' }}>
+        <defs>
+          {/* Cold air gradient */}
+          <linearGradient id="coldAirGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#60a5fa" />
+          </linearGradient>
 
-        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
-          {phaseLabels[phase]}
-        </span>
+          {/* Hot air gradient */}
+          <linearGradient id="hotAirGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#dc2626" />
+            <stop offset="50%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
 
-        <button
-          onClick={goToNextPhase}
-          style={{
-            padding: isMobile ? '10px 20px' : '10px 24px',
-            borderRadius: '10px',
-            fontWeight: 700,
-            fontSize: isMobile ? '13px' : '14px',
-            background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
-            color: canGoNext ? colors.textPrimary : colors.textMuted,
-            border: 'none',
-            cursor: canGoNext ? 'pointer' : 'not-allowed',
-            opacity: canGoNext ? 1 : 0.4,
-            boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
-            minHeight: '44px'
-          }}
-          disabled={!canGoNext}
-        >
-          {nextLabel} &#8594;
-        </button>
-      </div>
-    );
-  };
+          {/* Server rack gradient */}
+          <linearGradient id="rackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
 
-  const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setSelectedPrediction(prediction);
-    setShowPredictionFeedback(true);
-    playSound(prediction === 'C' ? 'success' : 'failure');
-  }, [playSound]);
+          {/* Floor gradient */}
+          <linearGradient id="floorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
 
-  const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTwistPrediction(prediction);
-    setShowTwistFeedback(true);
-    playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
+          {/* Glow filters */}
+          <filter id="coldGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-  const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setTestAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[questionIndex] = answerIndex;
-      return newAnswers;
-    });
-  }, []);
+          <filter id="hotGlow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-  const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    setCompletedApps(prev => new Set([...prev, appIndex]));
-    playSound('complete');
-  }, [playSound]);
+        {/* Background */}
+        <rect width="500" height="350" fill="#0f172a" />
 
-  const testQuestions = [
-    { question: "Why do data centers use raised floors?", options: [{ text: "To store cables", correct: false }, { text: "To create a pressurized plenum for cold air distribution", correct: true }, { text: "To make cleaning easier", correct: false }, { text: "For earthquake protection", correct: false }] },
-    { question: "What is the purpose of the hot aisle/cold aisle layout?", options: [{ text: "To look organized", correct: false }, { text: "To separate cold inlet air from hot exhaust air", correct: true }, { text: "To save floor space", correct: false }, { text: "To reduce noise", correct: false }] },
-    { question: "Blanking panels in empty rack slots prevent:", options: [{ text: "Dust from entering", correct: false }, { text: "Hot air from recirculating to the cold aisle", correct: true }, { text: "Theft of equipment", correct: false }, { text: "Electromagnetic interference", correct: false }] },
-    { question: "CFM stands for:", options: [{ text: "Cold Flow Measurement", correct: false }, { text: "Cubic Feet per Minute (airflow volume)", correct: true }, { text: "Cooling Factor Metric", correct: false }, { text: "Central Fan Motor", correct: false }] },
-    { question: "Static pressure in a raised floor is measured in:", options: [{ text: "PSI", correct: false }, { text: "Inches of water column (WC)", correct: true }, { text: "Degrees Celsius", correct: false }, { text: "Watts", correct: false }] },
-    { question: "Hot aisle containment helps by:", options: [{ text: "Making the room look better", correct: false }, { text: "Preventing hot/cold air mixing, improving CRAC efficiency", correct: true }, { text: "Reducing noise", correct: false }, { text: "Saving floor space", correct: false }] },
-    { question: "The ideal cold aisle temperature for servers is typically:", options: [{ text: "5-10C (very cold)", correct: false }, { text: "18-27C per ASHRAE guidelines", correct: true }, { text: "30-35C (warm)", correct: false }, { text: "0C (freezing)", correct: false }] },
-    { question: "Bypass airflow refers to:", options: [{ text: "Air going through servers too fast", correct: false }, { text: "Conditioned air that returns to CRAC without cooling equipment", correct: true }, { text: "Emergency ventilation", correct: false }, { text: "Air going through cable holes", correct: false }] },
-    { question: "If you remove a server without adding blanking panels:", options: [{ text: "Nothing changes", correct: false }, { text: "Hot air shortcuts through the gap, raising cold aisle temp", correct: true }, { text: "The rack cools better", correct: false }, { text: "Static pressure increases", correct: false }] },
-    { question: "Delta T (temperature rise) across a server depends on:", options: [{ text: "Server color", correct: false }, { text: "Heat load and airflow rate (Q = m_dot * Cp * deltaT)", correct: true }, { text: "Rack height only", correct: false }, { text: "Room lighting", correct: false }] }
-  ];
+        {/* Raised floor / Plenum */}
+        <rect x="20" y="280" width="460" height="50" fill="url(#floorGrad)" rx="4" />
+        <text x="250" y="310" fill={colors.textMuted} fontSize="10" textAnchor="middle">Raised Floor Plenum (Cold Air)</text>
 
-  const applications = [
-    { title: "Hyperscale Data Centers", icon: "🏢", description: "Google, Amazon, and Microsoft run data centers with 100,000+ servers. Perfect airflow management saves millions in cooling costs.", details: "Hot aisle containment can improve PUE by 0.1-0.2 points." },
-    { title: "Colocation Facilities", icon: "🔌", description: "Colo providers must cool diverse equipment from different customers. Blanking panels and airflow management are critical.", details: "Empty U-spaces without blanking panels can raise intake temps by 5-10C." },
-    { title: "Edge Computing", icon: "📡", description: "Small edge sites (5-10 racks) still need proper airflow. Micro-modular designs use sealed hot aisles.", details: "Self-contained pods maintain airflow even in non-ideal locations." },
-    { title: "Telecom Central Offices", icon: "📞", description: "Legacy telecom buildings often have poor airflow. Retrofitting with containment and proper tile placement helps.", details: "Perforated tile placement matters - 80% of cooling issues are airflow-related." }
-  ];
+        {/* Cold air in plenum */}
+        <ellipse cx="250" cy="295" rx={180 * (raisedFloorOpenness / 100)} ry="15" fill={coldColor} opacity="0.3" />
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
+        {/* Perforated floor tiles */}
+        {[80, 180, 280, 380].map((x, i) => (
+          <g key={`tile-${i}`}>
+            <rect x={x} y="265" width="40" height="15" fill="#475569" rx="2" stroke="#64748b" strokeWidth="1" />
+            {raisedFloorOpenness > 30 && (
+              <>
+                {[0, 1, 2].map(j => (
+                  <rect key={j} x={x + 8 + j * 12} y="268" width="6" height="9" fill={coldColor} opacity="0.6" rx="1" />
+                ))}
+              </>
+            )}
+          </g>
+        ))}
 
-  const getTempColor = (temp: number) => {
-    if (temp < 22) return '#3b82f6';
-    if (temp < 27) return '#22c55e';
-    if (temp < 35) return '#eab308';
-    return '#ef4444';
-  };
+        {/* Cold aisle zone */}
+        <rect x="140" y="80" width="220" height="180" fill={coldColor} opacity="0.1" rx="8" />
+        <text x="250" y="100" fill={coldColor} fontSize="12" textAnchor="middle" fontWeight="600">COLD AISLE</text>
+        <text x="250" y="116" fill={coldColor} fontSize="11" textAnchor="middle">{metrics.coldAisleTemp.toFixed(1)}°C</text>
 
-  const renderDataCenterVisualization = () => {
-    return (
-      <div className="relative">
-        {/* External Labels using typo system */}
-        <div className="flex justify-between mb-2 px-2">
-          <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700/50">
-            <div style={{ fontSize: typo.small, fontWeight: 700 }} className="text-slate-200 mb-1">Temperatures</div>
-            <div style={{ fontSize: typo.label }} className="text-blue-400">Cold: {metrics.coldAisleTemp.toFixed(1)}C</div>
-            <div style={{ fontSize: typo.label }} className="text-orange-400">Hot: {metrics.hotAisleTemp.toFixed(1)}C</div>
-          </div>
-          <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700/50 text-center">
-            <div style={{ fontSize: typo.label }} className="text-amber-400">Heat Load</div>
-            <div style={{ fontSize: typo.small, fontWeight: 700 }} className="text-amber-300">{metrics.heatGenerated.toFixed(0)} kW</div>
-          </div>
-          <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700/50">
-            <div style={{ fontSize: typo.small, fontWeight: 700 }} className="text-slate-200 mb-1">Airflow Metrics</div>
-            <div style={{ fontSize: typo.label }} className="text-slate-400">CFM: {metrics.effectiveCFM.toFixed(0)}</div>
-            <div style={{ fontSize: typo.label }} className="text-slate-400">Static: {metrics.staticPressure.toFixed(3)}&quot; WC</div>
-            <div style={{ fontSize: typo.label, color: blankingPanels ? '#22c55e' : '#ef4444' }}>Recirc: {metrics.recirculationPercent.toFixed(0)}%</div>
-          </div>
-        </div>
+        {/* Hot aisle zones */}
+        <rect x="20" y="80" width="60" height="180" fill={hotColor} opacity="0.15" rx="4" />
+        <text x="50" y="100" fill={hotColor} fontSize="10" textAnchor="middle" fontWeight="600">HOT</text>
+        <text x="50" y="114" fill={hotColor} fontSize="9" textAnchor="middle">{metrics.hotAisleTemp.toFixed(1)}°C</text>
 
-        <svg viewBox="0 0 500 300" className="w-full max-w-2xl mx-auto">
-          <defs>
-            {/* Premium cold air gradient with 5 stops */}
-            <linearGradient id="sairColdAir" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#1e3a8a" />
-              <stop offset="25%" stopColor="#1e40af" />
-              <stop offset="50%" stopColor="#2563eb" />
-              <stop offset="75%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#60a5fa" />
-            </linearGradient>
+        <rect x="420" y="80" width="60" height="180" fill={hotColor} opacity="0.15" rx="4" />
+        <text x="450" y="100" fill={hotColor} fontSize="10" textAnchor="middle" fontWeight="600">HOT</text>
+        <text x="450" y="114" fill={hotColor} fontSize="9" textAnchor="middle">{metrics.hotAisleTemp.toFixed(1)}°C</text>
 
-            {/* Premium hot air gradient with 5 stops */}
-            <linearGradient id="sairHotAir" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#7c2d12" />
-              <stop offset="25%" stopColor="#c2410c" />
-              <stop offset="50%" stopColor="#ea580c" />
-              <stop offset="75%" stopColor="#f97316" />
-              <stop offset="100%" stopColor="#fb923c" />
-            </linearGradient>
-
-            {/* Server chassis metallic gradient */}
-            <linearGradient id="sairChassisMetal" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="20%" stopColor="#4b5563" />
-              <stop offset="40%" stopColor="#374151" />
-              <stop offset="60%" stopColor="#1f2937" />
-              <stop offset="80%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
-            </linearGradient>
-
-            {/* Rack frame brushed metal */}
-            <linearGradient id="sairRackMetal" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0f172a" />
-              <stop offset="15%" stopColor="#1e293b" />
-              <stop offset="50%" stopColor="#0f172a" />
-              <stop offset="85%" stopColor="#1e293b" />
-              <stop offset="100%" stopColor="#0f172a" />
-            </linearGradient>
-
-            {/* Server LED glow */}
-            <radialGradient id="sairServerLED" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
-              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.8" />
-              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
-            </radialGradient>
-
-            {/* Blanking panel gradient */}
-            <linearGradient id="sairBlankingPanel" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#4b5563" />
-              <stop offset="25%" stopColor="#6b7280" />
-              <stop offset="50%" stopColor="#4b5563" />
-              <stop offset="75%" stopColor="#6b7280" />
-              <stop offset="100%" stopColor="#4b5563" />
-            </linearGradient>
-
-            {/* Floor tile gradient */}
-            <linearGradient id="sairFloorTile" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#6b7280" />
-              <stop offset="30%" stopColor="#4b5563" />
-              <stop offset="70%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
-            </linearGradient>
-
-            {/* Perforated tile gradient */}
-            <linearGradient id="sairPerfTile" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e40af" />
-              <stop offset="30%" stopColor="#1d4ed8" />
-              <stop offset="70%" stopColor="#2563eb" />
-              <stop offset="100%" stopColor="#3b82f6" />
-            </linearGradient>
-
-            {/* Plenum chamber gradient */}
-            <linearGradient id="sairPlenum" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1f2937" />
-              <stop offset="30%" stopColor="#111827" />
-              <stop offset="70%" stopColor="#0f172a" />
-              <stop offset="100%" stopColor="#020617" />
-            </linearGradient>
-
-            {/* Fan blade gradient */}
-            <radialGradient id="sairFanBlade" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="40%" stopColor="#475569" />
-              <stop offset="80%" stopColor="#334155" />
-              <stop offset="100%" stopColor="#1e293b" />
-            </radialGradient>
-
-            {/* Containment barrier gradient */}
-            <linearGradient id="sairContainment" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#c2410c" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#f97316" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#c2410c" stopOpacity="0.3" />
-            </linearGradient>
-
-            {/* Temperature zone gradients */}
-            <linearGradient id="sairTempZoneCold" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.1" />
-              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.1" />
-            </linearGradient>
-
-            <linearGradient id="sairTempZoneHot" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.1" />
-              <stop offset="50%" stopColor="#f97316" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.1" />
-            </linearGradient>
-
-            {/* Glow filters */}
-            <filter id="sairColdGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="sairHotGlow" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="sairLEDGlow" x="-200%" y="-200%" width="500%" height="500%">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            <filter id="sairSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" />
-            </filter>
-
-            {/* Airflow streamline pattern */}
-            <pattern id="sairStreamlines" width="20" height="10" patternUnits="userSpaceOnUse">
-              <path d="M0,5 Q5,2 10,5 T20,5" fill="none" stroke="#60a5fa" strokeWidth="0.5" strokeOpacity="0.3" />
-            </pattern>
-          </defs>
-
-          {/* Background with subtle grid */}
-          <rect width="500" height="300" fill="#030712" />
-          <pattern id="sairGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
-          </pattern>
-          <rect width="500" height="300" fill="url(#sairGrid)" />
-
-          {/* Floor/Plenum with depth */}
-          <rect x="20" y="235" width="460" height="55" rx="4" fill="url(#sairPlenum)" />
-          <rect x="20" y="235" width="460" height="4" fill="#374151" opacity="0.5" />
-          {/* Plenum internal cold air glow */}
-          <ellipse cx="250" cy="265" rx="180" ry="20" fill="url(#sairColdAir)" opacity="0.2" filter="url(#sairSoftGlow)" />
-
-          {/* Floor tiles with perforations */}
-          {[0, 1, 2, 3, 4, 5].map((i) => {
-            const x = 50 + i * 75;
-            const isPerforated = i === 1 || i === 4;
-            return (
-              <g key={i}>
-                <rect x={x} y="215" width="60" height="20" rx="2" fill={isPerforated ? 'url(#sairPerfTile)' : 'url(#sairFloorTile)'} stroke="#475569" strokeWidth="1" />
-                {/* Tile surface highlight */}
-                <rect x={x + 2} y="217" width="56" height="2" fill="rgba(255,255,255,0.1)" rx="1" />
-                {isPerforated && raisedFloorOpen > 20 && (
-                  <g>
-                    {[...Array(4)].map((_, j) => (
-                      <rect key={j} x={x + 8 + j * 14} y="219" width="8" height="12" rx="1" fill="#3b82f6" opacity={0.4 + (raisedFloorOpen / 200)} />
-                    ))}
-                    {/* Cold air glow from perforations */}
-                    <ellipse cx={x + 30} cy="225" rx="25" ry="8" fill="#3b82f6" opacity="0.15" filter="url(#sairColdGlow)" />
-                  </g>
-                )}
-              </g>
-            );
-          })}
-
-          {/* Temperature zones */}
-          {/* Cold aisle zone */}
-          <rect x="160" y="70" width="180" height="140" rx="8" fill="url(#sairTempZoneCold)" />
-
-          {/* Hot aisle zones */}
-          <rect x="20" y="70" width="45" height="140" rx="4" fill="url(#sairTempZoneHot)" />
-          <rect x="435" y="70" width="45" height="140" rx="4" fill="url(#sairTempZoneHot)" />
-
-          {/* Server racks with premium styling */}
-          {[0, 1, 2].map((row) => {
-            const y = 75 + row * 48;
-            return (
-              <g key={row}>
-                {/* Left rack */}
-                <g>
-                  {/* Rack frame */}
-                  <rect x="55" y={y} width="90" height="42" rx="4" fill="url(#sairRackMetal)" stroke="#475569" strokeWidth="1.5" />
-                  {/* Rack top highlight */}
-                  <rect x="57" y={y + 2} width="86" height="2" fill="rgba(255,255,255,0.08)" rx="1" />
-
-                  {blankingPanels ? (
-                    <>
-                      {/* Blanking panel with texture */}
-                      <rect x="60" y={y + 5} width="80" height="9" rx="2" fill="url(#sairBlankingPanel)" />
-                      <rect x="62" y={y + 6} width="76" height="1" fill="rgba(255,255,255,0.1)" />
-
-                      {/* Active server with LED and vents */}
-                      <rect x="60" y={y + 16} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
-                      <circle cx="68" cy={y + 21} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
-                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-                      </circle>
-                      {/* Server vents */}
-                      {[...Array(6)].map((_, v) => (
-                        <rect key={v} x={80 + v * 10} y={y + 18} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
-                      ))}
-
-                      {/* Blanking panel */}
-                      <rect x="60" y={y + 28} width="80" height="9" rx="2" fill="url(#sairBlankingPanel)" />
-                      <rect x="62" y={y + 29} width="76" height="1" fill="rgba(255,255,255,0.1)" />
-                    </>
-                  ) : (
-                    <>
-                      {/* Active server */}
-                      <rect x="60" y={y + 5} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
-                      <circle cx="68" cy={y + 10} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
-                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
-                      </circle>
-                      {[...Array(6)].map((_, v) => (
-                        <rect key={v} x={80 + v * 10} y={y + 7} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
-                      ))}
-
-                      {/* Empty slot (gap) with recirculation indicator */}
-                      <rect x="60" y={y + 17} width="80" height="8" rx="1" fill="#0f172a" stroke="#ef4444" strokeWidth="0.5" strokeDasharray="3 2" strokeOpacity="0.5" />
-
-                      {/* Active server */}
-                      <rect x="60" y={y + 27} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
-                      <circle cx="68" cy={y + 32} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
-                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite" />
-                      </circle>
-                      {[...Array(6)].map((_, v) => (
-                        <rect key={v} x={80 + v * 10} y={y + 29} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
-                      ))}
-                    </>
-                  )}
-                </g>
-
-                {/* Right rack */}
-                <g>
-                  <rect x="355" y={y} width="90" height="42" rx="4" fill="url(#sairRackMetal)" stroke="#475569" strokeWidth="1.5" />
-                  <rect x="357" y={y + 2} width="86" height="2" fill="rgba(255,255,255,0.08)" rx="1" />
-
-                  {[0, 1, 2].map((slot) => (
-                    <g key={slot}>
-                      <rect x="360" y={y + 5 + slot * 12} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
-                      <circle cx="368" cy={y + 10 + slot * 12} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
-                        <animate attributeName="opacity" values="0.7;1;0.7" dur={`${1.2 + slot * 0.3}s`} repeatCount="indefinite" />
-                      </circle>
-                      {[...Array(6)].map((_, v) => (
-                        <rect key={v} x={380 + v * 10} y={y + 7 + slot * 12} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
-                      ))}
-                    </g>
+        {/* Server racks - Left side */}
+        <g>
+          <rect x="85" y="120" width="50" height="140" fill="url(#rackGrad)" rx="4" stroke="#64748b" strokeWidth="1" />
+          {/* Servers */}
+          {[0, 1, 2, 3, 4].map(i => (
+            <g key={`left-server-${i}`}>
+              {blankingPanels || i !== 2 ? (
+                <>
+                  <rect x="90" y={125 + i * 27} width="40" height="22" fill="#1f2937" rx="2" />
+                  <circle cx="97" cy={136 + i * 27} r="3" fill={serverLoad > 20 * i ? '#22c55e' : '#64748b'}>
+                    <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                  {/* Vent lines */}
+                  {[0, 1, 2].map(j => (
+                    <rect key={j} x={106 + j * 8} y={128 + i * 27} width="5" height="16" fill="#374151" rx="1" />
                   ))}
-                </g>
-              </g>
-            );
-          })}
+                </>
+              ) : (
+                /* Empty slot without blanking panel */
+                <rect x="90" y={125 + i * 27} width="40" height="22" fill="#0f172a" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 2" rx="2" />
+              )}
+            </g>
+          ))}
+        </g>
 
-          {/* Fan visualization at top of racks */}
-          {[75, 375].map((x, idx) => (
-            <g key={`fan-${idx}`} transform={`translate(${x}, 55)`}>
-              <circle cx="35" cy="8" r="12" fill="url(#sairFanBlade)" stroke="#475569" strokeWidth="1" />
-              <circle cx="35" cy="8" r="4" fill="#1e293b" />
-              {/* Fan blades - animated rotation */}
-              {[0, 60, 120, 180, 240, 300].map((angle, i) => (
-                <line
-                  key={i}
-                  x1="35"
-                  y1="8"
-                  x2={35 + 9 * Math.cos((angle + animationFrame * (fanSpeed / 10)) * Math.PI / 180)}
-                  y2={8 + 9 * Math.sin((angle + animationFrame * (fanSpeed / 10)) * Math.PI / 180)}
-                  stroke="#94a3b8"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
+        {/* Server racks - Right side */}
+        <g>
+          <rect x="365" y="120" width="50" height="140" fill="url(#rackGrad)" rx="4" stroke="#64748b" strokeWidth="1" />
+          {[0, 1, 2, 3, 4].map(i => (
+            <g key={`right-server-${i}`}>
+              <rect x="370" y={125 + i * 27} width="40" height="22" fill="#1f2937" rx="2" />
+              <circle cx="377" cy={136 + i * 27} r="3" fill={serverLoad > 20 * i ? '#22c55e' : '#64748b'}>
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="1.2s" repeatCount="indefinite" />
+              </circle>
+              {[0, 1, 2].map(j => (
+                <rect key={j} x={386 + j * 8} y={128 + i * 27} width="5" height="16" fill="#374151" rx="1" />
               ))}
             </g>
           ))}
+        </g>
 
-          {/* Hot aisle containment barriers */}
-          {hotAisleContainment && (
-            <>
-              <rect x="20" y="60" width="40" height="8" rx="2" fill="url(#sairContainment)" />
-              <rect x="440" y="60" width="40" height="8" rx="2" fill="url(#sairContainment)" />
-              {/* Containment ceiling panels */}
-              <rect x="20" y="60" width="40" height="2" fill="#f97316" opacity="0.8" />
-              <rect x="440" y="60" width="40" height="2" fill="#f97316" opacity="0.8" />
-            </>
-          )}
+        {/* Hot aisle containment barriers */}
+        {hotAisleContainment && (
+          <>
+            <rect x="20" y="75" width="60" height="8" fill={warmColor} opacity="0.8" rx="2" />
+            <rect x="420" y="75" width="60" height="8" fill={warmColor} opacity="0.8" rx="2" />
+            <text x="50" y="70" fill={warmColor} fontSize="8" textAnchor="middle">CONTAINMENT</text>
+            <text x="450" y="70" fill={warmColor} fontSize="8" textAnchor="middle">CONTAINMENT</text>
+          </>
+        )}
 
-          {/* Animated cold air streamlines rising from floor */}
-          {[...Array(Math.round(raisedFloorOpen / 15))].map((_, i) => {
-            const baseX = 180 + i * 25;
-            const yOffset = (animationFrame * 2 + i * 15) % 60;
-            const opacity = 0.4 + (raisedFloorOpen / 200);
-            return (
-              <g key={`cold-stream-${i}`} filter="url(#sairColdGlow)">
-                <path
-                  d={`M${baseX},${215 - yOffset} Q${baseX + 5},${200 - yOffset} ${baseX},${185 - yOffset}`}
-                  fill="none"
-                  stroke="#60a5fa"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  opacity={opacity}
-                />
-                {/* Arrow head */}
-                <polygon
-                  points={`${baseX},${182 - yOffset} ${baseX - 4},${190 - yOffset} ${baseX + 4},${190 - yOffset}`}
-                  fill="#60a5fa"
-                  opacity={opacity}
-                />
-              </g>
-            );
-          })}
+        {/* Cold air flow arrows - rising from floor */}
+        {[160, 220, 280, 340].map((x, i) => (
+          <g key={`cold-flow-${i}`} filter="url(#coldGlow)">
+            <path
+              d={`M${x},${265 - flowOffset % 40} L${x},${220 - flowOffset % 40}`}
+              stroke={coldColor}
+              strokeWidth="3"
+              strokeLinecap="round"
+              opacity={0.4 + (fanSpeed / 200)}
+            />
+            <polygon
+              points={`${x},${215 - flowOffset % 40} ${x - 6},${225 - flowOffset % 40} ${x + 6},${225 - flowOffset % 40}`}
+              fill={coldColor}
+              opacity={0.6}
+            />
+          </g>
+        ))}
 
-          {/* Animated airflow through servers - streamlines */}
-          {[...Array(6)].map((_, i) => {
-            const row = i % 3;
-            const baseY = 95 + row * 48;
-            const xOffset = (animationFrame * 1.5 + i * 20) % 80;
-            const tempProgress = xOffset / 80;
-            const streamColor = tempProgress < 0.3 ? '#60a5fa' : tempProgress < 0.6 ? '#fbbf24' : '#f97316';
-            return (
-              <g key={`flow-${i}`}>
-                {/* Streamline path through server */}
-                <path
-                  d={`M${148 + xOffset},${baseY} l15,0`}
-                  fill="none"
-                  stroke={streamColor}
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  opacity="0.7"
-                />
-                {/* Small particle effect */}
-                <circle
-                  cx={155 + xOffset}
-                  cy={baseY}
-                  r="2"
-                  fill={streamColor}
-                  opacity="0.9"
-                />
-              </g>
-            );
-          })}
-
-          {/* Hot air recirculation visualization when no blanking panels */}
-          {!blankingPanels && (
-            <g filter="url(#sairHotGlow)">
-              {[0, 1, 2].map((row) => {
-                const y = 75 + row * 48 + 21;
-                const loopOffset = (animationFrame * 2 + row * 30) % 100;
-                return (
-                  <g key={`recirc-${row}`}>
-                    {/* Recirculation loop path */}
-                    <path
-                      d={`M148,${y} Q130,${y - 15} 130,${y - 30} Q130,${y - 45} 150,${y - 40}`}
-                      fill="none"
-                      stroke="#ef4444"
-                      strokeWidth="2"
-                      strokeDasharray="6 3"
-                      opacity="0.6"
-                    >
-                      <animate
-                        attributeName="stroke-dashoffset"
-                        from="0"
-                        to="18"
-                        dur="0.8s"
-                        repeatCount="indefinite"
-                      />
-                    </path>
-                    {/* Hot air particle */}
-                    <circle
-                      cx={130 + (loopOffset % 25)}
-                      cy={y - 20 - Math.sin(loopOffset * 0.1) * 10}
-                      r="3"
-                      fill="#ef4444"
-                      opacity="0.7"
-                    />
-                  </g>
-                );
-              })}
+        {/* Airflow through servers - left rack */}
+        {[0, 1, 2].map(i => {
+          const baseY = 136 + i * 40;
+          const xOffset = (flowOffset * 1.5) % 50;
+          return (
+            <g key={`flow-left-${i}`}>
+              <path
+                d={`M${140 + xOffset},${baseY} L${85 + xOffset * 0.5},${baseY}`}
+                stroke={xOffset < 25 ? coldColor : warmColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                opacity="0.5"
+              />
             </g>
-          )}
+          );
+        })}
 
-          {/* Hot exhaust rising from hot aisles */}
-          {[30, 455].map((x, idx) => (
-            <g key={`exhaust-${idx}`}>
-              {[...Array(3)].map((_, i) => {
-                const yOffset = (animationFrame * 1.5 + i * 25) % 50;
-                return (
-                  <g key={`heat-${idx}-${i}`} filter="url(#sairHotGlow)">
-                    <ellipse
-                      cx={x + 15}
-                      cy={70 - yOffset}
-                      rx="8"
-                      ry="4"
-                      fill="#f97316"
-                      opacity={0.3 - yOffset / 200}
-                    />
-                  </g>
-                );
-              })}
+        {/* Airflow through servers - right rack */}
+        {[0, 1, 2].map(i => {
+          const baseY = 136 + i * 40;
+          const xOffset = (flowOffset * 1.5) % 50;
+          return (
+            <g key={`flow-right-${i}`}>
+              <path
+                d={`M${360 - xOffset},${baseY} L${415 - xOffset * 0.5},${baseY}`}
+                stroke={xOffset < 25 ? coldColor : warmColor}
+                strokeWidth="2"
+                strokeLinecap="round"
+                opacity="0.5"
+              />
             </g>
+          );
+        })}
+
+        {/* Hot air recirculation when no blanking panels */}
+        {!blankingPanels && (
+          <g filter="url(#hotGlow)">
+            {[0, 1].map(i => (
+              <path
+                key={`recirc-${i}`}
+                d={`M85,${152 + i * 40} Q60,${152 + i * 40} 60,${130 + i * 40} Q60,${110 + i * 40} 140,${140 + i * 40}`}
+                stroke={hotColor}
+                strokeWidth="2"
+                strokeDasharray="5 3"
+                fill="none"
+                opacity="0.7"
+              >
+                <animate attributeName="stroke-dashoffset" from="0" to="16" dur="0.8s" repeatCount="indefinite" />
+              </path>
+            ))}
+          </g>
+        )}
+
+        {/* Hot exhaust rising */}
+        {[35, 435].map((x, idx) => (
+          <g key={`exhaust-${idx}`}>
+            {[0, 1, 2].map(i => {
+              const yOffset = (flowOffset + i * 15) % 40;
+              return (
+                <ellipse
+                  key={`heat-${idx}-${i}`}
+                  cx={x + 15}
+                  cy={75 - yOffset}
+                  rx="10"
+                  ry="5"
+                  fill={hotColor}
+                  opacity={0.3 - yOffset / 150}
+                  filter="url(#hotGlow)"
+                />
+              );
+            })}
+          </g>
+        ))}
+
+        {/* CRAC unit */}
+        <g>
+          <rect x="210" y="20" width="80" height="50" fill="#1e293b" rx="6" stroke="#475569" strokeWidth="2" />
+          <text x="250" y="40" fill={colors.textSecondary} fontSize="10" textAnchor="middle">CRAC Unit</text>
+          <text x="250" y="55" fill={coldColor} fontSize="10" textAnchor="middle">{fanSpeed}% CFM</text>
+          {/* Fan animation */}
+          {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+            <line
+              key={i}
+              x1="250"
+              y1="35"
+              x2={250 + 12 * Math.cos((angle + animationFrame * (fanSpeed / 15)) * Math.PI / 180)}
+              y2={35 + 12 * Math.sin((angle + animationFrame * (fanSpeed / 15)) * Math.PI / 180)}
+              stroke="#64748b"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           ))}
-        </svg>
-      </div>
+        </g>
+
+        {/* Metrics display */}
+        <g>
+          <rect x="20" y="15" width="85" height="50" fill={colors.bgSecondary} rx="6" opacity="0.9" />
+          <text x="62" y="32" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Recirculation</text>
+          <text x="62" y="50" fill={blankingPanels ? colors.success : colors.error} fontSize="14" fontWeight="600" textAnchor="middle">
+            {metrics.recirculationPercent.toFixed(0)}%
+          </text>
+        </g>
+
+        <g>
+          <rect x="395" y="15" width="85" height="50" fill={colors.bgSecondary} rx="6" opacity="0.9" />
+          <text x="437" y="32" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Est. PUE</text>
+          <text x="437" y="50" fill={metrics.pue < 1.5 ? colors.success : metrics.pue < 1.8 ? colors.warning : colors.error} fontSize="14" fontWeight="600" textAnchor="middle">
+            {metrics.pue.toFixed(2)}
+          </text>
+        </g>
+      </svg>
     );
   };
 
-  const renderHook = () => (
-    <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full mb-8">
-        <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-        <span className="text-sm font-medium text-blue-400 tracking-wide">DATA CENTER PHYSICS</span>
-      </div>
-
-      <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-blue-100 to-cyan-200 bg-clip-text text-transparent">
-        Server Airflow & Pressure
-      </h1>
-
-      <p className="text-lg text-slate-400 max-w-md mb-10">
-        Why do data centers have raised floors with holes?
-      </p>
-
-      <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 rounded-3xl" />
-
-        <div className="relative">
-          <div className="text-6xl mb-6">🏢 💨 ❄️</div>
-
-          <div className="space-y-4">
-            <p className="text-xl text-white/90 font-medium leading-relaxed">
-              A data center uses more power for cooling than the servers themselves!
-            </p>
-            <p className="text-lg text-slate-400 leading-relaxed">
-              Hot and cold air mixing wastes energy. The solution? Pressurized plenums, containment, and... blanking panels?
-            </p>
-            <div className="pt-2">
-              <p className="text-base text-blue-400 font-semibold">
-                Small details like a missing blanking panel can raise temps by 10C!
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '4px',
+      background: colors.bgSecondary,
+      zIndex: 100,
+    }}>
+      <div style={{
+        height: '100%',
+        width: `${((phaseOrder.indexOf(phase) + 1) / phaseOrder.length) * 100}%`,
+        background: `linear-gradient(90deg, ${colors.accent}, ${colors.success})`,
+        transition: 'width 0.3s ease',
+      }} />
     </div>
   );
 
-  const renderPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Data centers put servers in rows with alternating "cold aisles" and "hot aisles". Cold air comes up from the floor, goes through servers, and exits hot. Why this layout?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'It looks more organized for visitors' },
-          { id: 'B', text: 'It makes cable management easier' },
-          { id: 'C', text: 'It prevents hot and cold air from mixing, improving cooling efficiency' },
-          { id: 'D', text: 'It reduces noise from the servers' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handlePrediction(option.id)}
-            disabled={showPredictionFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showPredictionFeedback && (
-        <div className="mt-4 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Separating hot exhaust from cold supply prevents wasteful mixing. The cold aisle stays cool, and CRAC units work more efficiently!
-          </p>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Data Center Airflow Lab</h2>
-      <p className="text-slate-400 mb-4">Adjust parameters to see their effect on cooling!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-        {renderDataCenterVisualization()}
-      </div>
-
-      <div className="grid gap-4 w-full max-w-2xl mb-4">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Server Load: {serverLoad}%</label>
-          <input type="range" min="20" max="100" value={serverLoad} onChange={(e) => setServerLoad(parseInt(e.target.value))} className="w-full accent-blue-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">CRAC Fan Speed (CFM): {fanSpeed}%</label>
-          <input type="range" min="20" max="100" value={fanSpeed} onChange={(e) => setFanSpeed(parseInt(e.target.value))} className="w-full accent-blue-500" />
-        </div>
-
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Floor Tile Openness: {raisedFloorOpen}%</label>
-          <input type="range" min="10" max="100" value={raisedFloorOpen} onChange={(e) => setRaisedFloorOpen(parseInt(e.target.value))} className="w-full accent-cyan-500" />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => setBlankingPanels(!blankingPanels)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl font-medium transition-colors ${
-              blankingPanels ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
-            }`}
-          >
-            Blanking Panels: {blankingPanels ? 'ON' : 'OFF'}
-          </button>
-          <button
-            onClick={() => setHotAisleContainment(!hotAisleContainment)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl font-medium transition-colors ${
-              hotAisleContainment ? 'bg-orange-600 text-white' : 'bg-slate-600 text-white'
-            }`}
-          >
-            Hot Aisle Containment: {hotAisleContainment ? 'ON' : 'OFF'}
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-4">
-        <div className="grid grid-cols-3 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-blue-400">{metrics.coldAisleTemp.toFixed(1)}C</div>
-            <div className="text-sm text-slate-300">Cold Aisle</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-orange-400">{metrics.hotAisleTemp.toFixed(1)}C</div>
-            <div className="text-sm text-slate-300">Hot Aisle</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-amber-400">{metrics.deltaT.toFixed(1)}C</div>
-            <div className="text-sm text-slate-300">Delta T</div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  );
-
-  const renderReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Science of Data Center Airflow</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">Raised Floor Plenum</h3>
-          <p className="text-slate-300 text-sm">The space under the raised floor is a pressurized air distribution system. CRACs push cold air into this plenum, and it rises through perforated tiles into the cold aisle.</p>
-          <p className="text-cyan-400 text-sm mt-2">Static pressure: 0.03-0.05" water column is typical.</p>
-        </div>
-        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">Heat Transfer Physics</h3>
-          <div className="font-mono text-center text-sm text-white mb-2">Q = m_dot x Cp x deltaT</div>
-          <p className="text-slate-300 text-sm">Heat removed equals mass flow rate times specific heat times temperature difference. More CFM or larger deltaT = more cooling!</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">Key Concepts</h3>
-          <div className="grid grid-cols-2 gap-4 text-sm text-slate-300">
-            <div>
-              <p className="text-white font-medium">Hot/Cold Aisle Separation</p>
-              <p>Prevents mixing and short-circuiting of airflow</p>
-            </div>
-            <div>
-              <p className="text-white font-medium">Containment</p>
-              <p>Physical barriers further reduce mixing</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTwistPredict = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Blanking Panel Mystery</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          A data center manager removes some old servers from a rack but forgets to install blanking panels in the empty slots. The rack is only 60% full.
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          What happens to the remaining servers in that rack?
-        </p>
-      </div>
-      <div className="grid gap-3 w-full max-w-xl">
-        {[
-          { id: 'A', text: 'They cool better due to extra airflow through the gaps' },
-          { id: 'B', text: 'They overheat because hot air shortcuts through the gaps back to the cold aisle' },
-          { id: 'C', text: 'No change - servers manage their own cooling' },
-          { id: 'D', text: 'Only servers near the gaps are affected' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onClick={() => handleTwistPrediction(option.id)}
-            disabled={showTwistFeedback}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-      {showTwistFeedback && (
-        <div className="mt-4 p-4 bg-slate-800/70 rounded-xl max-w-xl">
-          <p className="text-emerald-400 font-semibold">
-            Correct! Hot exhaust air takes the path of least resistance - right through those gaps back into the cold aisle. This "recirculation" can raise intake temps by 10C or more!
-          </p>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Blanking Panel Demo</h2>
-      <p className="text-slate-400 mb-4">Toggle blanking panels to see the dramatic difference!</p>
-
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
-        {renderDataCenterVisualization()}
-      </div>
-
-      <div className="grid gap-4 w-full max-w-2xl mb-4">
+  // Navigation dots
+  const renderNavDots = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px 0',
+    }}>
+      {phaseOrder.map((p, i) => (
         <button
-          onClick={() => setBlankingPanels(!blankingPanels)}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`w-full p-4 rounded-xl font-bold text-lg transition-colors ${
-            blankingPanels ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
-          }`}
+          key={p}
+          onClick={() => goToPhase(p)}
+          style={{
+            width: phase === p ? '24px' : '8px',
+            height: '8px',
+            borderRadius: '4px',
+            border: 'none',
+            background: phaseOrder.indexOf(phase) >= i ? colors.accent : colors.border,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+          }}
+          aria-label={phaseLabels[p]}
+        />
+      ))}
+    </div>
+  );
+
+  // Primary button style
+  const primaryButtonStyle: React.CSSProperties = {
+    background: `linear-gradient(135deg, ${colors.accent}, #0891B2)`,
+    color: 'white',
+    border: 'none',
+    padding: isMobile ? '14px 28px' : '16px 32px',
+    borderRadius: '12px',
+    fontSize: isMobile ? '16px' : '18px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: `0 4px 20px ${colors.accentGlow}`,
+    transition: 'all 0.2s ease',
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // PHASE RENDERS
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // HOOK PHASE
+  if (phase === 'hook') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '64px',
+          marginBottom: '24px',
+          animation: 'pulse 2s infinite',
+        }}>
+          🏢💨❄️
+        </div>
+        <style>{`@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.textPrimary, marginBottom: '16px' }}>
+          Data Center Airflow
+        </h1>
+
+        <p style={{
+          ...typo.body,
+          color: colors.textSecondary,
+          maxWidth: '600px',
+          marginBottom: '32px',
+        }}>
+          "A data center uses <span style={{ color: colors.accent }}>more electricity for cooling</span> than its servers use for computing. The difference between good and bad airflow can be millions of dollars per year."
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '500px',
+          border: `1px solid ${colors.border}`,
+        }}>
+          <p style={{ ...typo.small, color: colors.textSecondary, fontStyle: 'italic' }}>
+            "Did you know? A $2 blanking panel can save thousands of dollars in cooling costs. Miss one empty slot, and server intake temperatures rise 10°C."
+          </p>
+          <p style={{ ...typo.small, color: colors.textMuted, marginTop: '8px' }}>
+            — Data Center Engineering Principle
+          </p>
+        </div>
+
+        <button
+          onClick={() => { playSound('click'); nextPhase(); }}
+          style={primaryButtonStyle}
         >
-          {blankingPanels ? '✓ Blanking Panels Installed' : '✗ Blanking Panels Missing'}
+          Master Airflow Management →
         </button>
 
-        <div className={`p-4 rounded-xl ${blankingPanels ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}>
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold" style={{ color: getTempColor(metrics.coldAisleTemp) }}>
-                {metrics.coldAisleTemp.toFixed(1)}C
-              </div>
-              <div className="text-sm text-slate-300">Cold Aisle Temp</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-amber-400">
-                {metrics.recirculationPercent.toFixed(0)}%
-              </div>
-              <div className="text-sm text-slate-300">Hot Air Recirculation</div>
-            </div>
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // PREDICT PHASE
+  if (phase === 'predict') {
+    const options = [
+      { id: 'a', text: 'It looks more organized and professional for facility tours' },
+      { id: 'b', text: 'It separates cold inlet air from hot exhaust to prevent wasteful mixing' },
+      { id: 'c', text: 'It reduces the number of cables needed between racks' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.accent}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.accent}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.accent, margin: 0 }}>
+              🤔 Make Your Prediction
+            </p>
           </div>
-          <p className="text-sm text-slate-300 mt-3 text-center">
-            {blankingPanels
-              ? "Good airflow! Cold aisle stays cool."
-              : "Hot air shortcuts through gaps, raising cold aisle temperature!"}
-          </p>
-        </div>
-      </div>
 
-    </div>
-  );
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            Data centers arrange servers in alternating "hot aisles" and "cold aisles". Why this specific layout?
+          </h2>
 
-  const renderTwistReview = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Why Blanking Panels Matter So Much</h2>
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
-        <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">The Physics of Recirculation</h3>
-          <p className="text-slate-300 text-sm">
-            Air follows the path of least resistance. A gap in the rack is much easier to flow through than dense server components. Hot exhaust (35-45C) loops back to the cold aisle (target 18-22C).
-          </p>
-        </div>
-        <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">The Cascade Effect</h3>
-          <ul className="text-sm text-slate-300 space-y-1">
-            <li>- Servers intake warmer air</li>
-            <li>- Fans spin faster to compensate</li>
-            <li>- Power consumption increases</li>
-            <li>- CRAC works harder</li>
-            <li>- PUE gets worse!</li>
-          </ul>
-        </div>
-        <div className="bg-gradient-to-br from-blue-900/50 to-purple-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">The $2 Panel That Saves Thousands</h3>
-          <p className="text-slate-300">A blanking panel costs $2-5. But that missing panel can cause $100s in extra cooling costs monthly, plus reduced server lifespan. It's one of the highest-ROI investments in a data center!</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderTransfer = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Real-World Applications</h2>
-      <div className="flex gap-2 mb-6 flex-wrap justify-center">
-        {applications.map((app, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveAppTab(index)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              activeAppTab === index ? 'bg-blue-600 text-white'
-              : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
-          >
-            {app.icon} {app.title.split(' ')[0]}
-          </button>
-        ))}
-      </div>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
-          <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
-        </div>
-        <p className="text-lg text-slate-300 mb-3">{applications[activeAppTab].description}</p>
-        <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
-        {!completedApps.has(activeAppTab) && (
-          <button
-            onClick={() => handleAppComplete(activeAppTab)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
-          >
-            Mark as Understood
-          </button>
-        )}
-      </div>
-      <div className="mt-6 flex items-center gap-2">
-        <span className="text-slate-400">Progress:</span>
-        <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
-        <span className="text-slate-400">{completedApps.size}/4</span>
-      </div>
-    </div>
-  );
-
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onClick={() => handleTestAnswer(qIndex, oIndex)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
+          {/* Simple diagram */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            textAlign: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <div style={{ padding: '12px 20px', background: colors.cold + '33', borderRadius: '8px', border: `2px solid ${colors.cold}` }}>
+                <span style={{ color: colors.cold, fontWeight: 600 }}>Cold Aisle</span>
+              </div>
+              <div style={{ fontSize: '20px' }}>⬛</div>
+              <div style={{ padding: '12px 20px', background: colors.hot + '33', borderRadius: '8px', border: `2px solid ${colors.hot}` }}>
+                <span style={{ color: colors.hot, fontWeight: 600 }}>Hot Aisle</span>
+              </div>
+              <div style={{ fontSize: '20px' }}>⬛</div>
+              <div style={{ padding: '12px 20px', background: colors.cold + '33', borderRadius: '8px', border: `2px solid ${colors.cold}` }}>
+                <span style={{ color: colors.cold, fontWeight: 600 }}>Cold Aisle</span>
               </div>
             </div>
-          ))}
-          <button
-            onClick={() => setShowTestResults(true)}
-            disabled={testAnswers.includes(-1)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered data center airflow!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() < 7 && (
+            <p style={{ ...typo.small, color: colors.textMuted, marginTop: '16px' }}>
+              Server racks face each other, creating alternating aisles
+            </p>
+          </div>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setPrediction(opt.id); }}
+                style={{
+                  background: prediction === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${prediction === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: prediction === opt.id ? colors.accent : colors.bgSecondary,
+                  color: prediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {prediction && (
             <button
-              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
             >
-              Review & Try Again
+              Test My Prediction →
             </button>
           )}
         </div>
-      )}
-    </div>
-  );
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">💨</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Airflow Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You've mastered data center airflow management!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🏢</div><p className="text-sm text-slate-300">Hot/Cold Aisles</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📋</div><p className="text-sm text-slate-300">Blanking Panels</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📊</div><p className="text-sm text-slate-300">Static Pressure</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔒</div><p className="text-sm text-slate-300">Containment</p></div>
-        </div>
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
 
-  const renderPhaseContent = () => {
-    switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return renderHook();
-    }
-  };
-
-  // Determine if next button should be enabled for each phase
-  const canProceed = () => {
-    switch (phase) {
-      case 'hook': return true;
-      case 'predict': return showPredictionFeedback;
-      case 'play': return true;
-      case 'review': return true;
-      case 'twist_predict': return showTwistFeedback;
-      case 'twist_play': return true;
-      case 'twist_review': return true;
-      case 'transfer': return completedApps.size >= 4;
-      case 'test': return showTestResults && calculateScore() >= 7;
-      case 'mastery': return false;
-      default: return true;
-    }
-  };
-
-  // Get next button label for each phase
-  const getNextLabel = () => {
-    switch (phase) {
-      case 'hook': return 'Start';
-      case 'predict': return showPredictionFeedback ? 'Continue' : 'Select an answer';
-      case 'play': return 'Learn More';
-      case 'review': return 'Discover Twist';
-      case 'twist_predict': return showTwistFeedback ? 'Continue' : 'Select an answer';
-      case 'twist_play': return 'See Explanation';
-      case 'twist_review': return 'Applications';
-      case 'transfer': return completedApps.size >= 4 ? 'Take Test' : `Complete ${4 - completedApps.size} more`;
-      case 'test': return calculateScore() >= 7 ? 'Complete' : 'Score 7+ to pass';
-      case 'mastery': return 'Complete';
-      default: return 'Continue';
-    }
-  };
-
-  return (
-    <div className="absolute inset-0 flex flex-col bg-[#0a0f1a] text-white overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900 pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Progress bar header */}
-      <div className="relative z-10 flex-shrink-0">
+  // PLAY PHASE - Interactive Data Center
+  if (phase === 'play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
         {renderProgressBar()}
-      </div>
 
-      {/* Main content - scrollable */}
-      <div className="relative z-10 flex-1 overflow-y-auto">
-        {renderPhaseContent()}
-      </div>
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Data Center Airflow Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Experiment with blanking panels and see how they affect temperatures
+          </p>
 
-      {/* Bottom navigation bar */}
-      <div className="relative z-10 flex-shrink-0">
-        {renderBottomBar(canProceed(), getNextLabel())}
+          {/* Main visualization */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <DataCenterVisualization />
+            </div>
+
+            {/* Blanking panel toggle */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              marginBottom: '24px',
+              padding: '16px',
+              background: colors.bgSecondary,
+              borderRadius: '12px',
+            }}>
+              <span style={{ ...typo.body, color: colors.textSecondary }}>Blanking Panels:</span>
+              <button
+                onClick={() => setBlankingPanels(!blankingPanels)}
+                style={{
+                  width: '80px',
+                  height: '40px',
+                  borderRadius: '20px',
+                  border: 'none',
+                  background: blankingPanels ? colors.success : colors.error,
+                  cursor: 'pointer',
+                  position: 'relative',
+                  transition: 'background 0.3s',
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'white',
+                  position: 'absolute',
+                  top: '4px',
+                  left: blankingPanels ? '44px' : '4px',
+                  transition: 'left 0.3s',
+                }} />
+              </button>
+              <span style={{
+                ...typo.body,
+                color: blankingPanels ? colors.success : colors.error,
+                fontWeight: 600,
+                minWidth: '80px'
+              }}>
+                {blankingPanels ? 'Installed' : 'Missing!'}
+              </span>
+            </div>
+
+            {/* Server load slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Server Load</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{serverLoad}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={serverLoad}
+                onChange={(e) => setServerLoad(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '8px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              />
+            </div>
+
+            {/* Temperature display */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '16px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.cold }}>{metrics.coldAisleTemp.toFixed(1)}°C</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Cold Aisle</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.hot }}>{metrics.hotAisleTemp.toFixed(1)}°C</div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Hot Aisle</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  ...typo.h3,
+                  color: metrics.recirculationPercent > 20 ? colors.error : colors.success
+                }}>
+                  {metrics.recirculationPercent.toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Recirculation</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Discovery prompt */}
+          {!blankingPanels && (
+            <div style={{
+              background: `${colors.error}22`,
+              border: `1px solid ${colors.error}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.error, margin: 0 }}>
+                ⚠️ Hot air is recirculating! Cold aisle temperature increased by {(metrics.coldAisleTemp - 18).toFixed(1)}°C
+              </p>
+            </div>
+          )}
+
+          {blankingPanels && (
+            <div style={{
+              background: `${colors.success}22`,
+              border: `1px solid ${colors.success}`,
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '24px',
+              textAlign: 'center',
+            }}>
+              <p style={{ ...typo.body, color: colors.success, margin: 0 }}>
+                ✓ Good airflow! Blanking panels prevent hot air recirculation.
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand the Physics →
+          </button>
+        </div>
+
+        {renderNavDots()}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // REVIEW PHASE
+  if (phase === 'review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            The Physics of Data Center Cooling
+          </h2>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '16px' }}>
+              Hot Aisle / Cold Aisle Separation
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              Servers intake air from one side and exhaust hot air from the other. By facing server fronts toward a shared cold aisle:
+            </p>
+            <ul style={{ ...typo.body, color: colors.textSecondary, paddingLeft: '20px' }}>
+              <li style={{ marginBottom: '8px' }}>Cold supply air stays at target temperature (18-27°C)</li>
+              <li style={{ marginBottom: '8px' }}>Hot exhaust air is isolated in dedicated hot aisles</li>
+              <li style={{ marginBottom: '8px' }}>CRAC units receive pure hot return air, maximizing efficiency</li>
+              <li>No energy is wasted cooling already-cold air</li>
+            </ul>
+          </div>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.warning, marginBottom: '16px' }}>
+              The Heat Transfer Equation
+            </h3>
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <code style={{ fontSize: '18px', color: colors.textPrimary }}>Q = m&#x307; × Cp × ΔT</code>
+            </div>
+            <p style={{ ...typo.small, color: colors.textSecondary }}>
+              Heat removed (Q) equals mass flow rate (m&#x307;) × specific heat capacity (Cp) × temperature difference (ΔT).
+              More CFM or larger temperature rise = more cooling capacity.
+            </p>
+          </div>
+
+          <div style={{
+            background: `${colors.accent}11`,
+            border: `1px solid ${colors.accent}33`,
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <h3 style={{ ...typo.h3, color: colors.accent, marginBottom: '12px' }}>
+              💡 Key Insight
+            </h3>
+            <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+              PUE (Power Usage Effectiveness) measures total facility power ÷ IT power. A PUE of 1.5 means 50% of power goes to cooling and infrastructure. Good airflow management can achieve PUE below 1.2!
+            </p>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Explore Containment →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PREDICT PHASE
+  if (phase === 'twist_predict') {
+    const options = [
+      { id: 'a', text: 'Temperatures stay the same since the same amount of cold air is supplied' },
+      { id: 'b', text: 'Cold aisle rises 5-10°C as hot exhaust shortcuts through the gaps back to server intakes' },
+      { id: 'c', text: 'Hot aisle temperature decreases because there are fewer servers generating heat' },
+    ];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <div style={{
+            background: `${colors.warning}22`,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '24px',
+            border: `1px solid ${colors.warning}44`,
+          }}>
+            <p style={{ ...typo.small, color: colors.warning, margin: 0 }}>
+              📋 New Variable: Blanking Panels
+            </p>
+          </div>
+
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px' }}>
+            A technician removes several servers for maintenance and forgets to install blanking panels. What happens to the remaining servers?
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '32px' }}>
+            {options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => { playSound('click'); setTwistPrediction(opt.id); }}
+                style={{
+                  background: twistPrediction === opt.id ? `${colors.warning}22` : colors.bgCard,
+                  border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: twistPrediction === opt.id ? colors.warning : colors.bgSecondary,
+                  color: twistPrediction === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '28px',
+                  marginRight: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.body }}>
+                  {opt.text}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {twistPrediction && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={primaryButtonStyle}
+            >
+              See the Containment Effect →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Containment & Efficiency Lab
+          </h2>
+          <p style={{ ...typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '24px' }}>
+            Combine blanking panels with hot aisle containment for maximum efficiency
+          </p>
+
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+              <DataCenterVisualization />
+            </div>
+
+            {/* Controls grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '16px',
+              marginBottom: '24px',
+            }}>
+              {/* Blanking panels toggle */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Blanking Panels</span>
+                  <button
+                    onClick={() => setBlankingPanels(!blankingPanels)}
+                    style={{
+                      width: '60px',
+                      height: '30px',
+                      borderRadius: '15px',
+                      border: 'none',
+                      background: blankingPanels ? colors.success : colors.error,
+                      cursor: 'pointer',
+                      position: 'relative',
+                    }}
+                  >
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: blankingPanels ? '33px' : '3px',
+                      transition: 'left 0.3s',
+                    }} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Hot aisle containment toggle */}
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '12px',
+                padding: '16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ ...typo.small, color: colors.textSecondary }}>Hot Aisle Containment</span>
+                  <button
+                    onClick={() => setHotAisleContainment(!hotAisleContainment)}
+                    style={{
+                      width: '60px',
+                      height: '30px',
+                      borderRadius: '15px',
+                      border: 'none',
+                      background: hotAisleContainment ? colors.warning : colors.border,
+                      cursor: 'pointer',
+                      position: 'relative',
+                    }}
+                  >
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      position: 'absolute',
+                      top: '3px',
+                      left: hotAisleContainment ? '33px' : '3px',
+                      transition: 'left 0.3s',
+                    }} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Fan speed slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>CRAC Fan Speed (CFM)</span>
+                <span style={{ ...typo.small, color: colors.accent, fontWeight: 600 }}>{fanSpeed}%</span>
+              </div>
+              <input
+                type="range"
+                min="30"
+                max="100"
+                value={fanSpeed}
+                onChange={(e) => setFanSpeed(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Raised floor slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>Floor Tile Openness</span>
+                <span style={{ ...typo.small, color: colors.cold, fontWeight: 600 }}>{raisedFloorOpenness}%</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="100"
+                value={raisedFloorOpenness}
+                onChange={(e) => setRaisedFloorOpenness(parseInt(e.target.value))}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* Metrics */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+            }}>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  ...typo.h3,
+                  color: metrics.pue < 1.4 ? colors.success : metrics.pue < 1.7 ? colors.warning : colors.error
+                }}>
+                  {metrics.pue.toFixed(2)}
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Est. PUE</div>
+              </div>
+              <div style={{
+                background: colors.bgSecondary,
+                borderRadius: '8px',
+                padding: '12px',
+                textAlign: 'center',
+              }}>
+                <div style={{ ...typo.h3, color: colors.accent }}>
+                  {metrics.coolingEfficiency.toFixed(0)}%
+                </div>
+                <div style={{ ...typo.small, color: colors.textMuted }}>Cooling Efficiency</div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            Understand Deep Principles →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TWIST REVIEW PHASE
+  if (phase === 'twist_review') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            CFD Modeling & Optimization
+          </h2>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🌊</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Computational Fluid Dynamics</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                CFD solves the Navier-Stokes equations to predict airflow patterns, temperature distributions, and pressure gradients. Engineers use CFD to optimize tile placement, identify hot spots, and validate containment designs before installation.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.border}`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>📉</span>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>Bypass Airflow Problem</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                Conditioned air that returns to CRAC units without cooling any equipment is wasted energy. Common sources: poorly placed tiles, gaps under racks, cable cutouts, and oversized floor tile openings. Eliminating bypass can improve efficiency by 20-30%.
+              </p>
+            </div>
+
+            <div style={{
+              background: `${colors.success}11`,
+              borderRadius: '12px',
+              padding: '20px',
+              border: `1px solid ${colors.success}33`,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <span style={{ fontSize: '24px' }}>🎯</span>
+                <h3 style={{ ...typo.h3, color: colors.success, margin: 0 }}>ASHRAE Thermal Guidelines</h3>
+              </div>
+              <p style={{ ...typo.body, color: colors.textSecondary, margin: 0 }}>
+                <strong>Recommended range:</strong> 18-27°C (64-80°F) inlet temperature. Modern equipment tolerates even higher temps, enabling free cooling in more climates. Each 1°C increase in setpoint can reduce cooling energy by 4-5%.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => { playSound('success'); nextPhase(); }}
+            style={{ ...primaryButtonStyle, width: '100%' }}
+          >
+            See Real-World Applications →
+          </button>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TRANSFER PHASE
+  if (phase === 'transfer') {
+    const app = realWorldApps[selectedApp];
+    const allAppsCompleted = completedApps.every(c => c);
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '800px', margin: '60px auto 0' }}>
+          <h2 style={{ ...typo.h2, color: colors.textPrimary, marginBottom: '24px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+
+          {/* App selector */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: '12px',
+            marginBottom: '24px',
+          }}>
+            {realWorldApps.map((a, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  playSound('click');
+                  setSelectedApp(i);
+                  const newCompleted = [...completedApps];
+                  newCompleted[i] = true;
+                  setCompletedApps(newCompleted);
+                }}
+                style={{
+                  background: selectedApp === i ? `${a.color}22` : colors.bgCard,
+                  border: `2px solid ${selectedApp === i ? a.color : completedApps[i] ? colors.success : colors.border}`,
+                  borderRadius: '12px',
+                  padding: '16px 8px',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {completedApps[i] && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-6px',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    background: colors.success,
+                    color: 'white',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                  }}>
+                    ✓
+                  </div>
+                )}
+                <div style={{ fontSize: '28px', marginBottom: '4px' }}>{a.icon}</div>
+                <div style={{ ...typo.small, color: colors.textPrimary, fontWeight: 500 }}>
+                  {a.title.split(' ').slice(0, 2).join(' ')}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Selected app details */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '16px',
+            padding: '24px',
+            marginBottom: '24px',
+            borderLeft: `4px solid ${app.color}`,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '48px' }}>{app.icon}</span>
+              <div>
+                <h3 style={{ ...typo.h3, color: colors.textPrimary, margin: 0 }}>{app.title}</h3>
+                <p style={{ ...typo.small, color: app.color, margin: 0 }}>{app.tagline}</p>
+              </div>
+            </div>
+
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '16px' }}>
+              {app.description}
+            </p>
+
+            <div style={{
+              background: colors.bgSecondary,
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px',
+            }}>
+              <h4 style={{ ...typo.small, color: colors.accent, marginBottom: '8px', fontWeight: 600 }}>
+                Connection to Airflow Management:
+              </h4>
+              <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+                {app.connection}
+              </p>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '12px',
+            }}>
+              {app.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: colors.bgSecondary,
+                  borderRadius: '8px',
+                  padding: '12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '20px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ ...typo.h3, color: app.color }}>{stat.value}</div>
+                  <div style={{ ...typo.small, color: colors.textMuted }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {allAppsCompleted && (
+            <button
+              onClick={() => { playSound('success'); nextPhase(); }}
+              style={{ ...primaryButtonStyle, width: '100%' }}
+            >
+              Take the Knowledge Test →
+            </button>
+          )}
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // TEST PHASE
+  if (phase === 'test') {
+    if (testSubmitted) {
+      const passed = testScore >= 7;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: colors.bgPrimary,
+          padding: '24px',
+        }}>
+          {renderProgressBar()}
+
+          <div style={{ maxWidth: '600px', margin: '60px auto 0', textAlign: 'center' }}>
+            <div style={{
+              fontSize: '80px',
+              marginBottom: '24px',
+            }}>
+              {passed ? '🎉' : '📚'}
+            </div>
+            <h2 style={{ ...typo.h2, color: passed ? colors.success : colors.warning }}>
+              {passed ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ ...typo.h1, color: colors.textPrimary, margin: '16px 0' }}>
+              {testScore} / 10
+            </p>
+            <p style={{ ...typo.body, color: colors.textSecondary, marginBottom: '32px' }}>
+              {passed
+                ? 'You\'ve mastered Data Center Airflow Management!'
+                : 'Review the concepts and try again.'}
+            </p>
+
+            {passed ? (
+              <button
+                onClick={() => { playSound('complete'); nextPhase(); }}
+                style={primaryButtonStyle}
+              >
+                Complete Lesson →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(Array(10).fill(null));
+                  setCurrentQuestion(0);
+                  setTestScore(0);
+                  goToPhase('hook');
+                }}
+                style={primaryButtonStyle}
+              >
+                Review & Try Again
+              </button>
+            )}
+          </div>
+          {renderNavDots()}
+        </div>
+      );
+    }
+
+    const question = testQuestions[currentQuestion];
+
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: colors.bgPrimary,
+        padding: '24px',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{ maxWidth: '700px', margin: '60px auto 0' }}>
+          {/* Progress */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}>
+            <span style={{ ...typo.small, color: colors.textSecondary }}>
+              Question {currentQuestion + 1} of 10
+            </span>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {testQuestions.map((_, i) => (
+                <div key={i} style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: i === currentQuestion
+                    ? colors.accent
+                    : testAnswers[i]
+                      ? colors.success
+                      : colors.border,
+                }} />
+              ))}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            background: colors.bgCard,
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '16px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ ...typo.small, color: colors.textSecondary, margin: 0 }}>
+              {question.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '20px' }}>
+            {question.question}
+          </h3>
+
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            {question.options.map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  playSound('click');
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentQuestion] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  background: testAnswers[currentQuestion] === opt.id ? `${colors.accent}22` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentQuestion] === opt.id ? colors.accent : colors.border}`,
+                  borderRadius: '10px',
+                  padding: '14px 16px',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                }}
+              >
+                <span style={{
+                  display: 'inline-block',
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: testAnswers[currentQuestion] === opt.id ? colors.accent : colors.bgSecondary,
+                  color: testAnswers[currentQuestion] === opt.id ? 'white' : colors.textSecondary,
+                  textAlign: 'center',
+                  lineHeight: '24px',
+                  marginRight: '10px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                }}>
+                  {opt.id.toUpperCase()}
+                </span>
+                <span style={{ color: colors.textPrimary, ...typo.small }}>
+                  {opt.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {currentQuestion > 0 && (
+              <button
+                onClick={() => setCurrentQuestion(currentQuestion - 1)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: `1px solid ${colors.border}`,
+                  background: 'transparent',
+                  color: colors.textSecondary,
+                  cursor: 'pointer',
+                }}
+              >
+                ← Previous
+              </button>
+            )}
+            {currentQuestion < 9 ? (
+              <button
+                onClick={() => testAnswers[currentQuestion] && setCurrentQuestion(currentQuestion + 1)}
+                disabled={!testAnswers[currentQuestion]}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers[currentQuestion] ? colors.accent : colors.border,
+                  color: 'white',
+                  cursor: testAnswers[currentQuestion] ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Next →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const score = testAnswers.reduce((acc, ans, i) => {
+                    const correct = testQuestions[i].options.find(o => o.correct)?.id;
+                    return acc + (ans === correct ? 1 : 0);
+                  }, 0);
+                  setTestScore(score);
+                  setTestSubmitted(true);
+                  playSound(score >= 7 ? 'complete' : 'failure');
+                }}
+                disabled={testAnswers.some(a => a === null)}
+                style={{
+                  flex: 1,
+                  padding: '14px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: testAnswers.every(a => a !== null) ? colors.success : colors.border,
+                  color: 'white',
+                  cursor: testAnswers.every(a => a !== null) ? 'pointer' : 'not-allowed',
+                  fontWeight: 600,
+                }}
+              >
+                Submit Test
+              </button>
+            )}
+          </div>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: `linear-gradient(180deg, ${colors.bgPrimary} 0%, ${colors.bgSecondary} 100%)`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px',
+        textAlign: 'center',
+      }}>
+        {renderProgressBar()}
+
+        <div style={{
+          fontSize: '100px',
+          marginBottom: '24px',
+          animation: 'bounce 1s infinite',
+        }}>
+          🏆
+        </div>
+        <style>{`@keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }`}</style>
+
+        <h1 style={{ ...typo.h1, color: colors.success, marginBottom: '16px' }}>
+          Airflow Master!
+        </h1>
+
+        <p style={{ ...typo.body, color: colors.textSecondary, maxWidth: '500px', marginBottom: '32px' }}>
+          You now understand how proper airflow management keeps data centers running efficiently and saves millions in energy costs.
+        </p>
+
+        <div style={{
+          background: colors.bgCard,
+          borderRadius: '16px',
+          padding: '24px',
+          marginBottom: '32px',
+          maxWidth: '400px',
+        }}>
+          <h3 style={{ ...typo.h3, color: colors.textPrimary, marginBottom: '16px' }}>
+            You Learned:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'left' }}>
+            {[
+              'Hot aisle / cold aisle separation',
+              'The physics of air recirculation',
+              'Why blanking panels are critical',
+              'Hot aisle containment benefits',
+              'CFD modeling and PUE optimization',
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ color: colors.success }}>✓</span>
+                <span style={{ ...typo.small, color: colors.textSecondary }}>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '14px 28px',
+              borderRadius: '10px',
+              border: `1px solid ${colors.border}`,
+              background: 'transparent',
+              color: colors.textSecondary,
+              cursor: 'pointer',
+            }}
+          >
+            Play Again
+          </button>
+          <a
+            href="/"
+            style={{
+              ...primaryButtonStyle,
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            Return to Dashboard
+          </a>
+        </div>
+
+        {renderNavDots()}
+      </div>
+    );
+  }
+
+  return null;
 };
 
 export default ServerAirflowRenderer;

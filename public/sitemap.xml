@@ -19,6 +19,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/a-s-i-cvs-g-p-u</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/adiabatic-heating</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -37,6 +43,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/antenna-gain</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/antenna-polarization</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -49,13 +61,31 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/arrhenius</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/attention-loves-bandwidth</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/attention-memory</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/ballistic-pendulum</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/batching-latency</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -211,6 +241,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/chiller-c-o-p</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/chiplet-architecture</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -259,6 +295,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/clock-jitter</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/cloud-in-bottle</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -295,6 +337,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/crosstalk</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/cycloid-motion</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -320,6 +368,18 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/damping</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/data-movement-energy</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/decoupling-capacitor</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -386,6 +446,12 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/droplet-breakup</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/e-c-c-memory</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -511,6 +577,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/fan-laws</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/faraday-cage</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -577,6 +649,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/g-p-u-occupancy</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/g-p-u-power-states</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -602,6 +680,12 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/grid-frequency</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/ground-bounce</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -691,6 +775,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/i-r-drop</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/inclined-plane</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -746,6 +836,12 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/jar-lid-expansion</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/k-v-cache</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -853,6 +949,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/m-p-p-t</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/magnetic-field</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -890,6 +992,12 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/memory-hierarchy</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/metastability</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -1099,6 +1207,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/pressure-drop</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/process-variation</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -1213,6 +1327,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/satellite-solar-angle</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/satellite-thermal</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -1220,6 +1340,12 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/screen-printing-metallization</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/series-parallel-p-v</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -1309,6 +1435,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/sparsity</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/speaker-principle</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -1381,6 +1513,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://atlascoach-5e3af.web.app/games/systolic-array</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://atlascoach-5e3af.web.app/games/t-p-uvs-g-p-u</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
@@ -1418,6 +1556,12 @@
   </url>
   <url>
     <loc>https://atlascoach-5e3af.web.app/games/thermal-expansion</loc>
+    <lastmod>2026-02-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://atlascoach-5e3af.web.app/games/thermal-interface</loc>
     <lastmod>2026-02-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
