@@ -35,6 +35,81 @@ const phaseLabels: Record<SRAMPhase, string> = {
   mastery: 'Mastery',
 };
 
+const realWorldApps = [
+  {
+    icon: '🏭',
+    title: 'Semiconductor Manufacturing',
+    short: 'Maximizing chip yield through redundancy',
+    tagline: 'Making perfect from imperfect',
+    description: 'Modern chips contain billions of transistors, and manufacturing defects are inevitable. SRAM redundancy allows fabs to repair defective memory cells, dramatically improving yield and reducing costs.',
+    connection: 'Yield improvement through redundancy directly applies defect statistics. By including spare rows and columns, chips with random defects can be repaired rather than discarded.',
+    howItWorks: 'During wafer testing, defective cells are mapped. Laser fuses or electrical fuses permanently redirect access from defective to spare cells. This happens before chips are packaged.',
+    stats: [
+      { value: '90%+', label: 'Yield with redundancy', icon: '📈' },
+      { value: '10-20%', label: 'Typical spare cells', icon: '🔧' },
+      { value: '$10B+', label: 'Saved per year industry-wide', icon: '💰' }
+    ],
+    examples: ['CPU cache repair', 'Memory chip production', 'FPGA block repair', 'ASIC manufacturing'],
+    companies: ['TSMC', 'Samsung', 'Intel', 'GlobalFoundries'],
+    futureImpact: 'As transistors shrink below 3nm, defect densities increase. Advanced redundancy schemes with AI-guided repair will be essential for economic manufacturing.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🛡️',
+    title: 'ECC Memory Systems',
+    short: 'Detecting and correcting bit errors',
+    tagline: 'Data integrity guaranteed',
+    description: 'Error-correcting code (ECC) memory detects and fixes bit errors caused by cosmic rays, electrical noise, or aging. This is mandatory in servers, aerospace, and medical systems where data corruption is unacceptable.',
+    connection: 'ECC adds redundant bits that encode parity information. Single-bit errors can be corrected; multi-bit errors detected. This complements physical redundancy with algorithmic redundancy.',
+    howItWorks: 'Hamming codes or more advanced SECDED codes add 12.5% overhead. Each read computes syndrome bits to locate errors. Hardware correction happens transparently at memory controller speed.',
+    stats: [
+      { value: '1E-15', label: 'Uncorrectable error rate', icon: '🎯' },
+      { value: '99.999%', label: 'Server uptime enabled', icon: '⏱️' },
+      { value: '72bit', label: 'Words for 64bit data', icon: '🔢' }
+    ],
+    examples: ['Server farms', 'Medical devices', 'Spacecraft computers', 'Banking systems'],
+    companies: ['Micron', 'SK Hynix', 'Samsung', 'Kingston'],
+    futureImpact: 'Quantum computing and extreme environments will require even stronger error correction, with multiple levels of protection against various error mechanisms.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🚀',
+    title: 'Radiation-Hardened Electronics',
+    short: 'Space-grade memory for harsh environments',
+    tagline: 'Surviving cosmic rays',
+    description: 'Space and nuclear environments bombard electronics with high-energy particles that flip bits. Radiation-hardened memory combines physical hardening with aggressive redundancy to maintain reliability.',
+    connection: 'Single-event upsets (SEUs) from radiation randomly flip SRAM bits. Triple modular redundancy (TMR) and scrubbing continuously repair errors faster than they accumulate.',
+    howItWorks: 'Rad-hard designs use larger transistors, special layouts, and triple-redundant storage. Voting logic detects disagreements. Continuous scrubbing reads all memory and rewrites corrected values.',
+    stats: [
+      { value: '1000x', label: 'Higher radiation tolerance', icon: '☢️' },
+      { value: '10yr+', label: 'Mission duration', icon: '🛰️' },
+      { value: '3x', label: 'Storage overhead for TMR', icon: '📦' }
+    ],
+    examples: ['Mars rovers', 'GPS satellites', 'Nuclear plant controls', 'Particle accelerators'],
+    companies: ['BAE Systems', 'Cobham', 'Honeywell', 'Microchip'],
+    futureImpact: 'Deep space missions to Jupiter and beyond will require new hardening approaches for the intense radiation environments of gas giant magnetospheres.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '💻',
+    title: 'High-Reliability Computing',
+    short: 'Fault-tolerant systems for critical applications',
+    tagline: 'Failure is not an option',
+    description: 'Mission-critical systems in aviation, healthcare, and finance require extreme reliability. Multiple layers of redundancy at cell, chip, and system levels ensure continuous operation despite failures.',
+    connection: 'System-level redundancy extends SRAM repair concepts. Hot spares, checksums, and replicated computation catch errors at every level, applying the same probabilistic principles.',
+    howItWorks: 'Lockstep processors run identical computations and compare results. RAID-like memory striping distributes data. Watchdog timers detect hangs. Failover switches to backup systems seamlessly.',
+    stats: [
+      { value: '99.9999%', label: 'Required uptime', icon: '✅' },
+      { value: '5min', label: 'Max yearly downtime', icon: '⏰' },
+      { value: '0', label: 'Data loss tolerance', icon: '🛡️' }
+    ],
+    examples: ['Air traffic control', 'Stock exchanges', 'Hospital ICU monitors', 'Nuclear plant SCRAM systems'],
+    companies: ['Stratus', 'HPE NonStop', 'Cisco', 'Dell EMC'],
+    futureImpact: 'Autonomous vehicles and AI-controlled infrastructure will extend high-reliability requirements to billions of edge devices, requiring cost-effective redundancy at scale.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

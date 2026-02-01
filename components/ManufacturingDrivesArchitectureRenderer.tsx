@@ -1,5 +1,81 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+// Real-world applications for manufacturing drives architecture
+const realWorldApps = [
+  {
+    icon: '🏭',
+    title: 'Semiconductor Fabrication',
+    short: 'Chip manufacturing precision systems',
+    tagline: 'Nanometer precision at industrial scale',
+    description: 'Semiconductor fabs use sophisticated drive architectures to position wafers with sub-nanometer accuracy. The interplay between high-level process control and low-level servo drives determines whether transistors at 3nm scale function correctly.',
+    connection: 'The game demonstrated how manufacturing requirements drive system architecture. In chip fabs, throughput needs (wafers/hour) and precision requirements (nm positioning) force specific hierarchies of control systems.',
+    howItWorks: 'EUV lithography tools use magnetic levitation stages controlled by nested servo loops. High-bandwidth current loops (100kHz) nest inside velocity loops (10kHz) inside position loops (1kHz). Architecture enables both speed and precision.',
+    stats: [
+      { value: '0.1nm', label: 'Stage positioning accuracy', icon: '🔬' },
+      { value: '150', label: 'Wafers per hour', icon: '⚡' },
+      { value: '$200B', label: 'Semiconductor equipment market', icon: '📈' }
+    ],
+    examples: ['ASML EUV lithography', 'Applied Materials etch', 'Lam Research deposition', 'KLA inspection'],
+    companies: ['ASML', 'Applied Materials', 'Tokyo Electron', 'Lam Research'],
+    futureImpact: 'High-NA EUV for 2nm nodes will require even tighter architecture integration, with AI-optimized drive tuning.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Assembly',
+    short: 'Robot coordination in car factories',
+    tagline: 'Choreographing 1000 robots in harmony',
+    description: 'Modern automotive plants use hundreds of coordinated robots, each with multiple servo drives. The architecture connecting PLCs, motion controllers, and drives determines whether a car can be built every 60 seconds with millimeter precision.',
+    connection: 'The manufacturing architecture principles - how high-level commands decompose into drive-level motion - directly apply. Car factories are the ultimate test of scalable, reliable drive system architecture.',
+    howItWorks: 'Plant-level MES schedules production. Cell controllers coordinate robot teams. Motion controllers generate trajectories. Servo drives execute torque commands at 8kHz. EtherCAT networks synchronize everything to microseconds.',
+    stats: [
+      { value: '60s', label: 'Takt time per vehicle', icon: '⏱️' },
+      { value: '1000+', label: 'Robots per plant', icon: '🤖' },
+      { value: '$150B', label: 'Industrial automation market', icon: '📈' }
+    ],
+    examples: ['Tesla Gigafactory', 'BMW Spartanburg', 'Toyota Production System', 'Hyundai Ulsan'],
+    companies: ['FANUC', 'KUKA', 'ABB', 'Rockwell Automation'],
+    futureImpact: 'Digital twins will simulate entire plants before construction, optimizing drive architecture for maximum throughput.',
+    color: '#22c55e'
+  },
+  {
+    icon: '📦',
+    title: 'E-Commerce Fulfillment',
+    short: 'Warehouse automation systems',
+    tagline: 'From click to ship in minutes',
+    description: 'Amazon-scale fulfillment centers use thousands of mobile robots, conveyors, and pick-and-place systems. The drive architecture must handle unpredictable demand, mixed product sizes, and continuous operation while meeting same-day delivery promises.',
+    connection: 'Warehouse systems exemplify how manufacturing drives architecture scales. The game\'s concepts of hierarchical control and communication networks directly apply to coordinating fleets of autonomous mobile robots.',
+    howItWorks: 'Warehouse management system assigns orders to zones. Fleet management routes mobile robots avoiding collisions. Each robot\'s motion controller plans paths. Individual wheel drives execute velocity profiles. Millions of daily decisions.',
+    stats: [
+      { value: '1M+', label: 'Packages per day', icon: '📦' },
+      { value: '10,000', label: 'Robots per warehouse', icon: '🤖' },
+      { value: '$50B', label: 'Warehouse automation market', icon: '📈' }
+    ],
+    examples: ['Amazon robotics', 'Ocado Smart Platform', 'Alibaba Cainiao', 'FedEx hubs'],
+    companies: ['Amazon Robotics', 'Ocado', 'Berkshire Grey', 'Locus Robotics'],
+    futureImpact: 'Fully lights-out warehouses will use autonomous systems from receiving to shipping, with drives architecture enabling 24/7 operation.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🔋',
+    title: 'Battery Manufacturing',
+    short: 'Gigafactory drive systems',
+    tagline: 'Powering the electric future',
+    description: 'EV battery gigafactories require precise coordination of coating, calendering, cutting, and assembly processes. Drive architecture determines whether electrode coatings achieve uniform thickness and cells meet quality standards at production speed.',
+    connection: 'Battery manufacturing showcases tension between speed and precision that drive architecture must resolve. The hierarchical control structures you learned enable both high throughput and tight tolerances.',
+    howItWorks: 'Coating lines use tension-controlled drives maintaining web speed. Calendering presses use force-controlled servos for electrode density. Laser cutting requires synchronized multi-axis motion. Cell assembly needs torque-limited fastening.',
+    stats: [
+      { value: '100GWh', label: 'Gigafactory capacity', icon: '🔋' },
+      { value: '±1μm', label: 'Coating thickness control', icon: '🎯' },
+      { value: '$100B', label: 'Battery production investment', icon: '📈' }
+    ],
+    examples: ['Tesla Nevada Gigafactory', 'CATL plants', 'LG Chem facilities', 'Northvolt Ett'],
+    companies: ['Tesla', 'CATL', 'Panasonic', 'BYD'],
+    futureImpact: 'Solid-state battery production will require even more precise drive control for thin ceramic layer deposition.',
+    color: '#8b5cf6'
+  }
+];
+
 // Phase type for internal state management
 type ManufacturingPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

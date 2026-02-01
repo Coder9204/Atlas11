@@ -59,6 +59,81 @@ const interfaceOptions: InterfaceOption[] = [
   }
 ];
 
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'CPU Thermal Management',
+    short: 'Keeping processors from melting themselves',
+    tagline: 'The thin line between performance and destruction',
+    description: 'Modern CPUs generate 100-300W of heat in an area smaller than a postage stamp. Thermal paste between the CPU and heatsink is critical - poor contact means 20-30C higher temps, causing throttling or damage.',
+    connection: 'Thermal contact resistance from microscopic air gaps is the bottleneck. Even polished surfaces only touch at 1-2% of their area.',
+    howItWorks: 'Thermal paste fills microscopic valleys between the CPU lid and heatsink base. Premium pastes use silver or diamond particles for conductivity 300x better than air.',
+    stats: [
+      { value: '30C', label: 'Temp difference without paste', icon: '🌡️' },
+      { value: '8.5W/mK', label: 'Good paste conductivity', icon: '⚡' },
+      { value: '0.026W/mK', label: 'Air conductivity', icon: '💨' }
+    ],
+    examples: ['Gaming PCs', 'Servers', 'Laptops', 'Workstations'],
+    companies: ['Thermal Grizzly', 'Noctua', 'Arctic', 'Cooler Master'],
+    futureImpact: 'Liquid metal compounds and graphene-based pastes will push conductivity above 100 W/mK.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Electric Vehicle Battery Cooling',
+    short: 'Keeping EV batteries in the safe zone',
+    tagline: 'Thermal management that goes the distance',
+    description: 'EV battery packs use thermal pads between cells and cooling plates. Uniform thermal contact ensures even cell temperatures, maximizing range, charging speed, and preventing thermal runaway.',
+    connection: 'Gap fillers accommodate manufacturing tolerances while maintaining thermal contact across thousands of cells.',
+    howItWorks: 'Soft thermal pads compress to fill gaps while conducting heat. Liquid cooling plates remove heat from the pack, keeping cells within their optimal 20-40C range.',
+    stats: [
+      { value: '1000+', label: 'Cells per pack', icon: '🔋' },
+      { value: '5C', label: 'Max cell temp variation', icon: '🌡️' },
+      { value: '200kW', label: 'Heat during fast charge', icon: '⚡' }
+    ],
+    examples: ['Tesla Model 3', 'Ford Mustang Mach-E', 'Rivian R1T', 'Lucid Air'],
+    companies: ['Tesla', 'CATL', 'LG Energy', 'Panasonic'],
+    futureImpact: 'Immersion cooling with dielectric fluids will enable 10-minute charging by eliminating thermal interfaces entirely.',
+    color: '#10B981'
+  },
+  {
+    icon: '💡',
+    title: 'LED Thermal Design',
+    short: 'Keeping LEDs bright for decades',
+    tagline: 'Heat is the enemy of light',
+    description: 'High-power LEDs convert 30-50% of energy to heat concentrated in a tiny chip. Thermal interface materials bond LED chips to heat sinks. Poor thermal management causes rapid dimming and early failure.',
+    connection: 'LED junction temperature directly affects light output and lifespan - every 10C rise halves the LED\'s life.',
+    howItWorks: 'Thermally conductive adhesives or solder attach LED dies to metal-core PCBs. Heat spreads through the board to finned heatsinks, keeping junction temperatures below 85C.',
+    stats: [
+      { value: '50%', label: 'Energy becomes heat', icon: '🔥' },
+      { value: '50,000hr', label: 'Well-cooled LED life', icon: '⏰' },
+      { value: '85C', label: 'Max junction temp', icon: '🌡️' }
+    ],
+    examples: ['Street lights', 'Stadium lighting', 'Automotive headlights', 'Grow lights'],
+    companies: ['Cree', 'Lumileds', 'Osram', 'Seoul Semiconductor'],
+    futureImpact: 'Integrated chip-on-board designs eliminate interface resistance, enabling 300+ lumen/watt efficiency.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🛰️',
+    title: 'Spacecraft Electronics',
+    short: 'Cooling without air in the vacuum of space',
+    tagline: 'No atmosphere, no convection, no second chances',
+    description: 'In space, there is no air for convection cooling. Electronics rely entirely on conduction to radiators. Thermal interface materials and bolted joints must be perfect - there is no repair possible once launched.',
+    connection: 'Space thermal management pushes contact resistance to its limits. Every interface adds thermal resistance to the only heat path: conduction to radiators.',
+    howItWorks: 'Electronics mount to cold plates with high-pressure bolted joints and specialized space-rated thermal compounds. Heat conducts to external radiator panels that emit infrared into space.',
+    stats: [
+      { value: '200C', label: 'Sun-shade temp swing', icon: '☀️' },
+      { value: '15yr', label: 'Mission lifetime', icon: '🚀' },
+      { value: '0', label: 'Repair opportunities', icon: '🔧' }
+    ],
+    examples: ['Mars rovers', 'GPS satellites', 'ISS computers', 'James Webb Telescope'],
+    companies: ['NASA', 'SpaceX', 'Lockheed Martin', 'Northrop Grumman'],
+    futureImpact: 'Loop heat pipes and advanced radiator coatings will enable higher-power spacecraft in extreme thermal environments.',
+    color: '#8B5CF6'
+  }
+];
+
 export default function ThermalContactRenderer({
   onBack,
   onPhaseComplete,

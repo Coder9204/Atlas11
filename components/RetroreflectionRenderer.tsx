@@ -1,5 +1,80 @@
 import React, { useState, useEffect } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🛣️',
+    title: 'Highway Safety Signs',
+    short: 'Retroreflective materials make road signs visible in headlight beams at night',
+    tagline: 'Signs that shine back at you',
+    description: 'Every highway sign visible in your headlights uses retroreflection. Tiny glass beads or prismatic microstructures return light directly back toward its source - your headlights and eyes are nearly collinear, so the sign appears to glow. This technology has prevented countless nighttime accidents since its widespread adoption in the 1960s.',
+    connection: 'This game demonstrates how retroreflectors return light to its source regardless of angle - the exact physics that makes road signs visible to every driver on the highway.',
+    howItWorks: 'Glass bead retroreflectors focus incoming light at the back surface where it reflects and retraces its path. Prismatic retroreflectors use corner-cube geometry - three mutually perpendicular surfaces that return any ray parallel to its incoming direction. Both achieve 50-100x the brightness of white paint.',
+    stats: [
+      { value: '100x', label: 'Brighter than white paint', icon: '💡' },
+      { value: '500M+', label: 'Signs using retroreflection', icon: '🪧' },
+      { value: '$3B', label: 'Retroreflective market', icon: '💰' }
+    ],
+    examples: ['Stop signs', 'Highway markers', 'Construction signs', 'License plates'],
+    companies: ['3M', 'Avery Dennison', 'Nippon Carbide', 'ORAFOL'],
+    futureImpact: 'Smart retroreflective materials could embed sensors and change appearance to show real-time traffic or weather information.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🚴',
+    title: 'Cyclist and Pedestrian Safety',
+    short: 'Retroreflective strips on clothing and bikes make people visible to drivers',
+    tagline: 'Be seen to be safe',
+    description: 'Cyclists, runners, and construction workers rely on retroreflective tape and fabrics to be visible to motorists. Unlike ordinary reflective materials that scatter light in all directions, retroreflectors send light back exactly toward the car headlights - and the driver eyes. This makes the difference between being seen and being invisible.',
+    connection: 'The corner-cube and glass bead retroreflection physics in this game explains why properly placed retroreflective gear makes pedestrians 500+ feet visible to drivers.',
+    howItWorks: 'Retroreflective fabric contains millions of microscopic glass beads or prisms. Each returns incident light toward its source. Placed on moving limbs (ankles, wrists), the biomotion effect makes the human form immediately recognizable to drivers brains.',
+    stats: [
+      { value: '500+ ft', label: 'Visibility distance', icon: '👁️' },
+      { value: '85%', label: 'Nighttime pedestrian deaths preventable', icon: '⚠️' },
+      { value: '$500M', label: 'Safety apparel market', icon: '👷' }
+    ],
+    examples: ['Running vests', 'Bicycle reflectors', 'Construction vests', 'School crossing guard gear'],
+    companies: ['Proviz', 'Reflective Apparel Factory', 'Salzmann', 'Nathan Sports'],
+    futureImpact: 'Integration with smart fabrics could add active LED elements that work with retroreflection for even greater visibility.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🌙',
+    title: 'Lunar Laser Ranging',
+    short: 'Apollo retroreflectors enable millimeter-precision Earth-Moon distance measurement',
+    tagline: 'Reflecting lasers from the Moon',
+    description: 'Apollo astronauts left corner-cube retroreflector arrays on the Moon that still work today. Scientists bounce laser pulses off these reflectors and measure the round-trip time to calculate Earth-Moon distance with millimeter precision. This has confirmed Einstein general relativity and revealed the Moon is slowly spiraling away from Earth.',
+    connection: 'This game shows how corner-cube retroreflectors return light exactly parallel to incoming rays - essential for returning laser light across 384,000 km of space.',
+    howItWorks: 'Ground observatories fire short laser pulses at the lunar surface. The retroreflector arrays (100 corner cubes each) return a tiny fraction of photons. Timing the 2.5-second round trip with picosecond precision gives distance measurements accurate to millimeters. Only 1 in 10^17 photons returns.',
+    stats: [
+      { value: '384,400 km', label: 'Earth-Moon distance', icon: '🌍' },
+      { value: '±1 mm', label: 'Measurement precision', icon: '📏' },
+      { value: '3.8 cm/yr', label: 'Moon recession rate', icon: '📈' }
+    ],
+    examples: ['Apollo 11 retroreflector', 'Apollo 14 array', 'Apollo 15 array', 'Lunokhod reflectors'],
+    companies: ['NASA', 'ESA', 'Apache Point Observatory', 'Observatoire de la Cote d\'Azur'],
+    futureImpact: 'New retroreflector arrays on future lunar missions could improve precision further, testing fundamental physics at even higher accuracy.',
+    color: '#6366F1'
+  },
+  {
+    icon: '📏',
+    title: 'Surveying and Construction',
+    short: 'Prism retroreflectors enable precise distance and angle measurements',
+    tagline: 'Building with millimeter precision',
+    description: 'Total stations and laser distance meters rely on prism retroreflectors to measure distances with millimeter accuracy over kilometers. A surveyor places prisms at target points; the instrument sends laser pulses that return precisely to the receiver regardless of prism orientation. This enables the precise layouts needed for modern construction.',
+    connection: 'The angle-independent return property of corner-cube retroreflectors explored in this game is exactly what makes surveying prisms work from any viewing angle.',
+    howItWorks: 'Surveying prisms are precision corner cubes with anti-reflection coatings. The total station measures the time or phase delay of returned light pulses. Combined with precise angle encoders, this gives 3D coordinates of the prism position. Modern instruments achieve sub-millimeter accuracy.',
+    stats: [
+      { value: '±1 mm', label: 'Distance accuracy', icon: '📐' },
+      { value: '5 km', label: 'Maximum range', icon: '📡' },
+      { value: '$15B', label: 'Surveying equipment market', icon: '🏗️' }
+    ],
+    examples: ['Building layout', 'Bridge construction', 'Tunnel surveying', 'Mining measurement'],
+    companies: ['Leica Geosystems', 'Trimble', 'Topcon', 'Sokkia'],
+    futureImpact: 'GPS-RTK is reducing surveying prism usage, but retroreflectors remain essential for indoor and high-precision applications.',
+    color: '#10B981'
+  }
+];
+
 interface RetroreflectionRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

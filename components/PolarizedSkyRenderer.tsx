@@ -2,6 +2,81 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🐝',
+    title: 'Bee Navigation',
+    short: 'Insects see polarized sky patterns invisible to us',
+    tagline: 'Nature\'s compass in the sky',
+    description: 'Honeybees and many insects can detect sky polarization patterns with specialized photoreceptors. They use this as a compass for navigation, even when the sun is behind clouds.',
+    connection: 'The sky polarization pattern forms concentric circles around the sun due to Rayleigh scattering. Bees detect this pattern to determine the sun\'s position.',
+    howItWorks: 'Bee eyes have polarization-sensitive photoreceptors arranged in specific patterns. The brain processes the e-vector orientation to compute the solar meridian direction.',
+    stats: [
+      { value: '90°', label: 'max polarization angle', icon: '📐' },
+      { value: '70%', label: 'max sky polarization', icon: '☀️' },
+      { value: '20K+', label: 'bee species', icon: '🐝' }
+    ],
+    examples: ['Honeybee hive navigation', 'Desert ant orientation', 'Dung beetle rolling', 'Monarch butterfly migration'],
+    companies: ['Research Institutions', 'Conservation Groups', 'Agricultural Services', 'Biomimetics Labs'],
+    futureImpact: 'Biomimetic polarization sensors inspired by insect eyes could enable GPS-free navigation systems.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⚔️',
+    title: 'Viking Sunstones',
+    short: 'Ancient navigators used crystals to find the sun',
+    tagline: 'Crossing oceans with physics',
+    description: 'Vikings may have used calcite crystals (Iceland spar) to locate the sun through overcast skies. These "sunstones" show different appearances when viewing polarized light from different directions.',
+    connection: 'Calcite crystals are birefringent - they split light into two polarizations. Rotating the crystal while viewing polarized skylight reveals the solar direction.',
+    howItWorks: 'The navigator views the sky through the crystal and rotates it. The two images from birefringence become equal brightness when pointing at 90° from the sun.',
+    stats: [
+      { value: '5°', label: 'navigation accuracy', icon: '🧭' },
+      { value: '1000+', label: 'years ago', icon: '📅' },
+      { value: '3000', label: 'km Atlantic crossings', icon: '🌊' }
+    ],
+    examples: ['North Atlantic voyages', 'Iceland to Greenland routes', 'Exploration of Vinland', 'Trading expeditions'],
+    companies: ['Maritime Museums', 'Historical Research', 'Viking Heritage Sites', 'Crystal Suppliers'],
+    futureImpact: 'Understanding historical navigation techniques informs modern backup systems for GPS failures.',
+    color: '#6366F1'
+  },
+  {
+    icon: '📷',
+    title: 'Photography Polarizing Filters',
+    short: 'Darken blue skies by blocking polarized light',
+    tagline: 'Making skies dramatic since 1938',
+    description: 'Photographers use polarizing filters to darken blue skies, reduce reflections, and increase color saturation. The effect varies across the sky based on the natural polarization pattern.',
+    connection: 'Since skylight is polarized perpendicular to the sun-sky-observer plane, rotating a polarizer blocks different amounts of sky light at different angles from the sun.',
+    howItWorks: 'The filter is rotated until the sky darkens optimally. Maximum effect occurs at 90° from the sun. Near the sun or opposite it, polarization is low so the filter has little effect.',
+    stats: [
+      { value: '90°', label: 'optimal sun angle', icon: '☀️' },
+      { value: '3', label: 'stops of sky darkening', icon: '📊' },
+      { value: '$500M', label: 'filter market', icon: '📈' }
+    ],
+    examples: ['Landscape photography', 'Architectural shoots', 'Car photography', 'Nature documentation'],
+    companies: ['B+W', 'Hoya', 'Lee Filters', 'NiSi'],
+    futureImpact: 'Digital cameras may incorporate computational polarimetry for automatic glare and reflection removal.',
+    color: '#EC4899'
+  },
+  {
+    icon: '🛩️',
+    title: 'Polarimetric Navigation',
+    short: 'Aircraft use sky polarization as GPS backup',
+    tagline: 'When satellites aren\'t enough',
+    description: 'Modern aircraft and drones can use polarized skylight sensors as navigation backup when GPS is unavailable or jammed. The sky polarization pattern provides absolute heading reference.',
+    connection: 'Military and civilian applications need GPS-independent navigation. The predictable polarization pattern based on sun position offers a physics-based backup.',
+    howItWorks: 'Multiple polarization sensors measure the e-vector pattern. Algorithms calculate the solar meridian from the pattern, providing heading without magnetic or satellite reference.',
+    stats: [
+      { value: '1°', label: 'heading accuracy', icon: '🎯' },
+      { value: '24/7', label: 'availability', icon: '⏰' },
+      { value: '$10B', label: 'nav systems market', icon: '📈' }
+    ],
+    examples: ['Military aircraft backup', 'Autonomous drones', 'Submarine periscopes', 'Arctic exploration'],
+    companies: ['Honeywell', 'Northrop Grumman', 'BAE Systems', 'Collins Aerospace'],
+    futureImpact: 'Chip-scale polarimetric sensors will make this navigation method available for any outdoor autonomous system.',
+    color: '#10B981'
+  }
+];
+
 // =============================================================================
 // POLARIZED SKY RENDERER - NAVIGATION PHYSICS IN THE ATMOSPHERE
 // =============================================================================

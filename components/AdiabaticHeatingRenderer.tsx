@@ -46,6 +46,81 @@ interface Molecule {
   vy: number;
 }
 
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Diesel Engine Ignition',
+    short: 'Diesel compression ignition',
+    tagline: 'Igniting fuel without spark plugs',
+    description: 'Diesel engines achieve combustion through extreme adiabatic compression, heating air to over 500°C where fuel spontaneously ignites. This compression-ignition process is more efficient than spark ignition.',
+    connection: 'When the piston rapidly compresses air (20:1 ratio), there is no time for heat to escape. The work done on the gas converts directly to internal energy, raising temperature from ~300K to ~900K - hot enough to ignite diesel fuel.',
+    howItWorks: 'The piston compresses air so quickly that the process is nearly adiabatic. Using PV^γ = constant, a 20:1 compression ratio with γ=1.4 raises temperature by factor of ~3, reaching autoignition temperature.',
+    stats: [
+      { value: '20:1', label: 'Compression ratio', icon: '⚡' },
+      { value: '900K', label: 'Peak temperature', icon: '🔥' },
+      { value: '45%', label: 'Thermal efficiency', icon: '📈' }
+    ],
+    examples: ['Semi-trucks', 'Ships', 'Locomotives', 'Construction equipment'],
+    companies: ['Cummins', 'Detroit Diesel', 'MAN', 'Caterpillar'],
+    futureImpact: 'Advanced diesel technology with precise injection timing and exhaust treatment continues to power global freight, while hybrid-diesel systems improve urban efficiency.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '❄️',
+    title: 'Refrigeration & Heat Pumps',
+    short: 'Cooling through expansion',
+    tagline: 'Moving heat uphill with thermodynamics',
+    description: 'Refrigerators and heat pumps exploit adiabatic compression and expansion to transfer heat from cold to hot regions, seemingly defying the natural direction of heat flow.',
+    connection: 'Compressing refrigerant adiabatically heats it above room temperature (so it can dump heat). Expanding it adiabatically cools it below the target temperature (so it can absorb heat).',
+    howItWorks: 'The compressor rapidly compresses refrigerant gas, heating it adiabatically. Hot gas releases heat in the condenser. Liquid passes through expansion valve, cooling adiabatically. Cold refrigerant absorbs heat in evaporator.',
+    stats: [
+      { value: '300%', label: 'COP efficiency', icon: '⚡' },
+      { value: '-40°C', label: 'Min temperature', icon: '❄️' },
+      { value: '20%', label: 'Global electricity use', icon: '🌍' }
+    ],
+    examples: ['Home refrigerators', 'Air conditioners', 'Heat pumps', 'Industrial chillers'],
+    companies: ['Carrier', 'Daikin', 'Trane', 'LG'],
+    futureImpact: 'Heat pumps are 3-5x more efficient than resistive heating. As grids decarbonize, heat pumps will replace gas furnaces for sustainable home heating.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🌤️',
+    title: 'Weather & Cloud Formation',
+    short: 'Atmospheric thermodynamics',
+    tagline: 'How pressure creates weather',
+    description: 'Rising air parcels cool adiabatically as atmospheric pressure decreases with altitude. This cooling triggers cloud formation, precipitation, and drives global weather patterns.',
+    connection: 'As air rises and pressure drops, it expands adiabatically. With no heat input, expansion reduces internal energy, cooling the air. When temperature drops below dew point, water condenses into clouds.',
+    howItWorks: 'Dry air cools at 10°C/km (dry adiabatic lapse rate). Once saturated, latent heat release slows cooling to 6°C/km (moist adiabatic rate). This drives convection, thunderstorms, and mountain weather.',
+    stats: [
+      { value: '10°C/km', label: 'Dry lapse rate', icon: '📉' },
+      { value: '6°C/km', label: 'Moist lapse rate', icon: '💧' },
+      { value: '100%', label: 'Cloud formation driver', icon: '☁️' }
+    ],
+    examples: ['Thunderstorm formation', 'Mountain clouds', 'Foehn winds', 'Hurricanes'],
+    companies: ['NOAA', 'ECMWF', 'Met Office', 'AccuWeather'],
+    futureImpact: 'Better understanding of adiabatic processes improves climate models and severe weather prediction, potentially saving thousands of lives annually.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '✈️',
+    title: 'Aircraft Cabin Pressurization',
+    short: 'Breathing at 35,000 feet',
+    tagline: 'Compressed air for passenger comfort',
+    description: 'Jet engines bleed compressed air for cabin pressurization. This air undergoes adiabatic heating during compression and must be cooled before entering the cabin.',
+    connection: 'Engine compressors achieve 30:1 pressure ratios, heating bleed air adiabatically to over 500°C. Air conditioning packs use expansion turbines (adiabatic cooling) to bring temperature to comfortable levels.',
+    howItWorks: 'Hot compressed air from the engine passes through heat exchangers, then expands through turbines. The adiabatic expansion dramatically cools the air. Mixing valves blend hot and cold air for precise temperature control.',
+    stats: [
+      { value: '500°C', label: 'Bleed air temp', icon: '🔥' },
+      { value: '8000ft', label: 'Cabin altitude', icon: '⛰️' },
+      { value: '30:1', label: 'Compression ratio', icon: '📊' }
+    ],
+    examples: ['Commercial aircraft', 'Business jets', 'Military transports', 'Spacecraft'],
+    companies: ['Boeing', 'Airbus', 'Collins Aerospace', 'Honeywell'],
+    futureImpact: 'Electric aircraft will require new pressurization approaches. Current designs use electrically-driven compressors with adiabatic cooling for efficiency.',
+    color: '#8B5CF6'
+  }
+];
+
 const AdiabaticHeatingRenderer: React.FC<AdiabaticHeatingRendererProps> = ({
   phase,
   onPhaseComplete,

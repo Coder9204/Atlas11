@@ -269,6 +269,81 @@ const testQuestions = [
   }
 ];
 
+const realWorldApps = [
+  {
+    icon: '🏥',
+    title: 'MRI Medical Imaging',
+    short: 'Superconducting electromagnets enable detailed body scans',
+    tagline: 'See inside the human body without surgery',
+    description: 'MRI machines use superconducting electromagnets cooled to near absolute zero to create magnetic fields 60,000 times stronger than Earth\'s, allowing doctors to visualize soft tissues, organs, and even brain activity in remarkable detail.',
+    connection: 'The electromagnet principle you learned - current through coils creates magnetic fields - is scaled up massively using superconducting wire that has zero electrical resistance.',
+    howItWorks: 'Liquid helium cools the coils to -269°C, enabling enormous currents to flow without resistance. These currents generate stable 1.5-7 Tesla fields that align hydrogen atoms in your body for imaging.',
+    stats: [
+      { value: '40,000+', label: 'MRI machines worldwide', icon: '🌍' },
+      { value: '$8B', label: 'Annual MRI market', icon: '📈' },
+      { value: '7 Tesla', label: 'Strongest clinical MRI', icon: '⚡' }
+    ],
+    examples: ['Brain tumor detection', 'Spinal cord imaging', 'Heart disease diagnosis', 'Sports injury assessment'],
+    companies: ['Siemens Healthineers', 'GE Healthcare', 'Philips', 'Canon Medical'],
+    futureImpact: 'High-field MRI at 10+ Tesla will reveal cellular-level details, while portable MRI units will bring scanning to rural areas.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚄',
+    title: 'Maglev Trains',
+    short: 'Electromagnetic levitation for frictionless high-speed travel',
+    tagline: 'Float at 600 km/h with no wheels touching rails',
+    description: 'Maglev trains use electromagnets to both levitate the train above the track and propel it forward, eliminating wheel friction and enabling speeds over 600 km/h while being quieter and more energy-efficient than conventional trains.',
+    connection: 'The controllable nature of electromagnets - turn on current to attract, off to release - enables precise levitation and propulsion control.',
+    howItWorks: 'Superconducting magnets on the train interact with coils in the guideway. Alternating the current in track coils creates a traveling magnetic wave that pulls the train forward while simultaneously levitating it.',
+    stats: [
+      { value: '603 km/h', label: 'World speed record (Japan)', icon: '🏎️' },
+      { value: '430 km/h', label: 'Shanghai commercial maglev', icon: '🚅' },
+      { value: '10mm', label: 'Levitation gap', icon: '📏' }
+    ],
+    examples: ['Shanghai Maglev (China)', 'Chuo Shinkansen (Japan)', 'Incheon Airport Maglev', 'Changsha Maglev Express'],
+    companies: ['Central Japan Railway', 'CRRC', 'Siemens', 'ThyssenKrupp'],
+    futureImpact: 'Hyperloop-style vacuum tube maglev systems could achieve 1,000+ km/h, making travel between cities faster than flying.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '⚡',
+    title: 'Electric Motors',
+    short: 'Converting electricity to motion in everything from EVs to drones',
+    tagline: 'The heartbeat of the electric revolution',
+    description: 'Electric motors use electromagnets to create rotating magnetic fields that push against permanent magnets, converting electrical energy into mechanical motion with over 95% efficiency - powering everything from electric vehicles to industrial robots.',
+    connection: 'AC current through stator coils creates a rotating magnetic field - exactly what you explored in the twist phase with alternating current.',
+    howItWorks: 'In an induction motor, AC current in stationary coils (stator) creates a rotating magnetic field. This induces currents in the rotor, making it magnetic and causing it to spin, chasing the rotating field.',
+    stats: [
+      { value: '50%', label: 'Of global electricity powers motors', icon: '🔌' },
+      { value: '95%+', label: 'Peak motor efficiency', icon: '♻️' },
+      { value: '$150B', label: 'Electric motor market', icon: '💰' }
+    ],
+    examples: ['Tesla Model S motor (670 hp)', 'Industrial pumps and fans', 'Drone propulsion', 'Refrigerator compressors'],
+    companies: ['Tesla', 'Nidec', 'ABB', 'Siemens'],
+    futureImpact: 'Solid-state motors with no rare earth magnets will make EVs cheaper, while direct-drive motors will revolutionize wind turbines and aviation.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🏗️',
+    title: 'Scrapyard Electromagnets',
+    short: 'Lifting tons of metal with the flip of a switch',
+    tagline: 'Pick up a car, drop it on command',
+    description: 'Industrial electromagnets in scrapyards and steel mills can lift entire cars and tons of metal debris. Unlike permanent magnets, they can release their load instantly by cutting the current - the ultimate demonstration of controllable magnetism.',
+    connection: 'This is the most direct application of what you learned: high current + many coil turns + iron core = incredibly powerful, switchable magnet.',
+    howItWorks: 'A large iron core wrapped with thick copper coils carries hundreds of amperes. The iron amplifies the field 1000×, creating enough magnetic force to lift vehicles. Cutting power releases the load.',
+    stats: [
+      { value: '20,000 kg', label: 'Maximum lift capacity', icon: '🏋️' },
+      { value: '4 Tesla', label: 'Field strength achieved', icon: '🧲' },
+      { value: '500 A', label: 'Typical operating current', icon: '⚡' }
+    ],
+    examples: ['Auto recycling facilities', 'Steel mills', 'Shipping container yards', 'Metal sorting plants'],
+    companies: ['Eriez', 'Walker Magnetics', 'Ohio Magnetics', 'Bunting Magnetics'],
+    futureImpact: 'AI-controlled electromagnets will automatically sort mixed metal waste, dramatically improving recycling efficiency and reducing landfill waste.',
+    color: '#F59E0B'
+  }
+];
+
 const TRANSFER_APPS = [
   {
     title: 'Electric Motors',

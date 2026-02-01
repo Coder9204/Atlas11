@@ -2,6 +2,81 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🏛️',
+      title: 'Roman Aqueduct Engineering',
+      short: 'Ancient inverted siphons',
+      tagline: 'Crossing valleys without pumps',
+      description: 'Romans built inverted siphons to carry aqueduct water across valleys. Water flowed down one side and up the other, using atmospheric pressure to push water over obstacles up to 50 meters high.',
+      connection: 'Roman siphons demonstrate the same physics as modern siphons: atmospheric pressure pushes water up the ascending leg while gravity pulls it down the descending leg.',
+      howItWorks: 'A sealed pipe connects two points at different elevations. Water entering the high side creates a continuous column that atmospheric pressure pushes through the low point and up to the outlet.',
+      stats: [
+         { value: '50m', label: 'Maximum depth', icon: '📏' },
+         { value: '10km', label: 'Longest Roman siphon', icon: '🏗️' },
+         { value: '2000 yrs', label: 'Technology age', icon: '📅' }
+      ],
+      examples: ['Lyon aqueducts', 'Pergamon water system', 'Aspendos aqueduct', 'Constantinople supply'],
+      companies: ['Roman Empire engineering corps', 'Modern civil engineers', 'Archaeological researchers'],
+      futureImpact: 'Gravity-fed siphon systems remain relevant for irrigation and water supply in developing regions without reliable electricity.',
+      color: '#92400E'
+   },
+   {
+      icon: '🚽',
+      title: 'Toilet Flush Systems',
+      short: 'Self-starting siphons',
+      tagline: 'The hidden siphon in every bathroom',
+      description: 'Modern toilets use a siphon mechanism to empty the bowl. When water level rises high enough, it starts a siphon in the trapway that pulls all the water and waste out, then breaks automatically.',
+      connection: 'The toilet trapway is a self-priming siphon. Flushing raises the water level to start the siphon, and the specific geometry ensures it breaks cleanly when the bowl empties.',
+      howItWorks: 'The flush valve releases tank water rapidly, raising bowl level above the trapway crown. This starts a siphon that empties the bowl. Air entering through the flush valve breaks the siphon cleanly.',
+      stats: [
+         { value: '1.6 gal', label: 'Modern flush volume', icon: '💧' },
+         { value: '2-3 sec', label: 'Siphon duration', icon: '⏱️' },
+         { value: '4B', label: 'Daily flushes worldwide', icon: '🌍' }
+      ],
+      examples: ['Residential toilets', 'Commercial fixtures', 'Marine heads', 'Aircraft lavatories'],
+      companies: ['TOTO', 'Kohler', 'American Standard', 'Duravit'],
+      futureImpact: 'Vacuum-assist and dual-flush systems reduce water consumption while maintaining siphon effectiveness.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '🍷',
+      title: 'Wine Racking and Transfer',
+      short: 'Gentle liquid handling',
+      tagline: 'Moving wine without pumps',
+      description: 'Winemakers use siphons to transfer wine between containers without disturbing sediment. The gentle gravity-powered flow avoids oxidation and agitation that mechanical pumps might cause.',
+      connection: 'Wine siphoning is a classic application: the outlet must be below the source, the tube must be primed, and the siphon breaks when air enters or levels equalize.',
+      howItWorks: 'A sanitized tube is filled with water or wine to prime it. One end goes into the source container above the sediment line, the other into a lower receiving vessel. Gravity does the rest.',
+      stats: [
+         { value: '1-2 gal/min', label: 'Typical flow rate', icon: '🍷' },
+         { value: '<1 ppm', label: 'Oxygen pickup', icon: '💨' },
+         { value: '5-10', label: 'Rackings per wine', icon: '🔄' }
+      ],
+      examples: ['Home winemaking', 'Commercial wineries', 'Brewery transfers', 'Laboratory work'],
+      companies: ['Fermtech', 'Buon Vino', 'All American', 'Della Toffola'],
+      futureImpact: 'Automated racking systems use sensors to detect sediment and control siphon operation without human intervention.',
+      color: '#7C3AED'
+   },
+   {
+      icon: '🏥',
+      title: 'Medical Chest Drainage',
+      short: 'Thoracic siphons save lives',
+      tagline: 'Draining fluid with gravity',
+      description: 'Chest tubes use water-seal drainage systems that combine siphon action with one-way valves. Gravity pulls fluid and air from the chest cavity while preventing backflow that could collapse the lung.',
+      connection: 'The water seal acts as a one-way valve, allowing fluid and air to exit via siphon action while preventing air from entering the chest when the patient inhales.',
+      howItWorks: 'A tube from the chest connects to a collection chamber with a water seal. Negative pressure in the chest pushes fluid out, and gravity pulls it into the collection container below patient level.',
+      stats: [
+         { value: '-20 cmH2O', label: 'Typical suction', icon: '📉' },
+         { value: '48-72 hrs', label: 'Typical duration', icon: '⏱️' },
+         { value: '1M+', label: 'Annual procedures', icon: '🏥' }
+      ],
+      examples: ['Pneumothorax treatment', 'Post-surgery drainage', 'Pleural effusion', 'Trauma care'],
+      companies: ['Atrium', 'Teleflex', 'BD', 'Medela'],
+      futureImpact: 'Digital chest drainage systems with electronic monitoring are replacing traditional water-seal units.',
+      color: '#10B981'
+   }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════

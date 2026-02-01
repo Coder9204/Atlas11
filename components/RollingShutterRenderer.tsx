@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Smartphone Camera Design',
+    short: 'Understanding rolling shutter helps engineers and users minimize distortion artifacts',
+    tagline: 'Why your phone warps fast motion',
+    description: 'Every smartphone camera uses a CMOS rolling shutter that scans the image line by line. Fast-moving objects or camera shake during this scan creates characteristic distortions - propellers become curved, guitars strings wobble, and buildings lean during quick pans. Camera engineers work to minimize readout time while users learn to avoid problematic shots.',
+    connection: 'This game teaches exactly how sequential line readout creates rolling shutter distortion - the physics behind artifacts you see in everyday phone photos.',
+    howItWorks: 'CMOS sensors read pixels row by row, taking 10-30ms to scan the full frame. Objects moving during this time are captured at different positions in different rows. The result: straight objects appear curved or tilted. Faster readout speeds and computational correction reduce but do not eliminate the effect.',
+    stats: [
+      { value: '10-30ms', label: 'Typical readout time', icon: '⏱️' },
+      { value: '12-200 MP', label: 'Phone sensor resolution', icon: '📸' },
+      { value: '1.4B', label: 'Smartphones sold yearly', icon: '📱' }
+    ],
+    examples: ['iPhone cameras', 'Samsung Galaxy', 'Google Pixel', 'OnePlus cameras'],
+    companies: ['Apple', 'Samsung', 'Sony Semiconductor', 'OmniVision'],
+    futureImpact: 'Stacked CMOS sensors with global shutter capability may eventually eliminate rolling shutter artifacts in smartphones.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎬',
+    title: 'Cinema Camera Technology',
+    short: 'Professional cameras balance rolling shutter with dynamic range and resolution',
+    tagline: 'The art of motion picture capture',
+    description: 'Cinema cameras face rolling shutter tradeoffs more acutely than phones. Large sensors with high dynamic range take longer to read out. Directors of photography must understand these limitations when planning shots with fast motion or quick camera movements. Premium cameras minimize skew through faster electronics.',
+    connection: 'The rolling shutter physics demonstrated in this game explains why cinematographers avoid certain shots and choose cameras based on readout speed.',
+    howItWorks: 'Cinema sensors prioritize image quality (14+ stops dynamic range) over readout speed. Larger pixels accumulate more light but take longer to read. Camera movement during readout creates the jello effect where the whole frame wobbles. Mechanical shutters can reduce but not eliminate the issue.',
+    stats: [
+      { value: '8-15ms', label: 'Pro cinema readout', icon: '🎥' },
+      { value: '14+ stops', label: 'Dynamic range target', icon: '📊' },
+      { value: '$50K+', label: 'High-end cinema camera', icon: '💰' }
+    ],
+    examples: ['ARRI Alexa', 'RED V-Raptor', 'Sony Venice', 'Blackmagic URSA'],
+    companies: ['ARRI', 'RED Digital', 'Sony Professional', 'Blackmagic Design'],
+    futureImpact: 'Global shutter cinema sensors are emerging that eliminate rolling shutter while maintaining the dynamic range cinematographers require.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🚁',
+    title: 'Drone Aerial Photography',
+    short: 'Drone cameras must handle vibration and motion that exacerbate rolling shutter',
+    tagline: 'Stable images from unstable platforms',
+    description: 'Drone cameras face extreme rolling shutter challenges. High-frequency propeller vibration, rapid altitude changes, and fast yaw movements all occur during frame capture. Gimbal stabilization helps but cannot eliminate rolling shutter artifacts when the drone itself moves quickly. Premium drones use mechanical or global shutters.',
+    connection: 'This game shows how object motion during scan creates distortion - explaining why drone footage of propellers and fast maneuvers often shows artifacts.',
+    howItWorks: 'Drone camera gimbals stabilize pointing direction but cannot stop the rolling shutter from seeing different parts of the scene at different times during rapid maneuvers. Mechanical shutters (like DJI Phantom 4 Pro) or global shutter sensors eliminate the problem at the source.',
+    stats: [
+      { value: '10,000+ RPM', label: 'Drone propeller speed', icon: '🔄' },
+      { value: '1-2ms', label: 'Global shutter readout', icon: '⚡' },
+      { value: '$1.5B', label: 'Consumer drone market', icon: '🚀' }
+    ],
+    examples: ['DJI Mavic 3 Pro', 'DJI Phantom 4 Pro', 'Autel Evo II Pro', 'Skydio 2+'],
+    companies: ['DJI', 'Autel Robotics', 'Skydio', 'Parrot'],
+    futureImpact: 'Affordable global shutter sensors will become standard in drones, enabling artifact-free capture of the fastest aerial maneuvers.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Machine Vision Systems',
+    short: 'Industrial cameras require global shutters for accurate measurement of moving parts',
+    tagline: 'Where distortion means defects',
+    description: 'Factory machine vision systems inspect products moving on conveyor belts at high speed. Rolling shutter would distort measurements, causing false rejects or missed defects. Industrial cameras almost universally use global shutters that capture the entire frame simultaneously, ensuring accurate dimensional measurement.',
+    connection: 'The rolling shutter distortion physics in this game explains why industrial inspection systems require global shutter sensors.',
+    howItWorks: 'Global shutter sensors expose and store all pixels simultaneously, then read them out. While readout is still sequential, the image represents a single instant in time. This eliminates motion distortion but requires more complex sensor design with storage elements at each pixel.',
+    stats: [
+      { value: '<1μs', label: 'Global shutter exposure', icon: '📷' },
+      { value: '100%', label: 'Inspection accuracy required', icon: '✓' },
+      { value: '$100B', label: 'Industrial automation market', icon: '🏭' }
+    ],
+    examples: ['PCB inspection', 'Pharmaceutical packaging', 'Automotive assembly', 'Food inspection'],
+    companies: ['Cognex', 'Keyence', 'Basler', 'FLIR (Teledyne)'],
+    futureImpact: 'AI-powered vision systems combined with faster global shutter sensors will enable real-time inspection at ever-higher production speeds.',
+    color: '#F59E0B'
+  }
+];
+
 interface RollingShutterRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

@@ -1,5 +1,81 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+// Real-world applications for Moire patterns
+const realWorldApps = [
+  {
+    icon: '🔬',
+    title: 'Precision Measurement',
+    short: 'Nanometer-scale displacement sensing',
+    tagline: 'Amplifying tiny movements into visible patterns',
+    description: 'Moire patterns amplify small displacements into large, easily measured pattern shifts. Optical encoders in CNC machines, semiconductor equipment, and scientific instruments use moire interference between gratings to achieve nanometer precision.',
+    connection: 'The game showed how small rotations create dramatic pattern changes. Optical encoders exploit this - tiny grating movements cause large moire fringe shifts, enabling nanometer resolution from visible patterns.',
+    howItWorks: 'Two fine gratings with slightly different spacings overlap. Relative movement shifts moire fringes. Photodetectors count fringes for position. Interpolation achieves sub-fringe resolution. Reference marks enable absolute positioning.',
+    stats: [
+      { value: '1nm', label: 'Resolution achieved', icon: '🔬' },
+      { value: '3m', label: 'Maximum travel', icon: '📏' },
+      { value: '$4B', label: 'Encoder market', icon: '📈' }
+    ],
+    examples: ['ASML lithography stages', 'CMM machines', 'Telescope mounts', 'Robotic arms'],
+    companies: ['Renishaw', 'Heidenhain', 'Mitutoyo', 'ASML'],
+    futureImpact: 'Quantum-enhanced moire sensing will push measurement precision to atomic scales for next-generation manufacturing.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '📰',
+    title: 'Print Quality Control',
+    short: 'Avoiding moire in color printing',
+    tagline: 'The enemy of halftone reproduction',
+    description: 'Color printing overlays cyan, magenta, yellow, and black halftone screens. If screen angles aren\'t carefully chosen, moire patterns create visible interference. Print engineers use specific rosette patterns to minimize this artifact.',
+    connection: 'The game demonstrated how overlapping grids create interference patterns. In printing, the periodic dot patterns of each color ink are essentially grids that can produce unwanted moire.',
+    howItWorks: 'Each color printed as halftone screen of dots. Different angles minimize interference (typically 15°, 45°, 75°, 0°). Wrong angles create visible rosette or moire. Digital screening algorithms optimize dot placement. High frequency screens reduce visibility.',
+    stats: [
+      { value: '175lpi', label: 'Magazine screen ruling', icon: '📰' },
+      { value: '15°', label: 'Typical screen angle offset', icon: '📐' },
+      { value: '$90B', label: 'Commercial print market', icon: '📈' }
+    ],
+    examples: ['Magazine printing', 'Packaging graphics', 'Fine art reproduction', 'Billboard printing'],
+    companies: ['Heidelberg', 'HP Indigo', 'Kodak', 'Screen Holdings'],
+    futureImpact: 'AI-optimized stochastic screening will eliminate moire while enabling finer detail reproduction than traditional halftones.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '💳',
+    title: 'Security Features',
+    short: 'Anti-counterfeiting moire patterns',
+    tagline: 'Hidden images that reveal themselves',
+    description: 'Currency, passports, and secure documents use moire patterns as anti-counterfeiting features. Special overlays or viewing angles reveal hidden images encoded in line patterns that are nearly impossible to reproduce with standard printers or copiers.',
+    connection: 'The interactive moire exploration shows how specific alignments reveal patterns. Security features use this - hidden images appear only when a decoder lens aligns with the printed pattern.',
+    howItWorks: 'Document contains high-frequency line pattern encoding hidden image. Decoder overlay with matching frequency placed on top. Moire interference reveals hidden message or image. Photocopiers cannot capture fine lines, defeating reproduction.',
+    stats: [
+      { value: '150+', label: 'Countries using moire security', icon: '🌍' },
+      { value: '1000lpi', label: 'Security pattern resolution', icon: '🔬' },
+      { value: '$30B', label: 'Security printing market', icon: '📈' }
+    ],
+    examples: ['US currency', 'EU passports', 'Bank checks', 'Event tickets'],
+    companies: ['De La Rue', 'Giesecke+Devrient', 'Crane Currency', 'Oberthur'],
+    futureImpact: 'Smartphone-readable moire codes will enable instant document authentication without special equipment.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '⚛️',
+    title: 'Twisted Bilayer Graphene',
+    short: 'Magic angle superconductivity',
+    tagline: 'Moire physics wins Nobel Prize',
+    description: 'When two graphene layers are stacked with a 1.1° twist, moire patterns in the atomic lattice create flat electronic bands. This "magic angle" enables superconductivity and exotic quantum states, launching a new field of twistronics.',
+    connection: 'The game showed how slight angle changes dramatically affect moire patterns. In twisted bilayer graphene, the atomic-scale moire superlattice completely changes electronic properties - same physics, quantum scale.',
+    howItWorks: 'Two graphene sheets stacked with slight twist. Moire pattern creates periodic potential for electrons. At magic angle (~1.1°), electronic bands flatten. Flat bands enhance interactions. Result: correlated insulator and superconductor phases.',
+    stats: [
+      { value: '1.1°', label: 'Magic twist angle', icon: '📐' },
+      { value: '14nm', label: 'Moire wavelength', icon: '🔬' },
+      { value: '1.7K', label: 'Superconducting Tc', icon: '❄️' }
+    ],
+    examples: ['Graphene superconductors', 'Moire excitons', 'Topological states', 'Quantum simulators'],
+    companies: ['MIT', 'Columbia University', 'Stanford', 'Max Planck'],
+    futureImpact: 'Moire quantum materials may enable room-temperature superconductors or fault-tolerant quantum computers.',
+    color: '#22c55e'
+  }
+];
+
 interface MoirePatternsRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

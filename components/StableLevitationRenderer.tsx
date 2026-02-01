@@ -7,6 +7,81 @@ interface StableLevitationRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🚄',
+    title: 'Maglev Trains',
+    short: 'Magnetic levitation for frictionless transport',
+    tagline: 'Floating at 600 km/h',
+    description: 'Maglev trains use electromagnetic forces to levitate above the track, eliminating wheel friction. This enables speeds over 600 km/h while providing a smooth, quiet ride.',
+    connection: 'Like Bernoulli levitation, maglev requires stable equilibrium in multiple dimensions. Active feedback control adjusts electromagnet current to maintain constant gap despite disturbances.',
+    howItWorks: 'Electromagnetic suspension (EMS) uses attractive force from beneath, with sensors and controllers adjusting current thousands of times per second. Electrodynamic suspension (EDS) uses repulsive force from superconducting magnets.',
+    stats: [
+      { value: '603km/h', label: 'Speed record (Japan)', icon: '🚀' },
+      { value: '10mm', label: 'Levitation gap', icon: '📏' },
+      { value: '90%', label: 'Energy efficiency', icon: '⚡' }
+    ],
+    examples: ['Shanghai Maglev', 'Japan Chuo Shinkansen', 'Inductrack systems', 'Urban people movers'],
+    companies: ['Central Japan Railway', 'Transrapid', 'CRRC', 'General Atomics'],
+    futureImpact: 'Superconducting maglev lines will connect major cities, with travel times competitive with aviation but without airport hassles or emissions.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🔬',
+    title: 'Acoustic Levitation',
+    short: 'Suspending objects with sound waves',
+    tagline: 'Touching without touching',
+    description: 'Ultrasonic transducers create standing waves that trap small objects at pressure nodes. This enables contactless manipulation for pharmaceutical processing, materials research, and microgravity simulation.',
+    connection: 'Like Bernoulli levitation using air pressure differences, acoustic levitation uses sound pressure gradients. Objects rest in low-pressure nodes surrounded by high-pressure antinodes.',
+    howItWorks: 'Arrays of ultrasonic speakers create interference patterns with stable trapping points. Multiple transducers allow 3D positioning. Frequency tuning adjusts trap stiffness and position.',
+    stats: [
+      { value: '40kHz', label: 'Typical frequency', icon: '🔊' },
+      { value: '5mm', label: 'Max object size', icon: '📐' },
+      { value: '160dB', label: 'Sound intensity', icon: '📢' }
+    ],
+    examples: ['Drug formulation', 'Containerless processing', 'Cell manipulation', 'Art installations'],
+    companies: ['Ultrahaptics', 'Argonne Lab', 'Bristol Ultrasonics', 'Sonovol'],
+    futureImpact: 'Mid-air haptic displays will let users feel virtual objects, with acoustic levitation creating tactile interfaces for VR and touchless public interfaces.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🧲',
+    title: 'Magnetic Bearings',
+    short: 'Frictionless rotation for precision machines',
+    tagline: 'Spinning without touching',
+    description: 'Active magnetic bearings suspend rotating shafts without contact, eliminating friction, wear, and lubricant contamination. Used in turbomachinery, flywheels, and precision instruments.',
+    connection: 'Magnetic bearings face the same stability challenge as Bernoulli levitation. Earnshaw\'s theorem prohibits stable passive magnetic suspension, so active feedback control is essential.',
+    howItWorks: 'Position sensors measure shaft location. Controllers calculate required restoring forces. Electromagnets provide forces proportional to displacement. Digital control enables stiffness tuning.',
+    stats: [
+      { value: '100k', label: 'RPM achievable', icon: '🔄' },
+      { value: '0', label: 'Friction losses', icon: '✨' },
+      { value: '10yr+', label: 'Maintenance-free life', icon: '⏰' }
+    ],
+    examples: ['Natural gas compressors', 'Flywheel energy storage', 'Vacuum pumps', 'Centrifuges'],
+    companies: ['SKF', 'Waukesha', 'Calnetix', 'Mecos'],
+    futureImpact: 'Superconducting magnetic bearings will enable lossless energy storage in utility-scale flywheels, supporting grid stability with renewable energy.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '⚗️',
+    title: 'Containerless Processing',
+    short: 'Manufacturing without contamination',
+    tagline: 'Pure materials from thin air',
+    description: 'Levitation enables melting and processing materials without crucible contact, preventing contamination. Essential for producing ultra-pure metals, glasses, and studying undercooled liquids.',
+    connection: 'Aerodynamic, acoustic, or electromagnetic levitation keeps molten samples suspended. The stability principles determine how well samples can be held during heating and cooling.',
+    howItWorks: 'Samples are levitated in controlled atmosphere chambers. Lasers or RF coils provide heating. Pyrometers measure temperature. Rapid cooling can produce amorphous metals or metastable phases.',
+    stats: [
+      { value: '3000°C', label: 'Max processing temp', icon: '🌡️' },
+      { value: '99.9999%', label: 'Purity achievable', icon: '💎' },
+      { value: '10-100x', label: 'Undercooling possible', icon: '❄️' }
+    ],
+    examples: ['Titanium alloys', 'Silicon purification', 'Metallic glasses', 'Oxide superconductors'],
+    companies: ['NASA Glenn', 'DLR', 'JAXA', 'Materion'],
+    futureImpact: 'Space manufacturing will use microgravity and levitation to create materials impossible to make on Earth, from perfect crystals to novel metal alloys.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

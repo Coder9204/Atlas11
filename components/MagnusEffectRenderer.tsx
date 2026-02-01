@@ -1,5 +1,81 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// Real-world applications for Magnus effect
+const realWorldApps = [
+  {
+    icon: '⚽',
+    title: 'Sports Ball Trajectory',
+    short: 'Curved shots in football, baseball, golf',
+    tagline: 'Bend it like Beckham - with physics',
+    description: 'Professional athletes exploit the Magnus effect to curve balls through the air. Soccer free kicks that bend around walls, baseball curveballs that drop suddenly, and golf drives that carry extra distance all rely on spin-induced aerodynamic forces.',
+    connection: 'The simulation showed how topspin, backspin, and sidespin create pressure differentials. In sports, players intuitively control spin rate and axis to achieve specific trajectories - making physics their secret weapon.',
+    howItWorks: 'Spinning ball drags air in rotation direction, creating asymmetric flow. Bernoulli principle causes pressure difference. Net force perpendicular to velocity curves trajectory. Spin axis determines curve direction.',
+    stats: [
+      { value: '3000rpm', label: 'Baseball pitcher spin rate', icon: '⚾' },
+      { value: '8m', label: 'Maximum ball curve', icon: '📐' },
+      { value: '$50B', label: 'Global sports equipment', icon: '📈' }
+    ],
+    examples: ['Roberto Carlos free kick', 'Clayton Kershaw curveball', 'Dustin Johnson drives', 'Table tennis loops'],
+    companies: ['Trackman', 'Rapsodo', 'Callaway', 'Wilson'],
+    futureImpact: 'AI-powered spin tracking will enable personalized coaching apps that teach optimal ball spin for any skill level.',
+    color: '#22c55e'
+  },
+  {
+    icon: '⛵',
+    title: 'Flettner Rotor Ships',
+    short: 'Spinning cylinders for ship propulsion',
+    tagline: 'Harnessing wind without sails',
+    description: 'Rotor ships use spinning vertical cylinders (Flettner rotors) to generate thrust from crosswinds via the Magnus effect. Modern cargo ships install these rotors to reduce fuel consumption by 10-30%, cutting emissions while maintaining schedules.',
+    connection: 'The game demonstrated how spinning objects in airflow experience perpendicular forces. Flettner rotors scale this up - 30-meter spinning cylinders generate enough Magnus force to propel massive cargo vessels.',
+    howItWorks: 'Electric motors spin cylinders at 100-200 rpm. Wind flowing past creates Magnus lift perpendicular to wind direction. Ship\'s course determines which direction this force provides thrust. Automated control optimizes rotor speed.',
+    stats: [
+      { value: '30%', label: 'Fuel savings possible', icon: '⛽' },
+      { value: '100+', label: 'Ships with rotors', icon: '🚢' },
+      { value: '35m', label: 'Tallest rotor installed', icon: '📏' }
+    ],
+    examples: ['E-Ship 1', 'Viking Grace', 'Maersk Pelican', 'Sea Cargo vessels'],
+    companies: ['Norsepower', 'Anemoi Marine', 'Bound4Blue', 'Eco Marine Power'],
+    futureImpact: 'IMO 2030 emissions targets will drive widespread adoption, with hybrid rotor-electric ships becoming standard for transoceanic shipping.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '✈️',
+    title: 'Boundary Layer Control',
+    short: 'Spinning leading edges for aircraft',
+    tagline: 'Extra lift when you need it most',
+    description: 'Experimental aircraft use spinning cylinders at wing leading edges to delay flow separation and increase lift. The Magnus effect energizes the boundary layer, allowing steeper approach angles and shorter landing distances.',
+    connection: 'The simulation showed how spin affects the wake behind a ball. On aircraft, spinning cylinders similarly modify airflow, keeping it attached to the wing surface longer for enhanced lift.',
+    howItWorks: 'Rotating cylinders at wing leading edge accelerate boundary layer air. Higher local velocity delays flow separation. Lift coefficient increases dramatically. Most effective at high angles of attack during takeoff/landing.',
+    stats: [
+      { value: '30%', label: 'Lift increase possible', icon: '📈' },
+      { value: '25%', label: 'Shorter runway needed', icon: '🛬' },
+      { value: '15°', label: 'Higher stall angle', icon: '📐' }
+    ],
+    examples: ['STOL aircraft', 'Bush planes', 'UAV designs', 'Wind tunnel research'],
+    companies: ['NASA', 'DARPA', 'Airbus', 'Joby Aviation'],
+    futureImpact: 'Urban air mobility vehicles may use Magnus lift augmentation for quiet, steep approaches into city vertiports.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🎯',
+    title: 'Projectile Guidance',
+    short: 'Spin-stabilized smart munitions',
+    tagline: 'Precision from physics, not explosives',
+    description: 'Modern guided projectiles use spin for stability and small fins or Magnus effect to steer. By controlling spin rate and asymmetry, projectiles can correct trajectory mid-flight without complex guidance systems, improving accuracy from kilometers away.',
+    connection: 'The game\'s sidespin demonstration shows how spinning objects curve predictably. Guided projectiles exploit this: intentional spin asymmetries or small actuators create controlled Magnus forces for steering.',
+    howItWorks: 'Spinning projectile has gyroscopic stability. Asymmetric surfaces or deployable tabs create lift differential via Magnus effect. GPS/IMU detects drift from target. Small corrections accumulate into precision strikes.',
+    stats: [
+      { value: '30km', label: 'Guided artillery range', icon: '🎯' },
+      { value: '1m', label: 'CEP accuracy achieved', icon: '📍' },
+      { value: '150rpm', label: 'Typical spin rate', icon: '🔄' }
+    ],
+    examples: ['Excalibur shells', 'PGK fuzes', 'Guided mortars', 'Extended range munitions'],
+    companies: ['Raytheon', 'BAE Systems', 'Northrop Grumman', 'General Dynamics'],
+    futureImpact: 'Affordable precision guidance will make all artillery as accurate as missiles, changing military tactics fundamentally.',
+    color: '#ef4444'
+  }
+];
+
 // Phase type for 10-phase learning structure
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

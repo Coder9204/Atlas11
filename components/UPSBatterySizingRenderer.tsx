@@ -175,6 +175,81 @@ const TRANSFER_APPS = [
   },
 ];
 
+const realWorldApps = [
+  {
+    icon: '🏢',
+    title: 'Data Center Backup Power',
+    short: 'Protecting billions in infrastructure',
+    tagline: 'Every second of uptime matters',
+    description: 'Data centers use UPS systems with hundreds of battery strings providing 10-15 minutes of backup. This bridges the gap until generators start. Undersized batteries mean downtime costing $100K+ per minute.',
+    connection: 'Peukert effect means high-power discharge delivers less energy than rated. A 1000Ah battery might only provide 600Ah at data center discharge rates.',
+    howItWorks: 'Parallel battery strings share the load. Monitoring systems track state of charge and health. Automatic transfer switches seamlessly transition from utility to battery to generator.',
+    stats: [
+      { value: '10-15min', label: 'Typical runtime', icon: '⏱️' },
+      { value: '$100K/min', label: 'Downtime cost', icon: '💰' },
+      { value: '99.999%', label: 'Target uptime', icon: '🎯' }
+    ],
+    examples: ['AWS data centers', 'Google Cloud', 'Microsoft Azure', 'Financial trading floors'],
+    companies: ['Eaton', 'Vertiv', 'Schneider Electric', 'APC'],
+    futureImpact: 'Lithium UPS batteries with lower Peukert exponents will halve required capacity.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Electric Vehicle Range',
+    short: 'Why your EV range varies so much',
+    tagline: 'Pedal position affects physics',
+    description: 'EV range estimates assume moderate driving. Aggressive acceleration or highway speeds dramatically increase discharge rate, triggering Peukert losses. A 300-mile rated range might only achieve 200 miles driven hard.',
+    connection: 'Higher power draw means higher C-rate discharge. Lithium batteries have low Peukert exponents (~1.05) but the effect is still significant at extreme power levels.',
+    howItWorks: 'Battery management systems track real-time consumption and adjust range estimates. Regenerative braking partially recovers energy. Preconditioning optimizes battery temperature.',
+    stats: [
+      { value: '30-40%', label: 'Range loss when spirited driving', icon: '📉' },
+      { value: '1.05', label: 'Li-ion Peukert exponent', icon: '📊' },
+      { value: '150kW', label: 'Peak motor power', icon: '⚡' }
+    ],
+    examples: ['Tesla Model 3', 'Rivian R1T', 'Ford Mustang Mach-E', 'Porsche Taycan'],
+    companies: ['Tesla', 'BYD', 'CATL', 'LG Energy'],
+    futureImpact: 'Solid-state batteries will further reduce Peukert losses and enable consistent performance.',
+    color: '#10B981'
+  },
+  {
+    icon: '☀️',
+    title: 'Solar Battery Sizing',
+    short: 'Storing sunshine for the night',
+    tagline: 'Capacity meets reality',
+    description: 'Home batteries like Tesla Powerwall are sized for overnight loads. Running high-power appliances during outages drains them faster than expected due to Peukert effect and inverter inefficiency.',
+    connection: 'A 13.5kWh battery might only deliver 10kWh when powering AC units and refrigerators simultaneously at high C-rates.',
+    howItWorks: 'Hybrid inverters manage solar, grid, and battery. Load prioritization extends runtime for critical circuits. State of health tracking adjusts available capacity over time.',
+    stats: [
+      { value: '13.5kWh', label: 'Powerwall capacity', icon: '🔋' },
+      { value: '7kW', label: 'Peak power output', icon: '⚡' },
+      { value: '10yr', label: 'Warranty period', icon: '📅' }
+    ],
+    examples: ['Tesla Powerwall', 'Enphase IQ', 'LG RESU', 'Generac PWRcell'],
+    companies: ['Tesla', 'Enphase', 'SolarEdge', 'Generac'],
+    futureImpact: 'Vehicle-to-home (V2H) will turn EV batteries into whole-home backup.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Equipment Backup',
+    short: 'When batteries are life or death',
+    tagline: 'Zero tolerance for failure',
+    description: 'Hospital critical systems require precise UPS sizing with massive safety margins. Life support, surgical equipment, and medication refrigeration cannot tolerate even brief interruptions.',
+    connection: 'Engineers apply 50%+ derating factors for Peukert effect, temperature, aging, and depth of discharge. Better to oversize than risk patient harm.',
+    howItWorks: 'N+1 redundant UPS systems ensure no single point of failure. Weekly load bank testing verifies capacity. Real-time monitoring alerts staff to any degradation.',
+    stats: [
+      { value: '50%', label: 'Typical derating factor', icon: '📉' },
+      { value: '2hr+', label: 'Critical system runtime', icon: '⏰' },
+      { value: 'N+1', label: 'Redundancy level', icon: '🔄' }
+    ],
+    examples: ['ICU equipment', 'Operating rooms', 'Medication storage', 'Dialysis machines'],
+    companies: ['Stryker', 'GE Healthcare', 'Philips', 'Siemens Healthineers'],
+    futureImpact: 'AI-managed microgrids will provide multi-hour backup with renewable integration.',
+    color: '#8B5CF6'
+  }
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ────────────────────────────────────────────────────────────────────────────

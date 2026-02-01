@@ -6,6 +6,82 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // MOMENTUM CONSERVATION - Premium 10-Phase Design
 // ============================================================================
 
+// Real-world applications for momentum conservation
+const realWorldApps = [
+  {
+    icon: '🚀',
+    title: 'Rocket Propulsion',
+    short: 'Getting to space by throwing mass backward',
+    tagline: 'Newton\'s third law at 10,000 mph',
+    description: 'Every rocket works by momentum conservation. Exhaust gas expelled backward at high velocity gives the rocket forward momentum. No runway, no atmosphere needed - just action-reaction and conservation of total momentum.',
+    connection: 'The game showed momentum transfer when masses push apart. Rockets do exactly this - hot exhaust (small mass, high velocity) pushes rocket (large mass, lower velocity). Total momentum stays zero, but the rocket gains speed.',
+    howItWorks: 'Combustion creates high-pressure gas in chamber. Gas expelled through nozzle at 2-4 km/s. Rocket gains equal and opposite momentum (Δp = -m_exhaust × v_exhaust). Continuous thrust accelerates rocket. Staging discards empty tanks to improve mass ratio.',
+    stats: [
+      { value: '9.8km/s', label: 'Orbital velocity', icon: '🌍' },
+      { value: '3000m/s', label: 'Typical exhaust velocity', icon: '🔥' },
+      { value: '$400B', label: 'Space industry', icon: '📈' }
+    ],
+    examples: ['SpaceX Falcon 9', 'NASA SLS', 'Ariane 6', 'Electron rocket'],
+    companies: ['SpaceX', 'Blue Origin', 'Rocket Lab', 'ULA'],
+    futureImpact: 'Fully reusable rockets will reduce launch costs 100x, enabling space manufacturing and Mars colonization.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🚗',
+    title: 'Vehicle Crash Safety',
+    short: 'Crumple zones extend collision time',
+    tagline: 'Same momentum change, gentler force',
+    description: 'Car safety systems use momentum conservation to protect occupants. Crumple zones extend the collision time, spreading the required momentum change over longer duration. Same Δp, smaller force (F = Δp/Δt), more survivors.',
+    connection: 'The game demonstrated momentum transfer in collisions. Crumple zones don\'t reduce momentum change - they reduce the FORCE by increasing collision time. Impulse (FΔt) must equal momentum change, so longer time means less force.',
+    howItWorks: 'Crumple zones designed to deform progressively. Collision time extended from ~5ms to ~100ms. Force reduced ~20x for same momentum change. Airbags further extend deceleration time. Seatbelts spread force across strong body parts.',
+    stats: [
+      { value: '20x', label: 'Force reduction possible', icon: '📉' },
+      { value: '100ms', label: 'Modern crumple duration', icon: '⏱️' },
+      { value: '90%', label: 'Fatality reduction since 1970', icon: '✅' }
+    ],
+    examples: ['Side-impact protection', 'Pedestrian safety', 'Motorcycle airbags', 'Train crash buffers'],
+    companies: ['Mercedes-Benz', 'Volvo', 'NHTSA', 'Euro NCAP'],
+    futureImpact: 'Active structural systems will pre-configure crumple zones milliseconds before impact based on collision prediction.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '⚽',
+    title: 'Sports Ball Dynamics',
+    short: 'Momentum transfer in kicks, hits, and throws',
+    tagline: 'Milliseconds determine champions',
+    description: 'Every ball sport involves momentum transfer during contact. The impulse (FΔt) from foot, bat, or racket determines ball velocity. Athletes optimize contact time, impact point, and follow-through to maximize momentum transfer.',
+    connection: 'The simulation showed how mass ratios affect velocity after collision. In sports, the bat/racket transfers momentum to the ball - heavier bats transfer more momentum, but slower swings reduce it. There\'s an optimal balance.',
+    howItWorks: 'Club/bat has momentum p = mv before impact. Collision transfers momentum to ball. Coefficient of restitution determines energy loss. Follow-through extends contact time for maximum transfer. Sweet spot minimizes vibration energy loss.',
+    stats: [
+      { value: '200mph', label: 'Fastest tennis serve', icon: '🎾' },
+      { value: '190mph', label: 'Golf ball speed', icon: '⛳' },
+      { value: '120mph', label: 'Soccer kick speed', icon: '⚽' }
+    ],
+    examples: ['Baseball home runs', 'Golf drives', 'Tennis serves', 'Hockey slap shots'],
+    companies: ['Titleist', 'Wilson', 'Callaway', 'Nike'],
+    futureImpact: 'Smart equipment with embedded sensors will provide real-time feedback on momentum transfer efficiency for training.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🔫',
+    title: 'Ballistics & Recoil',
+    short: 'Equal and opposite momentum in firearms',
+    tagline: 'Every bullet kicks back',
+    description: 'Firearm recoil is pure momentum conservation. The bullet\'s forward momentum equals the gun\'s backward momentum. Recoil management - through mass, brakes, and buffers - determines accuracy and shooter comfort.',
+    connection: 'The game\'s spring-launched masses mirror ballistics exactly. Small bullet (like small mass) gets high velocity, large gun (large mass) gets low velocity. Total momentum was zero before, zero after.',
+    howItWorks: 'Expanding gas accelerates bullet forward. Gun experiences equal backward momentum. Heavier guns have less recoil velocity. Muzzle brakes redirect gas to reduce recoil. Buffer springs extend recoil time for lower peak force.',
+    stats: [
+      { value: '1200m/s', label: 'Rifle bullet velocity', icon: '💨' },
+      { value: '50%', label: 'Recoil reduction from brakes', icon: '📉' },
+      { value: '30ft-lbs', label: 'Comfortable recoil energy', icon: '✅' }
+    ],
+    examples: ['Rifle marksmanship', 'Artillery design', 'Spacecraft thrusters', 'Industrial nail guns'],
+    companies: ['Remington', 'Smith & Wesson', 'General Dynamics', 'Hilti'],
+    futureImpact: 'Electromagnetic launch systems will enable recoilless directed-energy propulsion for space applications.',
+    color: '#f59e0b'
+  }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

@@ -86,6 +86,81 @@ const playSound = (frequency: number, duration: number, type: OscillatorType = '
   } catch {}
 };
 
+const realWorldApps = [
+  {
+    icon: '🎺',
+    title: 'Woodwind Instruments',
+    short: 'Precision engineering for musical resonance',
+    tagline: 'Every hole is calculated',
+    description: 'Clarinets, flutes, and oboes use precisely placed tone holes to change the effective length of the air column, producing different pitches. The physics of straw instruments scales directly to professional instruments.',
+    connection: 'The fundamental relationship f = v/(2L) for open pipes determines hole placement. Covering holes lengthens the effective tube, lowering pitch. The same physics applies from straws to concert flutes.',
+    howItWorks: 'Tone holes are placed where standing wave nodes would occur for desired frequencies. Open holes create pressure antinodes, effectively shortening the tube. Register keys and overblowing access harmonics.',
+    stats: [
+      { value: '262Hz', label: 'Middle C frequency', icon: '🎵' },
+      { value: '3oct', label: 'Typical range', icon: '📊' },
+      { value: '0.1mm', label: 'Manufacturing tolerance', icon: '🎯' }
+    ],
+    examples: ['Concert flute', 'Clarinet', 'Saxophone', 'Recorder'],
+    companies: ['Yamaha', 'Buffet Crampon', 'Selmer', 'Powell Flutes'],
+    futureImpact: 'Computational acoustics will enable custom-designed instruments optimized for individual players, with 3D-printed components tuned to perfection.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🎹',
+    title: 'Pipe Organs',
+    short: 'Architectural-scale resonant tubes',
+    tagline: 'The king of instruments',
+    description: 'Pipe organs contain thousands of precisely tuned pipes, from tiny metal flutes to massive wooden bass pipes. Each rank uses the same physics as a straw instrument, scaled across many octaves.',
+    connection: 'Pipe length determines fundamental pitch through standing wave formation. Metal and wooden pipes have different harmonic content based on wall stiffness and end correction factors.',
+    howItWorks: 'Flue pipes use air jets hitting an edge (like recorders). Reed pipes use vibrating brass tongues. Scaling laws determine how diameter changes with length to maintain consistent tone quality.',
+    stats: [
+      { value: '16Hz', label: 'Lowest pipe (32 ft)', icon: '🔊' },
+      { value: '10000+', label: 'Pipes in large organs', icon: '📊' },
+      { value: '500yr', label: 'Historic organ lifetimes', icon: '⏰' }
+    ],
+    examples: ['Cathedral organs', 'Concert hall instruments', 'Theatre organs', 'Electronic emulations'],
+    companies: ['Casavant', 'Schantz', 'Skinner', 'Allen Digital'],
+    futureImpact: 'Digital modeling will preserve endangered historic organs forever while enabling new tonal possibilities impossible with physical pipes.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🔊',
+    title: 'Acoustic Waveguides',
+    short: 'Directing sound through tubes',
+    tagline: 'Sound following a path',
+    description: 'Speaking tubes, ear trumpets, and modern horn loudspeakers all use tube acoustics to direct and amplify sound. Understanding resonance helps design efficient audio systems.',
+    connection: 'Tubes act as acoustic waveguides, with resonances that can enhance or color sound. Horn loading matches speaker impedance to air, using tube physics to increase efficiency.',
+    howItWorks: 'Horn loudspeakers use flared tubes to gradually match speaker to air impedance. Folded horns fit long paths in small enclosures. Transmission line speakers use resonant tubes for bass extension.',
+    stats: [
+      { value: '100dB', label: 'Horn efficiency SPL', icon: '🔊' },
+      { value: '10x', label: 'Efficiency vs direct', icon: '📈' },
+      { value: '20Hz', label: 'Horn bass extension', icon: '🎵' }
+    ],
+    examples: ['PA system horns', 'Gramophone horns', 'Subwoofer enclosures', 'Hearing aids'],
+    companies: ['JBL', 'Klipsch', 'Electro-Voice', 'Danley Sound'],
+    futureImpact: 'Metamaterial acoustic waveguides will bend sound around corners and focus it precisely, enabling immersive audio without headphones.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Acoustics',
+    short: 'Resonance in diagnostic and therapeutic tools',
+    tagline: 'Healing with sound waves',
+    description: 'Stethoscopes, tuning forks for neurological exams, and therapeutic ultrasound devices all rely on acoustic resonance. The same standing wave physics applies across frequencies.',
+    connection: 'Tuning forks vibrate at precisely known frequencies for hearing tests. Therapeutic ultrasound uses resonant transducers. Acoustic stethoscopes use tube resonance to enhance heart and lung sounds.',
+    howItWorks: 'Tuning fork prongs form standing wave patterns at specific frequencies. Ultrasonic transducers use piezoelectric resonance. Stethoscope tubing amplifies certain frequency ranges through resonance.',
+    stats: [
+      { value: '128Hz', label: 'Common tuning fork', icon: '🎵' },
+      { value: '1-3MHz', label: 'Therapeutic ultrasound', icon: '📡' },
+      { value: '200Hz', label: 'Heart sound peak', icon: '❤️' }
+    ],
+    examples: ['Hearing tests', 'Vibration sense testing', 'HIFU therapy', 'Acoustic stethoscopes'],
+    companies: ['3M Littmann', 'Welch Allyn', 'Mettler Electronics', 'Chattanooga'],
+    futureImpact: 'Acoustic therapy devices using precisely tuned resonators will enable non-invasive treatment of tumors, kidney stones, and neurological conditions.',
+    color: '#22c55e'
+  }
+];
+
 // Play musical note with harmonics (more realistic pipe sound)
 const playPipeSound = (baseFreq: number, duration: number) => {
   try {

@@ -24,6 +24,81 @@ const colors = {
   ground: '#475569',
 };
 
+const realWorldApps = [
+  {
+    icon: '🏙️',
+    title: 'Taipei 101 Pendulum',
+    short: 'World\'s largest tuned mass damper',
+    tagline: 'A 730-ton ball of stability',
+    description: 'Taipei 101 houses a 730-ton steel sphere suspended between the 87th and 92nd floors. During typhoons, it swings up to 1.5 meters, visibly counteracting building sway and reducing movement by 40%.',
+    connection: 'The pendulum\'s natural frequency is tuned to match the building\'s resonant frequency. When the building sways right, the mass swings left, canceling the motion.',
+    howItWorks: 'Eight steel cables suspend the sphere, with hydraulic dampers controlling its motion. The mass absorbs energy from building oscillations, converting kinetic energy to heat.',
+    stats: [
+      { value: '730t', label: 'Damper mass', icon: '⚖️' },
+      { value: '40%', label: 'Motion reduction', icon: '📉' },
+      { value: '1.5m', label: 'Max swing', icon: '📏' }
+    ],
+    examples: ['Taipei 101', 'Shanghai Tower', 'One WTC', 'Citigroup Center'],
+    companies: ['Motioneering', 'Thornton Tomasetti', 'RWDI', 'Arup'],
+    futureImpact: 'Active mass dampers with AI control will respond before vibrations build up.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌉',
+    title: 'Bridge Vibration Control',
+    short: 'Stopping dangerous oscillations',
+    tagline: 'Learning from Tacoma Narrows',
+    description: 'After the Tacoma Narrows collapse, engineers added tuned mass dampers to vulnerable bridges. The Millennium Bridge in London required emergency dampers after pedestrians caused dangerous swaying.',
+    connection: 'Bridges have resonant frequencies that can match wind gusts or footsteps. TMDs absorb energy at these specific frequencies.',
+    howItWorks: 'Multiple smaller TMDs target different vibration modes. Pendulum dampers suit vertical oscillations; horizontal dampers address lateral sway. Passive systems require no power.',
+    stats: [
+      { value: '37', label: 'Millennium Bridge TMDs', icon: '🔢' },
+      { value: '2.5Hz', label: 'Walking frequency', icon: '👣' },
+      { value: '90%', label: 'Vibration reduction', icon: '📉' }
+    ],
+    examples: ['Millennium Bridge', 'Solferino Footbridge', 'Pedro Arrupe Bridge', 'Suspension bridges'],
+    companies: ['Gerb', 'Taylor Devices', 'Maurer', 'Freyssinet'],
+    futureImpact: 'Shape-memory alloy dampers will self-tune to changing conditions.',
+    color: '#10B981'
+  },
+  {
+    icon: '⚡',
+    title: 'Power Line Dampers',
+    short: 'Preventing cable galloping',
+    tagline: 'Those dumbbell shapes save lives',
+    description: 'Stockbridge dampers on power lines prevent aeolian vibration and galloping - dangerous oscillations that can bring down lines. Each dumbbell-shaped damper is tuned to a specific span length.',
+    connection: 'Wind creates vortex shedding that excites cables at their natural frequency. Damper weights oscillate out of phase, absorbing vibrational energy.',
+    howItWorks: 'Weights on flexible messenger cables clamp to power lines. As the line vibrates, weights oscillate and dissipate energy through material hysteresis. Multiple dampers cover different frequency ranges.',
+    stats: [
+      { value: '5-150Hz', label: 'Damped frequency range', icon: '🎵' },
+      { value: '90%', label: 'Fatigue reduction', icon: '📉' },
+      { value: '50yr', label: 'Damper lifespan', icon: '⏰' }
+    ],
+    examples: ['Transmission lines', 'Guy wires', 'Cable-stayed bridges', 'Aerial cables'],
+    companies: ['PLP', 'AFL', 'Preformed Line Products', 'Hubbell'],
+    futureImpact: 'Smart dampers with sensors will report line health and predict failures.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Machinery',
+    short: 'Smooth operation at any speed',
+    tagline: 'Killing vibration at the source',
+    description: 'Rotating machinery like turbines, compressors, and engines use dynamic absorbers to prevent resonance at operating speeds. Without damping, vibration destroys bearings and structures.',
+    connection: 'Machinery passes through resonant frequencies during startup. TMDs prevent damage during these critical transitions.',
+    howItWorks: 'Absorbers mount directly on vibrating components. Spring-mass systems are tuned to problematic frequencies. Viscous or friction dampers dissipate energy.',
+    stats: [
+      { value: '±3%', label: 'Tuning precision needed', icon: '🎯' },
+      { value: '10x', label: 'Bearing life extension', icon: '⏰' },
+      { value: '30dB', label: 'Vibration reduction', icon: '📉' }
+    ],
+    examples: ['Gas turbines', 'Reciprocating compressors', 'Machine tools', 'Vehicle drivetrains'],
+    companies: ['LORD', 'Vibracoustic', 'ContiTech', 'Trelleborg'],
+    futureImpact: 'Active electromagnetic dampers will adapt in real-time to changing operating conditions.',
+    color: '#8B5CF6'
+  }
+];
+
 interface BuildingState {
   x: number;        // Building displacement
   v: number;        // Building velocity

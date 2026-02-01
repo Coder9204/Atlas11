@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🏢',
+      title: 'Hyperscale Data Centers',
+      short: 'Cooling at massive scale',
+      tagline: 'Millions of servers, billions in cooling',
+      description: 'Tech giants like Google, Amazon, and Microsoft operate data centers with 100,000+ servers each. Advanced airflow management, hot aisle containment, and free cooling save hundreds of millions in energy costs annually.',
+      connection: 'The hot/cold aisle separation principle scales to warehouse-sized facilities. Hot aisle containment can improve PUE by 0.1-0.2 points, saving millions of dollars per year per facility.',
+      howItWorks: 'Computational Fluid Dynamics (CFD) modeling optimizes tile placement and CRAC positioning. Real-time sensors adjust airflow dynamically. Some facilities use outside air or evaporative cooling when conditions permit.',
+      stats: [
+         { value: '1.1', label: 'Best PUE achieved', icon: '⚡' },
+         { value: '500MW', label: 'Largest facilities', icon: '🔌' },
+         { value: '$5B+', label: 'Annual cooling cost', icon: '💰' }
+      ],
+      examples: ['Google data centers', 'AWS regions', 'Microsoft Azure', 'Meta facilities'],
+      companies: ['Google', 'Amazon', 'Microsoft', 'Meta'],
+      futureImpact: 'AI workloads are driving liquid cooling adoption, as GPU clusters generate 10x the heat density of traditional servers.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '💧',
+      title: 'Liquid Cooling Systems',
+      short: 'Beyond air cooling',
+      tagline: 'Water is 25x better than air',
+      description: 'High-performance computing and AI training clusters generate heat densities that air cannot handle. Direct-to-chip liquid cooling and immersion cooling are becoming essential for modern data centers.',
+      connection: 'When airflow alone cannot remove enough heat (above ~30kW per rack), liquid cooling takes over. Water has 25x the heat capacity of air, enabling much higher power densities.',
+      howItWorks: 'Cold plates attach directly to CPUs and GPUs, circulating coolant that absorbs heat. Facility water systems or cooling distribution units (CDUs) reject this heat. Some systems immerse entire servers in dielectric fluid.',
+      stats: [
+         { value: '100kW+', label: 'Per-rack density', icon: '🔥' },
+         { value: '25x', label: 'Water vs air efficiency', icon: '💧' },
+         { value: '40%', label: 'Energy savings', icon: '⚡' }
+      ],
+      examples: ['NVIDIA DGX clusters', 'Supercomputers', 'Crypto mining', 'AI training farms'],
+      companies: ['Asetek', 'CoolIT', 'GRC', 'LiquidCool Solutions'],
+      futureImpact: 'Most new AI data centers will be designed for liquid cooling from the start, fundamentally changing facility architecture.',
+      color: '#06B6D4'
+   },
+   {
+      icon: '🌡️',
+      title: 'Free Cooling & Economizers',
+      short: 'Using outdoor air',
+      tagline: 'Nature as your air conditioner',
+      description: 'In cool climates, outside air can directly cool data centers for much of the year. Economizer systems switch between mechanical cooling and free cooling based on outdoor conditions.',
+      connection: 'When outdoor air is cooler than return air temperature, it makes no sense to run compressors. Airside economizers bring in filtered outside air; waterside economizers use cooling towers.',
+      howItWorks: 'Sensors monitor outdoor temperature and humidity. When conditions are favorable, dampers open to bring in outside air while exhaust fans remove hot air. Evaporative cooling extends free cooling hours.',
+      stats: [
+         { value: '5000+', label: 'Free cooling hours/yr', icon: '🌬️' },
+         { value: '50%', label: 'Energy reduction', icon: '⚡' },
+         { value: '18-27°C', label: 'ASHRAE range', icon: '🌡️' }
+      ],
+      examples: ['Nordic data centers', 'Mountain locations', 'Coastal facilities', 'Underground sites'],
+      companies: ['Facebook Lulea', 'Google Finland', 'Microsoft Dublin', 'Verne Global'],
+      futureImpact: 'Climate change may reduce free cooling hours in some regions, driving data centers toward colder locations or alternative cooling methods.',
+      color: '#10B981'
+   },
+   {
+      icon: '🔧',
+      title: 'Blanking Panel Systems',
+      short: 'Simple but critical',
+      tagline: 'The $2 part that saves thousands',
+      description: 'Empty rack slots without blanking panels allow hot exhaust air to recirculate to server intakes. This simple $2 piece of metal can prevent thousands of dollars in cooling waste and equipment failures.',
+      connection: 'The physics is straightforward: air takes the path of least resistance. A 2U gap in a rack provides a shortcut for hot air to bypass the intended airflow path, raising intake temperatures by 5-10°C.',
+      howItWorks: 'Blanking panels block unused rack spaces, forcing all air through active equipment. Brush grommets seal cable openings. Rack-level containment systems provide additional isolation.',
+      stats: [
+         { value: '10°C', label: 'Potential temp rise', icon: '🌡️' },
+         { value: '$2-5', label: 'Panel cost', icon: '💵' },
+         { value: '15%', label: 'Cooling waste', icon: '📉' }
+      ],
+      examples: ['Enterprise data centers', 'Colocation facilities', 'Telecom sites', 'Edge deployments'],
+      companies: ['APC', 'Eaton', 'Vertiv', 'Chatsworth'],
+      futureImpact: 'Smart blanking panels with sensors can detect airflow issues and alert operators before problems escalate.',
+      color: '#F59E0B'
+   }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ServerAirflowRendererProps {

@@ -42,6 +42,81 @@ const phaseLabels: Record<Phase, string> = {
   'mastery': 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🚀',
+    title: 'Rocket Propulsion',
+    short: 'Spacecraft engines expel mass to generate thrust',
+    tagline: 'Every launch is Newton in action',
+    description: 'Rocket engines work by expelling high-velocity exhaust gases downward. According to Newton\'s Third Law, the gases push back on the rocket with equal force, propelling it upward. This principle works even in the vacuum of space.',
+    connection: 'The action of expelling gas creates an equal and opposite reaction force that accelerates the rocket, demonstrating F_action = -F_reaction in its purest form.',
+    howItWorks: 'Combustion chambers burn fuel and oxidizer at extreme temperatures, accelerating exhaust to 2-4 km/s. The mass flow rate times exhaust velocity equals thrust. Multiple engines provide millions of pounds of force.',
+    stats: [
+      { value: '7.5M', label: 'lbs thrust (Saturn V)', icon: '🔥' },
+      { value: '4 km/s', label: 'exhaust velocity', icon: '💨' },
+      { value: '$62B', label: 'space industry', icon: '📈' }
+    ],
+    examples: ['SpaceX Falcon 9 launches', 'NASA Space Launch System', 'Satellite maneuvering thrusters', 'Mars rover landing rockets'],
+    companies: ['SpaceX', 'NASA', 'Blue Origin', 'Rocket Lab'],
+    futureImpact: 'Ion propulsion and nuclear thermal rockets will enable faster interplanetary travel, while reusable rockets make space access affordable for humanity.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏊',
+    title: 'Swimming Mechanics',
+    short: 'Swimmers push water backward to move forward',
+    tagline: 'Every stroke is physics in motion',
+    description: 'Swimmers propel themselves by pushing water backward with their hands and feet. The water pushes back with equal force, driving the swimmer forward. Olympic swimmers optimize stroke mechanics to maximize this reaction force.',
+    connection: 'The swimmer\'s hands push water backward (action), and the water pushes the swimmer forward (reaction). The larger the mass of water moved and the faster it\'s pushed, the greater the propulsion.',
+    howItWorks: 'Efficient swimming requires high catch and pull phases where hands act as paddles. The angle of attack, stroke rate, and body position all affect how much water is displaced and the resulting forward thrust.',
+    stats: [
+      { value: '60+', label: 'lbs force per stroke', icon: '💪' },
+      { value: '2.2', label: 'm/s sprint speed', icon: '⚡' },
+      { value: '8M+', label: 'competitive swimmers', icon: '🌊' }
+    ],
+    examples: ['Olympic freestyle sprints', 'Underwater dolphin kicks', 'Synchronized swimming', 'Rescue swimmer training'],
+    companies: ['USA Swimming', 'Speedo', 'Arena', 'TYR Sport'],
+    futureImpact: 'Biomechanical analysis and smart swimsuits will continue optimizing how swimmers apply Newton\'s Third Law for faster times.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '✈️',
+    title: 'Jet Engine Thrust',
+    short: 'Aircraft accelerate air backward for forward motion',
+    tagline: 'Billions of air molecules become propulsion',
+    description: 'Jet engines intake air, compress it, mix with fuel, ignite, and expel hot gases at high velocity. The accelerated exhaust creates a reaction force that pushes the aircraft forward, enabling flight at hundreds of miles per hour.',
+    connection: 'The engine accelerates air molecules backward (action), creating a continuous reaction force that propels the aircraft forward. Thrust equals mass flow rate times velocity change.',
+    howItWorks: 'Compressor stages increase air pressure 30-40x. Combustion raises temperature to 1,500°C. Turbines extract energy to drive compressors while remaining exhaust provides thrust. Bypass air in turbofans adds efficiency.',
+    stats: [
+      { value: '100K', label: 'lbs thrust (777)', icon: '🔥' },
+      { value: '600', label: 'mph cruise speed', icon: '✈️' },
+      { value: '$838B', label: 'aviation market', icon: '📈' }
+    ],
+    examples: ['Commercial airliner takeoff', 'Fighter jet afterburners', 'Cargo aircraft operations', 'Private jet travel'],
+    companies: ['GE Aviation', 'Rolls-Royce', 'Pratt & Whitney', 'Safran'],
+    futureImpact: 'Sustainable aviation fuels and hydrogen-powered engines will reduce emissions while maintaining the thrust principles that enable global air travel.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔫',
+    title: 'Firearm Recoil',
+    short: 'Guns kick back when bullets are fired forward',
+    tagline: 'Equal and opposite in milliseconds',
+    description: 'When a firearm is discharged, expanding gases propel the bullet forward while simultaneously pushing the gun backward. This recoil force is exactly equal to the force accelerating the bullet, just applied to a heavier mass.',
+    connection: 'The bullet accelerates forward (action) while the gun accelerates backward (reaction). Because the gun is much heavier, it moves slower but the momentum change is identical.',
+    howItWorks: 'Ignited gunpowder creates gases at 20,000+ PSI. These gases accelerate the bullet down the barrel while pushing equally against the breach. Recoil mitigation uses mass, springs, and gas-operated systems.',
+    stats: [
+      { value: '1,200', label: 'm/s muzzle velocity', icon: '⚡' },
+      { value: '15-25', label: 'ft-lbs recoil energy', icon: '💥' },
+      { value: '$20B', label: 'firearms industry', icon: '📈' }
+    ],
+    examples: ['Handgun recoil management', 'Rifle shoulder impact', 'Artillery gun recoil systems', 'Naval gun stabilization'],
+    companies: ['Smith & Wesson', 'Glock', 'Remington', 'Beretta'],
+    futureImpact: 'Advanced recoil reduction systems and smart firearms will improve accuracy and safety while the physics of action-reaction remains unchanged.',
+    color: '#8B5CF6'
+  }
+];
+
 interface AirParticle {
   id: number;
   x: number;

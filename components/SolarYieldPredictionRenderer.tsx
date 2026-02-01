@@ -1,5 +1,80 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '📊',
+    title: 'Utility Solar Forecasting',
+    short: 'Grid operators predict solar output to balance supply and demand',
+    tagline: 'Keeping the lights on',
+    description: 'As solar reaches 20%+ of grid power in many regions, accurate yield prediction is essential. Grid operators use sophisticated models combining weather forecasts, satellite imagery, and ML to predict solar output minutes to days ahead.',
+    connection: 'This simulation demonstrates the key factors in yield prediction: irradiance, temperature effects, system losses, and uncertainty quantification. Real forecasting systems build on these same physics-based fundamentals.',
+    howItWorks: 'Numerical weather prediction provides irradiance forecasts. Sky imagers and satellite data track clouds in real-time. Machine learning combines multiple inputs to predict power output with 5-15% accuracy for day-ahead forecasts.',
+    stats: [
+      { value: '5%', label: 'Best day-ahead forecast error', icon: '🎯' },
+      { value: '$50B', label: 'Annual solar forecasting value', icon: '💰' },
+      { value: '15 min', label: 'Typical forecast resolution', icon: '⏱️' }
+    ],
+    examples: ['ISO grid operations', 'Power trading', 'Renewable integration', 'Demand response'],
+    companies: ['ERCOT', 'PJM', 'Clean Power Research', 'Solcast'],
+    futureImpact: 'AI-powered forecasting and distributed sensors will enable real-time grid optimization with solar providing 50%+ of power reliably.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💼',
+    title: 'Solar Project Finance',
+    short: 'Banks require accurate yield estimates to fund billions in projects',
+    tagline: 'Bankability through accuracy',
+    description: 'Solar projects raise $100B+ annually in project finance. Banks require independent yield assessments with P50/P90/P99 confidence intervals. Overestimating yield by just 5% can jeopardize loan repayment.',
+    connection: 'This simulation shows uncertainty quantification - the difference between expected yield and confidence intervals. Project finance requires understanding not just expected output but the range of possible outcomes.',
+    howItWorks: 'Independent engineers analyze TMY weather data, equipment specs, and loss factors using PVsyst or similar tools. Monte Carlo simulations model uncertainty in weather, degradation, and component failures to generate probability distributions.',
+    stats: [
+      { value: 'P90', label: 'Typical bank confidence level', icon: '🏦' },
+      { value: '$100B+', label: 'Annual solar project finance', icon: '💵' },
+      { value: '8%', label: 'Typical P50-P90 gap', icon: '📉' }
+    ],
+    examples: ['Utility project debt', 'Tax equity financing', 'Solar bonds', 'Infrastructure funds'],
+    companies: ['DNV', 'Black & Veatch', 'Leidos', 'Wood Mackenzie'],
+    futureImpact: 'Standardized performance data and satellite monitoring will reduce uncertainty, lowering financing costs and accelerating deployment.',
+    color: '#10B981'
+  },
+  {
+    icon: '🛰️',
+    title: 'Satellite-Based Solar Resource',
+    short: 'Satellites measure global solar irradiance for project planning',
+    tagline: 'Mapping the sun from space',
+    description: 'Before building a solar project, developers need years of irradiance data. Geostationary satellites continuously image cloud cover, which is converted to surface irradiance estimates with ground station validation.',
+    connection: 'The irradiance input in this simulation comes from such satellite data in real projects. Solargis, NSRDB, and other databases provide the historical irradiance that drives yield predictions worldwide.',
+    howItWorks: 'Satellites like GOES and Meteosat capture cloud images every 10-30 minutes. Algorithms convert cloud reflectance to cloud opacity, then compute direct and diffuse irradiance reaching the surface using radiative transfer models.',
+    stats: [
+      { value: '20+ yrs', label: 'Historical data available', icon: '📅' },
+      { value: '1-4 km', label: 'Spatial resolution', icon: '🗺️' },
+      { value: '±3%', label: 'Annual GHI accuracy', icon: '🎯' }
+    ],
+    examples: ['Project prospecting', 'Resource assessment', 'Climate studies', 'Agriculture planning'],
+    companies: ['Solargis', 'SolarAnywhere', 'NREL NSRDB', 'Copernicus'],
+    futureImpact: 'Higher resolution satellites and AI processing will enable hyper-local resource assessment, identifying optimal sites for distributed solar.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔧',
+    title: 'Performance Monitoring & O&M',
+    short: 'Comparing actual vs predicted yield identifies problems early',
+    tagline: 'Watching every watt',
+    description: 'After construction, solar plants are continuously monitored against predicted performance. Deviations indicate equipment failures, soiling, or shading issues. Early detection through yield analysis saves millions in lost production.',
+    connection: 'This simulation models the factors affecting yield. Real monitoring systems compare measured output to physics-based models, flagging when actual performance falls below predictions considering current conditions.',
+    howItWorks: 'SCADA systems collect inverter data every 5-15 minutes. Performance ratio compares actual output to theoretical maximum for measured irradiance. Fleet analytics identify underperforming assets for targeted maintenance.',
+    stats: [
+      { value: '2-5%', label: 'Typical annual production loss from faults', icon: '⚠️' },
+      { value: '85%+', label: 'Target performance ratio', icon: '📊' },
+      { value: '1M+', label: 'Solar sites under monitoring', icon: '👁️' }
+    ],
+    examples: ['Asset management', 'Warranty verification', 'Insurance claims', 'Grid compliance'],
+    companies: ['PowerFactors', 'Also Energy', 'Stem', 'Bazefield'],
+    futureImpact: 'Drone inspection, thermal imaging, and predictive AI will enable autonomous O&M with minimal human intervention.',
+    color: '#8B5CF6'
+  }
+];
+
 // Phase type for internal state management
 type SolarPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

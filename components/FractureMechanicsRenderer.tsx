@@ -33,6 +33,81 @@ const PHASES: Phase[] = [
   'transfer', 'test', 'mastery'
 ];
 
+const realWorldApps = [
+  {
+    icon: '✈️',
+    title: 'Aircraft Structural Integrity',
+    short: 'Why airplane windows have rounded corners',
+    tagline: 'The shape that saved aviation',
+    description: 'After the de Havilland Comet disasters in 1954, engineers discovered that square window corners created stress concentrations up to 6x normal levels. Rounded corners distribute stress evenly, preventing crack initiation.',
+    connection: 'The stress concentration factor (Kt) you learned about explains why sharp corners are deadly: local stress = Kt × average stress, and sharp corners have Kt > 3.',
+    howItWorks: 'Sharp corners create geometric discontinuities where stress flow lines crowd together. Rounded corners allow stress to flow smoothly. Aircraft undergo regular inspection for microscopic fatigue cracks before they can propagate.',
+    stats: [
+      { value: '3-6x', label: 'Stress concentration at square corners', icon: '📐' },
+      { value: '30,000+', label: 'Flight cycles before inspection', icon: '✈️' },
+      { value: '$15B', label: 'Aircraft MRO market', icon: '💰' }
+    ],
+    examples: ['Boeing 737 window design', 'Airbus fuselage stress analysis', 'De Havilland Comet investigations', 'Spacecraft hatch design'],
+    companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'SpaceX'],
+    futureImpact: 'Composite materials with designed crack-arrest features will enable self-healing aircraft structures that stop cracks before they propagate.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔧',
+    title: 'Stop-Drill Crack Arrest',
+    short: 'Drilling holes to stop cracks',
+    tagline: 'The counterintuitive repair that works',
+    description: 'When a crack forms in metal structures, engineers often drill a circular hole at the crack tip. This counterintuitive technique reduces stress concentration from near-infinite at a sharp crack tip to manageable levels.',
+    connection: 'You learned that crack tips have extreme stress concentration. A drilled hole has Kt ≈ 3, while a sharp crack tip approaches infinity. The hole converts a dangerous crack into a manageable stress raiser.',
+    howItWorks: 'The sharp crack tip concentrates stress to fracture-inducing levels. Drilling a hole blunts the tip, distributing stress over a larger area. The crack effectively becomes a hole with finite, manageable stress concentration.',
+    stats: [
+      { value: '∞ → 3', label: 'Stress reduction at crack tip', icon: '📉' },
+      { value: '80%', label: 'Life extension possible', icon: '⏰' },
+      { value: '$500M', label: 'Annual savings in repairs', icon: '💰' }
+    ],
+    examples: ['Aircraft fuselage repairs', 'Ship hull maintenance', 'Bridge girder cracks', 'Pressure vessel repairs'],
+    companies: ['Textron Aviation', 'General Dynamics', 'Newport News Shipbuilding', 'AECOM'],
+    futureImpact: 'Laser-drilled precision holes with crack-monitoring sensors will enable autonomous structural health monitoring.',
+    color: '#EF4444'
+  },
+  {
+    icon: '💎',
+    title: 'Diamond Cutting & Scoring',
+    short: 'Using stress concentration to cut the hardest material',
+    tagline: 'Controlled fracture is precise cutting',
+    description: 'Glass and diamonds are cut by creating controlled stress concentrations. A score line creates a crack initiation point with extreme stress concentration, allowing fracture along a precise path with minimal force.',
+    connection: 'The scorer creates a V-notch - the highest stress concentration shape you studied. When bent, all fracture energy focuses at this notch, making the material break exactly where intended.',
+    howItWorks: 'A hard point (diamond tip) creates a shallow scratch with a sharp V-bottom. When force is applied, stress concentrates at the scratch tip (Kt → ∞). The material fractures along this pre-determined path.',
+    stats: [
+      { value: '10 GPa', label: 'Diamond hardness', icon: '💎' },
+      { value: '< 1 mm', label: 'Score depth needed', icon: '📏' },
+      { value: '$85B', label: 'Global diamond market', icon: '💰' }
+    ],
+    examples: ['Diamond cleaving', 'Glass cutting', 'Silicon wafer dicing', 'Ceramic tile cutting'],
+    companies: ['De Beers', 'Rio Tinto', 'Corning', 'Schott'],
+    futureImpact: 'Laser-induced controlled fracture will enable precise cutting of advanced materials like synthetic sapphire and silicon carbide.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🏗️',
+    title: 'Fatigue-Resistant Design',
+    short: 'Engineering structures to survive billions of cycles',
+    tagline: 'Design for the millionth load, not the first',
+    description: 'Bridges, engines, and aircraft experience millions of stress cycles. Fatigue failure occurs far below yield strength when repeated loading grows microscopic cracks. Engineers design for fatigue life, not static strength.',
+    connection: 'Fatigue cracks initiate at stress concentrations you studied. Each load cycle grows the crack slightly until it reaches critical size and causes sudden catastrophic failure.',
+    howItWorks: 'S-N curves show stress vs. cycles to failure. Below the fatigue limit, infinite life is possible. Above it, life is finite. Designs minimize stress concentrations, use shot peening to compress surfaces, and specify inspection intervals.',
+    stats: [
+      { value: '10^7', label: 'Cycles for infinite fatigue life', icon: '🔄' },
+      { value: '50%', label: 'Of mechanical failures from fatigue', icon: '⚠️' },
+      { value: '$100B', label: 'Annual fatigue-related costs', icon: '💰' }
+    ],
+    examples: ['Jet engine turbine blades', 'Suspension bridge cables', 'Automobile crankshafts', 'Railroad wheel axles'],
+    companies: ['GE Aviation', 'Rolls-Royce', 'ANSYS', 'Siemens PLM'],
+    futureImpact: 'Digital twins with real-time fatigue tracking will predict exact remaining life, enabling just-in-time maintenance.',
+    color: '#22C55E'
+  }
+];
+
 const TEST_QUESTIONS = [
   {
     question: 'Why do airplane windows have rounded corners?',

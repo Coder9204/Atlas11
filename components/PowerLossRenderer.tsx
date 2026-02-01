@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '⚡',
+    title: 'High-Voltage Transmission',
+    short: 'Power grids use high voltage to minimize losses',
+    tagline: 'Moving megawatts across continents',
+    description: 'Power transmission lines carry electricity at 115-765 kV to minimize current and therefore I²R losses. Transformers step voltage up for transmission and down for distribution.',
+    connection: 'Since Power = V × I, higher voltage means lower current for the same power. Since losses are I²R, halving current reduces losses by 75%.',
+    howItWorks: 'Generator output at 11-25 kV is stepped up to transmission voltage. Multiple voltage steps occur before reaching homes at 120/240V. Each transformation has some loss.',
+    stats: [
+      { value: '765', label: 'kV max transmission', icon: '⚡' },
+      { value: '5-6%', label: 'total grid loss', icon: '📉' },
+      { value: '$400B', label: 'transmission market', icon: '📈' }
+    ],
+    examples: ['Interstate transmission lines', 'Offshore wind connections', 'HVDC links', 'Grid interconnections'],
+    companies: ['National Grid', 'Duke Energy', 'ABB', 'Siemens Energy'],
+    futureImpact: 'HVDC and superconducting cables will further reduce transmission losses for renewable energy integration.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔌',
+    title: 'USB Charging Cables',
+    short: 'Cable quality affects charging speed',
+    tagline: 'Not all cables are created equal',
+    description: 'Cheap USB cables use thin 28 AWG wires that significantly drop voltage at high currents. Quality cables use 20-24 AWG wires to maintain voltage for fast charging.',
+    connection: 'At 3A charging current, a thin wire might drop 0.5V or more, reducing charging power by 10%+ and causing the phone to reduce current.',
+    howItWorks: 'Fast charging protocols require maintaining voltage within tight tolerances. Thick cables have lower resistance, ensuring the voltage at the phone stays high enough.',
+    stats: [
+      { value: '20 AWG', label: 'quality cable gauge', icon: '🔧' },
+      { value: '100W', label: 'USB-PD max power', icon: '⚡' },
+      { value: '<0.3Ω', label: 'good cable resistance', icon: '📊' }
+    ],
+    examples: ['Phone charging cables', 'Laptop USB-C chargers', 'Power bank cables', 'Car charger cables'],
+    companies: ['Apple', 'Anker', 'Belkin', 'Samsung'],
+    futureImpact: 'Gallium nitride chargers and cables with active electronics will optimize power delivery.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔊',
+    title: 'Speaker Wire Selection',
+    short: 'Long runs need thick wire for full power',
+    tagline: 'Every watt to the speaker',
+    description: 'Speaker wire resistance creates a voltage divider with the speaker, wasting power as heat and potentially affecting sound quality. Longer runs require thicker gauge.',
+    connection: 'An 8-ohm speaker with 1-ohm wire resistance loses 11% of power in the wire. Audiophiles use heavy gauge wire to minimize this loss.',
+    howItWorks: 'The amplifier sees wire resistance in series with the speaker. This reduces damping factor and can cause frequency-dependent response changes.',
+    stats: [
+      { value: '12 AWG', label: 'long run gauge', icon: '🔧' },
+      { value: '50ft', label: 'typical max run', icon: '📏' },
+      { value: '<5%', label: 'acceptable loss', icon: '📊' }
+    ],
+    examples: ['Home theater systems', 'PA systems', 'Car audio', 'Studio monitors'],
+    companies: ['Monster Cable', 'Blue Jeans Cable', 'AudioQuest', 'Monoprice'],
+    futureImpact: 'Active speakers with built-in amplifiers eliminate long speaker wire runs entirely.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🚗',
+    title: 'EV Charging Cables',
+    short: 'DC fast charging requires massive conductors',
+    tagline: 'Megawatts through a cable',
+    description: 'DC fast chargers deliver 350 kW or more at 400-800V. Even with high voltage, currents reach 500A, requiring liquid-cooled cables to prevent overheating.',
+    connection: 'At 500A, even 1 milliohm of resistance generates 250W of heat. Liquid cooling removes this heat, allowing higher currents in manageable cable sizes.',
+    howItWorks: 'Coolant flows through channels in the cable assembly, removing I²R heat. The cable can then use smaller conductors than air-cooled cables at the same current.',
+    stats: [
+      { value: '350', label: 'kW charging power', icon: '⚡' },
+      { value: '500', label: 'A maximum current', icon: '🔥' },
+      { value: '15min', label: '10-80% charge', icon: '⏱️' }
+    ],
+    examples: ['Tesla Superchargers', 'Electrify America', 'IONITY stations', 'ChargePoint DC'],
+    companies: ['Tesla', 'ABB', 'Tritium', 'EVBox'],
+    futureImpact: 'Megawatt charging for trucks will require even more advanced cooling and high-voltage architectures.',
+    color: '#8B5CF6'
+  }
+];
+
 interface PowerLossRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

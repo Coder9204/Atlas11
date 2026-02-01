@@ -93,6 +93,81 @@ const predictions = {
   }
 };
 
+const realWorldApps = [
+  {
+    icon: '📷',
+    title: 'Camera Autofocus',
+    short: 'Sharp photos in milliseconds',
+    tagline: 'Finding focus at the speed of light',
+    description: 'Modern cameras use the thin lens equation to calculate where to position lens elements for sharp focus. Phase detection and contrast detection autofocus systems measure image sharpness and drive motors to the exact position where the image plane coincides with the sensor.',
+    connection: 'The relationship 1/f = 1/do + 1/di tells cameras exactly where the image forms for any object distance. Autofocus systems solve this equation in reverse—given desired di (sensor position), they adjust lens position to achieve correct do.',
+    howItWorks: 'Phase detection AF splits incoming light and compares the two halves to determine focus direction and distance. Contrast AF moves the lens and measures sharpness peaks. Hybrid systems combine both for speed and accuracy.',
+    stats: [
+      { value: '0.02s', label: 'AF speed', icon: '⚡' },
+      { value: '1000+ points', label: 'AF coverage', icon: '📈' },
+      { value: '$35B', label: 'Camera market', icon: '🚀' }
+    ],
+    examples: ['Smartphone portrait mode', 'DSLR action shooting', 'Mirrorless eye tracking', 'Security camera zoom'],
+    companies: ['Sony', 'Canon', 'Nikon', 'Apple'],
+    futureImpact: 'Computational photography will combine focus stacking and AI to create images with infinite depth of field, transcending traditional lens limitations.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '👁️',
+    title: 'LASIK Eye Surgery',
+    short: 'Reshaping corneas for perfect vision',
+    tagline: 'Precision optics meets medicine',
+    description: 'LASIK surgery uses excimer lasers to reshape the cornea, changing its focal length. By removing microscopic amounts of tissue, surgeons correct myopia, hyperopia, and astigmatism—effectively creating a custom lens surface on the eye itself.',
+    connection: 'The cornea and lens together form an optical system. LASIK changes the cornea\'s radius of curvature, adjusting its contribution to total eye power so images focus correctly on the retina.',
+    howItWorks: 'Wavefront analysis maps the eye\'s optical aberrations. A femtosecond laser creates a corneal flap. An excimer laser ablates tissue in a pattern calculated to correct refractive errors. The flap is replaced and heals naturally.',
+    stats: [
+      { value: '96%', label: 'Success rate', icon: '⚡' },
+      { value: '0.25μm', label: 'Ablation precision', icon: '📈' },
+      { value: '$3.5B', label: 'Market size', icon: '🚀' }
+    ],
+    examples: ['Myopia correction', 'Hyperopia treatment', 'Astigmatism surgery', 'Presbyopia solutions'],
+    companies: ['Alcon', 'Johnson & Johnson Vision', 'ZEISS', 'Bausch + Lomb'],
+    futureImpact: 'Implantable lenses and corneal inlays will offer reversible vision correction, while gene therapy may eventually prevent refractive errors from developing.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Microscope Objectives',
+    short: 'Seeing the invisible world',
+    tagline: 'Magnification meets resolution',
+    description: 'Microscope objectives are complex multi-element lenses designed to minimize aberrations while achieving high magnification. The numerical aperture and focal length determine both magnification and resolution limits.',
+    connection: 'Microscope optics apply the thin lens equation at extreme ratios. Very short focal lengths create high magnification, while oil immersion increases numerical aperture to improve resolution beyond what air allows.',
+    howItWorks: 'Objectives contain 8-15 lens elements correcting for chromatic and spherical aberration. Immersion oil matches the refractive index of glass, increasing NA. Higher NA means better resolution: d = λ/(2NA).',
+    stats: [
+      { value: '100x', label: 'Max magnification', icon: '⚡' },
+      { value: '200nm', label: 'Resolution limit', icon: '📈' },
+      { value: '$7.2B', label: 'Microscopy market', icon: '🚀' }
+    ],
+    examples: ['Medical pathology', 'Semiconductor inspection', 'Cell biology research', 'Quality control'],
+    companies: ['ZEISS', 'Olympus', 'Nikon', 'Leica'],
+    futureImpact: 'Super-resolution techniques bypass diffraction limits, while AI-enhanced imaging extracts more information from fewer photons.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎥',
+    title: 'Cinematic Lenses',
+    short: 'Hollywood\'s optical magic',
+    tagline: 'Storytelling through glass',
+    description: 'Cinema lenses are engineered for precise focus control, minimal breathing, and consistent color rendition. Focus pullers use lens markings calibrated to the thin lens equation to smoothly rack focus between actors.',
+    connection: 'Cinema lenses have calibrated focus scales showing object distances. The thin lens equation relates these markings to actual lens element positions, enabling repeatable focus pulls.',
+    howItWorks: 'Cine lenses have long focus throw (300+ degrees rotation) for precise control. Internal focusing minimizes breathing (focal length change with focus). Matched lens sets maintain consistent color and contrast.',
+    stats: [
+      { value: '300°', label: 'Focus rotation', icon: '⚡' },
+      { value: 'T1.3', label: 'Fast aperture', icon: '📈' },
+      { value: '$50K+', label: 'Lens set cost', icon: '🚀' }
+    ],
+    examples: ['Feature film production', 'Television drama', 'Commercial advertising', 'Documentary filming'],
+    companies: ['ARRI', 'Cooke', 'Panavision', 'Zeiss'],
+    futureImpact: 'Motorized smart lenses with metadata embedding will enable perfect focus tracking and post-production adjustment of depth of field.',
+    color: '#F59E0B'
+  }
+];
+
 const realWorldApplications = [
   {
     id: 'glasses',

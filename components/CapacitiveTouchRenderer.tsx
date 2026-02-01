@@ -18,6 +18,81 @@ interface TouchPoint {
   capacitance: number;
 }
 
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Smartphone Touchscreens',
+    short: 'Multi-touch displays',
+    tagline: 'How your phone knows where you touch',
+    description: 'Every smartphone uses capacitive touch technology to detect finger positions with millimeter precision. The screen senses changes in its electric field when your conductive finger approaches.',
+    connection: 'Your finger acts as a conductor, coupling capacitively to the sensor grid. The touch controller measures capacitance changes at each grid intersection to locate multiple simultaneous touches.',
+    howItWorks: 'A grid of transparent ITO (indium tin oxide) electrodes sits behind the glass. The controller sends AC signals and measures how much charge couples to your finger at each intersection.',
+    stats: [
+      { value: '10+', label: 'Simultaneous touches', icon: '👆' },
+      { value: '240Hz', label: 'Touch sample rate', icon: '⚡' },
+      { value: '< 1mm', label: 'Position accuracy', icon: '🎯' }
+    ],
+    examples: ['iPhone displays', 'Android phones', 'Tablets', 'Smart watches'],
+    companies: ['Apple', 'Samsung', 'Synaptics', 'Goodix'],
+    futureImpact: 'Under-display fingerprint sensors and force-sensing displays are extending capacitive technology to new dimensions of interaction.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎹',
+    title: 'Touch-Sensitive Instruments',
+    short: 'Expressive digital music',
+    tagline: 'Velocity and pressure through capacitance',
+    description: 'Modern MIDI controllers and digital pianos use capacitive sensing to detect not just which key you press, but how fast and hard - enabling expressive musical performance.',
+    connection: 'The rate of capacitance change indicates velocity (how fast you struck). Some instruments measure the total capacitance change to infer pressure for continuous expression control.',
+    howItWorks: 'Conductive pads under each key sense finger approach before physical contact. The slope of the capacitance curve gives velocity. Continuous sensing enables aftertouch pressure control.',
+    stats: [
+      { value: '127', label: 'Velocity levels', icon: '🎵' },
+      { value: '< 5ms', label: 'Latency', icon: '⚡' },
+      { value: '16', label: 'Polyphonic aftertouch', icon: '🎹' }
+    ],
+    examples: ['Roli Seaboard', 'Ableton Push', 'Native Instruments', 'Sensel Morph'],
+    companies: ['Roli', 'Ableton', 'Native Instruments', 'Sensel'],
+    futureImpact: 'Capacitive sensing combined with pressure and position tracking is enabling entirely new musical instruments with unprecedented expressiveness.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Touch Controls',
+    short: 'Car interior interfaces',
+    tagline: 'Touch panels replacing buttons',
+    description: 'Modern vehicles use capacitive touch for climate controls, infotainment, and steering wheel buttons. The technology enables sleek designs with fewer mechanical parts to fail.',
+    connection: 'Capacitive sensors work through automotive-grade glass and plastic overlays. Proximity detection can wake controls as your hand approaches, providing a preview before touch.',
+    howItWorks: 'Projected capacitive sensors beneath the display surface detect fingers through thick glass. Haptic feedback motors simulate button clicks. Glove detection modes increase sensitivity.',
+    stats: [
+      { value: '15"+', label: 'Display sizes', icon: '📺' },
+      { value: '-40°C', label: 'Operating range', icon: '❄️' },
+      { value: '15 year', label: 'Reliability target', icon: '🔧' }
+    ],
+    examples: ['Tesla touchscreens', 'BMW iDrive', 'Mercedes MBUX', 'Lucid interface'],
+    companies: ['Tesla', 'Continental', 'Bosch', 'Visteon'],
+    futureImpact: 'Gesture recognition above the display surface and haptic feedback are making capacitive car controls safer and more intuitive for drivers.',
+    color: '#10B981'
+  },
+  {
+    icon: '💧',
+    title: 'Liquid Level Sensing',
+    short: 'Non-contact fluid detection',
+    tagline: 'Measuring liquids through container walls',
+    description: 'Capacitive sensors can detect liquid levels through non-metallic container walls. This enables sealed, hygienic sensing for medical, food, and industrial applications.',
+    connection: 'Liquids have different dielectric constants than air. A capacitive sensor on the outside of a container detects the liquid level by measuring how the capacitance changes with fill level.',
+    howItWorks: 'Electrodes on the container exterior form a capacitor with the liquid inside as part of the dielectric. As liquid level rises, capacitance increases proportionally. No contact with fluid needed.',
+    stats: [
+      { value: '± 1mm', label: 'Level accuracy', icon: '📏' },
+      { value: '100%', label: 'Sealed container', icon: '🔒' },
+      { value: '10+ year', label: 'Sensor lifetime', icon: '⏰' }
+    ],
+    examples: ['Medical IV bags', 'Coffee makers', 'Industrial tanks', 'Dishwasher salt'],
+    companies: ['Siemens', 'Endress+Hauser', 'Sensata', 'TE Connectivity'],
+    futureImpact: 'Smart containers with embedded capacitive sensors will enable automated inventory tracking and prevent running out of essential supplies.',
+    color: '#F59E0B'
+  }
+];
+
 // ===============================================================================
 // CONSTANTS
 // ===============================================================================

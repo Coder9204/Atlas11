@@ -9,6 +9,81 @@ interface InfraredEmissivityRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🔥',
+    title: 'Thermal Imaging Cameras',
+    short: 'Seeing heat in darkness',
+    tagline: 'Making the invisible visible',
+    description: 'Thermal cameras detect infrared radiation emitted by objects based on their temperature and emissivity. Used in building inspections, firefighting, medical diagnostics, and security, these cameras convert IR radiation into visible images showing temperature variations across surfaces.',
+    connection: 'Understanding emissivity is crucial for accurate thermal imaging. A shiny metal surface may appear cool on camera not because it is cool, but because its low emissivity means it emits less IR radiation and reflects ambient temperatures instead.',
+    howItWorks: 'Thermal cameras use microbolometer arrays sensitive to IR wavelengths (8-14 μm). Each pixel absorbs IR radiation, causing temperature changes that alter electrical resistance. Software converts resistance values to temperatures, applying emissivity corrections for accurate readings.',
+    stats: [
+      { value: '0.01°C', label: 'Sensitivity', icon: '⚡' },
+      { value: '$8.7B', label: 'Market size', icon: '📈' },
+      { value: '640x480', label: 'Resolution', icon: '🚀' }
+    ],
+    examples: ['Building energy audits finding insulation gaps', 'Electrical inspections detecting hot spots', 'Medical fever screening', 'Night vision for security'],
+    companies: ['FLIR Systems', 'Fluke', 'Hikvision', 'Seek Thermal'],
+    futureImpact: 'Smartphone-integrated thermal cameras will make IR imaging ubiquitous for home energy audits, health monitoring, and DIY repairs, democratizing a technology once reserved for professionals.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🌡️',
+    title: 'Spacecraft Thermal Control',
+    short: 'Surviving space extremes',
+    tagline: 'Engineering survival in the cosmic void',
+    description: 'Spacecraft must carefully manage thermal radiation to survive temperature extremes from -270°C in shadow to +120°C in sunlight. Surface coatings with precisely engineered emissivity values control how much heat is radiated to space or absorbed from the sun.',
+    connection: 'The Stefan-Boltzmann law (P = εσAT⁴) governs spacecraft thermal balance. By selecting surface emissivity values, engineers control the equilibrium temperature. High-emissivity surfaces radiate heat effectively; low-emissivity surfaces retain heat.',
+    howItWorks: 'Multi-layer insulation (MLI) uses low-emissivity metal foils to minimize radiative heat transfer. Radiator panels with high emissivity reject waste heat. Specialized coatings balance solar absorptivity and thermal emissivity for optimal temperature control.',
+    stats: [
+      { value: '0.02', label: 'MLI emissivity', icon: '⚡' },
+      { value: '400°C', label: 'Temp range', icon: '📈' },
+      { value: '$2.1B', label: 'Market size', icon: '🚀' }
+    ],
+    examples: ['James Webb Space Telescope sunshield', 'ISS radiator panels', 'Mars rover thermal blankets', 'Satellite bus thermal coatings'],
+    companies: ['NASA', 'SpaceX', 'Lockheed Martin', 'Northrop Grumman'],
+    futureImpact: 'Variable-emissivity surfaces using electrochromic or phase-change materials will allow spacecraft to dynamically adjust thermal properties, reducing heating power requirements and extending mission life.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏠',
+    title: 'Low-E Window Coatings',
+    short: 'Keeping buildings comfortable',
+    tagline: 'Invisible energy savings',
+    description: 'Low-emissivity (Low-E) window coatings are thin metal oxide layers that reduce heat transfer through windows. These coatings reflect infrared radiation while allowing visible light through, keeping buildings warmer in winter and cooler in summer.',
+    connection: 'Low-E coatings exploit the relationship between emissivity and reflectivity. A surface with low emissivity has high IR reflectivity, bouncing thermal radiation back rather than absorbing and re-emitting it.',
+    howItWorks: 'Sputtered coatings of silver or tin oxide are applied in layers just nanometers thick. The coating reflects long-wave IR (room heat) while transmitting visible light. Different coating configurations optimize for heating-dominated or cooling-dominated climates.',
+    stats: [
+      { value: '30%', label: 'Energy savings', icon: '⚡' },
+      { value: '$4.2B', label: 'Market size', icon: '📈' },
+      { value: '0.04', label: 'Low-E emissivity', icon: '🚀' }
+    ],
+    examples: ['Double-pane residential windows', 'Commercial building facades', 'Skylight glazing', 'Refrigerator door glass'],
+    companies: ['Guardian Glass', 'PPG Industries', 'Saint-Gobain', 'AGC'],
+    futureImpact: 'Switchable Low-E coatings will dynamically adjust emissivity based on outdoor conditions, maximizing solar gain in winter and rejection in summer, approaching the efficiency of smart building envelopes.',
+    color: '#10B981'
+  },
+  {
+    icon: '🍳',
+    title: 'Cookware Surface Engineering',
+    short: 'Optimizing heat transfer',
+    tagline: 'The science of perfect cooking',
+    description: 'Cookware surfaces are engineered with specific emissivity properties for optimal heat distribution. Matte black surfaces on cast iron radiate heat effectively for baking, while polished stainless interiors minimize radiative losses for efficient stovetop cooking.',
+    connection: 'High-emissivity surfaces radiate more thermal energy at a given temperature. A dark pizza stone radiates heat to the dough more effectively than a shiny metal pan, creating better crusts through radiative heat transfer.',
+    howItWorks: 'Cast iron develops a high-emissivity patina through seasoning. Enameled coatings provide consistent emissivity. Anodized aluminum creates a controlled oxide layer. Pizza ovens use refractory surfaces with emissivity near 0.9 for maximum radiant heating.',
+    stats: [
+      { value: '0.95', label: 'Cast iron ε', icon: '⚡' },
+      { value: '$12B', label: 'Cookware market', icon: '📈' },
+      { value: '40%', label: 'Better browning', icon: '🚀' }
+    ],
+    examples: ['Seasoned cast iron skillets', 'Stone pizza ovens', 'Infrared grills', 'Convection oven interiors'],
+    companies: ['Lodge', 'Le Creuset', 'All-Clad', 'Staub'],
+    futureImpact: 'Smart cookware with temperature-sensing coatings will provide real-time feedback, while engineered surface textures will optimize emissivity patterns for specific cooking techniques.',
+    color: '#F59E0B'
+  }
+];
+
 const TEST_QUESTIONS = [
   {
     question: 'Why do all warm objects emit infrared radiation?',

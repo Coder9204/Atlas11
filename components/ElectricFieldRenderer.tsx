@@ -75,6 +75,81 @@ interface SourceCharge {
   q: number;
 }
 
+const realWorldApps = [
+  {
+    icon: '📺',
+    title: 'CRT Displays & Electron Beams',
+    short: 'Steering electrons with fields',
+    tagline: 'Drawing pictures with electric force',
+    description: 'Cathode ray tubes used electric fields to steer electron beams, creating the images on old TVs and oscilloscopes. The beam deflection is proportional to the field strength.',
+    connection: 'Electrons experience force F = qE in an electric field. Deflection plates create uniform fields that bend the beam. The deflection angle depends on field strength and beam energy.',
+    howItWorks: 'An electron gun emits a beam. Pairs of deflection plates create electric fields that push the beam left/right and up/down. Varying the field rapidly scans the beam across the phosphor screen.',
+    stats: [
+      { value: '25kV', label: 'Accelerating voltage', icon: '⚡' },
+      { value: '0.3 mm', label: 'Spot size', icon: '🎯' },
+      { value: '100 MHz', label: 'Deflection bandwidth', icon: '📊' }
+    ],
+    examples: ['Old televisions', 'Oscilloscopes', 'Radar displays', 'Electron microscopes'],
+    companies: ['Tektronix', 'Sony', 'Samsung', 'RCA'],
+    futureImpact: 'While flat panels replaced CRTs for displays, electron beam steering remains essential in electron microscopes, particle accelerators, and semiconductor lithography.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚡',
+    title: 'High-Voltage Insulation',
+    short: 'Preventing breakdown',
+    tagline: 'Designing for intense electric fields',
+    description: 'High-voltage equipment must manage extreme electric fields without breakdown. Field intensity at sharp points can exceed the dielectric strength of air, causing corona or arcing.',
+    connection: 'Electric field concentrates at points and edges (small radius of curvature). Engineers use field simulations to shape conductors and insulators, keeping E below breakdown thresholds.',
+    howItWorks: 'Smooth, rounded shapes spread field lines over larger areas, reducing peak E. Corona rings and grading electrodes control field distribution. Insulating gases/oils have higher breakdown strength.',
+    stats: [
+      { value: '3 MV/m', label: 'Air breakdown', icon: '⚡' },
+      { value: '20 MV/m', label: 'SF6 breakdown', icon: '🛡️' },
+      { value: '765 kV', label: 'Max transmission', icon: '🔌' }
+    ],
+    examples: ['Transmission lines', 'Substation equipment', 'X-ray tubes', 'Van de Graaff generators'],
+    companies: ['ABB', 'Siemens Energy', 'GE Vernova', 'Hitachi Energy'],
+    futureImpact: 'New SF6-free insulation systems and solid-state circuit breakers are making high-voltage equipment more environmentally friendly.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🧬',
+    title: 'Gel Electrophoresis',
+    short: 'Separating DNA by size',
+    tagline: 'Electric fields sort molecules',
+    description: 'Gel electrophoresis uses uniform electric fields to move charged DNA fragments through a gel matrix. Smaller fragments move faster, separating molecules by size for analysis.',
+    connection: 'DNA is negatively charged (phosphate backbone). In an electric field, F = qE drives DNA toward the positive electrode. Gel resistance causes size-dependent mobility - smaller = faster.',
+    howItWorks: 'DNA samples are loaded into wells in an agarose gel. An electric field (~5 V/cm) is applied. DNA moves toward + electrode at rates inversely proportional to fragment length.',
+    stats: [
+      { value: '5-10 V/cm', label: 'Field strength', icon: '⚡' },
+      { value: '100-10000 bp', label: 'Size range', icon: '🧬' },
+      { value: '30-60 min', label: 'Run time', icon: '⏱️' }
+    ],
+    examples: ['DNA fingerprinting', 'PCR verification', 'Protein analysis', 'RNA quantification'],
+    companies: ['Bio-Rad', 'Thermo Fisher', 'Agilent', 'QIAGEN'],
+    futureImpact: 'Capillary and microfluidic electrophoresis enable faster, automated DNA analysis for rapid diagnostics and high-throughput sequencing.',
+    color: '#10B981'
+  },
+  {
+    icon: '🖥️',
+    title: 'Semiconductor Device Physics',
+    short: 'Transistor operation',
+    tagline: 'Fields that switch billions of times per second',
+    description: 'Every transistor in your computer uses electric fields to control current flow. Gate voltage creates a field that attracts or repels carriers, turning the transistor on or off.',
+    connection: 'In a MOSFET, the gate electrode creates an electric field through the thin oxide. This field attracts electrons to form a conductive channel, or repels them to turn the transistor off.',
+    howItWorks: 'Applying positive gate voltage creates downward E field. Electrons are attracted to the oxide interface, forming an inversion layer that conducts current between source and drain.',
+    stats: [
+      { value: '10 MV/cm', label: 'Oxide field', icon: '⚡' },
+      { value: '1 nm', label: 'Gate oxide thickness', icon: '📏' },
+      { value: '100B+', label: 'Transistors per chip', icon: '🖥️' }
+    ],
+    examples: ['CPU transistors', 'Memory cells', 'Power MOSFETs', 'Image sensors'],
+    companies: ['Intel', 'TSMC', 'Samsung', 'NVIDIA'],
+    futureImpact: 'New transistor architectures (GAA, CFET) and materials (high-k, 2D channels) are pushing Moore\'s Law forward despite atomic-scale challenges.',
+    color: '#8B5CF6'
+  }
+];
+
 // Coulomb's constant
 const k = 8.99e9; // N·m²/C²
 

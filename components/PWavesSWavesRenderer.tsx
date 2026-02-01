@@ -7,6 +7,81 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Gold Standard: Sequential transfer navigation with completedApps tracking
 // ============================================================================
 
+const realWorldApps = [
+   {
+      icon: '🌍',
+      title: 'Earthquake Early Warning',
+      short: 'Seconds that save lives',
+      tagline: 'Racing the seismic waves',
+      description: 'P-waves travel 1.7x faster than destructive S-waves. Seismometers detect P-waves first, triggering warnings before shaking arrives - giving precious seconds to take cover.',
+      connection: 'The speed difference between P and S waves creates a detection window. Closer to the epicenter, less warning time; farther away, more time to react.',
+      howItWorks: 'Networks of seismometers detect P-waves and calculate epicenter location within seconds. Automated systems send alerts to phones, trains, and factories before S-waves hit.',
+      stats: [
+         { value: '5-40s', label: 'Warning time', icon: '⏱️' },
+         { value: '1.7x', label: 'P-wave speed advantage', icon: '⚡' },
+         { value: '500K+', label: 'Quakes detected/year', icon: '📊' }
+      ],
+      examples: ['Japan ShakeAlert', 'Mexico SASMEX', 'US ShakeAlert', 'Taiwan CWB system'],
+      companies: ['USGS', 'JMA', 'INGV', 'GFZ Potsdam'],
+      futureImpact: 'AI systems will predict shaking intensity from first P-wave arrivals.',
+      color: '#EF4444'
+   },
+   {
+      icon: '🛢️',
+      title: 'Oil & Gas Exploration',
+      short: 'Finding hidden reservoirs',
+      tagline: 'Seeing underground with sound',
+      description: 'Seismic surveys send controlled waves into the ground. S-waves don\'t travel through fluids, so comparing P and S wave reflections reveals underground oil and gas pockets worth billions.',
+      connection: 'The S-wave shadow effect - where shear waves are blocked by liquids - creates a distinctive signature that identifies fluid-filled rock formations.',
+      howItWorks: 'Vibroseis trucks or air guns create seismic waves. Thousands of geophones record reflections. Computer processing creates 3D maps showing where S-waves disappear.',
+      stats: [
+         { value: '$30B', label: 'Industry value', icon: '💰' },
+         { value: '1000s', label: 'Sensors per survey', icon: '📡' },
+         { value: '10km', label: 'Depth penetration', icon: '📏' }
+      ],
+      examples: ['Offshore drilling', 'Shale gas mapping', 'Geothermal exploration', 'Groundwater surveys'],
+      companies: ['Schlumberger', 'Halliburton', 'CGG', 'PGS'],
+      futureImpact: 'Machine learning will identify reservoir signatures automatically from seismic data.',
+      color: '#F59E0B'
+   },
+   {
+      icon: '🏥',
+      title: 'Medical Ultrasound',
+      short: 'Safe imaging with sound',
+      tagline: 'Seeing babies and organs',
+      description: 'Medical ultrasound uses compression waves (like P-waves) because they travel through body fluids. The same physics that lets P-waves cross Earth\'s liquid core lets ultrasound image through blood and amniotic fluid.',
+      connection: 'P-waves are compression waves that propagate through any medium. Ultrasound at MHz frequencies follows identical physics, just scaled to medical imaging.',
+      howItWorks: 'Piezoelectric transducers emit ultrasound pulses. Echoes from tissue boundaries return at different times, creating images. Doppler effect measures blood flow velocity.',
+      stats: [
+         { value: '3B+', label: 'Scans per year', icon: '🏥' },
+         { value: '2-18MHz', label: 'Frequency range', icon: '📊' },
+         { value: '0', label: 'Radiation exposure', icon: '✅' }
+      ],
+      examples: ['Prenatal imaging', 'Cardiac echo', 'Abdominal scans', 'Vascular doppler'],
+      companies: ['GE Healthcare', 'Philips', 'Siemens', 'Canon Medical'],
+      futureImpact: 'AI-guided ultrasound will enable non-specialists to perform diagnostic scans.',
+      color: '#8B5CF6'
+   },
+   {
+      icon: '🔬',
+      title: 'Earth\'s Interior Mapping',
+      short: 'Discovering liquid layers',
+      tagline: 'X-raying the planet',
+      description: 'Scientists discovered Earth\'s liquid outer core because S-waves cannot pass through it, creating a "shadow zone" on the opposite side of earthquakes. This same technique maps the interiors of other planets.',
+      connection: 'S-waves require solid material to propagate - they cause shearing motion that liquids cannot support. The sudden disappearance of S-waves reveals liquid boundaries.',
+      howItWorks: 'Global seismometer networks record earthquake arrivals. Where S-waves don\'t appear (104-140° from epicenter), there must be liquid blocking them.',
+      stats: [
+         { value: '2900km', label: 'Core-mantle depth', icon: '🌍' },
+         { value: '5150km', label: 'Inner core depth', icon: '📏' },
+         { value: '1936', label: 'Discovery year', icon: '📅' }
+      ],
+      examples: ['Core-mantle boundary', 'Inner core discovery', 'Moon seismology', 'Mars InSight mission'],
+      companies: ['NASA', 'ESA', 'IRIS', 'GeoForschungsZentrum'],
+      futureImpact: 'Seismometers on Europa and Titan will search for subsurface oceans.',
+      color: '#10B981'
+   }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

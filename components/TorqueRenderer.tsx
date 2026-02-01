@@ -23,6 +23,81 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🔧',
+    title: 'Torque Wrenches',
+    short: 'Precision tightening for critical fasteners',
+    tagline: 'When too tight or too loose means failure',
+    description: 'Torque wrenches ensure bolts are tightened to exact specifications. Under-torqued bolts loosen and fail; over-torqued bolts strip threads or break. Critical in automotive, aerospace, and construction.',
+    connection: 'The wrench handle is the lever arm, and the force you apply creates torque. Click-type wrenches release when target torque is reached.',
+    howItWorks: 'A calibrated spring or electronic sensor measures torque. The longer the handle, the less force needed for the same torque. Digital wrenches display real-time readings.',
+    stats: [
+      { value: '±4%', label: 'Wrench accuracy', icon: '🎯' },
+      { value: '500Nm', label: 'Lug nut torque', icon: '🔩' },
+      { value: '1%', label: 'Aerospace tolerance', icon: '✈️' }
+    ],
+    examples: ['Wheel lug nuts', 'Engine head bolts', 'Aircraft fasteners', 'Bridge bolts'],
+    companies: ['Snap-on', 'Proto', 'CDI', 'Norbar'],
+    futureImpact: 'Smart bolts with embedded sensors will confirm proper torque and detect loosening over time.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚴',
+    title: 'Bicycle Gear Systems',
+    short: 'Multiplying force through the drivetrain',
+    tagline: 'Turning leg power into speed',
+    description: 'Bicycle gears trade pedaling speed for force multiplication. Small chainrings increase torque for climbing; large ones increase speed for flats. The crankset is a lever arm for your legs.',
+    connection: 'Pedal force times crank length equals input torque. Gear ratios multiply or divide this torque before it reaches the wheel.',
+    howItWorks: 'Torque = force x crank length. A 170mm crank with 100N force produces 17Nm. A 1:2 gear ratio doubles the torque at the wheel but halves the rotation speed.',
+    stats: [
+      { value: '165-175mm', label: 'Typical crank length', icon: '📏' },
+      { value: '1:4', label: 'Climbing gear ratio', icon: '⛰️' },
+      { value: '4:1', label: 'Sprint gear ratio', icon: '🏎️' }
+    ],
+    examples: ['Road bikes', 'Mountain bikes', 'E-bikes', 'Track cycling'],
+    companies: ['Shimano', 'SRAM', 'Campagnolo', 'FSA'],
+    futureImpact: 'Electronic shifting with AI will automatically optimize gear ratios based on terrain and rider fatigue.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏗️',
+    title: 'Crane Moment Ratings',
+    short: 'Understanding lifting capacity limits',
+    tagline: 'Load times distance equals danger',
+    description: 'Crane capacity drops dramatically with boom length and angle. A 100-ton crane might only lift 10 tons at full extension. Operators must constantly calculate moments to prevent tipping.',
+    connection: 'The load creates a tipping moment about the crane base. This moment (force x distance) must never exceed the counterweight moment.',
+    howItWorks: 'Load charts show maximum weight at each radius. Moment limiters cut power if limits approach. Counterweights balance the load moment. Longer boom = smaller capacity.',
+    stats: [
+      { value: '10x', label: 'Capacity reduction at full reach', icon: '📉' },
+      { value: '85%', label: 'Crane accidents from overload', icon: '⚠️' },
+      { value: '1000t', label: 'Max mobile crane capacity', icon: '🏗️' }
+    ],
+    examples: ['Tower cranes', 'Mobile cranes', 'Overhead cranes', 'Container cranes'],
+    companies: ['Liebherr', 'Manitowoc', 'Tadano', 'Terex'],
+    futureImpact: 'Real-time structural monitoring will enable cranes to safely exceed traditional limits.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⚙️',
+    title: 'Electric Motor Torque',
+    short: 'Instant power from electromagnetic forces',
+    tagline: 'Maximum torque from zero RPM',
+    description: 'Electric motors produce maximum torque at zero speed, unlike combustion engines. This enables incredible acceleration in EVs and precise control in robotics.',
+    connection: 'Motor torque comes from the force between magnetic fields times the rotor radius. Current controls the magnetic field strength, so torque is directly controllable.',
+    howItWorks: 'Electromagnetic force on conductors in a magnetic field creates rotation. Torque = force x radius. Controllers modulate current to achieve precise torque at any speed.',
+    stats: [
+      { value: '1000Nm', label: 'Tesla Plaid motor torque', icon: '⚡' },
+      { value: '0rpm', label: 'Max torque speed', icon: '🎯' },
+      { value: '1ms', label: 'Torque response time', icon: '⏱️' }
+    ],
+    examples: ['Electric vehicles', 'Industrial robots', 'CNC machines', 'Elevators'],
+    companies: ['Tesla', 'ABB', 'Siemens', 'Fanuc'],
+    futureImpact: 'In-wheel motors will provide independent torque control to each wheel for unprecedented handling.',
+    color: '#8B5CF6'
+  }
+];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'

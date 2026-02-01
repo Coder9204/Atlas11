@@ -18,6 +18,81 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🌙',
+    title: 'The Moon\'s Hidden Face',
+    short: 'Why we never see the far side from Earth',
+    tagline: '4.5 billion years of gravitational braking',
+    description: 'The Moon rotates exactly once per orbit, keeping the same face toward Earth. This synchronization is not coincidence - tidal forces gradually slowed the Moon\'s spin over billions of years.',
+    connection: 'Tidal bulges raised on the Moon by Earth created friction that transferred rotational energy to orbital energy until the rotation locked.',
+    howItWorks: 'Early in its history, the Moon rotated faster. Tidal bulges slightly led the Moon\'s rotation, creating a torque that slowed spinning. When rotation matched orbital period, the bulge aligned and torque ceased.',
+    stats: [
+      { value: '27.3d', label: 'Moon rotation period', icon: '🔄' },
+      { value: '27.3d', label: 'Moon orbital period', icon: '🌍' },
+      { value: '4.5B yr', label: 'Time to lock', icon: '⏰' }
+    ],
+    examples: ['Earth\'s Moon', 'Phobos', 'Deimos', 'Most large moons'],
+    companies: ['NASA', 'ESA', 'JAXA', 'Space agencies worldwide'],
+    futureImpact: 'The far side, shielded from Earth\'s radio noise, is ideal for radio telescopes and future bases.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '❤️',
+    title: 'Pluto-Charon Double Lock',
+    short: 'A binary system frozen in mutual embrace',
+    tagline: 'Two worlds facing each other forever',
+    description: 'Pluto and Charon are mutually tidally locked - they always show the same face to each other. Standing on Pluto, Charon hangs motionless in the sky forever.',
+    connection: 'Both bodies raised tides on each other, exchanging angular momentum until both rotations synchronized with their mutual orbit.',
+    howItWorks: 'Charon is so large relative to Pluto (1:8 mass ratio) that tidal forces were strong on both. Over time, both spun down until locked. They now orbit their common center of mass as a double dwarf planet.',
+    stats: [
+      { value: '6.4d', label: 'Mutual orbital period', icon: '🔄' },
+      { value: '6.4d', label: 'Both rotation periods', icon: '⏱️' },
+      { value: '1:8', label: 'Mass ratio', icon: '⚖️' }
+    ],
+    examples: ['Pluto-Charon', 'Future Earth-Moon', 'Close binary stars', 'Exoplanet systems'],
+    companies: ['NASA New Horizons', 'Space research', 'Planetary science', 'Observatories'],
+    futureImpact: 'In 50 billion years, Earth and Moon will be mutually locked, with month-long days.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔥',
+    title: 'Mercury\'s 3:2 Resonance',
+    short: 'A spin-orbit lock that isn\'t quite 1:1',
+    tagline: 'Captured in an eccentric dance',
+    description: 'Mercury rotates exactly 3 times for every 2 orbits around the Sun. This unusual resonance exists because Mercury\'s elliptical orbit prevented true 1:1 locking.',
+    connection: 'The same tidal physics applies, but Mercury\'s eccentric orbit created torques that stabilized at 3:2 instead of 1:1.',
+    howItWorks: 'At perihelion (closest to Sun), tidal forces are strongest. The 3:2 resonance keeps Mercury\'s long axis pointing at the Sun at each perihelion, minimizing tidal stress over time.',
+    stats: [
+      { value: '59d', label: 'Rotation period', icon: '🔄' },
+      { value: '88d', label: 'Orbital period', icon: '☀️' },
+      { value: '0.21', label: 'Orbital eccentricity', icon: '📈' }
+    ],
+    examples: ['Mercury', 'Some exoplanets', 'Binary asteroids', 'Eccentric moons'],
+    companies: ['NASA MESSENGER', 'ESA BepiColombo', 'Observatories', 'Research institutes'],
+    futureImpact: 'Understanding spin-orbit resonances helps predict exoplanet climates and habitability.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🌍',
+    title: 'Earth\'s Lengthening Days',
+    short: 'The Moon is slowing Earth\'s rotation',
+    tagline: 'Stealing our spin, second by second',
+    description: 'Earth\'s day was only 6 hours long 4 billion years ago. Tidal friction from the Moon has been slowing our spin ever since. Days grow 1.4 milliseconds longer each century.',
+    connection: 'Tidal bulges on Earth slightly lead the Moon\'s position due to Earth\'s faster rotation. This creates a torque that transfers Earth\'s rotational energy to the Moon\'s orbit.',
+    howItWorks: 'The Moon\'s gravity pulls back on Earth\'s leading tidal bulge, slowing Earth\'s spin. Angular momentum conservation means the Moon speeds up and moves farther away (3.8 cm/year).',
+    stats: [
+      { value: '1.4ms', label: 'Day lengthening/century', icon: '⏱️' },
+      { value: '3.8cm/yr', label: 'Moon receding', icon: '📏' },
+      { value: '6hr', label: 'Early Earth day length', icon: '🌅' }
+    ],
+    examples: ['Earth-Moon system', 'Mars-Phobos (opposite)', 'Ancient coral records', 'Eclipse timing'],
+    companies: ['NASA', 'USNO', 'International Earth Rotation Service', 'Observatories'],
+    futureImpact: 'In billions of years, Earth\'s day will equal a month, and Earth-Moon will be mutually locked.',
+    color: '#10B981'
+  }
+];
+
 // Gold standard types
 type GameEventType =
   | 'phase_change'

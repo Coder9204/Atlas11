@@ -24,6 +24,81 @@ const colors = {
   lightRay: '#fbbf24',
 };
 
+const realWorldApps = [
+  {
+    icon: '📷',
+    title: 'Camera Lens Coatings',
+    short: 'Eliminating reflections through precise interference',
+    tagline: 'Making glass invisible to light',
+    description: 'Multi-layer coatings on camera lenses use thin-film interference to reduce reflections from 4% per surface to under 0.2%. Without them, a 15-element lens would lose over 50% of light to reflections.',
+    connection: 'Quarter-wavelength films create destructive interference between surface and interface reflections, canceling the reflected light.',
+    howItWorks: 'Multiple layers of materials with different refractive indices are deposited with nanometer precision. Each layer is tuned to specific wavelengths, together covering the entire visible spectrum.',
+    stats: [
+      { value: '99.8%', label: 'Light transmission', icon: '✨' },
+      { value: '15+', label: 'Coating layers', icon: '📚' },
+      { value: '<0.2%', label: 'Reflection per surface', icon: '🎯' }
+    ],
+    examples: ['Camera lenses', 'Binoculars', 'Microscopes', 'Telescope mirrors'],
+    companies: ['Zeiss', 'Canon', 'Nikon', 'Leica'],
+    futureImpact: 'Nanostructured moth-eye coatings will achieve perfect anti-reflection across all angles and wavelengths.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🦋',
+    title: 'Structural Coloration',
+    short: 'Nature\'s iridescent colors without pigments',
+    tagline: 'When physics creates beauty',
+    description: 'Morpho butterfly wings display brilliant blue despite having no blue pigment. Nanoscale structures create interference that selectively reflects blue light while absorbing other wavelengths.',
+    connection: 'The wing scales contain tree-like nanostructures with spacing tuned to blue wavelengths, demonstrating natural thin-film interference.',
+    howItWorks: 'Regular arrays of chitin ridges create path differences for reflected light. Only blue wavelengths constructively interfere, while others destructively interfere and are absorbed.',
+    stats: [
+      { value: '200nm', label: 'Structure spacing', icon: '🔬' },
+      { value: '70%', label: 'Blue reflection', icon: '🔵' },
+      { value: '0', label: 'Blue pigment present', icon: '🎨' }
+    ],
+    examples: ['Morpho butterflies', 'Peacock feathers', 'Beetle shells', 'Hummingbird throats'],
+    companies: ['Bio-inspired research', 'Qualcomm Mirasol', 'Sharklet Technologies', 'Cypris Materials'],
+    futureImpact: 'Structural color displays will replace LCD/OLED with zero-power, sunlight-readable screens.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🛢️',
+    title: 'Oil Slick Patterns',
+    short: 'Rainbow colors from contamination layers',
+    tagline: 'Physics makes pollution visible',
+    description: 'Oil on water creates swirling rainbow patterns because the film thickness varies across its surface. Each thickness constructively interferes with different wavelengths, creating bands of color.',
+    connection: 'The varying thickness traces contour lines of equal optical path length, making the oil layer\'s structure visible through interference.',
+    howItWorks: 'Light reflects from both the oil-air and oil-water interfaces. The path difference depends on local thickness, causing constructive interference for wavelengths where thickness equals odd multiples of quarter-wavelength.',
+    stats: [
+      { value: '100-1000nm', label: 'Oil film thickness', icon: '📏' },
+      { value: '1.5', label: 'Oil refractive index', icon: '🔢' },
+      { value: '7', label: 'Visible spectral colors', icon: '🌈' }
+    ],
+    examples: ['Puddle rainbows', 'Soap bubbles', 'Gasoline films', 'Peacock feathers'],
+    companies: ['Environmental monitoring', 'Oil spill response', 'Art installations', 'Science education'],
+    futureImpact: 'Thin-film sensors will detect contamination at parts-per-billion levels through interference shifts.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '☀️',
+    title: 'Solar Cell Optimization',
+    short: 'Trapping light with interference coatings',
+    tagline: 'Every photon counts for efficiency',
+    description: 'Solar cells use anti-reflection coatings to capture more sunlight. Silicon\'s high refractive index causes 30% reflection without treatment. Thin-film coatings reduce this to under 3%.',
+    connection: 'The coating creates destructive interference for reflected light, redirecting energy into the cell where it generates electricity.',
+    howItWorks: 'Silicon nitride films of precisely controlled thickness create optimal anti-reflection at the peak of the solar spectrum. Multi-layer stacks extend the effect across broader wavelengths.',
+    stats: [
+      { value: '3%', label: 'Reflection with coating', icon: '📉' },
+      { value: '30%', label: 'Reflection without', icon: '📈' },
+      { value: '2-3%', label: 'Efficiency gain', icon: '⚡' }
+    ],
+    examples: ['Monocrystalline panels', 'Thin-film cells', 'Concentrated solar', 'Space solar arrays'],
+    companies: ['First Solar', 'SunPower', 'LONGi', 'Canadian Solar'],
+    futureImpact: 'Tandem cells with optimized interference layers will push efficiency above 50%.',
+    color: '#10B981'
+  }
+];
+
 const ThinFilmInterferenceRenderer: React.FC<ThinFilmInterferenceRendererProps> = ({
   phase,
   onPhaseComplete,

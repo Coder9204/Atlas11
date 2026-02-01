@@ -38,6 +38,81 @@ const colors = {
   primary: '#06b6d4',
 };
 
+const realWorldApps = [
+  {
+    icon: '📡',
+    title: 'RF Antenna Systems',
+    short: 'Maximum power transfer to antennas',
+    tagline: 'Every watt counts in wireless',
+    description: 'Radio transmitters must match 50-ohm transmission lines to antenna impedance. Mismatches reflect power back, reducing range and potentially damaging transmitters.',
+    connection: 'The reflection coefficient Gamma = (ZL-Z0)/(ZL+Z0) determines how much power reflects. Perfect matching (Gamma=0) transfers all power to the antenna.',
+    howItWorks: 'Antenna tuners and matching networks transform antenna impedance to 50 ohms. SWR meters measure VSWR to verify proper matching. Ferrite beads suppress reflections.',
+    stats: [
+      { value: '50ohm', label: 'Standard RF impedance', icon: '📊' },
+      { value: '1.5:1', label: 'Acceptable VSWR', icon: '✅' },
+      { value: '3dB', label: 'Loss at 6:1 VSWR', icon: '📉' }
+    ],
+    examples: ['Ham radio', 'Cell towers', 'WiFi routers', 'Radar systems'],
+    companies: ['Rohde & Schwarz', 'Keysight', 'CommScope', 'Qualcomm'],
+    futureImpact: 'Active antenna systems with built-in matching will automatically tune to changing conditions.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💻',
+    title: 'High-Speed PCB Design',
+    short: 'Signal integrity at gigahertz speeds',
+    tagline: 'Where traces become transmission lines',
+    description: 'At GHz frequencies, PCB traces behave as transmission lines. Impedance discontinuities cause reflections that corrupt data. Careful design maintains 50-ohm impedance throughout.',
+    connection: 'Trace width, spacing, and dielectric thickness determine characteristic impedance. Even via transitions and connectors must be impedance-matched.',
+    howItWorks: 'Controlled-impedance traces use precise geometry. Differential pairs maintain impedance while rejecting noise. Termination resistors absorb reflections at endpoints.',
+    stats: [
+      { value: '100ohm', label: 'Differential impedance', icon: '📐' },
+      { value: '10Gbps+', label: 'Modern data rates', icon: '⚡' },
+      { value: '±10%', label: 'Impedance tolerance', icon: '🎯' }
+    ],
+    examples: ['DDR5 memory', 'PCIe 5.0', 'USB4', 'Ethernet'],
+    companies: ['Intel', 'Cadence', 'Altium', 'Ansys'],
+    futureImpact: 'On-die equalization and advanced materials will push data rates beyond 100Gbps.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📺',
+    title: 'Cable TV Systems',
+    short: 'Delivering signals without reflections',
+    tagline: '75 ohms of entertainment',
+    description: 'Coaxial cable systems use 75-ohm impedance throughout. Every splitter, connector, and terminator must match to prevent ghosting and signal loss.',
+    connection: 'Unterminated outlets cause reflections that create ghost images. Proper termination absorbs signals at unused ports.',
+    howItWorks: 'Coax cable maintains 75-ohm characteristic impedance. Splitters divide power while matching impedance. Amplifiers boost signals to overcome splitting losses.',
+    stats: [
+      { value: '75ohm', label: 'Coax impedance', icon: '📊' },
+      { value: '3.5dB', label: '2-way splitter loss', icon: '📉' },
+      { value: '1GHz', label: 'Bandwidth capacity', icon: '📶' }
+    ],
+    examples: ['Cable TV', 'Satellite dishes', 'Security cameras', 'Cable modems'],
+    companies: ['Comcast', 'Charter', 'Commscope', 'Belden'],
+    futureImpact: 'DOCSIS 4.0 will push 10Gbps over existing coax through advanced equalization.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Laboratory Instrumentation',
+    short: 'Precision measurements require matching',
+    tagline: 'Accuracy starts with termination',
+    description: 'Oscilloscopes, signal generators, and network analyzers use 50-ohm systems. Proper termination ensures accurate measurements and prevents artifacts from reflections.',
+    connection: 'A 50-ohm scope input with 50-ohm termination absorbs the entire signal. High-Z inputs cause reflections that distort waveforms.',
+    howItWorks: '50-ohm BNC cables connect instruments. Scope inputs can switch between high-Z and 50-ohm modes. Network analyzers measure S-parameters including reflection.',
+    stats: [
+      { value: '50ohm', label: 'Lab standard impedance', icon: '📏' },
+      { value: '1Mohm', label: 'High-Z input', icon: '🔋' },
+      { value: '0.1dB', label: 'Measurement accuracy', icon: '🎯' }
+    ],
+    examples: ['Oscilloscopes', 'Spectrum analyzers', 'VNAs', 'Signal generators'],
+    companies: ['Keysight', 'Tektronix', 'R&S', 'Keithley'],
+    futureImpact: 'Real-time de-embedding will automatically compensate for fixture effects in measurements.',
+    color: '#F59E0B'
+  }
+];
+
 // Phase order and labels for navigation
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 const phaseLabels: Record<Phase, string> = {

@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '☀️',
+      title: 'PERC Solar Cells',
+      short: 'Mainstream high-efficiency',
+      tagline: 'Fine-line printing for 23%+ efficiency',
+      description: 'PERC (Passivated Emitter Rear Cell) technology dominates the solar market. Advanced screen printing creates ultra-fine silver fingers under 40 micrometers wide, minimizing shading while maintaining low resistance.',
+      connection: 'The metallization tradeoff is critical in PERC cells. Finer fingers reduce shading losses but require precise paste rheology and screen mesh selection to avoid breaks and high resistance.',
+      howItWorks: 'Multi-busbar designs with 9-12 thin busbars replace traditional 4-5 wide busbars. Combined with finer fingers and selective emitter patterns, modern PERC achieves the optimal balance of shading and resistance.',
+      stats: [
+         { value: '23.5%', label: 'Record efficiency', icon: '⚡' },
+         { value: '35μm', label: 'Min finger width', icon: '📏' },
+         { value: '~70%', label: 'Market share', icon: '📊' }
+      ],
+      examples: ['Rooftop solar', 'Utility-scale farms', 'Bifacial modules', 'Building-integrated PV'],
+      companies: ['LONGi', 'JA Solar', 'Trina Solar', 'Canadian Solar'],
+      futureImpact: 'PERC is transitioning to TOPCon and HJT technologies with even finer metallization requirements.',
+      color: '#F59E0B'
+   },
+   {
+      icon: '🔬',
+      title: 'Heterojunction (HJT) Cells',
+      short: 'Low-temperature metallization',
+      tagline: 'Silver paste at room temperature',
+      description: 'HJT cells use thin amorphous silicon layers that cannot survive high temperatures. Special low-temperature silver pastes cure below 200°C, requiring different formulations and printing strategies.',
+      connection: 'The metallization challenge in HJT is achieving low contact resistance without the high-temperature firing that traditional cells use. Paste chemistry and print optimization are critical.',
+      howItWorks: 'Low-temperature pastes use polymer binders instead of glass frit. Curing occurs via UV or mild thermal treatment. Ultra-fine printing with copper plating is emerging to reduce silver usage.',
+      stats: [
+         { value: '26%+', label: 'Lab efficiency', icon: '⚡' },
+         { value: '<200°C', label: 'Process temp', icon: '🌡️' },
+         { value: '0.7%/yr', label: 'Degradation rate', icon: '📉' }
+      ],
+      examples: ['Premium residential', 'High-efficiency modules', 'Bifacial installations', 'Space applications'],
+      companies: ['REC Solar', 'Meyer Burger', 'Panasonic', 'Risen Energy'],
+      futureImpact: 'Copper plating may replace silver entirely in HJT cells, dramatically reducing costs.',
+      color: '#10B981'
+   },
+   {
+      icon: '🏭',
+      title: 'Printed Circuit Boards',
+      short: 'Same tradeoffs, different scale',
+      tagline: 'Trace width optimization',
+      description: 'PCB design involves the same fundamental tradeoff as solar metallization: wider traces have lower resistance but take more space. High-frequency and high-power designs require careful optimization.',
+      connection: 'Just like solar cell fingers, PCB traces must balance current capacity (wider = better) against routing density (narrower = better). The I²R power loss equation applies identically.',
+      howItWorks: 'PCB designers use trace width calculators based on IPC standards. Current capacity scales with cross-sectional area while resistance drops with width. Thermal management often drives trace sizing.',
+      stats: [
+         { value: '3mil', label: 'Min trace width', icon: '📏' },
+         { value: '1oz', label: 'Standard copper', icon: '🔧' },
+         { value: '$50B', label: 'PCB market size', icon: '💰' }
+      ],
+      examples: ['Smartphones', 'Computer motherboards', 'Automotive electronics', 'Medical devices'],
+      companies: ['TTM Technologies', 'Zhen Ding', 'Unimicron', 'AT&S'],
+      futureImpact: 'HDI and substrate-like PCBs push trace widths below 25 micrometers for advanced packaging.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '🔋',
+      title: 'Battery Electrode Coating',
+      short: 'Slurry coating precision',
+      tagline: 'Uniform active material deposition',
+      description: 'Lithium-ion battery electrodes are manufactured using slot-die coating of slurries containing active materials, binders, and conductive additives. Coating uniformity directly impacts cell performance.',
+      connection: 'Like screen printing solar paste, battery coating requires precise rheology control. Too thin reduces capacity; too thick increases resistance and limits rate capability.',
+      howItWorks: 'Slurry flows through a precision slot die onto moving foil. Coating weight is controlled by gap, speed, and slurry properties. Calendering compresses the coating to achieve target density.',
+      stats: [
+         { value: '100μm', label: 'Typical thickness', icon: '📏' },
+         { value: '±2%', label: 'Weight tolerance', icon: '⚖️' },
+         { value: '60m/min', label: 'Line speed', icon: '🏃' }
+      ],
+      examples: ['EV batteries', 'Consumer electronics', 'Grid storage', 'Power tools'],
+      companies: ['CATL', 'LG Energy', 'Panasonic', 'Samsung SDI'],
+      futureImpact: 'Dry electrode coating may replace wet processes, eliminating solvents and reducing energy consumption.',
+      color: '#8B5CF6'
+   }
+];
+
 // Phase type for internal state management
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

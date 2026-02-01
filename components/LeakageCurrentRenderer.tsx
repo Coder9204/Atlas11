@@ -53,6 +53,81 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Smartphone Battery Life',
+    short: 'Why your phone dies overnight',
+    tagline: 'The hidden drain on every device',
+    description: 'Modern smartphone processors contain billions of transistors that leak current even when idle. This leakage can account for 30-40% of total power consumption, significantly impacting battery life. Managing leakage is crucial for all-day battery performance.',
+    connection: 'The exponential relationship between oxide thickness and gate leakage explains why process scaling has stalled at certain nodes. Thinner oxides for faster switching mean exponentially more leakage current.',
+    howItWorks: 'Subthreshold leakage flows when transistors are "off" but not fully blocking. Gate leakage tunnels through thin oxide layers. Power gating cuts supply to unused circuits, eliminating leakage in idle blocks.',
+    stats: [
+      { value: '40%', label: 'Leakage power', icon: '⚡' },
+      { value: '3nm', label: 'Leading process', icon: '📈' },
+      { value: '$500B', label: 'Chip market', icon: '🚀' }
+    ],
+    examples: ['Apple A-series chips', 'Qualcomm Snapdragon', 'Samsung Exynos', 'MediaTek Dimensity'],
+    companies: ['Apple', 'Qualcomm', 'TSMC', 'Samsung Foundry'],
+    futureImpact: 'Gate-all-around transistors and new materials like high-k dielectrics will continue reducing leakage, but managing power at nanoscale remains a fundamental challenge.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💾',
+    title: 'Data Center Efficiency',
+    short: 'Cooling billions of transistors',
+    tagline: 'Leakage heats the cloud',
+    description: 'Data centers consume 1-2% of global electricity, with leakage current contributing significantly to idle power. Servers must be cooled even when not processing data because transistor leakage generates continuous heat.',
+    connection: 'At nanoscale, leakage increases exponentially with temperature, creating a thermal runaway risk. Data center cooling must account for both active switching power and ever-present leakage heat.',
+    howItWorks: 'Modern processors use dynamic voltage and frequency scaling (DVFS) to reduce leakage when loads are low. Power states from C0 to C10 progressively shut down chip regions. Still, idle servers consume 30-60% of peak power.',
+    stats: [
+      { value: '205 TWh', label: 'DC energy/year', icon: '⚡' },
+      { value: '40%', label: 'Idle power', icon: '📈' },
+      { value: '$200B', label: 'DC market', icon: '🚀' }
+    ],
+    examples: ['Google hyperscale facilities', 'AWS data centers', 'Microsoft Azure regions', 'Facebook server farms'],
+    companies: ['Google', 'Meta', 'Microsoft', 'Intel'],
+    futureImpact: 'Near-threshold computing and aggressive power gating will reduce idle power, while immersion cooling handles remaining leakage heat more efficiently.',
+    color: '#10B981'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Electronics',
+    short: 'Reliable operation in extreme temps',
+    tagline: 'From -40°C to +150°C',
+    description: 'Automotive chips must operate reliably from cold starts to engine compartment temperatures. Leakage current increases exponentially with temperature, making high-temperature operation particularly challenging for safety-critical systems.',
+    connection: 'The temperature dependence of leakage current explains why automotive chips use different process nodes than phones. Higher operating temperatures require thicker oxides and higher threshold voltages.',
+    howItWorks: 'Automotive-grade processes use higher threshold voltage transistors that leak less at elevated temperatures. DRAM refresh rates must increase dramatically at high temperatures to compensate for increased cell leakage.',
+    stats: [
+      { value: '150°C', label: 'Max junction', icon: '⚡' },
+      { value: '10x', label: 'Leakage increase/50°C', icon: '📈' },
+      { value: '$50B', label: 'Auto chip market', icon: '🚀' }
+    ],
+    examples: ['Engine control units', 'ADAS processors', 'Battery management', 'Infotainment systems'],
+    companies: ['NXP', 'Infineon', 'Renesas', 'Texas Instruments'],
+    futureImpact: 'Silicon carbide and gallium nitride wide-bandgap semiconductors will enable higher temperature operation with minimal leakage for power electronics.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⌚',
+    title: 'Wearable Devices',
+    short: 'Days of battery from tiny cells',
+    tagline: 'Every microamp matters',
+    description: 'Smartwatches and fitness trackers have tiny batteries but must run for days. Ultra-low-leakage process technologies and aggressive power management make this possible. Leakage budgets are measured in microamps.',
+    connection: 'Wearable designers obsess over subthreshold leakage because it dominates idle power. The exponential relationship between threshold voltage and leakage current defines the design space.',
+    howItWorks: 'Ultra-low-power processes use high-threshold transistors and thicker gate oxides. Circuits spend most time in deep sleep with most blocks powered off. Only a tiny always-on domain runs real-time clock and sensors.',
+    stats: [
+      { value: '300mAh', label: 'Typical battery', icon: '⚡' },
+      { value: '7+ days', label: 'Standby life', icon: '📈' },
+      { value: '<50μA', label: 'Sleep current', icon: '🚀' }
+    ],
+    examples: ['Apple Watch', 'Fitbit trackers', 'Garmin watches', 'Oura Ring'],
+    companies: ['Apple', 'Fitbit', 'Garmin', 'Samsung'],
+    futureImpact: 'Emerging non-volatile memory and near-zero-power sensing will enable truly ambient-powered wearables that harvest energy from body heat or motion.',
+    color: '#8B5CF6'
+  }
+];
+
 const LeakageCurrentRenderer: React.FC<LeakageCurrentRendererProps> = ({
   gamePhase,
   onCorrectAnswer,

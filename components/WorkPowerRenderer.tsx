@@ -6,6 +6,81 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // The Human Engine: Calculate the power you generate climbing stairs
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '🏋️',
+    title: 'Athletic Performance Training',
+    short: 'Measuring human power output',
+    tagline: 'Train smarter with physics',
+    description: 'Athletes and coaches use power meters to measure work rate during training. Cycling power meters, force plates, and metabolic analyzers quantify exactly how much power an athlete generates, enabling precise training optimization.',
+    connection: 'Power = Work/Time = Force × Velocity. By measuring the force applied and speed of movement, trainers calculate instantaneous power output. This directly applies the physics of work and power to human performance.',
+    howItWorks: 'Cycling power meters use strain gauges in the crank or pedals to measure force. Multiplied by angular velocity gives power in watts. Athletes train at specific power zones to improve endurance, threshold, and sprint capacity.',
+    stats: [
+      { value: '2,000W', label: 'Sprint cyclist peak', icon: '🚴' },
+      { value: '400W', label: 'Tour de France avg', icon: '💪' },
+      { value: '$8B', label: 'Sports tech market', icon: '📈' }
+    ],
+    examples: ['Cycling power meters', 'Rowing ergometers', 'Weightlifting analysis', 'Jump power testing'],
+    companies: ['SRM', 'Garmin', 'Stages', 'Wahoo'],
+    futureImpact: 'AI coaches will prescribe real-time power targets during workouts, optimizing training adaptations based on accumulated fatigue and recovery.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🔋',
+    title: 'Electric Motor Efficiency',
+    short: 'Converting electricity to motion',
+    tagline: 'Power in, work out',
+    description: 'Electric motors convert electrical power to mechanical work. Motor efficiency ratings tell you how much input power becomes useful work versus waste heat. EV motors achieve 95%+ efficiency compared to 25-30% for combustion engines.',
+    connection: 'Motor power output (mechanical work per second) divided by electrical power input gives efficiency. Understanding this relationship is crucial for designing efficient electric vehicles, appliances, and industrial equipment.',
+    howItWorks: 'Electric motors create torque through electromagnetic forces. Power output = Torque × Angular velocity. Losses occur in windings (resistive heating), core (hysteresis), and mechanical friction. Engineers minimize each loss type.',
+    stats: [
+      { value: '95%', label: 'EV motor efficiency', icon: '⚡' },
+      { value: '500hp', label: 'Tesla Model S Plaid', icon: '🚗' },
+      { value: '$170B', label: 'Electric motor market', icon: '📈' }
+    ],
+    examples: ['Tesla drive units', 'Industrial pumps', 'HVAC compressors', 'Power tool motors'],
+    companies: ['Tesla', 'Nidec', 'ABB', 'Siemens'],
+    futureImpact: 'Superconducting motors will achieve near-100% efficiency, revolutionizing aviation with practical electric aircraft.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚡',
+    title: 'Power Grid Management',
+    short: 'Balancing electricity supply and demand',
+    tagline: 'Keeping the lights on',
+    description: 'Power grids must instantaneously match generation to consumption. Grid operators monitor power flows in megawatts across thousands of generators and millions of loads, making split-second decisions to maintain stability.',
+    connection: 'Electrical power delivered equals voltage times current. Grid operators track power generation and consumption continuously, understanding that any imbalance causes frequency changes that can cascade into blackouts.',
+    howItWorks: 'Generators convert mechanical work (from turbines) to electrical power. Grid frequency (60Hz in US) indicates supply-demand balance - dropping frequency means more power is being consumed than generated. Operators dispatch additional generation to compensate.',
+    stats: [
+      { value: '4,000GW', label: 'Global capacity', icon: '🌍' },
+      { value: '60Hz', label: 'US grid frequency', icon: '📊' },
+      { value: '$2T', label: 'Annual electricity sales', icon: '💰' }
+    ],
+    examples: ['Peak demand response', 'Renewable integration', 'Emergency load shedding', 'Interstate power trading'],
+    companies: ['National Grid', 'PJM Interconnection', 'ERCOT', 'CAISO'],
+    futureImpact: 'AI-managed grids will predict demand and automatically dispatch renewable generation, storage, and demand response to maintain perfect balance.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏠',
+    title: 'Building Energy Systems',
+    short: 'Designing efficient buildings',
+    tagline: 'Comfort with less power',
+    description: 'HVAC engineers calculate heating and cooling loads in terms of power requirements. Understanding the work needed to move heat against temperature gradients enables efficient building design that minimizes energy consumption.',
+    connection: 'Heat pumps do work to move thermal energy from cold to hot reservoirs. The coefficient of performance (COP) relates heating/cooling power output to electrical power input, directly applying work-energy principles.',
+    howItWorks: 'Heat pumps use compressors to circulate refrigerant, doing work to move heat. A COP of 4 means 4kW of heating from 1kW of electrical input. Building thermal mass stores energy, reducing peak power demand.',
+    stats: [
+      { value: '40%', label: 'Building energy use', icon: '🏢' },
+      { value: 'COP 5', label: 'Modern heat pump', icon: '❄️' },
+      { value: '$300B', label: 'HVAC market size', icon: '📈' }
+    ],
+    examples: ['Heat pump HVAC', 'Solar thermal systems', 'Energy recovery ventilation', 'Smart thermostats'],
+    companies: ['Carrier', 'Trane', 'Daikin', 'Mitsubishi Electric'],
+    futureImpact: 'Net-zero buildings will generate as much power as they consume, using integrated solar and ultra-efficient heat pumps with smart controls.',
+    color: '#10B981'
+  }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════

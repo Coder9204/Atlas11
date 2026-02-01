@@ -2,6 +2,82 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// Real-world applications for memory hierarchy
+const realWorldApps = [
+  {
+    icon: '🎮',
+    title: 'Video Game Optimization',
+    short: 'Maximizing FPS through cache-aware design',
+    tagline: '60 FPS or bust - cache decides',
+    description: 'Game engines obsess over cache efficiency. Data-oriented design restructures game objects to maximize cache hits. The difference between 30 FPS and 144 FPS often comes down to whether game data fits in L2 cache.',
+    connection: 'The game demonstrated how memory access patterns affect performance. Game engines apply these principles - storing position data contiguously, prefetching texture data, and organizing entity components for cache-friendly iteration.',
+    howItWorks: 'Entity-Component-System (ECS) separates game object data by type, not object. Position data for all entities stored contiguously. GPU texture streaming predicts and loads assets before needed. Frame data structures fit in L1 cache.',
+    stats: [
+      { value: '10x', label: 'ECS performance gain', icon: '🚀' },
+      { value: '60Hz', label: 'Target frame rate', icon: '🖥️' },
+      { value: '$200B', label: 'Gaming market', icon: '📈' }
+    ],
+    examples: ['Unity DOTS', 'Unreal Engine', 'Overwatch engine', 'id Tech'],
+    companies: ['Epic Games', 'Unity', 'Blizzard', 'Valve'],
+    futureImpact: 'Ray tracing acceleration will require new cache hierarchies optimized for incoherent memory access patterns.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🧠',
+    title: 'Machine Learning Training',
+    short: 'GPU memory hierarchy for AI',
+    tagline: 'Feeding the neural network beast',
+    description: 'Training large language models requires moving terabytes of data through memory hierarchies. GPUs have their own L1/L2 caches, shared memory, and HBM. Optimizing data layout and batch sizes for this hierarchy determines whether training takes days or months.',
+    connection: 'The principles of locality and cache hierarchy apply directly to GPUs. Matrix operations must tile data to fit in shared memory. Batch sizes are chosen to maximize HBM bandwidth utilization.',
+    howItWorks: 'Model weights stored in HBM (high bandwidth memory). Activations computed in tiles that fit in shared memory. Gradient accumulation reduces memory traffic. Mixed precision halves memory needs. Pipeline parallelism overlaps compute and data movement.',
+    stats: [
+      { value: '3TB/s', label: 'H100 HBM bandwidth', icon: '⚡' },
+      { value: '80GB', label: 'GPU memory capacity', icon: '💾' },
+      { value: '$50B', label: 'AI chip market', icon: '📈' }
+    ],
+    examples: ['GPT-4 training', 'Stable Diffusion', 'AlphaFold', 'Tesla FSD'],
+    companies: ['NVIDIA', 'Google TPU', 'AMD', 'Cerebras'],
+    futureImpact: 'Wafer-scale chips with unified memory hierarchies will enable trillion-parameter models trained on single systems.',
+    color: '#22c55e'
+  },
+  {
+    icon: '💾',
+    title: 'Database Query Optimization',
+    short: 'Cache-conscious data structures',
+    tagline: 'Millisecond queries on petabyte data',
+    description: 'Modern databases achieve sub-millisecond queries on massive datasets through careful memory hierarchy optimization. B-trees sized for cache lines, column stores for vectorized processing, and buffer pools that predict access patterns all exploit the same locality principles.',
+    connection: 'The game showed how sequential access beats random access by 100x. Databases use this knowledge - columnar storage keeps similar data together, indexes are B-trees with cache-line-sized nodes, and query planners prefer sequential scans.',
+    howItWorks: 'Columnar storage groups same-column data contiguously. B-tree nodes sized to match cache lines (64 bytes). Buffer pool keeps hot pages in RAM. Query optimizer estimates I/O cost based on expected cache behavior. Bloom filters avoid disk access.',
+    stats: [
+      { value: '<1ms', label: 'OLTP query latency', icon: '⚡' },
+      { value: '100TB', label: 'Single-node capacity', icon: '💾' },
+      { value: '$80B', label: 'Database market', icon: '📈' }
+    ],
+    examples: ['PostgreSQL', 'ClickHouse', 'Apache Spark', 'Redis'],
+    companies: ['Oracle', 'Snowflake', 'MongoDB', 'Databricks'],
+    futureImpact: 'CXL-attached memory pools will create new cache hierarchy levels, enabling databases with RAM-speed access to petabytes.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '📱',
+    title: 'Mobile App Performance',
+    short: 'Battery life through cache efficiency',
+    tagline: 'Every cache miss costs milliwatts',
+    description: 'Mobile apps must balance performance with battery life. RAM access consumes 100x more energy than cache access. Apps that optimize for cache efficiency not only run faster but drain batteries slower, a critical advantage in the smartphone market.',
+    connection: 'The memory hierarchy game showed latency differences, but energy follows similar ratios. Mobile developers use the same principles - keeping working sets small, prefetching intelligently, and avoiding random access patterns.',
+    howItWorks: 'Object pooling keeps allocations in cache. Image decoding uses tiled processing. Scroll views recycle cell objects. Lazy loading defers memory allocation. Compression trades CPU cycles for memory bandwidth.',
+    stats: [
+      { value: '100x', label: 'RAM vs cache energy', icon: '🔋' },
+      { value: '4GB', label: 'Typical phone RAM', icon: '📱' },
+      { value: '$500B', label: 'Mobile app market', icon: '📈' }
+    ],
+    examples: ['iOS UIKit', 'Android Jetpack', 'React Native', 'Flutter'],
+    companies: ['Apple', 'Google', 'Meta', 'ByteDance'],
+    futureImpact: 'On-device AI inference will require new cache-conscious neural network architectures optimized for mobile memory hierarchies.',
+    color: '#f59e0b'
+  }
+];
+
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

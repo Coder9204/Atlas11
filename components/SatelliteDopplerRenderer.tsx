@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🛰️',
+      title: 'GPS Navigation Systems',
+      short: 'Precise positioning worldwide',
+      tagline: 'Doppler correction for centimeter accuracy',
+      description: 'GPS satellites transmit signals that experience Doppler shifts as they orbit. Receivers must correct for these shifts to calculate precise positions, enabling everything from smartphone navigation to autonomous vehicles.',
+      connection: 'The Doppler effect causes GPS signal frequencies to shift by several kHz as satellites move relative to receivers. Without compensation, position errors would accumulate rapidly.',
+      howItWorks: 'GPS receivers track the carrier frequency of satellite signals and compute the Doppler shift. This reveals the satellite velocity vector, which combined with timing data gives position accuracy within centimeters.',
+      stats: [
+         { value: '31', label: 'Active GPS satellites', icon: '🛰️' },
+         { value: '±5kHz', label: 'Typical Doppler shift', icon: '📊' },
+         { value: '<1m', label: 'Position accuracy', icon: '📍' }
+      ],
+      examples: ['Smartphone navigation', 'Aircraft guidance', 'Precision agriculture', 'Autonomous vehicles'],
+      companies: ['Garmin', 'Trimble', 'u-blox', 'Qualcomm'],
+      futureImpact: 'Next-generation GNSS systems will use multi-frequency Doppler tracking for sub-centimeter positioning accuracy.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '📡',
+      title: 'Starlink Internet',
+      short: 'Global broadband from LEO',
+      tagline: 'Tracking thousands of fast-moving satellites',
+      description: 'SpaceX Starlink satellites orbit at 550km altitude, moving at 7.5 km/s. User terminals must continuously track Doppler-shifted signals from rapidly moving satellites while seamlessly handing off between them.',
+      connection: 'LEO satellites create massive Doppler shifts (±40 kHz at Ku-band) that change rapidly during each pass. Phased array antennas and software-defined radios handle this automatically.',
+      howItWorks: 'Starlink dishes use electronically-steered phased arrays to track satellites. Onboard processors predict and compensate for Doppler shifts in real-time, maintaining stable connections during satellite handoffs.',
+      stats: [
+         { value: '5,000+', label: 'Satellites in orbit', icon: '🛰️' },
+         { value: '7.5 km/s', label: 'Orbital velocity', icon: '⚡' },
+         { value: '~100ms', label: 'Latency to ground', icon: '📶' }
+      ],
+      examples: ['Rural broadband', 'Maritime connectivity', 'Aviation WiFi', 'Disaster response'],
+      companies: ['SpaceX', 'Amazon Kuiper', 'OneWeb', 'Telesat'],
+      futureImpact: 'LEO constellations will provide global 5G-like connectivity, requiring advanced Doppler compensation at massive scale.',
+      color: '#10B981'
+   },
+   {
+      icon: '🚀',
+      title: 'Deep Space Communications',
+      short: 'Talking to distant spacecraft',
+      tagline: 'Extracting signals from interplanetary distances',
+      description: 'NASA Deep Space Network tracks spacecraft billions of kilometers away. Doppler measurements reveal spacecraft velocity with extraordinary precision, enabling navigation to distant planets and moons.',
+      connection: 'At X-band frequencies, even small velocity changes produce measurable Doppler shifts. This allows tracking spacecraft motion to fractions of a millimeter per second.',
+      howItWorks: 'Giant dish antennas receive extremely weak signals from distant spacecraft. Hydrogen maser atomic clocks provide the frequency stability needed to measure Doppler shifts of millihertz.',
+      stats: [
+         { value: '70m', label: 'Largest DSN dishes', icon: '📡' },
+         { value: '0.1 mm/s', label: 'Velocity precision', icon: '📏' },
+         { value: '24B km', label: 'Voyager 1 distance', icon: '🌌' }
+      ],
+      examples: ['Mars rover communications', 'Voyager missions', 'James Webb telescope', 'Asteroid missions'],
+      companies: ['NASA JPL', 'ESA ESTRACK', 'JAXA', 'ISRO'],
+      futureImpact: 'Optical communications will supplement radio, but Doppler tracking remains essential for precision navigation.',
+      color: '#8B5CF6'
+   },
+   {
+      icon: '🌍',
+      title: 'Weather Satellites',
+      short: 'Monitoring Earth from orbit',
+      tagline: 'Continuous global weather observation',
+      description: 'Polar-orbiting weather satellites circle Earth every 100 minutes, requiring ground stations to track rapidly changing Doppler shifts. Geostationary satellites provide fixed coverage without Doppler complications.',
+      connection: 'NOAA polar satellites experience significant Doppler shifts during each pass. Ground stations like HRPT receivers must track these shifts to download weather imagery.',
+      howItWorks: 'Polar satellites transmit at L-band frequencies. As they pass overhead, receivers use phase-locked loops to track the changing frequency and decode high-resolution weather data.',
+      stats: [
+         { value: '14', label: 'Orbits per day (polar)', icon: '🔄' },
+         { value: '850 km', label: 'Typical altitude', icon: '📐' },
+         { value: '±25 kHz', label: 'Doppler range', icon: '📊' }
+      ],
+      examples: ['Hurricane tracking', 'Climate monitoring', 'Search and rescue', 'Agriculture forecasting'],
+      companies: ['NOAA', 'EUMETSAT', 'JMA', 'CMA'],
+      futureImpact: 'Next-generation weather satellites will use higher frequencies with larger Doppler shifts, requiring more sophisticated tracking.',
+      color: '#F59E0B'
+   }
+];
+
 // ============================================================================
 // GAME 200: DOPPLER SHIFT IN SATELLITE COMMUNICATIONS
 // Physics: f_received = f_transmitted * (1 + v_radial/c)

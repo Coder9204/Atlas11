@@ -76,6 +76,85 @@ interface TransferApp {
 }
 
 // -----------------------------------------------------------------------------
+// Real-World Applications Data
+// -----------------------------------------------------------------------------
+
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Automotive Crash Safety',
+    short: 'Crumple zones save lives',
+    tagline: 'Engineering survival through controlled deformation',
+    description: 'Modern vehicles are designed with crumple zones that intentionally deform during collisions. These zones convert kinetic energy into deformation work, extending the collision time and reducing peak forces on occupants. The physics of inelastic collisions is fundamental to understanding why softer, longer impacts are safer than rigid, instantaneous ones.',
+    connection: 'Inelastic collisions convert kinetic energy into other forms like heat and deformation. Crumple zones exploit this by maximizing energy absorption through plastic deformation, reducing the energy transferred to passengers.',
+    howItWorks: 'During impact, the crumple zone undergoes plastic deformation, converting kinetic energy into deformation energy. The impulse J = FΔt remains constant, so by increasing Δt through progressive crushing, the peak force F is dramatically reduced. Modern designs use honeycomb structures and strategic fold patterns.',
+    stats: [
+      { value: '70%', label: 'Force reduction', icon: '⚡' },
+      { value: '$45B', label: 'Safety market', icon: '📈' },
+      { value: '40ms', label: 'Crash duration', icon: '🚀' }
+    ],
+    examples: ['Front crumple zones in passenger vehicles', 'Rear impact absorption structures', 'Side impact door beams', 'Pedestrian-friendly hood designs'],
+    companies: ['Volvo', 'Mercedes-Benz', 'Toyota', 'Tesla'],
+    futureImpact: 'Future vehicles will use adaptive crumple zones with smart materials that can adjust stiffness based on crash severity, occupant position, and collision angle for optimized protection.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏈',
+    title: 'Sports Helmet Design',
+    short: 'Protecting athletes from impacts',
+    tagline: 'Milliseconds matter in brain protection',
+    description: 'Football, hockey, and cycling helmets use multi-layer foam systems designed to undergo inelastic deformation during impacts. The helmet sacrifices itself to absorb energy that would otherwise be transmitted to the skull and brain. Understanding collision physics is essential for designing helmets that prevent concussions.',
+    connection: 'When a helmet impacts a surface, the foam undergoes permanent compression—a classic inelastic collision. The kinetic energy of the head is converted to deformation energy in the foam rather than being transmitted to the brain.',
+    howItWorks: 'Modern helmets use expanded polystyrene (EPS) foam that crushes on impact, paired with a hard outer shell that distributes force. Multi-density foam layers handle different impact speeds. MIPS technology adds rotational impact protection.',
+    stats: [
+      { value: '85%', label: 'Energy absorbed', icon: '⚡' },
+      { value: '$4.2B', label: 'Market size', icon: '📈' },
+      { value: '300g', label: 'Peak reduction', icon: '🚀' }
+    ],
+    examples: ['NFL player helmets with position-specific designs', 'Cycling helmets with MIPS technology', 'Military combat helmets', 'Motorcycle full-face helmets'],
+    companies: ['Riddell', 'VICIS', 'Giro', 'Bell'],
+    futureImpact: 'Next-generation helmets will incorporate sensors for real-time impact monitoring and smart materials that can reset after minor impacts, improving both safety tracking and helmet longevity.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📦',
+    title: 'Package Drop Protection',
+    short: 'Shipping without breaking',
+    tagline: 'From warehouse to doorstep intact',
+    description: 'E-commerce relies on packaging engineered to protect products during shipping. Drop tests simulate inelastic collisions at various heights and orientations. Foam inserts, air pillows, and corrugated structures absorb impact energy through deformation, preventing product damage.',
+    connection: 'When a package hits the ground, the kinetic energy must go somewhere. Protective packaging creates an inelastic collision where energy is absorbed by crushing foam or compressing air cushions rather than damaging the product.',
+    howItWorks: 'Packaging materials are designed with specific crush strengths matched to product fragility. The g-force experienced by the product equals the stopping force divided by mass. By extending the stopping distance through material compression, peak g-forces stay below product damage thresholds.',
+    stats: [
+      { value: '99.5%', label: 'Delivery intact', icon: '⚡' },
+      { value: '$32B', label: 'Packaging market', icon: '📈' },
+      { value: '95%', label: 'Damage reduction', icon: '🚀' }
+    ],
+    examples: ['Amazon frustration-free packaging', 'Apple product boxes with precision inserts', 'Medical device sterile packaging', 'Electronics anti-static protection'],
+    companies: ['Sealed Air', 'Pregis', 'Sonoco', 'DS Smith'],
+    futureImpact: 'Sustainable packaging will use mushroom-based foams and recycled paper honeycomb that provide excellent impact protection while being fully biodegradable, reducing environmental impact.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔧',
+    title: 'Industrial Dampers',
+    short: 'Controlling machine vibrations',
+    tagline: 'Precision through energy dissipation',
+    description: 'Industrial machinery uses dampers to absorb shock and vibration through controlled inelastic deformation. Hydraulic dampers, viscoelastic mounts, and crushable elements protect sensitive equipment and extend machine life by converting kinetic energy into heat.',
+    connection: 'Dampers work by creating intentionally inelastic collisions between moving parts and absorbing elements. The energy of vibration or impact is converted to heat through fluid friction or material deformation.',
+    howItWorks: 'Hydraulic dampers force fluid through small orifices, converting kinetic energy to heat through viscous friction. Viscoelastic materials deform and recover, but with energy loss. For one-time events, crushable tubes provide maximum energy absorption.',
+    stats: [
+      { value: '90%', label: 'Vibration reduction', icon: '⚡' },
+      { value: '$8.5B', label: 'Damper market', icon: '📈' },
+      { value: '10x', label: 'Equipment life', icon: '🚀' }
+    ],
+    examples: ['Building seismic dampers', 'Vehicle suspension systems', 'Precision manufacturing mounts', 'Elevator safety buffers'],
+    companies: ['Parker Hannifin', 'Enidine', 'LORD Corporation', 'ACE Controls'],
+    futureImpact: 'Smart dampers with magnetorheological fluids will adjust stiffness in milliseconds based on sensor input, providing optimal damping for any condition from smooth operation to sudden impacts.',
+    color: '#F59E0B'
+  }
+];
+
+// -----------------------------------------------------------------------------
 // Sound Utility with Web Audio API
 // -----------------------------------------------------------------------------
 

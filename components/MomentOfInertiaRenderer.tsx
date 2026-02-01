@@ -5,6 +5,82 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Covers rotational inertia, I = mr², and conservation of angular momentum
 // ============================================================================
 
+// Real-world applications for moment of inertia
+const realWorldApps = [
+  {
+    icon: '⛸️',
+    title: 'Figure Skating Spins',
+    short: 'Angular momentum conservation on ice',
+    tagline: 'Pulling arms in to spin faster',
+    description: 'Figure skaters demonstrate moment of inertia beautifully. By pulling their arms close to their body, they reduce moment of inertia and spin dramatically faster - the same total angular momentum distributed in a smaller radius means higher angular velocity.',
+    connection: 'The game showed how extending arms slows rotation while tucking them speeds it up. Skaters exploit L = Iω conservation - reducing I forces ω to increase. The physics you simulated is exactly what enables triple axels.',
+    howItWorks: 'Skater starts spin with arms extended (large I, moderate ω). Arms pulled tight to body dramatically reduce I. Angular momentum L = Iω conserved. Smaller I means larger ω. Can increase spin rate 3-4x.',
+    stats: [
+      { value: '6rev/s', label: 'Top spin speed', icon: '🔄' },
+      { value: '4x', label: 'Speed increase tucking in', icon: '⚡' },
+      { value: '$400M', label: 'Figure skating industry', icon: '📈' }
+    ],
+    examples: ['Sit spins', 'Camel spins', 'Jump landings', 'Ice dance'],
+    companies: ['US Figure Skating', 'ISU', 'Jackson Ultima', 'Riedell'],
+    futureImpact: 'Biomechanical sensors will optimize arm positioning for maximum spin speed while maintaining stability.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Flywheels',
+    short: 'Energy storage in rotating mass',
+    tagline: 'Smoothing engine pulses with inertia',
+    description: 'Engine flywheels use high moment of inertia to store rotational energy and smooth power delivery. The same physics applies to regenerative braking systems that store energy in spinning flywheels for later acceleration.',
+    connection: 'The game demonstrated how mass distribution affects rotational inertia. Flywheels concentrate mass at large radius to maximize I = mr², storing more kinetic energy (½Iω²) for a given spin rate.',
+    howItWorks: 'Heavy rim concentrates mass at large radius, maximizing I. Stores rotational kinetic energy E = ½Iω². Releases energy to smooth engine pulses between combustion strokes. Dual-mass flywheels isolate drivetrain vibrations.',
+    stats: [
+      { value: '25kg', label: 'Typical flywheel mass', icon: '⚖️' },
+      { value: '60kJ', label: 'Energy storage', icon: '⚡' },
+      { value: '$5B', label: 'Automotive flywheel market', icon: '📈' }
+    ],
+    examples: ['Engine flywheels', 'KERS systems', 'Flywheel batteries', 'Grid storage'],
+    companies: ['LuK', 'Valeo', 'ZF', 'Beacon Power'],
+    futureImpact: 'Carbon fiber flywheels spinning at 100,000 rpm will compete with batteries for grid-scale energy storage.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🛰️',
+    title: 'Satellite Attitude Control',
+    short: 'Reaction wheels for spacecraft orientation',
+    tagline: 'Spinning to point at stars',
+    description: 'Satellites use reaction wheels - spinning masses whose angular momentum can be traded with the spacecraft body. Speeding up or slowing down wheels causes the satellite to rotate in the opposite direction, enabling precise pointing without fuel.',
+    connection: 'The simulation showed angular momentum conservation when changing arm position. Reaction wheels use the same physics - changing wheel spin rate (Iω) forces the spacecraft body to counter-rotate to conserve total L.',
+    howItWorks: 'Multiple reaction wheels oriented along spacecraft axes. Electric motors speed up or slow down wheels. Change in wheel angular momentum must be balanced by spacecraft body. Result: precise attitude control. Desaturation uses thrusters.',
+    stats: [
+      { value: '0.001°', label: 'Pointing accuracy', icon: '🎯' },
+      { value: '6000rpm', label: 'Wheel speed', icon: '🔄' },
+      { value: '$2B', label: 'Attitude control market', icon: '📈' }
+    ],
+    examples: ['Hubble Space Telescope', 'GPS satellites', 'Earth observation', 'Communication sats'],
+    companies: ['Honeywell', 'Rockwell Collins', 'SSTL', 'Blue Canyon'],
+    futureImpact: 'Control moment gyroscopes will enable rapid repointing for satellite constellations providing real-time Earth imaging.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🏍️',
+    title: 'Motorcycle Dynamics',
+    short: 'Gyroscopic stability from spinning wheels',
+    tagline: 'Why bicycles stay upright',
+    description: 'Motorcycle and bicycle stability relies heavily on the gyroscopic effects of spinning wheels. The angular momentum of the wheels resists changes in orientation, and the moment of inertia distribution affects handling characteristics.',
+    connection: 'The game showed how moment of inertia affects rotational response. Motorcycle wheels have significant angular momentum (Iω), and this gyroscopic effect makes the bike resist tipping - harder to change L means harder to fall over.',
+    howItWorks: 'Front wheel angular momentum creates gyroscopic stability. Steering input precesses wheel, causing lean. Heavier wheels (higher I) increase stability but reduce agility. Racing bikes optimize wheel I for quick direction changes.',
+    stats: [
+      { value: '100rad/s', label: 'Highway wheel speed', icon: '🔄' },
+      { value: '10kg·m²', label: 'Typical wheel I', icon: '⚖️' },
+      { value: '$100B', label: 'Motorcycle market', icon: '📈' }
+    ],
+    examples: ['Sportbike handling', 'Touring stability', 'Trials balance', 'Electric motorcycles'],
+    companies: ['Honda', 'BMW', 'Ducati', 'Harley-Davidson'],
+    futureImpact: 'Active gyroscopic stabilization will enable self-balancing motorcycles that can\'t tip over at stops.',
+    color: '#22c55e'
+  }
+];
+
 // Phase type - string-based for clarity
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

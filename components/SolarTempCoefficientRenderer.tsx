@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🏜️',
+    title: 'Desert Solar Farm Engineering',
+    short: 'Hot climates require careful design to manage efficiency losses',
+    tagline: 'Engineering for extreme heat',
+    description: 'Desert installations like those in Arizona, Saudi Arabia, and the Sahara face panel temperatures exceeding 70°C. Engineers must oversize systems and use advanced cooling strategies to compensate for temperature-related efficiency losses.',
+    connection: 'This simulation shows how hot panels produce less power despite receiving intense sunlight. Desert solar farms can lose 15-25% of potential output to temperature effects, making this a critical design consideration.',
+    howItWorks: 'Hot panels suffer voltage drops of ~0.3%/°C above 25°C STC. Engineers use elevated mounting for air circulation, wider row spacing, and cooling fins. Some advanced systems use water cooling or tracking that reduces time at peak sun angles.',
+    stats: [
+      { value: '20%', label: 'Typical summer efficiency loss', icon: '📉' },
+      { value: '70°C', label: 'Peak desert panel temp', icon: '🌡️' },
+      { value: '180 GW', label: 'Planned MENA solar by 2030', icon: '☀️' }
+    ],
+    examples: ['Noor-Ouarzazate (Morocco)', 'NEOM solar (Saudi Arabia)', 'Australian solar farms', 'Chile Atacama projects'],
+    companies: ['ACWA Power', 'Masdar', 'Enel Green Power', 'First Solar'],
+    futureImpact: 'New panel technologies with better temperature coefficients and passive cooling could unlock the vast solar potential of the world\'s deserts.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '❄️',
+    title: 'Cold Climate Solar Advantages',
+    short: 'Snowy regions can achieve surprising solar performance',
+    tagline: 'Cold panels, hot performance',
+    description: 'Contrary to intuition, cold sunny regions like Colorado mountains or Scandinavian summers can achieve excellent solar yields. Cool panels maintain higher voltage and efficiency, often outperforming warmer locations.',
+    connection: 'The simulation demonstrates that cold panels (below 25°C STC) actually exceed rated efficiency. Combined with clean air, high altitude, and snow reflection, cold climate solar can match or exceed warmer regions.',
+    howItWorks: 'At 0°C, panels gain ~10% voltage compared to 25°C STC. Snow reflection (albedo) can add 20-30% to incident light. Clear mountain air provides higher direct normal irradiance. Net effect often exceeds hot climate production.',
+    stats: [
+      { value: '+10%', label: 'Cold weather efficiency gain', icon: '📈' },
+      { value: '30%', label: 'Boost from snow reflection', icon: '❄️' },
+      { value: '2200', label: 'Peak sun hours in Alaska summer', icon: '🌅' }
+    ],
+    examples: ['Swiss Alpine installations', 'Scandinavian solar parks', 'Canadian solar farms', 'High-altitude research stations'],
+    companies: ['Meyer Burger', 'REC Solar', 'Canadian Solar', 'Norwegian solar firms'],
+    futureImpact: 'As panel costs drop, previously overlooked cold regions are becoming attractive for solar development, especially for summer peak production.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🏢',
+    title: 'Building-Integrated Solar Design',
+    short: 'Architects balance aesthetics with thermal management',
+    tagline: 'Form meets function',
+    description: 'Building-integrated photovoltaics (BIPV) replace traditional building materials with solar elements. Designers must carefully consider ventilation and thermal mass to prevent efficiency losses from building-trapped heat.',
+    connection: 'This simulation shows why ventilation gaps behind panels are critical. Rooftop panels can run 20-30°C hotter than ground-mounted systems if air cannot circulate, significantly impacting annual energy yield.',
+    howItWorks: 'BIPV systems include solar facades, solar roof tiles, and transparent solar glazing. Ventilated cavities allow convective cooling. Some designs use phase-change materials to absorb heat peaks. Optimal designs balance thermal performance with structural integration.',
+    stats: [
+      { value: '$11B', label: 'BIPV market by 2028', icon: '🏗️' },
+      { value: '25°C', label: 'Typical roof temp difference', icon: '🏠' },
+      { value: '40%', label: 'Building energy from facades', icon: '🔋' }
+    ],
+    examples: ['Solar roof tiles', 'Glass curtain walls', 'Solar facades', 'Transparent skylights'],
+    companies: ['Tesla Solar Roof', 'SunPower', 'Onyx Solar', 'Solarcentury'],
+    futureImpact: 'Perovskite tandem cells and improved thermal management will enable net-zero buildings where every surface contributes to energy generation.',
+    color: '#10B981'
+  },
+  {
+    icon: '📊',
+    title: 'Solar Investment Analysis',
+    short: 'Financial models must account for temperature derating',
+    tagline: 'The economics of efficiency',
+    description: 'Solar project investors and banks use sophisticated models to predict energy yield and financial returns. Temperature coefficients are essential inputs that can make or break project economics in different climates.',
+    connection: 'The simulation shows real derating factors used in industry models. A -0.4%/°C power coefficient might reduce annual yield by 5-15% depending on location, directly impacting project revenue and loan repayment.',
+    howItWorks: 'PVsyst and similar software model hourly temperatures from weather data, apply panel temperature coefficients, and calculate derated output. Banks require P90/P99 estimates accounting for year-to-year climate variation.',
+    stats: [
+      { value: '$350B', label: 'Annual solar investment globally', icon: '💰' },
+      { value: '5-15%', label: 'Temperature derating range', icon: '📉' },
+      { value: '25 yrs', label: 'Typical financial model horizon', icon: '📆' }
+    ],
+    examples: ['Utility project finance', 'Solar REITs', 'Community solar funds', 'Residential loan underwriting'],
+    companies: ['Goldman Sachs', 'BlackRock', 'Brookfield', 'Climate finance firms'],
+    futureImpact: 'Better temperature prediction through satellite data and AI will reduce investment risk and enable financing in emerging solar markets.',
+    color: '#8B5CF6'
+  }
+];
+
 interface SolarTempCoefficientRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

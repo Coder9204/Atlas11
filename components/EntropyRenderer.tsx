@@ -66,6 +66,81 @@ interface Particle {
   side: 'left' | 'right' | 'mixed';
 }
 
+const realWorldApps = [
+  {
+    icon: '🌡️',
+    title: 'Heat Engines & Thermodynamics',
+    short: 'Why no engine can be 100% efficient',
+    tagline: 'The Second Law sets the ultimate speed limit',
+    description: 'Every heat engine - from car engines to power plants - must reject some heat to a cold reservoir. This isn\'t a design flaw; it\'s entropy in action. The Carnot efficiency limit shows that even perfect engines can\'t convert all heat to work.',
+    connection: 'Just as gas molecules spontaneously spread to fill a container, heat spontaneously flows from hot to cold. Both processes increase total entropy, and neither can be fully reversed.',
+    howItWorks: 'A heat engine extracts work from the temperature difference between hot and cold reservoirs. The maximum efficiency is 1 - T_cold/T_hot. Real engines achieve 30-40% efficiency; the rest becomes waste heat.',
+    stats: [
+      { value: '40%', label: 'Best coal plant efficiency', icon: '⚡' },
+      { value: '60%', label: 'Combined cycle gas turbine', icon: '🔥' },
+      { value: '25%', label: 'Car engine efficiency', icon: '🚗' }
+    ],
+    examples: ['Automobile engines', 'Steam power plants', 'Jet engines', 'Refrigerators (reverse heat engines)'],
+    companies: ['General Electric', 'Siemens Energy', 'Toyota', 'Rolls-Royce'],
+    futureImpact: 'Thermoelectric generators will harvest waste heat from vehicles and factories, turning entropy\'s tax into useful electricity.',
+    color: '#EF4444'
+  },
+  {
+    icon: '💊',
+    title: 'Drug Dissolution & Mixing',
+    short: 'Why pills dissolve and mixtures form spontaneously',
+    tagline: 'Entropy drives medicine into your bloodstream',
+    description: 'When you take a pill, it dissolves because the drug molecules spreading throughout your stomach increases entropy. This same principle drives all mixing processes - from paint stirring to chemical reactions.',
+    connection: 'The particle simulation you explored shows exactly this: separated molecules spontaneously mix because mixed states have vastly more possible arrangements (microstates).',
+    howItWorks: 'Dissolution is entropically favored when molecules can access more microstates dissolved than solid. Entropy of mixing drives the process; pharmaceutical engineers tune solubility by controlling molecular interactions.',
+    stats: [
+      { value: '$1.5T', label: 'Global pharma market', icon: '💰' },
+      { value: '90%', label: 'Drugs are crystalline solids', icon: '💎' },
+      { value: '40%', label: 'Drug candidates fail due to poor solubility', icon: '📊' }
+    ],
+    examples: ['Extended-release tablets', 'IV drug solutions', 'Oral suspensions', 'Transdermal patches'],
+    companies: ['Pfizer', 'Johnson & Johnson', 'Novartis', 'Merck'],
+    futureImpact: 'Entropy-informed drug design will create "smart" pills that release medication at precisely controlled rates based on body conditions.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🧬',
+    title: 'Protein Folding & Biology',
+    short: 'How life fights entropy locally while increasing it globally',
+    tagline: 'The paradox of biological order',
+    description: 'Living organisms seem to defy entropy by creating highly ordered structures. But life actually accelerates universal entropy increase by consuming free energy and releasing heat. Protein folding itself is an entropy-driven process!',
+    connection: 'When proteins fold, they release bound water molecules. The entropy gain from freeing these water molecules drives folding, showing that order can increase entropy when the whole system is considered.',
+    howItWorks: 'Unfolded proteins have ordered water "cages" around hydrophobic residues. Folding buries these residues, releasing water and increasing its entropy. The hydrophobic effect makes folding thermodynamically favorable.',
+    stats: [
+      { value: '50ms', label: 'Fastest protein folding time', icon: '⚡' },
+      { value: '10^300', label: 'Possible conformations for one protein', icon: '🔢' },
+      { value: '$200M', label: 'AlphaFold development cost', icon: '🧪' }
+    ],
+    examples: ['Hemoglobin oxygen binding', 'Enzyme catalysis', 'Antibody recognition', 'Muscle contraction'],
+    companies: ['DeepMind', 'Genentech', 'Amgen', 'Moderna'],
+    futureImpact: 'Understanding entropy in biology will enable designed proteins that self-assemble into nanomachines for targeted drug delivery.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🌌',
+    title: 'Arrow of Time & Cosmology',
+    short: 'Why time flows in one direction',
+    tagline: 'Entropy defines past from future',
+    description: 'The Second Law of Thermodynamics is the only fundamental physics law that distinguishes past from future. The universe began in a low-entropy Big Bang and has been increasing in entropy ever since - giving time its arrow.',
+    connection: 'Your simulation shows irreversibility: mixed particles never spontaneously separate. This asymmetry - possible in principle but vanishingly improbable - is why eggs break but don\'t unbreak.',
+    howItWorks: 'The early universe was in an extraordinarily low-entropy state (smooth and uniform). As it expands and matter clumps, entropy increases. Stars, planets, and life are all temporary entropy gradients in this cosmic process.',
+    stats: [
+      { value: '10^88', label: 'Entropy of observable universe (in Boltzmann units)', icon: '🌍' },
+      { value: '10^120', label: 'Maximum possible entropy (black hole)', icon: '🕳️' },
+      { value: '13.8B years', label: 'Age of the universe', icon: '⏰' }
+    ],
+    examples: ['Black hole thermodynamics', 'Heat death of universe', 'Cosmological arrow of time', 'Hawking radiation'],
+    companies: ['NASA', 'ESA', 'CERN', 'Caltech'],
+    futureImpact: 'Understanding cosmic entropy may reveal whether our universe is a fluctuation in a larger multiverse, or explain how it began in such a special state.',
+    color: '#3B82F6'
+  }
+];
+
 const EntropyRenderer: React.FC<Props> = ({
   onGameEvent,
   currentPhase,

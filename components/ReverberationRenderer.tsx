@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🎭',
+    title: 'Concert Hall Acoustics',
+    short: 'Architects design room shapes and materials for optimal reverberation time',
+    tagline: 'Engineering the perfect listening experience',
+    description: 'Concert halls are precision-engineered acoustic instruments. The reverberation time (RT60) - how long sound takes to decay 60 dB - determines whether music sounds intimate or grand. Symphony halls target 1.8-2.2 seconds, while opera houses need 1.2-1.5 seconds for vocal clarity. Every surface material and angle is calculated.',
+    connection: 'This game teaches exactly how room volume, surface areas, and absorption coefficients determine RT60 - the core calculation acoustic architects use.',
+    howItWorks: 'Sound bounces between surfaces, losing energy at each reflection based on material absorption. The Sabine equation (RT60 = 0.161*V/A) relates room volume to total absorption. Reflective surfaces (wood, plaster) extend reverb; absorptive materials (carpet, curtains) shorten it.',
+    stats: [
+      { value: '1.8-2.2s', label: 'Ideal symphony RT60', icon: '🎵' },
+      { value: '$500M+', label: 'Major concert hall cost', icon: '💰' },
+      { value: '2000+', label: 'Seats in major venues', icon: '🎫' }
+    ],
+    examples: ['Vienna Musikverein', 'Boston Symphony Hall', 'Berlin Philharmonie', 'Walt Disney Concert Hall'],
+    companies: ['Arup Acoustics', 'Kirkegaard Associates', 'Nagata Acoustics', 'Jaffe Holden'],
+    futureImpact: 'Variable acoustics systems with motorized panels and active sound enhancement will let single halls adapt to different performance types.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎤',
+    title: 'Recording Studio Design',
+    short: 'Studios minimize reverberation for clean recordings that can be processed later',
+    tagline: 'Capturing sound in its purest form',
+    description: 'Recording studios aim for the opposite of concert halls - minimal reverberation (RT60 under 0.3 seconds) so engineers have complete control over the sound. Highly absorptive treatments cover walls, bass traps fill corners, and diffusers break up remaining reflections. Clean recordings allow reverb to be added digitally during mixing.',
+    connection: 'The room acoustics simulated in this game show why recording studios need extensive acoustic treatment to achieve near-zero reverberation.',
+    howItWorks: 'Studios use broadband absorption (fiberglass, rockwool) to kill mid/high frequencies and specialized bass traps for low frequencies that are hardest to absorb. Floating floors and isolated walls prevent external noise. Control rooms often use reflection-free zones around the mixing position.',
+    stats: [
+      { value: '<0.3s', label: 'Target studio RT60', icon: '🎙️' },
+      { value: '0.7-0.9', label: 'Absorption coefficients', icon: '📊' },
+      { value: '$100K+', label: 'Professional treatment cost', icon: '🏗️' }
+    ],
+    examples: ['Abbey Road Studios', 'Electric Lady Studios', 'Capitol Records', 'Sunset Sound'],
+    companies: ['Primacoustic', 'Auralex', 'GIK Acoustics', 'RealTraps'],
+    futureImpact: 'AI denoising and dereverberation algorithms may reduce physical treatment needs, but premium studios will continue prioritizing acoustic perfection.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏛️',
+    title: 'Worship Space Acoustics',
+    short: 'Churches and temples balance speech clarity with musical resonance',
+    tagline: 'Sacred spaces that inspire through sound',
+    description: 'Religious spaces face a unique challenge: long reverberation enhances organ music and choral singing, but obscures spoken sermons. Historic cathedrals with 5+ second RT60 sound majestic but require slow, deliberate speech. Modern worship spaces often use electronic speech reinforcement while preserving natural reverb for music.',
+    connection: 'This game demonstrates how room volume and absorption create vastly different RT60 values - explaining why cathedrals sound so different from modern churches.',
+    howItWorks: 'Large stone cathedrals have massive volume and minimal absorption, yielding RT60 of 4-8 seconds. Modern worship spaces use adjustable absorption (fabric banners, curtains) to balance music and speech. Sound systems with directional speakers deliver clear speech while allowing natural room reverb for music.',
+    stats: [
+      { value: '4-8s', label: 'Cathedral RT60', icon: '⛪' },
+      { value: '1.0-1.5s', label: 'Modern worship target', icon: '🕌' },
+      { value: 'Millions', label: 'Active worship spaces globally', icon: '🌍' }
+    ],
+    examples: ['Notre-Dame Paris', 'St. Peter Basilica', 'Crystal Cathedral', 'Sagrada Familia'],
+    companies: ['Bose Professional', 'Meyer Sound', 'QSC', 'L-Acoustics'],
+    futureImpact: 'Beam-steering loudspeaker arrays will deliver personalized audio zones, solving the speech-vs-music tradeoff without physical changes.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🎮',
+    title: 'Video Game Audio',
+    short: 'Real-time reverb algorithms simulate virtual acoustic environments',
+    tagline: 'Immersive worlds through sound',
+    description: 'Modern video games simulate reverberation in real-time based on virtual room geometry. Walking from a tight corridor into a vast cave, players hear reverb change instantly. This acoustic feedback is crucial for immersion and spatial awareness. Ray-traced audio is emerging alongside ray-traced graphics.',
+    connection: 'The reverb physics in this game - how room size and materials affect sound decay - is exactly what game audio engines simulate in real-time.',
+    howItWorks: 'Game engines calculate early reflections based on nearby virtual surfaces and late reverb from room volume/absorption estimates. Impulse response convolution or algorithmic reverb creates the effect. Modern GPUs can trace audio rays for physically accurate room simulation.',
+    stats: [
+      { value: '10-50ms', label: 'Audio latency budget', icon: '⏱️' },
+      { value: '$180B', label: 'Global games market', icon: '🎮' },
+      { value: '3B+', label: 'Global gamers', icon: '👥' }
+    ],
+    examples: ['Battlefield series', 'The Last of Us', 'Half-Life: Alyx', 'Forza Horizon'],
+    companies: ['Dolby', 'Audiokinetic (Wwise)', 'FMOD', 'Steam Audio'],
+    futureImpact: 'Full ray-traced spatial audio will create perfectly accurate virtual acoustics, making games and VR experiences indistinguishable from reality.',
+    color: '#3B82F6'
+  }
+];
+
 interface ReverberationRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

@@ -87,6 +87,81 @@ const predictions = {
   }
 };
 
+const realWorldApps = [
+  {
+    icon: '🔭',
+    title: 'Telescope Mirrors',
+    short: 'Gathering starlight precisely',
+    tagline: 'Reflecting the cosmos into focus',
+    description: 'Astronomical telescopes use precisely curved mirrors to gather and focus starlight. The law of reflection determines how each point on the mirror directs light to the focal point. Even nanometer-scale surface errors cause image degradation.',
+    connection: 'Every photon striking the mirror obeys the law of reflection—angle in equals angle out relative to the local surface normal. Parabolic shapes ensure all parallel rays converge at one focus.',
+    howItWorks: 'Primary mirrors are ground to parabolic shapes accurate to fractions of a wavelength. Secondary mirrors redirect light to detectors. Adaptive optics use deformable mirrors that adjust shape hundreds of times per second to correct for atmospheric turbulence.',
+    stats: [
+      { value: '10nm', label: 'Surface accuracy', icon: '⚡' },
+      { value: '39m', label: 'ELT diameter', icon: '📈' },
+      { value: '$1.4B', label: 'ELT cost', icon: '🚀' }
+    ],
+    examples: ['James Webb Space Telescope', 'Keck Observatory', 'Extremely Large Telescope', 'Hubble primary mirror'],
+    companies: ['L3Harris', 'Safran Reosc', 'Schott', 'Corning'],
+    futureImpact: 'Next-generation telescopes will use segmented mirrors with hundreds of individually controlled segments, each applying the law of reflection to create continent-sized virtual apertures.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🚗',
+    title: 'Vehicle Mirrors',
+    short: 'Seeing around corners safely',
+    tagline: 'Reflection saves lives on roads',
+    description: 'Car mirrors use the law of reflection to show drivers what is behind and beside them. Convex mirrors on passenger sides provide wider fields of view by reflecting light from a larger area, though objects appear smaller and farther away.',
+    connection: 'Each point on a mirror reflects light according to the law of reflection. Flat mirrors show true size and distance; convex mirrors curve outward, with local normals pointing in different directions to capture a wider view.',
+    howItWorks: 'Driver-side flat mirrors provide accurate distance perception for lane changes. Passenger-side convex mirrors show blind spots but require the "objects closer than they appear" warning. Auto-dimming mirrors reduce glare by electronically adjusting reflectivity.',
+    stats: [
+      { value: '180°', label: 'Convex FOV', icon: '⚡' },
+      { value: '24%', label: 'Crash reduction', icon: '📈' },
+      { value: '$8.2B', label: 'Mirror market', icon: '🚀' }
+    ],
+    examples: ['Side-view mirrors', 'Rear-view auto-dimming', 'Truck convex mirrors', 'Motorcycle bar-end mirrors'],
+    companies: ['Gentex', 'Magna', 'Ficosa', 'Murakami'],
+    futureImpact: 'Camera-based mirror replacement systems will eliminate blind spots entirely while maintaining the intuitive reflected-image experience drivers expect.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '☀️',
+    title: 'Solar Concentrators',
+    short: 'Focusing sunlight for power',
+    tagline: 'Mirrors that harvest the sun',
+    description: 'Concentrated solar power plants use thousands of mirrors to focus sunlight onto receivers. Each heliostat applies the law of reflection to direct its beam precisely. Tower plants can reach temperatures above 1000°C for efficient thermal generation.',
+    connection: 'The law of reflection determines exactly how each mirror must be angled to reflect sunlight toward the central tower. Two-axis tracking adjusts angles throughout the day as the sun moves across the sky.',
+    howItWorks: 'Heliostats are flat or slightly curved mirrors mounted on two-axis trackers. Control systems calculate required angles using solar position and the law of reflection. Concentrated light heats molten salt that stores energy for 24-hour generation.',
+    stats: [
+      { value: '1000°C', label: 'Receiver temp', icon: '⚡' },
+      { value: '10,000+', label: 'Heliostats', icon: '📈' },
+      { value: '$6.2B', label: 'CSP market', icon: '🚀' }
+    ],
+    examples: ['Ivanpah Solar Plant', 'Crescent Dunes Tower', 'Noor Ouarzazate', 'Gemasolar'],
+    companies: ['BrightSource', 'SolarReserve', 'Abengoa', 'ACWA Power'],
+    futureImpact: 'Falling photovoltaic costs challenge CSP, but its thermal storage capability makes it valuable for providing dispatchable solar power after sunset.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🌙',
+    title: 'Lunar Laser Ranging',
+    short: 'Measuring Earth-Moon distance',
+    tagline: 'Corner reflectors on the Moon',
+    description: 'Apollo astronauts left retroreflector arrays on the Moon. These corner-cube reflectors use the law of reflection to send laser beams straight back to Earth. Scientists measure the round-trip time to track Earth-Moon distance to millimeter precision.',
+    connection: 'Corner reflectors work because of the law of reflection applied twice (or three times in 3D). Light entering any angle exits parallel to its entry direction—directly back toward the source.',
+    howItWorks: 'Ground stations fire short laser pulses at the Moon. Retroreflectors return photons along the same path. Timing the round trip gives distance to ±1mm. Data reveals lunar orbit details, tests general relativity, and measures continental drift.',
+    stats: [
+      { value: '1mm', label: 'Distance precision', icon: '⚡' },
+      { value: '2.5s', label: 'Round trip time', icon: '📈' },
+      { value: '384,400km', label: 'Mean distance', icon: '🚀' }
+    ],
+    examples: ['Apollo 11 retroreflector', 'Apache Point Observatory', 'Grasse laser station', 'LURE facility'],
+    companies: ['NASA', 'McDonald Observatory', 'OCA France', 'JPL'],
+    futureImpact: 'New retroreflectors on future lunar missions will enable even more precise measurements, improving tests of gravitational physics and lunar interior models.',
+    color: '#10B981'
+  }
+];
+
 const realWorldApplications = [
   {
     id: 'mirrors',

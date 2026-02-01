@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Earthquake Early Warning',
+    short: 'Smartphone networks detect quakes in seconds',
+    tagline: 'Crowdsourced seismology saves lives',
+    description: 'Apps like MyShake and ShakeAlert use millions of smartphone accelerometers as a distributed seismic network. When multiple phones detect shaking simultaneously, alerts go out before damaging waves arrive.',
+    connection: 'MEMS accelerometers in phones can detect P-waves, which travel faster than destructive S-waves and surface waves, providing crucial seconds of warning.',
+    howItWorks: 'Machine learning distinguishes earthquake signatures from everyday phone movement. When a quake is confirmed, alerts propagate to users in the affected area within seconds.',
+    stats: [
+      { value: '10-60', label: 'seconds warning', icon: '⏱️' },
+      { value: '3M+', label: 'MyShake users', icon: '📱' },
+      { value: '99%', label: 'detection accuracy', icon: '✅' }
+    ],
+    examples: ['California ShakeAlert', 'Japan JMA warnings', 'Mexico SASMEX', 'MyShake app'],
+    companies: ['UC Berkeley', 'USGS', 'Google', 'Apple'],
+    futureImpact: 'Global smartphone coverage will enable earthquake early warning everywhere, not just in regions with expensive seismometer networks.',
+    color: '#EF4444'
+  },
+  {
+    icon: '👟',
+    title: 'Fitness Tracking',
+    short: 'Step counting through accelerometer patterns',
+    tagline: 'Every step is physics in action',
+    description: 'Fitness trackers and smartphones count steps by detecting the characteristic acceleration pattern of walking. The accelerometer senses the impact of each footfall and periodic motion of gait.',
+    connection: 'Walking produces a distinctive vertical acceleration signature: a sharp spike on heel strike followed by oscillation. Algorithms detect these patterns to count steps accurately.',
+    howItWorks: 'Signal processing filters out noise and detects peaks in acceleration data. Machine learning distinguishes walking from running, climbing stairs, and other activities.',
+    stats: [
+      { value: '97%', label: 'step accuracy', icon: '✅' },
+      { value: '500M+', label: 'fitness devices', icon: '⌚' },
+      { value: '$36B', label: 'wearables market', icon: '📈' }
+    ],
+    examples: ['Apple Watch Activity', 'Fitbit step tracking', 'Google Fit', 'Samsung Health'],
+    companies: ['Apple', 'Fitbit', 'Garmin', 'Samsung'],
+    futureImpact: 'Multi-sensor fusion will enable accurate activity recognition for any movement pattern, from swimming to weightlifting.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🚗',
+    title: 'Vehicle Crash Detection',
+    short: 'Sudden deceleration triggers emergency response',
+    tagline: 'Accelerometers that save lives',
+    description: 'Modern smartphones and vehicles detect crashes using accelerometers. A sudden high-G deceleration event triggers automatic calls to emergency services with GPS location.',
+    connection: 'Crashes produce distinctive acceleration signatures: multi-G deceleration over tens of milliseconds, often with rapid direction changes. Algorithms distinguish crashes from drops.',
+    howItWorks: 'Sensors sample at 100+ Hz to capture impact dynamics. Multiple accelerometer axes detect frontal, side, and rollover impacts. Confirmation prompts prevent false alerts.',
+    stats: [
+      { value: '100G', label: 'crash detection range', icon: '💥' },
+      { value: '30', label: 'seconds to call 911', icon: '⏱️' },
+      { value: '10K+', label: 'lives saved yearly', icon: '❤️' }
+    ],
+    examples: ['iPhone Crash Detection', 'Pixel emergency SOS', 'OnStar response', 'GM crash sensors'],
+    companies: ['Apple', 'Google', 'GM OnStar', 'BMW'],
+    futureImpact: 'Autonomous vehicles will use accelerometer data for real-time safety systems and post-crash automated response.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🎮',
+    title: 'Motion Gaming',
+    short: 'Controllers sense every tilt and shake',
+    tagline: 'Physics becomes gameplay',
+    description: 'Game controllers from the Nintendo Wii to modern VR controllers use accelerometers to translate physical motion into game input. Players swing, tilt, and gesture to control gameplay.',
+    connection: 'Accelerometers measure both gravitational orientation and dynamic motion. Combined with gyroscopes, they provide complete 6-DOF motion tracking for immersive gaming.',
+    howItWorks: 'Sensor fusion combines accelerometer and gyroscope data. Dead reckoning tracks motion, while gravity provides absolute orientation reference. Drift is corrected continuously.',
+    stats: [
+      { value: '1000', label: 'Hz sampling rate', icon: '⚡' },
+      { value: '6', label: 'degrees of freedom', icon: '🎯' },
+      { value: '$180B', label: 'gaming market', icon: '📈' }
+    ],
+    examples: ['Nintendo Switch Joy-Con', 'PlayStation DualSense', 'Oculus Quest 2', 'Mobile gaming'],
+    companies: ['Nintendo', 'Sony', 'Meta', 'Valve'],
+    futureImpact: 'Full-body motion tracking and haptic feedback will create increasingly immersive gaming experiences.',
+    color: '#8B5CF6'
+  }
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────

@@ -46,6 +46,81 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
   } catch { /* Audio not available */ }
 };
 
+const realWorldApps = [
+  {
+    icon: '📡',
+    title: 'Satellite Communications',
+    short: 'Satellite signal optimization',
+    tagline: 'Maximizing signal through polarization alignment',
+    description: 'Satellite dishes must precisely align their polarization with the satellite signal. Incorrect polarization can reduce signal strength by 20-30 dB, making the difference between perfect reception and no signal.',
+    connection: 'Just like our simulation shows, when antenna and wave polarizations are misaligned, signal strength follows Malus\'s Law (cos²θ). At 90° misalignment, theoretically zero signal gets through.',
+    howItWorks: 'Satellites transmit in either linear (horizontal/vertical) or circular polarization. The receiving antenna must match. Dual-polarization allows frequency reuse, doubling capacity on the same frequencies.',
+    stats: [
+      { value: '30dB', label: 'Cross-pol isolation', icon: '📊' },
+      { value: '2x', label: 'Capacity with dual-pol', icon: '📈' },
+      { value: '99.9%', label: 'Alignment precision', icon: '🎯' }
+    ],
+    examples: ['DirecTV dishes', 'Starlink terminals', 'GPS receivers', 'Weather satellites'],
+    companies: ['SpaceX', 'Hughes', 'Viasat', 'SES'],
+    futureImpact: 'Next-gen satellites use dynamic polarization to reduce interference and increase capacity. Phased arrays can electronically adjust polarization in milliseconds.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📱',
+    title: 'Smartphone Antenna Design',
+    short: 'Mobile signal reliability',
+    tagline: 'Why phone orientation affects signal',
+    description: 'Smartphone antennas are designed for multiple polarizations because users hold phones at random angles. MIMO technology uses polarization diversity to improve reliability.',
+    connection: 'When you rotate your phone, you\'re changing the antenna polarization relative to the cell tower. Multiple antennas with different polarizations ensure at least one always has good signal.',
+    howItWorks: 'Modern phones have 4+ antennas with different polarizations. MIMO combines signals from all antennas, using the polarization differences to separate data streams and improve throughput.',
+    stats: [
+      { value: '4x', label: 'MIMO improvement', icon: '⚡' },
+      { value: '4+', label: 'Antennas per phone', icon: '📡' },
+      { value: '5G', label: 'Massive MIMO', icon: '📶' }
+    ],
+    examples: ['5G smartphones', 'WiFi routers', 'Bluetooth devices', 'Smart watches'],
+    companies: ['Apple', 'Qualcomm', 'Samsung', 'MediaTek'],
+    futureImpact: '6G will use even more polarization states and orbital angular momentum to achieve terabit wireless speeds in dense urban environments.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Polarized Microscopy',
+    short: 'Crystal and fiber analysis',
+    tagline: 'Seeing structures through polarization',
+    description: 'Polarized light microscopy reveals internal structures in crystals, minerals, and biological samples that are invisible in normal light. It\'s essential in geology, materials science, and pathology.',
+    connection: 'Materials with ordered molecular structures rotate polarization. By placing samples between crossed polarizers, we can see this rotation as brilliant colors that reveal crystal structure.',
+    howItWorks: 'Light passes through a polarizer, then the sample (which may rotate polarization), then an analyzer (second polarizer). Only light whose polarization was rotated by the sample passes through.',
+    stats: [
+      { value: '0.1°', label: 'Rotation detection', icon: '🎯' },
+      { value: '100x', label: 'Structure visibility', icon: '👁️' },
+      { value: '1850', label: 'Year invented', icon: '📅' }
+    ],
+    examples: ['Mineral identification', 'Asbestos detection', 'Kidney stone analysis', 'Polymer characterization'],
+    companies: ['Zeiss', 'Leica', 'Nikon', 'Olympus'],
+    futureImpact: 'AI-enhanced polarized microscopy can automatically identify minerals and pathological crystals, speeding diagnosis and material analysis.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎬',
+    title: '3D Cinema Technology',
+    short: 'Immersive 3D movies',
+    tagline: 'Separate images through polarization',
+    description: 'Modern 3D movies use polarization to deliver different images to each eye. RealD 3D and IMAX 3D both rely on circular polarization for a comfortable 3D experience.',
+    connection: 'Two projectors (or one alternating projector) send left and right eye images with opposite circular polarizations. Glasses with matching polarized lenses let each eye see only its intended image.',
+    howItWorks: 'RealD uses circular polarization (clockwise for one eye, counterclockwise for the other). The silver screen preserves polarization. Tilting your head doesn\'t break the 3D effect like linear polarization would.',
+    stats: [
+      { value: '144Hz', label: 'Frame rate (per eye)', icon: '🎥' },
+      { value: '35%', label: 'Light efficiency', icon: '💡' },
+      { value: '$200B', label: 'Global cinema market', icon: '💰' }
+    ],
+    examples: ['RealD 3D', 'IMAX 3D', 'Dolby 3D', 'Home 3D TVs'],
+    companies: ['RealD', 'IMAX', 'Dolby', 'Sony'],
+    futureImpact: 'Glasses-free 3D displays using lenticular lenses and light field technology may eventually replace polarization-based 3D, but polarization remains dominant for large screens.',
+    color: '#EF4444'
+  }
+];
+
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================

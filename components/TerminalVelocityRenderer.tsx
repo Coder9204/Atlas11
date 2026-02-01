@@ -7,6 +7,81 @@ interface TerminalVelocityRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🪂',
+    title: 'Parachute Design',
+    short: 'Engineering safe descent rates',
+    tagline: 'Slowing down to save lives',
+    description: 'Parachutes are precisely engineered to create enough drag to reduce terminal velocity to safe landing speeds. Canopy size, shape, and porosity all determine the final descent rate.',
+    connection: 'Parachute design directly applies terminal velocity equations. The canopy area and drag coefficient must reduce terminal velocity from 200+ km/h to about 20 km/h for safe landing.',
+    howItWorks: 'Ram-air parachutes inflate to create airfoil shapes with high drag and some lift. Slider mechanisms control opening shock. Multiple stages can reduce velocity gradually.',
+    stats: [
+      { value: '5m/s', label: 'Safe landing speed', icon: '🎯' },
+      { value: '28m²', label: 'Typical main canopy', icon: '📐' },
+      { value: '1.4', label: 'Parachute Cd', icon: '💨' }
+    ],
+    examples: ['Military airborne', 'Recreational skydiving', 'Cargo drops', 'Emergency ejection'],
+    companies: ['Performance Designs', 'PD', 'Aerodyne', 'UPT'],
+    futureImpact: 'Autonomous precision-guided parachutes will enable accurate delivery of supplies anywhere on Earth, including disaster relief to inaccessible areas.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🚀',
+    title: 'Spacecraft Reentry',
+    short: 'Surviving atmospheric braking',
+    tagline: 'From orbital speed to touchdown',
+    description: 'Spacecraft returning from orbit use atmospheric drag to slow from 28,000 km/h to landing speed. Heat shields, parachutes, and retrorockets work together to manage the deceleration.',
+    connection: 'Reentry vehicles intentionally maximize drag to slow down. Blunt body shapes create high drag coefficients. The balance between drag heating and deceleration determines safe reentry trajectories.',
+    howItWorks: 'Blunt heat shields create a strong bow shock that keeps hot gases away. Peak heating occurs before peak deceleration. Parachutes deploy once velocity and density allow textile survival.',
+    stats: [
+      { value: '28000km/h', label: 'Orbital velocity', icon: '🌍' },
+      { value: '4G', label: 'Peak deceleration', icon: '⚡' },
+      { value: '1650°C', label: 'Peak heating', icon: '🔥' }
+    ],
+    examples: ['SpaceX Dragon', 'Soyuz capsule', 'Space Shuttle', 'Mars landers'],
+    companies: ['SpaceX', 'Roscosmos', 'NASA', 'Blue Origin'],
+    futureImpact: 'Inflatable heat shields and precision-guided parafoils will enable landing anywhere on Earth or Mars with pinpoint accuracy.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🌧️',
+    title: 'Raindrop Physics',
+    short: 'Understanding precipitation dynamics',
+    tagline: 'Why big drops fall faster',
+    description: 'Raindrops of different sizes reach different terminal velocities, affecting weather radar interpretation, soil erosion, and agricultural planning. Large drops fall faster but also break up.',
+    connection: 'Raindrop terminal velocity depends on the balance between gravity (proportional to volume) and drag (proportional to area). Larger drops fall faster until they become unstable.',
+    howItWorks: 'Small drops (<1mm) are spherical with low Reynolds number drag. Larger drops flatten and oscillate. Above 5mm, drops break up due to aerodynamic pressure. Terminal velocity ranges from 2-9 m/s.',
+    stats: [
+      { value: '9m/s', label: 'Max raindrop speed', icon: '💧' },
+      { value: '5mm', label: 'Max stable drop size', icon: '📏' },
+      { value: '0.45', label: 'Drop drag coefficient', icon: '💨' }
+    ],
+    examples: ['Weather radar', 'Soil erosion studies', 'Aircraft icing', 'Agricultural spraying'],
+    companies: ['NOAA', 'Weather companies', 'Agricultural tech', 'Aviation safety'],
+    futureImpact: 'Better raindrop physics models will improve weather forecasting and enable precision agriculture with optimized irrigation and pesticide application.',
+    color: '#06b6d4'
+  },
+  {
+    icon: '⚽',
+    title: 'Sports Aerodynamics',
+    short: 'Understanding ball flight through air',
+    tagline: 'When drag determines the game',
+    description: 'Every sport with a ball involves terminal velocity physics. Golf balls, baseballs, and soccer balls are designed with specific dimple patterns and surface textures to optimize flight.',
+    connection: 'Ball sports exploit the drag equation. Golf ball dimples reduce drag by triggering turbulent boundary layers. Spin affects drag and creates lift through the Magnus effect.',
+    howItWorks: 'Smooth balls transition to turbulent flow late, creating high drag. Dimples trip the boundary layer early, reducing wake size and drag. Seams on baseballs allow pitchers to manipulate airflow.',
+    stats: [
+      { value: '50%', label: 'Drag reduction from dimples', icon: '⛳' },
+      { value: '160km/h', label: 'Fastest baseball pitch', icon: '⚾' },
+      { value: '500', label: 'Golf ball dimples', icon: '🔘' }
+    ],
+    examples: ['Golf ball design', 'Baseball pitching', 'Soccer free kicks', 'Tennis serves'],
+    companies: ['Titleist', 'Callaway', 'Rawlings', 'Wilson'],
+    futureImpact: 'Smart sports equipment with active surface control will adapt to conditions in real-time, optimizing performance for each shot or throw.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

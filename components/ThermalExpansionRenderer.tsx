@@ -116,6 +116,81 @@ export default function ThermalExpansionRenderer({
     { name: 'Concrete', alpha: 12.0, color: '#9ca3af', description: 'Similar to steel (reinforcement compatible)' }
   ];
 
+const realWorldApps = [
+  {
+    icon: '🌉',
+    title: 'Bridge Expansion Joints',
+    short: 'Accommodating thermal movement in massive structures',
+    tagline: 'Bridges that breathe with the seasons',
+    description: 'Large bridges can expand several feet between winter and summer. Expansion joints allow controlled movement, preventing the enormous forces that would crack concrete and buckle steel.',
+    connection: 'The formula L = L0 * alpha * delta T explains why the Golden Gate Bridge is 7 inches longer in summer than winter.',
+    howItWorks: 'Finger joints, sliding plates, and modular systems create gaps that close in summer and open in winter. Bearings allow bridge sections to slide freely while supporting massive loads.',
+    stats: [
+      { value: '18cm', label: 'Golden Gate expansion', icon: '🌉' },
+      { value: '12ppm/C', label: 'Steel expansion rate', icon: '📏' },
+      { value: '50C', label: 'Typical temp range', icon: '🌡️' }
+    ],
+    examples: ['Golden Gate Bridge', 'Sydney Harbour Bridge', 'Highway overpasses', 'Railway bridges'],
+    companies: ['Mageba', 'Freyssinet', 'D.S. Brown', 'Watson Bowman'],
+    futureImpact: 'Shape-memory alloy joints will self-adjust to temperature changes, eliminating maintenance needs.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '✈️',
+    title: 'Aircraft Design',
+    short: 'Managing thermal stress at Mach 2+',
+    tagline: 'When metal meets friction heat',
+    description: 'Supersonic aircraft skins heat to over 300C from air friction. The Concorde grew 10 inches longer in flight. Engineers must account for dramatic expansion while maintaining structural integrity.',
+    connection: 'Different materials expanding at different rates create thermal stress. Aircraft use matching alloys and flexible joints to prevent cracking.',
+    howItWorks: 'Titanium frames with aluminum skins use similar expansion coefficients. Overlapping panels slide past each other. Fuel tanks use the thermal expansion for cabin pressurization.',
+    stats: [
+      { value: '300C', label: 'Supersonic skin temp', icon: '🔥' },
+      { value: '25cm', label: 'Concorde expansion', icon: '✈️' },
+      { value: '23ppm/C', label: 'Aluminum expansion', icon: '📐' }
+    ],
+    examples: ['Concorde', 'SR-71 Blackbird', 'Space Shuttle', 'Hypersonic vehicles'],
+    companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'Northrop Grumman'],
+    futureImpact: 'Carbon-carbon composites with near-zero expansion will enable sustained Mach 5+ flight.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🔬',
+    title: 'Precision Instruments',
+    short: 'Defeating expansion for atomic-scale accuracy',
+    tagline: 'Where nanometers matter',
+    description: 'Scientific instruments like interferometers and electron microscopes use ultra-low expansion materials like Invar and Zerodur. A temperature change of 0.1C could ruin measurements.',
+    connection: 'Invar\'s coefficient is just 1.2 ppm/C - 20 times lower than steel - because its magnetic properties counteract thermal expansion.',
+    howItWorks: 'Low-expansion alloys, temperature-controlled enclosures, and symmetric designs minimize dimensional changes. Critical components use materials that expand in opposite directions to cancel out.',
+    stats: [
+      { value: '1.2ppm/C', label: 'Invar expansion', icon: '🎯' },
+      { value: '0ppm/C', label: 'Zerodur at 20C', icon: '🔬' },
+      { value: 'nm', label: 'Measurement precision', icon: '📏' }
+    ],
+    examples: ['LIGO gravitational wave detector', 'Hubble mirrors', 'Semiconductor steppers', 'Atomic clocks'],
+    companies: ['Schott', 'Corning', 'ASML', 'Carl Zeiss'],
+    futureImpact: 'Meta-materials with negative thermal expansion will create truly zero-expansion structures.',
+    color: '#10B981'
+  },
+  {
+    icon: '🚂',
+    title: 'Railway Engineering',
+    short: 'Letting steel rails grow with the sun',
+    tagline: 'Miles of metal in motion',
+    description: 'Rails expand 12mm per 100m for every 10C rise. Without expansion gaps, summer heat would buckle tracks. Modern continuously welded rail is pre-stressed to handle temperature extremes.',
+    connection: 'Rail buckling occurs when thermal stress exceeds the lateral resistance of the track bed - a dramatic demonstration of thermal expansion forces.',
+    howItWorks: 'Rails are welded at a neutral temperature (around 25C) while stretched. They\'re in tension when cold and compression when hot, but never buckle because stresses are controlled.',
+    stats: [
+      { value: '12mm/100m', label: 'Expansion per 10C', icon: '📏' },
+      { value: '1000km', label: 'Continuous rail lengths', icon: '🛤️' },
+      { value: '±30C', label: 'Design temp range', icon: '🌡️' }
+    ],
+    examples: ['High-speed rail', 'Freight railways', 'Metro systems', 'Maglev tracks'],
+    companies: ['Network Rail', 'SNCF', 'Deutsche Bahn', 'JR Central'],
+    futureImpact: 'Active rail tensioning systems will automatically adjust stress based on real-time temperature monitoring.',
+    color: '#F59E0B'
+  }
+];
+
   // Initialize audio context
   useEffect(() => {
     if (typeof window !== 'undefined') {

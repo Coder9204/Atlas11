@@ -46,6 +46,81 @@ interface SpecklePoint {
   intensity: number;
 }
 
+const realWorldApps = [
+  {
+    icon: '❤️',
+    title: 'Blood Flow Imaging',
+    short: 'Non-invasive perfusion measurement',
+    tagline: 'Seeing circulation in real-time',
+    description: 'Laser speckle contrast imaging (LSCI) measures blood flow in tissue without contact. Moving blood cells cause speckle pattern fluctuations that blur the image. By analyzing this blur, doctors can map blood perfusion in skin, brain, and retina.',
+    connection: 'When laser light scatters from moving blood cells, the speckle pattern changes over time. Faster flow causes more blur in a camera exposure. This dynamic speckle directly reveals the speed of blood flow.',
+    howItWorks: 'A laser illuminates tissue, and a camera captures the speckle pattern. Static tissue shows high speckle contrast; flowing blood shows low contrast due to pattern averaging during exposure. Software converts contrast maps to flow velocity.',
+    stats: [
+      { value: '0.1mm', label: 'Resolution', icon: '⚡' },
+      { value: '25 fps', label: 'Real-time rate', icon: '📈' },
+      { value: '$4.2B', label: 'Vascular market', icon: '🚀' }
+    ],
+    examples: ['Surgical perfusion monitoring', 'Burn depth assessment', 'Diabetic foot screening', 'Brain blood flow mapping'],
+    companies: ['Perimed', 'Moor Instruments', 'Aimago', 'Stryker'],
+    futureImpact: 'Smartphone-based speckle imaging will enable home monitoring of circulation for diabetics and wound healing assessment, bringing vascular diagnostics to point-of-care.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🔬',
+    title: 'Surface Roughness Measurement',
+    short: 'Quality control at nanoscale',
+    tagline: 'Speckle reveals what eyes cannot see',
+    description: 'Speckle patterns encode surface texture information at scales smaller than visible light wavelength. By analyzing speckle statistics, manufacturers measure surface roughness without contact, enabling 100% inspection at production speeds.',
+    connection: 'Rougher surfaces create larger path length differences between scattered wavelets, producing speckle with different statistical properties. The contrast and correlation of speckle quantify surface texture.',
+    howItWorks: 'Laser light reflects from a surface, creating a speckle pattern. Smooth surfaces produce low-contrast speckle; rough surfaces produce high contrast. Speckle correlation length indicates feature size. Angularly-resolved measurements reveal roughness spectrum.',
+    stats: [
+      { value: '1nm', label: 'Sensitivity', icon: '⚡' },
+      { value: '100%', label: 'Inspection rate', icon: '📈' },
+      { value: '$800M', label: 'Metrology market', icon: '🚀' }
+    ],
+    examples: ['Semiconductor wafer inspection', 'Optical lens quality', 'Paper smoothness testing', 'Metal finishing control'],
+    companies: ['KLA', 'Zygo', 'Bruker', 'Keyence'],
+    futureImpact: 'AI analysis of speckle patterns will enable real-time classification of surface defects and prediction of functional performance from texture measurements.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏗️',
+    title: 'Structural Strain Monitoring',
+    short: 'Detecting microscopic deformation',
+    tagline: 'Watching buildings breathe',
+    description: 'Speckle pattern interferometry measures sub-wavelength displacements and strains in structures. As a surface deforms, its speckle pattern shifts. Comparing patterns before and after loading reveals strain fields across entire surfaces.',
+    connection: 'Surface displacement changes optical path lengths, shifting the speckle pattern. By correlating speckle images, engineers measure movements smaller than 1/100th of a light wavelength.',
+    howItWorks: 'A reference speckle image is captured. After loading, a new image is acquired. Digital correlation reveals displacement vectors at each point. Multiple images track strain evolution over time.',
+    stats: [
+      { value: '10nm', label: 'Displacement resolution', icon: '⚡' },
+      { value: 'Full-field', label: 'Measurement type', icon: '📈' },
+      { value: '$2.1B', label: 'NDT market', icon: '🚀' }
+    ],
+    examples: ['Aircraft fatigue testing', 'Bridge load monitoring', 'Composite damage detection', 'Weld quality inspection'],
+    companies: ['Dantec Dynamics', 'LaVision', 'GOM', 'Correlated Solutions'],
+    futureImpact: 'Embedded fiber sensors combined with speckle imaging will provide comprehensive structural health monitoring for smart infrastructure.',
+    color: '#10B981'
+  },
+  {
+    icon: '🎯',
+    title: 'Laser Display Correction',
+    short: 'Eliminating the grain',
+    tagline: 'Making laser projectors beautiful',
+    description: 'Laser projectors create vivid colors but suffer from visible speckle that degrades image quality. Understanding speckle formation allows engineers to design despeckle systems using diffusers, screen engineering, and temporal averaging.',
+    connection: 'The grainy appearance of laser displays is the same coherent interference we observe in our simulation. Reducing coherence or randomizing the speckle pattern faster than the eye integrates eliminates visible grain.',
+    howItWorks: 'Despeckle methods reduce effective coherence. Moving diffusers average many speckle patterns. Wavelength diversity uses multiple laser wavelengths. Angle diversity illuminates screens from varying directions. The eye averages the changing patterns.',
+    stats: [
+      { value: '4%', label: 'Speckle contrast target', icon: '⚡' },
+      { value: '4K', label: 'Resolution supported', icon: '📈' },
+      { value: '$4.8B', label: 'Laser display market', icon: '🚀' }
+    ],
+    examples: ['Cinema laser projectors', 'Automotive head-up displays', 'AR/VR laser displays', 'Planetarium projectors'],
+    companies: ['Christie', 'Barco', 'Sony', 'Texas Instruments'],
+    futureImpact: 'Quantum dot enhancement and advanced diffuser designs will eliminate speckle while maintaining the color gamut and efficiency advantages of laser illumination.',
+    color: '#F59E0B'
+  }
+];
+
 const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
   phase,
   onPhaseComplete,

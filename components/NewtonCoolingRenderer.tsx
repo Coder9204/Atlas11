@@ -8,6 +8,82 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Hook: "Does cooling happen at a constant rate?"
 // ============================================================================
 
+// Real-world applications for Newton's Law of Cooling
+const realWorldApps = [
+  {
+    icon: '🔍',
+    title: 'Forensic Time of Death',
+    short: 'Estimating when someone died',
+    tagline: 'Body temperature tells the story',
+    description: 'Forensic investigators use Newton\'s Law of Cooling to estimate time of death. By measuring body temperature and ambient conditions, they calculate how long since death based on the exponential cooling curve.',
+    connection: 'The game demonstrated how cooling rate depends on temperature difference. Forensic pathologists use this directly - a body at 32°C in a 22°C room cools slower than one at 37°C because the temperature difference is smaller.',
+    howItWorks: 'Normal body temp: 37°C. Death stops metabolic heating. Body cools following dT/dt = -k(T - T_ambient). Measure current temp and ambient. Calculate k from body mass and conditions. Solve for time since death.',
+    stats: [
+      { value: '1-2°C/hr', label: 'Typical cooling rate', icon: '📉' },
+      { value: '±2hrs', label: 'Time estimation accuracy', icon: '⏱️' },
+      { value: '100K+', label: 'Death investigations/year (US)', icon: '📊' }
+    ],
+    examples: ['Homicide investigation', 'Unattended deaths', 'Accident reconstruction', 'Insurance claims'],
+    companies: ['FBI', 'Medical Examiner offices', 'Forensic pathology labs', 'Law enforcement'],
+    futureImpact: 'AI-enhanced thermal modeling will account for clothing, posture, and environment for more accurate time-of-death estimation.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🍳',
+    title: 'Food Safety & HACCP',
+    short: 'Keeping food in safe temperature zones',
+    tagline: 'Bacteria don\'t wait for linear cooling',
+    description: 'Food safety protocols use Newton\'s Law to calculate how long food can be at dangerous temperatures. The exponential nature means hot food stays in the bacterial growth zone (40-140°F) longer than intuition suggests.',
+    connection: 'The simulation showed exponential cooling curves. Food safety professionals use these to design cooling protocols - rapid cooling from 135°F to 70°F within 2 hours is required precisely because of Newton\'s Law.',
+    howItWorks: 'Hot food must cool through danger zone (40-140°F) quickly. Cooling rate depends on (T - T_ambient). Larger batches cool slower (smaller k). Ice baths increase k dramatically. Time in danger zone determines bacterial growth.',
+    stats: [
+      { value: '2hrs', label: 'Max time 135°F to 70°F', icon: '⏱️' },
+      { value: '4hrs', label: 'Max time 70°F to 40°F', icon: '⏱️' },
+      { value: '48M', label: 'Foodborne illness cases/year', icon: '⚠️' }
+    ],
+    examples: ['Restaurant kitchens', 'Hospital food service', 'Airline catering', 'Food manufacturing'],
+    companies: ['FDA', 'Ecolab', 'NSF International', 'ServSafe'],
+    futureImpact: 'Smart sensors will monitor cooling curves in real-time, automatically alerting when food safety protocols are at risk.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '💻',
+    title: 'Electronics Thermal Design',
+    short: 'Cooling chips before they overheat',
+    tagline: 'Every CPU follows Newton\'s Law',
+    description: 'Every computer chip\'s thermal design uses Newton\'s Law of Cooling. Heat sinks, fans, and thermal interface materials all work to increase the cooling coefficient k, keeping silicon temperature below damage thresholds.',
+    connection: 'The game explored how the cooling coefficient k affects temperature response. In electronics, heat sink design, fan speed, and thermal paste all modify k to achieve target junction temperatures.',
+    howItWorks: 'CPU generates heat power P. Steady-state: P = k(T_junction - T_ambient). Larger k (better cooling) = lower T_junction. Transient response follows exponential. Thermal throttling kicks in if T exceeds limit.',
+    stats: [
+      { value: '100°C', label: 'Typical Tj max', icon: '🌡️' },
+      { value: '250W', label: 'High-end CPU TDP', icon: '⚡' },
+      { value: '$15B', label: 'Thermal management market', icon: '📈' }
+    ],
+    examples: ['CPU coolers', 'GPU thermal solutions', 'Data center cooling', 'Smartphone thermal design'],
+    companies: ['Noctua', 'Cooler Master', 'Intel', 'NVIDIA'],
+    futureImpact: 'Microfluidic cooling directly on die will enable 1000W processors by dramatically increasing effective k.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🏠',
+    title: 'Building Energy Modeling',
+    short: 'HVAC sizing from thermal physics',
+    tagline: 'Newton\'s Law heats and cools your home',
+    description: 'Building engineers use Newton\'s Law of Cooling to size HVAC systems. The rate of heat loss through walls depends on temperature difference - a principle that determines heating bills and comfort in every building.',
+    connection: 'The simulation showed how temperature difference drives cooling rate. Buildings follow the same physics - heat flows out in winter proportional to (T_inside - T_outside). Insulation reduces k, lowering energy bills.',
+    howItWorks: 'Heat loss rate: Q = U × A × ΔT (Newton\'s Law in disguise). U-value = thermal transmittance (like k). Better insulation = lower U. HVAC must replace lost heat to maintain comfort. Sizing based on design day ΔT.',
+    stats: [
+      { value: '40%', label: 'Building energy share', icon: '⚡' },
+      { value: 'R-38', label: 'Recommended attic insulation', icon: '🏠' },
+      { value: '$400B', label: 'Global HVAC market', icon: '📈' }
+    ],
+    examples: ['Passive house design', 'Energy Star buildings', 'District heating', 'Net-zero construction'],
+    companies: ['Carrier', 'Trane', 'Daikin', 'Johnson Controls'],
+    futureImpact: 'Digital twins will model building thermal behavior in real-time, optimizing HVAC for comfort and efficiency.',
+    color: '#8b5cf6'
+  }
+];
+
 // Test question interface with scenarios and explanations
 interface TestQuestion {
   scenario: string;

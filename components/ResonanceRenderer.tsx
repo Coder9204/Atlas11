@@ -6,6 +6,81 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // RESONANCE - Premium Apple/Airbnb Design System
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '🌉',
+    title: 'Bridge Resonance Prevention',
+    short: 'Engineers design bridges to avoid resonance that could cause catastrophic failure',
+    tagline: 'When bridges dance dangerously',
+    description: 'The 1940 Tacoma Narrows Bridge collapse remains engineering most famous resonance disaster. Wind vortices matched the bridge natural frequency, causing oscillations that grew until the structure failed. Modern bridge design explicitly calculates all resonant modes and ensures no likely excitation source can match them.',
+    connection: 'This game teaches how driving frequency matching natural frequency causes dramatic amplitude growth - the exact phenomenon that destroyed Tacoma Narrows.',
+    howItWorks: 'Bridges have multiple resonant modes (vertical, torsional, lateral). Designers calculate these frequencies and ensure they do not match wind vortex shedding frequencies, footfall patterns, or traffic rhythms. Dampers and tuned mass systems can absorb energy if resonance begins.',
+    stats: [
+      { value: '0.2 Hz', label: 'Typical bridge resonance', icon: '🔊' },
+      { value: '$100M+', label: 'Modern bridge costs', icon: '💰' },
+      { value: '100+ years', label: 'Design lifespan', icon: '📅' }
+    ],
+    examples: ['Millennium Bridge London', 'Tacoma Narrows (original)', 'Golden Gate dampers', 'Akashi Kaikyo Bridge'],
+    companies: ['ARUP', 'Bechtel', 'Jacobs Engineering', 'AECOM'],
+    futureImpact: 'AI-monitored bridges with real-time resonance detection could warn of dangerous conditions and activate active damping systems.',
+    color: '#6366F1'
+  },
+  {
+    icon: '🔊',
+    title: 'Musical Instrument Design',
+    short: 'Instruments use resonant chambers to amplify and shape sound',
+    tagline: 'The physics of beautiful sound',
+    description: 'Every acoustic instrument relies on resonance to produce its characteristic sound. A violin body resonates at frequencies that amplify string vibrations. A guitar sound hole couples string energy to air. Woodwind instruments use air column resonance, with finger holes changing the resonant length and thus the pitch.',
+    connection: 'The resonance curves explored in this game directly explain why certain frequencies get amplified by instrument bodies while others do not.',
+    howItWorks: 'Vibrating strings or reeds excite air and structural resonances in the instrument body. The resonant peaks (formants) determine tonal character. Violin makers carefully shape wood thickness to tune resonant modes. Even subtle changes affect the instrument voice.',
+    stats: [
+      { value: '440 Hz', label: 'Concert pitch A4', icon: '🎵' },
+      { value: '$16M', label: 'Record Stradivarius price', icon: '🎻' },
+      { value: '300+ years', label: 'Age of finest violins', icon: '📜' }
+    ],
+    examples: ['Stradivarius violins', 'Steinway pianos', 'Selmer saxophones', 'Martin guitars'],
+    companies: ['Steinway', 'Yamaha', 'Gibson', 'Fender'],
+    futureImpact: 'CT scanning and acoustic modeling help modern luthiers understand and replicate the resonance characteristics of historic instruments.',
+    color: '#EC4899'
+  },
+  {
+    icon: '📻',
+    title: 'Radio Tuning Circuits',
+    short: 'LC resonance selects specific frequencies from the electromagnetic spectrum',
+    tagline: 'Plucking signals from the airwaves',
+    description: 'Every radio receiver uses resonant circuits to select desired stations while rejecting all others. An inductor-capacitor (LC) circuit resonates at a specific frequency determined by component values. Only signals matching this frequency pass through with full amplitude; others are attenuated.',
+    connection: 'Electrical resonance follows the same mathematics as mechanical resonance in this game - the resonant frequency depends on circuit mass (inductance) and spring constant (capacitance).',
+    howItWorks: 'At resonance (f = 1/2*pi*sqrt(LC)), the LC circuit impedance becomes purely resistive and maximum current flows. The circuit Q factor determines selectivity - how sharply it distinguishes nearby frequencies. Variable capacitors or inductors allow tuning to different stations.',
+    stats: [
+      { value: '540-1600 kHz', label: 'AM radio band', icon: '📡' },
+      { value: '88-108 MHz', label: 'FM radio band', icon: '🎧' },
+      { value: '100+', label: 'Circuit Q factor', icon: '📊' }
+    ],
+    examples: ['AM/FM radios', 'Cell phone filters', 'WiFi receivers', 'GPS receivers'],
+    companies: ['Qualcomm', 'Broadcom', 'Skyworks', 'Murata'],
+    futureImpact: 'Software-defined radio is replacing hardware resonant circuits with digital signal processing for more flexible frequency selection.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏥',
+    title: 'MRI Imaging',
+    short: 'Nuclear magnetic resonance detects hydrogen atoms to create detailed body images',
+    tagline: 'Seeing inside the body with resonance',
+    description: 'MRI machines use nuclear magnetic resonance - hydrogen atoms in body tissue resonate when exposed to radio waves matching their natural frequency in a magnetic field. Different tissues have different relaxation times, creating contrast in images. This non-invasive technique revolutionized medical diagnosis.',
+    connection: 'The resonance condition (driving frequency = natural frequency) explored in this game is exactly what MRI exploits to detect hydrogen atoms in the body.',
+    howItWorks: 'A strong magnetic field aligns hydrogen protons. RF pulses at the resonant frequency (42.58 MHz per Tesla) tip protons away from alignment. As they relax back, they emit detectable RF signals. Gradient fields allow spatial encoding to create detailed 3D images.',
+    stats: [
+      { value: '1.5-7 T', label: 'MRI field strength', icon: '🧲' },
+      { value: '40M+', label: 'MRI scans per year (US)', icon: '🏥' },
+      { value: '$8B', label: 'MRI equipment market', icon: '💵' }
+    ],
+    examples: ['Brain imaging', 'Cardiac MRI', 'Joint/spine scans', 'Breast MRI'],
+    companies: ['Siemens Healthineers', 'GE HealthCare', 'Philips', 'Canon Medical'],
+    futureImpact: 'Low-field portable MRI units could bring this technology to ambulances and rural clinics where traditional machines cannot go.',
+    color: '#3B82F6'
+  }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

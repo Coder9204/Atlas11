@@ -24,6 +24,81 @@ const phaseLabels: Record<BandwidthPhase, string> = {
   mastery: 'Master'
 };
 
+const realWorldApps = [
+  {
+    icon: '🤖',
+    title: 'Large Language Model Inference',
+    short: 'LLM token generation',
+    tagline: 'Memory bandwidth limits AI response speed',
+    description: 'When ChatGPT or Claude generates responses, each new token requires reading the entire key-value cache from memory. This memory bandwidth bottleneck determines how fast AI can "think."',
+    connection: 'The attention mechanism must read all previous context to generate each new token. With 100K+ context windows, this means moving gigabytes of data from HBM memory for every single token.',
+    howItWorks: 'GPU HBM bandwidth (~3 TB/s for H100) divided by KV cache size determines max token throughput. At 100K context with 70B parameters, the KV cache alone can be 40GB+ per request.',
+    stats: [
+      { value: '3.35 TB/s', label: 'H100 HBM bandwidth', icon: '⚡' },
+      { value: '100K+', label: 'Context window', icon: '📝' },
+      { value: '10x', label: 'Memory vs compute bound', icon: '📊' }
+    ],
+    examples: ['ChatGPT', 'Claude', 'Gemini', 'Llama inference'],
+    companies: ['OpenAI', 'Anthropic', 'Google', 'Meta'],
+    futureImpact: 'Techniques like KV cache quantization, sparse attention, and speculative decoding are pushing the boundaries of what\'s possible within memory bandwidth constraints.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎮',
+    title: 'GPU-Accelerated Gaming',
+    short: 'Real-time graphics rendering',
+    tagline: 'Textures and shaders compete for bandwidth',
+    description: 'Modern games require moving massive textures, vertex data, and shader parameters between GPU memory and compute units. Memory bandwidth often limits frame rates more than raw compute.',
+    connection: 'At 4K resolution with complex materials, the GPU needs to fetch gigabytes of texture data per second. The memory bandwidth ceiling creates the "bandwidth wall" that limits visual fidelity.',
+    howItWorks: 'GPUs use wide memory buses (384-bit) and fast GDDR6X (21 Gbps) to achieve 1+ TB/s bandwidth. Texture compression, mesh shaders, and variable rate shading all help reduce bandwidth demands.',
+    stats: [
+      { value: '1 TB/s', label: 'RTX 4090 bandwidth', icon: '🎮' },
+      { value: '24GB', label: 'VRAM capacity', icon: '💾' },
+      { value: '4K@144Hz', label: 'Target performance', icon: '🖥️' }
+    ],
+    examples: ['Ray-traced games', 'VR rendering', 'AI upscaling', 'Streaming graphics'],
+    companies: ['NVIDIA', 'AMD', 'Intel', 'Sony'],
+    futureImpact: 'Chiplet GPUs with stacked HBM memory will dramatically increase bandwidth, enabling photorealistic real-time rendering and higher resolution VR.',
+    color: '#10B981'
+  },
+  {
+    icon: '🧠',
+    title: 'Neural Network Training',
+    short: 'Deep learning optimization',
+    tagline: 'Gradient synchronization at scale',
+    description: 'Training large AI models requires constantly moving weights, activations, and gradients. Multi-GPU training adds network bandwidth constraints on top of memory bandwidth.',
+    connection: 'Each training step reads all model weights from memory. For a 70B parameter model in FP16, that\'s 140GB of memory reads per forward pass - bandwidth becomes the limiting factor.',
+    howItWorks: 'Distributed training uses gradient all-reduce across GPUs. Network bandwidth (InfiniBand at 400 Gb/s) and memory bandwidth both constrain training throughput. Gradient compression helps.',
+    stats: [
+      { value: '400 Gb/s', label: 'InfiniBand speed', icon: '🔗' },
+      { value: '16K', label: 'GPUs in cluster', icon: '🖥️' },
+      { value: '$100M+', label: 'Training cost', icon: '💰' }
+    ],
+    examples: ['GPT-4 training', 'Gemini training', 'Llama training', 'Stable Diffusion'],
+    companies: ['NVIDIA', 'Google', 'Microsoft', 'Meta'],
+    futureImpact: 'New interconnects like NVLink-C2C and CXL will blur the line between local and remote memory, enabling larger models with better bandwidth utilization.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '📊',
+    title: 'High-Frequency Trading',
+    short: 'Ultra-low latency finance',
+    tagline: 'Nanoseconds matter in markets',
+    description: 'HFT systems process market data and execute trades in microseconds. Memory bandwidth determines how fast trading algorithms can evaluate opportunities across thousands of instruments.',
+    connection: 'Each market update triggers reads of position data, risk limits, and model parameters. With millions of updates per second, memory bandwidth directly translates to trading edge.',
+    howItWorks: 'FPGA and custom ASIC trading systems use wide, fast memory interfaces. Data structures are carefully aligned for cache efficiency. Every nanosecond of latency costs money.',
+    stats: [
+      { value: '<1μs', label: 'Trade latency', icon: '⚡' },
+      { value: '10M', label: 'Messages/second', icon: '📨' },
+      { value: '$6B', label: 'Annual HFT profits', icon: '💰' }
+    ],
+    examples: ['Stock exchanges', 'Crypto trading', 'Forex markets', 'Options market making'],
+    companies: ['Citadel', 'Two Sigma', 'Jane Street', 'Virtu'],
+    futureImpact: 'Quantum computing may eventually break the bandwidth barrier for portfolio optimization, while AI systems push classical computing to its limits.',
+    color: '#EF4444'
+  }
+];
+
 const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererProps> = ({
   gamePhase,
   onCorrectAnswer,

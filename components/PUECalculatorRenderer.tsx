@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '☁️',
+      title: 'Hyperscale Data Centers',
+      short: 'Tech giants lead efficiency',
+      tagline: 'Every watt counts at scale',
+      description: 'Google, Meta, and Microsoft operate massive data centers achieving PUE of 1.1-1.2. At their scale, even 0.1 PUE improvement saves tens of millions of dollars annually.',
+      connection: 'PUE directly measures how much of the power bill goes to computing versus overhead. Lower PUE means more computation per dollar spent on electricity.',
+      howItWorks: 'Custom facility designs with hot/cold aisle containment, free cooling, and AI-optimized HVAC systems minimize the energy gap between IT load and total facility power.',
+      stats: [
+         { value: '1.10', label: 'Google average PUE', icon: '📊' },
+         { value: '$1B+', label: 'Annual power costs', icon: '💰' },
+         { value: '50MW+', label: 'Per facility', icon: '⚡' }
+      ],
+      examples: ['Google Oregon', 'Meta Lulea', 'Microsoft Dublin', 'AWS US-East'],
+      companies: ['Google', 'Meta', 'Microsoft', 'Amazon'],
+      futureImpact: 'AI workloads are driving PUE optimization with liquid cooling and waste heat recovery.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '❄️',
+      title: 'Nordic Free Cooling',
+      short: 'Cold climate advantage',
+      tagline: 'Nature as air conditioning',
+      description: 'Data centers in Nordic countries achieve near-1.0 PUE using cold outside air year-round. No mechanical chillers needed when ambient temperature stays below server intake requirements.',
+      connection: 'Free cooling eliminates the biggest PUE overhead - mechanical refrigeration. Cold climates provide natural cooling that requires only fans to move air.',
+      howItWorks: 'Outside air is filtered and humidified before entering server rooms. When temperatures drop below 18°C, no mechanical cooling is needed at all.',
+      stats: [
+         { value: '1.07', label: 'Best Nordic PUE', icon: '🏆' },
+         { value: '95%', label: 'Free cooling hours', icon: '❄️' },
+         { value: '40%', label: 'Power savings', icon: '⚡' }
+      ],
+      examples: ['Facebook Lulea', 'Google Hamina', 'Apple Viborg', 'Microsoft Finland'],
+      companies: ['Facebook', 'Google', 'Apple', 'Microsoft'],
+      futureImpact: 'Subsea and underground data centers will leverage even more extreme cooling environments.',
+      color: '#06B6D4'
+   },
+   {
+      icon: '🏢',
+      title: 'Enterprise Data Centers',
+      short: 'Legacy meets efficiency',
+      tagline: 'Upgrading to save millions',
+      description: 'Enterprise data centers typically run PUE of 1.5-2.0. Upgrading cooling systems, consolidating servers, and implementing containment can cut overhead power by 30%.',
+      connection: 'Older facilities were designed before efficiency was prioritized. Simple retrofits like blanking panels and hot aisle containment dramatically improve PUE.',
+      howItWorks: 'Airflow management prevents hot and cold air mixing. Variable speed fans match cooling to actual load. Raised floor optimization directs cooling where needed.',
+      stats: [
+         { value: '1.8', label: 'Average legacy PUE', icon: '📊' },
+         { value: '25%', label: 'Typical savings', icon: '💰' },
+         { value: '2 yrs', label: 'Payback period', icon: '⏱️' }
+      ],
+      examples: ['Bank data centers', 'Hospital IT rooms', 'University computing', 'Government facilities'],
+      companies: ['Schneider Electric', 'Vertiv', 'Eaton', 'Emerson'],
+      futureImpact: 'Edge computing will bring efficient modular designs closer to users.',
+      color: '#8B5CF6'
+   },
+   {
+      icon: '💧',
+      title: 'Liquid Cooling Revolution',
+      short: 'Water beats air',
+      tagline: 'The future of cooling',
+      description: 'Liquid cooling removes heat 3,500x more efficiently than air. For AI and HPC workloads exceeding 1kW per server, liquid cooling is becoming essential to maintain reasonable PUE.',
+      connection: 'Traditional air cooling struggles above 500W per server. Liquid cooling directly absorbs heat from CPUs/GPUs, enabling higher density without proportionally higher cooling overhead.',
+      howItWorks: 'Cold plates attached to processors circulate water or specialized coolant. Heat is rejected via cooling towers or exchangers, often enabling heat reuse.',
+      stats: [
+         { value: '3500x', label: 'Better than air', icon: '💧' },
+         { value: '50%', label: 'Cooling energy cut', icon: '⚡' },
+         { value: '1kW+', label: 'Per chip enabled', icon: '🔥' }
+      ],
+      examples: ['NVIDIA DGX systems', 'IBM Summit supercomputer', 'Intel Gaudi clusters', 'AMD Instinct servers'],
+      companies: ['NVIDIA', 'Asetek', 'CoolIT', 'LiquidCool'],
+      futureImpact: 'Immersion cooling will submerge entire servers in dielectric fluid for ultimate efficiency.',
+      color: '#10B981'
+   }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface PUECalculatorRendererProps {

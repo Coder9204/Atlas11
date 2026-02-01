@@ -1,5 +1,80 @@
 import React, { useState, useRef, useEffect } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🧹',
+    title: 'Detergents & Cleaning Products',
+    short: 'Surfactants break surface tension to lift away dirt and grease',
+    tagline: 'The chemistry of clean',
+    description: 'All modern cleaning products rely on surfactants that reduce water\'s surface tension. This allows water to spread and penetrate fabrics, lift oils from surfaces, and suspend dirt particles for rinsing away.',
+    connection: 'The soap boat demonstrates how reducing surface tension creates forces. Detergents use the same principle - surfactant molecules disrupt water\'s cohesive forces, allowing it to wet surfaces it would normally bead up on.',
+    howItWorks: 'Surfactant molecules have water-loving (hydrophilic) heads and water-fearing (hydrophobic) tails. At surfaces, they orient with tails outward, reducing surface tension. In water, they form micelles that trap oil droplets for removal.',
+    stats: [
+      { value: '$150B', label: 'Global cleaning products market', icon: '🧴' },
+      { value: '300%', label: 'Surface area increase when spread', icon: '📊' },
+      { value: '50M tons', label: 'Surfactants produced yearly', icon: '🏭' }
+    ],
+    examples: ['Laundry detergent', 'Dish soap', 'Industrial degreasers', 'Hand sanitizers'],
+    companies: ['P&G', 'Unilever', 'Henkel', 'Ecolab'],
+    futureImpact: 'Bio-based surfactants and enzyme-enhanced cleaners are making products more effective while reducing environmental impact and water usage.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🫧',
+    title: 'Lung Surfactant Medicine',
+    short: 'Life-saving treatment reduces surface tension in premature infant lungs',
+    tagline: 'Every breath easier',
+    description: 'Premature babies often lack pulmonary surfactant, making breathing nearly impossible. Their alveoli collapse due to high surface tension. Artificial surfactant therapy has saved millions of lives since the 1980s.',
+    connection: 'Just as soap reduces water\'s surface tension to propel the boat, lung surfactant reduces the surface tension in tiny alveoli, preventing them from collapsing and allowing gas exchange with minimal breathing effort.',
+    howItWorks: 'Natural lung surfactant is 90% lipids and 10% proteins. It forms a monolayer at the air-water interface in alveoli, dramatically reducing surface tension from 70 to near 0 mN/m during exhalation, preventing collapse.',
+    stats: [
+      { value: '15M', label: 'Preterm births yearly', icon: '👶' },
+      { value: '80%', label: 'Survival improvement', icon: '💚' },
+      { value: '$2B', label: 'Surfactant therapy market', icon: '💊' }
+    ],
+    examples: ['Neonatal intensive care', 'ARDS treatment', 'Respiratory therapy', 'COVID-19 treatment research'],
+    companies: ['AbbVie', 'Chiesi', 'ONY Biotech', 'Discovery Labs'],
+    futureImpact: 'Synthetic surfactants and aerosol delivery methods are expanding treatment to adult respiratory distress and enabling targeted drug delivery to the lungs.',
+    color: '#10B981'
+  },
+  {
+    icon: '🌊',
+    title: 'Oil Spill Remediation',
+    short: 'Dispersants use surface tension science to break up oil slicks',
+    tagline: 'Cleaning our oceans',
+    description: 'When oil spills occur, dispersants are used to break thick slicks into tiny droplets that microbes can consume. These chemicals work by dramatically reducing the oil-water interfacial tension.',
+    connection: 'The Marangoni effect that propels the soap boat is related to how dispersants work - creating surface tension gradients that break apart and spread oil into manageable droplets throughout the water column.',
+    howItWorks: 'Dispersant surfactants concentrate at the oil-water interface, reducing tension from ~20 to ~1 mN/m. Wave energy then breaks the slick into microdroplets (<100μm) that disperse naturally and are biodegraded by marine bacteria.',
+    stats: [
+      { value: '7M gal', label: 'Dispersants used in BP spill', icon: '🛢️' },
+      { value: '1000x', label: 'Faster biodegradation', icon: '⚡' },
+      { value: '$1B+', label: 'Spill response industry', icon: '🚢' }
+    ],
+    examples: ['Deepwater Horizon response', 'Ship spill cleanup', 'Refinery accidents', 'Pipeline leaks'],
+    companies: ['Nalco', 'COREXIT', 'Oil Spill Response', 'DESMI'],
+    futureImpact: 'Biodegradable dispersants and oil-eating bacteria are making spill response more effective and environmentally friendly.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🦟',
+    title: 'Insect Water Walking',
+    short: 'Water striders and other insects exploit surface tension to walk on water',
+    tagline: 'Nature\'s surface science',
+    description: 'Water striders can walk on water because their legs are covered in microscopic hydrophobic hairs that prevent water penetration. They push down without breaking through, using surface tension as their floor.',
+    connection: 'The soap boat shows what happens when surface tension is disrupted - movement occurs. Water striders work the opposite way - they carefully avoid breaking surface tension while using it to support their weight.',
+    howItWorks: 'Strider legs have thousands of tiny grooved hairs coated in waxy secretions. These trap air and create a superhydrophobic surface. Each leg can support 15 times the insect\'s weight before breaking through the water surface.',
+    stats: [
+      { value: '15x', label: 'Body weight supported per leg', icon: '🦵' },
+      { value: '100 cm/s', label: 'Walking speed on water', icon: '💨' },
+      { value: '4M', label: 'Years of evolution', icon: '🧬' }
+    ],
+    examples: ['Water striders', 'Fishing spiders', 'Some ant species', 'Biomimetic robots'],
+    companies: ['MIT Robotics', 'Harvard Microrobotics', 'Seoul National University', 'KAIST'],
+    futureImpact: 'Bio-inspired water-walking robots could monitor water quality, perform search and rescue, and explore environments inaccessible to conventional craft.',
+    color: '#8B5CF6'
+  }
+];
+
 // ─────────────────────────────────────────────────────────────
 // SoapBoatRenderer – Teach surface tension propulsion
 // ─────────────────────────────────────────────────────────────

@@ -2,6 +2,81 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'High-Performance Processors',
+    short: 'CPUs need massive current with minimal voltage drop',
+    tagline: 'Feeding billions of transistors',
+    description: 'Modern processors draw 200+ amps at under 1 volt. The power delivery network must supply this current with less than 5% voltage variation, requiring careful impedance engineering.',
+    connection: 'PDN impedance must be below Vdd × tolerance / Imax. For 1V at 5% tolerance and 200A, this means under 0.25 milliohms across all frequencies.',
+    howItWorks: 'Voltage regulators, bulk capacitors, MLCCs, and on-die capacitors form a cascade of decreasing inductance. Each stage handles different frequency ranges of current demand.',
+    stats: [
+      { value: '250+', label: 'amps CPU current', icon: '⚡' },
+      { value: '<0.5', label: 'mΩ PDN impedance', icon: '📊' },
+      { value: '1000+', label: 'capacitors', icon: '🔧' }
+    ],
+    examples: ['Intel Core processors', 'AMD Ryzen chips', 'Server Xeon/EPYC', 'Apple M-series'],
+    companies: ['Intel', 'AMD', 'Apple', 'Renesas'],
+    futureImpact: 'Advanced packaging with integrated voltage regulators will reduce PDN impedance for next-generation chips.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎮',
+    title: 'Graphics Card Power',
+    short: 'GPUs demand hundreds of watts with fast transients',
+    tagline: 'Powering pixels at teraflops',
+    description: 'Gaming GPUs can draw 450+ watts with transient spikes that stress power delivery. Multi-phase VRMs and extensive capacitor arrays maintain stable voltage during demanding workloads.',
+    connection: 'GPU power draw can spike 2x in microseconds when shader utilization changes. The PDN must handle V = L × di/dt without excessive voltage droop.',
+    howItWorks: 'High-phase-count VRMs distribute current across many phases. Close-coupled capacitors provide local charge storage. Thick PCB copper planes minimize resistance.',
+    stats: [
+      { value: '600+', label: 'watts (RTX 4090)', icon: '⚡' },
+      { value: '16+', label: 'VRM phases', icon: '🔧' },
+      { value: '12', label: 'PCB layers', icon: '📚' }
+    ],
+    examples: ['NVIDIA GeForce RTX', 'AMD Radeon RX', 'Workstation Quadro', 'Data center A100'],
+    companies: ['NVIDIA', 'AMD', 'ASUS', 'MSI'],
+    futureImpact: 'New power connector standards like 12VHPWR and advanced VRMs will handle 1000W+ GPU power requirements.',
+    color: '#22C55E'
+  },
+  {
+    icon: '📱',
+    title: 'Mobile Device Power',
+    short: 'Smartphones balance power delivery with battery life',
+    tagline: 'Efficiency in your pocket',
+    description: 'Mobile devices must minimize PDN losses while handling bursty workloads. Power management ICs integrate voltage regulation with sophisticated load prediction and DVFS.',
+    connection: 'Battery internal resistance adds to PDN impedance. Careful design minimizes I²R losses while maintaining voltage stability during peak performance.',
+    howItWorks: 'PMIC integrates multiple voltage rails with fast load-line response. Thin-film inductors and capacitors save space. Voltage scaling reduces power during idle.',
+    stats: [
+      { value: '15', label: 'voltage rails', icon: '🔌' },
+      { value: '5+', label: 'W peak power', icon: '⚡' },
+      { value: '95%', label: 'PMIC efficiency', icon: '📊' }
+    ],
+    examples: ['iPhone power management', 'Android flagship PMICs', 'Tablet power systems', 'Wearable power'],
+    companies: ['Qualcomm', 'Apple', 'Samsung', 'Dialog Semi'],
+    futureImpact: 'Integrated voltage regulators in SoC packaging will improve efficiency and enable higher performance in mobile devices.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🖥️',
+    title: 'Server Motherboards',
+    short: 'Data centers need efficient multi-CPU power',
+    tagline: 'Powering the cloud',
+    description: 'Server motherboards deliver hundreds of amps to multiple CPUs, memory, and accelerators. Power efficiency directly impacts operating costs and cooling requirements.',
+    connection: 'Enterprise PDN design targets 48V input for efficiency. High-current bus bars and massive copper pours minimize conduction losses.',
+    howItWorks: '48V-to-1V voltage regulators use high-efficiency topologies. Digital control enables load sharing and telemetry. Redundant power paths ensure reliability.',
+    stats: [
+      { value: '700+', label: 'watts per CPU', icon: '⚡' },
+      { value: '48V', label: 'distribution voltage', icon: '🔌' },
+      { value: '97%', label: 'VRM efficiency', icon: '📊' }
+    ],
+    examples: ['Intel Xeon servers', 'AMD EPYC platforms', 'Google TPU hosts', 'AWS Graviton systems'],
+    companies: ['Intel', 'AMD', 'Supermicro', 'Dell EMC'],
+    futureImpact: 'Direct liquid cooling and 48V power distribution will enable even higher density data centers.',
+    color: '#8B5CF6'
+  }
+];
+
 // Phase type for internal state management
 type PDNPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

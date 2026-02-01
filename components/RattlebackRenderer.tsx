@@ -6,6 +6,81 @@ import React, { useState, useEffect, useCallback } from 'react';
 // Demonstrates coupled oscillations, asymmetric inertia, and energy transfer
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '🛸',
+    title: 'Spacecraft Attitude Dynamics',
+    short: 'Understanding how satellites can unexpectedly tumble due to asymmetric mass distributions',
+    tagline: 'When spacecraft develop a mind of their own',
+    description: 'Satellites and space probes with asymmetric mass distributions can exhibit rattleback-like behavior, where intended spin about one axis couples into unwanted rotation about others. This has caused mission-threatening tumbles in spacecraft when solar panels deploy asymmetrically or fuel sloshes unpredictably. Understanding coupled oscillations is critical for attitude control system design.',
+    connection: 'The rattleback physics of coupled oscillations and asymmetric inertia directly applies to predicting and preventing unwanted spacecraft dynamics.',
+    howItWorks: 'Spacecraft designers use moment of inertia tensors and coupled dynamics analysis to predict potential instabilities. Attitude control systems monitor for unexpected oscillations and can dampen them using reaction wheels or thrusters before they grow into full reversals.',
+    stats: [
+      { value: '6-DOF', label: 'Rotational degrees of freedom', icon: '🔄' },
+      { value: '$400M', label: 'Average satellite value', icon: '💰' },
+      { value: '<0.01°', label: 'Pointing accuracy required', icon: '🎯' }
+    ],
+    examples: ['Explorer 1 spin stabilization', 'Intelsat fuel slosh issues', 'ISS solar array dynamics', 'Mars Climate Orbiter attitude'],
+    companies: ['SpaceX', 'Boeing Satellites', 'Lockheed Martin Space', 'Northrop Grumman'],
+    futureImpact: 'Mega-constellations with thousands of satellites require reliable attitude control. Understanding rattleback-like dynamics helps prevent on-orbit failures.',
+    color: '#6366F1'
+  },
+  {
+    icon: '🏌️',
+    title: 'Golf Ball Dimple Design',
+    short: 'Optimizing asymmetric ball surfaces to control spin-coupling effects during flight',
+    tagline: 'Engineering the perfect dimple pattern',
+    description: 'Golf ball dimple patterns must be carefully designed to avoid rattleback-like spin instabilities during flight. Asymmetric wear patterns or manufacturing defects can cause the ball to develop coupled oscillations that hurt accuracy. Premium balls use sophisticated dimple geometries that maintain stable spin throughout their trajectory.',
+    connection: 'Like a rattleback, a spinning golf ball with asymmetries can develop coupled oscillations that transfer energy between spin axes - affecting distance and accuracy.',
+    howItWorks: 'Modern golf balls use dimple patterns optimized through computational fluid dynamics and high-speed camera analysis. The patterns maintain symmetric drag even as the ball spins at 2000-3000 RPM, preventing the coupling effects that could destabilize flight.',
+    stats: [
+      { value: '300-500', label: 'Dimples per ball', icon: '⛳' },
+      { value: '3000 RPM', label: 'Typical spin rate', icon: '🌀' },
+      { value: '$1.8B', label: 'Global golf ball market', icon: '📈' }
+    ],
+    examples: ['Titleist Pro V1', 'Callaway Chrome Soft', 'TaylorMade TP5', 'Bridgestone Tour B'],
+    companies: ['Titleist', 'Callaway', 'TaylorMade', 'Bridgestone Golf'],
+    futureImpact: 'AI-designed dimple patterns and new materials could further reduce spin instabilities, helping golfers achieve more consistent ball flight.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔄',
+    title: 'Washing Machine Balancing',
+    short: 'Preventing spin reversals and violent oscillations in high-speed drum appliances',
+    tagline: 'Taming the wild spin cycle',
+    description: 'Washing machine drums spinning at 1000+ RPM with unbalanced loads can exhibit rattleback-like dynamics where rotational energy couples into violent oscillations. Unbalanced loads create asymmetric mass distributions that lead to walking machines, bearing damage, and dangerous vibrations. Modern machines use sophisticated detection and compensation systems.',
+    connection: 'An unbalanced washing machine drum is essentially a giant rattleback - asymmetric mass distribution causes energy to transfer between rotation and oscillation modes.',
+    howItWorks: 'Sensors detect vibration patterns during spin-up. When coupling oscillations are detected, the machine pauses, redistributes the load, and restarts. Some machines use counterbalance weights that automatically shift to compensate for uneven loads.',
+    stats: [
+      { value: '1400 RPM', label: 'Maximum spin speeds', icon: '💨' },
+      { value: '10+ kg', label: 'Unbalanced load tolerance', icon: '⚖️' },
+      { value: '$50B', label: 'Global appliance market', icon: '🏭' }
+    ],
+    examples: ['Samsung FlexWash', 'LG TurboWash', 'Miele W1', 'Bosch Serie 8'],
+    companies: ['Samsung', 'LG Electronics', 'Whirlpool', 'BSH (Bosch/Siemens)'],
+    futureImpact: 'Machine learning algorithms will better predict and prevent oscillation modes, enabling faster spin speeds and more efficient water extraction.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🎨',
+    title: 'Physics Toys and Education',
+    short: 'Using rattlebacks to demonstrate counterintuitive physics of angular momentum',
+    tagline: 'The toy that defies intuition',
+    description: 'Rattlebacks have been used for centuries to demonstrate that physics can surprise us. They serve as hands-on examples of coupled oscillations, non-principal axis rotation, and energy transfer between modes. From ancient Celtic stones to modern science museum exhibits, rattlebacks challenge students to think deeply about rotational dynamics.',
+    connection: 'Rattlebacks are direct physical demonstrations of the coupled oscillation physics explored in this game - showing how asymmetric inertia leads to spin reversal.',
+    howItWorks: 'The rattleback shape has principal inertia axes that are tilted relative to its geometric axes. When spun in the unstable direction, small wobbles grow through feedback until enough energy has transferred to reverse the spin direction entirely.',
+    stats: [
+      { value: '5000+', label: 'Years of known history', icon: '📜' },
+      { value: 'Millions', label: 'Sold as physics toys', icon: '🎁' },
+      { value: '100+', label: 'Research papers published', icon: '📚' }
+    ],
+    examples: ['Celtic stones', 'Celt tops', 'Science museum exhibits', 'Physics classroom demos'],
+    companies: ['Grand Illusions', 'Educational Innovations', 'Arbor Scientific', 'TEDCO Toys'],
+    futureImpact: 'Virtual reality and haptic feedback technologies may soon allow students to feel and explore rattleback physics without physical toys.',
+    color: '#8B5CF6'
+  }
+];
+
 interface RattlebackRendererProps {
   phase: string;
   onPhaseComplete?: () => void;

@@ -2,6 +2,81 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🏭',
+    title: 'Industrial Motors',
+    short: 'Factories correct power factor to avoid penalties',
+    tagline: 'Saving money through reactive power',
+    description: 'Large industrial motors have inherently low power factors due to inductive loads. Factories install capacitor banks to correct power factor and avoid utility penalty charges.',
+    connection: 'Inductive loads cause current to lag voltage, creating reactive power that utilities must supply but cannot bill. Capacitors provide leading reactive power to cancel the lag.',
+    howItWorks: 'Automatic power factor correction systems measure load conditions and switch capacitor banks to maintain target power factor, typically 0.95 or higher.',
+    stats: [
+      { value: '0.95+', label: 'target power factor', icon: '🎯' },
+      { value: '30%', label: 'electricity savings', icon: '💰' },
+      { value: '$5B', label: 'PFC equipment market', icon: '📈' }
+    ],
+    examples: ['Steel mills', 'Manufacturing plants', 'Water treatment', 'Mining operations'],
+    companies: ['ABB', 'Schneider Electric', 'Siemens', 'Eaton'],
+    futureImpact: 'Smart grid integration will enable dynamic power factor correction based on grid conditions and pricing.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⚡',
+    title: 'Utility Power Distribution',
+    short: 'Grid operators manage reactive power flow',
+    tagline: 'Keeping the lights on efficiently',
+    description: 'Electric utilities must manage reactive power across the grid to maintain voltage stability. Poor power factor increases transmission losses and can cause voltage problems.',
+    connection: 'Reactive power (VARs) doesn\'t do useful work but creates current that causes I²R losses. Utilities install static VAR compensators and synchronous condensers.',
+    howItWorks: 'Capacitor banks, reactors, and SVCs at substations inject or absorb reactive power. Real-time control systems optimize power factor across the grid.',
+    stats: [
+      { value: '5-10%', label: 'loss reduction', icon: '📉' },
+      { value: '1GVA', label: 'SVC capacity', icon: '⚡' },
+      { value: '$10B', label: 'grid reactive market', icon: '📈' }
+    ],
+    examples: ['Substation capacitor banks', 'Static VAR compensators', 'Synchronous condensers', 'FACTS devices'],
+    companies: ['GE Grid Solutions', 'ABB', 'Siemens Energy', 'Mitsubishi Electric'],
+    futureImpact: 'Grid-scale battery inverters will provide reactive power services as renewables replace synchronous generators.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💻',
+    title: 'Computer Power Supplies',
+    short: 'Active PFC achieves near-unity power factor',
+    tagline: 'Efficient computing starts at the plug',
+    description: 'Computer power supplies use active power factor correction to achieve power factors above 0.99. This reduces harmonic distortion and enables efficient use of building wiring.',
+    connection: 'Switch-mode power supplies create current pulses that cause harmonics. Active PFC shapes the input current to be sinusoidal and in phase with voltage.',
+    howItWorks: 'A boost converter stage forces input current to follow a sinusoidal reference synchronized to line voltage. DSP controllers optimize switching for efficiency.',
+    stats: [
+      { value: '0.99', label: 'power factor', icon: '📊' },
+      { value: '95%', label: 'efficiency', icon: '⚡' },
+      { value: '$15B', label: 'PSU market', icon: '📈' }
+    ],
+    examples: ['Desktop power supplies', 'Server PSUs', 'Laptop chargers', 'Data center UPS'],
+    companies: ['Seasonic', 'Corsair', 'Delta Electronics', 'Artesyn'],
+    futureImpact: 'GaN and SiC semiconductors will enable even higher efficiency PFC with smaller form factors.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🔌',
+    title: 'Variable Frequency Drives',
+    short: 'VFDs control motor speed while managing power factor',
+    tagline: 'Precision motor control with grid harmony',
+    description: 'Variable frequency drives adjust motor speed by varying frequency and voltage. Modern VFDs include active front ends that maintain high power factor and low harmonics.',
+    connection: 'Traditional VFD rectifiers create current harmonics and low power factor. Active front ends use PWM rectification to draw clean sinusoidal current.',
+    howItWorks: 'The AFE uses an IGBT bridge to synthesize current that matches voltage phase and waveshape. This enables regenerative braking and bidirectional power flow.',
+    stats: [
+      { value: '0.98', label: 'AFE power factor', icon: '📊' },
+      { value: '50%', label: 'energy savings', icon: '💰' },
+      { value: '$25B', label: 'VFD market', icon: '📈' }
+    ],
+    examples: ['HVAC systems', 'Pump stations', 'Conveyor systems', 'Crane drives'],
+    companies: ['ABB', 'Siemens', 'Danfoss', 'Rockwell'],
+    futureImpact: 'AI-optimized motor control will further improve efficiency while maintaining grid power quality.',
+    color: '#8B5CF6'
+  }
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
 // ────────────────────────────────────────────────────────────────────────────

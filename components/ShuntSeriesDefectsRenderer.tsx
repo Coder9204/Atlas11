@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🔍',
+      title: 'Electroluminescence Imaging',
+      short: 'Seeing cell defects',
+      tagline: 'X-ray vision for solar cells',
+      description: 'EL imaging applies current to solar cells in the dark and photographs the infrared light emitted. Defects appear as dark areas because damaged regions have higher resistance and emit less light.',
+      connection: 'Series resistance from cracks reduces local current flow, causing those areas to appear dark. Shunt defects create bright spots where excess current flows through localized paths.',
+      howItWorks: 'A DC power supply forward-biases the solar cell, causing it to emit infrared light through radiative recombination. An IR-sensitive camera captures the emission pattern, revealing defects invisible to the eye.',
+      stats: [
+         { value: '100%', label: 'Inspection coverage', icon: '✅' },
+         { value: '<1min', label: 'Image capture time', icon: '⏱️' },
+         { value: '10μm', label: 'Crack detection', icon: '🔬' }
+      ],
+      examples: ['Factory quality control', 'Module certification', 'Field diagnostics', 'Research and development'],
+      companies: ['Greateyes', 'BT Imaging', 'Wavelabs', 'IRCAM'],
+      futureImpact: 'AI-powered EL analysis will automatically classify defects and predict long-term performance impact.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '🛡️',
+      title: 'Bypass Diode Protection',
+      short: 'Preventing hotspots',
+      tagline: 'Safety valves for solar strings',
+      description: 'Bypass diodes provide an alternative current path when cells are shaded or defective. Without them, the full string current would be forced through the defective cell, causing dangerous hotspot heating.',
+      connection: 'When a cell with low shunt resistance is forced to carry high current, P=I²R heating concentrates in the shunt path. Bypass diodes limit reverse voltage to ~0.6V, preventing thermal runaway.',
+      howItWorks: 'Each bypass diode spans a group of cells (typically 20-24). When any cell in the group becomes reverse-biased, the diode conducts, routing current around the problem cells and limiting power dissipation.',
+      stats: [
+         { value: '3', label: 'Diodes per module', icon: '🔌' },
+         { value: '0.6V', label: 'Diode forward drop', icon: '⚡' },
+         { value: '200°C', label: 'Hotspot prevention', icon: '🔥' }
+      ],
+      examples: ['Residential rooftop', 'Utility-scale farms', 'BIPV installations', 'Portable solar'],
+      companies: ['Vishay', 'STMicroelectronics', 'ON Semiconductor', 'Diodes Inc'],
+      futureImpact: 'Smart bypass diodes with integrated sensing will report cell-level problems to monitoring systems.',
+      color: '#EF4444'
+   },
+   {
+      icon: '📷',
+      title: 'Infrared Thermography',
+      short: 'Heat maps reveal problems',
+      tagline: 'Finding hot spots from the air',
+      description: 'IR cameras detect temperature differences across solar arrays, revealing hotspots caused by shunt defects, poor connections, and other problems. Drone-mounted IR inspection has revolutionized O&M.',
+      connection: 'Shunt defects dissipate power as heat in localized areas. Series resistance problems cause entire cells or strings to run hot. IR imaging directly visualizes these P=I²R heating effects.',
+      howItWorks: 'Thermal cameras measure surface temperature by detecting infrared radiation. Hot cells appear bright against cooler surroundings. Best results require clear skies and irradiance above 600 W/m².',
+      stats: [
+         { value: '1MW/hr', label: 'Drone inspection rate', icon: '🚁' },
+         { value: '0.1°C', label: 'Temperature resolution', icon: '🌡️' },
+         { value: '30m', label: 'Typical flight altitude', icon: '📏' }
+      ],
+      examples: ['Utility-scale O&M', 'Insurance claims', 'Performance verification', 'Warranty enforcement'],
+      companies: ['FLIR', 'DJI', 'Above Surveying', 'Raptor Maps'],
+      futureImpact: 'AI-powered drone fleets will autonomously inspect gigawatts of solar capacity, detecting problems before they cause failures.',
+      color: '#F59E0B'
+   },
+   {
+      icon: '📊',
+      title: 'IV Curve Tracing',
+      short: 'Electrical fingerprinting',
+      tagline: 'Diagnosing cells with current-voltage curves',
+      description: 'IV curve tracers measure the complete current-voltage characteristic of cells, strings, or modules. The shape of the curve reveals series resistance, shunt resistance, and other performance issues.',
+      connection: 'The single-diode model predicts how series and shunt resistance affect IV curve shape. High Rs causes voltage drop at high current; low Rsh causes slope at low voltage.',
+      howItWorks: 'The tracer sweeps voltage from 0 to Voc while measuring current, capturing hundreds of IV pairs in milliseconds. Software fits the data to the diode model, extracting Rs, Rsh, and other parameters.',
+      stats: [
+         { value: '1000V', label: 'Max test voltage', icon: '⚡' },
+         { value: '±1%', label: 'Measurement accuracy', icon: '📏' },
+         { value: '100ms', label: 'Sweep time', icon: '⏱️' }
+      ],
+      examples: ['Commissioning tests', 'Performance ratio analysis', 'Warranty claims', 'Research characterization'],
+      companies: ['Seaward', 'Solmetric', 'HT Instruments', 'Chroma'],
+      futureImpact: 'Embedded IV tracing in inverters will enable continuous performance monitoring without manual testing.',
+      color: '#8B5CF6'
+   }
+];
+
 // Phase type for this game
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

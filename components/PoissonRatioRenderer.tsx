@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🍾',
+    title: 'Cork Stoppers',
+    short: 'Near-zero Poisson ratio enables easy insertion',
+    tagline: 'The perfect bottle seal since ancient times',
+    description: 'Cork has a uniquely low Poisson\'s ratio of nearly zero. When compressed to insert into a bottle neck, it doesn\'t bulge outward, making insertion easy while still providing an excellent seal.',
+    connection: 'Cork\'s cellular structure contains air-filled cells that collapse upon compression without forcing material sideways. This is unlike rubber which would expand laterally.',
+    howItWorks: 'Cork cells are arranged in a honeycomb pattern that absorbs compression. The cell walls buckle and fold rather than displacing material laterally, resulting in minimal lateral expansion.',
+    stats: [
+      { value: '~0', label: 'Poisson ratio', icon: '📏' },
+      { value: '12B', label: 'corks produced yearly', icon: '🍾' },
+      { value: '$2B', label: 'cork market', icon: '📈' }
+    ],
+    examples: ['Wine bottle corks', 'Champagne stoppers', 'Whiskey bottle seals', 'Cork flooring'],
+    companies: ['Amorim', 'Corticeira Viking', 'Lafitte Cork', 'Jelinek Cork'],
+    futureImpact: 'Sustainable cork farming and recycling ensure this ancient material remains relevant for centuries.',
+    color: '#A1887F'
+  },
+  {
+    icon: '🛡️',
+    title: 'Auxetic Body Armor',
+    short: 'Negative Poisson materials expand on impact',
+    tagline: 'Armor that gets thicker when struck',
+    description: 'Auxetic materials have negative Poisson\'s ratio - they expand laterally when stretched. In body armor, this means the material becomes denser and thicker at the point of impact.',
+    connection: 'Re-entrant honeycomb structures unfold when stretched, causing lateral expansion. Under impact compression, they densify at the strike point, distributing force over a larger area.',
+    howItWorks: 'Auxetic foam and fabric structures are engineered with inward-folding geometry. Impact causes localized densification that spreads force and prevents penetration.',
+    stats: [
+      { value: '-0.7', label: 'typical auxetic ratio', icon: '📊' },
+      { value: '40%', label: 'better energy absorption', icon: '⚡' },
+      { value: '$2B', label: 'armor market', icon: '📈' }
+    ],
+    examples: ['Military body armor', 'Sports helmets', 'Protective clothing', 'Impact-resistant cases'],
+    companies: ['Auxetix', 'Under Armour', '3M', 'DuPont'],
+    futureImpact: 'Advanced auxetic metamaterials will enable lighter, more effective protection for military and sports applications.',
+    color: '#455A64'
+  },
+  {
+    icon: '🔗',
+    title: 'Rubber Bands and Seals',
+    short: 'High Poisson ratio enables volume conservation',
+    tagline: 'Stretch one way, shrink another',
+    description: 'Rubber has a Poisson\'s ratio near 0.5, meaning it conserves volume. When you stretch a rubber band, it becomes dramatically thinner to maintain constant volume.',
+    connection: 'Rubber molecules are long polymer chains that can uncoil when stretched. The material cannot compress, so elongation must be exactly compensated by lateral contraction.',
+    howItWorks: 'Vulcanized rubber cross-links prevent chains from slipping past each other. When stretched, chains extend but volume stays constant, forcing proportional thickness reduction.',
+    stats: [
+      { value: '0.49', label: 'Poisson ratio', icon: '📏' },
+      { value: '700%', label: 'max elongation', icon: '↔️' },
+      { value: '$30B', label: 'rubber market', icon: '📈' }
+    ],
+    examples: ['O-ring seals', 'Elastic bands', 'Gaskets', 'Tire sidewalls'],
+    companies: ['Trelleborg', 'Freudenberg', 'Parker Hannifin', 'SKF'],
+    futureImpact: 'Smart rubber with tunable properties will enable seals that adapt to changing conditions.',
+    color: '#E65100'
+  },
+  {
+    icon: '🏭',
+    title: 'Metal Forming',
+    short: 'Poisson effect determines stamping die design',
+    tagline: 'Precision manufacturing needs precision physics',
+    description: 'When stamping metal parts, the Poisson effect causes material to spread laterally under compression. Engineers must account for this expansion to achieve precise final dimensions.',
+    connection: 'Steel has a Poisson\'s ratio of about 0.3. Stamping compression causes lateral spread of 30% of the thickness reduction, requiring die compensation.',
+    howItWorks: 'Dies are designed oversized or with specific clearances to account for material flow. Simulation software predicts Poisson expansion to optimize die geometry.',
+    stats: [
+      { value: '0.30', label: 'steel Poisson ratio', icon: '📏' },
+      { value: '±0.1mm', label: 'typical tolerance', icon: '🎯' },
+      { value: '$15B', label: 'die/mold market', icon: '📈' }
+    ],
+    examples: ['Automotive body panels', 'Beverage cans', 'Electronic enclosures', 'Appliance parts'],
+    companies: ['Schuler', 'Komatsu', 'AIDA', 'Nidec Minster'],
+    futureImpact: 'AI-driven forming simulation will optimize dies for complex geometries while accounting for precise material behavior.',
+    color: '#37474F'
+  }
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────

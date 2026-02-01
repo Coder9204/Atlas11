@@ -77,6 +77,81 @@ const phaseNames: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🔋',
+    title: 'Battery Management Systems',
+    short: 'Balancing EV battery cells',
+    tagline: 'Keeping thousands of cells in harmony',
+    description: 'Electric vehicles contain thousands of battery cells that must be monitored and balanced. Kirchhoff\'s laws govern how current flows through cell arrays and balancing circuits, ensuring each cell charges and discharges evenly for maximum range and battery life.',
+    connection: 'KCL tells us the current entering a battery pack equals the current leaving. KVL shows that cell voltages must sum to pack voltage. Battery management systems use these laws to detect cell imbalances and failing cells.',
+    howItWorks: 'BMS circuits apply KVL around cell loops to identify voltage imbalances. Active balancing transfers charge between cells using inductors or capacitors. Current sensors verify KCL at every junction to detect faults.',
+    stats: [
+      { value: '7000+', label: 'Cells in Tesla', icon: '⚡' },
+      { value: '$15B', label: 'BMS market', icon: '📈' },
+      { value: '10mV', label: 'Balance accuracy', icon: '🚀' }
+    ],
+    examples: ['Tesla battery pack management', 'Grid-scale energy storage', 'Laptop power circuits', 'Electric aircraft batteries'],
+    companies: ['Tesla', 'LG Energy', 'CATL', 'Panasonic'],
+    futureImpact: 'Solid-state batteries will require new BMS architectures, but Kirchhoff\'s laws will remain fundamental to understanding current flow and voltage distribution.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '☀️',
+    title: 'Solar Array Optimization',
+    short: 'Maximizing solar harvest',
+    tagline: 'Every photon counts',
+    description: 'Solar installations require careful circuit analysis to maximize power output. Kirchhoff\'s laws help engineers understand how partial shading affects string current and how bypass diodes protect panels from hotspots.',
+    connection: 'KCL explains why a shaded cell limits current for the entire string—current must be equal through series-connected cells. KVL shows how bypass diodes activate when a cell can\'t carry the string current.',
+    howItWorks: 'Maximum power point tracking (MPPT) controllers continuously solve Kirchhoff equations to find optimal operating voltage. String inverters sum panel voltages per KVL. Microinverters apply KCL at each panel junction.',
+    stats: [
+      { value: '99.5%', label: 'MPPT efficiency', icon: '⚡' },
+      { value: '$200B', label: 'Solar market', icon: '📈' },
+      { value: '30%', label: 'Shade loss possible', icon: '🚀' }
+    ],
+    examples: ['Utility-scale solar farms', 'Rooftop residential systems', 'Building-integrated PV', 'Solar trackers'],
+    companies: ['Enphase', 'SolarEdge', 'SMA', 'Huawei'],
+    futureImpact: 'AI-powered optimizers will predict shading patterns and reconfigure arrays in real-time, applying Kirchhoff\'s laws dynamically to maximize energy harvest.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔌',
+    title: 'Power Grid Analysis',
+    short: 'Keeping the lights on',
+    tagline: 'Balancing supply and demand at scale',
+    description: 'Electrical grids are massive networks where Kirchhoff\'s laws govern power flow. Grid operators use these laws to calculate load distribution, identify bottlenecks, and prevent blackouts. Every node must satisfy KCL; every loop must satisfy KVL.',
+    connection: 'At every substation, currents entering must equal currents leaving (KCL). Around any loop in the grid, voltage drops across lines and generators must sum to zero (KVL). Violations indicate faults or instabilities.',
+    howItWorks: 'SCADA systems model the grid as thousands of nodes and branches. State estimation algorithms use measurements to verify Kirchhoff equations are satisfied. Contingency analysis simulates failures to ensure reliability.',
+    stats: [
+      { value: '450K miles', label: 'US transmission', icon: '⚡' },
+      { value: '1 trillion', label: 'kWh/year US', icon: '📈' },
+      { value: '99.97%', label: 'Grid reliability', icon: '🚀' }
+    ],
+    examples: ['Regional transmission networks', 'Distribution substations', 'Microgrid controllers', 'Renewable integration'],
+    companies: ['GE Grid', 'Siemens Energy', 'ABB', 'Schneider Electric'],
+    futureImpact: 'Distributed energy resources will create bidirectional power flows, requiring real-time Kirchhoff analysis at millions of nodes instead of thousands.',
+    color: '#10B981'
+  },
+  {
+    icon: '💻',
+    title: 'PCB Power Distribution',
+    short: 'Powering complex electronics',
+    tagline: 'Millivolts matter at GHz speeds',
+    description: 'Modern circuit boards have complex power distribution networks that must deliver clean power to processors operating at billions of cycles per second. Kirchhoff\'s laws govern voltage drops across traces and current sharing between parallel paths.',
+    connection: 'KVL shows why voltage regulators must be placed close to loads—IR drops across traces reduce voltage at the chip. KCL determines how current divides between parallel power planes.',
+    howItWorks: 'PDN design starts with target impedance based on load current and acceptable voltage ripple. Engineers use KVL to calculate trace resistance and inductance. Decoupling capacitors provide local charge reservoirs analyzed using KCL.',
+    stats: [
+      { value: '1mΩ', label: 'Target impedance', icon: '⚡' },
+      { value: '100A+', label: 'CPU current', icon: '📈' },
+      { value: '±3%', label: 'Voltage tolerance', icon: '🚀' }
+    ],
+    examples: ['Server motherboard design', 'Smartphone PCB layout', 'GPU power delivery', 'Automotive ECU design'],
+    companies: ['Intel', 'AMD', 'NVIDIA', 'Qualcomm'],
+    futureImpact: 'Chiplet architectures will require sophisticated power delivery across package substrates, with Kirchhoff analysis essential for managing power integrity at the microscale.',
+    color: '#8B5CF6'
+  }
+];
+
 const testQuestions: TestQuestion[] = [
   {
     scenario: "You're designing a circuit board for a new smartphone. At a junction where the main power line splits to feed three components (display, processor, WiFi), the incoming current measures 2.5A.",

@@ -13,6 +13,81 @@ interface StickSlipRendererProps {
 }
 
 // Color palette with proper contrast
+const realWorldApps = [
+  {
+    icon: '🌍',
+    title: 'Earthquake Prediction',
+    short: 'Understanding seismic cycles through stick-slip',
+    tagline: 'The earth builds up stress, then releases',
+    description: 'Earthquakes occur when accumulated tectonic stress overcomes fault friction in a sudden slip event. Understanding the stick-slip cycle helps scientists assess seismic hazards and predict future earthquakes.',
+    connection: 'Stick-slip mechanics directly model earthquake physics. Faults "stick" for decades as plates push against them, then "slip" catastrophically when stress exceeds static friction.',
+    howItWorks: 'GPS and seismometers monitor ground deformation. Paleoseismology dates past earthquakes. Models use static friction to estimate stress accumulation and predict when faults might fail.',
+    stats: [
+      { value: '500yr', label: 'Major quake cycle', icon: '📅' },
+      { value: 'M9.0', label: 'Max subduction quake', icon: '📊' },
+      { value: '3cm/yr', label: 'Typical plate motion', icon: '🌏' }
+    ],
+    examples: ['San Andreas Fault', 'Japan Trench', 'Himalayan Front', 'Cascadia Subduction'],
+    companies: ['USGS', 'Japan Meteorological Agency', 'GeoNet', 'UNAVCO'],
+    futureImpact: 'Dense sensor networks and AI will enable better forecasting of earthquake probability, giving communities days to weeks of warning for potential major events.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🎻',
+    title: 'Bowed String Instruments',
+    short: 'Creating music through controlled stick-slip',
+    tagline: 'Making strings sing',
+    description: 'Violins and cellos produce sound through stick-slip motion between bow and string. Rosin creates the right friction for the bow to alternately grip and release the string at the desired frequency.',
+    connection: 'The bow sticks to the string, deflecting it until kinetic friction takes over and it slips back. This cycle repeats hundreds of times per second, driving the string vibration.',
+    howItWorks: 'Rosin increases static friction between horsehair and string. The Helmholtz motion creates a kink that travels along the string. Bow pressure and speed control tone quality.',
+    stats: [
+      { value: '440Hz', label: 'A string frequency', icon: '🎵' },
+      { value: '100g', label: 'Typical bow pressure', icon: '⚖️' },
+      { value: '0.5m/s', label: 'Bow speed', icon: '🏃' }
+    ],
+    examples: ['Violin technique', 'Cello bowing', 'Bass fiddle', 'Chinese erhu'],
+    companies: ['Stradivari', 'Pirastro', 'Thomastik-Infeld', 'D\'Addario'],
+    futureImpact: 'Robotic bowing systems will enable new musical instruments and help train students by precisely reproducing the stick-slip dynamics of master musicians.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🚗',
+    title: 'Brake Squeal',
+    short: 'Unwanted stick-slip in braking systems',
+    tagline: 'When friction makes noise',
+    description: 'Brake squeal occurs when stick-slip motion between brake pads and rotors excites resonant frequencies in the brake assembly. Engineers work to eliminate this annoying phenomenon.',
+    connection: 'The negative slope of friction vs. velocity can cause instability. When friction drops as speed increases, stick-slip oscillations grow into audible squealing.',
+    howItWorks: 'Pad material alternates between sticking and slipping on the rotor. This self-excited vibration couples to structural resonances. Chamfers, shims, and special compounds reduce squeal.',
+    stats: [
+      { value: '1-16kHz', label: 'Squeal frequency', icon: '🔊' },
+      { value: '-$1B', label: 'Annual warranty costs', icon: '💰' },
+      { value: '0.35', label: 'Target friction coefficient', icon: '📊' }
+    ],
+    examples: ['Automotive disc brakes', 'Motorcycle brakes', 'Industrial machinery', 'Aircraft landing gear'],
+    companies: ['Brembo', 'Akebono', 'Federal-Mogul', 'TMD Friction'],
+    futureImpact: 'Active noise cancellation and smart brake materials will eliminate squeal by dynamically adjusting friction characteristics based on real-time vibration sensing.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🏔️',
+    title: 'Glacier Movement',
+    short: 'Ice stick-slip on continental scale',
+    tagline: 'When ice rivers suddenly surge',
+    description: 'Glaciers exhibit stick-slip behavior, alternating between periods of slow creep and sudden surges. Understanding this helps predict ice sheet collapse and sea level rise.',
+    connection: 'Glacial ice sticks to bedrock through frozen debris and pressure, then slips when meltwater lubricates the base. This creates episodic motion similar to earthquake fault behavior.',
+    howItWorks: 'Basal friction depends on temperature, water pressure, and sediment type. GPS measures surface velocity. Seismometers detect "icequakes" during slip events. Models predict future behavior.',
+    stats: [
+      { value: '10km/yr', label: 'Surge velocity', icon: '🏃' },
+      { value: 'M7', label: 'Largest glacial quake', icon: '📊' },
+      { value: '3m/yr', label: 'Potential sea rise', icon: '🌊' }
+    ],
+    examples: ['Antarctic ice streams', 'Greenland outlet glaciers', 'Alaskan tidewater glaciers', 'Himalayan surge glaciers'],
+    companies: ['NASA', 'British Antarctic Survey', 'Alfred Wegener Institute', 'NOAA'],
+    futureImpact: 'Satellite monitoring and improved friction models will help predict catastrophic glacier collapse events, providing critical input for climate adaptation planning.',
+    color: '#8b5cf6'
+  }
+];
+
 const colors = {
   // Text colors - HIGH CONTRAST
   textPrimary: '#f8fafc',

@@ -1,5 +1,80 @@
 import React, { useState, useCallback, useEffect } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🌐',
+    title: 'Fiber Optic Communications',
+    short: 'Light signals travel through glass cables using total internal reflection',
+    tagline: 'The backbone of the internet',
+    description: 'Fiber optic cables carry 99% of intercontinental data traffic. Light bounces along glass cores thinner than a hair, using total internal reflection to travel thousands of kilometers with minimal loss.',
+    connection: 'Snell\'s Law determines the critical angle for total internal reflection. When light hits the fiber cladding at angles greater than the critical angle, it reflects completely back into the core instead of refracting out.',
+    howItWorks: 'The fiber core has higher refractive index (n≈1.48) than the cladding (n≈1.46). Light entering at shallow angles hits the boundary beyond the critical angle (~82°), reflecting totally. Signals can travel 100km before needing amplification.',
+    stats: [
+      { value: '99%', label: 'Of intercontinental data via fiber', icon: '📡' },
+      { value: '500M km', label: 'Fiber installed globally', icon: '🌍' },
+      { value: '100 Tbps', label: 'Single fiber capacity', icon: '⚡' }
+    ],
+    examples: ['Submarine internet cables', 'Data center interconnects', 'FTTH broadband', 'Medical endoscopes'],
+    companies: ['Corning', 'Prysmian', 'Furukawa', 'CommScope'],
+    futureImpact: 'New hollow-core fibers and space-division multiplexing could increase capacity 100x, enabling real-time global computing and holographic communication.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💎',
+    title: 'Diamond Cutting & Gemology',
+    short: 'Precise facet angles maximize sparkle through internal reflections',
+    tagline: 'Science meets brilliance',
+    description: 'Diamond\'s exceptional sparkle comes from its high refractive index (n=2.42) and careful cutting. Master cutters calculate exact angles so light entering the top bounces inside and exits back through the crown.',
+    connection: 'Snell\'s Law and total internal reflection determine the critical angle for diamonds (~24.4°). Facets are cut so light reflects multiple times internally before exiting the top, creating fire and brilliance.',
+    howItWorks: 'Light enters the table, refracts into the diamond, then hits pavilion facets at angles exceeding the critical angle. The light reflects, bounces to the other side, reflects again, and exits the crown, splitting into spectral colors.',
+    stats: [
+      { value: '24.4°', label: 'Diamond critical angle', icon: '💎' },
+      { value: '$80B', label: 'Annual diamond market', icon: '💰' },
+      { value: '57', label: 'Facets in ideal cut', icon: '🔷' }
+    ],
+    examples: ['Engagement rings', 'Precision optics', 'Industrial cutting tools', 'Laser windows'],
+    companies: ['De Beers', 'Tiffany & Co', 'GIA', 'Swarovski'],
+    futureImpact: 'AI-optimized cutting algorithms and lab-grown diamonds are making perfect optical properties more accessible while expanding industrial applications.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '👓',
+    title: 'Corrective Lenses',
+    short: 'Eyeglasses and contacts bend light to focus on the retina',
+    tagline: 'Bending light for better vision',
+    description: 'Over 4 billion people wear corrective lenses. Glasses and contacts use precisely curved surfaces to refract light, compensating for eyes that focus images in front of or behind the retina.',
+    connection: 'Snell\'s Law governs how light bends at each lens surface. Lens designers calculate the exact curvatures needed to add or subtract focusing power, redirecting light rays to converge on the retina.',
+    howItWorks: 'Myopia (nearsightedness) needs diverging lenses to spread light before it enters the eye. Hyperopia (farsightedness) needs converging lenses. Astigmatism requires cylindrical corrections. Modern lenses combine multiple corrections.',
+    stats: [
+      { value: '4B+', label: 'People need vision correction', icon: '👁️' },
+      { value: '$150B', label: 'Global eyewear market', icon: '📈' },
+      { value: '700+', label: 'Years of lens making', icon: '🏛️' }
+    ],
+    examples: ['Prescription glasses', 'Contact lenses', 'Intraocular implants', 'VR/AR headsets'],
+    companies: ['EssilorLuxottica', 'Zeiss', 'Johnson & Johnson Vision', 'CooperVision'],
+    futureImpact: 'Smart lenses with adjustable focus, AR overlays, and drug-delivering contacts are transforming vision correction into vision enhancement.',
+    color: '#10B981'
+  },
+  {
+    icon: '📸',
+    title: 'Camera & Microscope Optics',
+    short: 'Compound lens systems create sharp images at any scale',
+    tagline: 'From galaxies to molecules',
+    description: 'Modern optical systems use multiple precisely shaped lenses to capture images from microscopic cells to distant galaxies. Each lens element is designed using Snell\'s Law to correct aberrations and focus light perfectly.',
+    connection: 'Snell\'s Law determines how light bends at each glass-air interface. Multi-element lens designs use different glass types (different n values) to cancel chromatic aberration and achieve sharp focus across the entire image.',
+    howItWorks: 'Camera lenses combine 10-20 elements with different refractive indices. Crown glass (lower n) and flint glass (higher n) pairs cancel chromatic aberration. Aspherical elements correct geometric distortions, all calculated from Snell\'s Law.',
+    stats: [
+      { value: '1.4B', label: 'Cameras shipped yearly', icon: '📷' },
+      { value: '0.1 nm', label: 'Electron microscope resolution', icon: '🔬' },
+      { value: '$45B', label: 'Optical lens market', icon: '💹' }
+    ],
+    examples: ['Smartphone cameras', 'Professional DSLRs', 'Electron microscopes', 'Space telescopes'],
+    companies: ['Canon', 'Sony', 'Nikon', 'Zeiss'],
+    futureImpact: 'Metalenses using nanostructures could replace bulky multi-element designs, enabling paper-thin cameras with perfect optics in every device.',
+    color: '#F59E0B'
+  }
+];
+
 interface SnellsLawRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

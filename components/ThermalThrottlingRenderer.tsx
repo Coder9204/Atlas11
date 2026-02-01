@@ -36,6 +36,81 @@ const colors = {
   primary: '#06b6d4',
 };
 
+const realWorldApps = [
+  {
+    icon: '🎮',
+    title: 'Gaming Laptops',
+    short: 'Balancing performance and thermal limits',
+    tagline: 'When thin means hot',
+    description: 'Gaming laptops pack 150W+ of processing power into thin chassis. Thermal throttling kicks in when cooling cannot keep up, dropping frame rates from 144fps to 30fps in demanding games.',
+    connection: 'Power = C * V^2 * f means higher clock speeds generate exponentially more heat. Throttling reduces frequency to stay within thermal limits.',
+    howItWorks: 'Temperature sensors trigger firmware to reduce clock speed and voltage when approaching 95-100C. Cooling systems use vapor chambers, multiple fans, and liquid metal thermal paste.',
+    stats: [
+      { value: '95C', label: 'Throttling threshold', icon: '🌡️' },
+      { value: '50%', label: 'Perf drop when throttled', icon: '📉' },
+      { value: '150W', label: 'Typical gaming load', icon: '⚡' }
+    ],
+    examples: ['ASUS ROG laptops', 'Razer Blade', 'MSI Stealth', 'Alienware m15'],
+    companies: ['ASUS', 'MSI', 'Razer', 'Dell'],
+    futureImpact: 'Gallium-based cooling and graphene heat spreaders will enable desktop-class performance in ultra-thin laptops.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📱',
+    title: 'Smartphone Throttling',
+    short: 'Keeping phones from burning your hand',
+    tagline: 'Performance in your pocket has limits',
+    description: 'Phone processors throttle aggressively because there are no fans and the case temperature must stay comfortable. Extended gaming or video calls trigger throttling within minutes.',
+    connection: 'Without active cooling, phones rely entirely on passive dissipation. Thermal mass buys time, but sustained loads always trigger throttling.',
+    howItWorks: 'Multi-layer throttling reduces CPU cores, GPU frequency, and screen brightness. Thermal paste connects chips to graphite sheets that spread heat across the entire phone body.',
+    stats: [
+      { value: '45C', label: 'Case temp limit', icon: '🤚' },
+      { value: '3W', label: 'Sustainable power', icon: '🔋' },
+      { value: '8W', label: 'Peak burst power', icon: '⚡' }
+    ],
+    examples: ['iPhone Pro', 'Samsung Galaxy Ultra', 'Pixel Pro', 'OnePlus'],
+    companies: ['Apple', 'Samsung', 'Google', 'Qualcomm'],
+    futureImpact: 'Phase-change materials and AI-predictive throttling will extend peak performance windows.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏢',
+    title: 'Data Center Cooling',
+    short: 'Preventing thermal runaway in server farms',
+    tagline: 'Where heat costs millions',
+    description: 'Data centers spend 40% of energy on cooling. Server throttling wastes compute capacity and revenue. Operators balance cooling costs against performance using sophisticated thermal management.',
+    connection: 'At scale, every degree of temperature reduction saves millions in cooling costs but also affects server performance and longevity.',
+    howItWorks: 'Hot/cold aisle containment, liquid cooling, and AI-controlled HVAC maintain optimal temperatures. Servers report thermal headroom to workload schedulers.',
+    stats: [
+      { value: '40%', label: 'Power for cooling', icon: '❄️' },
+      { value: '$1M/yr', label: 'Cooling per MW of compute', icon: '💰' },
+      { value: '25C', label: 'Optimal inlet temp', icon: '🌡️' }
+    ],
+    examples: ['Google data centers', 'AWS facilities', 'Microsoft Azure', 'Meta AI clusters'],
+    companies: ['Google', 'Microsoft', 'Amazon', 'Equinix'],
+    futureImpact: 'Immersion cooling in dielectric fluid will eliminate air cooling entirely, boosting efficiency 50%.',
+    color: '#10B981'
+  },
+  {
+    icon: '🚗',
+    title: 'Electric Vehicle Power Electronics',
+    short: 'Managing heat in high-power inverters',
+    tagline: 'Where throttling means less range',
+    description: 'EV inverters convert battery DC to motor AC at 200-400kW. Thermal limits cause power derating on track days or towing, reducing acceleration and top speed to protect components.',
+    connection: 'Power electronics use the same thermal physics as CPUs - higher current means quadratically more heat from I^2*R losses.',
+    howItWorks: 'Silicon carbide MOSFETs handle higher temperatures than silicon. Liquid cooling loops connect inverters, motors, and batteries. Derating algorithms protect components while maximizing performance.',
+    stats: [
+      { value: '150C', label: 'SiC junction limit', icon: '🔥' },
+      { value: '400kW', label: 'Peak inverter power', icon: '⚡' },
+      { value: '30%', label: 'Derating at thermal limit', icon: '📉' }
+    ],
+    examples: ['Tesla Model S Plaid', 'Porsche Taycan', 'Rivian R1T', 'Lucid Air'],
+    companies: ['Tesla', 'Porsche', 'Rivian', 'BorgWarner'],
+    futureImpact: 'Gallium nitride devices and integrated motor-inverter designs will push efficiency above 99%.',
+    color: '#EF4444'
+  }
+];
+
 const ThermalThrottlingRenderer: React.FC<ThermalThrottlingRendererProps> = ({
   gamePhase,
   onGameEvent,

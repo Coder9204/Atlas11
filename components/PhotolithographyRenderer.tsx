@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'Processor Manufacturing',
+    short: 'EUV lithography enables 3nm transistors',
+    tagline: 'Printing circuits smaller than viruses',
+    description: 'Modern processor manufacturing uses extreme ultraviolet (EUV) lithography with 13.5nm wavelength light to pattern transistors at 3nm and below. This enables billions of transistors on a single chip.',
+    connection: 'The Rayleigh criterion limits resolution to approximately half the wavelength. EUV\'s short wavelength enables much finer features than traditional DUV (193nm) lithography.',
+    howItWorks: 'EUV light is produced by hitting tin droplets with a laser. Mirrors collect the light and project circuit patterns through masks onto silicon wafers coated with photoresist.',
+    stats: [
+      { value: '13.5', label: 'nm EUV wavelength', icon: '🔬' },
+      { value: '$150M', label: 'per EUV tool', icon: '💰' },
+      { value: '100B', label: 'transistors per chip', icon: '⚡' }
+    ],
+    examples: ['Apple M3 chips', 'AMD Ryzen 7000', 'Intel Core Ultra', 'NVIDIA H100'],
+    companies: ['ASML', 'TSMC', 'Samsung', 'Intel'],
+    futureImpact: 'High-NA EUV will enable 2nm and beyond, continuing Moore\'s Law for another decade.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📱',
+    title: 'Smartphone Chips',
+    short: 'Mobile processors rely on advanced lithography',
+    tagline: 'Pocket supercomputers from light patterns',
+    description: 'The processor in your smartphone contains billions of transistors fabricated using cutting-edge lithography. Each transistor is smaller than a coronavirus, yet they work reliably for years.',
+    connection: 'Multiple patterning techniques allow printing features smaller than the lithography wavelength by exposing patterns in multiple steps that interleave.',
+    howItWorks: 'Self-aligned multiple patterning uses spacer deposition to subdivide patterns. EUV simplifies this by enabling single-exposure patterning at the finest pitches.',
+    stats: [
+      { value: '3nm', label: 'process node', icon: '📏' },
+      { value: '15B', label: 'transistors (A17)', icon: '🔢' },
+      { value: '$580B', label: 'semiconductor market', icon: '📈' }
+    ],
+    examples: ['Apple A17 Pro', 'Qualcomm Snapdragon 8 Gen 3', 'MediaTek Dimensity 9300', 'Samsung Exynos'],
+    companies: ['Apple', 'Qualcomm', 'MediaTek', 'Samsung'],
+    futureImpact: 'Continued scaling will enable AI capabilities currently requiring data center GPUs to run on mobile devices.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🔬',
+    title: 'Memory Chip Fabrication',
+    short: 'High-density storage through lithography',
+    tagline: 'Trillions of bits in your pocket',
+    description: 'Flash memory and DRAM chips use lithography to create incredibly dense storage cells. 3D NAND stacks hundreds of layers of storage cells, each patterned with lithography.',
+    connection: 'Memory density depends on how small each cell can be patterned. Advanced lithography enables terabit-scale storage on a single chip.',
+    howItWorks: 'DRAM uses capacitors patterned at the tightest pitches. 3D NAND stacks cells vertically after patterning, multiplying density without requiring finer lithography.',
+    stats: [
+      { value: '200+', label: 'NAND layers', icon: '📚' },
+      { value: '1Tb', label: 'per NAND die', icon: '💾' },
+      { value: '$150B', label: 'memory market', icon: '📈' }
+    ],
+    examples: ['Samsung V-NAND', 'SK Hynix NAND', 'Micron DRAM', 'Western Digital BiCS'],
+    companies: ['Samsung', 'SK Hynix', 'Micron', 'Kioxia'],
+    futureImpact: 'Advanced lithography and 3D stacking will enable 100+ TB SSDs by 2030.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🌐',
+    title: 'Advanced Packaging',
+    short: 'Chiplets connected through lithographed interconnects',
+    tagline: 'Beyond single-chip limits',
+    description: 'Modern processors combine multiple chiplets using advanced packaging with lithographed silicon interposers and bridges. This enables combining different manufacturing processes on one package.',
+    connection: 'Packaging lithography creates fine-pitch interconnects between chiplets. While less demanding than transistor lithography, it still requires nanometer-scale precision.',
+    howItWorks: 'Silicon interposers are patterned with fine-pitch wiring. Through-silicon vias connect layers. Hybrid bonding achieves micron-scale chip-to-chip connections.',
+    stats: [
+      { value: '10μm', label: 'interconnect pitch', icon: '📏' },
+      { value: '1000+', label: 'I/O per mm²', icon: '🔌' },
+      { value: '$45B', label: 'packaging market', icon: '📈' }
+    ],
+    examples: ['AMD 3D V-Cache', 'Intel Foveros', 'TSMC CoWoS', 'Samsung I-Cube'],
+    companies: ['TSMC', 'Intel', 'ASE', 'Amkor'],
+    futureImpact: 'Chiplet architectures will dominate high-performance computing, enabled by advanced packaging lithography.',
+    color: '#F59E0B'
+  }
+];
+
 // ============================================================================
 // GAME 183: PHOTOLITHOGRAPHY RESOLUTION
 // ============================================================================

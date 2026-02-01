@@ -1,5 +1,80 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🔌',
+    title: 'Semiconductor Manufacturing',
+    short: 'Chip fabs require the purest materials on Earth',
+    tagline: 'Purity at atomic scale',
+    description: 'Modern microprocessors contain billions of transistors measuring just 3-5 nanometers. At this scale, a single impurity atom can cause a transistor to fail. The semiconductor industry has driven silicon purification to unimaginable levels.',
+    connection: 'This simulation shows why IC-grade silicon requires 9-11 nines of purity (99.9999999%+). Even one impurity atom per billion can create defects that ruin chip performance or cause random failures.',
+    howItWorks: 'The Siemens process converts metallurgical silicon to trichlorosilane gas, which is repeatedly distilled to remove impurities. Czochralski crystal growth then pulls a single crystal ingot from molten ultra-pure silicon in an inert atmosphere.',
+    stats: [
+      { value: '11N', label: 'Nines of purity for ICs', icon: '💎' },
+      { value: '$580B', label: 'Global chip market', icon: '💰' },
+      { value: '3nm', label: 'Current transistor size', icon: '🔬' }
+    ],
+    examples: ['CPUs and GPUs', 'Memory chips', 'Power semiconductors', 'RF chips'],
+    companies: ['TSMC', 'Intel', 'Samsung', 'GlobalFoundries'],
+    futureImpact: 'As transistors shrink to 1nm and below, even isotopic purity (silicon-28 only) may be required, pushing purification technology to new extremes.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '☀️',
+    title: 'Solar Cell Production',
+    short: 'Solar panels use lower-grade but still remarkably pure silicon',
+    tagline: 'Clean energy economics',
+    description: 'Solar cells work well with 6-7 nines purity (99.9999%), 1000x less pure than IC-grade. This dramatic difference in requirements is why solar panel costs have dropped 99% since 1976 - they can use "reject" silicon and simpler processes.',
+    connection: 'The simulation demonstrates that solar cells tolerate more impurities because they rely on bulk material properties, not individual atomic-scale features. Carrier lifetime decreases with impurities but remains adequate for photovoltaic operation.',
+    howItWorks: 'Solar-grade silicon uses the upgraded metallurgical silicon (UMG) process or simplified Siemens processes. Multicrystalline casting is cheaper than single-crystal growth. Higher impurity tolerance means faster, cheaper production.',
+    stats: [
+      { value: '6N', label: 'Nines of purity for solar', icon: '☀️' },
+      { value: '99%', label: 'Cost drop since 1976', icon: '📉' },
+      { value: '1.2 TW', label: 'Global solar capacity', icon: '⚡' }
+    ],
+    examples: ['Rooftop panels', 'Utility solar farms', 'Portable chargers', 'Space solar arrays'],
+    companies: ['JinkoSolar', 'LONGi', 'First Solar', 'Canadian Solar'],
+    futureImpact: 'New purification methods and thin-film alternatives may further reduce material requirements, making solar even more affordable and sustainable.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '♻️',
+    title: 'Silicon Recycling Industry',
+    short: 'IC rejects become solar gold, waste becomes resource',
+    tagline: 'Circular silicon economy',
+    description: 'Rejected IC-grade silicon wafers and chips contain ultra-pure material that far exceeds solar requirements. A growing recycling industry collects this waste and reprocesses it for solar panel production.',
+    connection: 'This simulation shows why silicon that fails IC specs (8N purity) still far exceeds solar requirements (6N). Understanding this gap reveals the economic opportunity in recycling "impure" semiconductor waste.',
+    howItWorks: 'Silicon recyclers collect pot scrap, broken wafers, and off-spec material from chip fabs. After testing for purity, material is melted, recast, and often mixed with new polysilicon. Some recyclers achieve 90% material recovery rates.',
+    stats: [
+      { value: '$1.2B', label: 'Silicon recycling market', icon: '♻️' },
+      { value: '90%', label: 'Material recovery rate', icon: '📊' },
+      { value: '50%', label: 'Energy savings vs virgin', icon: '⚡' }
+    ],
+    examples: ['Wafer scrap recovery', 'Solar panel recycling', 'Electronic waste processing', 'Industrial silicon reuse'],
+    companies: ['Silrec', 'SiC Processing', 'NPC', 'ROSI Solar'],
+    futureImpact: 'As millions of solar panels reach end-of-life, a massive new recycling industry will recover silicon and other materials for circular reuse.',
+    color: '#10B981'
+  },
+  {
+    icon: '⚛️',
+    title: 'Quantum Computing Silicon',
+    short: 'Quantum bits need isotopically pure silicon-28',
+    tagline: 'Beyond chemical purity',
+    description: 'Silicon-based quantum computers require not just chemical purity but isotopic purity. Natural silicon contains 4.7% silicon-29, whose nuclear spin disrupts quantum coherence. Quantum silicon must be 99.99%+ silicon-28.',
+    connection: 'This simulation focuses on chemical impurities, but quantum computing adds another dimension. Even chemically pure silicon fails if it contains the wrong isotopes - a new frontier in material purity.',
+    howItWorks: 'Isotope separation uses gas centrifuges with silane (SiH₄) gas, similar to uranium enrichment. The heavier Si-29 and Si-30 isotopes separate slightly, requiring thousands of cascade stages. The enriched gas is then deposited as epitaxial layers.',
+    stats: [
+      { value: '99.995%', label: 'Si-28 purity for quantum', icon: '⚛️' },
+      { value: '$100K', label: 'Per gram isotopically pure', icon: '💎' },
+      { value: '1000x', label: 'Coherence time improvement', icon: '⏱️' }
+    ],
+    examples: ['Quantum processors', 'Quantum memory', 'Single-spin qubits', 'Quantum sensors'],
+    companies: ['Intel', 'UNSW', 'TU Delft', 'Archer Materials'],
+    futureImpact: 'Scalable quantum computers may require tons of isotopically pure silicon, creating an entirely new ultra-premium materials industry.',
+    color: '#3B82F6'
+  }
+];
+
 interface SolarVsICPurityRendererProps {
   gamePhase?: string; // Optional for resume functionality
   onCorrectAnswer?: () => void;

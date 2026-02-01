@@ -6,6 +6,81 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // WAVE SPEED & TENSION - Premium Design System
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '🎸',
+    title: 'Musical Instrument Design',
+    short: 'Engineering perfect pitch and tone',
+    tagline: 'The physics behind every note',
+    description: 'Stringed instruments rely entirely on wave speed physics. Guitar strings, piano wires, and violin strings are precisely engineered with specific tensions and linear densities to produce exact musical frequencies.',
+    connection: 'Wave speed v = sqrt(T/μ) directly determines the fundamental frequency of a vibrating string. Instrument makers manipulate tension (tuning pegs) and linear density (string gauge) to achieve desired pitches.',
+    howItWorks: 'Thicker strings (higher μ) vibrate slower, producing lower notes. Tightening a string (higher T) increases wave speed and pitch. String length determines the wavelength, and together these set the frequency: f = v/(2L).',
+    stats: [
+      { value: '440Hz', label: 'Concert A standard', icon: '🎵' },
+      { value: '$7B', label: 'String instrument market', icon: '📈' },
+      { value: '200MPa', label: 'Piano wire tension', icon: '⚡' }
+    ],
+    examples: ['Guitar string gauges', 'Piano bass strings', 'Violin gut vs steel', 'Harp string design'],
+    companies: ['Steinway', 'Martin Guitar', 'D\'Addario', 'Ernie Ball'],
+    futureImpact: 'Smart instruments with automatic tuning systems continuously adjust tension to maintain perfect pitch despite temperature changes.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏗️',
+    title: 'Suspension Bridge Cables',
+    short: 'Engineering massive spans',
+    tagline: 'Cables that carry cities',
+    description: 'Suspension bridge main cables must support enormous loads while resisting wind-induced oscillations. Engineers carefully control cable tension and mass to ensure dangerous resonant frequencies don\'t match wind or traffic vibrations.',
+    connection: 'The wave speed in bridge cables determines their natural vibration frequencies. The Tacoma Narrows collapse showed what happens when wind frequency matches a cable\'s natural frequency - destructive resonance.',
+    howItWorks: 'Bridge cables are pre-tensioned to specific values that push natural frequencies away from common excitation sources. Dampers add energy dissipation. Cable design balances strength, weight, and vibration characteristics.',
+    stats: [
+      { value: '2km', label: 'Longest cable spans', icon: '📏' },
+      { value: '60,000T', label: 'Cable tension force', icon: '💪' },
+      { value: '100+yrs', label: 'Design lifespan', icon: '⏳' }
+    ],
+    examples: ['Golden Gate Bridge', 'Akashi Kaikyo Bridge', 'Brooklyn Bridge', 'Millau Viaduct'],
+    companies: ['Freyssinet', 'Bridon-Bekaert', 'Kiswire', 'WireCo WorldGroup'],
+    futureImpact: 'Active damping systems using real-time tension adjustment will enable even longer spans by controlling vibration dynamically.',
+    color: '#DC2626'
+  },
+  {
+    icon: '⚡',
+    title: 'Power Line Engineering',
+    short: 'Transmitting electricity across continents',
+    tagline: 'Keeping the lights on everywhere',
+    description: 'High-voltage power lines span thousands of kilometers. Their tension must be carefully maintained to prevent dangerous sag, while their wave characteristics affect how they respond to wind, ice loading, and galloping oscillations.',
+    connection: 'Power line conductors behave as vibrating strings. Aeolian vibration from steady wind can cause fatigue failure. Engineers use the wave speed equation to predict vibration modes and install dampers at calculated positions.',
+    howItWorks: 'Stockbridge dampers positioned along power lines absorb vibration energy at specific frequencies. Conductor tension is set to balance sag limits with vibration susceptibility. Ice accumulation changes μ, affecting all calculations.',
+    stats: [
+      { value: '800kV', label: 'Max transmission voltage', icon: '⚡' },
+      { value: '500km', label: 'Typical span length', icon: '📏' },
+      { value: '$2T', label: 'Global grid value', icon: '💰' }
+    ],
+    examples: ['HVDC transmission lines', 'Rural distribution', 'Submarine power cables', 'Mountain crossings'],
+    companies: ['ABB', 'Siemens Energy', 'Prysmian', 'Nexans'],
+    futureImpact: 'Smart grid sensors will continuously monitor line tension and vibration, enabling predictive maintenance and automatic re-tensioning.',
+    color: '#2563EB'
+  },
+  {
+    icon: '🏃',
+    title: 'Sports Equipment Technology',
+    short: 'Optimizing athletic performance',
+    tagline: 'Physics for champions',
+    description: 'Tennis rackets, badminton strings, and archery bowstrings all depend on wave mechanics. String tension affects ball speed, control, and the "sweet spot" size. Athletes and equipment makers obsess over these parameters.',
+    connection: 'When a ball hits a racket, waves propagate through the strings. Higher tension means faster wave speed and quicker energy return, but smaller sweet spot. Players choose tension based on playing style.',
+    howItWorks: 'Racket strings are tensioned between 50-70 lbs. Higher tension gives more control but less power. String material (nylon, polyester, natural gut) affects both tension retention and linear density, changing wave behavior.',
+    stats: [
+      { value: '70lbs', label: 'Pro tennis tension', icon: '🎾' },
+      { value: '160mph', label: 'Fastest tennis serve', icon: '🚀' },
+      { value: '$400M', label: 'String market size', icon: '📈' }
+    ],
+    examples: ['Tennis string patterns', 'Badminton rackets', 'Archery compound bows', 'Squash equipment'],
+    companies: ['Wilson', 'Babolat', 'Luxilon', 'Yonex'],
+    futureImpact: 'Smart rackets with tension sensors and embedded electronics will help players optimize string setup for their exact playing style.',
+    color: '#10B981'
+  }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

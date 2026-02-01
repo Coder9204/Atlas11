@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Automotive Wheel Design',
+    short: 'Reducing wheel rotational inertia improves acceleration, braking, and fuel efficiency',
+    tagline: 'Every gram of wheel matters',
+    description: 'Automotive engineers obsess over wheel rotational inertia because it directly affects vehicle dynamics. Reducing unsprung rotating mass improves acceleration (less energy stored in spinning), braking (less rotational energy to dissipate), and fuel efficiency. Lightweight alloy and carbon fiber wheels cost more but transform how a car performs.',
+    connection: 'This game teaches how moment of inertia affects rolling acceleration - exactly why lightweight wheels make cars feel more responsive.',
+    howItWorks: 'A wheel with high rotational inertia resists speed changes. When accelerating, energy goes into both translational motion and rotation. Hollow designs and low-density materials reduce I while maintaining strength. Each kg saved from the wheel rim is worth 2-3 kg saved from the car body.',
+    stats: [
+      { value: '2-3x', label: 'Wheel weight effect multiplier', icon: '⚡' },
+      { value: '10-15 kg', label: 'Typical alloy wheel mass', icon: '⚖️' },
+      { value: '5-7 kg', label: 'Carbon wheel mass', icon: '🏎️' }
+    ],
+    examples: ['Carbon fiber race wheels', 'Forged aluminum alloys', 'Magnesium wheels', 'Flow-formed wheels'],
+    companies: ['BBS', 'HRE Wheels', 'Vossen', 'Enkei'],
+    futureImpact: 'Electric vehicles with in-wheel motors will require radical rethinking of wheel inertia optimization as the motor becomes part of the rotating mass.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏊',
+    title: 'Flywheel Energy Storage',
+    short: 'High-inertia flywheels store grid-scale energy as rotational kinetic energy',
+    tagline: 'Spinning up the power grid',
+    description: 'Flywheel energy storage systems use massive rotating discs to store electrical energy as rotational kinetic energy. When demand exceeds supply, the flywheel momentum is converted back to electricity. The key is maximizing moment of inertia - energy stored scales with I*omega^2. Carbon fiber flywheels spin at 60,000+ RPM.',
+    connection: 'The moment of inertia physics in this game directly explains flywheel energy storage - why mass distribution matters more than total mass for storing energy.',
+    howItWorks: 'A motor/generator accelerates a flywheel during low demand (storing energy) and extracts power during peaks (releasing energy). Carbon composite allows high rim speed for maximum energy density. Magnetic bearings and vacuum enclosures minimize friction losses.',
+    stats: [
+      { value: '100 MJ', label: 'Energy per flywheel', icon: '⚡' },
+      { value: '60,000 RPM', label: 'Carbon flywheel speed', icon: '🔄' },
+      { value: '95%+', label: 'Round-trip efficiency', icon: '📊' }
+    ],
+    examples: ['Grid frequency regulation', 'UPS backup power', 'EV regenerative storage', 'Tokamak pulse power'],
+    companies: ['Beacon Power', 'Amber Kinetics', 'Stornetic', 'Punch Flybrid'],
+    futureImpact: 'Lower-cost carbon fiber and superconducting bearings could make flywheels competitive with batteries for multi-hour grid storage.',
+    color: '#10B981'
+  },
+  {
+    icon: '🛹',
+    title: 'Skateboard and Bicycle Wheels',
+    short: 'Wheel inertia affects acceleration response and maintaining speed over rough terrain',
+    tagline: 'The physics of smooth rolling',
+    description: 'Skateboarders and cyclists intuitively understand wheel inertia. Heavier wheels maintain speed better over cracks and bumps but are sluggish to accelerate. Lightweight wheels respond instantly but slow down faster on rough surfaces. The right choice depends on riding style and terrain.',
+    connection: 'This game demonstrates why hollow vs solid cylinders have different accelerations - explaining the performance tradeoffs in wheel design.',
+    howItWorks: 'Wheel angular momentum resists change. High-inertia wheels carry through obstacles better because more energy is stored in rotation. Low-inertia wheels accelerate faster from stops and respond quicker to pushes. Skaters choose based on street (lighter) vs cruising (heavier) priorities.',
+    stats: [
+      { value: '50-60mm', label: 'Street skate wheels', icon: '🛹' },
+      { value: '60-75mm', label: 'Cruiser wheels', icon: '🏄' },
+      { value: '1.5-2 kg', label: 'Road bike wheel target', icon: '🚴' }
+    ],
+    examples: ['Spitfire Formula Fours', 'Bones STF', 'Mavic road wheels', 'Zipp aero wheels'],
+    companies: ['Spitfire', 'Bones', 'Shimano', 'SRAM'],
+    futureImpact: 'Advanced composites and 3D-printed wheel cores will allow optimized inertia distribution impossible with traditional manufacturing.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎡',
+    title: 'Industrial Machinery Flywheels',
+    short: 'Flywheels smooth power delivery and store energy in presses, engines, and generators',
+    tagline: 'Smoothing the industrial heartbeat',
+    description: 'Industrial machines use flywheels to smooth power pulses and store energy between strokes. Punch presses store energy during the motor-driven portion of the cycle and release it during the high-force punch. Engine flywheels smooth the power pulses between cylinder firings. Moment of inertia determines smoothing effectiveness.',
+    connection: 'The rolling physics in this game shows how rotational inertia stores kinetic energy - the same principle industrial flywheels use to smooth power delivery.',
+    howItWorks: 'During low-load portions of a machine cycle, the flywheel accelerates slightly, storing energy. During peak loads, it slows, releasing stored energy. The result is more constant motor loading and reduced electrical demand spikes. Higher inertia means smoother operation but slower startup.',
+    stats: [
+      { value: '10-100 kg', label: 'Typical flywheel mass', icon: '⚙️' },
+      { value: '1000-3000 RPM', label: 'Operating speeds', icon: '🔄' },
+      { value: '50%+', label: 'Peak power reduction', icon: '📉' }
+    ],
+    examples: ['Punch presses', 'Steam engines', 'Diesel generators', 'Potter wheels'],
+    companies: ['Schuler', 'Caterpillar', 'Cummins', 'SHIMPO'],
+    futureImpact: 'Smart flywheels with variable inertia could adapt to changing load patterns, optimizing efficiency across different operating conditions.',
+    color: '#F59E0B'
+  }
+];
+
 interface RollingRaceRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

@@ -1,6 +1,81 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🎧',
+    title: 'Noise-Canceling Headphones',
+    short: 'Creating silence with sound waves',
+    tagline: 'Fighting noise with physics',
+    description: 'Active noise cancellation uses microphones to detect ambient sound and generates an anti-phase wave that destructively interferes with the noise. When the waves combine, they cancel out, creating perceived silence.',
+    connection: 'This is direct application of wave interference - when two waves of equal amplitude meet 180° out of phase, they undergo destructive interference and cancel completely.',
+    howItWorks: 'Microphones sample external sound hundreds of times per second. DSP chips calculate the inverse waveform and speakers play it in real-time. The original noise and anti-noise interfere destructively, reducing perceived volume by up to 45dB.',
+    stats: [
+      { value: '45dB', label: 'Max noise reduction', icon: '🔇' },
+      { value: '$35B', label: 'Headphone market', icon: '📈' },
+      { value: '1μs', label: 'Processing latency', icon: '⚡' }
+    ],
+    examples: ['Sony WH-1000XM series', 'Apple AirPods Pro', 'Bose QuietComfort', 'Aircraft cabin systems'],
+    companies: ['Sony', 'Bose', 'Apple', 'Sennheiser'],
+    futureImpact: 'Adaptive ANC systems will use AI to predict and pre-emptively cancel sounds before they reach your ears, enabling near-perfect silence.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📱',
+    title: 'Thin-Film Optical Coatings',
+    short: 'Anti-reflective screens and lenses',
+    tagline: 'Seeing clearly through physics',
+    description: 'The rainbow sheen on soap bubbles and oil slicks comes from thin-film interference. Engineers harness this to create anti-reflective coatings on eyeglasses, camera lenses, and phone screens by carefully controlling film thickness.',
+    connection: 'Light reflecting from the top and bottom surfaces of a thin film travels different distances. When the path difference equals half a wavelength, destructive interference eliminates reflection for that color.',
+    howItWorks: 'Multiple thin layers of precise thickness are deposited on surfaces. Each layer creates reflections that interfere. By stacking layers tuned to different wavelengths, broadband anti-reflection is achieved across visible light.',
+    stats: [
+      { value: '99.9%', label: 'Transmission possible', icon: '✨' },
+      { value: '$12B', label: 'Optical coating market', icon: '📈' },
+      { value: '100nm', label: 'Typical layer thickness', icon: '🔬' }
+    ],
+    examples: ['Camera lens coatings', 'Eyeglass anti-reflective', 'Solar panel efficiency', 'Smartphone screens'],
+    companies: ['Zeiss', 'Essilor', 'Corning', 'HOYA'],
+    futureImpact: 'Metamaterial coatings using nanostructures will enable tunable interference, creating surfaces that can switch between reflective and transparent.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '📡',
+    title: 'Radio Telescope Arrays',
+    short: 'Imaging the universe with wave combining',
+    tagline: 'Many dishes, one giant telescope',
+    description: 'Radio telescopes combine signals from multiple antennas using interferometry. The interference pattern between dishes separated by kilometers creates resolution equivalent to a single dish that size, revealing unprecedented cosmic detail.',
+    connection: 'Each antenna receives radio waves from space at slightly different times due to their separation. By carefully combining these signals (correlating phases), the interference pattern encodes spatial information about the source.',
+    howItWorks: 'Atomic clocks synchronize antennas to femtosecond precision. Signals are recorded and combined by supercomputers that calculate how waves would interfere. The resulting interference pattern is transformed into an image.',
+    stats: [
+      { value: '10km', label: 'VLA baseline', icon: '📏' },
+      { value: '25μas', label: 'EHT resolution', icon: '🎯' },
+      { value: '5PB', label: 'Data per observation', icon: '💾' }
+    ],
+    examples: ['Event Horizon Telescope', 'Very Large Array', 'ALMA Observatory', 'SKA (under construction)'],
+    companies: ['NRAO', 'ESO', 'CSIRO', 'SKAO'],
+    futureImpact: 'Space-based interferometers will achieve baselines of millions of kilometers, enabling us to image exoplanet surfaces.',
+    color: '#1D4ED8'
+  },
+  {
+    icon: '🔬',
+    title: 'Gravitational Wave Detectors',
+    short: 'Measuring ripples in spacetime',
+    tagline: 'Detecting the universe vibrating',
+    description: 'LIGO uses laser interferometry to detect gravitational waves - ripples in spacetime from colliding black holes. The interference pattern between perpendicular laser beams shifts by less than a proton width when a gravitational wave passes.',
+    connection: 'A Michelson interferometer splits laser light into two perpendicular beams. When they recombine, any tiny path difference from a passing gravitational wave changes the interference pattern from constructive to partially destructive.',
+    howItWorks: 'A 4km laser beam is split and sent down perpendicular arms. Mirrors reflect the beams back to recombine at a detector. A gravitational wave stretches one arm while compressing the other, shifting the interference fringe.',
+    stats: [
+      { value: '10⁻¹⁹m', label: 'Sensitivity', icon: '🎯' },
+      { value: '4km', label: 'Arm length', icon: '📏' },
+      { value: '100+', label: 'Detections made', icon: '🌟' }
+    ],
+    examples: ['LIGO Hanford', 'LIGO Livingston', 'Virgo detector', 'KAGRA Japan'],
+    companies: ['LIGO Laboratory', 'Virgo Collaboration', 'KAGRA', 'LISA Pathfinder'],
+    futureImpact: 'Space-based detectors like LISA will have million-kilometer baselines, detecting gravitational waves from supermassive black hole mergers.',
+    color: '#7C3AED'
+  }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════

@@ -6,6 +6,81 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // PRECESSION & NUTATION - Premium 10-Phase Learning Experience
 // ============================================================================
 
+const realWorldApps = [
+   {
+      icon: '🛰️',
+      title: 'Spacecraft Attitude Control',
+      short: 'Gyroscopes stabilize satellites',
+      tagline: 'Keeping satellites pointed right',
+      description: 'Control Moment Gyroscopes (CMGs) use precession to rotate spacecraft without fuel. By tilting spinning flywheels, satellites can change orientation precisely for Earth observation, communications, and scientific instruments.',
+      connection: 'Precession allows angular momentum transfer between gyroscopes and spacecraft, enabling fuel-free attitude adjustments that can last for decades.',
+      howItWorks: 'When a CMG gimbal tilts a spinning flywheel, the resulting torque causes the spacecraft to rotate perpendicular to both the spin axis and tilt direction - pure precession physics.',
+      stats: [
+         { value: '6000+', label: 'Active satellites', icon: '🛰️' },
+         { value: '20+ yrs', label: 'Gyro lifespan', icon: '⏱️' },
+         { value: '0.001°', label: 'Pointing accuracy', icon: '🎯' }
+      ],
+      examples: ['Hubble Space Telescope', 'International Space Station', 'GPS satellites', 'Communication satellites'],
+      companies: ['NASA', 'SpaceX', 'Lockheed Martin', 'Northrop Grumman'],
+      futureImpact: 'Next-generation spacecraft will use advanced CMG arrays for autonomous asteroid mining and deep space exploration.',
+      color: '#6366F1'
+   },
+   {
+      icon: '🧭',
+      title: 'Gyrocompasses',
+      short: 'Navigation without magnetism',
+      tagline: 'Finding true north anywhere',
+      description: 'Gyrocompasses use Earth rotation-induced precession to find true north, unaffected by magnetic anomalies. Essential for ships, submarines, and aircraft where magnetic compasses fail.',
+      connection: 'Earth\'s rotation creates a torque on tilted gyroscopes, causing them to precess until aligned with Earth\'s rotational axis - pointing true north.',
+      howItWorks: 'A spinning gyroscope mounted with freedom to tilt experiences gravity-induced precession that gradually aligns it with Earth\'s rotation axis over 1-4 hours.',
+      stats: [
+         { value: '0.1°', label: 'Accuracy', icon: '🎯' },
+         { value: '$50K+', label: 'Marine unit cost', icon: '💰' },
+         { value: '100%', label: 'Ships using them', icon: '🚢' }
+      ],
+      examples: ['Nuclear submarines', 'Container ships', 'Naval vessels', 'Commercial aircraft'],
+      companies: ['Sperry Marine', 'Raytheon', 'Safran', 'Honeywell'],
+      futureImpact: 'Fiber-optic and ring laser gyros are replacing mechanical versions with solid-state precision.',
+      color: '#10B981'
+   },
+   {
+      icon: '🏥',
+      title: 'MRI Physics',
+      short: 'Medical imaging via precession',
+      tagline: 'Seeing inside the body',
+      description: 'MRI machines detect hydrogen proton precession in magnetic fields. When radio waves disturb aligned protons, their precession frequency reveals tissue composition for detailed medical imaging.',
+      connection: 'Proton spin axes precess around the MRI\'s magnetic field direction at the Larmor frequency, creating detectable radio signals.',
+      howItWorks: 'Strong magnets align proton spins, RF pulses tip them, and receiver coils detect the precession frequency variations that map tissue density and type.',
+      stats: [
+         { value: '40M+', label: 'Scans per year', icon: '📊' },
+         { value: '$3M', label: 'Machine cost', icon: '💰' },
+         { value: '7 Tesla', label: 'Research field strength', icon: '🧲' }
+      ],
+      examples: ['Brain imaging', 'Cardiac MRI', 'Sports injury diagnosis', 'Cancer detection'],
+      companies: ['Siemens Healthineers', 'GE Healthcare', 'Philips', 'Canon Medical'],
+      futureImpact: 'Portable MRI and ultra-high field systems will bring brain imaging to emergency rooms and enable molecular-level diagnostics.',
+      color: '#EC4899'
+   },
+   {
+      icon: '🌍',
+      title: 'Climate & Astronomy',
+      short: 'Earth\'s 26,000-year wobble',
+      tagline: 'Celestial mechanics at work',
+      description: 'Earth\'s axial precession changes which star is "North Star" over millennia. This 26,000-year cycle affects climate patterns (Milankovitch cycles) and required ancient astronomers to update star catalogs.',
+      connection: 'The Sun and Moon\'s gravitational pull on Earth\'s equatorial bulge creates torque, causing our planet\'s axis to precess like a tilted spinning top.',
+      howItWorks: 'Earth\'s 23.5° tilt combined with its equatorial bulge experiences differential gravitational pull, generating the torque that drives precession.',
+      stats: [
+         { value: '26,000', label: 'Years per cycle', icon: '🔄' },
+         { value: '23.5°', label: 'Axial tilt', icon: '📐' },
+         { value: '50"', label: 'Shift per year', icon: '⭐' }
+      ],
+      examples: ['Ice age timing', 'Ancient Egyptian astronomy', 'Star catalog corrections', 'Agricultural calendar drift'],
+      companies: ['NASA JPL', 'ESA', 'NOAA', 'Major observatories'],
+      futureImpact: 'Understanding precession helps predict long-term climate and guides interstellar navigation for future space missions.',
+      color: '#F59E0B'
+   }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

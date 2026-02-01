@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🎧',
+    title: 'Noise-Canceling Headphones',
+    short: 'Creating anti-sound to silence the world',
+    tagline: 'Silence through physics',
+    description: 'Active noise cancellation uses microphones to detect incoming sound and speakers to emit an inverted waveform. The original sound and anti-sound interfere destructively, reducing noise by up to 30dB.',
+    connection: 'This simulation demonstrates destructive interference at half-wavelength path differences. Noise-canceling headphones create a path difference of exactly half a wavelength inside your ear canal.',
+    howItWorks: 'External microphones capture ambient noise. DSP chips compute the inverted waveform (180° phase shift) in microseconds. Speakers emit anti-sound that arrives at your eardrum simultaneously with the original noise, causing destructive interference.',
+    stats: [
+      { value: '30 dB', label: 'Maximum noise reduction', icon: '📉' },
+      { value: '$15B', label: 'ANC headphone market', icon: '💰' },
+      { value: '10μs', label: 'Processing latency', icon: '⚡' }
+    ],
+    examples: ['Bose QuietComfort', 'Sony WH-1000XM', 'Apple AirPods Pro', 'Aviation headsets'],
+    companies: ['Bose', 'Sony', 'Apple', 'Sennheiser'],
+    futureImpact: 'Transparent mode and spatial audio use the same physics to selectively enhance desired sounds while canceling unwanted noise.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎭',
+    title: 'Concert Hall Acoustics',
+    short: 'Designing spaces where every seat sounds perfect',
+    tagline: 'Architecture of sound',
+    description: 'Concert hall designers carefully position reflective surfaces, absorbers, and diffusers to ensure constructive interference enhances music while destructive interference eliminates echoes and dead spots.',
+    connection: 'This simulation shows how speaker position creates interference patterns with loud and quiet spots. Concert halls are designed so reflections from walls, ceiling, and stage create beneficial interference at all seats.',
+    howItWorks: 'Ray tracing models predict sound paths from stage to every seat. Early reflections (within 50ms) should reinforce the direct sound through constructive interference. Later reflections are scattered by diffusers to create ambiance without distinct echoes.',
+    stats: [
+      { value: '1.8-2.2s', label: 'Ideal reverberation time', icon: '🎵' },
+      { value: '$500M+', label: 'Major concert hall cost', icon: '🏛️' },
+      { value: '50ms', label: 'Critical early reflection window', icon: '⏱️' }
+    ],
+    examples: ['Sydney Opera House', 'Walt Disney Concert Hall', 'Elbphilharmonie Hamburg', 'Boston Symphony Hall'],
+    companies: ['Arup Acoustics', 'Nagata Acoustics', 'Kirkegaard', 'Jaffe Holden'],
+    futureImpact: 'Programmable acoustic surfaces with active elements could transform a single hall into multiple acoustic environments on demand.',
+    color: '#10B981'
+  },
+  {
+    icon: '📡',
+    title: 'Phased Array Radar & Sonar',
+    short: 'Steering beams electronically without moving parts',
+    tagline: 'The power of many',
+    description: 'Phased array systems use multiple transmitters with precisely controlled timing. Constructive interference in one direction creates a focused beam, while destructive interference suppresses energy elsewhere. Electronic timing changes steer the beam instantly.',
+    connection: 'This simulation shows two-source interference patterns. Phased arrays use dozens to thousands of sources with controlled phase delays to create complex interference patterns that can be steered and shaped.',
+    howItWorks: 'Each antenna element transmits with a programmable time delay. Waves from all elements arrive in phase (constructive interference) only in one direction, determined by the delay pattern. Changing delays electronically steers the beam in microseconds.',
+    stats: [
+      { value: '1000+', label: 'Elements in advanced arrays', icon: '📡' },
+      { value: '1μs', label: 'Beam steering time', icon: '⚡' },
+      { value: '$50B', label: 'Phased array market', icon: '💵' }
+    ],
+    examples: ['AEGIS naval radar', 'F-35 fighter radar', 'SpaceX Starlink antennas', 'Medical ultrasound'],
+    companies: ['Raytheon', 'Northrop Grumman', 'Lockheed Martin', 'SpaceX'],
+    futureImpact: 'Low-cost digital phased arrays will enable 5G/6G communications, autonomous vehicle radar, and satellite internet for everyone.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔬',
+    title: 'Gravitational Wave Detection',
+    short: 'Interferometers detect ripples in spacetime itself',
+    tagline: 'Hearing the universe',
+    description: 'LIGO detects gravitational waves by measuring interference changes when a passing wave stretches space differently in perpendicular directions. This remarkable achievement measures distances 1/10,000th the width of a proton.',
+    connection: 'LIGO is essentially a giant version of this simulation, using laser light instead of sound. When path lengths change due to gravitational waves, the interference pattern shifts detectably.',
+    howItWorks: 'A laser beam is split and sent down 4km perpendicular arms. Mirrors reflect the beams back to recombine at a detector. Normally the beams interfere destructively (dark output). A gravitational wave changes arm lengths asymmetrically, shifting the interference and creating a signal.',
+    stats: [
+      { value: '10⁻²¹', label: 'Strain sensitivity', icon: '🎯' },
+      { value: '4 km', label: 'Arm length', icon: '📏' },
+      { value: '90+', label: 'Gravitational wave events detected', icon: '🌌' }
+    ],
+    examples: ['LIGO Hanford & Livingston', 'Virgo (Italy)', 'KAGRA (Japan)', 'Future LISA space detector'],
+    companies: ['Caltech', 'MIT', 'LIGO Scientific Collaboration', 'Max Planck Society'],
+    futureImpact: 'Space-based interferometers like LISA will detect gravitational waves from supermassive black holes and the early universe.',
+    color: '#3B82F6'
+  }
+];
+
 interface SoundInterferenceRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

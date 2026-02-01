@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🛰️',
+    title: 'Spacecraft Attitude Control',
+    short: 'Satellites use reaction wheels to orient themselves in space',
+    tagline: 'Staying steady among the stars',
+    description: 'Spacecraft use spinning reaction wheels and control moment gyroscopes to maintain precise orientation without expending fuel. By speeding up or slowing down internal flywheels, the craft can rotate in the opposite direction.',
+    connection: 'The sleeping top demonstrates gyroscopic stability - the same principle that keeps spacecraft pointing in the right direction. Angular momentum conservation means changing one spinning component affects the whole system.',
+    howItWorks: 'Reaction wheels are electric motors spinning heavy disks. To turn the spacecraft right, the wheel spins faster left, and by conservation of angular momentum, the spacecraft rotates right. Control moment gyroscopes use tilting gyros for faster, more powerful attitude changes.',
+    stats: [
+      { value: '6000+', label: 'Active satellites in orbit', icon: '🛰️' },
+      { value: '0.001°', label: 'Pointing accuracy achieved', icon: '🎯' },
+      { value: '90%', label: 'Fuel savings vs thrusters', icon: '⛽' }
+    ],
+    examples: ['Hubble Space Telescope', 'International Space Station', 'GPS satellites', 'Mars rovers'],
+    companies: ['NASA', 'SpaceX', 'Honeywell Aerospace', 'Collins Aerospace'],
+    futureImpact: 'Advanced gyroscopic systems will enable more agile spacecraft, precise space telescopes, and eventually artificial gravity stations using rotating habitats.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚴',
+    title: 'Bicycle Stability',
+    short: 'Spinning wheels help bikes stay upright at speed',
+    tagline: 'The physics of two-wheeled balance',
+    description: 'A moving bicycle is remarkably stable even without a rider. The spinning wheels act as gyroscopes, and when the bike tips, the front wheel naturally steers into the fall, creating a self-correcting effect.',
+    connection: 'Like a sleeping top resisting falling over, spinning bicycle wheels resist changes to their orientation. The gyroscopic precession of the front wheel provides automatic steering correction.',
+    howItWorks: 'When a bike tips left, the gyroscopic effect steers the front wheel left. This moves the wheels under the falling center of mass, correcting the tip. Trail geometry and mass distribution also contribute to this self-stability.',
+    stats: [
+      { value: '1B+', label: 'Bicycles worldwide', icon: '🚲' },
+      { value: '8 mph', label: 'Min speed for gyro stability', icon: '💨' },
+      { value: '130+', label: 'Years of physics study', icon: '📚' }
+    ],
+    examples: ['Road racing bikes', 'Motorcycles', 'Self-balancing robots', 'Gyroscopic monorails'],
+    companies: ['Trek', 'Specialized', 'Lit Motors', 'Segway'],
+    futureImpact: 'Understanding bicycle gyroscopic dynamics is enabling self-balancing electric vehicles, autonomous delivery robots, and more stable motorcycle designs.',
+    color: '#10B981'
+  },
+  {
+    icon: '🧭',
+    title: 'Gyrocompasses',
+    short: 'Spinning gyros find true north without magnets',
+    tagline: 'Earth itself becomes the reference',
+    description: 'Ships and aircraft use gyrocompasses to find true north. Unlike magnetic compasses, they are unaffected by metal hulls or electromagnetic interference, making them essential for precise navigation.',
+    connection: 'A gyrocompass exploits gyroscopic precession - the same physics that makes a sleeping top precess around its vertical axis. Earth\'s rotation causes the gyro axis to align with true north over time.',
+    howItWorks: 'A spinning gyro wants to maintain its orientation in space. But Earth rotates beneath it. Clever damping mechanisms convert this apparent drift into precession that aligns the spin axis with Earth\'s rotation axis (north-south).',
+    stats: [
+      { value: '0.1°', label: 'Heading accuracy', icon: '🎯' },
+      { value: '100+', label: 'Years of marine use', icon: '⚓' },
+      { value: '$15B', label: 'Navigation equipment market', icon: '📈' }
+    ],
+    examples: ['Naval vessels', 'Commercial ships', 'Submarines', 'Large aircraft'],
+    companies: ['Sperry Marine', 'Raytheon', 'Kongsberg', 'Safran'],
+    futureImpact: 'Modern fiber-optic and MEMS gyroscopes are miniaturizing this technology for drones, autonomous vehicles, and consumer electronics.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⛸️',
+    title: 'Figure Skating Spins',
+    short: 'Skaters spin faster by pulling arms inward',
+    tagline: 'Conservation of angular momentum in action',
+    description: 'Figure skaters demonstrate physics principles beautifully. Starting a spin with arms extended, then pulling them in dramatically increases rotation speed - sometimes reaching 6 revolutions per second.',
+    connection: 'Like adjusting a top\'s precession by changing its spin rate, skaters exploit conservation of angular momentum. Reducing moment of inertia (arms in) means angular velocity must increase to conserve L.',
+    howItWorks: 'Angular momentum L = Iω is conserved. When the skater pulls arms from extended (large I) to the body (small I), the angular velocity ω must increase proportionally. A 3x reduction in I means 3x faster spinning.',
+    stats: [
+      { value: '6 rev/s', label: 'Max spin speed', icon: '🌀' },
+      { value: '4 G', label: 'Force on body during spin', icon: '💪' },
+      { value: '20M', label: 'Global skating enthusiasts', icon: '👥' }
+    ],
+    examples: ['Olympic figure skating', 'Ice dancing', 'Divers and gymnasts', 'Ballet pirouettes'],
+    companies: ['US Figure Skating', 'International Skating Union', 'Riedell Skates', 'Jackson Ultima'],
+    futureImpact: 'Biomechanics research in skating is improving athletic performance, rehabilitation techniques, and even robotics control systems.',
+    color: '#8B5CF6'
+  }
+];
+
 interface SleepingTopRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

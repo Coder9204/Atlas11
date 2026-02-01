@@ -6,6 +6,81 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // Why is the sky blue but clouds white?
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '🌅',
+    title: 'Sunset Color Prediction',
+    short: 'Meteorologists use scattering physics to predict sky colors and visibility conditions',
+    tagline: 'The science behind spectacular sunsets',
+    description: 'The stunning oranges and reds of sunset result from Rayleigh scattering - blue light scatters away during the longer atmospheric path at low sun angles, leaving warm colors to reach our eyes. Pollution particles, volcanic ash, and humidity add Mie scattering effects that can create unusually vivid or hazy sunsets.',
+    connection: 'This game teaches exactly why short wavelengths scatter more than long wavelengths - the fundamental physics that creates every sunrise and sunset you see.',
+    howItWorks: 'Sunlight traveling through atmosphere at sunset passes through 10-40x more air than at noon. Blue wavelengths scatter away first (Rayleigh). Particles add forward-peaked Mie scattering. The combined effect creates the color gradient from blue zenith to orange horizon.',
+    stats: [
+      { value: '~460nm', label: 'Blue light wavelength', icon: '🔵' },
+      { value: '~650nm', label: 'Red light wavelength', icon: '🔴' },
+      { value: '10x', label: 'Blue vs red scattering ratio', icon: '📊' }
+    ],
+    examples: ['Weather photography', 'Aviation visibility', 'Pollution monitoring', 'Solar energy forecasting'],
+    companies: ['The Weather Channel', 'AccuWeather', 'National Weather Service', 'European Space Agency'],
+    futureImpact: 'AI models combining satellite data with scattering physics will provide hyper-local visibility forecasts for autonomous vehicles and drones.',
+    color: '#F97316'
+  },
+  {
+    icon: '🌫️',
+    title: 'Fog and Cloud Visibility',
+    short: 'Understanding how water droplet size affects visibility for aviation and driving safety',
+    tagline: 'Seeing through the white curtain',
+    description: 'Fog and clouds appear white because water droplets are large enough for Mie scattering, which scatters all wavelengths equally. Visibility in fog depends on droplet concentration and size distribution. Aviation and highway safety systems must detect and predict fog formation to prevent accidents.',
+    connection: 'The game demonstrates how particle size determines scattering type - Mie scattering from large droplets explains why fog and clouds obscure vision uniformly across all colors.',
+    howItWorks: 'Water droplets 1-50 micrometers in diameter produce strong Mie scattering. Unlike Rayleigh, Mie scattering is wavelength-independent for visible light, causing the white appearance. Visibility meters measure scattered light to quantify fog density for pilots and drivers.',
+    stats: [
+      { value: '<1 km', label: 'Fog visibility definition', icon: '👁️' },
+      { value: '10-50μm', label: 'Typical fog droplet size', icon: '💧' },
+      { value: '500+', label: 'Annual fog-related accidents', icon: '⚠️' }
+    ],
+    examples: ['Airport fog sensors', 'Highway visibility systems', 'Marine navigation', 'Autonomous vehicle sensors'],
+    companies: ['Vaisala', 'Campbell Scientific', 'Lufft', 'Biral'],
+    futureImpact: 'LiDAR and radar fusion will enable vehicles to navigate safely through fog by combining scattering models with active sensing.',
+    color: '#6B7280'
+  },
+  {
+    icon: '🔬',
+    title: 'Medical Diagnostics',
+    short: 'Light scattering techniques detect pathogens, blood cells, and protein aggregation',
+    tagline: 'Diagnosing disease with scattered light',
+    description: 'Medical instruments use light scattering to count and classify blood cells, detect bacteria, and measure protein aggregation. Flow cytometers scatter laser light off individual cells, with scattering patterns revealing cell size (Mie) and internal structure (Rayleigh). This enables rapid diagnosis without chemical staining.',
+    connection: 'The wavelength-dependence of Rayleigh vs Mie scattering explored in this game is exactly how flow cytometers distinguish between different cell types.',
+    howItWorks: 'Cells passing through a laser beam scatter light at different angles. Forward scatter (Mie) indicates cell size. Side scatter (mix of Rayleigh and Mie) reveals internal complexity. Multiple detectors build a signature that identifies each cell type.',
+    stats: [
+      { value: '10,000+', label: 'Cells analyzed per second', icon: '🔬' },
+      { value: '$8B', label: 'Flow cytometry market', icon: '💊' },
+      { value: '100+', label: 'Disease markers detectable', icon: '🩺' }
+    ],
+    examples: ['Complete blood counts', 'HIV viral load testing', 'Cancer cell detection', 'Bacterial identification'],
+    companies: ['Beckman Coulter', 'BD Biosciences', 'Sysmex', 'Abbott Laboratories'],
+    futureImpact: 'Miniaturized scattering-based diagnostics will enable point-of-care testing for infectious diseases and cancer screening in remote areas.',
+    color: '#10B981'
+  },
+  {
+    icon: '🎨',
+    title: 'Paint and Pigment Design',
+    short: 'Engineering particle sizes to create specific colors and opacity in coatings',
+    tagline: 'The physics of perfect white paint',
+    description: 'White paint contains titanium dioxide particles engineered to be the optimal size for Mie scattering of visible light. Particle size determines whether paint appears transparent, translucent, or opaque. Color pigments must balance absorption and scattering to achieve desired appearance.',
+    connection: 'Understanding how particle size affects scattering - the core lesson of this game - is essential for formulating paints with correct hiding power and color.',
+    howItWorks: 'TiO2 particles ~250nm diameter maximize scattering efficiency for visible light via Mie scattering. Smaller particles would allow light through (Rayleigh regime). Larger particles waste material. The refractive index contrast with the binder determines scattering strength.',
+    stats: [
+      { value: '~250nm', label: 'Optimal TiO2 particle size', icon: '⚪' },
+      { value: '$17B', label: 'Global TiO2 market', icon: '💰' },
+      { value: '5M tons', label: 'Annual TiO2 production', icon: '🏭' }
+    ],
+    examples: ['House paint', 'Automotive coatings', 'Sunscreen', 'Paper whitening'],
+    companies: ['Chemours', 'Kronos', 'Tronox', 'Lomon Billions'],
+    futureImpact: 'Bio-based white pigments and structural color from nanoengineered particles may reduce environmental impact of paint production.',
+    color: '#3B82F6'
+  }
+];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'

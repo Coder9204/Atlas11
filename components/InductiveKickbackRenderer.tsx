@@ -40,6 +40,85 @@ interface InductiveKickbackRendererProps {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Automotive Ignition Systems',
+    short: 'Turning 12V into 40,000V to create sparks',
+    tagline: 'Every engine start uses controlled kickback',
+    description: 'Car ignition systems exploit inductive kickback to create the 40,000V spark needed to ignite fuel. A 12V battery energizes a coil, then the circuit is interrupted, causing the collapsing magnetic field to generate tens of thousands of volts.',
+    connection: 'The V = -L(di/dt) equation you explored explains it: interrupting current through a high-inductance coil creates a massive di/dt, producing enormous voltage spikes.',
+    howItWorks: 'The ignition coil has two windings sharing a core. Primary current (low voltage, high current) builds magnetic field. When interrupted, field collapse induces high voltage in the secondary winding with many more turns.',
+    stats: [
+      { value: '40,000V', label: 'Typical spark voltage', icon: '⚡' },
+      { value: '12V input', label: 'Battery voltage', icon: '🔋' },
+      { value: '3,000x', label: 'Voltage multiplication', icon: '📈' }
+    ],
+    examples: ['Spark plug ignition', 'Distributor systems', 'Coil-on-plug systems', 'Racing ignition'],
+    companies: ['Delphi', 'Denso', 'Bosch', 'NGK'],
+    futureImpact: 'Plasma ignition systems will use even higher voltages for cleaner combustion in hydrogen engines.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🔌',
+    title: 'DC-DC Boost Converters',
+    short: 'Harnessing kickback to step up voltage efficiently',
+    tagline: 'Turn 3.7V into 5V with 95% efficiency',
+    description: 'Boost converters intentionally create controlled inductive kickback to step up voltage. A transistor rapidly switches current through an inductor; each switching cycle harvests the kickback energy to charge a capacitor at higher voltage.',
+    connection: 'Rather than suppressing kickback with a flyback diode, boost converters capture this energy through a diode to a capacitor, converting the inductor\'s stored energy to higher voltage.',
+    howItWorks: 'When the switch closes, current builds in the inductor, storing energy. When opened, the inductor\'s voltage spikes (kickback) forward-biases a diode, charging an output capacitor at higher voltage. PWM control regulates output.',
+    stats: [
+      { value: '95%', label: 'Typical efficiency', icon: '⚡' },
+      { value: '100 kHz+', label: 'Switching frequency', icon: '🔄' },
+      { value: '2-10x', label: 'Boost ratio achievable', icon: '📈' }
+    ],
+    examples: ['USB power banks', 'LED driver circuits', 'Solar MPPT chargers', 'Electric vehicle power systems'],
+    companies: ['Texas Instruments', 'Analog Devices', 'Maxim', 'ON Semiconductor'],
+    futureImpact: 'GaN transistors will enable MHz switching for smaller, more efficient converters.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🎸',
+    title: 'Electric Guitar Pickups',
+    short: 'Converting string vibration to electrical signal via induction',
+    tagline: 'Magnetic strings moving through coils create music',
+    description: 'Guitar pickups are inductors with permanent magnets that magnetize steel strings. Vibrating strings create a changing magnetic flux through the pickup coil, inducing a voltage that becomes the audio signal.',
+    connection: 'While not kickback in the sudden-interruption sense, pickups demonstrate the same V = -N(dΦ/dt) principle: changing magnetic flux through a coil induces voltage.',
+    howItWorks: 'Permanent magnets beneath the strings magnetize them. When strings vibrate, they create a time-varying magnetic field through the pickup coil. This changing flux induces voltage proportional to string velocity.',
+    stats: [
+      { value: '10 mV', label: 'Typical output voltage', icon: '📊' },
+      { value: '5-15 kΩ', label: 'Pickup coil resistance', icon: '🔌' },
+      { value: '8,000 turns', label: 'Typical winding count', icon: '🔄' }
+    ],
+    examples: ['Fender Stratocaster pickups', 'Gibson PAF humbuckers', 'Active EMG pickups', 'Bass guitar pickups'],
+    companies: ['Fender', 'Gibson', 'Seymour Duncan', 'DiMarzio'],
+    futureImpact: 'Active digital pickups will model any vintage pickup sound through real-time DSP processing.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔋',
+    title: 'Relay Protection & Snubber Circuits',
+    short: 'Protecting electronics from kickback damage',
+    tagline: 'A 50-cent diode saves $50 in components',
+    description: 'Every relay, solenoid, and motor in electronic systems produces potentially damaging kickback spikes when switched off. Protection circuits (flyback diodes, snubbers) provide safe paths for the collapsing field energy.',
+    connection: 'The protective measures you learned about - flyback diodes clamping spikes to safe voltages - are essential in every system containing inductors and semiconductor switches.',
+    howItWorks: 'A flyback diode across an inductor provides a current path when the switch opens. Instead of voltage spiking to kV levels, current circulates through the diode, limited to diode forward voltage above supply.',
+    stats: [
+      { value: '100V+', label: 'Unprotected spike voltage', icon: '⚡' },
+      { value: '1V', label: 'Protected spike voltage', icon: '📉' },
+      { value: '$0.10', label: 'Flyback diode cost', icon: '💰' }
+    ],
+    examples: ['Arduino relay shields', 'Automotive ECU design', 'Industrial PLC outputs', 'Motor driver circuits'],
+    companies: ['Vishay', 'ON Semiconductor', 'Nexperia', 'STMicroelectronics'],
+    futureImpact: 'Integrated smart switches will include protection on-chip, eliminating external components.',
+    color: '#F59E0B'
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // 10-QUESTION TEST DATA
 // ────────────────────────────────────────────────────────────────────────────
 

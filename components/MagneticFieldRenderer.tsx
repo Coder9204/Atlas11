@@ -13,6 +13,82 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // - Right-hand rule for field direction
 // ════════════════════════════════════════════════════════════════════════════
 
+// Real-world applications for magnetic fields
+const realWorldApps = [
+  {
+    icon: '🏥',
+    title: 'MRI Medical Imaging',
+    short: 'Magnetic resonance imaging for diagnosis',
+    tagline: 'See inside the body without radiation',
+    description: 'MRI machines use powerful superconducting magnets (1.5-7 Tesla) to align hydrogen atoms in body tissue. Radio pulses flip these atoms, and the magnetic field detects their return signal, creating detailed 3D images of soft tissue, brain, and organs.',
+    connection: 'MRI relies on the Lorentz force and magnetic field interactions you explored. The solenoid field equation B = μ₀nI determines the main field strength, while gradient coils use F = BIL forces to spatially encode position.',
+    howItWorks: 'Superconducting coils create uniform 1.5-3T field. RF pulses excite hydrogen nuclei. Gradient coils (using F = BIL) encode spatial information. Relaxation signals are detected and reconstructed into images.',
+    stats: [
+      { value: '40M+', label: 'MRI scans per year (US)', icon: '🏥' },
+      { value: '$8B', label: 'MRI equipment market', icon: '📈' },
+      { value: '0.1mm', label: 'Spatial resolution', icon: '🔬' }
+    ],
+    examples: ['Brain tumor detection', 'Cardiac imaging', 'Orthopedic diagnosis', 'Neurological research'],
+    companies: ['Siemens Healthineers', 'GE Healthcare', 'Philips', 'Canon Medical'],
+    futureImpact: '7T ultra-high-field MRI will enable visualization of individual neural pathways, revolutionizing brain research and early Alzheimer\'s detection.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🚄',
+    title: 'Maglev Transportation',
+    short: 'Magnetic levitation trains',
+    tagline: 'Floating at 600 km/h on magnetic fields',
+    description: 'Maglev trains use powerful electromagnets to levitate above the track, eliminating friction. The Lorentz force F = qv × B propels the train forward, while magnetic field gradients provide stable levitation and guidance without physical contact.',
+    connection: 'The magnetic force F = BIL sin(θ) on current-carrying rails demonstrates the same physics used to accelerate maglev trains. Understanding field direction via the right-hand rule is essential for designing stable levitation.',
+    howItWorks: 'Superconducting or electromagnetic coils create repulsive/attractive forces for levitation. Linear motors use traveling magnetic waves to propel trains. Active control systems adjust currents for stability.',
+    stats: [
+      { value: '603km/h', label: 'Speed record (Japan)', icon: '🚀' },
+      { value: '30km', label: 'Longest commercial line', icon: '📏' },
+      { value: '0', label: 'Wheel friction', icon: '⚡' }
+    ],
+    examples: ['Shanghai Maglev', 'Japan Chuo Shinkansen', 'Hyperloop concepts', 'Urban people movers'],
+    companies: ['Central Japan Railway', 'CRRC', 'Transrapid', 'Virgin Hyperloop'],
+    futureImpact: 'Vacuum tube maglev (Hyperloop) could achieve 1000+ km/h, making cross-country travel faster than flying.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '⚡',
+    title: 'Electric Motors & Generators',
+    short: 'Converting electricity and motion',
+    tagline: 'The force that moves the world',
+    description: 'Every electric motor uses F = BIL - the force on a current-carrying wire in a magnetic field. From tiny computer fans to massive industrial drives, this fundamental interaction converts electrical energy to mechanical motion (and vice versa in generators).',
+    connection: 'The interactive simulation showed how F = BIL sin(θ) depends on field strength, current, and angle. Motors optimize this by using radial magnetic fields and commutation to maintain maximum torque throughout rotation.',
+    howItWorks: 'Permanent magnets or electromagnets create radial field. Current through rotor windings experiences F = BIL force. Commutator or inverter switches current direction to maintain rotation. Generators reverse the process.',
+    stats: [
+      { value: '45%', label: 'Of global electricity to motors', icon: '⚡' },
+      { value: '$175B', label: 'Electric motor market', icon: '📈' },
+      { value: '97%', label: 'Best motor efficiency', icon: '🎯' }
+    ],
+    examples: ['Electric vehicles', 'Industrial drives', 'HVAC systems', 'Wind turbines'],
+    companies: ['Tesla', 'Siemens', 'ABB', 'Nidec'],
+    futureImpact: 'Axial flux motors with halbach arrays will double EV range by achieving >98% efficiency in compact packages.',
+    color: '#22c55e'
+  },
+  {
+    icon: '💾',
+    title: 'Data Storage Technology',
+    short: 'Magnetic recording in hard drives',
+    tagline: 'Trillions of tiny magnets storing data',
+    description: 'Hard disk drives store data as magnetic domains - tiny regions magnetized in one of two directions representing 0s and 1s. Read/write heads use the Biot-Savart law to create precise magnetic fields that flip these domains, achieving densities of 1 terabit per square inch.',
+    connection: 'The field from a current-carrying wire (B = μ₀I/2πr) is the basis for write heads. The closer the head gets to the disk, the stronger and more localized the field, enabling higher storage density.',
+    howItWorks: 'Write head creates localized magnetic field from current pulse. Field magnetizes tiny grain on disk surface. Read head detects stray field from magnetized regions. Giant magnetoresistance (GMR) amplifies tiny signals.',
+    stats: [
+      { value: '20TB', label: 'Current HDD capacity', icon: '💾' },
+      { value: '1Tb/in²', label: 'Areal density', icon: '🔬' },
+      { value: '$65B', label: 'Storage market', icon: '📈' }
+    ],
+    examples: ['Data centers', 'Cloud storage', 'Surveillance systems', 'Archival storage'],
+    companies: ['Seagate', 'Western Digital', 'Toshiba', 'Samsung'],
+    futureImpact: 'Heat-assisted magnetic recording (HAMR) will push densities to 10 Tb/in², enabling 100TB drives by 2030.',
+    color: '#f59e0b'
+  }
+];
+
 // Phase type - 10 phases per spec
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

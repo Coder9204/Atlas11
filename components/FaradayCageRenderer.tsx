@@ -13,6 +13,84 @@ interface FaradayCageRendererProps {
 }
 
 // ===============================================================================
+// REAL WORLD APPLICATIONS
+// ===============================================================================
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'RF Shielding in Electronics',
+    short: 'Protecting sensitive circuits from electromagnetic interference',
+    tagline: 'Keep signals in, interference out',
+    description: 'Every smartphone, computer, and electronic device contains Faraday cage shielding to prevent internal circuits from radiating interference and to protect them from external electromagnetic noise that could cause malfunctions.',
+    connection: 'Just as you saw charges redistribute to cancel fields inside, metal enclosures around sensitive circuits redirect electromagnetic waves around the electronics inside.',
+    howItWorks: 'Conductive enclosures around circuit boards redirect incoming EM waves. The waves induce currents in the shield, which create opposing fields that cancel inside. Mesh and solid shields work as long as holes are smaller than the wavelength.',
+    stats: [
+      { value: '60 dB', label: 'Typical shielding effectiveness', icon: '📊' },
+      { value: '$30B', label: 'EMI shielding market', icon: '💰' },
+      { value: '99.9%', label: 'Signal attenuation possible', icon: '📉' }
+    ],
+    examples: ['Smartphone RF shields', 'Computer cases', 'Medical device enclosures', 'Military communications'],
+    companies: ['Laird Performance Materials', 'Parker Chomerics', 'Tech-Etch', '3M'],
+    futureImpact: 'Advanced metamaterials will enable frequency-selective shielding that blocks specific interference while allowing desired signals through.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚡',
+    title: 'Lightning Protection',
+    short: 'Cars and planes as mobile Faraday cages',
+    tagline: 'Survive 200 million volts safely',
+    description: 'When lightning strikes a car or airplane, the metal body acts as a Faraday cage, conducting the massive current around the exterior and protecting passengers inside. Aircraft are struck by lightning about once per year with no harm.',
+    connection: 'The same charge redistribution you observed - charges moving to the outer surface - directs lightning current around the vehicle\'s exterior, leaving the interior field-free.',
+    howItWorks: 'Lightning current flows along the conductive outer skin of vehicles. Aircraft have bonding straps connecting all metal parts, ensuring current has a continuous conductive path. The electric field inside remains zero despite hundreds of thousands of amperes flowing outside.',
+    stats: [
+      { value: '200M volts', label: 'Typical lightning voltage', icon: '⚡' },
+      { value: '30,000 A', label: 'Average lightning current', icon: '🔥' },
+      { value: '1/year', label: 'Average aircraft lightning strikes', icon: '✈️' }
+    ],
+    examples: ['Automobile lightning safety', 'Aircraft lightning protection', 'Building lightning systems', 'Outdoor shelter design'],
+    companies: ['Boeing', 'Airbus', 'Lightning Master', 'ERICO'],
+    futureImpact: 'Carbon fiber aircraft require special conductive mesh layers since composite materials don\'t conduct - engineering Faraday cages into new materials.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏥',
+    title: 'MRI Room Shielding',
+    short: 'Creating interference-free zones for medical imaging',
+    tagline: 'A room-sized Faraday cage for your health',
+    description: 'MRI machines detect incredibly faint radio signals from hydrogen atoms in your body. The entire MRI room is a giant Faraday cage - copper mesh in the walls blocks external radio signals that would otherwise swamp these tiny signals.',
+    connection: 'This is the Faraday cage principle at room scale: conductive walls block external EM waves while allowing the controlled magnetic and radio fields of the MRI to function inside.',
+    howItWorks: 'MRI rooms are lined with copper mesh or foil forming a continuous conductive enclosure. All cables entering must pass through filtered panels. The shielding typically provides 80-100 dB of attenuation.',
+    stats: [
+      { value: '100 dB', label: 'Typical MRI room shielding', icon: '📊' },
+      { value: '$200K', label: 'Cost of MRI room shielding', icon: '💰' },
+      { value: '40,000+', label: 'MRI machines worldwide', icon: '🌍' }
+    ],
+    examples: ['Hospital MRI suites', 'Research MRI facilities', 'Mobile MRI units', 'Veterinary MRI rooms'],
+    companies: ['ETS-Lindgren', 'Universal Shielding', 'Siemens Healthineers', 'GE Healthcare'],
+    futureImpact: 'Active cancellation systems may supplement passive shielding, enabling MRI in challenging environments like operating rooms.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔒',
+    title: 'RFID & Signal Blocking',
+    short: 'Protecting credit cards and keyless entry from hacking',
+    tagline: 'Your wallet as a security device',
+    description: 'RFID-blocking wallets and pouches use Faraday cage principles to prevent unauthorized scanning of contactless credit cards and passport chips. Signal-blocking pouches protect car key fobs from relay attacks.',
+    connection: 'The mesh blocking electromagnetic waves you explored protects your personal data - if the holes are smaller than the ~10cm wavelength of RFID signals, the cards inside are unreadable.',
+    howItWorks: 'Thin metal fabric or foil in wallet linings blocks the 13.56 MHz signals used by contactless cards. For car key fobs (typically 315-433 MHz), pouches must block longer wavelengths, requiring more complete enclosure.',
+    stats: [
+      { value: '$10B+', label: 'Annual contactless fraud', icon: '💳' },
+      { value: '125 KHz-13.56 MHz', label: 'RFID frequency range', icon: '📡' },
+      { value: '70%', label: 'Car thefts using relay attacks', icon: '🚗' }
+    ],
+    examples: ['RFID-blocking wallets', 'Faraday key pouches', 'Secure document bags', 'Phone privacy pouches'],
+    companies: ['Silent Pocket', 'Secrid', 'Ekster', 'RFID Cloaked'],
+    futureImpact: 'As more devices become wireless and hackable, Faraday principles will be built into everyday items from handbags to home security systems.',
+    color: '#22C55E'
+  }
+];
+
+// ===============================================================================
 // CONSTANTS
 // ===============================================================================
 const TEST_QUESTIONS = [

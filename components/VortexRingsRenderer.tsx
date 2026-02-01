@@ -25,6 +25,81 @@ const colors = {
   fog: 'rgba(200, 200, 200, 0.6)',
 };
 
+const realWorldApps = [
+  {
+    icon: '🐙',
+    title: 'Squid & Jellyfish Propulsion',
+    short: 'Nature\'s vortex-ring engines',
+    tagline: 'Millions of years of optimization',
+    description: 'Squid and jellyfish propel themselves by ejecting water in carefully formed vortex rings. This is remarkably efficient - each pulse carries maximum momentum for minimum expelled mass.',
+    connection: 'Vortex rings transport momentum with minimal energy loss. The rotating toroidal structure maintains coherence over long distances.',
+    howItWorks: 'Muscle contractions expel water through a siphon (squid) or bell margin (jellyfish). The resulting vortex ring carries impulse efficiently. Squid optimize ring formation for different speeds.',
+    stats: [
+      { value: '25mph', label: 'Squid burst speed', icon: '🚀' },
+      { value: '50%', label: 'Jet efficiency', icon: '⚡' },
+      { value: '500M yr', label: 'Evolution time', icon: '🧬' }
+    ],
+    examples: ['Giant squid', 'Box jellyfish', 'Nautilus', 'Cuttlefish'],
+    companies: ['Marine biology research', 'Biomimetic robotics', 'Oceanography', 'DARPA'],
+    futureImpact: 'Bio-inspired underwater robots will use vortex propulsion for efficient long-range exploration.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌋',
+    title: 'Volcanic Smoke Rings',
+    short: 'Giant vortex rings from eruptions',
+    tagline: 'Nature\'s largest vortex demonstrations',
+    description: 'Some volcanic vents produce spectacular smoke rings hundreds of meters across. These demonstrate vortex ring physics at enormous scale, visible for miles.',
+    connection: 'Hot gas pulses from circular vents create the same vortex dynamics as a toy cannon. Boundary layer friction at the vent edge initiates rotation.',
+    howItWorks: 'A pressure pulse expels gas from the vent. Edge friction creates the rotational component. The resulting toroidal vortex rises and maintains shape until dissipated by wind.',
+    stats: [
+      { value: '200m', label: 'Ring diameter', icon: '⭕' },
+      { value: '1km+', label: 'Travel distance', icon: '📏' },
+      { value: 'Minutes', label: 'Ring lifetime', icon: '⏱️' }
+    ],
+    examples: ['Mount Etna', 'Stromboli', 'Eyjafjallajokull', 'Hawaiian volcanoes'],
+    companies: ['USGS', 'Volcanology institutes', 'Documentary crews', 'Research universities'],
+    futureImpact: 'Studying volcanic vortex rings helps predict eruption characteristics and hazards.',
+    color: '#EF4444'
+  },
+  {
+    icon: '❤️',
+    title: 'Heart Blood Flow',
+    short: 'Vortex rings in every heartbeat',
+    tagline: 'Your heart is a vortex cannon',
+    description: 'Blood entering the left ventricle forms a vortex ring that optimizes filling and ejection. Disrupted vortex formation indicates heart disease. Cardiologists study these patterns for diagnosis.',
+    connection: 'The mitral valve opening creates a circular orifice. Incoming blood forms a toroidal vortex that aids complete ventricular filling and efficient ejection.',
+    howItWorks: 'Diastolic filling creates an asymmetric vortex ring. The ring redirects flow toward the outflow tract. Systolic contraction ejects blood with minimal turbulence.',
+    stats: [
+      { value: '60-100', label: 'Beats per minute', icon: '💓' },
+      { value: '5L/min', label: 'Cardiac output', icon: '🩸' },
+      { value: '60%', label: 'Ejection fraction', icon: '📊' }
+    ],
+    examples: ['Normal heart function', 'Cardiomyopathy diagnosis', 'Heart valve disease', 'Echo imaging'],
+    companies: ['GE Healthcare', 'Philips', 'Siemens Healthineers', 'CardioMEMS'],
+    futureImpact: 'AI analysis of cardiac vortex patterns will enable early detection of heart disease.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Mixing',
+    short: 'Vortex rings for efficient blending',
+    tagline: 'Controlled chaos for perfect mixes',
+    description: 'Industrial mixers use pulsed jets to create vortex rings that efficiently blend tank contents. This approach uses less energy than continuous stirring while achieving better uniformity.',
+    connection: 'Vortex rings entrain surrounding fluid as they travel, providing mixing far from the jet source. Multiple rings interact to distribute material throughout.',
+    howItWorks: 'Submerged jet nozzles pulse to create vortex rings. Rings travel through the tank, entraining and mixing contents. Computer control optimizes pulse timing and energy.',
+    stats: [
+      { value: '50%', label: 'Energy savings vs stirring', icon: '⚡' },
+      { value: '10x', label: 'Reach vs steady jets', icon: '📏' },
+      { value: '±2%', label: 'Mixing uniformity', icon: '🎯' }
+    ],
+    examples: ['Chemical reactors', 'Water treatment', 'Food processing', 'Pharmaceutical mixing'],
+    companies: ['GEA', 'Alfa Laval', 'SPX Flow', 'Pulsair'],
+    futureImpact: 'Smart mixing systems will use real-time sensing to optimize vortex generation.',
+    color: '#10B981'
+  }
+];
+
 interface VortexRing {
   id: number;
   x: number;

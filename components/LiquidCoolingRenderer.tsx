@@ -25,6 +25,81 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'Data Center Cooling',
+    short: 'Keeping servers running cool',
+    tagline: 'The liquid revolution in computing',
+    description: 'Modern data centers increasingly use liquid cooling to handle the intense heat from AI and high-performance computing. Direct-to-chip liquid cooling can remove 10x more heat than air, enabling denser server deployments and reducing cooling energy by 40%.',
+    connection: 'Water\'s high specific heat (4.18 kJ/kg·K) allows it to carry away much more heat per unit mass than air. The heat transfer equation Q = ṁCpΔT shows why liquid cooling enables higher power densities.',
+    howItWorks: 'Cold plates attach directly to CPUs and GPUs. Chilled water flows through microchannels, absorbing heat. The warm water circulates to cooling towers or heat exchangers. Some systems use immersion cooling where servers are submerged entirely.',
+    stats: [
+      { value: '1000 W/chip', label: 'Cooling capacity', icon: '⚡' },
+      { value: '40%', label: 'Energy savings', icon: '📈' },
+      { value: '$20B', label: 'DC cooling market', icon: '🚀' }
+    ],
+    examples: ['Microsoft Azure liquid cooling', 'Google TPU cooling', 'NVIDIA DGX systems', 'Meta AI clusters'],
+    companies: ['Asetek', 'CoolIT', 'GRC', 'LiquidCool Solutions'],
+    futureImpact: 'Two-phase immersion cooling using engineered fluids will enable chip power densities exceeding 2000 W while recovering waste heat for building heating.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'EV Battery Thermal Management',
+    short: 'Keeping batteries in the zone',
+    tagline: 'Temperature equals range',
+    description: 'Electric vehicle batteries perform best between 20-40°C. Liquid cooling systems circulate glycol through cooling plates between cells, managing heat during fast charging and high-power driving while also warming batteries in cold weather.',
+    connection: 'The convective heat transfer equation governs battery cooling. Flow rate, coolant properties, and temperature differential determine how fast heat can be removed—critical during DC fast charging.',
+    howItWorks: 'Cooling plates with serpentine channels sandwich battery modules. A pump circulates coolant to a heat exchanger or chiller. Intelligent controls balance cooling power against pump energy. Cold weather operation reverses flow through a heater.',
+    stats: [
+      { value: '250 kW', label: 'Charging power', icon: '⚡' },
+      { value: '30%', label: 'Range improvement', icon: '📈' },
+      { value: '$45B', label: 'EV thermal market', icon: '🚀' }
+    ],
+    examples: ['Tesla battery packs', 'Rivian thermal system', 'Porsche Taycan 800V', 'Lucid Air cooling'],
+    companies: ['Tesla', 'Rivian', 'Hanon Systems', 'Valeo'],
+    futureImpact: 'Immersive cell cooling and thermal interface materials will enable safe 500 kW charging, achieving 80% charge in under 10 minutes.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Superconductor Cooling',
+    short: 'Reaching near absolute zero',
+    tagline: 'Where resistance vanishes',
+    description: 'Superconducting systems like MRI machines and particle accelerators require cooling to cryogenic temperatures. Liquid helium at 4.2K or high-temperature superconductor systems at 77K use liquid nitrogen—both leveraging the exceptional heat capacity of cryogenic fluids.',
+    connection: 'Cryogenic cooling applies the same heat transfer principles at extreme temperatures. Latent heat of vaporization provides high cooling capacity. Maintaining temperature stability requires careful thermal management.',
+    howItWorks: 'Superconducting magnets sit in liquid helium baths. Cryocoolers recondense boiled helium. Multi-layer insulation minimizes heat leak from the room-temperature environment. Some systems use closed-loop circulation of subcooled helium.',
+    stats: [
+      { value: '4.2K', label: 'LHe temperature', icon: '⚡' },
+      { value: '1500L', label: 'MRI helium', icon: '📈' },
+      { value: '$8B', label: 'Cryogenics market', icon: '🚀' }
+    ],
+    examples: ['MRI scanners', 'LHC superconducting magnets', 'Fusion reactor magnets', 'Quantum computers'],
+    companies: ['Linde', 'Air Liquide', 'Bruker', 'Oxford Instruments'],
+    futureImpact: 'High-temperature superconductors will reduce cooling requirements, making fusion power and levitating transport more practical.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎮',
+    title: 'Gaming PC Cooling',
+    short: 'Maximum performance for gamers',
+    tagline: 'Enthusiast builds run cool',
+    description: 'High-end gaming PCs use custom liquid cooling loops to handle 500+ watts from overclocked CPUs and GPUs. Larger radiators, higher flow rates, and better thermal paste enable extreme performance while keeping temperatures under control.',
+    connection: 'Custom loops demonstrate heat transfer fundamentals. Radiator surface area, fan airflow, coolant flow rate, and temperature differential all appear in the cooling performance equation.',
+    howItWorks: 'A pump circulates coolant through water blocks on CPU and GPU. Heat transfers through copper bases into the coolant. Radiators with large surface area and fans reject heat to room air. Reservoirs aid in filling and monitoring.',
+    stats: [
+      { value: '500 W+', label: 'Heat dissipation', icon: '⚡' },
+      { value: '20°C', label: 'Temp reduction', icon: '📈' },
+      { value: '$5B', label: 'PC cooling market', icon: '🚀' }
+    ],
+    examples: ['Custom hardline builds', 'AIO liquid coolers', 'EKWB loop kits', 'Overclocker competition rigs'],
+    companies: ['EKWB', 'Corsair', 'NZXT', 'Alphacool'],
+    futureImpact: 'Factory-sealed modular systems will bring custom loop performance to mainstream PCs without the complexity of building loops.',
+    color: '#EF4444'
+  }
+];
+
 const LiquidCoolingRenderer: React.FC<LiquidCoolingRendererProps> = ({
   gamePhase,
   onCorrectAnswer,

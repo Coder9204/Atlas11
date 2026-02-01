@@ -15,6 +15,81 @@ interface LeidenfrostRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🏭',
+    title: 'Metal Quenching',
+    short: 'Hardening steel precisely',
+    tagline: 'The vapor blanket paradox',
+    description: 'When hot steel is quenched in water, the Leidenfrost effect initially slows cooling. The vapor blanket insulates the metal until it cools below the Leidenfrost point, then violent boiling rapidly extracts heat. Understanding this transition is critical for achieving desired metallurgical properties.',
+    connection: 'Just as water droplets hover on hot surfaces, quench water vaporizes and forms an insulating blanket around hot metal. The cooling rate dramatically increases once the metal cools enough for the vapor blanket to collapse.',
+    howItWorks: 'Above the Leidenfrost point (~200°C for water), film boiling creates slow, uniform cooling. As the surface cools, transition boiling begins with unstable vapor film. Below ~100°C, nucleate boiling provides maximum heat transfer.',
+    stats: [
+      { value: '1000°C', label: 'Steel temp', icon: '⚡' },
+      { value: '10x', label: 'Cooling rate change', icon: '📈' },
+      { value: '$150B', label: 'Steel industry', icon: '🚀' }
+    ],
+    examples: ['Hardening tool steel', 'Automotive part heat treatment', 'Sword blade tempering', 'Spring manufacturing'],
+    companies: ['ArcelorMittal', 'Nucor', 'ThyssenKrupp', 'Bodycote'],
+    futureImpact: 'Polymer quenchants with tailored Leidenfrost behavior will enable precise cooling profiles for advanced high-strength steels.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🍳',
+    title: 'Cooking Techniques',
+    short: 'When pans are hot enough',
+    tagline: 'The water droplet test',
+    description: 'Chefs test pan temperature by watching water droplet behavior. Below the Leidenfrost point, drops sizzle and evaporate quickly. Above it, drops dance and skate across the surface. This indicates the pan is hot enough for proper searing.',
+    connection: 'The dancing water droplet demonstrates the Leidenfrost effect perfectly. The vapor cushion reduces friction and heat transfer, allowing the drop to survive much longer on a hotter surface.',
+    howItWorks: 'At pan temperatures above ~193°C (380°F), water drops levitate on their own vapor. This indicates the pan will quickly sear food rather than steaming it. The Maillard reaction requires these high temperatures.',
+    stats: [
+      { value: '193°C', label: 'Water Leidenfrost', icon: '⚡' },
+      { value: '150°C', label: 'Maillard starts', icon: '📈' },
+      { value: '$7B', label: 'Cookware market', icon: '🚀' }
+    ],
+    examples: ['Steak searing', 'Stir-fry technique', 'Crêpe making', 'Pan sauce timing'],
+    companies: ['All-Clad', 'Le Creuset', 'Lodge', 'de Buyer'],
+    futureImpact: 'Smart cookware with temperature sensors will indicate optimal cooking temperature, but the water drop test remains a reliable, zero-cost technique.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🧪',
+    title: 'Liquid Nitrogen Handling',
+    short: 'Safe contact with cryogenics',
+    tagline: 'When cold becomes protection',
+    description: 'Briefly touching liquid nitrogen (-196°C) doesn\'t cause instant frostbite because of an inverse Leidenfrost effect. Your warm skin vaporizes the nitrogen, creating an insulating gas layer. This allows short contact—but longer exposure is extremely dangerous.',
+    connection: 'The physics is identical to water on a hot pan, but reversed. Your warm skin is the "hot surface" and liquid nitrogen rapidly vaporizes, creating a protective gas cushion.',
+    howItWorks: 'Skin at ~33°C is far above nitrogen\'s boiling point (-196°C). Contact immediately vaporizes nitrogen, creating an insulating gas layer. This effect only works for fractions of a second—prolonged contact causes severe cryogenic burns.',
+    stats: [
+      { value: '-196°C', label: 'LN2 boiling point', icon: '⚡' },
+      { value: '<1 sec', label: 'Safe contact', icon: '📈' },
+      { value: '$15B', label: 'Industrial gas market', icon: '🚀' }
+    ],
+    examples: ['Cryogenic food preparation', 'Lab demonstrations', 'Wart removal treatment', 'Semiconductor cooling'],
+    companies: ['Linde', 'Air Liquide', 'Air Products', 'Praxair'],
+    futureImpact: 'Understanding Leidenfrost protection enables safe handling protocols for cryogenic applications in medicine, food science, and research.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚡',
+    title: 'Nuclear Reactor Safety',
+    short: 'Critical heat flux limits',
+    tagline: 'When vapor becomes danger',
+    description: 'Nuclear reactors use water to cool fuel rods. If heat flux exceeds critical limits, a vapor blanket forms (departure from nucleate boiling), dramatically reducing heat transfer. This Leidenfrost-like transition can lead to fuel damage—making it a key safety consideration.',
+    connection: 'Film boiling on reactor fuel is catastrophic because the vapor blanket insulates rather than cools. Reactor designers ensure heat flux stays below the point where stable vapor films can form.',
+    howItWorks: 'Fuel rods are designed to operate in nucleate boiling regime where bubbles form and depart rapidly, providing excellent heat transfer. Exceeding critical heat flux causes transition to film boiling with much lower cooling capacity.',
+    stats: [
+      { value: '1-2 MW/m²', label: 'Critical heat flux', icon: '⚡' },
+      { value: '300°C', label: 'Normal operation', icon: '📈' },
+      { value: '$50B', label: 'Nuclear industry', icon: '🚀' }
+    ],
+    examples: ['PWR fuel assemblies', 'BWR fuel channels', 'Research reactor design', 'Spent fuel pool cooling'],
+    companies: ['Westinghouse', 'Framatome', 'GE Hitachi', 'Rosatom'],
+    futureImpact: 'Advanced reactor designs with enhanced surface treatments will increase critical heat flux margins, improving safety and power density.',
+    color: '#10B981'
+  }
+];
+
 const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
   phase,
   onPhaseComplete,

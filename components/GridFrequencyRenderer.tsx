@@ -74,6 +74,85 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const realWorldApps = [
+  {
+    icon: '⚡',
+    title: 'Grid-Scale Battery Storage',
+    short: 'Instant frequency response without spinning mass',
+    tagline: 'Batteries react in milliseconds, not seconds',
+    description: 'Battery storage systems can inject or absorb power within milliseconds to stabilize grid frequency. Unlike generators that take seconds to respond, batteries provide instant frequency regulation, becoming essential as renewable penetration increases.',
+    connection: 'The frequency droop you studied shows how generators slow under load. Batteries don\'t have inertia - they provide synthetic inertia by mimicking generator response curves, but 10-100x faster.',
+    howItWorks: 'Grid-forming inverters measure frequency thousands of times per second. When frequency drops, the battery instantly injects power. Smart algorithms predict frequency deviations and pre-emptively respond.',
+    stats: [
+      { value: '<50 ms', label: 'Battery response time', icon: '⚡' },
+      { value: '100 GW', label: 'Installed battery capacity globally', icon: '🔋' },
+      { value: '$15B', label: 'Annual grid storage market', icon: '💰' }
+    ],
+    examples: ['Hornsdale Power Reserve (Australia)', 'Moss Landing (California)', 'UK National Grid batteries', 'Germany frequency reserves'],
+    companies: ['Tesla', 'Fluence', 'BYD', 'LG Energy Solution'],
+    futureImpact: 'Long-duration storage using iron-air and flow batteries will provide not just frequency response but multi-day grid resilience.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🌊',
+    title: 'Renewable Integration',
+    short: 'Managing frequency with variable wind and solar',
+    tagline: 'When the sun sets, frequency drops',
+    description: 'Solar and wind don\'t naturally provide inertia like spinning generators. As renewables replace fossil plants, grids must find new sources of frequency stability - or face more frequent blackouts.',
+    connection: 'Traditional grids relied on the kinetic energy in spinning generator rotors to resist frequency changes. Solar panels and wind turbines (in basic configurations) provide no equivalent - the core challenge of modern grids.',
+    howItWorks: 'Grid operators forecast renewable output, schedule conventional backup, deploy batteries for fast response, and use interconnections to import/export power. Advanced inverters now provide "synthetic inertia" by measuring frequency and responding accordingly.',
+    stats: [
+      { value: '30%', label: 'Renewable share in many grids', icon: '☀️' },
+      { value: '90%', label: 'Renewable targets for 2050', icon: '🎯' },
+      { value: '50%', label: 'Inertia reduction in some grids', icon: '📉' }
+    ],
+    examples: ['California duck curve', 'German Energiewende', 'Texas ERCOT solar growth', 'UK coal-free days'],
+    companies: ['Ørsted', 'NextEra Energy', 'Iberdrola', 'Enel'],
+    futureImpact: 'Grid-forming inverters will make 100% renewable grids stable without conventional generators, using software to mimic spinning mass.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔄',
+    title: 'Inter-Grid Connections',
+    short: 'Synchronizing continents through massive interconnectors',
+    tagline: 'One grid\'s surplus is another\'s salvation',
+    description: 'AC interconnectors synchronize entire power grids - Europe operates as one 60,000 MW synchronized system. HVDC links connect asynchronous grids, allowing power sharing without frequency synchronization.',
+    connection: 'Synchronized grids share inertia - when demand spikes in France, generators in Spain help stabilize frequency. The larger the synchronized system, the more stable the frequency.',
+    howItWorks: 'AC interconnectors require precise phase and frequency matching. HVDC converters decouple grids electrically while allowing power flow. Back-to-back HVDC links connect different frequency grids (50 Hz/60 Hz).',
+    stats: [
+      { value: '600+ GW', label: 'European synchronized grid capacity', icon: '⚡' },
+      { value: '2 GW', label: 'UK-France interconnector', icon: '🔗' },
+      { value: '$100B', label: 'Global HVDC investment by 2030', icon: '💰' }
+    ],
+    examples: ['European continental grid', 'US Eastern/Western interconnections', 'Japan 50/60 Hz interface', 'Australia-Asia proposed link'],
+    companies: ['Siemens Energy', 'ABB', 'Hitachi Energy', 'GE Grid Solutions'],
+    futureImpact: 'Intercontinental supergrids will balance solar across time zones - Asian morning sun powers European evening, and vice versa.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '⏰',
+    title: 'Electric Clocks & Time Standards',
+    short: 'Why your oven clock drifts with grid frequency',
+    tagline: 'Power grids are giant clocks',
+    description: 'Many electrical clocks count AC cycles to keep time (60 cycles = 1 second at 60 Hz). Grid operators must ensure long-term frequency averages exactly 60 Hz, or millions of clocks drift. Frequency deviations accumulate as time errors.',
+    connection: 'The slight frequency variations you observed - 59.95 Hz or 60.05 Hz - accumulate over hours. Grid operators track "time error" and deliberately run slightly fast or slow to correct it.',
+    howItWorks: 'Clocks count zero-crossings of the AC waveform. At exactly 60 Hz, they\'re perfect. If frequency averages 59.99 Hz for a day, clocks lose 14.4 seconds. Operators schedule "time error corrections" to compensate.',
+    stats: [
+      { value: '±30 sec', label: 'Maximum allowed time error', icon: '⏱️' },
+      { value: '3,600', label: 'Cycles per minute at 60 Hz', icon: '🔄' },
+      { value: 'Millions', label: 'Affected clocks in a grid', icon: '⏰' }
+    ],
+    examples: ['Kitchen oven clocks', 'Old alarm clocks', 'Industrial process timers', 'Traffic signal controllers'],
+    companies: ['ERCOT', 'PJM', 'ENTSO-E', 'National Grid'],
+    futureImpact: 'As synchronous motor clocks become rare, grid operators may eventually stop time error corrections, simplifying operations.',
+    color: '#F59E0B'
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // COLOR PALETTE
 // ────────────────────────────────────────────────────────────────────────────
 

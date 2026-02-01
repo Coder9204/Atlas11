@@ -8,6 +8,81 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // The Van Allen belts trap high-energy particles creating hazardous regions
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '🛰️',
+    title: 'Satellite Radiation Hardening',
+    short: 'Protecting spacecraft electronics from cosmic rays and trapped particles in the Van Allen belts',
+    tagline: 'Surviving the harsh space radiation environment',
+    description: 'Satellites operating in Earth orbit face constant bombardment from high-energy protons, electrons, and heavy ions. The Van Allen radiation belts create particularly intense zones where particle fluxes can be millions of times higher than at ground level. Without proper radiation hardening, satellite electronics can experience bit flips, permanent damage, and catastrophic latchup events that can destroy entire systems within hours.',
+    connection: 'This game teaches exactly how radiation interacts with semiconductor devices - the same physics that satellite engineers must understand to design systems that survive 15+ years in orbit.',
+    howItWorks: 'Radiation-hardened designs use specialized manufacturing processes with insulating substrates (SOI), triple modular redundancy (TMR), error-correcting memory, current-limiting circuits for latchup protection, and thick shielding. Critical systems use multiple layers of protection since no single technique is sufficient.',
+    stats: [
+      { value: '10-15', label: 'Year mission lifetimes', icon: '📅' },
+      { value: '$500M+', label: 'Typical satellite cost', icon: '💰' },
+      { value: '100x', label: 'Rad-hard chip cost premium', icon: '🔧' }
+    ],
+    examples: ['GPS III satellites', 'James Webb Space Telescope', 'Juno Jupiter probe', 'Mars rovers Curiosity/Perseverance'],
+    companies: ['BAE Systems', 'Honeywell', 'Microchip (Microsemi)', 'Cobham Advanced Electronic Solutions'],
+    futureImpact: 'As mega-constellations deploy thousands of satellites, radiation-tolerant commercial designs will become crucial. Cheaper hardening techniques could enable democratized space access.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚛️',
+    title: 'Nuclear Facility Control Systems',
+    short: 'Electronics that operate reliably in extreme gamma and neutron radiation environments',
+    tagline: 'Keeping reactors safe under intense radiation',
+    description: 'Nuclear power plants and research reactors require instrumentation and control systems that function reliably in radiation fields that would destroy ordinary electronics within minutes. Sensors measuring reactor conditions must operate continuously in environments where total ionizing dose can reach megarads per year. Safety systems must guarantee correct operation even when radiation is causing ongoing damage.',
+    connection: 'The TID (Total Ionizing Dose) accumulation mechanics in this game directly model how reactor instrumentation degrades over time, requiring scheduled replacement before failure.',
+    howItWorks: 'Nuclear-grade electronics use radiation-hardened components rated for 1 Mrad or more total dose. Analog circuits often outperform digital in high-radiation areas. Fiber optic cables replace electrical wiring in high-dose zones. Systems are designed with wide safety margins and redundancy to tolerate gradual degradation.',
+    stats: [
+      { value: '1 Mrad', label: 'Typical TID tolerance', icon: '☢️' },
+      { value: '40+', label: 'Year reactor lifetimes', icon: '⏱️' },
+      { value: '99.9%', label: 'Required availability', icon: '✓' }
+    ],
+    examples: ['Reactor protection systems', 'In-core neutron detectors', 'Fuel handling robotics', 'Remote inspection cameras'],
+    companies: ['Westinghouse', 'Framatome', 'General Electric', 'Rolls-Royce'],
+    futureImpact: 'Small modular reactors and fusion power plants will need new generations of rad-hard electronics capable of operating in even more extreme environments.',
+    color: '#10B981'
+  },
+  {
+    icon: '✈️',
+    title: 'High-Altitude Avionics',
+    short: 'Aircraft electronics designed to handle increased cosmic ray flux at flight altitudes',
+    tagline: 'Flying safely through cosmic radiation',
+    description: 'Commercial aircraft cruising at 35,000-40,000 feet experience cosmic ray flux 100-300 times higher than at sea level. Single Event Upsets (SEUs) in flight computers have caused autopilot disconnects, display anomalies, and navigation errors. The polar routes favored for transpacific flights pass through regions with even higher radiation intensity.',
+    connection: 'This game simulates SEU rates at different altitudes - the exact analysis avionics engineers perform when certifying flight-critical systems for high-altitude operation.',
+    howItWorks: 'Aviation electronics use triple-redundant computing with voting logic, error-detecting and correcting memory (EDAC), watchdog timers to catch frozen processors, and architectural isolation to prevent single-point failures. Designs are validated through neutron beam testing at particle accelerators.',
+    stats: [
+      { value: '300x', label: 'Increased cosmic flux at altitude', icon: '📊' },
+      { value: '10^-9', label: 'Required failure rate per hour', icon: '🎯' },
+      { value: '$1B+', label: 'Avionics per aircraft type', icon: '💵' }
+    ],
+    examples: ['Boeing 787 flight computers', 'Airbus A350 avionics', 'Fly-by-wire systems', 'Engine control units'],
+    companies: ['Collins Aerospace', 'Honeywell Aerospace', 'Thales', 'Safran'],
+    futureImpact: 'Supersonic and hypersonic aircraft operating at 60,000+ feet will require even more robust radiation protection as cosmic ray flux continues increasing with altitude.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔬',
+    title: 'Particle Physics Detectors',
+    short: 'Electronics operating at particle accelerators amid intense radiation from beam collisions',
+    tagline: 'Discovering particles in a sea of radiation',
+    description: 'The Large Hadron Collider generates radiation environments more intense than any spacecraft encounters - detector electronics near the beam pipe receive radiation doses equivalent to decades in space within months. Yet these systems must precisely measure particles from collisions happening 40 million times per second while embedded in this extreme environment.',
+    connection: 'The SEU and latchup mechanisms explored in this game are daily concerns for physicists designing detector readout electronics that must survive LHC radiation levels.',
+    howItWorks: 'Detector ASICs use deep submicron processes with built-in radiation tolerance, redundant encoding of configuration data, frequent refresh of stored values, and architectures that can continue operating even with some failed channels. Systems are designed assuming ongoing radiation damage throughout their operational life.',
+    stats: [
+      { value: '1 GGy', label: 'LHC detector lifetime dose', icon: '⚡' },
+      { value: '40 MHz', label: 'Collision rate', icon: '🔄' },
+      { value: '10^8', label: 'Readout channels', icon: '📡' }
+    ],
+    examples: ['ATLAS detector', 'CMS experiment', 'LHCb spectrometer', 'ALICE heavy-ion detector'],
+    companies: ['CERN', 'Fermilab', 'SLAC', 'DESY'],
+    futureImpact: 'Future colliders like the FCC will produce even more intense radiation, driving innovation in radiation-tolerant electronics that may benefit space and medical applications.',
+    color: '#F59E0B'
+  }
+];
+
 interface Props {
   onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
   gamePhase?: string;

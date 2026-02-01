@@ -2,6 +2,82 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+// Real-world applications for magnetic field mapping
+const realWorldApps = [
+  {
+    icon: '🧭',
+    title: 'GPS-Free Navigation',
+    short: 'Indoor positioning using magnetic maps',
+    tagline: 'Navigate by Earth\'s magnetic fingerprint',
+    description: 'Buildings distort Earth\'s magnetic field in unique patterns. By mapping these magnetic anomalies, smartphones can determine indoor position without GPS. Each location has a distinct magnetic fingerprint from steel beams, electrical wiring, and concrete rebar.',
+    connection: 'Just as you mapped field lines with a compass probe, indoor navigation systems create magnetic field maps. The inverse cube law for field strength and compass alignment principles enable centimeter-accurate positioning.',
+    howItWorks: 'Workers survey buildings with magnetometers, recording field vectors at known positions. Machine learning creates magnetic maps. Users\' phone magnetometers match readings to map locations for navigation.',
+    stats: [
+      { value: '1-3m', label: 'Indoor positioning accuracy', icon: '🎯' },
+      { value: '$40B', label: 'Indoor location market', icon: '📈' },
+      { value: '90%', label: 'Of time spent indoors', icon: '🏢' }
+    ],
+    examples: ['Airport wayfinding', 'Mall navigation', 'Warehouse logistics', 'Museum tours'],
+    companies: ['IndoorAtlas', 'Apple', 'Google', 'Mappedin'],
+    futureImpact: 'Combining magnetic positioning with AR glasses will enable seamless indoor-outdoor navigation without infrastructure costs.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🌍',
+    title: 'Geophysical Exploration',
+    short: 'Finding mineral deposits magnetically',
+    tagline: 'Hidden treasure revealed by field anomalies',
+    description: 'Magnetic surveying detects underground mineral deposits, archaeological sites, and geological structures. Iron ore, nickel, and other ferromagnetic minerals create measurable anomalies in Earth\'s field. Aircraft and drones map vast areas by measuring field variations.',
+    connection: 'The magnetic mapping techniques - measuring field direction and strength at grid points - directly translate to airborne surveys. Understanding how field lines concentrate near magnetic materials guides interpretation.',
+    howItWorks: 'Magnetometers on aircraft measure total field intensity while flying grid patterns. Data processing removes daily variations and Earth\'s main field. Anomalies indicate buried magnetic sources; depth estimated from field gradient.',
+    stats: [
+      { value: '0.01nT', label: 'Magnetometer sensitivity', icon: '🔬' },
+      { value: '$2B', label: 'Mineral exploration spending', icon: '💎' },
+      { value: '500m', label: 'Detection depth possible', icon: '📏' }
+    ],
+    examples: ['Iron ore discovery', 'Archaeological surveys', 'Unexploded ordnance detection', 'Pipeline mapping'],
+    companies: ['Xcalibur', 'Geotech', 'CGG', 'Fugro'],
+    futureImpact: 'Quantum magnetometers on autonomous drones will enable real-time subsurface mapping during drilling operations.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🧠',
+    title: 'Magnetoencephalography (MEG)',
+    short: 'Brain activity from magnetic fields',
+    tagline: 'Reading thoughts through magnetic whispers',
+    description: 'Neural activity generates tiny magnetic fields (femtoTesla range) outside the skull. SQUID sensors detect these fields, mapping brain activity with millisecond precision. MEG reveals which brain regions activate during thinking, perception, and disease.',
+    connection: 'MEG extends the compass-mapping concept to biological fields. The same principles of field line direction and inverse-distance decay help localize neural current sources from external field measurements.',
+    howItWorks: 'Neurons firing create current dipoles that produce external magnetic fields. Arrays of 300+ SQUID sensors surround the head in magnetically shielded room. Source localization algorithms reconstruct neural activity from field maps.',
+    stats: [
+      { value: '1ms', label: 'Temporal resolution', icon: '⚡' },
+      { value: '10fT', label: 'Sensitivity needed', icon: '🔬' },
+      { value: '$500M', label: 'Neuroimaging market share', icon: '📈' }
+    ],
+    examples: ['Epilepsy surgery planning', 'Brain-computer interfaces', 'Cognitive neuroscience', 'Language mapping'],
+    companies: ['Elekta', 'CTF MEG', 'MEGIN', 'FieldLine'],
+    futureImpact: 'Wearable OPM-MEG sensors will enable brain monitoring outside the lab, revolutionizing neurological diagnosis and BCI applications.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🦅',
+    title: 'Animal Navigation Research',
+    short: 'How animals sense magnetic fields',
+    tagline: 'Nature\'s compass revealed',
+    description: 'Birds, sea turtles, and salmon navigate thousands of miles using Earth\'s magnetic field. Scientists map magnetic fields to understand these remarkable abilities. Research has identified magnetite crystals and cryptochrome proteins as biological magnetic sensors.',
+    connection: 'The game\'s exploration of compass alignment with field lines mirrors how migrating animals orient. Understanding magnetic inclination and declination helps explain navigation along magnetic "highways."',
+    howItWorks: 'Researchers expose animals to controlled magnetic fields while monitoring behavior or neural activity. Field manipulations reveal which magnetic parameters (intensity, inclination, direction) animals use for navigation.',
+    stats: [
+      { value: '12,000km', label: 'Arctic tern migration', icon: '🦅' },
+      { value: '0.1°', label: 'Bird compass precision', icon: '🧭' },
+      { value: '50+', label: 'Species with magnetoreception', icon: '🐢' }
+    ],
+    examples: ['Bird migration tracking', 'Sea turtle conservation', 'Salmon homing studies', 'Insect navigation'],
+    companies: ['Max Planck Institute', 'Cornell Lab', 'USGS', 'Wildlife Conservation'],
+    futureImpact: 'Understanding animal magnetoreception may enable biomimetic navigation systems for autonomous vehicles in GPS-denied environments.',
+    color: '#22c55e'
+  }
+];
+
 // ===============================================================================
 // TYPES & INTERFACES
 // ===============================================================================

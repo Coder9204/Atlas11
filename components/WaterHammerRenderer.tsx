@@ -7,6 +7,81 @@ import React, { useState, useRef, useEffect } from 'react';
 // Water hammer occurs when fluid momentum is suddenly arrested
 // Pressure wave travels at speed of sound in fluid (~1400 m/s for water)
 
+const realWorldApps = [
+  {
+    icon: '🏠',
+    title: 'Home Plumbing Systems',
+    short: 'Protecting pipes from burst damage',
+    tagline: 'Why pipes bang when you turn off faucets',
+    description: 'Water hammer causes the loud banging sound in home plumbing when valves close quickly. The sudden pressure surge can exceed 10x normal operating pressure, damaging pipes, joints, and fixtures over time.',
+    connection: 'When flowing water is suddenly stopped by closing a valve, the momentum of the water converts to a pressure wave that travels through the pipes at the speed of sound in water (~1400 m/s). This is the Joukowsky equation in action.',
+    howItWorks: 'Air chambers or water hammer arrestors provide a cushion for the pressure wave. When the valve closes, the pressure wave compresses air in the chamber instead of slamming against the closed valve, gradually dissipating the energy.',
+    stats: [
+      { value: '500psi', label: 'Peak pressure possible', icon: '💥' },
+      { value: '$3,000', label: 'Avg. pipe repair cost', icon: '💰' },
+      { value: '1,400m/s', label: 'Wave speed in water', icon: '⚡' }
+    ],
+    examples: ['Washing machine fill valves', 'Dishwasher solenoids', 'Toilet fill valves', 'Quick-close faucets'],
+    companies: ['Watts', 'Sioux Chief', 'Oatey', 'SharkBite'],
+    futureImpact: 'Smart home water systems now include hammer prevention with gradual valve closure and real-time pressure monitoring.',
+    color: '#0EA5E9'
+  },
+  {
+    icon: '🏗️',
+    title: 'Hydroelectric Power Plants',
+    short: 'Managing turbine water flow',
+    tagline: 'Harnessing water power safely',
+    description: 'Hydroelectric plants must carefully control water flow to turbines. Sudden load changes or emergency shutdowns can create massive water hammer pressures in penstocks, requiring surge tanks and slow-closing valves to prevent catastrophic pipe failure.',
+    connection: 'The enormous volume and velocity of water in hydroelectric penstocks means water hammer forces can be millions of pounds. The Joukowsky equation scales with velocity change and fluid density, making design critical.',
+    howItWorks: 'Surge tanks act as pressure relief, allowing water to rise during pressure spikes. Wicket gates close gradually over 10-30 seconds, and bypass valves divert flow during emergencies to prevent dangerous pressure buildup.',
+    stats: [
+      { value: '4,200GW', label: 'Global hydro capacity', icon: '⚡' },
+      { value: '60sec', label: 'Typical valve close time', icon: '⏱️' },
+      { value: '$50M+', label: 'Penstock replacement', icon: '💰' }
+    ],
+    examples: ['Hoover Dam operations', 'Three Gorges powerhouse', 'Run-of-river plants', 'Pumped storage facilities'],
+    companies: ['Voith Hydro', 'GE Renewable Energy', 'Andritz', 'ANDRITZ'],
+    futureImpact: 'AI-controlled valve systems optimize closure profiles in real-time based on flow conditions, reducing stress while maintaining grid stability.',
+    color: '#059669'
+  },
+  {
+    icon: '🚢',
+    title: 'Ship Ballast Systems',
+    short: 'Stabilizing ocean vessels',
+    tagline: 'Keeping ships balanced at sea',
+    description: 'Large ships use ballast water systems to maintain stability. Rapid valve operations during ballast transfer can create water hammer that damages piping and pumps, requiring careful operational procedures and protective equipment.',
+    connection: 'Ship ballast systems involve long pipe runs and large flow rates. The combination creates high potential for water hammer during valve operations, especially in emergency scenarios.',
+    howItWorks: 'Marine ballast systems use slow-acting butterfly valves, anti-surge tanks, and computerized sequencing to gradually change flow rates. Pressure relief valves protect against unexpected hammer events.',
+    stats: [
+      { value: '90%', label: 'Of trade by sea', icon: '🌊' },
+      { value: '20M', label: 'Tons ballast/day moved', icon: '📦' },
+      { value: '$100K', label: 'Pump repair cost', icon: '💰' }
+    ],
+    examples: ['Container ship ballasting', 'Oil tanker operations', 'Cruise ship stability', 'Offshore platform supply'],
+    companies: ['Alfa Laval', 'Wartsila', 'DESMI', 'Optimarin'],
+    futureImpact: 'Automated ballast systems with predictive algorithms adjust for sea conditions, minimizing water hammer while optimizing vessel stability.',
+    color: '#0284C7'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Fluid Systems',
+    short: 'Protecting critical healthcare equipment',
+    tagline: 'Precision flow for patient safety',
+    description: 'Hospital water and medical gas systems require water hammer prevention to protect sensitive equipment and maintain sterile conditions. Dialysis machines, autoclaves, and surgical suites depend on stable fluid delivery.',
+    connection: 'Medical facilities have complex piping with many quick-acting solenoid valves. Each valve closure creates potential water hammer that can damage equipment or cause contamination from loose particles.',
+    howItWorks: 'Medical-grade hammer arrestors, pressure regulators, and electronic valve controllers ensure smooth pressure transitions. Systems use smaller pipe diameters and lower velocities to reduce hammer potential.',
+    stats: [
+      { value: '6,000', label: 'US hospitals', icon: '🏥' },
+      { value: '99.99%', label: 'Required uptime', icon: '✓' },
+      { value: '$1M+', label: 'Dialysis machine cost', icon: '💰' }
+    ],
+    examples: ['Dialysis water treatment', 'Autoclave steam systems', 'Surgical suite supply', 'Laboratory pure water'],
+    companies: ['Mar Cor Purification', 'Watts Healthcare', 'Pentair', 'Evoqua'],
+    futureImpact: 'IoT-connected medical water systems provide real-time monitoring of pressure events, enabling predictive maintenance before equipment damage occurs.',
+    color: '#DC2626'
+  }
+];
+
 interface WaterHammerRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

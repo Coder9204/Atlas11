@@ -17,6 +17,81 @@ type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_p
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
+const realWorldApps = [
+  {
+    icon: '🛰️',
+    title: 'Satellite Communications',
+    short: 'Bridging thousands of kilometers',
+    tagline: 'Every decibel counts in space',
+    description: 'Communication satellites orbit 36,000 km above Earth, making link budget calculations critical. Engineers must ensure signals arrive with sufficient strength after path losses exceeding 200 dB. Antenna gains, transmit power, and receiver sensitivity are precisely balanced.',
+    connection: 'The link budget equation directly determines whether a satellite link works. Free space path loss increases with distance squared, requiring high-gain antennas and powerful transmitters for geostationary orbits.',
+    howItWorks: 'Ground stations use large dish antennas (10-30m) for high gain. Satellites use spot beams to concentrate power. Link margins account for rain fade, atmospheric absorption, and equipment degradation.',
+    stats: [
+      { value: '200+ dB', label: 'Path loss', icon: '⚡' },
+      { value: '10+ Gbps', label: 'Throughput', icon: '📈' },
+      { value: '$270B', label: 'Satcom market', icon: '🚀' }
+    ],
+    examples: ['Starlink LEO constellation', 'Inmarsat maritime', 'DirecTV broadcasting', 'GPS navigation'],
+    companies: ['SpaceX', 'Viasat', 'SES', 'Intelsat'],
+    futureImpact: 'LEO mega-constellations will reduce path losses and latency, enabling satellite internet competitive with terrestrial fiber.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📡',
+    title: 'Deep Space Networks',
+    short: 'Talking to interplanetary probes',
+    tagline: 'Whispering across the solar system',
+    description: 'NASA\'s Deep Space Network communicates with probes billions of kilometers away. At these distances, received signals are unimaginably weak—often less than a billionth of a billionth of a watt. Link budgets must account for every possible dB.',
+    connection: 'Deep space links push link budget principles to extremes. Free space path loss to Mars can exceed 280 dB. Only massive ground antennas (70m dishes), cryogenic receivers, and sophisticated coding make communication possible.',
+    howItWorks: 'DSN uses 34m and 70m antennas worldwide. Cryogenic receivers minimize noise temperature. Error-correcting codes extract signals below the noise floor. Missions plan data rates based on link budget at maximum distance.',
+    stats: [
+      { value: '280 dB', label: 'Mars path loss', icon: '⚡' },
+      { value: '20 hours', label: 'Voyager roundtrip', icon: '📈' },
+      { value: '160 bps', label: 'Voyager rate', icon: '🚀' }
+    ],
+    examples: ['Mars rovers', 'Voyager 1 and 2', 'New Horizons', 'James Webb Space Telescope'],
+    companies: ['NASA JPL', 'ESA', 'JAXA', 'ISRO'],
+    futureImpact: 'Optical deep space links using lasers will provide 10-100x higher data rates than radio, enabling high-definition video from Mars.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📶',
+    title: '5G Wireless Networks',
+    short: 'Gigabit mobile connectivity',
+    tagline: 'Millimeter waves meet link budgets',
+    description: '5G networks use millimeter wave frequencies (24-100 GHz) for high bandwidth but face challenging link budgets. Higher frequencies have greater path loss and don\'t penetrate buildings. Massive MIMO and beamforming are essential for coverage.',
+    connection: 'Free space path loss increases with frequency squared. 5G at 28 GHz has 10x the path loss of 4G at 2.8 GHz for the same distance, requiring compensating antenna gains and denser cell sites.',
+    howItWorks: 'Base stations use massive MIMO arrays with 64-256 elements to create focused beams. Beamforming concentrates energy toward users, adding 15-20 dB effective gain. Small cells provide coverage in challenging locations.',
+    stats: [
+      { value: '10 Gbps', label: 'Peak rate', icon: '⚡' },
+      { value: '1 ms', label: 'Latency', icon: '📈' },
+      { value: '$700B', label: '5G investment', icon: '🚀' }
+    ],
+    examples: ['Urban 5G networks', 'Fixed wireless access', 'Stadium connectivity', 'Industrial IoT'],
+    companies: ['Ericsson', 'Nokia', 'Samsung', 'Huawei'],
+    futureImpact: '6G will use sub-THz frequencies, pushing link budget engineering to even higher frequencies and requiring even more sophisticated beamforming.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔭',
+    title: 'Radio Astronomy',
+    short: 'Listening to the cosmos',
+    tagline: 'Detecting whispers from galaxies',
+    description: 'Radio telescopes detect incredibly weak signals from astronomical sources. Link budget concepts apply in reverse—calculating the sensitivity needed to detect natural emissions. Receiver noise temperature and antenna collecting area determine detection limits.',
+    connection: 'Radio astronomy applies link budget principles to natural sources. The "transmitter" is a distant galaxy; path loss is cosmological. Telescope sensitivity must exceed the link budget deficit to detect the signal.',
+    howItWorks: 'Large dish antennas (up to 500m) maximize collecting area. Cryogenic receivers minimize noise. Interferometry combines multiple telescopes for greater resolution. Integration time trades speed for sensitivity.',
+    stats: [
+      { value: '500m', label: 'FAST diameter', icon: '⚡' },
+      { value: '10⁻²⁶ W', label: 'Detection limit', icon: '📈' },
+      { value: '$1.5B', label: 'SKA cost', icon: '🚀' }
+    ],
+    examples: ['ALMA in Chile', 'VLA in New Mexico', 'FAST in China', 'SKA under construction'],
+    companies: ['NRAO', 'ESO', 'CSIRO', 'MPIfR'],
+    futureImpact: 'The Square Kilometre Array will have unprecedented sensitivity, potentially detecting radio emissions from exoplanets.',
+    color: '#F59E0B'
+  }
+];
+
 const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const getInitialPhase = (): Phase => {
     if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) {

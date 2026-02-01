@@ -36,6 +36,81 @@ const colors = {
   error: '#ef4444',
 };
 
+const realWorldApps = [
+  {
+    icon: '🔍',
+    title: 'Google Search & AI',
+    short: 'TPUs powering billions of searches daily',
+    tagline: 'Custom silicon for web-scale AI',
+    description: 'Google designed TPUs specifically for their massive AI workloads. TPUs power Search ranking, YouTube recommendations, Gmail spam filtering, and Google Assistant - processing queries in milliseconds.',
+    connection: 'TPUs systolic arrays excel at the matrix multiplications in transformer models. Purpose-built silicon achieves 10x better efficiency than GPUs for inference.',
+    howItWorks: 'TPU pods connect thousands of chips for training giant models. For inference, individual TPUs handle specific model types. bfloat16 precision balances accuracy with throughput.',
+    stats: [
+      { value: '275T', label: 'TPU v4 FLOPS', icon: '⚡' },
+      { value: '10x', label: 'Efficiency vs GPU', icon: '📈' },
+      { value: '1M+', label: 'Queries/sec capacity', icon: '🔍' }
+    ],
+    examples: ['Google Search', 'YouTube recommendations', 'Google Translate', 'AlphaFold'],
+    companies: ['Google', 'DeepMind', 'Anthropic (Google Cloud)', 'Research labs'],
+    futureImpact: 'TPU v5 and beyond will enable real-time AI video generation and multimodal understanding.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎮',
+    title: 'NVIDIA Gaming & AI Dual-Use',
+    short: 'From gaming graphics to AI dominance',
+    tagline: 'The accidental AI revolution',
+    description: 'NVIDIA GPUs designed for gaming accidentally became perfect for AI. Their massively parallel architecture handles both ray tracing and neural network training with equal efficiency.',
+    connection: 'GPUs evolved for graphics have thousands of cores doing parallel math - exactly what neural networks need. CUDA made them programmable for any parallel workload.',
+    howItWorks: 'Tensor cores accelerate matrix ops alongside graphics cores. Memory bandwidth feeds data to thousands of parallel processors. CUDA software enables AI workloads.',
+    stats: [
+      { value: '16K+', label: 'CUDA cores (H100)', icon: '🔢' },
+      { value: '80GB', label: 'HBM3 memory', icon: '💾' },
+      { value: '$3T', label: 'NVIDIA market cap', icon: '💰' }
+    ],
+    examples: ['ChatGPT training', 'Stable Diffusion', 'Gaming', 'Scientific computing'],
+    companies: ['NVIDIA', 'OpenAI', 'Meta AI', 'Every AI startup'],
+    futureImpact: 'Grace Hopper superchips will unify CPU and GPU for next-generation AI systems.',
+    color: '#76B900'
+  },
+  {
+    icon: '🧠',
+    title: 'Large Language Model Training',
+    short: 'Choosing hardware for trillion-parameter models',
+    tagline: 'Where hardware choices cost millions',
+    description: 'Training GPT-4 class models requires thousands of GPUs or TPUs running for months. Hardware selection dramatically affects training cost, time, and model capability.',
+    connection: 'Matrix multiplications in transformer attention scale quadratically with context length. Hardware must efficiently handle both compute and memory bandwidth.',
+    howItWorks: 'Distributed training splits models across thousands of chips. TPUs excel at inference efficiency; GPUs offer more flexibility. Memory capacity limits model size per chip.',
+    stats: [
+      { value: '$100M+', label: 'GPT-4 training cost', icon: '💰' },
+      { value: '25,000', label: 'GPUs for training', icon: '🖥️' },
+      { value: '1.8T', label: 'GPT-4 parameters', icon: '🔢' }
+    ],
+    examples: ['GPT-4', 'Claude', 'Gemini', 'Llama'],
+    companies: ['OpenAI', 'Anthropic', 'Google', 'Meta'],
+    futureImpact: 'Specialized AI training chips will reduce costs 100x, democratizing frontier AI development.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '⚡',
+    title: 'Edge AI Inference',
+    short: 'Running AI where data lives',
+    tagline: 'No cloud needed',
+    description: 'Phones, cars, and IoT devices increasingly run AI locally. Specialized neural processing units (NPUs) bring TPU-like efficiency to edge devices, enabling private, low-latency inference.',
+    connection: 'Edge NPUs use similar systolic array concepts as TPUs but at lower power. INT8 quantization maintains accuracy while dramatically reducing compute and memory needs.',
+    howItWorks: 'Dedicated neural cores run optimized models while main CPU handles other tasks. Weight compression and quantization fit models in limited memory. Inference happens in milliseconds.',
+    stats: [
+      { value: '15', label: 'TOPS in iPhone NPU', icon: '📱' },
+      { value: '5ms', label: 'On-device inference', icon: '⏱️' },
+      { value: '<1W', label: 'Edge NPU power', icon: '🔋' }
+    ],
+    examples: ['iPhone Neural Engine', 'Google Tensor', 'Tesla FSD chip', 'Qualcomm Hexagon'],
+    companies: ['Apple', 'Google', 'Qualcomm', 'Tesla'],
+    futureImpact: 'Ubiquitous edge AI will enable always-on intelligent assistants that never send data to the cloud.',
+    color: '#10B981'
+  }
+];
+
 const TPUvsGPURenderer: React.FC<TPUvsGPURendererProps> = ({
   gamePhase,
   onCorrectAnswer,

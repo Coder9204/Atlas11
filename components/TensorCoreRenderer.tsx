@@ -31,6 +31,81 @@ const phaseLabels: Record<Phase, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🤖',
+    title: 'Large Language Models',
+    short: 'Training AI that understands language',
+    tagline: 'The engines behind ChatGPT',
+    description: 'Tensor cores enable training massive language models like GPT-4 and Claude. The matrix multiplications in transformer attention and feed-forward layers run thousands of times faster on tensor cores.',
+    connection: 'Language models are essentially stacked matrix operations. Each token attention requires billions of multiply-accumulate operations. Tensor cores fused matrix operations make training feasible.',
+    howItWorks: 'Transformers compute attention weights through matrix multiplication of queries and keys. Feed-forward layers are dense matrix operations. BF16 precision on tensor cores enables massive parallelism.',
+    stats: [
+      { value: '175B', label: 'GPT-3 parameters', icon: '🔢' },
+      { value: '1000+', label: 'GPUs for training', icon: '💻' },
+      { value: '10000x', label: 'Speedup vs CPU', icon: '🚀' }
+    ],
+    examples: ['ChatGPT', 'Claude', 'Gemini', 'LLaMA'],
+    companies: ['OpenAI', 'Anthropic', 'Google', 'Meta'],
+    futureImpact: 'Next-generation tensor cores with sparsity support will enable models 10x larger while using the same power, approaching human-level reasoning.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🎨',
+    title: 'Generative AI Art',
+    short: 'Creating images from text descriptions',
+    tagline: 'Imagination rendered in pixels',
+    description: 'Diffusion models like Stable Diffusion and DALL-E use tensor cores to generate photorealistic images from text prompts. Each denoising step involves massive convolution operations.',
+    connection: 'Image generation requires billions of matrix operations per image. Convolutions are implemented as matrix multiplications. Tensor core acceleration makes real-time generation possible.',
+    howItWorks: 'Diffusion models start with noise and iteratively denoise using a U-Net with attention layers. Each step involves convolutions and self-attention - all matrix operations accelerated by tensor cores.',
+    stats: [
+      { value: '50', label: 'Denoising steps', icon: '🔄' },
+      { value: '1B+', label: 'Model parameters', icon: '🔢' },
+      { value: '2sec', label: 'Image generation time', icon: '⚡' }
+    ],
+    examples: ['Stable Diffusion', 'Midjourney', 'DALL-E', 'Firefly'],
+    companies: ['Stability AI', 'OpenAI', 'Adobe', 'Google'],
+    futureImpact: 'Real-time video generation and 3D world creation will become possible as tensor core performance continues to double every two years.',
+    color: '#ec4899'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Imaging AI',
+    short: 'Faster diagnosis through deep learning',
+    tagline: 'AI that reads X-rays and MRIs',
+    description: 'Medical imaging AI uses convolutional neural networks accelerated by tensor cores to detect tumors, fractures, and disease markers faster and more accurately than manual review.',
+    connection: 'Medical image analysis relies on deep convolutions - 3D matrix operations through multiple layers. Tensor cores enable real-time inference on high-resolution CT and MRI scans.',
+    howItWorks: 'CNNs process volumetric medical images through 3D convolution layers. Tensor cores compute these as matrix multiplications. FP16 inference provides sufficient precision while doubling throughput.',
+    stats: [
+      { value: '94%', label: 'Accuracy vs radiologists', icon: '🎯' },
+      { value: '100x', label: 'Faster than human review', icon: '⚡' },
+      { value: '512^3', label: 'Voxels per scan', icon: '📊' }
+    ],
+    examples: ['Mammography screening', 'Lung CT analysis', 'Brain MRI segmentation', 'Pathology slides'],
+    companies: ['Viz.ai', 'Arterys', 'Aidoc', 'PathAI'],
+    futureImpact: 'Every medical image will be AI-screened, catching early-stage cancers and rare diseases that human readers might miss.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🚗',
+    title: 'Autonomous Vehicles',
+    short: 'Real-time perception for self-driving',
+    tagline: 'See, think, drive - in milliseconds',
+    description: 'Self-driving cars use tensor cores for real-time object detection, lane tracking, and path planning. Multiple camera and lidar streams must be processed simultaneously with minimal latency.',
+    connection: 'Perception networks process multiple high-resolution video streams. Each frame requires billions of operations through detection and segmentation networks, all matrix operations on tensor cores.',
+    howItWorks: 'Camera feeds run through detection networks (YOLO, EfficientDet). Lidar point clouds use PointNet-style architectures. Sensor fusion combines outputs. All require massive parallel matrix operations.',
+    stats: [
+      { value: '30fps', label: 'Minimum processing rate', icon: '🎬' },
+      { value: '8', label: 'Camera streams', icon: '📷' },
+      { value: '10ms', label: 'Maximum latency', icon: '⏱️' }
+    ],
+    examples: ['Tesla Autopilot', 'Waymo Driver', 'Cruise Origin', 'NVIDIA DRIVE'],
+    companies: ['Tesla', 'Waymo', 'Cruise', 'NVIDIA'],
+    futureImpact: 'Edge tensor cores in vehicles will enable full autonomy without cloud connectivity, with safety margins exceeding human drivers.',
+    color: '#f59e0b'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

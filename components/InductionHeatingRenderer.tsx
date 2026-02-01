@@ -20,6 +20,84 @@ interface InductionHeatingRendererProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🍳',
+    title: 'Induction Cooktops',
+    short: 'The stove that only heats the pan, not your kitchen',
+    tagline: '90% efficiency versus 40% for gas',
+    description: 'Induction cooktops use rapidly alternating magnetic fields to induce eddy currents directly in ferromagnetic cookware. The pan itself becomes the heating element, with virtually no wasted heat.',
+    connection: 'The eddy current heating you explored - I²R losses from induced currents - happens directly in the pan bottom. The cooktop stays cool because ceramic doesn\'t conduct electricity.',
+    howItWorks: 'A copper coil under the ceramic surface carries 20-100 kHz AC current, creating a rapidly changing magnetic field. This field induces eddy currents in the pan\'s ferromagnetic base. Resistance converts these currents to heat.',
+    stats: [
+      { value: '90%', label: 'Energy efficiency', icon: '⚡' },
+      { value: '<3 min', label: 'Time to boil water', icon: '⏱️' },
+      { value: '40%', label: 'Gas stove efficiency', icon: '🔥' }
+    ],
+    examples: ['GE Profile induction ranges', 'Bosch induction cooktops', 'Portable induction plates', 'Commercial kitchen equipment'],
+    companies: ['Bosch', 'GE Appliances', 'Miele', 'Wolf'],
+    futureImpact: 'Zoneless induction surfaces will heat any pan anywhere on the cooktop, with automatic pan detection.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔧',
+    title: 'Industrial Heat Treatment',
+    short: 'Hardening steel without heating entire parts',
+    tagline: 'Precision hardening in seconds, not hours',
+    description: 'Induction hardening selectively heats just the surface of metal parts (gears, shafts, bearings), then quenches rapidly. This creates a hard, wear-resistant surface while maintaining a tough, ductile core.',
+    connection: 'The skin effect you learned about concentrates eddy currents (and thus heating) at the surface. Higher frequencies create shallower heating - precision control of hardened layer depth.',
+    howItWorks: 'High-frequency current (10-500 kHz) in a shaped coil heats only the surface layer due to skin effect. Depth is controlled by frequency: 450 kHz for 0.5mm depth, 10 kHz for 5mm. Quenching follows immediately.',
+    stats: [
+      { value: '<10 sec', label: 'Typical hardening cycle', icon: '⏱️' },
+      { value: '0.5-5 mm', label: 'Controlled hardening depth', icon: '📏' },
+      { value: '60 HRC', label: 'Achievable surface hardness', icon: '💎' }
+    ],
+    examples: ['Automotive crankshafts', 'Gear teeth hardening', 'Bearing races', 'Camshaft lobes'],
+    companies: ['Inductotherm', 'Eldec', 'Ajax Tocco', 'EFD Induction'],
+    futureImpact: 'AI-controlled induction will enable real-time adjustment of hardening depth based on part geometry and material.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏭',
+    title: 'Metal Melting & Foundries',
+    short: 'Clean, efficient melting without combustion',
+    tagline: 'Stir while you melt with electromagnetic force',
+    description: 'Induction furnaces melt metal using large-scale eddy current heating. The electromagnetic field also stirs the melt, ensuring uniform temperature and alloy composition. No combustion means cleaner metal and workplace.',
+    connection: 'The same eddy current principle scales up: massive induction coils around a crucible induce currents throughout the metal charge, heating it from within rather than from outside.',
+    howItWorks: 'A water-cooled copper coil surrounds a refractory crucible. AC current (50 Hz to 10 kHz) induces eddy currents throughout the metal charge. The electromagnetic field also creates stirring forces, mixing the melt.',
+    stats: [
+      { value: '50+ tons', label: 'Largest furnace capacity', icon: '⚖️' },
+      { value: '1600°C', label: 'Steel melting temperature', icon: '🌡️' },
+      { value: '75%', label: 'Energy efficiency', icon: '⚡' }
+    ],
+    examples: ['Steel foundries', 'Aluminum recycling', 'Precious metal melting', 'Specialty alloy production'],
+    companies: ['Inductotherm', 'ABP Induction', 'Pillar Induction', 'Otto Junker'],
+    futureImpact: 'Renewable-powered induction will enable zero-carbon steel production, crucial for climate goals.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔌',
+    title: 'Wireless Charging',
+    short: 'Induction transfers power without wires',
+    tagline: 'Your phone charges by invisible magnetism',
+    description: 'Wireless chargers use induction to transfer energy across an air gap. A transmitter coil creates an alternating magnetic field that induces current in a receiver coil in your phone - eddy current heating\'s helpful cousin.',
+    connection: 'While we want eddy currents in induction cooking, wireless charging uses tightly coupled coils to minimize stray eddy currents. The principle is the same: changing magnetic fields induce current.',
+    howItWorks: 'Qi chargers use 100-200 kHz fields. Transmitter and receiver coils are designed for efficient coupling. Resonant designs improve efficiency at larger distances. Foreign object detection prevents metal heating.',
+    stats: [
+      { value: '15W', label: 'Fast wireless charging power', icon: '⚡' },
+      { value: '80-90%', label: 'Charging efficiency', icon: '📊' },
+      { value: '$15B', label: 'Wireless charging market', icon: '💰' }
+    ],
+    examples: ['iPhone MagSafe', 'Samsung wireless pads', 'EV wireless charging', 'Medical implant charging'],
+    companies: ['Apple', 'Samsung', 'Belkin', 'WiTricity'],
+    futureImpact: 'Roadway-embedded charging will power EVs while driving, eliminating range anxiety entirely.',
+    color: '#8B5CF6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const TEST_QUESTIONS = [

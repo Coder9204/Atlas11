@@ -93,6 +93,81 @@ interface Particle {
   vy: number;
 }
 
+const realWorldApps = [
+  {
+    icon: '🏠',
+    title: 'Home Heating & Cooling',
+    short: 'HVAC system design',
+    tagline: 'Harnessing air circulation for comfort',
+    description: 'HVAC systems are designed around convection principles. Hot air rises, cold air sinks - understanding this allows engineers to optimally place vents, returns, and ductwork.',
+    connection: 'Natural convection creates stratification (hot air at ceiling, cold at floor). Forced convection from fans mixes air for even temperatures. The convection coefficient h determines heat transfer rate.',
+    howItWorks: 'Warm air from heating vents rises and spreads across the ceiling. As it cools, it sinks along walls. Return vents near the floor capture cool air to be reheated. Ceiling fans enhance mixing.',
+    stats: [
+      { value: '40%', label: 'Home energy for HVAC', icon: '⚡' },
+      { value: '5-25 W/m²K', label: 'Natural convection h', icon: '📊' },
+      { value: '10-200 W/m²K', label: 'Forced convection h', icon: '💨' }
+    ],
+    examples: ['Central air systems', 'Radiant floor heating', 'Ceiling fans', 'Passive house design'],
+    companies: ['Carrier', 'Trane', 'Lennox', 'Daikin'],
+    futureImpact: 'Smart HVAC systems use AI to optimize airflow patterns based on occupancy and weather, improving comfort while reducing energy use by 20-40%.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🖥️',
+    title: 'Electronics Cooling',
+    short: 'Managing heat in devices',
+    tagline: 'Keeping chips cool through convection',
+    description: 'Every electronic device relies on convection to remove waste heat. From passive laptop vents to active server cooling, convection carries heat from hot components to the environment.',
+    connection: 'Heat sinks increase surface area for convection. Fans boost the convection coefficient by creating forced convection. Heat pipes use convective phase change for even faster heat transport.',
+    howItWorks: 'Heat conducts from chip to heatsink fins. Air flows over fins, absorbing heat through convection. Fans increase airflow velocity, dramatically improving the heat transfer coefficient.',
+    stats: [
+      { value: '150W', label: 'Desktop CPU TDP', icon: '🔥' },
+      { value: '100x', label: 'Fan vs passive cooling', icon: '📈' },
+      { value: '10-30°C', label: 'Typical temp rise', icon: '🌡️' }
+    ],
+    examples: ['Computer heatsinks', 'Laptop cooling', 'Data center HVAC', 'LED lighting'],
+    companies: ['Noctua', 'Corsair', 'Intel', 'NVIDIA'],
+    futureImpact: 'Liquid cooling and immersion cooling are pushing the boundaries as chip power densities exceed what air convection can handle.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🌍',
+    title: 'Atmospheric Circulation',
+    short: 'Global weather patterns',
+    tagline: 'Earth\'s convection drives weather',
+    description: 'Global atmospheric circulation is convection on a planetary scale. Solar heating at the equator creates rising air that flows toward the poles, descending to complete convection cells.',
+    connection: 'Hot air rises at the equator (low pressure), flows poleward at altitude, cools and sinks at ~30° latitude (high pressure), and returns along the surface as trade winds.',
+    howItWorks: 'Three convection cells per hemisphere (Hadley, Ferrel, Polar) drive global wind patterns. The Coriolis effect deflects these flows, creating trade winds, westerlies, and polar easterlies.',
+    stats: [
+      { value: '30°', label: 'Hadley cell extent', icon: '🌐' },
+      { value: '10 km', label: 'Troposphere height', icon: '⬆️' },
+      { value: '15 m/s', label: 'Typical wind speeds', icon: '💨' }
+    ],
+    examples: ['Trade winds', 'Monsoons', 'Jet streams', 'Sea breezes'],
+    companies: ['NOAA', 'ECMWF', 'Met Office', 'Weather Underground'],
+    futureImpact: 'Climate change is altering convection patterns, potentially shifting monsoons, intensifying storms, and changing agricultural regions worldwide.',
+    color: '#10B981'
+  },
+  {
+    icon: '🍳',
+    title: 'Cooking & Food Processing',
+    short: 'Heat transfer in the kitchen',
+    tagline: 'Convection ovens cook faster and more evenly',
+    description: 'Convection ovens use fans to circulate hot air, dramatically improving heat transfer to food. This cooks food faster and more evenly than relying on natural convection alone.',
+    connection: 'Natural convection in a standard oven has h ≈ 5-10 W/m²K. Forced convection from a fan increases this to 20-50 W/m²K, reducing cooking time by 25% or more.',
+    howItWorks: 'A fan circulates hot air around food, constantly replacing the cooler air layer at the food surface with hot air. This increases the temperature gradient and heat transfer rate.',
+    stats: [
+      { value: '25%', label: 'Faster cooking', icon: '⏱️' },
+      { value: '25°F', label: 'Lower temp needed', icon: '🌡️' },
+      { value: '5x', label: 'Better browning', icon: '🥐' }
+    ],
+    examples: ['Convection ovens', 'Air fryers', 'Commercial kitchens', 'Food dehydrators'],
+    companies: ['Viking', 'Wolf', 'Breville', 'Cuisinart'],
+    futureImpact: 'Smart ovens with variable fan speed and moisture injection are enabling precise control over cooking processes for restaurant-quality results at home.',
+    color: '#F59E0B'
+  }
+];
+
 // ============================================================================
 // COMPREHENSIVE TEST QUESTIONS (10 questions with scenarios)
 // ============================================================================

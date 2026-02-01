@@ -74,6 +74,85 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const realWorldApps = [
+  {
+    icon: '🏠',
+    title: 'GFCI Outlets in Homes',
+    short: 'The outlets that save lives in wet locations',
+    tagline: 'Trip in 25 milliseconds to prevent electrocution',
+    description: 'GFCI outlets continuously compare hot and neutral current. If as little as 5 mA difference is detected (indicating current flowing through a person to ground), the outlet trips in under 25 milliseconds - fast enough to prevent fatal electrocution.',
+    connection: 'The current imbalance detection you explored is exactly what GFCIs do: a toroidal transformer senses the difference between outgoing and returning current, triggering a trip when they don\'t match.',
+    howItWorks: 'Both hot and neutral wires pass through a toroidal current transformer. If currents are equal, net flux is zero. Any imbalance induces a voltage in the sensing coil, which triggers a solenoid to open the circuit instantly.',
+    stats: [
+      { value: '5 mA', label: 'Trip threshold', icon: '⚡' },
+      { value: '<25 ms', label: 'Maximum trip time', icon: '⏱️' },
+      { value: '300+ lives', label: 'Saved annually in US', icon: '❤️' }
+    ],
+    examples: ['Bathroom outlets', 'Kitchen countertop outlets', 'Outdoor receptacles', 'Pool and spa equipment'],
+    companies: ['Leviton', 'Eaton', 'Hubbell', 'Legrand'],
+    futureImpact: 'Smart GFCIs will report fault patterns and predict equipment degradation before dangerous faults occur.',
+    color: '#EF4444'
+  },
+  {
+    icon: '⚡',
+    title: 'Arc Fault Detection (AFCI)',
+    short: 'Preventing electrical fires from damaged wiring',
+    tagline: 'Hearing the dangerous crackle in the current',
+    description: 'Arc faults from damaged wiring cause 30,000+ home fires annually. AFCIs analyze current waveforms to detect the characteristic "signature" of dangerous arcing, tripping before wires ignite insulation.',
+    connection: 'While GFCIs detect current imbalance, AFCIs detect the high-frequency noise and irregular current patterns of arcing - a complementary protection that you\'ve now learned the principles behind.',
+    howItWorks: 'Microprocessors analyze current waveforms thousands of times per second. Algorithms distinguish dangerous arcing (damaged wires) from normal arcing (switch contacts, motor brushes). When dangerous patterns persist, the breaker trips.',
+    stats: [
+      { value: '30,000+', label: 'Arc-fault fires annually', icon: '🔥' },
+      { value: '$1B', label: 'Annual fire damage from arcing', icon: '💰' },
+      { value: '50%', label: 'Fire reduction in protected homes', icon: '📉' }
+    ],
+    examples: ['Bedroom circuit protection', 'Living room outlets', 'Home theater wiring', 'Older home renovations'],
+    companies: ['Siemens', 'Square D (Schneider)', 'Eaton', 'GE'],
+    futureImpact: 'AI-enhanced AFCIs will learn each home\'s normal patterns, reducing nuisance trips while catching more dangerous faults.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Ground Fault Protection',
+    short: 'Protecting motors and equipment from insulation breakdown',
+    tagline: 'Catching faults before they become explosions',
+    description: 'Industrial motors and equipment use ground fault relays to detect insulation degradation. Continuous monitoring catches small leakage currents before they escalate to arc flashes, equipment damage, or explosions.',
+    connection: 'Industrial ground fault protection extends the current-balance principle to higher currents and faster response times, often with adjustable thresholds for different equipment needs.',
+    howItWorks: 'Zero-sequence current transformers measure the sum of all phase currents. In a balanced system, this sum is zero. Any ground fault creates an imbalance. Relays can be set for different trip thresholds and time delays.',
+    stats: [
+      { value: '2,000+', label: 'Arc flash incidents annually', icon: '⚡' },
+      { value: '$15B', label: 'Industrial electrical fire losses', icon: '💰' },
+      { value: '100 mA - 1200 A', label: 'Industrial trip range', icon: '📊' }
+    ],
+    examples: ['Motor protection relays', 'Transformer ground fault detection', 'Mining equipment protection', 'Petrochemical plant safety'],
+    companies: ['Schweitzer Engineering', 'ABB', 'Siemens', 'GE Grid'],
+    futureImpact: 'Predictive ground fault monitoring will use insulation resistance trending to schedule maintenance before faults occur.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔌',
+    title: 'EV Charging Safety Systems',
+    short: 'Protecting against faults in high-power charging',
+    tagline: 'Safe charging from 240V to 800V',
+    description: 'Electric vehicle chargers handle high currents (up to 350 kW) in outdoor, wet environments. Multiple layers of ground fault protection ensure that charging is safe even if cables are damaged or connections are wet.',
+    connection: 'EV charging combines DC ground fault monitoring (for the high-voltage battery side) with AC ground fault protection (for the grid connection), using principles you\'ve now mastered.',
+    howItWorks: 'Chargers monitor ground fault current on both AC and DC sides. Pilot signals verify ground connection before energizing. Continuous insulation monitoring detects degradation. Any fault triggers immediate shutdown.',
+    stats: [
+      { value: '350 kW', label: 'DC fast charger power', icon: '⚡' },
+      { value: '800V', label: 'Next-gen EV voltage', icon: '🔋' },
+      { value: '<100 ms', label: 'Fault response time', icon: '⏱️' }
+    ],
+    examples: ['Tesla Superchargers', 'Electrify America stations', 'Home Level 2 chargers', 'Workplace charging'],
+    companies: ['Tesla', 'ChargePoint', 'ABB', 'Tritium'],
+    futureImpact: 'Vehicle-to-grid systems will require bidirectional ground fault protection as EVs become mobile power sources.',
+    color: '#8B5CF6'
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // COLOR PALETTE
 // ────────────────────────────────────────────────────────────────────────────
 

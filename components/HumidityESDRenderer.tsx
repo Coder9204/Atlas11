@@ -53,6 +53,85 @@ const PHASE_LABELS: Record<Phase, string> = {
 };
 
 // ────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const realWorldApps = [
+  {
+    icon: '💾',
+    title: 'Semiconductor Manufacturing',
+    short: 'Where a 100V spark kills a million-dollar wafer',
+    tagline: 'Cleanrooms are humidity-controlled fortresses',
+    description: 'Chip fabrication requires precise humidity control (40-60% RH) to prevent ESD damage to nanometer-scale transistors. A single static discharge can destroy thousands of chips on a wafer worth millions of dollars.',
+    connection: 'The humidity-ESD relationship you explored is critical here: too dry allows charge buildup that arcs across microscopic gaps; too humid causes particle contamination and corrosion.',
+    howItWorks: 'Cleanrooms maintain 45% RH using HVAC systems with humidifiers and dehumidifiers. Workers wear grounded suits and wrist straps. Ionizers neutralize surface charges. Every surface is conductive or static-dissipative.',
+    stats: [
+      { value: '45% RH', label: 'Typical cleanroom humidity', icon: '💧' },
+      { value: '<10V', label: 'Damage threshold for advanced chips', icon: '⚡' },
+      { value: '$100M+', label: 'Cleanroom construction cost', icon: '💰' }
+    ],
+    examples: ['Intel fabs', 'TSMC cleanrooms', 'Samsung foundries', 'ASML lithography systems'],
+    companies: ['TSMC', 'Intel', 'Samsung', 'Applied Materials'],
+    futureImpact: 'As transistors shrink below 2nm, even lower voltage thresholds will require humidity control within ±2% RH.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏥',
+    title: 'Operating Room Environment',
+    short: 'Balancing infection control with static safety',
+    tagline: 'Where sparks near oxygen can be explosive',
+    description: 'Operating rooms maintain specific humidity (30-60% RH) to balance infection risk, ESD prevention near electronic equipment, and fire safety around supplemental oxygen and anesthetic gases.',
+    connection: 'The trade-off you learned - low humidity increases ESD, high humidity enables microbes - plays out critically in surgical settings with sensitive equipment and flammable gases.',
+    howItWorks: 'HVAC systems with HEPA filtration control humidity precisely. Conductive flooring grounds personnel. All equipment is tested for ESD safety. Oxygen-enriched areas have stricter static controls.',
+    stats: [
+      { value: '30-60% RH', label: 'OR humidity range', icon: '💧' },
+      { value: '20 air changes/hr', label: 'Typical ventilation rate', icon: '💨' },
+      { value: '$20M', label: 'Average OR construction cost', icon: '💰' }
+    ],
+    examples: ['Cardiac surgery suites', 'Neurosurgery ORs', 'Laser surgery rooms', 'Hybrid operating rooms'],
+    companies: ['Siemens Healthineers', 'GE Healthcare', 'Philips', 'Stryker'],
+    futureImpact: 'Smart OR systems will dynamically adjust humidity based on procedure type and real-time ESD monitoring.',
+    color: '#22C55E'
+  },
+  {
+    icon: '💻',
+    title: 'Data Center Operations',
+    short: 'Protecting servers from static and corrosion',
+    tagline: 'Humidity determines uptime',
+    description: 'Data centers maintain 40-60% relative humidity across thousands of square feet of servers. Too dry causes ESD damage to components; too humid causes condensation, corrosion, and electrical shorts.',
+    connection: 'Your simulation showed the ESD risk curve - data centers operate in the "sweet spot" where charge dissipation is sufficient but condensation doesn\'t occur.',
+    howItWorks: 'Precision cooling units (CRACs/CRAHs) control both temperature and humidity. Sensors monitor conditions continuously. Hot/cold aisle containment optimizes airflow. Ultrasonic humidifiers add moisture without water droplets.',
+    stats: [
+      { value: '40-60% RH', label: 'Target humidity range', icon: '💧' },
+      { value: '$10M/hr', label: 'Cost of major outage', icon: '💰' },
+      { value: '99.999%', label: 'Uptime target', icon: '📊' }
+    ],
+    examples: ['Google data centers', 'AWS facilities', 'Microsoft Azure', 'Facebook infrastructure'],
+    companies: ['Equinix', 'Digital Realty', 'Vertiv', 'Schneider Electric'],
+    futureImpact: 'AI-controlled environmental systems will predict and prevent humidity excursions before they cause damage.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📦',
+    title: 'Electronics Packaging & Shipping',
+    short: 'Protecting components before they reach you',
+    tagline: 'The pink bag has a purpose',
+    description: 'Electronic components are packaged in antistatic (pink) or static-shielding (silver) bags to prevent ESD damage during shipping. Humidity indicator cards monitor conditions, and desiccants control moisture.',
+    connection: 'Since shipping environments have uncontrolled humidity, packaging must protect against both low-humidity ESD (antistatic bags) and high-humidity corrosion (desiccants and moisture barriers).',
+    howItWorks: 'Static-shielding bags form a Faraday cage. Antistatic bags have surface treatments that bleed charge slowly. Humidity indicator cards change color when thresholds are exceeded. Desiccants maintain <30% RH inside sealed packages.',
+    stats: [
+      { value: '$5B', label: 'Annual ESD damage in transit', icon: '💰' },
+      { value: '<20% RH', label: 'Dry pack requirement', icon: '💧' },
+      { value: '10+ years', label: 'Moisture-sensitive component shelf life', icon: '⏰' }
+    ],
+    examples: ['Chip packaging', 'Circuit board shipping', 'Hard drive storage', 'Medical device transport'],
+    companies: ['Desco', 'SCS (Static Control)', 'Protektive Pak', '3M'],
+    futureImpact: 'Smart packaging with IoT sensors will track ESD events and humidity excursions throughout the supply chain.',
+    color: '#F59E0B'
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // 10-QUESTION TEST DATA
 // ────────────────────────────────────────────────────────────────────────────
 

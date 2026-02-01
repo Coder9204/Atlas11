@@ -79,6 +79,81 @@ const design = {
 };
 
 
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Anti-lock Braking Systems',
+    short: 'Maximizing braking through friction control',
+    tagline: 'Stop faster by slipping less',
+    description: 'ABS prevents wheel lockup during hard braking, keeping tires in static friction regime where stopping force is maximum. Locked wheels slide with lower kinetic friction, increasing stopping distance.',
+    connection: 'Static friction coefficient is higher than kinetic. ABS sensors detect when wheels are about to lock and pulse brakes to maintain the maximum static friction force available.',
+    howItWorks: 'Wheel speed sensors detect impending lockup. The ABS module releases and reapplies brakes rapidly (15x/second). This keeps tires at optimal slip ratio where friction peaks.',
+    stats: [
+      { value: '30%', label: 'Shorter stopping distance', icon: '🛑' },
+      { value: '15Hz', label: 'Brake pulsing rate', icon: '⚡' },
+      { value: '0.9', label: 'Optimal slip ratio', icon: '📊' }
+    ],
+    examples: ['Emergency braking', 'Wet road stopping', 'Motorcycle ABS', 'Aircraft landing'],
+    companies: ['Bosch', 'Continental', 'ZF', 'Brembo'],
+    futureImpact: 'AI-enhanced ABS will predict road conditions and optimize braking strategy before the driver even reacts, with vehicle-to-vehicle communication enabling coordinated emergency stops.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🧗',
+    title: 'Climbing Gear',
+    short: 'Life-saving friction in vertical sports',
+    tagline: 'Trust your grip',
+    description: 'Rock climbing depends entirely on friction. Rubber shoe compounds, chalk for hands, and belay devices all optimize friction to keep climbers safe on vertical rock faces.',
+    connection: 'Climbing shoes maximize static friction with sticky rubber. Belay devices use the difference between static and kinetic friction to catch falls while allowing controlled descent.',
+    howItWorks: 'Climbing rubber is soft with high friction coefficient. Belay devices wrap rope around a drum - static friction holds firm, but rope can slip when tension is released. Chalk absorbs sweat to maintain grip.',
+    stats: [
+      { value: '1.0+', label: 'Climbing rubber friction', icon: '👟' },
+      { value: '5kN', label: 'Belay device holding force', icon: '🔒' },
+      { value: '7kN', label: 'Fall force limit', icon: '⚠️' }
+    ],
+    examples: ['Rock climbing shoes', 'Belay devices', 'Chalk and grip aids', 'Rope friction knots'],
+    companies: ['La Sportiva', 'Petzl', 'Black Diamond', 'Five Ten'],
+    futureImpact: 'Smart climbing gear will use sensors to monitor friction conditions and warn climbers of dangerous surface conditions before a slip occurs.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🏭',
+    title: 'Manufacturing Conveyors',
+    short: 'Moving products through friction control',
+    tagline: 'Smooth movement, precise positioning',
+    description: 'Factory conveyors rely on friction to move products without slipping. Belt materials, tensioning, and surface treatments are engineered to balance grip and smooth motion.',
+    connection: 'Conveyor belts use static friction to move products. Too little friction causes slipping; too much causes jerky motion as products transition between static and kinetic friction.',
+    howItWorks: 'Belt materials are chosen for optimal friction with products. Tension provides normal force. Accumulation conveyors use friction differences to queue products. Incline conveyors need higher friction.',
+    stats: [
+      { value: '0.35', label: 'Typical belt friction', icon: '📊' },
+      { value: '30°', label: 'Max incline angle', icon: '📐' },
+      { value: '500m/min', label: 'High-speed conveyor', icon: '⚡' }
+    ],
+    examples: ['Amazon warehouses', 'Airport baggage', 'Food processing', 'Automotive assembly'],
+    companies: ['Dorner', 'Intralox', 'Habasit', 'FlexLink'],
+    futureImpact: 'Intelligent conveyors with variable friction surfaces will self-adjust for different products and conditions, optimizing throughput while preventing damage.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🎿',
+    title: 'Ski and Snowboard Wax',
+    short: 'Optimizing snow friction for speed',
+    tagline: 'The art of gliding fast',
+    description: 'Ski wax reduces friction between ski base and snow, but optimal wax depends on temperature. Too little friction and you can\'t control speed; too much and you\'re slow.',
+    connection: 'Snow friction involves both dry friction and thin water films. Wax creates hydrophobic barriers and fills microscopic base texture, transitioning between friction regimes with temperature.',
+    howItWorks: 'Wax melts into porous ski bases. Fluorocarbon waxes reduce water adhesion. Temperature-specific waxes optimize the water film thickness that forms from frictional heating.',
+    stats: [
+      { value: '0.03', label: 'Pro race ski friction', icon: '🎿' },
+      { value: '5%', label: 'Speed gain from waxing', icon: '🏆' },
+      { value: '-30 to 0°C', label: 'Wax temperature range', icon: '🌡️' }
+    ],
+    examples: ['Alpine racing', 'Cross-country skiing', 'Snowboarding', 'Ski jumping'],
+    companies: ['Swix', 'Toko', 'Holmenkol', 'Start'],
+    futureImpact: 'Nanotextured ski bases with environmentally friendly coatings will replace fluorocarbon waxes, providing optimized friction without harmful chemicals.',
+    color: '#22c55e'
+  }
+];
+
 // ============================================================================
 // APPLICATION TAB SVG GRAPHICS
 // ============================================================================

@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🔋',
+      title: 'MPPT Charge Controllers',
+      short: 'Maximizing solar harvest',
+      tagline: 'Every photon counts',
+      description: 'Maximum Power Point Tracking (MPPT) controllers continuously adjust load resistance to keep solar panels operating at their I-V curve sweet spot, capturing 15-30% more energy than basic controllers.',
+      connection: 'The I-V curve shows power peaks at a specific voltage-current combination. MPPT algorithms find and track this maximum power point as conditions change.',
+      howItWorks: 'DC-DC converters dynamically adjust their input impedance, sweeping the I-V curve to find maximum power. Perturb-and-observe or incremental conductance algorithms track the MPP.',
+      stats: [
+         { value: '30%', label: 'More energy captured', icon: '⚡' },
+         { value: '<1s', label: 'Tracking speed', icon: '⏱️' },
+         { value: '99%', label: 'Tracking efficiency', icon: '🎯' }
+      ],
+      examples: ['Off-grid solar systems', 'RV solar installations', 'Solar water pumping', 'Portable power stations'],
+      companies: ['Victron', 'Morningstar', 'Outback', 'Midnite Solar'],
+      futureImpact: 'AI-enhanced MPPT will predict optimal settings before clouds arrive.',
+      color: '#F59E0B'
+   },
+   {
+      icon: '🏠',
+      title: 'Residential Solar Inverters',
+      short: 'Powering homes from rooftops',
+      tagline: 'Sunshine to savings',
+      description: 'Grid-tied inverters convert DC from rooftop panels to AC for home use. Built-in MPPT ensures panels operate at peak efficiency regardless of temperature, shading, or panel aging.',
+      connection: 'The I-V curve shifts with temperature and irradiance. Inverters must continuously track these changes to maximize energy production throughout the day.',
+      howItWorks: 'String inverters manage series-connected panels with single or dual MPPT inputs. Microinverters provide per-panel optimization for complex roof configurations.',
+      stats: [
+         { value: '10kW', label: 'Typical home system', icon: '🏠' },
+         { value: '25 yrs', label: 'Panel lifespan', icon: '⏳' },
+         { value: '$100B', label: 'Global market', icon: '💰' }
+      ],
+      examples: ['Tesla Solar', 'SunPower systems', 'Enphase microinverters', 'SolarEdge optimizers'],
+      companies: ['Enphase', 'SolarEdge', 'SMA', 'Fronius'],
+      futureImpact: 'Vehicle-to-home integration will use bidirectional I-V management.',
+      color: '#22C55E'
+   },
+   {
+      icon: '🛰️',
+      title: 'Space Solar Arrays',
+      short: 'Powering satellites and spacecraft',
+      tagline: 'No atmosphere, maximum power',
+      description: 'Satellites use multi-junction gallium arsenide cells with different I-V characteristics than silicon. In space, extreme temperature swings require sophisticated MPPT and thermal management.',
+      connection: 'Space cells operate at very different I-V curves - cold shadow periods increase voltage significantly, while direct sun raises temperature and shifts curves.',
+      howItWorks: 'Sequential power trackers manage solar array wings, adjusting for orbital position, sun angle, and eclipse transitions. Radiation-hardened electronics maintain tracking.',
+      stats: [
+         { value: '30%', label: 'Cell efficiency', icon: '🔬' },
+         { value: '-150°C', label: 'Shadow temp', icon: '❄️' },
+         { value: '15+ yrs', label: 'Mission life', icon: '🛰️' }
+      ],
+      examples: ['ISS solar arrays', 'Mars rovers', 'Starlink satellites', 'James Webb telescope'],
+      companies: ['NASA', 'SpaceX', 'Boeing', 'Airbus'],
+      futureImpact: 'Space-based solar power stations may beam energy to Earth.',
+      color: '#8B5CF6'
+   },
+   {
+      icon: '🚗',
+      title: 'Electric Vehicle Solar',
+      short: 'Driving on sunshine',
+      tagline: 'Free miles from the sun',
+      description: 'Solar-integrated EVs face unique I-V challenges: curved surfaces receive varying irradiance, rapid shading changes during driving, and vibration affects connections.',
+      connection: 'Vehicle-integrated panels require extremely fast MPPT to handle shadows from trees and buildings changing in milliseconds as the car moves.',
+      howItWorks: 'Multiple MPPT zones handle different panel orientations. Algorithms predict shading transitions and pre-adjust for smooth power delivery to the vehicle battery.',
+      stats: [
+         { value: '30 mi', label: 'Daily solar range', icon: '🚗' },
+         { value: '200W', label: 'Roof panel power', icon: '☀️' },
+         { value: '$2K', label: 'Fuel savings/year', icon: '💰' }
+      ],
+      examples: ['Lightyear 0', 'Sono Sion', 'Hyundai Ioniq 5', 'Toyota Prius Prime'],
+      companies: ['Lightyear', 'Sono Motors', 'Hyundai', 'Toyota'],
+      futureImpact: 'High-efficiency cells will extend vehicle-integrated solar to trucks and buses.',
+      color: '#EC4899'
+   }
+];
+
 // --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
 export interface GameEvent {
   eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |

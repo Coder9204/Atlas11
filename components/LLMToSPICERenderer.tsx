@@ -1,5 +1,81 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+// Real-world applications for LLM-to-SPICE design workflow
+const realWorldApps = [
+  {
+    icon: '🔌',
+    title: 'Power Electronics Design',
+    short: 'AI-accelerated power converter design',
+    tagline: 'From specs to silicon in hours, not weeks',
+    description: 'Power supply designers use LLM-assisted workflows to generate initial converter topologies, component values, and control loop parameters. SPICE simulation validates efficiency, thermal performance, and transient response before any physical prototype.',
+    connection: 'The LLM-to-SPICE pipeline enables rapid iteration through design space. LLMs suggest component values based on specifications, while SPICE validates against physics - exactly as demonstrated with buck converter optimization.',
+    howItWorks: 'Engineers input voltage/current specs to LLMs, which generate netlists with initial component values. SPICE runs AC/DC/transient analysis. Results feed back to LLMs for refinement until specs are met.',
+    stats: [
+      { value: '10x', label: 'Faster iteration cycles', icon: '⚡' },
+      { value: '$45B', label: 'Power electronics market', icon: '📈' },
+      { value: '85%', label: 'Design time reduction', icon: '🚀' }
+    ],
+    examples: ['EV charging systems', 'Data center power supplies', 'Solar inverters', 'Laptop adapters'],
+    companies: ['Texas Instruments', 'Analog Devices', 'Infineon', 'ON Semiconductor'],
+    futureImpact: 'AI-assisted design will enable custom power solutions for IoT devices at fraction of current NRE costs, democratizing power electronics design.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '📡',
+    title: 'RF/Wireless Circuit Design',
+    short: 'LLM-generated matching networks',
+    tagline: 'Impedance matching meets machine learning',
+    description: 'Radio frequency engineers leverage LLMs to propose matching network topologies for antennas and amplifiers. Electromagnetic simulators verify S-parameters, noise figure, and bandwidth - properties impossible to predict without solving Maxwell\'s equations.',
+    connection: 'Just as buck converter phase margin requires actual simulation, RF performance depends on parasitic effects that only EM/SPICE tools can compute. LLMs generate starting points; physics reveals truth.',
+    howItWorks: 'LLMs suggest L-C-R values for matching networks based on frequency and impedance targets. RF simulators compute actual S11/S21 parameters. Multiple iterations converge on optimal matching.',
+    stats: [
+      { value: '5G+', label: 'Frequency bands supported', icon: '📶' },
+      { value: '$35B', label: 'RF component market', icon: '📈' },
+      { value: '40dB', label: 'Typical isolation achieved', icon: '🎯' }
+    ],
+    examples: ['5G base stations', 'WiFi 6E routers', 'Satellite communications', 'Radar systems'],
+    companies: ['Qualcomm', 'Broadcom', 'Skyworks', 'Qorvo'],
+    futureImpact: 'Generative AI will design custom RF front-ends for emerging spectrum allocations, accelerating 6G and satellite internet deployment.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🧠',
+    title: 'Analog IC Design Automation',
+    short: 'Neural network-guided transistor sizing',
+    tagline: 'Billions of transistors, intelligently placed',
+    description: 'Integrated circuit designers use ML models to propose transistor sizes for amplifiers, filters, and data converters. SPICE simulation validates gain, bandwidth, noise, and yield across process corners that statistical models alone cannot capture.',
+    connection: 'The game shows how plausible LLM outputs need physics validation. In IC design, process variation and temperature effects make simulation essential - no amount of training data captures your specific foundry process.',
+    howItWorks: 'ML models trained on successful designs suggest W/L ratios and bias points. Foundry SPICE models simulate actual silicon behavior. Monte Carlo runs verify yield. Feedback improves suggestions.',
+    stats: [
+      { value: '3nm', label: 'Leading edge node', icon: '🔬' },
+      { value: '$600B', label: 'Semiconductor market', icon: '📈' },
+      { value: '99.9%', label: 'Target yield rate', icon: '✅' }
+    ],
+    examples: ['Smartphone SoCs', 'Automotive sensors', 'Medical implants', 'Industrial ADCs'],
+    companies: ['TSMC', 'Intel', 'Samsung', 'Cadence'],
+    futureImpact: 'AI-assisted analog design will close the productivity gap with digital design, enabling fully custom mixed-signal systems at Moore\'s Law pace.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '⚡',
+    title: 'EMC/Signal Integrity Analysis',
+    short: 'AI-predicted PCB routing with EM validation',
+    tagline: 'Every trace is a transmission line',
+    description: 'High-speed PCB designers use AI tools to suggest layer stackups and routing strategies for signal integrity. Full-wave electromagnetic solvers validate crosstalk, reflections, and EMI compliance - effects that emerge from physical geometry, not rules.',
+    connection: 'Like the game\'s phase margin analysis, signal integrity depends on distributed effects that only field solvers can compute. AI suggests; Maxwell\'s equations decide.',
+    howItWorks: 'AI recommends trace widths, spacing, and via patterns based on data rate targets. 3D EM solvers compute actual S-parameters and eye diagrams. DDR5 memory at 6400 MT/s demands sub-mm accuracy.',
+    stats: [
+      { value: '112G', label: 'PAM4 SerDes rates', icon: '🚀' },
+      { value: '$8B', label: 'EDA tools market', icon: '📈' },
+      { value: '<1ps', label: 'Timing margin budgets', icon: '⏱️' }
+    ],
+    examples: ['DDR5 memory interfaces', 'PCIe Gen5 backplanes', '400G Ethernet switches', 'AI accelerator boards'],
+    companies: ['Ansys', 'Keysight', 'Siemens EDA', 'Altium'],
+    futureImpact: 'Generative AI will enable first-pass SI success for 224G SerDes, reducing board respins from industry average of 3 to 1.',
+    color: '#22c55e'
+  }
+];
+
 // Phase type for internal state management
 type SPICEPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

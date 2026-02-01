@@ -2,6 +2,80 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '💻',
+      title: 'CPU Speed Binning',
+      short: 'Same chip, different speeds',
+      tagline: 'Turning defects into profits',
+      description: 'Intel and AMD test every processor and sort them by maximum stable frequency. Faster chips become premium products, slower ones sell at lower prices - all from the same manufacturing run.',
+      connection: 'Random process variation creates a natural distribution of transistor speeds. Rather than discarding slower chips, manufacturers monetize the entire distribution.',
+      howItWorks: 'Each chip is tested at increasing frequencies until it fails. Those reaching highest speeds become i9/Ryzen 9, while slower ones become i5/Ryzen 5 variants.',
+      stats: [
+         { value: '30%', label: 'Speed variation', icon: '📊' },
+         { value: '$500+', label: 'Price difference', icon: '💰' },
+         { value: '95%', label: 'Yield rate target', icon: '🎯' }
+      ],
+      examples: ['Intel Core i9 vs i5', 'AMD Ryzen 9 vs 5', 'NVIDIA RTX tiers', 'Apple M-series chips'],
+      companies: ['Intel', 'AMD', 'NVIDIA', 'TSMC'],
+      futureImpact: 'AI-driven binning and adaptive voltage scaling will extract maximum performance from every chip.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '📱',
+      title: 'SRAM Yield Challenges',
+      short: 'Memory cells fail first',
+      tagline: 'The canary in the fab',
+      description: 'SRAM cells are the smallest, most variation-sensitive structures on chips. They often determine overall yield because mismatched transistors cause read/write failures.',
+      connection: 'Six-transistor SRAM cells require precise balance. Even small threshold voltage (Vth) mismatches between paired transistors cause bit failures.',
+      howItWorks: 'Designers add redundant rows/columns and error correction. When cells fail, spare cells replace them, rescuing chips that would otherwise be discarded.',
+      stats: [
+         { value: '6T', label: 'Transistors per cell', icon: '⚡' },
+         { value: '10%', label: 'Cache adds to die area', icon: '📐' },
+         { value: '99.9%', label: 'ECC correction rate', icon: '✅' }
+      ],
+      examples: ['CPU L1/L2/L3 cache', 'GPU shared memory', 'Smartphone processors', 'Embedded controllers'],
+      companies: ['Samsung', 'Micron', 'SK Hynix', 'Intel'],
+      futureImpact: 'New memory architectures like MRAM may reduce variation sensitivity while enabling non-volatile caches.',
+      color: '#8B5CF6'
+   },
+   {
+      icon: '🔋',
+      title: 'Adaptive Voltage Scaling',
+      short: 'Each chip finds its sweet spot',
+      tagline: 'Custom tuning at scale',
+      description: 'Modern processors store calibration data in fuses during manufacturing. At runtime, chips adjust voltage and frequency based on their unique silicon characteristics and workload.',
+      connection: 'Process variation means each chip has an optimal voltage-frequency curve. AVS finds the minimum voltage needed for stable operation, saving power.',
+      howItWorks: 'Factory testing maps each chip\'s voltage-frequency relationship. Runtime monitors adjust voltage dynamically, compensating for temperature and aging.',
+      stats: [
+         { value: '20%', label: 'Power savings', icon: '⚡' },
+         { value: '1000+', label: 'Voltage steps', icon: '📊' },
+         { value: 'ms', label: 'Adjustment speed', icon: '⏱️' }
+      ],
+      examples: ['Smartphone SoCs', 'Data center CPUs', 'Laptop processors', 'Electric vehicle controllers'],
+      companies: ['Qualcomm', 'Apple', 'AMD', 'ARM'],
+      futureImpact: 'Machine learning will predict optimal voltage settings before workload changes occur.',
+      color: '#10B981'
+   },
+   {
+      icon: '🏭',
+      title: 'Design for Manufacturing',
+      short: 'Building variation tolerance in',
+      tagline: 'Anticipating imperfection',
+      description: 'Chip designers add margins, use restricted design rules, and apply optical proximity correction (OPC) to ensure layouts survive real-world manufacturing variation.',
+      connection: 'Instead of fighting variation, modern design flows embrace it. Statistical timing analysis treats delays as distributions, not fixed values.',
+      howItWorks: 'Designers simulate thousands of random variation scenarios. Layouts are adjusted to ensure circuits work across the expected statistical range.',
+      stats: [
+         { value: '3σ', label: 'Design margin', icon: '📐' },
+         { value: '99.7%', label: 'Coverage target', icon: '🎯' },
+         { value: '10x', label: 'Simulation increase', icon: '💻' }
+      ],
+      examples: ['EDA timing analysis', 'Lithography simulation', 'Via redundancy', 'Guard-banding'],
+      companies: ['Synopsys', 'Cadence', 'Mentor', 'ASML'],
+      futureImpact: 'AI-driven design automation will optimize layouts for manufacturability in hours instead of weeks.',
+      color: '#F59E0B'
+   }
+];
 
 interface GameEvent {
   type: 'phase_complete' | 'answer_correct' | 'answer_incorrect' | 'interaction';

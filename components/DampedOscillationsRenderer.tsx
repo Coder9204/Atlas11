@@ -57,6 +57,81 @@ interface Props {
   onPhaseComplete?: (phase: string) => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Vehicle Suspension Systems',
+    short: 'Smooth ride engineering',
+    tagline: 'Critical damping for comfort and control',
+    description: 'Car suspensions use shock absorbers (dampers) tuned near critical damping. This allows the suspension to absorb bumps quickly without bouncing, providing both comfort and vehicle control.',
+    connection: 'An underdamped suspension would bounce repeatedly after hitting a bump. Overdamped would be too stiff. Near-critical damping returns the wheel to equilibrium fastest without oscillation.',
+    howItWorks: 'Hydraulic shock absorbers force oil through small orifices when compressed. This viscous resistance provides damping force proportional to velocity. Adjustable dampers can tune the damping ratio.',
+    stats: [
+      { value: '0.2-0.4', label: 'Typical damping ratio', icon: '📊' },
+      { value: '2-3 Hz', label: 'Natural frequency', icon: '🔄' },
+      { value: '1-2 cycles', label: 'Settling time', icon: '⏱️' }
+    ],
+    examples: ['Car shock absorbers', 'Motorcycle forks', 'Truck air ride', 'Racing suspensions'],
+    companies: ['Bilstein', 'KYB', 'Monroe', 'Öhlins'],
+    futureImpact: 'Active suspension systems with electronically controlled damping can adjust in milliseconds, optimizing for comfort on smooth roads and control on rough terrain.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏗️',
+    title: 'Earthquake Engineering',
+    short: 'Building protection',
+    tagline: 'Damping to survive earthquakes',
+    description: 'Tall buildings use tuned mass dampers and base isolation systems to reduce earthquake and wind vibrations. The damping ratio is carefully chosen to minimize structural stress.',
+    connection: 'Buildings naturally oscillate at resonant frequencies. Earthquakes can excite these frequencies. Dampers dissipate energy, reducing amplitude and preventing structural failure.',
+    howItWorks: 'Tuned mass dampers are large masses (up to 700 tons) on springs and dampers in tall buildings. They oscillate out of phase with building motion, absorbing energy and reducing sway.',
+    stats: [
+      { value: '40%', label: 'Motion reduction', icon: '📉' },
+      { value: '700 tons', label: 'Taipei 101 damper', icon: '🏗️' },
+      { value: '0.5-2%', label: 'Structural damping', icon: '📊' }
+    ],
+    examples: ['Taipei 101', 'Shanghai Tower', 'Citicorp Center', 'John Hancock Tower'],
+    companies: ['Taylor Devices', 'Thornton Tomasetti', 'Arup', 'Motioneering'],
+    futureImpact: 'Semi-active and active damping systems with real-time control can adapt to different earthquake frequencies for optimal protection.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🎸',
+    title: 'Musical Instrument Design',
+    short: 'Sound and sustain',
+    tagline: 'Controlled decay for beautiful tones',
+    description: 'Musical instruments rely on specific damping characteristics. Pianos need sustained tones (low damping), while drums need quick decay. Guitar sustain depends on minimizing energy loss.',
+    connection: 'A piano string is lightly damped - it oscillates thousands of times before stopping. The damping ratio determines how long notes sustain and how quickly they fade.',
+    howItWorks: 'String vibration energy dissipates through air resistance, internal friction, and coupling to the soundboard. Material choice, construction, and felt dampers all affect the decay envelope.',
+    stats: [
+      { value: '10+ sec', label: 'Piano sustain', icon: '🎹' },
+      { value: '0.001', label: 'Guitar string damping', icon: '🎸' },
+      { value: '0.1', label: 'Drum head damping', icon: '🥁' }
+    ],
+    examples: ['Piano sustain pedal', 'Guitar sustain', 'Drum muffling', 'Cymbal decay'],
+    companies: ['Steinway', 'Gibson', 'DW Drums', 'Zildjian'],
+    futureImpact: 'Digital instruments can simulate any damping characteristic, and new materials are enabling acoustic instruments with unprecedented sustain and tonal control.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📱',
+    title: 'MEMS Sensors & Accelerometers',
+    short: 'Precision motion sensing',
+    tagline: 'Damping for accurate measurements',
+    description: 'Smartphone accelerometers and gyroscopes are microscopic damped oscillators. Critical damping ensures fast response without ringing, enabling accurate motion detection for navigation and games.',
+    connection: 'MEMS sensors use tiny proof masses on springs. Air or electrostatic damping is precisely controlled to achieve near-critical damping for fast, accurate response to acceleration.',
+    howItWorks: 'A microscopic proof mass deflects under acceleration. Capacitive sensors measure displacement. Feedback electronics can add electrostatic damping, tuning the response for the application.',
+    stats: [
+      { value: '0.5-0.7', label: 'Typical damping ratio', icon: '📊' },
+      { value: '1 kHz', label: 'Bandwidth', icon: '⚡' },
+      { value: '$0.50', label: 'Sensor cost', icon: '💰' }
+    ],
+    examples: ['Phone accelerometers', 'Airbag sensors', 'Drone IMUs', 'Gaming controllers'],
+    companies: ['STMicroelectronics', 'Bosch', 'InvenSense', 'Analog Devices'],
+    futureImpact: 'MEMS inertial sensors are enabling autonomous vehicles, AR/VR tracking, and medical devices with ever-improving accuracy and lower power consumption.',
+    color: '#10B981'
+  }
+];
+
 const DampedOscillationsRenderer: React.FC<Props> = ({
   onGameEvent,
   gamePhase,

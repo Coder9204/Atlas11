@@ -19,6 +19,81 @@ interface SRAMCellRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '💾',
+    title: 'CPU Cache Memory',
+    short: 'Ultra-fast memory for processor performance',
+    tagline: 'Nanoseconds matter here',
+    description: 'Modern CPUs use multiple levels of SRAM cache (L1, L2, L3) to bridge the speed gap between fast processors and slow main memory. Cache hit rates determine real-world performance more than clock speed.',
+    connection: 'SRAM cell stability directly affects cache reliability. The static noise margin determines whether a cell holds its data while being read or when supply voltage droops during power-saving modes.',
+    howItWorks: 'L1 cache uses the fastest, largest 6T SRAM cells optimized for speed. L2/L3 use denser cells with smaller transistors. Read disturb protection prevents data corruption during the millions of accesses per second.',
+    stats: [
+      { value: '<1ns', label: 'L1 cache access', icon: '⚡' },
+      { value: '512KB', label: 'Typical L2 cache', icon: '💾' },
+      { value: '50%', label: 'Die area for cache', icon: '📊' }
+    ],
+    examples: ['Intel Core processors', 'AMD Ryzen chips', 'Apple M-series', 'Server Xeons'],
+    companies: ['Intel', 'AMD', 'Apple', 'ARM'],
+    futureImpact: 'New SRAM architectures with improved stability will enable lower voltage operation, reducing power consumption in mobile and data center processors.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '📱',
+    title: 'Mobile Device Memory',
+    short: 'Low-power memory for phones and tablets',
+    tagline: 'Every milliwatt counts',
+    description: 'Smartphones rely on SRAM for graphics buffers, neural network accelerators, and system caches. Low-power SRAM variants operate at reduced voltages to extend battery life while maintaining stability.',
+    connection: 'Operating SRAM at lower voltages reduces power quadratically but shrinks stability margins. Cell design must balance power savings against read disturb and retention failures.',
+    howItWorks: 'Mobile SRAM uses techniques like read-assist and write-assist circuits to maintain margins at low voltage. Power gating turns off unused cache blocks. Temperature variation in phones tests stability limits.',
+    stats: [
+      { value: '0.5V', label: 'Low-power operation', icon: '🔋' },
+      { value: '100x', label: 'Lower leakage than DRAM', icon: '💡' },
+      { value: '8MB+', label: 'Mobile GPU cache', icon: '📱' }
+    ],
+    examples: ['iPhone processors', 'Qualcomm Snapdragon', 'Samsung Exynos', 'MediaTek Dimensity'],
+    companies: ['Apple', 'Qualcomm', 'Samsung', 'TSMC'],
+    futureImpact: 'Advanced finFET and gate-all-around transistors will enable even lower voltage SRAM operation, potentially doubling mobile processor efficiency.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🎮',
+    title: 'GPU Shared Memory',
+    short: 'High-bandwidth memory for parallel computing',
+    tagline: 'Feeding the parallel beast',
+    description: 'GPUs contain megabytes of on-chip SRAM shared between thousands of processing cores. This memory enables high-bandwidth data sharing critical for graphics rendering and AI inference.',
+    connection: 'GPU SRAM must support simultaneous access from many cores. Multi-port cell designs trade density for bandwidth, and read disturb becomes more challenging with higher access rates.',
+    howItWorks: 'Modern GPUs use register files and shared memory built from SRAM. Banks allow parallel access. Error correction (ECC) detects and corrects soft errors in server GPUs.',
+    stats: [
+      { value: '20TB/s', label: 'Aggregate bandwidth', icon: '🚀' },
+      { value: '128KB', label: 'Per SM shared memory', icon: '🔢' },
+      { value: '144MB', label: 'H100 L2 cache', icon: '💾' }
+    ],
+    examples: ['NVIDIA RTX graphics', 'AMD RDNA gaming', 'AI training clusters', 'Scientific computing'],
+    companies: ['NVIDIA', 'AMD', 'Intel Arc', 'Google TPU'],
+    futureImpact: 'Chiplet-based GPUs will integrate more SRAM closer to compute units, with novel 3D stacking enabling unprecedented on-chip memory capacity.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🌐',
+    title: 'Network Router Buffers',
+    short: 'Packet storage for internet traffic',
+    tagline: 'Keeping the internet flowing',
+    description: 'Network routers and switches use large SRAM arrays to buffer packets while making forwarding decisions. The stability and speed of this memory directly affects internet latency and throughput.',
+    connection: 'Router SRAM experiences continuous read-write cycles at wire speed. Cell stability must be maintained while operating at maximum frequency with minimal latency for line-rate packet processing.',
+    howItWorks: 'Packet buffers use wide SRAM arrays to match port speeds. Content-addressable memory (CAM) built from SRAM enables fast routing table lookups. Quality of service requires reliable priority queue management.',
+    stats: [
+      { value: '400Gb/s', label: 'Per port speed', icon: '🌐' },
+      { value: '256MB', label: 'Typical buffer size', icon: '📦' },
+      { value: '10ns', label: 'Lookup latency', icon: '⏱️' }
+    ],
+    examples: ['Data center switches', 'Internet backbone routers', '5G base stations', 'Enterprise networking'],
+    companies: ['Cisco', 'Juniper', 'Arista', 'Broadcom'],
+    futureImpact: 'Terabit-speed networking will require even faster, denser SRAM for buffering as the internet scales to support AR/VR, autonomous vehicles, and IoT.',
+    color: '#f59e0b'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

@@ -2,6 +2,82 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 
+// Real-world applications for MOSFET switching
+const realWorldApps = [
+  {
+    icon: '⚡',
+    title: 'Power Conversion Systems',
+    short: 'Switching power supplies everywhere',
+    tagline: 'Billions of transistors switching trillions of watts',
+    description: 'Every laptop charger, phone charger, and data center power supply uses MOSFET switching to efficiently convert voltage levels. The switching frequency, rise/fall times, and losses you explored determine whether power supplies run cool or hot.',
+    connection: 'The game showed how gate drive affects switching speed and losses. In real power supplies, MOSFET switching at 100kHz-1MHz converts AC to DC efficiently. The same Cgs charging dynamics determine switching loss.',
+    howItWorks: 'MOSFETs switch on/off at high frequency (100kHz+). PWM duty cycle controls output voltage. Faster switching allows smaller inductors/capacitors. Switching losses (Coss, gate charge) limit frequency. GaN/SiC enable MHz operation.',
+    stats: [
+      { value: '95%', label: 'Modern PSU efficiency', icon: '⚡' },
+      { value: '1MHz', label: 'GaN switching frequency', icon: '📊' },
+      { value: '$50B', label: 'Power electronics market', icon: '📈' }
+    ],
+    examples: ['USB-C chargers', 'Server PSUs', 'EV onboard chargers', 'Solar inverters'],
+    companies: ['Texas Instruments', 'Infineon', 'ON Semiconductor', 'GaN Systems'],
+    futureImpact: 'GaN and SiC MOSFETs will enable 99% efficient power conversion, cutting data center energy waste in half.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🚗',
+    title: 'Electric Vehicle Inverters',
+    short: 'MOSFETs driving motors at 400V',
+    tagline: 'From battery to torque in microseconds',
+    description: 'EV powertrains use MOSFET/IGBT inverters to convert battery DC to 3-phase AC for the motor. The same gate drive and switching dynamics determine motor efficiency, torque response, and driving range.',
+    connection: 'The simulation showed switching transitions and losses. EV inverters switch at 10-20kHz, with each transition following the same gate charge, dead time, and loss mechanisms. Faster switching means smoother motor control.',
+    howItWorks: 'Six MOSFETs/IGBTs form 3-phase bridge. PWM creates sinusoidal current in motor windings. Dead time prevents shoot-through (both switches on). Switching losses generate heat requiring cooling. SiC enables higher frequency and efficiency.',
+    stats: [
+      { value: '300kW', label: 'Peak inverter power', icon: '⚡' },
+      { value: '97%', label: 'Inverter efficiency', icon: '📊' },
+      { value: '$20B', label: 'EV power electronics', icon: '📈' }
+    ],
+    examples: ['Tesla Model S/3/X/Y', 'Porsche Taycan', 'Rivian R1T', 'Lucid Air'],
+    companies: ['Tesla', 'BYD', 'Bosch', 'Denso'],
+    futureImpact: '800V SiC inverters will enable 350kW charging and 400+ mile ranges in mainstream EVs.',
+    color: '#22c55e'
+  },
+  {
+    icon: '💻',
+    title: 'CPU Voltage Regulators',
+    short: 'Millions of switching cycles per second',
+    tagline: 'Powering processors one nanosecond at a time',
+    description: 'Modern CPUs require precise voltage (1V) at extreme currents (200A) that change in nanoseconds. Voltage regulator modules (VRMs) use banks of MOSFETs switching at MHz rates, with the same gate drive challenges explored in the game.',
+    connection: 'The game\'s focus on gate charge and switching speed applies directly to VRMs. Each phase switches at 500kHz-2MHz, and gate driver strength determines how fast the MOSFET can respond to CPU load changes.',
+    howItWorks: 'Multi-phase VRM with 12-20 MOSFET pairs. High-side and low-side switch alternately. Rapid switching enables fast load response. Gate drivers must charge Cgs in nanoseconds. Thermal management critical for 200A+ delivery.',
+    stats: [
+      { value: '200A', label: 'CPU current demand', icon: '⚡' },
+      { value: '2MHz', label: 'Per-phase switching', icon: '📊' },
+      { value: '<1%', label: 'Voltage tolerance', icon: '🎯' }
+    ],
+    examples: ['Intel desktop VRMs', 'AMD Ryzen motherboards', 'Laptop power delivery', 'GPU power stages'],
+    companies: ['Renesas', 'Monolithic Power', 'Infineon', 'Texas Instruments'],
+    futureImpact: 'GaN-based VRMs will triple power density, enabling thinner laptops with desktop-class performance.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🔊',
+    title: 'Class D Audio Amplifiers',
+    short: 'High-fidelity sound from switching transistors',
+    tagline: 'Digital efficiency, analog quality',
+    description: 'Class D amplifiers achieve 90%+ efficiency by using MOSFETs as switches rather than linear amplifiers. PWM encodes the audio signal, and the same switching dynamics explored in the game determine distortion and audio quality.',
+    connection: 'The simulation showed how switching transitions create losses. In Class D, switching speed determines how accurately the PWM waveform represents the audio signal. Faster transitions mean lower distortion.',
+    howItWorks: 'Audio signal modulates PWM duty cycle. MOSFETs switch at 400kHz-2MHz. LC filter recovers analog audio. Dead time causes crossover distortion. Feedback corrects errors. Switching noise must stay above audio band.',
+    stats: [
+      { value: '95%', label: 'Amplifier efficiency', icon: '⚡' },
+      { value: '0.01%', label: 'THD achievable', icon: '📊' },
+      { value: '$5B', label: 'Audio amplifier market', icon: '📈' }
+    ],
+    examples: ['Smartphone speakers', 'Bluetooth speakers', 'Car audio', 'PA systems'],
+    companies: ['Texas Instruments', 'Cirrus Logic', 'Qualcomm', 'Analog Devices'],
+    futureImpact: 'GaN Class D amplifiers will enable 1000W home theater systems that run cool without fans.',
+    color: '#8b5cf6'
+  }
+];
+
 type MOSFETPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface MOSFETSwitchingRendererProps {

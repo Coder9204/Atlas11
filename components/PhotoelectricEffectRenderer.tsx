@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '☀️',
+    title: 'Solar Cells',
+    short: 'Photons liberate electrons for clean energy',
+    tagline: 'Einstein\'s discovery powers the future',
+    description: 'Solar cells convert sunlight directly into electricity using the photoelectric effect. Photons with sufficient energy liberate electrons in semiconductor materials, creating current that powers homes and businesses.',
+    connection: 'Each photon with energy above the bandgap (analogous to work function) can create one electron-hole pair. This is why efficiency is limited by the solar spectrum.',
+    howItWorks: 'Photons are absorbed in the depletion region of a p-n junction. Freed electrons flow through an external circuit. Multiple cells are connected to build useful voltage and current.',
+    stats: [
+      { value: '26%', label: 'top Si efficiency', icon: '⚡' },
+      { value: '1TW', label: 'installed capacity', icon: '🌍' },
+      { value: '$180B', label: 'annual market', icon: '📈' }
+    ],
+    examples: ['Rooftop solar panels', 'Solar farms', 'Spacecraft power', 'Solar calculators'],
+    companies: ['First Solar', 'LONGi', 'Canadian Solar', 'SunPower'],
+    futureImpact: 'Perovskite and tandem cells will push efficiencies toward 50%, making solar the dominant energy source globally.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '📷',
+    title: 'Digital Cameras',
+    short: 'CMOS sensors capture photons as pixels',
+    tagline: 'Every photo is the photoelectric effect',
+    description: 'Digital camera sensors use the photoelectric effect to convert light into electrical signals. Each pixel is a tiny photodiode that generates electrons proportional to the light it receives.',
+    connection: 'The quantum efficiency of image sensors depends on photon energy matching the semiconductor bandgap. Different wavelengths require different sensor designs.',
+    howItWorks: 'Photons create electron-hole pairs in silicon photodiodes. These charges accumulate during exposure, then are read out as voltage signals that become digital pixel values.',
+    stats: [
+      { value: '100M+', label: 'megapixels', icon: '📸' },
+      { value: '90%', label: 'quantum efficiency', icon: '⚡' },
+      { value: '$25B', label: 'sensor market', icon: '📈' }
+    ],
+    examples: ['Smartphone cameras', 'DSLR sensors', 'Scientific CCDs', 'Security cameras'],
+    companies: ['Sony', 'Samsung', 'OmniVision', 'Canon'],
+    futureImpact: 'Stacked sensor architectures and computational imaging will enable even better low-light performance and dynamic range.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌙',
+    title: 'Night Vision',
+    short: 'Photomultipliers amplify scarce photons',
+    tagline: 'Seeing in the dark with quantum physics',
+    description: 'Night vision devices use photocathodes where the photoelectric effect releases electrons from incoming photons. These electrons are multiplied thousands of times to create a visible image.',
+    connection: 'The work function of the photocathode material determines the minimum photon energy (color) that can be detected. Modern materials respond to near-infrared.',
+    howItWorks: 'Photons hit a photocathode, releasing electrons. An intensifier tube accelerates and multiplies these electrons. Finally, a phosphor screen converts them back to visible light.',
+    stats: [
+      { value: '50K', label: 'electron multiplication', icon: '⚡' },
+      { value: '0.001', label: 'lux sensitivity', icon: '🌙' },
+      { value: '$10B', label: 'market size', icon: '📈' }
+    ],
+    examples: ['Military goggles', 'Security surveillance', 'Wildlife observation', 'Astronomy'],
+    companies: ['L3Harris', 'Elbit Systems', 'Thales', 'FLIR'],
+    futureImpact: 'Digital night vision with CMOS sensors will provide color imaging in near-total darkness.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🚪',
+    title: 'Automatic Doors',
+    short: 'Photosensors detect your approach',
+    tagline: 'Physics in everyday convenience',
+    description: 'Automatic doors use photoelectric sensors to detect when someone approaches. A light beam is broken or reflected, triggering the door to open. The photoelectric effect converts the light signal to an electrical one.',
+    connection: 'Phototransistors and photodiodes in these sensors operate on the same quantum mechanical principle Einstein explained: photons eject electrons.',
+    howItWorks: 'An emitter sends an infrared beam. A photodetector opposite or nearby measures the light. When the beam is interrupted or reflected by a person, the current change triggers the door.',
+    stats: [
+      { value: '3m', label: 'detection range', icon: '📏' },
+      { value: '100ms', label: 'response time', icon: '⏱️' },
+      { value: '$10B', label: 'sensor market', icon: '📈' }
+    ],
+    examples: ['Supermarket entrances', 'Elevator doors', 'Garage door safety', 'Assembly line sensors'],
+    companies: ['Omron', 'Sick', 'Banner Engineering', 'Keyence'],
+    futureImpact: 'Smart building systems will use networked photoelectric sensors for occupancy detection and energy optimization.',
+    color: '#8B5CF6'
+  }
+];
+
 // ============================================================================
 // PHOTOELECTRIC EFFECT RENDERER - SPEC-COMPLIANT IMPLEMENTATION
 // Follows GAME_TEST_SPECIFICATION.md exactly

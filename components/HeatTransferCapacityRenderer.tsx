@@ -39,6 +39,85 @@ interface Props {
 }
 
 // ============================================================================
+// REAL WORLD APPLICATIONS
+// ============================================================================
+
+const realWorldApps = [
+  {
+    icon: '🖥️',
+    title: 'CPU & GPU Cooling',
+    short: 'Conducting heat from chips to air through metal highways',
+    tagline: 'Thermal conductivity determines if your PC throttles',
+    description: 'Modern processors generate 100-300+ watts in a tiny area. Heat spreaders, heat pipes, and heatsinks use high-conductivity materials (copper, aluminum) to spread and dissipate this heat before the chip overheats and throttles.',
+    connection: 'The thermal conductivity (k) you explored explains heatsink design: copper (k=401) bases spread heat quickly, aluminum (k=237) fins dissipate it to air, and thermal paste (k=5-15) bridges the microscopic gaps.',
+    howItWorks: 'Heat flows from the die through thermal interface material to a copper base (spreading), up heat pipes (phase-change transport), through aluminum fins, and finally convects to air. Each stage is optimized for its thermal role.',
+    stats: [
+      { value: '300W', label: 'High-end GPU thermal load', icon: '🔥' },
+      { value: '100°C', label: 'Typical throttle temperature', icon: '🌡️' },
+      { value: '400+ W/(m·K)', label: 'Copper thermal conductivity', icon: '⚡' }
+    ],
+    examples: ['Noctua air coolers', 'Corsair AIO liquid coolers', 'NVIDIA Founders Edition', 'Data center cold plates'],
+    companies: ['Noctua', 'Corsair', 'NZXT', 'Thermal Grizzly'],
+    futureImpact: 'Graphene and diamond-like carbon thermal interfaces will enable fanless cooling of high-power chips.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏠',
+    title: 'Building Insulation',
+    short: 'Keeping heat in (or out) with low-conductivity materials',
+    tagline: 'R-value is inverted thermal conductivity',
+    description: 'Building insulation uses materials with extremely low thermal conductivity - fiberglass, foam, aerogel - to minimize heat transfer through walls and roofs. The lower the k-value, the higher the R-value and energy savings.',
+    connection: 'While high-k materials conduct heat quickly (bad for insulation), low-k materials like fiberglass (k=0.04) and aerogel (k=0.015) trap air and resist heat flow - the opposite of what you want in a cooking pan.',
+    howItWorks: 'Insulation materials trap still air in tiny pockets. Air has very low thermal conductivity (k=0.025). The solid structure prevents convection while the trapped air resists conduction. R = thickness/k.',
+    stats: [
+      { value: '50%', label: 'Home energy for heating/cooling', icon: '💰' },
+      { value: 'R-60', label: 'Best attic insulation', icon: '🏠' },
+      { value: '0.015 W/(m·K)', label: 'Aerogel conductivity', icon: '📉' }
+    ],
+    examples: ['Fiberglass batts', 'Spray foam insulation', 'Rigid foam boards', 'NASA aerogel blankets'],
+    companies: ['Owens Corning', 'Johns Manville', 'Dow Chemical', 'Aspen Aerogels'],
+    futureImpact: 'Vacuum insulated panels with k=0.004 will enable super-insulated buildings requiring minimal heating/cooling.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🍳',
+    title: 'Cookware Engineering',
+    short: 'Designing pans for even heat distribution',
+    tagline: 'Why copper-clad pans cost $400',
+    description: 'Premium cookware uses multi-layer construction to optimize heat distribution. Copper or aluminum cores provide high lateral conductivity (no hot spots), while stainless steel surfaces provide durability and non-reactivity.',
+    connection: 'You learned that copper (k=401) conducts heat far faster than stainless steel (k=16). Copper-clad pans spread heat evenly because lateral conduction outpaces the heat input from the burner.',
+    howItWorks: 'Heat from the burner must spread laterally faster than it accumulates. With low-k steel alone, hot spots form. A copper or aluminum core layer conducts heat sideways rapidly, then transfers it evenly through the cooking surface.',
+    stats: [
+      { value: '25x', label: 'Copper vs steel conductivity', icon: '⚡' },
+      { value: '$400+', label: 'Premium copper cookware', icon: '💰' },
+      { value: '3-5 layers', label: 'Typical clad construction', icon: '📊' }
+    ],
+    examples: ['All-Clad tri-ply', 'Mauviel copper', 'Demeyere 7-ply', 'Cast iron seasoned pans'],
+    companies: ['All-Clad', 'Mauviel', 'Demeyere', 'Le Creuset'],
+    futureImpact: 'Graphene-enhanced cookware will achieve copper performance at aluminum weight and cost.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔋',
+    title: 'EV Battery Thermal Management',
+    short: 'Keeping battery cells in the perfect temperature window',
+    tagline: 'Too hot degrades, too cold loses range',
+    description: 'EV batteries must operate between 20-40°C for optimal performance and longevity. Thermal management systems use liquid cooling plates with high conductivity to rapidly equalize temperatures across thousands of cells.',
+    connection: 'Both thermal conductivity (moving heat to coolant) and specific heat capacity (thermal mass to buffer temperature swings) matter - you explored both concepts in the simulation.',
+    howItWorks: 'Cooling plates with internal channels contact cell surfaces. High-conductivity aluminum spreads heat to the coolant. Glycol-water mixture absorbs heat and carries it to radiators. Active heating works similarly in reverse.',
+    stats: [
+      { value: '20-40°C', label: 'Optimal battery temperature', icon: '🌡️' },
+      { value: '10+ years', label: 'Target battery life', icon: '⏰' },
+      { value: '15 kW', label: 'Cooling system capacity', icon: '❄️' }
+    ],
+    examples: ['Tesla battery cooling', 'Rivian thermal system', 'BMW i4 cooling', 'Lucid Air thermal management'],
+    companies: ['Tesla', 'CATL', 'Dana Incorporated', 'Valeo'],
+    futureImpact: 'Immersion cooling in dielectric fluid will enable 4C+ charging rates without overheating.',
+    color: '#8B5CF6'
+  }
+];
+
+// ============================================================================
 // GAME CONTENT DATA
 // ============================================================================
 

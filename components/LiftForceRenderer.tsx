@@ -7,6 +7,81 @@ interface LiftForceRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '✈️',
+    title: 'Commercial Aviation',
+    short: 'Moving billions of passengers',
+    tagline: 'The physics of flight made routine',
+    description: 'Commercial aircraft wings generate lift through precise airfoil design. Wing shape, angle of attack, and airspeed combine to create the pressure differential that lifts 500+ ton aircraft. Modern wings include variable geometry for optimal lift at all flight phases.',
+    connection: 'The lift equation L = ½ρv²SCL directly determines aircraft performance. Designers balance wing area, airfoil shape, and cruise speed to optimize fuel efficiency while ensuring adequate lift for takeoff and landing.',
+    howItWorks: 'Wings curve more on top than bottom, accelerating air over the upper surface. Faster air has lower pressure (Bernoulli), creating net upward force. High-lift devices (flaps, slats) increase lift coefficient for slow-speed flight.',
+    stats: [
+      { value: '500+ tons', label: 'Max takeoff weight', icon: '⚡' },
+      { value: '900 km/h', label: 'Cruise speed', icon: '📈' },
+      { value: '$838B', label: 'Aviation market', icon: '🚀' }
+    ],
+    examples: ['Boeing 787 Dreamliner', 'Airbus A350', 'Embraer E2 jets', 'Bombardier Global'],
+    companies: ['Boeing', 'Airbus', 'Embraer', 'Bombardier'],
+    futureImpact: 'Blended wing body designs and active flow control will dramatically improve lift-to-drag ratios, reducing fuel consumption by 20-30%.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏎️',
+    title: 'Race Car Aerodynamics',
+    short: 'Negative lift for grip',
+    tagline: 'Pushing down at 300 km/h',
+    description: 'Formula 1 cars use inverted airfoils to generate downforce—negative lift that pushes cars onto the track. At high speeds, downforce can exceed the car\'s weight, enabling cornering forces impossible with tire grip alone.',
+    connection: 'The same lift equation applies, but with inverted wings creating downward force. L = ½ρv²SCL becomes a pushing force, dramatically increasing tire normal force and therefore maximum friction.',
+    howItWorks: 'Front and rear wings act as upside-down aircraft wings. The floor uses ground effect—airflow acceleration under the car creates low pressure. Active elements adjust downforce for straight-line speed vs. cornering grip.',
+    stats: [
+      { value: '5g', label: 'Cornering force', icon: '⚡' },
+      { value: '3x weight', label: 'Max downforce', icon: '📈' },
+      { value: '$1.8B', label: 'F1 team budgets', icon: '🚀' }
+    ],
+    examples: ['F1 front and rear wings', 'Le Mans prototype floors', 'NASCAR spoilers', 'Indy car underwings'],
+    companies: ['Red Bull Racing', 'Ferrari', 'Mercedes-AMG', 'McLaren'],
+    futureImpact: 'Active aerodynamics with real-time adjustment will optimize downforce distribution for every corner, maximizing both speed and safety.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🚁',
+    title: 'Helicopter Rotors',
+    short: 'Spinning wings for vertical flight',
+    tagline: 'Lift in every direction',
+    description: 'Helicopter rotor blades are rotating wings that generate lift. By tilting the rotor disc and changing blade pitch, pilots control both the magnitude and direction of lift force, enabling hover, forward flight, and precise maneuvering.',
+    connection: 'Each rotor blade section generates lift according to the lift equation. Collective pitch changes overall lift for altitude control; cyclic pitch varies lift around the rotation to tilt the thrust vector.',
+    howItWorks: 'Rotor blades have airfoil cross-sections like wings. Collective control changes pitch of all blades equally for altitude. Cyclic control varies pitch through rotation, tilting the rotor disc to direct thrust. Anti-torque tail rotors prevent fuselage spin.',
+    stats: [
+      { value: '15,000 kg', label: 'Max lift', icon: '⚡' },
+      { value: '300 rpm', label: 'Rotor speed', icon: '📈' },
+      { value: '$10B', label: 'Helicopter market', icon: '🚀' }
+    ],
+    examples: ['Medical evacuation', 'Search and rescue', 'Offshore transport', 'Military operations'],
+    companies: ['Airbus Helicopters', 'Bell', 'Sikorsky', 'Leonardo'],
+    futureImpact: 'Electric vertical takeoff aircraft (eVTOL) will use distributed rotors and fly-by-wire controls for urban air mobility.',
+    color: '#10B981'
+  },
+  {
+    icon: '⛵',
+    title: 'Sailing Yacht Keels',
+    short: 'Lift underwater',
+    tagline: 'Using water like air',
+    description: 'Yacht keels and centerboards are underwater wings that generate lift perpendicular to water flow. This sideways lift counteracts the sideways force of wind on sails, allowing boats to sail at angles to the wind—even partially upwind.',
+    connection: 'The lift equation applies to water just as it does to air. Keels generate lift to counteract the lateral component of sail force, with water\'s higher density providing more force at lower speeds.',
+    howItWorks: 'Keel foils have symmetric or asymmetric airfoil sections. When the boat moves forward with a side slip angle, the keel generates lift perpendicular to flow. This balances the sideways sail force, allowing upwind sailing.',
+    stats: [
+      { value: '4000 kg', label: 'Keel lift', icon: '⚡' },
+      { value: '45°', label: 'Upwind angle', icon: '📈' },
+      { value: '$8.5B', label: 'Sailing market', icon: '🚀' }
+    ],
+    examples: ['America\'s Cup foiling yachts', 'Olympic sailing dinghies', 'Cruising sailboats', 'Racing multihulls'],
+    companies: ['North Sails', 'Nautor\'s Swan', 'Beneteau', 'Bavaria'],
+    futureImpact: 'Hydrofoiling sailboats lift entirely out of the water, using underwater wings to fly on foils at speeds exceeding wind speed.',
+    color: '#F59E0B'
+  }
+];
+
 const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
   const [isMobile, setIsMobile] = useState(false);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);

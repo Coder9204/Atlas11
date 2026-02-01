@@ -58,6 +58,81 @@ interface Props {
   onPhaseComplete?: (phase: Phase) => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🏭',
+    title: 'Power Plant Efficiency',
+    short: 'Maximizing electricity generation',
+    tagline: 'The Carnot limit sets the efficiency ceiling',
+    description: 'All heat engines - from coal plants to nuclear reactors - are limited by Carnot efficiency. Engineers push toward this theoretical maximum by maximizing temperature differences.',
+    connection: 'Carnot efficiency = 1 - Tc/Th. A plant with 600°C steam (873K) and 30°C cooling (303K) has maximum efficiency of 65%. Real plants achieve 35-45% due to irreversibilities.',
+    howItWorks: 'Superheated steam expands through turbines, converting heat to work. Condensers reject heat to the environment. Combined cycle plants use waste heat for a second turbine stage.',
+    stats: [
+      { value: '65%', label: 'Carnot limit (typical)', icon: '📊' },
+      { value: '45%', label: 'Best coal plants', icon: '🏭' },
+      { value: '62%', label: 'Combined cycle gas', icon: '🔥' }
+    ],
+    examples: ['Nuclear power plants', 'Coal-fired plants', 'Combined cycle gas', 'Geothermal plants'],
+    companies: ['GE Vernova', 'Siemens Energy', 'Mitsubishi Power', 'Westinghouse'],
+    futureImpact: 'Supercritical CO2 cycles and advanced materials enabling higher temperatures are pushing real efficiencies closer to the Carnot limit.',
+    color: '#EF4444'
+  },
+  {
+    icon: '❄️',
+    title: 'Heat Pump Technology',
+    short: 'Carnot in reverse',
+    tagline: 'Heating with 300%+ efficiency',
+    description: 'Heat pumps run the Carnot cycle backwards, using work to move heat from cold to hot. Their COP (coefficient of performance) can exceed 100% because they move heat rather than create it.',
+    connection: 'Carnot COP for heating = Th/(Th-Tc). With 20°C inside and 0°C outside, ideal COP = 293/20 = 14.7. Real heat pumps achieve COP of 3-5, still far better than resistive heating.',
+    howItWorks: 'The refrigerant absorbs heat from cold outdoor air (evaporator), compressor adds work and raises temperature, then releases heat inside (condenser). Even cold air contains useful heat.',
+    stats: [
+      { value: '300-500%', label: 'Effective efficiency', icon: '📈' },
+      { value: '3-5', label: 'Typical COP', icon: '⚡' },
+      { value: '$100B', label: 'Global market', icon: '💰' }
+    ],
+    examples: ['Home heat pumps', 'Commercial HVAC', 'Water heaters', 'Pool heaters'],
+    companies: ['Daikin', 'Carrier', 'Trane', 'Mitsubishi Electric'],
+    futureImpact: 'Cold-climate heat pumps and CO2 refrigerant systems are extending heat pump viability to replace gas heating even in harsh winters.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Internal Combustion Engines',
+    short: 'Otto and Diesel cycles',
+    tagline: 'Why engines waste so much heat',
+    description: 'Car engines operate on cycles similar to Carnot. The temperature difference between combustion (~2000°C) and exhaust limits efficiency to about 60% theoretical, with real engines achieving 25-40%.',
+    connection: 'Higher compression ratios increase effective Th, improving efficiency. Diesel engines use higher compression (20:1 vs 10:1) and achieve better efficiency than gasoline engines.',
+    howItWorks: 'Fuel combustion creates hot, high-pressure gas. Expansion pushes the piston (work output). Exhaust removes heat. The radiator removes additional waste heat to prevent overheating.',
+    stats: [
+      { value: '25-30%', label: 'Gasoline efficiency', icon: '⛽' },
+      { value: '35-45%', label: 'Diesel efficiency', icon: '🚛' },
+      { value: '40%', label: 'Formula 1 engines', icon: '🏎️' }
+    ],
+    examples: ['Car engines', 'Truck diesels', 'Marine engines', 'Aircraft piston engines'],
+    companies: ['Toyota', 'Cummins', 'BMW', 'Mercedes-Benz'],
+    futureImpact: 'Hybrid systems capture waste heat and regenerative braking, pushing overall powertrain efficiency toward 50% in the most advanced vehicles.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🌡️',
+    title: 'Cryogenic Systems',
+    short: 'Reaching absolute zero',
+    tagline: 'The extreme efficiency of cold',
+    description: 'Reaching extremely low temperatures requires moving heat from cold to hot - the reverse Carnot cycle. As temperatures approach absolute zero, the thermodynamic cost becomes enormous.',
+    connection: 'Carnot COP for cooling = Tc/(Th-Tc). Cooling to 4K (liquid helium) with 300K surroundings gives ideal COP = 4/296 = 0.014. It takes ~75 watts to remove 1 watt of heat!',
+    howItWorks: 'Multiple refrigeration stages cascade to reach cryogenic temperatures. Liquid nitrogen (77K) pre-cools, then helium systems reach 4K. Dilution refrigerators reach millikelvin temperatures.',
+    stats: [
+      { value: '4K', label: 'Liquid helium', icon: '❄️' },
+      { value: '10 mK', label: 'Dilution fridge', icon: '🔬' },
+      { value: '75:1', label: 'Power ratio at 4K', icon: '⚡' }
+    ],
+    examples: ['MRI machines', 'Quantum computers', 'Particle accelerators', 'Superconducting cables'],
+    companies: ['Linde', 'Air Liquide', 'Bluefors', 'Oxford Instruments'],
+    futureImpact: 'Room-temperature superconductors would revolutionize energy and computing, but until then, cryogenic efficiency improvements are crucial for quantum computing scale-up.',
+    color: '#06B6D4'
+  }
+];
+
 const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }) => {
   const [phase, setPhase] = useState<Phase>(currentPhase ?? 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);

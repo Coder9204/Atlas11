@@ -2,6 +2,81 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'High-Speed CPU Design',
+    short: 'Interconnect RC delays limit how fast modern processors can operate',
+    tagline: 'When wires become the bottleneck',
+    description: 'In modern CPUs with billions of transistors, the wires connecting them have become the limiting factor for speed. As transistors shrink, interconnect delays dominated by RC time constants now consume 50-70% of signal propagation time. Intel, AMD, and other chip designers spend enormous effort optimizing wire routing to minimize these delays.',
+    connection: 'This game teaches the fundamental RC delay physics that chip designers use every day to predict and minimize signal propagation delays.',
+    howItWorks: 'Each metal wire acts as a distributed RC network. Resistance comes from thin copper traces. Capacitance forms between adjacent wires and to substrate. Signal edges slow as they charge this distributed capacitance. Repeaters (buffers) break long wires into segments to reduce delay.',
+    stats: [
+      { value: '50-70%', label: 'Delay from interconnects', icon: '⚡' },
+      { value: '10+ km', label: 'Total wire per chip', icon: '📏' },
+      { value: '13+ layers', label: 'Metal interconnect stack', icon: '🏗️' }
+    ],
+    examples: ['Intel Core processors', 'AMD Ryzen chips', 'Apple M-series', 'NVIDIA GPUs'],
+    companies: ['Intel', 'AMD', 'TSMC', 'Samsung Foundry'],
+    futureImpact: 'Advanced materials like graphene and optical interconnects may eventually overcome copper RC limitations for next-generation chips.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💾',
+    title: 'High-Bandwidth Memory',
+    short: 'Memory interfaces optimize trace geometry to minimize RC delay and signal integrity',
+    tagline: 'Racing data from memory to processor',
+    description: 'DDR5 memory runs at 6400+ MT/s, with signal round-trips in under 15 nanoseconds. At these speeds, the RC delay of every millimeter of trace matters. Memory designers carefully match trace lengths and impedances to ensure all data bits arrive simultaneously, preventing timing errors.',
+    connection: 'The RC delay analysis in this game is exactly what memory interface engineers perform when designing traces for high-speed DRAM communication.',
+    howItWorks: 'Memory traces are impedance-matched transmission lines with controlled RC characteristics. Trace width, spacing, dielectric thickness, and copper weight are all tuned to minimize delay variation between bits. On-die termination resistors absorb reflections.',
+    stats: [
+      { value: '6400 MT/s', label: 'DDR5 transfer rate', icon: '🚀' },
+      { value: '<15ns', label: 'Memory latency target', icon: '⏱️' },
+      { value: '±5ps', label: 'Bit-to-bit timing match', icon: '🎯' }
+    ],
+    examples: ['DDR5 server memory', 'HBM3 graphics memory', 'LPDDR5 mobile', 'GDDR6X gaming'],
+    companies: ['Micron', 'Samsung', 'SK Hynix', 'Kingston'],
+    futureImpact: 'Memory stacking and 3D integration will shorten interconnects, enabling memory bandwidth to continue scaling beyond planar limits.',
+    color: '#10B981'
+  },
+  {
+    icon: '📡',
+    title: 'PCB Signal Integrity',
+    short: 'High-frequency board design requires careful RC delay matching for reliable signals',
+    tagline: 'The art of the perfect circuit board',
+    description: 'Modern circuit boards running at GHz speeds must account for RC delays in every trace. Signals that look clean at low frequencies develop timing skew, reflections, and crosstalk at high speeds. Signal integrity engineers simulate and optimize trace geometry to ensure reliable operation.',
+    connection: 'The RC interconnect physics in this game directly applies to PCB design, where distributed resistance and capacitance determine signal quality.',
+    howItWorks: 'PCB traces are modeled as distributed RC networks or transmission lines depending on length. Controlled impedance traces (50/100 ohm) minimize reflections. Length matching ensures synchronous arrival. Via stubs and crosstalk are minimized through careful layout.',
+    stats: [
+      { value: '50Ω/100Ω', label: 'Standard impedances', icon: '📐' },
+      { value: '25+ Gbps', label: 'PCIe 5.0 lane rate', icon: '💨' },
+      { value: '$10B+', label: 'PCB market size', icon: '📈' }
+    ],
+    examples: ['Server motherboards', 'Network switches', '5G base stations', 'Automotive ECUs'],
+    companies: ['Cadence', 'Synopsys (Sigrity)', 'Ansys', 'Keysight'],
+    futureImpact: 'AI-assisted PCB design tools will automatically optimize trace routing for minimum RC delay while meeting manufacturing constraints.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '📱',
+    title: 'Mobile SoC Design',
+    short: 'Smartphone chips minimize interconnect delay to balance performance with power efficiency',
+    tagline: 'Billions of transistors in your pocket',
+    description: 'Mobile systems-on-chip pack CPU, GPU, NPU, and memory controllers into chips smaller than a fingernail. Every interconnect must be optimized for both delay and power consumption - charging and discharging wire capacitance wastes energy. RC delay management is crucial for all-day battery life.',
+    connection: 'This game teaches that delay scales with RC product - the same principle mobile chip designers use to minimize both latency and power consumption.',
+    howItWorks: 'Mobile SoCs use aggressive power gating to shut down unused blocks. Active interconnects use minimum-width traces where delay permits to reduce capacitance. Critical paths use wider traces with repeaters. Clock trees are carefully balanced for minimal skew.',
+    stats: [
+      { value: '<5W', label: 'Typical SoC power budget', icon: '🔋' },
+      { value: '15B+', label: 'Transistors per chip', icon: '🔢' },
+      { value: '3nm', label: 'Latest process node', icon: '🔬' }
+    ],
+    examples: ['Apple A17 Bionic', 'Qualcomm Snapdragon 8', 'Samsung Exynos', 'MediaTek Dimensity'],
+    companies: ['Apple', 'Qualcomm', 'MediaTek', 'Samsung LSI'],
+    futureImpact: 'Chiplet architectures and advanced packaging will change interconnect design, using shorter on-package wires with lower RC delays.',
+    color: '#F59E0B'
+  }
+];
+
 type RCPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface RCDelayInterconnectRendererProps {

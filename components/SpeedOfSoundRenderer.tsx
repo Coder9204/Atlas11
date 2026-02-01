@@ -43,6 +43,81 @@ function isValidPhase(p: string): p is Phase {
   return phaseOrder.includes(p as Phase);
 }
 
+const realWorldApps = [
+  {
+    icon: '🔊',
+    title: 'Sonar & Echolocation',
+    short: 'Underwater navigation using sound waves',
+    tagline: 'Seeing with sound in the deep',
+    description: 'Submarines and marine vessels use sonar to detect objects underwater by measuring the time for sound to echo back. Since light cannot penetrate deep water, sound is the primary sensing method in oceans.',
+    connection: 'Sonar directly applies v = d/t. Knowing the speed of sound in water (about 1500 m/s) allows calculating distance from echo time. Temperature and salinity affect speed, requiring careful calibration.',
+    howItWorks: 'Active sonar emits pulses and times echoes. Passive sonar listens for sounds. The speed of sound in seawater varies with depth, temperature, and salinity, creating "sound channels" that bend acoustic rays.',
+    stats: [
+      { value: '1500', label: 'm/s in seawater', icon: '🌊' },
+      { value: '10km', label: 'Detection range', icon: '📡' },
+      { value: '4x', label: 'Faster than in air', icon: '⚡' }
+    ],
+    examples: ['Submarine detection', 'Fish finding', 'Seafloor mapping', 'Underwater communication'],
+    companies: ['Raytheon', 'Thales', 'Kongsberg', 'L3Harris'],
+    futureImpact: 'Autonomous underwater vehicles will use advanced sonar arrays and AI to explore ocean depths, map the seafloor, and monitor marine ecosystems.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Ultrasound',
+    short: 'Imaging inside the body with sound',
+    tagline: 'Safe imaging without radiation',
+    description: 'Ultrasound imaging uses high-frequency sound waves to create images of organs, fetuses, and blood flow. It is safe, real-time, and portable, making it essential in medicine.',
+    connection: 'Medical ultrasound measures the time for sound echoes to return from tissue interfaces. The speed of sound in tissue (about 1540 m/s) is used to calculate depths and create images.',
+    howItWorks: 'A transducer emits ultrasound pulses (1-20 MHz) and detects echoes. Different tissues reflect sound differently based on acoustic impedance. The time delay gives depth; amplitude gives brightness.',
+    stats: [
+      { value: '1540', label: 'm/s in soft tissue', icon: '🫀' },
+      { value: '0.1mm', label: 'Resolution possible', icon: '🔬' },
+      { value: '140M', label: 'Scans per year (US)', icon: '📊' }
+    ],
+    examples: ['Fetal imaging', 'Cardiac echo', 'Guided biopsies', 'Vascular doppler'],
+    companies: ['GE Healthcare', 'Philips', 'Siemens Healthineers', 'Canon Medical'],
+    futureImpact: 'Portable AI-powered ultrasound devices will bring imaging to remote areas and enable point-of-care diagnostics globally.',
+    color: '#ec4899'
+  },
+  {
+    icon: '🎭',
+    title: 'Concert Hall Acoustics',
+    short: 'Designing spaces for perfect sound',
+    tagline: 'Where physics meets art',
+    description: 'Concert halls are carefully designed so sound reaches every seat with proper delay, clarity, and reverberation. The speed of sound determines optimal room dimensions and surface placements.',
+    connection: 'The speed of sound determines how long sound takes to travel from stage to listener and reflect off surfaces. Delays over 50ms cause echoes; careful design ensures reflections enhance rather than muddy the sound.',
+    howItWorks: 'Acoustic engineers calculate reflection paths using the speed of sound. Surfaces are angled to direct early reflections toward listeners. Diffusers scatter sound to prevent flutter echoes.',
+    stats: [
+      { value: '1.5-2s', label: 'Optimal reverberation', icon: '🎵' },
+      { value: '17ms', label: 'Per 6m of travel', icon: '⏱️' },
+      { value: '$100M+', label: 'Major hall construction', icon: '🏛️' }
+    ],
+    examples: ['Sydney Opera House', 'Carnegie Hall', 'Berlin Philharmonie', 'Walt Disney Concert Hall'],
+    companies: ['Arup Acoustics', 'Nagata Acoustics', 'Kirkegaard', 'Threshold Acoustics'],
+    futureImpact: 'Variable acoustics systems using movable panels and electronic enhancement will allow single venues to optimize for symphony, opera, or amplified music.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '⛈️',
+    title: 'Lightning Distance',
+    short: 'Calculating storm proximity by sound delay',
+    tagline: 'Flash-to-bang tells the truth',
+    description: 'The "flash-to-bang" method uses the delay between seeing lightning and hearing thunder to estimate storm distance. This simple application of sound speed helps people stay safe during thunderstorms.',
+    connection: 'Light travels almost instantaneously, while sound travels at about 343 m/s. Counting seconds between flash and bang, then dividing by 3, gives distance in kilometers.',
+    howItWorks: 'Lightning heats air to 30,000K in microseconds, creating a supersonic shockwave that becomes thunder. The 5-second-per-mile rule (or 3-second-per-km) uses v = d/t with sound speed ≈ 340 m/s.',
+    stats: [
+      { value: '5sec', label: 'Per mile to thunder', icon: '⚡' },
+      { value: '30000K', label: 'Lightning temperature', icon: '🌡️' },
+      { value: '25M', label: 'Lightning strikes/year', icon: '🌍' }
+    ],
+    examples: ['Outdoor safety protocols', 'Sports event decisions', 'Aviation weather', 'Emergency management'],
+    companies: ['Vaisala', 'Earth Networks', 'AccuWeather', 'National Weather Service'],
+    futureImpact: 'Lightning location networks using arrival time differences at multiple sensors provide real-time mapping of storm electrical activity for safety and research.',
+    color: '#8b5cf6'
+  }
+];
+
 const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
   try {
     const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();

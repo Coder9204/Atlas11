@@ -1,5 +1,80 @@
 import React, { useState, useEffect } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🔧',
+    title: 'Engineering Stress Analysis',
+    short: 'Visualizing forces in transparent models',
+    tagline: 'See stress before it causes failure',
+    description: 'Engineers create transparent plastic models of structures and machine parts. Under load, photoelastic fringes reveal where stress concentrates, helping identify potential failure points before production.',
+    connection: 'Stress causes birefringence in transparent materials. Between crossed polarizers, different stress levels produce different colors, creating a visual stress map.',
+    howItWorks: 'Plastic models are loaded in polariscopes. The fringe patterns directly correlate to principal stress differences. High stress areas show dense, closely-spaced fringes.',
+    stats: [
+      { value: '±2%', label: 'stress accuracy', icon: '🎯' },
+      { value: '100+', label: 'years of use', icon: '📅' },
+      { value: '$5B', label: 'testing market', icon: '📈' }
+    ],
+    examples: ['Gear tooth stress', 'Bolt hole concentrations', 'Aircraft components', 'Automotive parts'],
+    companies: ['Vishay', 'Magnaflux', 'TestResources', 'MTS Systems'],
+    futureImpact: 'Digital image correlation combined with photoelasticity enables full-field dynamic stress analysis for complex loading scenarios.',
+    color: '#A855F7'
+  },
+  {
+    icon: '📺',
+    title: 'LCD Display Quality',
+    short: 'Detecting residual stress in display glass',
+    tagline: 'Every pixel needs stress-free glass',
+    description: 'LCD and OLED displays use polarizers as part of their operation. Residual stress in glass substrates causes unwanted birefringence that degrades image quality and color accuracy.',
+    connection: 'Stressed glass rotates polarization differently across the display, causing color shifts and contrast variations. Quality control uses polarimetry to detect these defects.',
+    howItWorks: 'Displays are viewed between crossed polarizers during manufacturing. Stress patterns appear as color variations. Thermal annealing reduces stress to acceptable levels.',
+    stats: [
+      { value: '<5nm', label: 'retardation limit', icon: '🔬' },
+      { value: '8K', label: 'resolution displays', icon: '📺' },
+      { value: '$150B', label: 'display market', icon: '📈' }
+    ],
+    examples: ['OLED smartphone screens', 'Monitor panels', 'TV displays', 'Automotive HUDs'],
+    companies: ['Samsung Display', 'LG Display', 'BOE', 'Corning'],
+    futureImpact: 'Flexible and foldable displays require new approaches to stress management while maintaining optical quality.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌡️',
+    title: 'Tempered Glass Inspection',
+    short: 'Polarized light reveals safety glass quality',
+    tagline: 'Stress patterns ensure strength',
+    description: 'Tempered glass is strengthened by deliberately introducing surface compression stress. Polarized light inspection verifies proper tempering by revealing the characteristic stress pattern.',
+    connection: 'The tempering process creates a specific stress distribution: compression at surfaces, tension in the core. This pattern is visible as birefringence under polarized light.',
+    howItWorks: 'Glass is viewed between polarizers or with a polarimeter. Properly tempered glass shows uniform stress patterns. Defects or improper tempering create irregular fringes.',
+    stats: [
+      { value: '4-5x', label: 'stronger than annealed', icon: '💪' },
+      { value: '10K', label: 'PSI surface stress', icon: '⚡' },
+      { value: '$4B', label: 'safety glass market', icon: '📈' }
+    ],
+    examples: ['Car side windows', 'Smartphone screens', 'Shower doors', 'Building facades'],
+    companies: ['AGC Glass', 'Saint-Gobain', 'Guardian', 'Pilkington'],
+    futureImpact: 'Chemically strengthened glass for devices requires polarimetric inspection to verify stress profiles meet specifications.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Geological Mineral ID',
+    short: 'Identifying rocks through optical properties',
+    tagline: 'Every mineral tells a story in polarized light',
+    description: 'Geologists use polarized light microscopy to identify minerals in thin rock sections. Different minerals have characteristic birefringence and interference colors that serve as fingerprints.',
+    connection: 'Crystal structure determines birefringence. The interference colors between crossed polarizers are diagnostic for mineral identification.',
+    howItWorks: 'Rock sections are ground to 30 microns thin. In polarized light, each mineral shows distinctive interference colors, extinction angles, and crystal habits.',
+    stats: [
+      { value: '4,000+', label: 'minerals identified', icon: '💎' },
+      { value: '30', label: 'micron section thickness', icon: '📏' },
+      { value: '200+', label: 'years of technique', icon: '📅' }
+    ],
+    examples: ['Quartz identification', 'Feldspar analysis', 'Ore microscopy', 'Metamorphic studies'],
+    companies: ['Zeiss', 'Leica', 'Olympus', 'Nikon'],
+    futureImpact: 'Automated mineral identification using AI and polarimetry accelerates geological survey and mining exploration.',
+    color: '#F59E0B'
+  }
+];
+
 interface PhotoelasticityRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

@@ -25,6 +25,81 @@ const colors = {
   support: '#10b981',
 };
 
+const realWorldApps = [
+  {
+    icon: '🏠',
+    title: 'Furniture Anti-Tip Safety',
+    short: 'Preventing deadly furniture tip-overs',
+    tagline: 'Protecting children from physics',
+    description: 'Tall dressers and bookshelves kill dozens of children annually when they tip over. Understanding the physics of tipping points informs safety standards and anchor requirements.',
+    connection: 'A child climbing a dresser shifts the center of mass upward and outward. When it crosses the support edge, gravity\'s torque becomes unbalanced and tipping is unstoppable.',
+    howItWorks: 'Wall anchors prevent the furniture from rotating past its tipping angle. Anti-tip feet widen the base. Heavy items stored low reduce COM height, increasing the critical angle.',
+    stats: [
+      { value: '46', label: 'Deaths/year (US)', icon: '⚠️' },
+      { value: '25K', label: 'ER visits/year', icon: '🏥' },
+      { value: '$400', label: 'Average fine for non-compliance', icon: '💰' }
+    ],
+    examples: ['IKEA MALM recall', 'Dresser anchors', 'TV mounts', 'Bookshelf straps'],
+    companies: ['IKEA', 'CPSC', 'ASTM', 'Furniture manufacturers'],
+    futureImpact: 'Smart furniture with tilt sensors will alert caregivers before dangerous conditions develop.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🚗',
+    title: 'Vehicle Rollover Prevention',
+    short: 'Keeping SUVs rubber-side down',
+    tagline: 'Fighting physics at highway speeds',
+    description: 'SUVs and trucks have higher rollover risk due to elevated centers of mass. Understanding the critical rollover angle guides vehicle design and electronic stability systems.',
+    connection: 'The static stability factor (SSF) equals half the track width divided by COM height. Lower SSF means easier rollover - physics that kills thousands annually.',
+    howItWorks: 'Electronic stability control detects approaching rollover conditions and applies brakes to individual wheels. Active suspension can lower the vehicle in emergencies.',
+    stats: [
+      { value: '0.5s', label: 'ESC reaction time', icon: '⚡' },
+      { value: '35%', label: 'Rollover reduction with ESC', icon: '📉' },
+      { value: '1.0+', label: 'Good SSF rating', icon: '🎯' }
+    ],
+    examples: ['SUV stability control', 'NASCAR roll cages', 'Truck load limits', 'Trailer sway control'],
+    companies: ['Bosch', 'Continental', 'NHTSA', 'Tesla'],
+    futureImpact: 'Active weight transfer and predictive AI will make rollovers nearly impossible.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏗️',
+    title: 'Construction Crane Stability',
+    short: 'Preventing catastrophic crane collapses',
+    tagline: 'Thousands of tons on the edge',
+    description: 'Tower cranes lifting loads at extreme heights must carefully manage their center of mass. Wind, dynamic loads, and counterweights all affect the critical tipping moment.',
+    connection: 'The crane\'s stability depends on keeping the combined COM of crane and load within the base footprint. Moment limits are calculated for every lift condition.',
+    howItWorks: 'Counterweights balance the load moment. Load moment indicators prevent operators from exceeding limits. Outriggers expand the base polygon for mobile cranes.',
+    stats: [
+      { value: '85%', label: 'Crane accidents from tipping', icon: '📊' },
+      { value: '20t', label: 'Typical counterweight', icon: '⚖️' },
+      { value: '1000t', label: 'Max tower crane capacity', icon: '🏗️' }
+    ],
+    examples: ['Tower cranes', 'Mobile cranes', 'Container cranes', 'Lattice boom cranes'],
+    companies: ['Liebherr', 'Manitowoc', 'OSHA', 'Terex'],
+    futureImpact: 'Real-time wind and load monitoring will enable autonomous crane operation.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🥋',
+    title: 'Martial Arts & Sports Stances',
+    short: 'The physics of staying on your feet',
+    tagline: 'Balance is biomechanical engineering',
+    description: 'Athletes instinctively lower their center of mass and widen their stance when expecting impact. This increases the critical tipping angle and the force needed to knock them down.',
+    connection: 'A wider stance increases the base polygon, while bending knees lowers COM. Together, they dramatically increase the critical angle.',
+    howItWorks: 'Wrestling stances put COM low over a wide base. Judo throws manipulate the opponent\'s COM outside their base. Sumo wrestlers maximize weight low to resist pushing.',
+    stats: [
+      { value: '45deg', label: 'Low stance critical angle', icon: '📐' },
+      { value: '15deg', label: 'Standing critical angle', icon: '📏' },
+      { value: '3x', label: 'Force resistance increase', icon: '💪' }
+    ],
+    examples: ['Wrestling stance', 'Football linemen', 'Judo throws', 'Boxing defense'],
+    companies: ['UFC', 'World Wrestling', 'Olympic sports', 'NFL'],
+    futureImpact: 'Biomechanical sensors will coach athletes to optimal stable positions in real-time.',
+    color: '#8B5CF6'
+  }
+];
+
 const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
   phase,
   onPhaseComplete,

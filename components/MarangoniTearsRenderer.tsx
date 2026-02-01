@@ -6,6 +6,82 @@ import React, { useState, useEffect, useCallback } from 'react';
 // Demonstrates Marangoni flow from alcohol evaporation
 // ============================================================================
 
+// Real-world applications for Marangoni effect
+const realWorldApps = [
+  {
+    icon: '💧',
+    title: 'Semiconductor Wafer Drying',
+    short: 'Spot-free chip manufacturing',
+    tagline: 'Surface tension gradients for perfect cleanliness',
+    description: 'After chemical cleaning, silicon wafers must dry without water spots that would ruin circuits. Marangoni drying uses isopropyl alcohol vapor to create surface tension gradients that pull water off the wafer surface, leaving it perfectly clean.',
+    connection: 'The same surface tension gradients that drive wine tears pull water from wafer surfaces. Lower surface tension of IPA creates flow toward the alcohol-rich region, carrying water away from the wafer.',
+    howItWorks: 'Wafer slowly withdraws from water bath. IPA vapor condenses at water-air interface, lowering local surface tension. Marangoni flow pulls water down off wafer surface. Wafer emerges dry without heat or mechanical contact.',
+    stats: [
+      { value: '0', label: 'Water spots per wafer', icon: '💧' },
+      { value: '<3nm', label: 'Surface particle spec', icon: '🔬' },
+      { value: '$600B', label: 'Semiconductor market', icon: '📈' }
+    ],
+    examples: ['ASML lithography', 'Applied Materials cleaning', 'Lam Research processing', 'Screen wafer handling'],
+    companies: ['Lam Research', 'SCREEN Holdings', 'Tokyo Electron', 'SEMES'],
+    futureImpact: 'Sub-angstrom surface cleanliness for next-gen EUV lithography will rely on optimized Marangoni drying processes.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🎨',
+    title: 'Coating & Painting Technology',
+    short: 'Surface tension defects in films',
+    tagline: 'Why paint crawls and coatings fail',
+    description: 'Paint defects like "fisheyes" and "crawling" result from Marangoni flows caused by contaminants. Understanding surface tension gradients helps formulators design coatings that level uniformly, and helps painters identify contamination sources.',
+    connection: 'The wine tears experiment shows how surface tension differences drive flow. In coatings, silicone contamination or solvent evaporation creates similar gradients that can pull wet paint into defects.',
+    howItWorks: 'Contaminant with low surface tension creates local gradient. Marangoni flow pulls coating away from contaminated spot. Circular "fisheye" defect forms. Leveling additives reduce surface tension differences to prevent flow.',
+    stats: [
+      { value: '2%', label: 'Typical defect rate', icon: '⚠️' },
+      { value: '$160B', label: 'Global coatings market', icon: '📈' },
+      { value: '30mN/m', label: 'Typical paint surface tension', icon: '📊' }
+    ],
+    examples: ['Automotive clear coats', 'Architectural paints', 'Electronics conformal coating', 'Printing inks'],
+    companies: ['PPG', 'Sherwin-Williams', 'Axalta', 'BASF Coatings'],
+    futureImpact: 'Self-healing coatings will use controlled Marangoni flows to automatically repair scratches and defects.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🔬',
+    title: 'Microfluidic Lab-on-Chip',
+    short: 'Pumping without pumps',
+    tagline: 'Moving liquids with chemistry',
+    description: 'Microfluidic devices manipulate tiny liquid volumes for medical diagnostics, drug discovery, and chemical analysis. Marangoni flows driven by temperature or concentration gradients can pump fluids without mechanical parts, enabling simpler, cheaper devices.',
+    connection: 'The game demonstrated how surface tension gradients drive fluid motion. In microfluidics, this effect moves droplets, mixes reagents, and separates samples - all without traditional pumps.',
+    howItWorks: 'Heaters or surfactant gradients create local surface tension differences. Marangoni stress drives flow along interface. Liquid moves from low to high surface tension regions. Programmable heating patterns enable complex fluid handling.',
+    stats: [
+      { value: '1μL', label: 'Sample volumes', icon: '💧' },
+      { value: '10mm/s', label: 'Flow velocities achieved', icon: '⚡' },
+      { value: '$30B', label: 'Lab-on-chip market by 2030', icon: '📈' }
+    ],
+    examples: ['COVID rapid tests', 'Glucose monitors', 'DNA sequencers', 'Drug screening chips'],
+    companies: ['Abbott', 'Roche', 'Illumina', 'Dolomite Microfluidics'],
+    futureImpact: 'Marangoni-driven microfluidics will enable smartphone-based diagnostics for infectious diseases in resource-limited settings.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🌌',
+    title: 'Space Manufacturing',
+    short: 'Fluid control in microgravity',
+    tagline: 'When gravity disappears, surface tension rules',
+    description: 'In space, surface tension dominates fluid behavior. Crystal growth, metal alloy mixing, and pharmaceutical production all exhibit strong Marangoni convection that affects product quality. Understanding and controlling these flows is essential for space manufacturing.',
+    connection: 'The wine tears phenomenon becomes dramatically amplified in microgravity, where surface tension forces aren\'t overwhelmed by gravity. Space experiments reveal Marangoni effects impossible to study on Earth.',
+    howItWorks: 'Temperature gradients across liquid pools drive Marangoni convection cells. Oscillatory instabilities can develop. Affects crystal growth uniformity and alloy segregation. Magnetic fields or vibration used for control.',
+    stats: [
+      { value: '0g', label: 'Gravity environment', icon: '🚀' },
+      { value: '100x', label: 'Stronger Marangoni effect', icon: '📈' },
+      { value: '$10B', label: 'Space manufacturing potential', icon: '💰' }
+    ],
+    examples: ['ZBLAN fiber production', 'Protein crystallization', 'Metal alloy research', 'Pharmaceutical synthesis'],
+    companies: ['NASA', 'SpaceX', 'Axiom Space', 'Varda Space'],
+    futureImpact: 'Orbital manufacturing facilities will produce materials impossible on Earth, with Marangoni control enabling defect-free crystals and alloys.',
+    color: '#22c55e'
+  }
+];
+
 interface MarangoniTearsRendererProps {
   phase: string;
   onPhaseComplete?: () => void;

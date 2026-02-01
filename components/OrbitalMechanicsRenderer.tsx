@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🛰️',
+    title: 'International Space Station',
+    short: 'Continuous crewed presence in low Earth orbit',
+    tagline: 'Humanity\'s outpost in space',
+    description: 'The ISS orbits at 400 km altitude, completing one orbit every 90 minutes at 7.7 km/s. It demonstrates orbital mechanics principles daily as it requires periodic reboosts to counteract atmospheric drag.',
+    connection: 'The ISS is in constant free fall around Earth, demonstrating that orbiting is "falling while moving sideways fast enough to keep missing the ground."',
+    howItWorks: 'The station maintains altitude through periodic engine burns from visiting spacecraft. Crew members experience microgravity because they fall at the same rate as their spacecraft.',
+    stats: [
+      { value: '400', label: 'km altitude', icon: '📏' },
+      { value: '90', label: 'min per orbit', icon: '⏱️' },
+      { value: '23', label: 'years crewed', icon: '👨‍🚀' }
+    ],
+    examples: ['Crew rotation missions', 'Science experiments', 'Spacewalks', 'Commercial cargo deliveries'],
+    companies: ['NASA', 'Roscosmos', 'ESA', 'SpaceX'],
+    futureImpact: 'Commercial space stations like Axiom and Orbital Reef will continue demonstrating orbital mechanics while expanding human presence in space.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌍',
+    title: 'Earth Observation Satellites',
+    short: 'Sun-synchronous orbits for consistent imaging',
+    tagline: 'Watching our planet from above',
+    description: 'Earth observation satellites use carefully chosen orbits to image the entire planet with consistent lighting. Sun-synchronous orbits precess to maintain the same solar angle throughout the year.',
+    connection: 'The orbital precession rate depends on altitude and inclination, demonstrating how orbital mechanics enables specific mission requirements like consistent imaging conditions.',
+    howItWorks: 'Satellites at 600-800 km with ~98° inclination precess eastward at the same rate Earth orbits the Sun, maintaining constant illumination for their ground track.',
+    stats: [
+      { value: '1,000+', label: 'EO satellites', icon: '📡' },
+      { value: '30cm', label: 'resolution', icon: '🔍' },
+      { value: '$5B', label: 'annual market', icon: '📈' }
+    ],
+    examples: ['Landsat land imaging', 'Sentinel climate monitoring', 'Planet daily imagery', 'Maxar commercial imaging'],
+    companies: ['Maxar', 'Planet Labs', 'Airbus', 'BlackSky'],
+    futureImpact: 'Mega-constellations will provide near-real-time global monitoring for climate, agriculture, and security applications.',
+    color: '#10B981'
+  },
+  {
+    icon: '🚀',
+    title: 'Interplanetary Missions',
+    short: 'Hohmann transfers minimize fuel for planet travel',
+    tagline: 'Reaching other worlds efficiently',
+    description: 'Spacecraft traveling to Mars, Venus, or beyond use Hohmann transfer orbits that touch the departure and arrival planet orbits. These trajectories minimize fuel consumption for interplanetary travel.',
+    connection: 'The transfer orbit is an ellipse with its perihelion at Earth\'s orbit and aphelion at the destination planet, demonstrating Kepler\'s laws on an interplanetary scale.',
+    howItWorks: 'Spacecraft launch during specific windows when planetary alignment allows efficient transfers. The journey to Mars takes about 7 months along an elliptical path around the Sun.',
+    stats: [
+      { value: '7', label: 'months to Mars', icon: '🔴' },
+      { value: '55M', label: 'km minimum distance', icon: '📏' },
+      { value: '$2.7B', label: 'Perseverance cost', icon: '💰' }
+    ],
+    examples: ['Mars rover missions', 'Venus flybys', 'Jupiter exploration', 'Voyager interstellar missions'],
+    companies: ['NASA JPL', 'ESA', 'JAXA', 'SpaceX'],
+    futureImpact: 'Starship and nuclear thermal propulsion will reduce transit times, while orbital mechanics principles remain fundamental to mission planning.',
+    color: '#EF4444'
+  },
+  {
+    icon: '⭐',
+    title: 'Gravity Assists',
+    short: 'Planetary flybys change spacecraft velocity',
+    tagline: 'Borrowing momentum from planets',
+    description: 'Spacecraft can use planetary gravity to change their velocity without using fuel. This gravity assist or "slingshot" maneuver has enabled missions to the outer solar system that would otherwise be impossible.',
+    connection: 'The spacecraft gains velocity relative to the Sun while losing velocity relative to the planet, conserving momentum in the planet-spacecraft system.',
+    howItWorks: 'By approaching a planet from behind its orbital motion, spacecraft "steal" a small amount of the planet\'s orbital momentum. The planet slows imperceptibly while the spacecraft accelerates significantly.',
+    stats: [
+      { value: '14 km/s', label: 'velocity gain possible', icon: '⚡' },
+      { value: '10+', label: 'flybys for Cassini', icon: '🪐' },
+      { value: '45', label: 'years Voyager mission', icon: '📡' }
+    ],
+    examples: ['Voyager grand tour', 'Cassini Saturn mission', 'New Horizons Pluto flyby', 'Parker Solar Probe'],
+    companies: ['NASA', 'ESA', 'APL', 'Lockheed Martin'],
+    futureImpact: 'Advanced trajectory planning using multiple gravity assists will enable faster, more capable missions throughout the solar system.',
+    color: '#8B5CF6'
+  }
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES & INTERFACES
 // ─────────────────────────────────────────────────────────────────────────────

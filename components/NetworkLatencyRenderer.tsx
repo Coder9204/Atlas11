@@ -2,6 +2,82 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+// Real-world applications for network latency physics
+const realWorldApps = [
+  {
+    icon: '🎮',
+    title: 'Competitive Gaming',
+    short: 'Milliseconds determine victory',
+    tagline: 'When physics limits your reaction time',
+    description: 'Professional esports players obsess over latency. The speed of light through fiber sets absolute minimum ping times - New York to Tokyo cannot be less than 67ms one-way. Game servers, routing, and display latency add more. Every millisecond matters in competition.',
+    connection: 'The game showed how propagation delay depends on distance and light speed in fiber. Competitive gamers experience this directly - no amount of money can overcome the ~200ms minimum round-trip from NA to Asia servers.',
+    howItWorks: 'Light travels 200km/ms in fiber (2/3 speed of vacuum). Distance sets minimum latency floor. Router hops add processing delay. Server tick rate adds update delay. Display/input add 5-50ms more. Total "ping" is round-trip time.',
+    stats: [
+      { value: '67ms', label: 'NY-Tokyo minimum RTT', icon: '🌏' },
+      { value: '<20ms', label: 'Pro gaming target', icon: '🎯' },
+      { value: '$1.5B', label: 'Esports market', icon: '📈' }
+    ],
+    examples: ['League of Legends', 'CS:GO tournaments', 'Fortnite World Cup', 'Call of Duty League'],
+    companies: ['Riot Games', 'Valve', 'Epic Games', 'Activision'],
+    futureImpact: 'Edge computing and 5G will bring game servers within 10ms of 90% of players, enabling truly responsive cloud gaming.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '📈',
+    title: 'High-Frequency Trading',
+    short: 'Racing light to beat the market',
+    tagline: 'Billions won in microseconds',
+    description: 'Financial firms spend fortunes minimizing latency between exchanges. The physics you explored - propagation delay through fiber - determines who gets market data first. Firms use microwave links and hollow-core fiber to approach vacuum light speed.',
+    connection: 'The simulation showed how fiber\'s refractive index slows light to 2/3 c. HFT firms exploit this - microwave towers travel near-vacuum speed (0.99c), shaving milliseconds off Chicago-New York latency worth billions.',
+    howItWorks: 'Market data travels exchange to exchange. Fiber: n=1.5, so v=0.67c. Microwave: v≈0.99c through air. Difference: ~4ms faster for 1000km. Algorithms react to price changes. First to act captures arbitrage profit.',
+    stats: [
+      { value: '4ms', label: 'Microwave vs fiber advantage', icon: '⚡' },
+      { value: '$1B', label: 'Latency infrastructure spend', icon: '💰' },
+      { value: '10μs', label: 'Modern exchange latency', icon: '📊' }
+    ],
+    examples: ['Chicago-New Jersey corridor', 'London-Frankfurt links', 'Cross-Pacific routes', 'Co-location facilities'],
+    companies: ['Citadel', 'Two Sigma', 'Jump Trading', 'Virtu Financial'],
+    futureImpact: 'Quantum communication may eventually enable faster-than-light correlation detection, though not information transfer.',
+    color: '#22c55e'
+  },
+  {
+    icon: '☁️',
+    title: 'Cloud Computing Architecture',
+    short: 'Designing around the speed of light',
+    tagline: 'Why data centers have locations',
+    description: 'Cloud providers place data centers strategically because latency determines user experience. The physics of light propagation means a user in Singapore will always experience delays to US servers. Multi-region architectures work around these physical limits.',
+    connection: 'The game showed propagation delay as a fundamental limit. Cloud architects face this daily - replicating data globally for low latency, accepting consistency tradeoffs, and placing compute near users.',
+    howItWorks: 'Speed of light sets minimum latency to remote servers. CDNs cache content at edge locations worldwide. Databases replicate across regions with eventual consistency. Load balancers route to nearest healthy region. Anycast DNS directs queries.',
+    stats: [
+      { value: '100ms', label: 'User-perceivable delay', icon: '👤' },
+      { value: '200+', label: 'AWS edge locations', icon: '🌍' },
+      { value: '$500B', label: 'Cloud computing market', icon: '📈' }
+    ],
+    examples: ['AWS Global Infrastructure', 'Google Cloud Platform', 'Azure regions', 'Cloudflare edge'],
+    companies: ['Amazon AWS', 'Google Cloud', 'Microsoft Azure', 'Cloudflare'],
+    futureImpact: 'LEO satellite internet will reduce latency to remote areas from 600ms to 20ms, enabling global edge computing.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🌐',
+    title: 'Internet Infrastructure',
+    short: 'Submarine cables connecting continents',
+    tagline: '99% of international data under the ocean',
+    description: 'Submarine fiber optic cables carry virtually all international internet traffic. The physics of light in fiber determines capacity and latency. Cable routes balance distance (latency) against geography (cost and risk).',
+    connection: 'The simulation calculated propagation delays for transoceanic distances. Real submarine cables follow these physics exactly - the MAREA cable from Virginia to Spain has ~40ms one-way latency determined by its 6,600km length.',
+    howItWorks: 'Light pulses travel through fiber at 200,000 km/s. Amplifiers every 50-100km boost signal. Multiple fiber pairs provide redundancy and capacity. Wavelength division multiplexing: 100+ colors per fiber. Total capacity: 200+ Tbps per cable.',
+    stats: [
+      { value: '450+', label: 'Active submarine cables', icon: '🌊' },
+      { value: '1.3M km', label: 'Total cable length', icon: '📏' },
+      { value: '200Tbps', label: 'Modern cable capacity', icon: '📊' }
+    ],
+    examples: ['MAREA (US-Spain)', 'JUPITER (US-Japan)', 'Dunant (US-France)', 'Africa Coast to Europe'],
+    companies: ['SubCom', 'NEC', 'Alcatel Submarine', 'Google'],
+    futureImpact: 'Hollow-core fiber may eventually achieve near-vacuum light speed, cutting transoceanic latency by 30%.',
+    color: '#3b82f6'
+  }
+];
+
 interface NetworkLatencyRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

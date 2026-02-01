@@ -39,6 +39,81 @@ const phaseLabels: Record<Phase, string> = {
   'mastery': 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🎸',
+    title: 'Musical Instruments',
+    short: 'Creating music through vibrating strings and air',
+    tagline: 'Physics makes harmony',
+    description: 'Every stringed and wind instrument produces sound through standing waves. Guitar strings, violin bows, and flute air columns all vibrate in specific patterns determined by their length, tension, and material.',
+    connection: 'The harmonic series from standing waves creates the overtones that give each instrument its unique timbre. Nodes and antinodes determine where to place fingers or frets.',
+    howItWorks: 'Plucking a string excites multiple harmonics simultaneously. The fundamental frequency determines pitch while the relative strength of overtones creates timbre. Instrument bodies amplify and shape these frequencies.',
+    stats: [
+      { value: '440Hz', label: 'Concert A pitch', icon: '🎵' },
+      { value: '88', label: 'Piano keys (7+ octaves)', icon: '🎹' },
+      { value: '20+', label: 'Audible harmonics', icon: '🔊' }
+    ],
+    examples: ['Guitar harmonics', 'Violin overtones', 'Pipe organ resonance', 'Didgeridoo drones'],
+    companies: ['Steinway', 'Fender', 'Yamaha', 'Martin Guitar'],
+    futureImpact: 'Digital instruments and synthesizers use standing wave physics to create realistic virtual instruments and entirely new sounds impossible with physical materials.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '📡',
+    title: 'Antenna Design',
+    short: 'Radio waves in resonant structures',
+    tagline: 'Tuned to the right frequency',
+    description: 'Radio antennas work by creating standing electromagnetic waves. Dipole antennas are sized to be half a wavelength, creating current antinodes at feed points for maximum efficiency.',
+    connection: 'Antenna length determines resonant frequency just like string length determines pitch. Standing wave ratio (SWR) measures how well antenna impedance matches the transmission line.',
+    howItWorks: 'RF current flows back and forth in the antenna, creating standing waves of current and voltage. Maximum radiation occurs at current antinodes. Array antennas use interference between elements for beam steering.',
+    stats: [
+      { value: 'λ/2', label: 'Dipole antenna length', icon: '📏' },
+      { value: '1.0', label: 'Perfect SWR', icon: '📊' },
+      { value: '73Ω', label: 'Dipole impedance', icon: '⚡' }
+    ],
+    examples: ['Cell phone antennas', 'WiFi routers', 'TV broadcast towers', 'Satellite dishes'],
+    companies: ['Qualcomm', 'Ericsson', 'CommScope', 'Laird Connectivity'],
+    futureImpact: 'Metamaterial antennas will use engineered standing wave patterns to create ultra-thin, reconfigurable antennas for 6G communications and radar.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🔬',
+    title: 'Laser Cavities',
+    short: 'Light standing waves for coherent beams',
+    tagline: 'Light waves in perfect sync',
+    description: 'Lasers create coherent light using standing electromagnetic waves between mirrors. Only wavelengths that fit exactly between the mirrors are amplified, selecting specific frequencies for the laser beam.',
+    connection: 'The laser cavity acts like a pipe for light waves. Mirror spacing determines which wavelengths form standing waves (cavity modes). Mode selection creates the laser\'s pure color.',
+    howItWorks: 'Light bounces between mirrors, with some escaping through a partially reflective output coupler. Gain medium amplifies the standing wave. Mode locking synchronizes many standing wave modes for ultrashort pulses.',
+    stats: [
+      { value: '10^15', label: 'Light oscillations/second', icon: '💡' },
+      { value: 'fs', label: 'Shortest pulse duration', icon: '⚡' },
+      { value: '<1nm', label: 'Wavelength precision', icon: '🎯' }
+    ],
+    examples: ['Fiber optic communications', 'Laser surgery', 'Barcode scanners', 'Laser shows'],
+    companies: ['Coherent', 'Trumpf', 'IPG Photonics', 'Lumentum'],
+    futureImpact: 'Optical frequency combs using precisely spaced standing wave modes will enable atomic clocks and quantum sensors with unprecedented precision.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🌊',
+    title: 'Microwave Ovens',
+    short: 'Standing waves cook your food',
+    tagline: 'Hot spots and cold spots explained',
+    description: 'Microwave ovens create standing electromagnetic waves inside a metal cavity. The uneven heating patterns (hot and cold spots) result from nodes and antinodes in these standing waves.',
+    connection: 'The rotating turntable moves food through alternating nodes (cold) and antinodes (hot) of the microwave standing wave pattern, averaging out the heating.',
+    howItWorks: 'A magnetron generates 2.45 GHz microwaves that reflect off metal walls. Interference creates a 3D standing wave pattern. Mode stirrers and turntables help distribute energy evenly.',
+    stats: [
+      { value: '12.2cm', label: 'Wavelength in oven', icon: '📏' },
+      { value: '2.45GHz', label: 'Operating frequency', icon: '📡' },
+      { value: '1000W', label: 'Typical power', icon: '⚡' }
+    ],
+    examples: ['Home microwave cooking', 'Industrial food processing', 'Laboratory heating', 'Material drying'],
+    companies: ['Panasonic', 'LG', 'Samsung', 'Sharp'],
+    futureImpact: 'Solid-state microwave generators will replace magnetrons, enabling precise standing wave control for uniform heating without turntables.',
+    color: '#22c55e'
+  }
+];
+
 interface StandingWavesRendererProps {
   width?: number;
   height?: number;

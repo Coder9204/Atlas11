@@ -47,6 +47,84 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 };
 
 // ============================================================================
+// REAL-WORLD APPLICATIONS
+// ============================================================================
+const realWorldApps = [
+  {
+    icon: '📻',
+    title: 'Radio Tuning Circuits',
+    short: 'Selecting your favorite station',
+    tagline: 'The original wireless technology',
+    description: 'Every AM/FM radio uses an LC resonant circuit to select one station from the electromagnetic spectrum. By adjusting capacitance, the resonant frequency changes, allowing only the desired station\'s frequency to pass while rejecting all others.',
+    connection: 'The resonant frequency f = 1/(2π√LC) determines which station you hear. Changing capacitance with the tuning dial shifts this frequency, exactly as we explored in the simulation.',
+    howItWorks: 'A variable capacitor connected to a fixed inductor forms the tuning circuit. At resonance, the LC circuit has maximum impedance for parallel configurations or minimum for series. Only signals at the resonant frequency develop significant voltage.',
+    stats: [
+      { value: '540-1700kHz', label: 'AM band', icon: '⚡' },
+      { value: '88-108MHz', label: 'FM band', icon: '📈' },
+      { value: 'Billions', label: 'Radios worldwide', icon: '🚀' }
+    ],
+    examples: ['Car AM/FM receivers', 'Portable shortwave radios', 'Crystal radio sets', 'Software-defined radios'],
+    companies: ['Sony', 'Bose', 'Sangean', 'Tecsun'],
+    futureImpact: 'Digital radio and streaming dominate, but LC resonance principles remain fundamental in RF front-ends of all wireless devices including smartphones.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📡',
+    title: 'Antenna Matching Networks',
+    short: 'Maximizing power transfer',
+    tagline: 'Every watt counts in wireless',
+    description: 'Antennas must be matched to transmitters for efficient power transfer. LC networks transform antenna impedance to match the source, maximizing radiated power. Poor matching wastes energy as heat and reduces range.',
+    connection: 'At resonance, an LC circuit can transform impedance levels. Matching networks use this principle to make antennas "look like" the optimal load impedance to the transmitter.',
+    howItWorks: 'L-networks, pi-networks, and T-networks use combinations of inductors and capacitors to transform impedance. The component values are chosen so the network resonates at the operating frequency while providing the needed impedance transformation.',
+    stats: [
+      { value: '>90%', label: 'Match efficiency', icon: '⚡' },
+      { value: '50Ω', label: 'Standard impedance', icon: '📈' },
+      { value: '$12B', label: 'RF market', icon: '🚀' }
+    ],
+    examples: ['Cell tower transmitters', 'WiFi access points', 'Ham radio tuners', 'Satellite uplinks'],
+    companies: ['Qualcomm', 'Skyworks', 'Qorvo', 'Murata'],
+    futureImpact: 'Active tunable matching networks using varactors and MEMS will enable antennas that automatically optimize for any frequency and loading condition.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔊',
+    title: 'Audio Crossover Networks',
+    short: 'Sending frequencies to the right speaker',
+    tagline: 'Physics behind high-fidelity sound',
+    description: 'Speaker systems use LC filters to divide audio frequencies between drivers. Tweeters receive high frequencies, woofers receive low frequencies, and midranges handle the middle. LC resonance determines the crossover points.',
+    connection: 'LC filters use resonance to pass or block frequency ranges. Below resonance, an LC low-pass filter passes signals; above resonance, a high-pass filter passes signals. This frequency-selective behavior separates audio into bands.',
+    howItWorks: 'Second-order crossovers use one inductor and one capacitor per filter section. The crossover frequency is set by f = 1/(2π√LC). Higher-order designs use multiple LC sections for steeper rolloff between frequency bands.',
+    stats: [
+      { value: '80Hz-5kHz', label: 'Crossover range', icon: '⚡' },
+      { value: '12dB/oct', label: 'Typical slope', icon: '📈' },
+      { value: '$8.5B', label: 'Speaker market', icon: '🚀' }
+    ],
+    examples: ['Home theater systems', 'PA speaker cabinets', 'Studio monitors', 'Car audio systems'],
+    companies: ['JBL', 'Bowers & Wilkins', 'KEF', 'Focal'],
+    futureImpact: 'Digital signal processing increasingly replaces passive crossovers, but understanding LC resonance remains essential for speaker design and audio engineering.',
+    color: '#10B981'
+  },
+  {
+    icon: '⚡',
+    title: 'Wireless Power Transfer',
+    short: 'Charging without cables',
+    tagline: 'Resonance enables the cordless future',
+    description: 'Wireless chargers use resonant LC coils to transfer power across air gaps. When transmitter and receiver coils resonate at the same frequency, energy transfer is maximized. This resonant coupling enables efficient charging of phones and electric vehicles.',
+    connection: 'Resonant wireless power transfer relies on coupled LC circuits oscillating at the same frequency. At resonance, magnetic coupling between coils is enhanced, allowing efficient energy transfer even with imperfect alignment.',
+    howItWorks: 'The transmitter coil and capacitor form an LC circuit driven at resonance. The receiver coil and capacitor are tuned to the same frequency. At resonance, current flows efficiently between coils through their shared magnetic field.',
+    stats: [
+      { value: '85-95%', label: 'Efficiency', icon: '⚡' },
+      { value: '15W-11kW', label: 'Power range', icon: '📈' },
+      { value: '$15B', label: 'WPT market', icon: '🚀' }
+    ],
+    examples: ['Qi phone chargers', 'Electric vehicle charging', 'Medical implant power', 'Industrial robot charging'],
+    companies: ['WiTricity', 'Energous', 'Powermat', 'Qualcomm Halo'],
+    futureImpact: 'Room-scale wireless power using resonant magnetic fields will eliminate charging pads, powering devices automatically as they move through spaces.',
+    color: '#F59E0B'
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 

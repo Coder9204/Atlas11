@@ -72,6 +72,81 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // Coulomb's constant
 const k = 8.99e9; // N·m²/C²
 
+const realWorldApps = [
+  {
+    icon: '⚡',
+    title: 'Electrostatic Precipitators',
+    short: 'Industrial air cleaning',
+    tagline: 'Capturing pollution with electric force',
+    description: 'Power plants and factories use Coulomb\'s law to remove particulates from exhaust. Charged particles are attracted to oppositely charged plates with forces proportional to q₁×q₂/r².',
+    connection: 'Particles are given a strong negative charge by corona discharge. Coulomb attraction to positive collector plates pulls them out of the gas stream, achieving 99%+ removal efficiency.',
+    howItWorks: 'Dirty gas flows between electrode plates. Corona wires give particles a negative charge. The charged particles experience F = kq₁q₂/r² toward positive plates, where they collect and are removed.',
+    stats: [
+      { value: '99%+', label: 'Removal efficiency', icon: '✅' },
+      { value: '50kV', label: 'Operating voltage', icon: '⚡' },
+      { value: '10M+ tons', label: 'Particles removed/year', icon: '🏭' }
+    ],
+    examples: ['Coal power plants', 'Cement factories', 'Steel mills', 'Paper mills'],
+    companies: ['GE Environmental', 'Babcock & Wilcox', 'Siemens', 'FLSmidth'],
+    futureImpact: 'Hybrid precipitators combining electrostatic and fabric filtration are achieving near-zero emissions for ultra-fine particles.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🖨️',
+    title: 'Laser Printers & Copiers',
+    short: 'Electrostatic imaging',
+    tagline: 'Printing with charged toner particles',
+    description: 'Laser printers use Coulomb forces to transfer toner particles to paper. Charged toner is attracted to oppositely charged areas on a drum, then transferred to paper by even stronger attraction.',
+    connection: 'The photoconductor drum is selectively charged by a laser. Toner particles (charged to ~-20μC/g) experience Coulomb force toward positively charged image areas, creating the print.',
+    howItWorks: 'A laser writes the image as a charge pattern on the drum. Toner is attracted to charged areas. Paper is given an even higher charge, pulling toner from drum to paper. Heat fuses the image.',
+    stats: [
+      { value: '1200 dpi', label: 'Print resolution', icon: '📝' },
+      { value: '-20 μC/g', label: 'Toner charge', icon: '⚡' },
+      { value: '50+ ppm', label: 'Print speed', icon: '⏱️' }
+    ],
+    examples: ['Office printers', 'Copy machines', 'Digital presses', 'Photo printers'],
+    companies: ['HP', 'Canon', 'Xerox', 'Brother'],
+    futureImpact: 'Direct-to-garment and 3D printing are extending electrostatic principles to new materials and applications.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '💊',
+    title: 'Drug Delivery Systems',
+    short: 'Targeted medicine',
+    tagline: 'Guiding charged particles to their target',
+    description: 'Some advanced drug delivery systems use charged nanoparticles that can be guided by electric fields to specific locations in the body, taking advantage of Coulomb forces.',
+    connection: 'Charged drug carriers experience F = qE in an electric field. By controlling field strength and direction, particles can be concentrated at tumor sites or driven across cell membranes.',
+    howItWorks: 'Drug molecules are attached to charged nanoparticles. External or implanted electrodes create electric fields. Coulomb force drives particles toward the treatment site, improving efficacy.',
+    stats: [
+      { value: '10x', label: 'Drug concentration increase', icon: '💉' },
+      { value: '100 nm', label: 'Particle size', icon: '🔬' },
+      { value: '$200B', label: 'Drug delivery market', icon: '💰' }
+    ],
+    examples: ['Cancer treatment', 'Gene therapy', 'Transdermal patches', 'Eye treatments'],
+    companies: ['Novartis', 'Johnson & Johnson', 'Endo International', 'Inovio'],
+    futureImpact: 'Electrochemically-controlled drug release could enable precise dosing based on real-time biomarker feedback.',
+    color: '#10B981'
+  },
+  {
+    icon: '🧪',
+    title: 'Mass Spectrometry',
+    short: 'Molecular identification',
+    tagline: 'Sorting molecules by charge and mass',
+    description: 'Mass spectrometers ionize molecules and use electric fields to accelerate and separate them. Coulomb force F = qE accelerates ions, with trajectory depending on mass-to-charge ratio.',
+    connection: 'Ions are accelerated by electric fields where F = qE. Their paths through the analyzer depend on m/q ratio. This separates molecules by mass, enabling identification of unknown compounds.',
+    howItWorks: 'Molecules are ionized (given charge q). An electric field accelerates them with F = qE. Magnetic or electric analyzers separate ions by m/q. Detectors measure ion abundance at each mass.',
+    stats: [
+      { value: '0.001 Da', label: 'Mass resolution', icon: '🎯' },
+      { value: 'ppt', label: 'Detection limits', icon: '🔬' },
+      { value: '$6B', label: 'Market size', icon: '📈' }
+    ],
+    examples: ['Proteomics research', 'Drug testing', 'Environmental analysis', 'Forensics'],
+    companies: ['Thermo Fisher', 'Agilent', 'Waters', 'SCIEX'],
+    futureImpact: 'Miniaturized mass specs and ambient ionization are enabling real-time chemical analysis in the field for security and medical diagnostics.',
+    color: '#F59E0B'
+  }
+];
+
 const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }) => {
   // Phase type - string-based per spec
   type CLPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';

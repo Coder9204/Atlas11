@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🔭',
+      title: 'James Webb Space Telescope',
+      short: 'Coldest telescope in space',
+      tagline: 'Seeing the universe in infrared',
+      description: 'JWST operates at -233°C, colder than any natural place in our solar system. Its tennis-court-sized sunshield creates a 300°C temperature difference between the hot and cold sides.',
+      connection: 'The Stefan-Boltzmann law governs how JWST radiates heat to space. The five-layer sunshield blocks solar radiation while the cold side radiates remaining heat away to achieve cryogenic temperatures.',
+      howItWorks: 'Each sunshield layer reflects most incident radiation. The gaps between layers allow residual heat to radiate sideways. The cold side faces deep space at 3K, providing maximum radiative cooling.',
+      stats: [
+         { value: '-233°C', label: 'Operating temp', icon: '❄️' },
+         { value: '5', label: 'Sunshield layers', icon: '🛡️' },
+         { value: '300°C', label: 'Hot/cold difference', icon: '🌡️' }
+      ],
+      examples: ['Infrared astronomy', 'Exoplanet detection', 'Galaxy formation studies', 'Star birth observation'],
+      companies: ['NASA', 'ESA', 'Northrop Grumman', 'Ball Aerospace'],
+      futureImpact: 'Future space telescopes will use even more advanced thermal control for detecting biosignatures on exoplanets.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '🚀',
+      title: 'Mars Rovers',
+      short: 'Surviving Martian extremes',
+      tagline: 'Engineering for -100°C nights',
+      description: 'Mars rovers experience temperature swings from +20°C during the day to -100°C at night. Radioisotope heaters and careful thermal design keep electronics within survival limits.',
+      connection: 'With Mars thin atmosphere providing minimal insulation, rovers rely entirely on radiative heat transfer and nuclear decay heat to survive the freezing nights.',
+      howItWorks: 'Plutonium-238 radioisotope heater units (RHUs) provide constant warmth. Multi-layer insulation traps heat at night while louvers can open to reject excess heat during warm days.',
+      stats: [
+         { value: '120°C', label: 'Daily temp swing', icon: '🌡️' },
+         { value: '10+', label: 'RHUs per rover', icon: '☢️' },
+         { value: '10+ yrs', label: 'Design life', icon: '📅' }
+      ],
+      examples: ['Curiosity rover', 'Perseverance rover', 'InSight lander', 'Future Mars helicopters'],
+      companies: ['NASA JPL', 'Lockheed Martin', 'DOE', 'Aerojet Rocketdyne'],
+      futureImpact: 'Crewed Mars missions will require larger-scale thermal systems to protect habitats and equipment.',
+      color: '#EF4444'
+   },
+   {
+      icon: '🛸',
+      title: 'International Space Station',
+      short: 'Managing 100kW of heat',
+      tagline: 'The ultimate thermal challenge',
+      description: 'ISS generates over 100kW of waste heat from crew, experiments, and equipment. Giant radiator panels and ammonia heat exchangers reject this heat to the cold of space.',
+      connection: 'The Stefan-Boltzmann law determines radiator sizing. ISS radiators operate at ~280K, requiring large surface areas to reject heat at the T^4 rate.',
+      howItWorks: 'Internal water loops collect heat from equipment. Heat exchangers transfer this to external ammonia loops, which carry heat to large radiator panels that radiate it to space.',
+      stats: [
+         { value: '100kW', label: 'Heat rejection', icon: '🔥' },
+         { value: '1,400m²', label: 'Radiator area', icon: '📐' },
+         { value: '-40°C', label: 'Ammonia temp', icon: '❄️' }
+      ],
+      examples: ['Crew life support', 'Science experiments', 'Power systems', 'Computer cooling'],
+      companies: ['NASA', 'Roscosmos', 'Boeing', 'Thales Alenia'],
+      futureImpact: 'Lunar Gateway and future space stations will use similar but more compact thermal systems.',
+      color: '#10B981'
+   },
+   {
+      icon: '📦',
+      title: 'CubeSat Thermal Design',
+      short: 'Tiny satellites, big challenges',
+      tagline: 'Passive thermal control in a shoebox',
+      description: 'CubeSats have minimal thermal mass and limited power for heaters. Creative passive designs using surface coatings, strategic component placement, and thermal straps keep these tiny satellites operational.',
+      connection: 'With small surface areas and rapid orbital thermal cycling, CubeSats rely heavily on surface emissivity and absorptivity properties to manage the radiative heat balance.',
+      howItWorks: 'Gold or silver coatings reflect solar radiation while white paint radiates heat. Internal components are positioned to share heat, and thermal straps conduct heat to radiating surfaces.',
+      stats: [
+         { value: '10cm', label: 'Typical size (1U)', icon: '📏' },
+         { value: '90min', label: 'Orbital period', icon: '🔄' },
+         { value: '±50°C', label: 'Temp swing', icon: '🌡️' }
+      ],
+      examples: ['University research', 'IoT constellations', 'Earth observation', 'Technology demos'],
+      companies: ['Planet Labs', 'Spire Global', 'Swarm', 'Various universities'],
+      futureImpact: 'Mega-constellations of small satellites will require mass-produced, standardized thermal solutions.',
+      color: '#8B5CF6'
+   }
+];
+
 // ============================================================================
 // GAME 198: SATELLITE THERMAL CONTROL
 // Physics: Q_rad = epsilon * sigma * A * T^4 (Stefan-Boltzmann Law)

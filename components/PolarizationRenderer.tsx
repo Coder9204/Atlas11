@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '📺',
+    title: 'LCD Displays',
+    short: 'Polarizers control light in every pixel',
+    tagline: 'Billions of polarized crystals showing images',
+    description: 'LCD screens use two polarizers with liquid crystals between them. Electric fields twist the crystals to rotate light polarization, controlling how much light passes through each pixel.',
+    connection: 'Crossed polarizers would block all light, but liquid crystals rotate the polarization by 90°, allowing light through. Voltage removes the twist, blocking light for dark pixels.',
+    howItWorks: 'Backlight passes through a polarizer. Liquid crystals in each pixel rotate light based on applied voltage. The second crossed polarizer blocks or passes light accordingly.',
+    stats: [
+      { value: '8K', label: 'resolution displays', icon: '📺' },
+      { value: '1ms', label: 'response time', icon: '⚡' },
+      { value: '$150B', label: 'display market', icon: '📈' }
+    ],
+    examples: ['Computer monitors', 'Smartphone screens', 'TVs', 'Smartwatches'],
+    companies: ['Samsung', 'LG Display', 'BOE', 'AU Optronics'],
+    futureImpact: 'OLED is replacing LCD in many applications, but LCD polarizer technology enables energy-efficient reflective displays.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎬',
+    title: '3D Cinema',
+    short: 'Polarized glasses separate left and right eyes',
+    tagline: 'Depth perception through physics',
+    description: '3D movies project two overlapping images with different polarizations. Special glasses filter one polarization to each eye, creating the illusion of depth.',
+    connection: 'Circular polarization is used so head tilting doesn\'t cause ghosting. Left-circular and right-circular polarizations remain separated regardless of viewer orientation.',
+    howItWorks: 'Two projectors or alternating frames show left and right eye views with opposite circular polarizations. Glasses use quarter-wave plates to separate images by eye.',
+    stats: [
+      { value: '144', label: 'fps total (48 per eye)', icon: '🎞️' },
+      { value: '98%', label: 'image separation', icon: '👀' },
+      { value: '$15B', label: '3D cinema market', icon: '📈' }
+    ],
+    examples: ['IMAX 3D', 'RealD Cinema', 'Dolby 3D', 'Home 3D TVs'],
+    companies: ['IMAX', 'RealD', 'Dolby', 'Sony'],
+    futureImpact: 'VR headsets and glasses-free 3D displays may eventually replace polarized 3D in theaters.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🕶️',
+    title: 'Polarized Sunglasses',
+    short: 'Blocking glare from horizontal surfaces',
+    tagline: 'See clearer on water and roads',
+    description: 'Light reflecting off flat surfaces like water, roads, and car hoods becomes horizontally polarized. Polarized sunglasses with vertical transmission axes block this glare.',
+    connection: 'Brewster\'s angle reflection creates nearly 100% horizontally polarized light. Vertically-oriented polarizing lenses specifically reject this glare.',
+    howItWorks: 'Stretched PVA film embedded in lenses contains aligned iodine chains that absorb horizontal polarization while transmitting vertical polarization.',
+    stats: [
+      { value: '99%', label: 'glare reduction', icon: '✨' },
+      { value: '50%', label: 'light transmission', icon: '☀️' },
+      { value: '$5B', label: 'sunglass market', icon: '📈' }
+    ],
+    examples: ['Fishing sunglasses', 'Driving glasses', 'Skiing goggles', 'Boating eyewear'],
+    companies: ['Ray-Ban', 'Oakley', 'Maui Jim', 'Costa'],
+    futureImpact: 'Smart sunglasses with adjustable polarization will optimize visibility for any lighting condition.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Stress Analysis Microscopy',
+    short: 'Visualizing forces in transparent materials',
+    tagline: 'See the invisible forces',
+    description: 'Polarized light microscopy reveals stress in transparent materials. Stressed regions rotate light polarization differently, creating colorful fringe patterns between crossed polarizers.',
+    connection: 'Stress causes birefringence - different refractive indices for different polarization directions. This creates phase delays that produce interference colors.',
+    howItWorks: 'Samples are placed between crossed polarizers. Stressed regions rotate polarization, allowing some light through and creating patterns that map the stress field.',
+    stats: [
+      { value: '1nm', label: 'retardation sensitivity', icon: '🔬' },
+      { value: '100+', label: 'years of technique', icon: '📅' },
+      { value: '$3B', label: 'microscopy market', icon: '📈' }
+    ],
+    examples: ['Engineering models', 'Glass inspection', 'Polymer analysis', 'Mineral identification'],
+    companies: ['Zeiss', 'Leica', 'Olympus', 'Nikon'],
+    futureImpact: 'Quantitative polarimetry with digital imaging enables automated stress mapping in manufacturing.',
+    color: '#8B5CF6'
+  }
+];
+
 interface PolarizationRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

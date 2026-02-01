@@ -15,6 +15,81 @@ interface SupercoolingRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🩸',
+    title: 'Organ Preservation',
+    short: 'Supercooling for transplant medicine',
+    tagline: 'Life-saving cold without ice',
+    description: 'Donor organs can be preserved longer using supercooling than traditional ice storage. By keeping tissue below freezing without ice crystal formation, cells remain viable for transplantation.',
+    connection: 'Supercooling prevents the ice crystal damage that occurs during conventional freezing. The metastable liquid state preserves cell structure while slowing metabolic decay.',
+    howItWorks: 'Organs are cooled in specialized solutions that suppress nucleation. Precise temperature control maintains the supercooled state. Antifreeze proteins from arctic fish further prevent ice formation.',
+    stats: [
+      { value: '27hr', label: 'Liver preservation (3x longer)', icon: '⏰' },
+      { value: '-6°C', label: 'Supercooling temperature', icon: '❄️' },
+      { value: '30%', label: 'More viable organs', icon: '📈' }
+    ],
+    examples: ['Liver transplants', 'Heart preservation', 'Kidney banking', 'Limb reattachment'],
+    companies: ['OrganOx', 'TransMedics', 'Paragonix', 'Harvard MGH Research'],
+    futureImpact: 'Reliable supercooling will enable organ banking and shipping worldwide, dramatically reducing the 17 people who die daily waiting for transplants in the US alone.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🔥',
+    title: 'Hand Warmers',
+    short: 'Instant heat from supersaturated solutions',
+    tagline: 'Click and feel the warmth',
+    description: 'Reusable hand warmers use supersaturated sodium acetate that crystallizes instantly when triggered, releasing heat. The supercooled solution can be reset by boiling.',
+    connection: 'Sodium acetate solutions can be supercooled far below their melting point. Mechanical activation provides nucleation sites, triggering rapid crystallization and exothermic heat release.',
+    howItWorks: 'Supersaturated solution is prepared by dissolving excess salt in hot water. A metal disc click provides nucleation. Crystallization releases latent heat. Boiling re-dissolves crystals to reset.',
+    stats: [
+      { value: '54°C', label: 'Operating temperature', icon: '🌡️' },
+      { value: '2hr', label: 'Heat duration', icon: '⏰' },
+      { value: '500+', label: 'Reuse cycles', icon: '🔄' }
+    ],
+    examples: ['Hand warmers', 'Hot packs for therapy', 'Food warming pads', 'Heat storage systems'],
+    companies: ['HotSnapz', 'Hothands (disposable)', 'Zippo', 'Various consumer brands'],
+    futureImpact: 'Phase change materials using controlled supercooling will enable on-demand thermal energy storage for buildings and vehicles.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '☁️',
+    title: 'Cloud Seeding',
+    short: 'Making rain from supercooled clouds',
+    tagline: 'Engineering weather with nucleation',
+    description: 'Cloud seeding introduces nucleation particles into supercooled clouds to trigger precipitation. Silver iodide crystals mimic ice structure, catalyzing the transition from supercooled droplets to snow.',
+    connection: 'Clouds can contain water droplets supercooled to -40°C. Adding nucleation sites triggers rapid ice crystal formation, which grow and fall as precipitation.',
+    howItWorks: 'Aircraft or ground generators release silver iodide smoke into clouds. The hexagonal crystal structure matches ice, providing perfect nucleation sites. Ice crystals grow at the expense of supercooled droplets.',
+    stats: [
+      { value: '10-15%', label: 'Precipitation increase', icon: '🌧️' },
+      { value: '-5°C', label: 'Minimum cloud temp', icon: '❄️' },
+      { value: '60yr', label: 'Technology history', icon: '📅' }
+    ],
+    examples: ['Drought mitigation', 'Snowpack enhancement', 'Hail suppression', 'Fog dispersal'],
+    companies: ['Weather Modification Inc.', 'North American Weather Consultants', 'Snowy Hydro', 'China Weather Bureau'],
+    futureImpact: 'Climate adaptation will rely on controlled precipitation to manage water resources, with AI-optimized seeding operations maximizing effectiveness.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🍦',
+    title: 'Food Science',
+    short: 'Texture through controlled crystallization',
+    tagline: 'The science of smooth ice cream',
+    description: 'Premium ice cream stays smooth because small ice crystals form during rapid freezing. Supercooling control and added stabilizers prevent the large crystals that create icy texture.',
+    connection: 'Ice cream quality depends on preventing nucleation during storage temperature fluctuations. Supercooling and controlled crystallization keep crystals small for creamy texture.',
+    howItWorks: 'Flash freezing creates many small nucleation sites. Stabilizers like guar gum slow crystal growth. Sugar and fat lower the freezing point. Storage temperature cycling must be minimized.',
+    stats: [
+      { value: '<50um', label: 'Ideal crystal size', icon: '🔬' },
+      { value: '-18°C', label: 'Storage temperature', icon: '❄️' },
+      { value: '35%', label: 'Overrun (air content)', icon: '💨' }
+    ],
+    examples: ['Premium ice cream', 'Frozen desserts', 'Sorbet production', 'Frozen yogurt'],
+    companies: ['Haagen-Dazs', 'Ben & Jerrys', 'Unilever', 'Nestle'],
+    futureImpact: 'Novel freezing techniques and plant-based stabilizers will enable lactose-free and vegan frozen desserts with traditional texture and mouthfeel.',
+    color: '#8b5cf6'
+  }
+];
+
 const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
   phase,
   onPhaseComplete,

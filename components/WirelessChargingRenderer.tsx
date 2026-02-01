@@ -8,6 +8,81 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // Real-World Application: Why phone position on wireless charger matters
 // ============================================================================
 
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Smartphone Wireless Charging',
+    short: 'Powering devices without cables',
+    tagline: 'Drop and charge convenience',
+    description: 'Modern smartphones use Qi-standard wireless charging with inductive coils. Proper alignment between phone and charger coils determines charging efficiency - misalignment can reduce power transfer by 50% or more.',
+    connection: 'Inductive coupling efficiency depends on the magnetic flux linkage between coils. Maximum flux occurs when coils are perfectly aligned and close together. Distance and offset both reduce the coupling coefficient.',
+    howItWorks: 'The charger coil creates an alternating magnetic field at ~100-200kHz. The phone\'s receiver coil intercepts this field, inducing a current through Faraday\'s law. The coupling coefficient k determines how much magnetic flux links the coils.',
+    stats: [
+      { value: '15W', label: 'Max Qi charging', icon: '⚡' },
+      { value: '80%', label: 'Peak efficiency', icon: '📈' },
+      { value: '1.4B', label: 'Qi devices shipped', icon: '📱' }
+    ],
+    examples: ['iPhone MagSafe', 'Samsung wireless pads', 'Pixel Stand', 'Multi-device chargers'],
+    companies: ['Apple', 'Samsung', 'Belkin', 'Anker'],
+    futureImpact: 'Room-scale wireless power using resonant coupling and beamforming will charge devices anywhere in a room without placement requirements.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Electric Vehicle Charging',
+    short: 'Hands-free EV power',
+    tagline: 'Park and charge automatically',
+    description: 'Wireless EV charging eliminates plugging in - vehicles park over ground-mounted coils that transfer power at 11-22kW. Precise alignment is critical for safe, efficient high-power transfer.',
+    connection: 'EV wireless charging scales up smartphone principles to kilowatt power levels. Larger coils and air gaps require careful design of resonant circuits to maintain efficiency despite greater separation distances.',
+    howItWorks: 'Ground assembly coils couple to vehicle-mounted receiver pads across a 10-25cm air gap. Resonant tuning at 85kHz maximizes power transfer. Automatic positioning systems guide drivers to optimal alignment.',
+    stats: [
+      { value: '22kW', label: 'Commercial power', icon: '⚡' },
+      { value: '92%', label: 'System efficiency', icon: '🎯' },
+      { value: '$65B', label: 'EV charging market', icon: '📈' }
+    ],
+    examples: ['BMW 530e wireless', 'Genesis GV60', 'Public transit buses', 'Autonomous taxi fleets'],
+    companies: ['WiTricity', 'Plugless Power', 'Qualcomm Halo', 'Momentum Dynamics'],
+    futureImpact: 'Dynamic wireless charging roads will power EVs while driving, eliminating range anxiety and reducing battery size requirements.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Implant Charging',
+    short: 'Powering life-saving devices',
+    tagline: 'Charging through skin safely',
+    description: 'Pacemakers, cochlear implants, and neurostimulators use transcutaneous inductive charging to repower batteries without surgery. Coil alignment through tissue requires optimized designs for safety and efficiency.',
+    connection: 'Medical wireless power must account for tissue between coils, which attenuates magnetic fields. Lower frequencies (100-500kHz) penetrate tissue better but require larger coils. Alignment is critical for patient safety.',
+    howItWorks: 'External charging paddles align with implanted coils using magnetic guides. The system monitors temperature and adjusts power to prevent tissue heating. Charging sessions typically take 1-4 hours depending on device.',
+    stats: [
+      { value: '5M+', label: 'Pacemakers worldwide', icon: '❤️' },
+      { value: '15yr', label: 'Battery life goal', icon: '🔋' },
+      { value: '$15B', label: 'Implant market', icon: '📈' }
+    ],
+    examples: ['Cochlear implants', 'Neurostimulators', 'Left ventricular assist', 'Insulin pumps'],
+    companies: ['Medtronic', 'Boston Scientific', 'Abbott', 'Cochlear Ltd'],
+    futureImpact: 'Continuous low-power wireless charging will eliminate battery replacement surgeries entirely, improving patient quality of life.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🤖',
+    title: 'Industrial Robot Charging',
+    short: 'Autonomous factory power',
+    tagline: 'Robots that never stop working',
+    description: 'Autonomous mobile robots (AMRs) in warehouses use wireless charging to top up batteries without human intervention. Robots drive onto charging pads during idle moments, maintaining continuous operation.',
+    connection: 'Industrial wireless charging uses larger coils and higher power (1-10kW) than consumer applications. Robots use onboard sensors to precisely position themselves for optimal coil alignment.',
+    howItWorks: 'Floor-mounted charging pads create magnetic fields when robots are detected. Robots navigate to pads using LIDAR and cameras, then fine-tune position using magnetic field strength feedback until coupling is maximized.',
+    stats: [
+      { value: '10kW', label: 'Robot charging power', icon: '⚡' },
+      { value: '500K+', label: 'Warehouse AMRs', icon: '🤖' },
+      { value: '24/7', label: 'Operation capability', icon: '🔄' }
+    ],
+    examples: ['Amazon fulfillment', 'Automotive assembly', 'Hospital logistics', 'Retail inventory'],
+    companies: ['Amazon Robotics', 'KUKA', 'ABB', 'WiBotic'],
+    futureImpact: 'Wireless power zones will enable continuous operation with opportunity charging, eliminating dedicated charging stations entirely.',
+    color: '#8B5CF6'
+  }
+];
+
 interface GameEvent {
   eventType: string;
   gameType: string;

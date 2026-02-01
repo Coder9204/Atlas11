@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '👓',
+    title: 'Prescription Eyeglasses',
+    short: 'Lens curvature refracts light to correct nearsightedness, farsightedness, and astigmatism',
+    tagline: 'Bending light to perfect vision',
+    description: 'Over 4 billion people worldwide need vision correction. Eyeglass lenses use precisely calculated curvatures to refract light, compensating for eyes that focus incorrectly. Myopia (nearsightedness) requires diverging lenses, while hyperopia (farsightedness) needs converging lenses. Modern high-index materials bend light more with thinner, lighter lenses.',
+    connection: 'This game teaches how different materials bend light at different angles - the exact physics optometrists use when prescribing lenses.',
+    howItWorks: 'Light entering a curved lens refracts at each surface according to Snell law. The lens power in diopters equals 1/focal length in meters. Steeper curves and higher refractive index materials bend light more. Progressive lenses vary curvature to provide multiple focal lengths.',
+    stats: [
+      { value: '4B+', label: 'People needing correction', icon: '👁️' },
+      { value: '1.74', label: 'High-index lens n value', icon: '🔬' },
+      { value: '$150B', label: 'Global eyewear market', icon: '💰' }
+    ],
+    examples: ['Single vision lenses', 'Bifocals', 'Progressive lenses', 'Photochromic lenses'],
+    companies: ['EssilorLuxottica', 'Zeiss', 'Hoya', 'Rodenstock'],
+    futureImpact: 'Smart glasses with adjustable focus using liquid crystal lenses may eventually replace traditional prescriptions.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📷',
+    title: 'Camera Lens Design',
+    short: 'Multi-element lenses use refraction to focus images sharply across the entire frame',
+    tagline: 'Engineering the perfect image',
+    description: 'Camera lenses contain 10-20 precisely shaped glass elements, each designed to refract light in ways that correct for aberrations. Chromatic aberration (color fringing) occurs because different wavelengths refract differently. Lens designers combine elements of different materials to cancel these effects.',
+    connection: 'The wavelength-dependent refraction explored in this game explains chromatic aberration - the challenge every camera lens designer must overcome.',
+    howItWorks: 'Each lens element has specific curvature and refractive index. Rays from scene points must all converge to the same image point regardless of where they enter the lens. Special low-dispersion glass and aspherical elements correct aberrations. Computational design optimizes element placement.',
+    stats: [
+      { value: '10-20', label: 'Elements in quality lenses', icon: '🔍' },
+      { value: 'f/1.2-f/2.8', label: 'Fast lens apertures', icon: '📸' },
+      { value: '$100B', label: 'Camera market size', icon: '💵' }
+    ],
+    examples: ['Smartphone lenses', 'DSLR zooms', 'Cinema primes', 'Microscope objectives'],
+    companies: ['Canon', 'Sony', 'Nikon', 'Zeiss'],
+    futureImpact: 'Computational photography combined with simpler optics may reduce lens complexity while maintaining image quality.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '💎',
+    title: 'Gemstone Cutting',
+    short: 'Diamond facets maximize brilliance by exploiting total internal reflection',
+    tagline: 'The science of sparkle',
+    description: 'A diamond sparkle comes from its high refractive index (n=2.42) and precisely angled facets. Light entering the diamond refracts, then reflects internally off the back facets (total internal reflection), and exits through the top with dramatic dispersion into spectral colors. Cut quality determines how effectively this physics is exploited.',
+    connection: 'This game demonstrates critical angles and total internal reflection - the physics that makes diamonds and other gems sparkle brilliantly.',
+    howItWorks: 'Diamond critical angle is only 24.4 degrees due to high refractive index. Facets are angled so light entering the top reflects off back facets rather than passing through. The stone acts as a light trap, returning light with fire (dispersion into colors) and brilliance (total light return).',
+    stats: [
+      { value: '2.42', label: 'Diamond refractive index', icon: '💎' },
+      { value: '24.4°', label: 'Critical angle in diamond', icon: '📐' },
+      { value: '$80B', label: 'Diamond jewelry market', icon: '💍' }
+    ],
+    examples: ['Round brilliant cut', 'Princess cut', 'Emerald cut', 'Cushion cut'],
+    companies: ['De Beers', 'Tiffany & Co.', 'Cartier', 'Harry Winston'],
+    futureImpact: 'AI-optimized cutting patterns and lab-grown diamonds are changing how the industry maximizes optical performance.',
+    color: '#EC4899'
+  },
+  {
+    icon: '🌊',
+    title: 'Fiber Optic Communications',
+    short: 'Total internal reflection guides light signals thousands of kilometers through glass fibers',
+    tagline: 'The internet travels at light speed',
+    description: 'The global internet runs on fiber optics - thin glass strands that trap light through total internal reflection. Data encoded as light pulses travels thousands of kilometers with minimal loss. A single fiber can carry terabits per second, enabling video calls, streaming, and cloud computing across continents.',
+    connection: 'Total internal reflection, demonstrated when light bends at material boundaries in this game, is exactly how fiber optics guide light around the world.',
+    howItWorks: 'Optical fiber has a high-index core surrounded by lower-index cladding. Light entering at shallow angles exceeds the critical angle and reflects internally rather than escaping. Pulses bounce along the fiber, losing only about 0.2 dB per kilometer in modern single-mode fiber.',
+    stats: [
+      { value: '100+ Tbps', label: 'Capacity per fiber pair', icon: '📡' },
+      { value: '0.2 dB/km', label: 'Signal loss rate', icon: '📉' },
+      { value: '500M km', label: 'Total fiber deployed globally', icon: '🌍' }
+    ],
+    examples: ['Submarine cables', 'Metro networks', 'Data center interconnects', 'FTTH broadband'],
+    companies: ['Corning', 'Prysmian', 'Fujikura', 'OFS'],
+    futureImpact: 'Hollow-core fibers guiding light through air could reduce latency to near the ultimate speed-of-light limit.',
+    color: '#10B981'
+  }
+];
+
 interface RefractionRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

@@ -27,6 +27,81 @@ const colors = {
   border: '#334155',
 };
 
+const realWorldApps = [
+  {
+    icon: '☀️',
+    title: 'Solar Panel Manufacturing',
+    short: 'Maximizing light capture through surface texturing',
+    tagline: 'Making every photon count',
+    description: 'Solar cell manufacturers use pyramid texturing on silicon wafers to trap incoming light and reduce reflection. The rough surface causes photons to bounce multiple times, increasing absorption from 70% to over 95%.',
+    connection: 'Surface texturing exploits wave optics to maximize scattering - the opposite goal of lithography which minimizes it.',
+    howItWorks: 'Chemical etching creates random pyramids 1-10 micrometers tall. Light entering at any angle bounces between pyramids, getting multiple chances to be absorbed. Anti-reflection coatings further reduce surface losses.',
+    stats: [
+      { value: '25%', label: 'Efficiency boost', icon: '⚡' },
+      { value: '$170B', label: 'Solar market size', icon: '📈' },
+      { value: '95%', label: 'Light absorption', icon: '🔆' }
+    ],
+    examples: ['Monocrystalline panels', 'PERC cells', 'Black silicon cells', 'Bifacial modules'],
+    companies: ['First Solar', 'LONGi', 'JA Solar', 'Canadian Solar'],
+    futureImpact: 'Next-gen texturing with nanowire arrays could push absorption to 99%, enabling solar cells thinner than a human hair.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💻',
+    title: 'EUV Lithography',
+    short: 'Printing 3nm transistors with extreme UV light',
+    tagline: 'Where atomically flat means everything',
+    description: 'Extreme Ultraviolet lithography uses 13.5nm wavelength light to print transistor features smaller than 10nm. Unlike solar texturing, any surface roughness destroys the pattern by causing unwanted scattering.',
+    connection: 'EUV lithography demands the smoothest surfaces ever made because shorter wavelengths make scattering from imperfections catastrophic.',
+    howItWorks: 'Multilayer mirrors with atomic-scale precision reflect EUV light through photomasks onto wafers. Surface roughness must be below 0.1nm - smoother than anything in nature.',
+    stats: [
+      { value: '$150M', label: 'Per EUV machine', icon: '💰' },
+      { value: '3nm', label: 'Feature size', icon: '🔬' },
+      { value: '250W', label: 'EUV source power', icon: '⚡' }
+    ],
+    examples: ['Apple M3 chips', 'AMD Ryzen 7000', 'NVIDIA H100', 'iPhone processors'],
+    companies: ['ASML', 'TSMC', 'Samsung', 'Intel'],
+    futureImpact: 'High-NA EUV will enable 1nm transistors by 2030, continuing Moore\'s Law through ever-shorter wavelengths.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔬',
+    title: 'Anti-Reflection Coatings',
+    short: 'Controlling interference for optical clarity',
+    tagline: 'Making glass invisible',
+    description: 'Camera lenses, glasses, and solar panels use thin-film coatings to eliminate reflections. By choosing the right film thickness, reflected waves destructively interfere and cancel out.',
+    connection: 'Anti-reflection coatings use the same wave physics as both texturing and lithography, but engineer specific thicknesses for interference.',
+    howItWorks: 'Quarter-wavelength thick films create a 180-degree phase shift between surface and interface reflections. When these waves combine, they cancel, eliminating glare and increasing transmission.',
+    stats: [
+      { value: '99.9%', label: 'Light transmission', icon: '✨' },
+      { value: '$12B', label: 'Optical coatings market', icon: '📈' },
+      { value: '<0.1%', label: 'Reflection loss', icon: '🎯' }
+    ],
+    examples: ['Camera lenses', 'Prescription glasses', 'Telescope mirrors', 'Smartphone screens'],
+    companies: ['Zeiss', 'Essilor', 'Corning', 'Schott'],
+    futureImpact: 'Metamaterial coatings will create perfect anti-reflection across all wavelengths simultaneously.',
+    color: '#10B981'
+  },
+  {
+    icon: '🌈',
+    title: 'Photonic Crystals',
+    short: 'Engineering light with periodic nanostructures',
+    tagline: 'Building materials that bend light',
+    description: 'Photonic crystals use periodic nanoscale structures to control light propagation. Like semiconductors for electrons, they create bandgaps where certain light frequencies cannot propagate.',
+    connection: 'Photonic crystals combine the scattering concepts from texturing with the precision of lithography to create entirely new optical behaviors.',
+    howItWorks: 'Regular arrays of holes or pillars create interference patterns that block specific wavelengths. The periodicity determines which colors are reflected, transmitted, or guided.',
+    stats: [
+      { value: '1000x', label: 'Light slowdown', icon: '🐢' },
+      { value: '$5B', label: 'Market by 2028', icon: '📈' },
+      { value: '100%', label: 'Reflection at bandgap', icon: '🔄' }
+    ],
+    examples: ['Optical fibers', 'LED efficiency', 'Biosensors', 'Butterfly wings'],
+    companies: ['NKT Photonics', 'Lumentum', 'II-VI', 'Thorlabs'],
+    futureImpact: 'Photonic computing could process data 1000x faster than electronics by manipulating light instead of electrons.',
+    color: '#F59E0B'
+  }
+];
+
 const TexturingVsLithographyRenderer: React.FC<TexturingVsLithographyRendererProps> = ({
   gamePhase,
   onCorrectAnswer,

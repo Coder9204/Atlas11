@@ -77,6 +77,81 @@ const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // COLOR PALETTE
 // ────────────────────────────────────────────────────────────────────────────
 
+const realWorldApps = [
+  {
+    icon: '🎸',
+    title: 'Guitar String Design',
+    short: 'Engineering strings for every playing style',
+    tagline: 'The right string for the right sound',
+    description: 'Guitar strings are precision-engineered products where diameter, core material, winding pattern, and coating all affect tone, playability, and durability. String companies spend years developing new designs.',
+    connection: 'The Mersenne equation (f = (1/2L)sqrt(T/mu)) directly governs string design. Changing mass per length (mu) through diameter and material selection allows tuning while maintaining optimal tension.',
+    howItWorks: 'Wound strings use thin core wire wrapped with round or flat wire to add mass without stiffness. Coatings reduce corrosion. Different alloys produce different tonal characteristics.',
+    stats: [
+      { value: '0.010"', label: 'Light high E gauge', icon: '📏' },
+      { value: '16lbs', label: 'Typical string tension', icon: '⚖️' },
+      { value: '100hr', label: 'String lifespan', icon: '⏰' }
+    ],
+    examples: ['Electric guitar sets', 'Acoustic phosphor bronze', 'Classical nylon', 'Bass guitar strings'],
+    companies: ["D'Addario", 'Ernie Ball', 'Elixir', 'Martin'],
+    futureImpact: 'Self-tuning guitars with smart bridges will automatically adjust tension, while new materials will provide consistent tone regardless of temperature and humidity.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🎹',
+    title: 'Piano String Scaling',
+    short: 'Three octaves in one instrument',
+    tagline: 'The science of the grand piano',
+    description: 'Pianos use a complex scaling system where string length, diameter, and material change across the keyboard. Bass strings are wound with copper, while treble strings are plain steel wire.',
+    connection: 'Piano design applies string physics across 88 keys. Longer, thicker bass strings and shorter, thinner treble strings maintain consistent tension while achieving a 7+ octave range.',
+    howItWorks: 'Bass strings use copper winding on steel cores for high mass at playable tension. Multiple strings per note (bichord and trichord) increase volume. Overstringing places bass over treble for efficiency.',
+    stats: [
+      { value: '2m', label: 'Longest bass string', icon: '📏' },
+      { value: '230', label: 'Strings in concert grand', icon: '🎵' },
+      { value: '18tons', label: 'Total string tension', icon: '⚡' }
+    ],
+    examples: ['Concert grands', 'Upright pianos', 'Digital piano modeling', 'Historical instruments'],
+    companies: ['Steinway', 'Yamaha', 'Bosendorfer', 'Fazioli'],
+    futureImpact: 'Carbon fiber soundboards and advanced string materials will enable lighter pianos with richer tone, while modeling synthesis captures impossible instruments.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🎻',
+    title: 'Violin String Engineering',
+    short: 'Centuries of refinement in four strings',
+    tagline: 'From gut to synthetic perfection',
+    description: 'Violin strings have evolved from pure gut to synthetic cores with various windings. Each combination offers different tone, response, and stability, letting players customize their sound.',
+    connection: 'Violin makers must balance tension across four strings with different pitches. String materials and construction affect not just pitch but bowing response and overtone content.',
+    howItWorks: 'Modern strings use nylon or steel cores wound with aluminum, silver, or tungsten. Core stiffness affects bow grip. Winding density and pattern shape tonal color. Gauge affects both pitch and playability.',
+    stats: [
+      { value: '5-10kg', label: 'String tension', icon: '⚖️' },
+      { value: '0.8mm', label: 'E string diameter', icon: '📏' },
+      { value: '440Hz', label: 'Standard A pitch', icon: '🎵' }
+    ],
+    examples: ['Solo violin strings', 'Orchestra sets', 'Baroque gut strings', 'Electric violin strings'],
+    companies: ['Thomastik', 'Pirastro', 'Larsen', "D'Addario Kaplan"],
+    futureImpact: 'Smart strings with embedded sensors will help players optimize technique while advanced materials match historic gut sound with modern stability.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🏸',
+    title: 'Racquet String Technology',
+    short: 'Optimizing power and control',
+    tagline: 'Physics on the court',
+    description: 'Tennis and badminton strings are engineered for specific playing characteristics. String material, gauge, and tension affect power, control, spin, and durability.',
+    connection: 'String physics applies to racquet sports where string tension creates elastic energy storage and release. Thinner strings bite the ball for spin while thicker strings last longer.',
+    howItWorks: 'Polyester strings are stiff for control and spin. Natural gut offers power and feel. Multifilament synthetics mimic gut. Tension affects power (loose) vs control (tight).',
+    stats: [
+      { value: '50-65lbs', label: 'Tennis string tension', icon: '⚖️' },
+      { value: '1.20mm', label: 'Typical string gauge', icon: '📏' },
+      { value: '10hr', label: 'Pro player restring cycle', icon: '⏰' }
+    ],
+    examples: ['Tennis polyester', 'Badminton multifilament', 'Squash natural gut', 'Racquetball synthetics'],
+    companies: ['Luxilon', 'Babolat', 'Yonex', 'Wilson'],
+    futureImpact: 'Self-adjusting string beds with variable tension will optimize for each shot type, while smart racquets analyze string wear in real-time.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   primary: '#eab308',
   primaryDark: '#ca8a04',

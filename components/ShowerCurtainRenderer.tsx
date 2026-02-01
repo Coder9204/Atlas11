@@ -2,6 +2,81 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '✈️',
+      title: 'Aircraft Wing Design',
+      short: 'Lift from pressure difference',
+      tagline: 'Bernoulli keeps planes flying',
+      description: 'Aircraft wings generate lift through the same pressure principle as the shower curtain effect. Air flows faster over the curved upper surface, creating lower pressure that pulls the wing upward.',
+      connection: 'Just as faster-moving water droplets create low pressure that pulls the shower curtain inward, faster air over a wing creates low pressure that generates lift.',
+      howItWorks: 'The wings curved upper surface forces air to travel a longer path, speeding up the flow. By Bernoullis principle, this faster flow has lower pressure than the slower flow beneath, creating a net upward force.',
+      stats: [
+         { value: '30%', label: 'Pressure reduction', icon: '📉' },
+         { value: '600mph', label: 'Cruise speed', icon: '✈️' },
+         { value: '~1M lbs', label: 'Max lift (747)', icon: '⬆️' }
+      ],
+      examples: ['Commercial aviation', 'Fighter jets', 'Helicopter rotors', 'Wind turbine blades'],
+      companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'GE Aviation'],
+      futureImpact: 'Morphing wing designs will dynamically adjust shape to optimize pressure distribution for different flight conditions.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '🏎️',
+      title: 'Race Car Aerodynamics',
+      short: 'Downforce for grip',
+      tagline: 'Inverted wings push cars down',
+      description: 'Formula 1 cars use inverted airfoils to create downforce, pushing the car onto the track. This is the shower curtain effect in reverse: low pressure below the wing pulls the car toward the ground.',
+      connection: 'The same Bernoulli principle that pulls shower curtains inward creates downforce on race cars. Air accelerating under the car and around wings creates low pressure zones.',
+      howItWorks: 'Front and rear wings are shaped like inverted aircraft wings. Ground effect tunnels under the car accelerate air to very high speeds, creating extreme low pressure that sucks the car to the track.',
+      stats: [
+         { value: '5,000 lbs', label: 'F1 downforce', icon: '⬇️' },
+         { value: '200mph', label: 'Speeds achieved', icon: '🏁' },
+         { value: '5G', label: 'Cornering force', icon: '🔄' }
+      ],
+      examples: ['Formula 1', 'IndyCar', 'Le Mans prototypes', 'NASCAR drafting'],
+      companies: ['Ferrari', 'Mercedes AMG', 'Red Bull Racing', 'McLaren'],
+      futureImpact: 'Active aerodynamics with computer-controlled surfaces will optimize downforce in real-time based on track conditions.',
+      color: '#EF4444'
+   },
+   {
+      icon: '🌬️',
+      title: 'HVAC Ventilation',
+      short: 'Air entrainment systems',
+      tagline: 'Moving air efficiently',
+      description: 'Building ventilation systems use the entrainment principle to distribute conditioned air. High-velocity supply jets entrain room air, multiplying the effective airflow without additional fan power.',
+      connection: 'Just as falling water droplets entrain surrounding air in a shower, HVAC diffusers use high-velocity jets to pull room air into the airstream, creating efficient mixing.',
+      howItWorks: 'Ceiling diffusers discharge air at high velocity. This jet entrains surrounding room air, creating an induction ratio of 10:1 or more. The mixed air reaches occupants at comfortable velocities.',
+      stats: [
+         { value: '10:1', label: 'Induction ratio', icon: '🔄' },
+         { value: '68-76°F', label: 'Comfort range', icon: '🌡️' },
+         { value: '20%', label: 'Energy savings', icon: '⚡' }
+      ],
+      examples: ['Office buildings', 'Hospitals', 'Clean rooms', 'Data centers'],
+      companies: ['Trane', 'Carrier', 'Johnson Controls', 'Daikin'],
+      futureImpact: 'Personalized ventilation systems will use entrainment to deliver fresh air directly to occupants while reducing overall system airflow.',
+      color: '#10B981'
+   },
+   {
+      icon: '⛽',
+      title: 'Carburetor Fuel Mixing',
+      short: 'Venturi-powered engines',
+      tagline: 'Air speed draws fuel in',
+      description: 'Classic carburetors use the Venturi effect to draw fuel into the airstream. Air accelerating through a narrow throat creates low pressure that pulls fuel from the bowl - the same principle as the shower curtain.',
+      connection: 'The carburetor venturi is a direct application of Bernoullis principle. Fast-moving air in the throat creates low pressure that entrains fuel, just as fast-moving water droplets entrain air in a shower.',
+      howItWorks: 'Incoming air accelerates through a venturi throat. The pressure drop draws fuel through a jet into the airstream. Throttle position controls airflow, and fuel mixture adjusts automatically with engine demand.',
+      stats: [
+         { value: '14.7:1', label: 'Stoichiometric ratio', icon: '⚖️' },
+         { value: '~5 psi', label: 'Venturi vacuum', icon: '📉' },
+         { value: '100+ yrs', label: 'Technology age', icon: '📅' }
+      ],
+      examples: ['Classic cars', 'Small engines', 'Aircraft piston engines', 'Motorcycles'],
+      companies: ['Holley', 'Edelbrock', 'Weber', 'Mikuni'],
+      futureImpact: 'While fuel injection has replaced carburetors in most applications, the Venturi principle lives on in industrial atomizers and spray systems.',
+      color: '#F59E0B'
+   }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════

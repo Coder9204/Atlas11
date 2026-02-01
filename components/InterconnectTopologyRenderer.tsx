@@ -53,6 +53,81 @@ const TOPOLOGY_SPECS = {
   'Full Mesh': { latency: 'O(1)', bandwidth: 'Maximum', scalability: 'Poor (N^2 links)', color: colors.allreduce },
 };
 
+const realWorldApps = [
+  {
+    icon: '🤖',
+    title: 'AI Training Clusters',
+    short: 'Training massive AI models',
+    tagline: 'Connecting thousands of GPUs efficiently',
+    description: 'Training large language models like GPT-4 requires thousands of GPUs working in parallel. The interconnect topology determines how efficiently gradients can be synchronized across all GPUs during distributed training. Poor topology choices can make training 10x slower.',
+    connection: 'Ring all-reduce and tree topologies directly apply to gradient synchronization. The bandwidth and latency characteristics we explored determine whether training is compute-bound or communication-bound at scale.',
+    howItWorks: 'Modern training clusters use hierarchical topologies: NVLink connects GPUs within a node (full mesh), InfiniBand connects nodes in fat-tree configurations, and software implements ring all-reduce for gradient averaging. This hybrid approach optimizes for both bandwidth and latency.',
+    stats: [
+      { value: '10,000+', label: 'GPUs in cluster', icon: '⚡' },
+      { value: '400Gb/s', label: 'InfiniBand speed', icon: '📈' },
+      { value: '90%', label: 'Scaling efficiency', icon: '🚀' }
+    ],
+    examples: ['OpenAI GPT training infrastructure', 'Google TPU pods', 'NVIDIA DGX SuperPOD', 'Meta Research AI clusters'],
+    companies: ['NVIDIA', 'Google', 'Microsoft', 'Meta'],
+    futureImpact: 'Optical interconnects and photonic computing will enable even higher bandwidth with lower power consumption, making million-GPU clusters practical for training next-generation AI models.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🌐',
+    title: 'Data Center Networks',
+    short: 'Internet backbone infrastructure',
+    tagline: 'The hidden highways of the cloud',
+    description: 'Modern data centers use carefully designed network topologies to handle massive traffic volumes. Fat-tree and Clos architectures provide non-blocking bandwidth between any two servers, essential for distributed applications like search and cloud computing.',
+    connection: 'The scalability trade-offs between mesh, tree, and ring topologies directly apply to data center design. Fat-tree topologies solve the bandwidth bottleneck problem we observed at tree roots.',
+    howItWorks: 'Leaf-spine architectures use two layers of switches. Every leaf switch connects to every spine switch, creating multiple paths between any two servers. Equal-cost multi-path routing distributes traffic across all available paths.',
+    stats: [
+      { value: '100Tb/s', label: 'Bisection BW', icon: '⚡' },
+      { value: '500μs', label: 'Latency', icon: '📈' },
+      { value: '$180B', label: 'DC market', icon: '🚀' }
+    ],
+    examples: ['Google global network', 'AWS availability zones', 'Facebook data centers', 'Microsoft Azure regions'],
+    companies: ['Arista', 'Cisco', 'Juniper', 'Broadcom'],
+    futureImpact: 'Disaggregated computing will separate CPU, memory, and storage resources connected by ultra-fast fabric, allowing dynamic resource allocation and eliminating server boundaries entirely.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔬',
+    title: 'High-Performance Computing',
+    short: 'Scientific supercomputers',
+    tagline: 'Simulating the universe one node at a time',
+    description: 'Supercomputers for weather prediction, drug discovery, and physics simulations require interconnects that minimize communication overhead. Dragonfly and fat-tree topologies enable thousands of nodes to share data with minimal latency.',
+    connection: 'HPC applications like climate modeling require all-to-all communication patterns similar to our topology exercises. The O(log N) vs O(N) latency trade-offs directly impact simulation performance.',
+    howItWorks: 'Modern supercomputers use dragonfly topologies with multiple hierarchy levels. Adaptive routing algorithms dynamically select paths to avoid congestion. High-radix switches minimize hop counts while maintaining scalability.',
+    stats: [
+      { value: '1 ExaFlop', label: 'Computing power', icon: '⚡' },
+      { value: '50,000+', label: 'Nodes connected', icon: '📈' },
+      { value: '$600M', label: 'System cost', icon: '🚀' }
+    ],
+    examples: ['Frontier at Oak Ridge', 'Fugaku in Japan', 'LUMI in Finland', 'Leonardo in Italy'],
+    companies: ['Cray/HPE', 'IBM', 'Fujitsu', 'Intel'],
+    futureImpact: 'Quantum networking will eventually connect quantum computers across data centers, requiring entirely new topology concepts for quantum entanglement distribution and error correction.',
+    color: '#10B981'
+  },
+  {
+    icon: '🎮',
+    title: 'Multi-GPU Gaming Systems',
+    short: 'Extreme graphics performance',
+    tagline: 'Rendering reality in real-time',
+    description: 'High-end gaming and professional visualization systems use multiple GPUs connected through NVLink or PCIe. The interconnect determines how efficiently GPUs can share frame rendering work and textures.',
+    connection: 'The bandwidth and latency considerations from our topology study apply directly. NVLink provides near-mesh connectivity between GPUs, while PCIe creates a tree through the CPU.',
+    howItWorks: 'NVLink bridges connect 2-4 GPUs with up to 900GB/s aggregate bandwidth. SLI/CrossFire splits frame rendering across GPUs. Professional applications use GPU memory pooling across the NVLink fabric.',
+    stats: [
+      { value: '900GB/s', label: 'NVLink BW', icon: '⚡' },
+      { value: '4-way', label: 'GPU configs', icon: '📈' },
+      { value: '2x', label: 'Performance gain', icon: '🚀' }
+    ],
+    examples: ['NVIDIA Quadro workstations', 'Gaming enthusiast builds', 'VR development systems', 'Real-time rendering farms'],
+    companies: ['NVIDIA', 'AMD', 'ASUS', 'MSI'],
+    futureImpact: 'Chiplet-based GPUs will use advanced packaging to integrate multiple GPU dies with ultra-wide interconnects, making multi-GPU performance seamless and automatic.',
+    color: '#F59E0B'
+  }
+];
+
 const TEST_QUESTIONS = [
   // Q1: Core Concept - Ring Topology (Easy)
   {

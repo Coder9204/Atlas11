@@ -11,6 +11,82 @@ import * as THREE from 'three';
 // Real-world applications: MRI, LEDs, Solar Cells, Drug Design
 // ============================================================================
 
+// Real-world applications for molecular orbital theory
+const realWorldApps = [
+  {
+    icon: '💊',
+    title: 'Drug Design & Discovery',
+    short: 'Molecular orbital matching for pharmaceuticals',
+    tagline: 'Designing molecules that fit like keys',
+    description: 'Pharmaceutical chemists use molecular orbital theory to design drugs that bind to specific protein targets. The HOMO-LUMO gap determines reactivity, while orbital shapes predict which drug conformations will interact with disease targets.',
+    connection: 'The game showed how atomic orbitals combine into bonding and antibonding molecular orbitals. Drug design uses this - matching drug frontier orbitals to target protein binding sites enables selective, effective medications.',
+    howItWorks: 'Computational chemistry calculates molecular orbital energies and shapes. Drug HOMO must match target LUMO for electron donation (or vice versa). Orbital overlap determines binding strength. Thousands of candidates screened computationally.',
+    stats: [
+      { value: '$1.5T', label: 'Global pharma market', icon: '💰' },
+      { value: '10-15yrs', label: 'Drug development time', icon: '⏱️' },
+      { value: '90%', label: 'Of drugs designed with MO theory', icon: '📊' }
+    ],
+    examples: ['Cancer targeted therapies', 'Antiviral medications', 'Enzyme inhibitors', 'Receptor blockers'],
+    companies: ['Pfizer', 'Roche', 'Merck', 'Novartis'],
+    futureImpact: 'AI-driven molecular orbital optimization will design drugs in days instead of years, revolutionizing personalized medicine.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '💡',
+    title: 'LED & OLED Displays',
+    short: 'Engineered band gaps for light emission',
+    tagline: 'Color from quantum mechanics',
+    description: 'LEDs and OLED displays emit specific colors based on the HOMO-LUMO gap of their semiconductor or organic materials. Engineers tune molecular structure to achieve exact energy gaps for red, green, and blue emission.',
+    connection: 'The game demonstrated how orbital energy levels determine electronic properties. In LEDs, electrons dropping from LUMO to HOMO release photons with energy equal to the band gap - direct application of MO theory.',
+    howItWorks: 'Electrons excited to LUMO level by electric current. Electron-hole recombination emits photon. Photon energy = HOMO-LUMO gap = light color. Material engineering tunes gap for desired wavelength. Quantum dots enable precise color control.',
+    stats: [
+      { value: '3.1eV', label: 'Blue LED gap', icon: '💙' },
+      { value: '100M', label: 'OLED TVs sold yearly', icon: '📺' },
+      { value: '$150B', label: 'Display market', icon: '📈' }
+    ],
+    examples: ['iPhone OLED screens', 'Samsung QLED TVs', 'LED light bulbs', 'Car displays'],
+    companies: ['Samsung Display', 'LG Display', 'BOE', 'Universal Display'],
+    futureImpact: 'Perovskite quantum dots will enable ultra-wide color gamut displays with perfect color accuracy.',
+    color: '#22c55e'
+  },
+  {
+    icon: '☀️',
+    title: 'Solar Cell Engineering',
+    short: 'Harvesting photons with band gap tuning',
+    tagline: 'Converting sunlight to electricity, one orbital at a time',
+    description: 'Solar cells convert light to electricity by absorbing photons that promote electrons from HOMO to LUMO (valence to conduction band). The band gap determines which wavelengths are absorbed - too small wastes energy as heat, too large misses photons.',
+    connection: 'MO theory explains why silicon absorbs infrared but not UV efficiently. The HOMO-LUMO gap of 1.1eV matches well with solar spectrum. Multi-junction cells use different materials to capture different parts of the spectrum.',
+    howItWorks: 'Photon with energy > band gap excites electron to LUMO. Electric field separates electron-hole pair. Electrons flow through external circuit. Optimal gap (~1.4eV) maximizes efficiency. Tandem cells stack different gaps.',
+    stats: [
+      { value: '1.1eV', label: 'Silicon band gap', icon: '⚡' },
+      { value: '47%', label: 'Record cell efficiency', icon: '📊' },
+      { value: '$200B', label: 'Solar market', icon: '📈' }
+    ],
+    examples: ['Rooftop panels', 'Solar farms', 'Perovskite cells', 'Space solar arrays'],
+    companies: ['First Solar', 'LONGi', 'JinkoSolar', 'SunPower'],
+    futureImpact: 'Tandem perovskite-silicon cells will achieve 35% efficiency at half the cost of current panels.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🧲',
+    title: 'MRI Contrast Agents',
+    short: 'Paramagnetism from unpaired electrons',
+    tagline: 'Molecular orbitals make tumors visible',
+    description: 'MRI contrast agents like gadolinium compounds exploit unpaired electrons in molecular orbitals to enhance image contrast. The paramagnetic effect from unfilled orbitals alters local magnetic fields, making tissues containing the agent appear brighter.',
+    connection: 'The game showed how orbital filling determines magnetism - O2 is paramagnetic because of unpaired electrons in antibonding orbitals. MRI contrast agents are designed with specific orbital configurations for maximum paramagnetic effect.',
+    howItWorks: 'Gadolinium has 7 unpaired f-electrons. Unpaired electrons create local magnetic field fluctuations. Water protons near agent relax faster. Faster relaxation = brighter MRI signal. Chelation makes gadolinium safe for injection.',
+    stats: [
+      { value: '7', label: 'Gd unpaired electrons', icon: '🧲' },
+      { value: '40M', label: 'MRI scans with contrast/year', icon: '🏥' },
+      { value: '$5B', label: 'MRI contrast market', icon: '📈' }
+    ],
+    examples: ['Tumor detection', 'Brain angiography', 'Cardiac imaging', 'Liver lesions'],
+    companies: ['Bayer', 'GE Healthcare', 'Bracco', 'Guerbet'],
+    futureImpact: 'Iron-based contrast agents from MO-designed molecules will provide safer alternatives to gadolinium for kidney patients.',
+    color: '#3b82f6'
+  }
+];
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

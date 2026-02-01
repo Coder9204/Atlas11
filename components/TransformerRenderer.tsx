@@ -51,6 +51,81 @@ const PHASES: Phase[] = [
   'transfer', 'test', 'mastery'
 ];
 
+const realWorldApps = [
+  {
+    icon: '⚡',
+    title: 'Power Grid Distribution',
+    short: 'Delivering electricity across continents',
+    tagline: 'The backbone of modern civilization',
+    description: 'Transformers step voltage up to 400kV+ for long-distance transmission, then down through substations to 120/240V for homes. This system loses only 5% of energy over thousands of miles.',
+    connection: 'The turns ratio determines voltage change: V2/V1 = N2/N1. Power companies use this to minimize I^2*R losses by transmitting at high voltage, low current.',
+    howItWorks: 'Step-up transformers at power plants increase voltage 20x. High-voltage lines carry power with minimal current. Substations step down progressively until pole transformers deliver home voltage.',
+    stats: [
+      { value: '400kV', label: 'Transmission voltage', icon: '⚡' },
+      { value: '5%', label: 'Grid power loss', icon: '📉' },
+      { value: '$65B', label: 'US transformer market', icon: '💰' }
+    ],
+    examples: ['Grid substations', 'Pole transformers', 'Industrial power', 'HVDC converters'],
+    companies: ['ABB', 'Siemens', 'GE', 'Hitachi Energy'],
+    futureImpact: 'Smart transformers with solid-state power electronics will enable bidirectional flow for renewable integration.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '📱',
+    title: 'Device Chargers',
+    short: 'Safely powering your electronics',
+    tagline: 'From wall outlet to USB',
+    description: 'Your phone charger contains a transformer or switching circuit that converts 120/240V AC to the 5-20V DC your devices need. Poor chargers can overheat or damage devices.',
+    connection: 'The charger steps down voltage using the turns ratio, then rectifies AC to DC. USB-C PD chargers negotiate voltage with your device for optimal charging.',
+    howItWorks: 'Switch-mode power supplies use high-frequency transformers that are much smaller than 60Hz versions. Feedback circuits regulate output voltage precisely.',
+    stats: [
+      { value: '5-240W', label: 'Charger power range', icon: '🔌' },
+      { value: '90%+', label: 'Modern charger efficiency', icon: '📈' },
+      { value: '100kHz+', label: 'Switching frequency', icon: '📊' }
+    ],
+    examples: ['Phone chargers', 'Laptop adapters', 'USB-C PD', 'Wireless chargers'],
+    companies: ['Anker', 'Apple', 'Belkin', 'Samsung'],
+    futureImpact: 'GaN transistors are enabling chargers half the size with better efficiency.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔧',
+    title: 'Welding Equipment',
+    short: 'High current for melting metal',
+    tagline: 'Voltage down, current up',
+    description: 'Arc welders step down voltage to 20-40V while boosting current to 100-400A. The transformer inverts the power relationship, trading voltage for the current needed to melt steel.',
+    connection: 'Conservation of power means V1*I1 = V2*I2. Stepping down voltage 6x multiplies current 6x, generating intense heat at the welding arc.',
+    howItWorks: 'Heavy copper windings with few turns on the secondary carry massive current. Adjustable taps change the turns ratio for different welding settings. Modern inverter welders use high-frequency switching.',
+    stats: [
+      { value: '400A', label: 'Max welding current', icon: '⚡' },
+      { value: '6000C', label: 'Arc temperature', icon: '🔥' },
+      { value: '85%', label: 'Energy to heat', icon: '📊' }
+    ],
+    examples: ['Stick welding', 'MIG/MAG', 'TIG welding', 'Spot welding'],
+    companies: ['Lincoln Electric', 'Miller', 'ESAB', 'Fronius'],
+    futureImpact: 'AI-controlled welders will automatically adjust current based on real-time joint analysis.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🎸',
+    title: 'Audio Equipment',
+    short: 'Powering sound with isolation',
+    tagline: 'Clean power for pure audio',
+    description: 'High-end audio uses transformers for power supply isolation and impedance matching. Tube amplifiers use output transformers to match high-impedance tubes to low-impedance speakers.',
+    connection: 'Audio transformers block DC and common-mode noise while coupling the AC audio signal. Impedance transformation enables efficient power transfer.',
+    howItWorks: 'Isolation transformers prevent ground loops that cause hum. Balanced audio uses transformers to reject interference. Output transformers in tube amps convert high-voltage/low-current to low-voltage/high-current for speakers.',
+    stats: [
+      { value: '600ohm', label: 'Pro audio impedance', icon: '🎤' },
+      { value: '8ohm', label: 'Speaker impedance', icon: '🔊' },
+      { value: '20Hz-20kHz', label: 'Audio bandwidth', icon: '🎵' }
+    ],
+    examples: ['Tube amplifiers', 'DI boxes', 'Microphone preamps', 'Isolation transformers'],
+    companies: ['Jensen', 'Lundahl', 'Cinemag', 'Marshall'],
+    futureImpact: 'Toroidal transformers with exotic core materials continue improving audio quality.',
+    color: '#8B5CF6'
+  }
+];
+
 const TEST_QUESTIONS = [
   {
     question: 'What determines the voltage ratio in a transformer?',

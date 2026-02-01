@@ -23,6 +23,81 @@ interface BoilingPressureRendererProps {
   onPhaseComplete?: (phase: Phase) => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🍳',
+    title: 'Pressure Cookers',
+    short: 'Faster cooking through pressure',
+    tagline: 'Raising boiling point to speed up cooking',
+    description: 'Pressure cookers trap steam to increase internal pressure, raising water\'s boiling point from 100°C to 120°C. This higher temperature dramatically speeds up cooking by accelerating chemical reactions.',
+    connection: 'At 2 atmospheres of pressure, water boils at 120°C instead of 100°C. The extra 20°C increases reaction rates by roughly 4x, cutting cooking times by 70% or more.',
+    howItWorks: 'A sealed pot with a pressure-regulated valve maintains 15 psi above atmospheric. The higher pressure prevents water from boiling until it reaches a higher temperature, cooking food faster.',
+    stats: [
+      { value: '120°C', label: 'Max water temp', icon: '🌡️' },
+      { value: '70%', label: 'Time savings', icon: '⏱️' },
+      { value: '2 atm', label: 'Operating pressure', icon: '📊' }
+    ],
+    examples: ['Instant Pot', 'Stovetop pressure cookers', 'Industrial canners', 'Hospital sterilizers'],
+    companies: ['Instant Brands', 'T-fal', 'Presto', 'All American'],
+    futureImpact: 'Smart pressure cookers with precise pressure and temperature control are revolutionizing home cooking, enabling restaurant-quality results with minimal effort.',
+    color: '#EF4444'
+  },
+  {
+    icon: '⛰️',
+    title: 'High-Altitude Cooking',
+    short: 'Adapting recipes for elevation',
+    tagline: 'Lower pressure means lower boiling points',
+    description: 'At high altitudes, reduced atmospheric pressure lowers water\'s boiling point. In Denver (5,280 ft), water boils at 95°C; at Everest base camp, only 70°C. This requires adjusted cooking times and techniques.',
+    connection: 'Vapor pressure equals atmospheric pressure at boiling. Lower atmospheric pressure means vapor pressure is reached at lower temperatures. Boiling water is cooler at altitude.',
+    howItWorks: 'At 10,000 feet, water boils at about 90°C. Pasta and rice take longer because the water isn\'t as hot. Baking also changes due to faster evaporation and different leavening behavior.',
+    stats: [
+      { value: '1°C/300m', label: 'Boiling point drop', icon: '📉' },
+      { value: '25%', label: 'Longer cook times', icon: '⏱️' },
+      { value: '6000+', label: 'High-altitude recipes', icon: '📚' }
+    ],
+    examples: ['Mountain resort cooking', 'Airline meal preparation', 'Expedition food planning', 'Denver bakeries'],
+    companies: ['King Arthur Flour', 'Ball Canning', 'Cuisinart', 'Lodge'],
+    futureImpact: 'Altitude-adjusting smart cookers automatically compensate for elevation, making high-altitude cooking foolproof for residents and travelers alike.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🧪',
+    title: 'Vacuum Distillation',
+    short: 'Low-temperature purification',
+    tagline: 'Distilling heat-sensitive compounds',
+    description: 'Vacuum distillation lowers pressure to reduce boiling points, allowing purification of heat-sensitive compounds like pharmaceuticals and essential oils without thermal degradation.',
+    connection: 'By reducing pressure to 0.01 atm, a compound with a normal boiling point of 200°C might boil at only 80°C. This allows separation without destroying delicate molecules.',
+    howItWorks: 'A vacuum pump removes air, lowering pressure in the distillation vessel. Compounds boil at lower temperatures proportional to the pressure reduction, following the Clausius-Clapeyron equation.',
+    stats: [
+      { value: '0.01 atm', label: 'Typical vacuum', icon: '📉' },
+      { value: '100°C+', label: 'Temp reduction', icon: '🌡️' },
+      { value: '$50B', label: 'Pharma market use', icon: '💰' }
+    ],
+    examples: ['Pharmaceutical purification', 'Essential oil extraction', 'Crude oil refining', 'Chemical synthesis'],
+    companies: ['Pfizer', 'BASF', 'Dow Chemical', 'ExxonMobil'],
+    futureImpact: 'Advanced vacuum systems with precise pressure control enable new purification techniques for biologics and nanomaterials that were previously impossible.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🌋',
+    title: 'Geothermal Power & Geysers',
+    short: 'Earth\'s pressure-heat systems',
+    tagline: 'Superheated water under pressure',
+    description: 'Deep underground, water remains liquid above 100°C due to high pressure from rock above. When this superheated water reaches lower pressure at the surface, it explosively boils, powering geysers and geothermal plants.',
+    connection: 'At 200m depth, pressure is about 20 atm, allowing water to reach 200°C while remaining liquid. When pressure drops as water rises, it flash-boils violently.',
+    howItWorks: 'Geothermal wells tap superheated water reservoirs. As water rises and pressure drops, it partially flashes to steam. This steam drives turbines to generate electricity.',
+    stats: [
+      { value: '200°C+', label: 'Reservoir temp', icon: '🔥' },
+      { value: '15 GW', label: 'Global capacity', icon: '⚡' },
+      { value: '90%', label: 'Capacity factor', icon: '📊' }
+    ],
+    examples: ['Yellowstone geysers', 'Iceland geothermal', 'The Geysers (CA)', 'New Zealand power'],
+    companies: ['Ormat', 'Calpine', 'Enel Green Power', 'Chevron'],
+    futureImpact: 'Enhanced geothermal systems (EGS) could provide baseload renewable power anywhere by creating artificial underground heat exchangers.',
+    color: '#F59E0B'
+  }
+];
+
 const TEST_QUESTIONS = [
   {
     question: 'Why does water boil at a lower temperature on Mount Everest?',

@@ -80,6 +80,81 @@ interface Props {
   onPhaseComplete?: (phase: string) => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🔋',
+    title: 'Battery Technology',
+    short: 'Storing electrical energy',
+    tagline: 'Voltage difference drives current',
+    description: 'Batteries create a potential difference (voltage) between terminals through electrochemical reactions. This voltage represents the energy available per unit charge to do electrical work.',
+    connection: 'Battery voltage is the potential difference V = W/q between terminals. A 12V battery provides 12 joules of energy per coulomb of charge. Higher voltage means more energy per electron.',
+    howItWorks: 'Chemical reactions at electrodes create charge separation. Lithium ions moving from anode to cathode through electrolyte create potential difference. Connecting a load allows current to flow.',
+    stats: [
+      { value: '3.7V', label: 'Li-ion cell voltage', icon: '🔋' },
+      { value: '250 Wh/kg', label: 'Energy density', icon: '⚡' },
+      { value: '1000+', label: 'Charge cycles', icon: '🔄' }
+    ],
+    examples: ['Phone batteries', 'EV battery packs', 'Grid storage', 'Laptop batteries'],
+    companies: ['CATL', 'LG Energy', 'Panasonic', 'Samsung SDI'],
+    futureImpact: 'Solid-state batteries and new chemistries promise higher voltage cells, greater energy density, and faster charging for next-generation EVs and devices.',
+    color: '#10B981'
+  },
+  {
+    icon: '💓',
+    title: 'Electrocardiography (ECG)',
+    short: 'Heart electrical monitoring',
+    tagline: 'Mapping cardiac potentials',
+    description: 'ECG machines measure potential differences across the heart as it beats. The changing voltage patterns reveal heart rhythm, conduction pathways, and potential problems.',
+    connection: 'Heart muscle cells create potential differences during depolarization and repolarization. ECG electrodes measure these millivolt-level potentials at different points on the body surface.',
+    howItWorks: 'Ion channels opening create potential waves that spread across the heart. Skin electrodes detect these potentials. The ECG displays voltage vs time, with distinct P, QRS, and T waves.',
+    stats: [
+      { value: '1 mV', label: 'QRS amplitude', icon: '📊' },
+      { value: '12', label: 'Standard leads', icon: '📍' },
+      { value: '60-100', label: 'Normal heart rate', icon: '💓' }
+    ],
+    examples: ['Hospital monitors', 'Smartwatches', 'Stress tests', 'Holter monitors'],
+    companies: ['Philips', 'GE Healthcare', 'Apple', 'Medtronic'],
+    futureImpact: 'AI-powered ECG analysis can detect subtle patterns indicating disease risk years before symptoms appear, enabling preventive intervention.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🧠',
+    title: 'Neural Signal Recording',
+    short: 'Brain-computer interfaces',
+    tagline: 'Reading thoughts through potentials',
+    description: 'Brain-computer interfaces measure the tiny voltage changes from neuron activity. Arrays of electrodes map potential across brain regions, enabling control of prosthetics and computers.',
+    connection: 'Neurons create action potentials (~100mV) as ions flow through channels. Extracellular electrodes detect the superposition of many neurons. Processing reveals neural intent.',
+    howItWorks: 'Microelectrode arrays implanted in motor cortex detect potential changes when thinking about movement. Algorithms decode neural patterns into control signals for robotic arms or cursors.',
+    stats: [
+      { value: '100 μV', label: 'Signal amplitude', icon: '📊' },
+      { value: '1000+', label: 'Electrode channels', icon: '🔌' },
+      { value: '90%+', label: 'Decoding accuracy', icon: '🎯' }
+    ],
+    examples: ['Neuralink', 'Utah arrays', 'EEG headsets', 'Cochlear implants'],
+    companies: ['Neuralink', 'Blackrock Neurotech', 'Synchron', 'Paradromics'],
+    futureImpact: 'Higher-density electrode arrays and better algorithms may restore natural movement and even enable direct brain-to-brain communication.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '⚡',
+    title: 'Capacitor Energy Storage',
+    short: 'Instant power delivery',
+    tagline: 'Storing charge at high potential',
+    description: 'Capacitors store energy by maintaining charge separation at a potential difference. Energy stored is E = ½CV², making high voltage critical for energy density.',
+    connection: 'A capacitor stores energy proportional to voltage squared. Doubling voltage quadruples stored energy. Supercapacitors use large surface area to achieve high capacitance at moderate voltage.',
+    howItWorks: 'Charge accumulates on separated conductive plates. The potential difference V = Q/C determines stored energy. Dielectric material between plates increases capacitance and breakdown voltage.',
+    stats: [
+      { value: '3000 F', label: 'Supercap capacitance', icon: '⚡' },
+      { value: '5 Wh/kg', label: 'Energy density', icon: '🔋' },
+      { value: '1M cycles', label: 'Cycle life', icon: '🔄' }
+    ],
+    examples: ['Camera flash', 'Regenerative braking', 'Grid stabilization', 'Backup power'],
+    companies: ['Maxwell', 'Skeleton', 'Panasonic', 'KEMET'],
+    futureImpact: 'Hybrid battery-supercapacitor systems combine the energy density of batteries with the power density and cycle life of capacitors.',
+    color: '#F59E0B'
+  }
+];
+
 const ElectricPotentialRenderer: React.FC<Props> = ({
   onGameEvent,
   onPhaseComplete

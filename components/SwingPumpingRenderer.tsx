@@ -7,6 +7,81 @@ interface SwingPumpingRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🔬',
+    title: 'Parametric Amplifiers',
+    short: 'Amplifying signals by pumping parameters',
+    tagline: 'When changing conditions creates gain',
+    description: 'Parametric amplifiers boost weak signals by periodically varying a circuit parameter like capacitance. The same physics that pumps a swing high applies to amplifying radio and quantum signals.',
+    connection: 'Just as pumping a swing at twice its natural frequency adds energy, parametric amplifiers pump a circuit parameter at twice the signal frequency to achieve gain.',
+    howItWorks: 'A varactor diode\'s capacitance is modulated by a pump signal at 2f. Energy transfers from pump to signal. In quantum systems, Josephson junctions provide parametric amplification near the quantum limit.',
+    stats: [
+      { value: '20dB', label: 'Typical gain', icon: '📈' },
+      { value: '0.5K', label: 'Quantum noise temp', icon: '❄️' },
+      { value: '10GHz', label: 'Operating frequency', icon: '📡' }
+    ],
+    examples: ['Radio telescopes', 'Quantum computing', 'Radar receivers', 'Satellite communications'],
+    companies: ['Low Noise Factory', 'Quantum Microwave', 'CalTech', 'IBM Quantum'],
+    futureImpact: 'Quantum-limited parametric amplifiers will enable the readout of millions of qubits needed for practical quantum computers.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🛸',
+    title: 'Space Tethers',
+    short: 'Orbital maneuvers through momentum transfer',
+    tagline: 'Climbing to orbit on a rope',
+    description: 'Space tethers can change spacecraft orbits by exchanging momentum, similar to how a swinging person transfers energy. Electrodynamic tethers interact with Earth\'s magnetic field for propulsion.',
+    connection: 'A rotating tether system acts like a giant swing. Timing the release of a payload at the right phase can boost or lower orbits, applying parametric resonance principles to orbital mechanics.',
+    howItWorks: 'Rotating tethers spin to create centrifugal force. Payloads attach at one end, released at the top of rotation for a velocity boost. Electrodynamic tethers push against the magnetic field using induced current.',
+    stats: [
+      { value: '10km', label: 'Typical tether length', icon: '📏' },
+      { value: '1km/s', label: 'Delta-V possible', icon: '🚀' },
+      { value: '90%', label: 'Fuel savings potential', icon: '⛽' }
+    ],
+    examples: ['Orbital debris removal', 'Moon cargo delivery', 'Deorbit systems', 'Inter-orbital transfer'],
+    companies: ['Tethers Unlimited', 'NASA', 'ESA', 'JAXA'],
+    futureImpact: 'Spinning tether systems could dramatically reduce the cost of reaching orbit and enable affordable Mars missions by eliminating most chemical propellant.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '⚡',
+    title: 'MEMS Oscillators',
+    short: 'Timing devices through mechanical resonance',
+    tagline: 'Microscopic pendulums keeping time',
+    description: 'MEMS oscillators use tiny mechanical structures vibrating at precise frequencies for timing in electronics. Parametric excitation helps maintain these oscillations with minimal power.',
+    connection: 'MEMS resonators behave like miniature pendulums or swings. Parametric pumping at twice the resonant frequency sustains oscillation while filtering out noise at other frequencies.',
+    howItWorks: 'Silicon microstructures resonate at MHz frequencies. Electrostatic actuation drives motion. Parametric excitation modulates spring constant. Phase-locked loops maintain frequency accuracy.',
+    stats: [
+      { value: '32kHz-100MHz', label: 'Frequency range', icon: '🎵' },
+      { value: '1ppm', label: 'Frequency accuracy', icon: '🎯' },
+      { value: '1uW', label: 'Power consumption', icon: '🔋' }
+    ],
+    examples: ['Smartphone timing', 'IoT sensors', 'Wearable devices', 'Automotive electronics'],
+    companies: ['SiTime', 'Analog Devices', 'Microchip', 'Murata'],
+    futureImpact: 'Parametrically pumped MEMS will enable atomic-clock-like accuracy in consumer devices, revolutionizing GPS, 5G timing, and distributed systems.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🌊',
+    title: 'Wave Energy Converters',
+    short: 'Harvesting ocean energy through resonance',
+    tagline: 'Riding the waves for power',
+    description: 'Wave energy devices use parametric resonance to efficiently extract power from ocean waves. Tuning the device to resonate with wave frequencies maximizes energy capture.',
+    connection: 'Like pumping a swing in time with its motion, wave energy converters tune their natural frequency to match dominant wave periods. Parametric resonance can amplify the response.',
+    howItWorks: 'Floating buoys or oscillating water columns resonate with wave periods. Power take-off systems convert mechanical motion to electricity. Active tuning adjusts to changing sea states.',
+    stats: [
+      { value: '2TW', label: 'Global wave power', icon: '🌊' },
+      { value: '30%', label: 'Capture efficiency', icon: '📊' },
+      { value: '100kW', label: 'Per device output', icon: '⚡' }
+    ],
+    examples: ['Pelamis wave farm', 'Oscillating buoys', 'Overtopping devices', 'Oscillating water columns'],
+    companies: ['Ocean Power Technologies', 'Wello', 'CorPower', 'Carnegie Clean Energy'],
+    futureImpact: 'Parametrically tuned wave farms will provide reliable baseload renewable energy to coastal communities, complementing wind and solar.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

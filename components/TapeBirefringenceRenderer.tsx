@@ -7,6 +7,81 @@ interface TapeBirefringenceRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '📺',
+    title: 'LCD Displays',
+    short: 'Controlling light with liquid crystals',
+    tagline: 'Every pixel is a polarization switch',
+    description: 'LCD screens use liquid crystal layers that rotate polarization based on applied voltage. Combined with polarizing filters, this controls which pixels are bright or dark, creating images.',
+    connection: 'LCD panels are sophisticated birefringent systems. Liquid crystals act like adjustable waveplates, rotating light polarization by controlled amounts. The same physics as tape between polarizers, but voltage-controlled.',
+    howItWorks: 'Light enters through a polarizer, passes through liquid crystal layer, then exit polarizer. Voltage changes crystal orientation, altering polarization rotation. Color filters create RGB subpixels.',
+    stats: [
+      { value: '8K', label: 'Resolution (33M pixels)', icon: '📊' },
+      { value: '1ms', label: 'Response time', icon: '⚡' },
+      { value: '1000:1', label: 'Contrast ratio', icon: '🌓' }
+    ],
+    examples: ['Smartphones', 'Computer monitors', 'Televisions', 'Digital signage'],
+    companies: ['Samsung', 'LG Display', 'BOE', 'AU Optronics'],
+    futureImpact: 'Mini-LED and micro-LED backlights will provide perfect blacks and HDR, while new LC materials enable faster switching for VR displays.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🔬',
+    title: 'Stress Analysis',
+    short: 'Visualizing mechanical stress through colors',
+    tagline: 'See stress before things break',
+    description: 'Photoelastic stress analysis uses birefringence to visualize stress distributions in transparent materials. Engineers use this to identify stress concentrations before failures occur.',
+    connection: 'Mechanical stress induces birefringence in plastics. Polarized light reveals the stress field as color patterns. Higher stress creates more birefringence and different colors - exactly like stacking tape layers.',
+    howItWorks: 'Models are made from photoelastic plastic and loaded in a polariscope. Isochromatic fringes (color bands) show stress magnitude. Isoclinic lines show stress direction. Full-field visualization reveals weak points.',
+    stats: [
+      { value: '1MPa', label: 'Stress resolution', icon: '📊' },
+      { value: '100+yr', label: 'Technology history', icon: '📅' },
+      { value: '10x', label: 'Faster than simulation', icon: '⚡' }
+    ],
+    examples: ['Dental implant design', 'Aircraft components', 'Consumer product testing', 'Civil engineering'],
+    companies: ['Vishay Measurements', 'Instron', 'Dantec Dynamics', 'Various universities'],
+    futureImpact: 'Digital photoelasticity with high-speed cameras will enable real-time stress visualization during dynamic loading and impact events.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🎬',
+    title: '3D Cinema',
+    short: 'Polarized glasses for depth perception',
+    tagline: 'Two views make three dimensions',
+    description: '3D movies use polarization to deliver different images to each eye. Special screens preserve polarization while reflecting light to audience wearing polarized glasses.',
+    connection: 'Each eye receives light with different polarization state. Linear or circular polarization separates left and right views. The same polarization optics as birefringence experiments create the 3D illusion.',
+    howItWorks: 'Two projectors or alternating frames produce left/right images with orthogonal polarizations. Silver screens preserve polarization. Glasses have matched polarizing filters for each eye.',
+    stats: [
+      { value: '144Hz', label: 'Refresh rate per eye', icon: '🔄' },
+      { value: '99%', label: 'Separation efficiency', icon: '🎯' },
+      { value: '$3B', label: '3D cinema revenue', icon: '💰' }
+    ],
+    examples: ['RealD 3D', 'IMAX 3D', '3D theme park rides', 'VR headsets'],
+    companies: ['RealD', 'IMAX', 'Dolby', 'Sony'],
+    futureImpact: 'Glasses-free 3D displays using lenticular or directional backlighting will eliminate the need for polarized glasses in future entertainment.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '💎',
+    title: 'Mineralogy & Gemology',
+    short: 'Identifying crystals by optical properties',
+    tagline: 'Every mineral has a signature',
+    description: 'Geologists identify minerals using polarized light microscopy. Each mineral has characteristic birefringence, interference colors, and extinction angles that uniquely identify it.',
+    connection: 'Mineral crystals are naturally birefringent due to their atomic structure. Between crossed polarizers, thin sections show interference colors determined by birefringence and thickness - the same physics as tape layers.',
+    howItWorks: 'Thin rock sections (30 microns) are examined between crossed polarizers. Birefringent minerals show colors from Michel-Levy chart. Rotation reveals extinction angles. Conoscopic patterns show optical axis orientation.',
+    stats: [
+      { value: '0.009', label: 'Quartz birefringence', icon: '💎' },
+      { value: '1000+', label: 'Identifiable minerals', icon: '🔬' },
+      { value: '100x', label: 'Typical magnification', icon: '🔍' }
+    ],
+    examples: ['Petrography', 'Gem identification', 'Ore microscopy', 'Forensic geology'],
+    companies: ['Zeiss', 'Leica', 'Olympus', 'Nikon'],
+    futureImpact: 'AI-assisted mineral identification will automatically classify thin sections, accelerating geological surveys and mineral exploration.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

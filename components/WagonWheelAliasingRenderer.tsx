@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🎬',
+    title: 'Film & Video Production',
+    short: 'Creating smooth motion in cinema',
+    tagline: 'Making movies move naturally',
+    description: 'Film cameras capture 24 frames per second, which can create aliasing artifacts when filming rotating objects. Directors and cinematographers must carefully control shutter angles and frame rates to achieve the desired motion blur and avoid the wagon wheel effect in car chases and action sequences.',
+    connection: 'The wagon wheel effect demonstrates temporal aliasing - when the sampling rate (frame rate) is insufficient to capture the true motion of periodic objects. Understanding this helps filmmakers choose appropriate frame rates and shutter speeds.',
+    howItWorks: 'When a wheel rotates at a frequency close to the frame rate, each frame captures the spokes in nearly the same position, creating the illusion of slow or reversed motion. Motion blur from longer exposures can help mask this effect.',
+    stats: [
+      { value: '24fps', label: 'Standard cinema rate', icon: '🎥' },
+      { value: '$95B', label: 'Global film market', icon: '📈' },
+      { value: '180°', label: 'Standard shutter angle', icon: '🔄' }
+    ],
+    examples: ['Car commercial filming', 'Western movie stagecoaches', 'Helicopter rotor footage', 'Music video production'],
+    companies: ['ARRI', 'RED Digital Cinema', 'Sony Pictures', 'Panavision'],
+    futureImpact: 'High frame rate (HFR) cinema at 48-120fps is reducing aliasing artifacts, with directors like Peter Jackson pioneering new visual storytelling techniques.',
+    color: '#E11D48'
+  },
+  {
+    icon: '🔬',
+    title: 'Stroboscopic Measurement',
+    short: 'Non-contact RPM measurement',
+    tagline: 'Freezing motion to measure speed',
+    description: 'Stroboscopes use the wagon wheel effect intentionally to measure rotation speeds without physical contact. By adjusting the strobe frequency until a rotating object appears stationary, technicians can precisely determine RPM for machinery maintenance and quality control.',
+    connection: 'When strobe frequency matches rotation frequency, the object appears frozen due to temporal aliasing. This deliberate application of the wagon wheel effect enables precise speed measurement.',
+    howItWorks: 'A stroboscope flashes light at adjustable frequencies. When the flash rate synchronizes with the rotation rate, each flash illuminates the object in the same position, making it appear stationary. The flash frequency then equals the rotation frequency.',
+    stats: [
+      { value: '500K+', label: 'Industrial units in use', icon: '⚡' },
+      { value: '±0.02%', label: 'Measurement accuracy', icon: '🎯' },
+      { value: '100K', label: 'Max RPM measurable', icon: '🚀' }
+    ],
+    examples: ['Turbine blade inspection', 'Motor speed verification', 'Printing press calibration', 'Vibration analysis'],
+    companies: ['Monarch Instruments', 'Shimpo', 'Checkline', 'FLIR Systems'],
+    futureImpact: 'Digital stroboscopes with automatic frequency matching and smartphone integration are making precision measurements accessible to smaller manufacturers.',
+    color: '#2563EB'
+  },
+  {
+    icon: '🎮',
+    title: 'Video Game Graphics',
+    short: 'Rendering realistic motion',
+    tagline: 'Smooth gameplay at any frame rate',
+    description: 'Game engines must handle temporal aliasing when rendering rotating objects like wheels and propellers. Modern games implement motion blur, temporal anti-aliasing, and variable refresh rates to create smooth visuals regardless of frame rate.',
+    connection: 'Games render discrete frames just like cameras capture them. Fast-rotating objects can exhibit the same wagon wheel aliasing, requiring special rendering techniques to maintain visual fidelity.',
+    howItWorks: 'Game engines accumulate motion information across frames and apply motion blur based on velocity vectors. Temporal anti-aliasing (TAA) blends frames together, and adaptive sync technologies match display refresh to frame rate.',
+    stats: [
+      { value: '144Hz', label: 'Gaming monitor refresh', icon: '🖥️' },
+      { value: '$180B', label: 'Gaming market size', icon: '📈' },
+      { value: '60fps', label: 'Console standard', icon: '🎯' }
+    ],
+    examples: ['Racing game tire rendering', 'Flight simulator propellers', 'Spinning weapon effects', 'Vehicle combat games'],
+    companies: ['Epic Games', 'Unity', 'NVIDIA', 'AMD'],
+    futureImpact: 'Ray-traced motion blur and AI-powered frame interpolation will virtually eliminate temporal aliasing in next-generation gaming.',
+    color: '#7C3AED'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Safety Monitoring',
+    short: 'Preventing machinery accidents',
+    tagline: 'Seeing the invisible dangers',
+    description: 'Security cameras and safety systems monitoring rotating machinery must account for aliasing effects. A fan or blade appearing stationary due to camera frame rate synchronization could mask dangerous rotation, requiring careful camera selection and configuration.',
+    connection: 'Safety systems relying on visual monitoring can be deceived by the wagon wheel effect. Understanding aliasing is critical for designing reliable machine guarding and lockout/tagout verification systems.',
+    howItWorks: 'Industrial cameras use randomized shutter timing, multiple frame rates, or continuous sensors to avoid false readings. Some systems add detection algorithms that identify aliasing patterns.',
+    stats: [
+      { value: '2.3M', label: 'Workplace injuries/year', icon: '⚠️' },
+      { value: '$170B', label: 'Injury costs annually', icon: '💰' },
+      { value: '98%', label: 'Preventable accidents', icon: '🛡️' }
+    ],
+    examples: ['Fan blade monitoring', 'Turbine safety systems', 'Conveyor inspection', 'Lockout verification cameras'],
+    companies: ['Honeywell', 'Siemens', 'Rockwell Automation', 'ABB'],
+    futureImpact: 'AI-powered computer vision systems are learning to detect and compensate for aliasing artifacts, making automated safety monitoring more reliable.',
+    color: '#DC2626'
+  }
+];
+
 interface WagonWheelAliasingRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

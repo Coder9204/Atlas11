@@ -52,6 +52,81 @@ const PHASE_LABELS: Record<Phase, string> = {
   mastery: 'Mastery',
 };
 
+const realWorldApps = [
+  {
+    icon: '🏢',
+    title: 'Data Center Power Distribution',
+    short: 'Massive copper infrastructure',
+    tagline: 'Minimizing I²R losses at scale',
+    description: 'Data centers consume megawatts of power. Properly sized cables and bus bars minimize I²R losses, preventing millions of dollars in wasted electricity and avoiding dangerous heat buildup.',
+    connection: 'Power loss scales with I²R. Data centers use thick copper bus bars (low R) and higher voltages (lower I for same power) to minimize losses in their distribution systems.',
+    howItWorks: 'Power enters at medium voltage (15kV), steps down through transformers, and distributes via massive bus bars to PDUs. Each stage is sized to keep voltage drop under 2% and prevent overheating.',
+    stats: [
+      { value: '2-3%', label: 'Distribution losses', icon: '📉' },
+      { value: '500MW+', label: 'Large DC capacity', icon: '⚡' },
+      { value: '$10M/year', label: 'Loss cost savings', icon: '💰' }
+    ],
+    examples: ['Google data centers', 'AWS facilities', 'Meta campuses', 'Microsoft Azure'],
+    companies: ['Vertiv', 'Schneider Electric', 'Eaton', 'ABB'],
+    futureImpact: 'Superconducting power distribution and 48V direct-to-server power are emerging to eliminate I²R losses in next-generation data centers.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚡',
+    title: 'High-Voltage Transmission',
+    short: 'Moving power across continents',
+    tagline: 'Why we transmit at 500,000 volts',
+    description: 'Power transmission lines operate at extreme voltages (up to 765kV AC or 1100kV DC) to minimize I²R losses over long distances. Higher voltage means lower current for the same power.',
+    connection: 'For P = VI, doubling voltage halves current. Since losses are I²R, halving current reduces losses to 1/4. This is why transmission uses ultra-high voltages despite insulation challenges.',
+    howItWorks: 'Step-up transformers boost voltage at power plants. HVDC is even more efficient for long distances. Step-down transformers reduce voltage for distribution. Each stage sized for minimal loss.',
+    stats: [
+      { value: '765kV', label: 'Max AC transmission', icon: '⚡' },
+      { value: '1100kV', label: 'Max HVDC', icon: '🔌' },
+      { value: '3-5%', label: 'Transmission losses', icon: '📊' }
+    ],
+    examples: ['Cross-country grid ties', 'Offshore wind connections', 'Hydro power export', 'International interconnects'],
+    companies: ['Siemens Energy', 'Hitachi', 'GE Vernova', 'ABB'],
+    futureImpact: 'Superconducting transmission cables could eliminate losses entirely, enabling efficient global power grids that balance renewable generation across continents.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🔋',
+    title: 'EV Charging Infrastructure',
+    short: 'Delivering 350kW to vehicles',
+    tagline: 'High-power charging demands thick cables',
+    description: 'DC fast chargers deliver up to 350kW to electric vehicles. The cables from grid to car must handle massive currents while staying cool enough to touch - demanding careful sizing.',
+    connection: 'At 350kW and 400V, current exceeds 875A. Cable resistance causes I²R heating. Liquid-cooled cables allow higher currents in smaller packages by actively removing heat.',
+    howItWorks: 'Grid power is rectified to DC, voltage matched to battery. Liquid-cooled cables carry high current to the vehicle. The CCS connector handles up to 500A continuous with active cooling.',
+    stats: [
+      { value: '350kW', label: 'Max charging power', icon: '⚡' },
+      { value: '500A', label: 'Peak current', icon: '🔌' },
+      { value: '15min', label: '10-80% charge time', icon: '⏱️' }
+    ],
+    examples: ['Tesla Superchargers', 'Electrify America', 'IONITY network', 'ChargePoint'],
+    companies: ['ABB', 'Tritium', 'ChargePoint', 'EVBox'],
+    futureImpact: 'Megawatt charging for trucks (3MW+) will require even more sophisticated cable and cooling systems, potentially including superconducting connectors.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Motor Feeds',
+    short: 'Powering heavy machinery',
+    tagline: 'Sizing cables for motors that move mountains',
+    description: 'Large industrial motors can draw thousands of amps. Properly sized cables ensure motors receive full voltage at startup (avoiding damaging voltage sag) and run efficiently under load.',
+    connection: 'Motor starting current can be 6-8x running current. Cables must handle this inrush without excessive voltage drop (which weakens starting torque) while dissipating steady-state I²R heat.',
+    howItWorks: 'NEC tables specify wire sizes for current capacity (ampacity) and voltage drop. Large motors often use paralleled conductors or bus duct. VFDs can reduce starting current requirements.',
+    stats: [
+      { value: '5000+ HP', label: 'Large motor size', icon: '🏭' },
+      { value: '6-8x', label: 'Starting current multiplier', icon: '⚡' },
+      { value: '3%', label: 'Max voltage drop', icon: '📉' }
+    ],
+    examples: ['Mining conveyors', 'Steel rolling mills', 'Water pumping stations', 'HVAC chillers'],
+    companies: ['Siemens', 'ABB', 'WEG', 'Nidec'],
+    futureImpact: 'Direct-drive permanent magnet motors and advanced VFDs are improving efficiency while reducing cable sizing requirements for new industrial installations.',
+    color: '#8B5CF6'
+  }
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 // 10-QUESTION TEST DATA
 // ────────────────────────────────────────────────────────────────────────────

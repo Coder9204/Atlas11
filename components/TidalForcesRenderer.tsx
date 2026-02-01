@@ -47,6 +47,81 @@ const PHASES: Phase[] = [
   'transfer', 'test', 'mastery'
 ];
 
+const realWorldApps = [
+  {
+    icon: '🌊',
+    title: 'Tidal Power Generation',
+    short: 'Harvesting energy from the Moon\'s pull',
+    tagline: 'Predictable renewable energy from space',
+    description: 'Tidal power plants harness the rise and fall of ocean tides to generate electricity. Unlike solar and wind, tidal energy is completely predictable centuries in advance, based on orbital mechanics.',
+    connection: 'Tidal forces from the Moon and Sun create the water level changes that drive turbines, converting gravitational potential energy to electricity.',
+    howItWorks: 'Tidal barrages trap water at high tide, releasing it through turbines at low tide. Tidal stream generators work like underwater wind turbines, capturing energy from tidal currents.',
+    stats: [
+      { value: '500MW', label: 'Largest tidal plant', icon: '⚡' },
+      { value: '100%', label: 'Predictability', icon: '📊' },
+      { value: '80%', label: 'Capacity factor possible', icon: '🔋' }
+    ],
+    examples: ['La Rance, France', 'Sihwa Lake, Korea', 'Bay of Fundy', 'Pentland Firth'],
+    companies: ['Simec Atlantis', 'Orbital Marine Power', 'Naval Group', 'DCNS'],
+    futureImpact: 'Floating tidal platforms will make tidal energy accessible in deep water sites worldwide.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌙',
+    title: 'Tidal Locking of Moons',
+    short: 'Why we only see one face of the Moon',
+    tagline: 'Gravity\'s grip on rotation',
+    description: 'The Moon always shows the same face to Earth because tidal forces have synchronized its rotation with its orbit. This same process affects moons throughout the solar system.',
+    connection: 'Tidal bulges create a torque that gradually slows rotation until the bulge points permanently toward the parent body.',
+    howItWorks: 'Tidal forces stretch the Moon along the Earth-Moon axis. If the Moon rotated faster than it orbited, friction would slow its spin until locked. Earth is slowly locking to the Moon too.',
+    stats: [
+      { value: '27.3d', label: 'Moon rotation = orbit', icon: '🔄' },
+      { value: '4.5B yr', label: 'Time to lock', icon: '⏰' },
+      { value: '3.8cm/yr', label: 'Moon receding rate', icon: '📏' }
+    ],
+    examples: ['Earth\'s Moon', 'Pluto-Charon', 'Jupiter\'s Galilean moons', 'Mars\'s Phobos'],
+    companies: ['NASA', 'ESA', 'JAXA', 'Space research institutes'],
+    futureImpact: 'In 50 billion years, Earth and Moon will be mutually tidally locked, with month-long days.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🌋',
+    title: 'Io\'s Volcanic Activity',
+    short: 'Tidal heating creates the most volcanic world',
+    tagline: 'Jupiter\'s crushing embrace',
+    description: 'Jupiter\'s moon Io is the most volcanically active body in the solar system, with over 400 active volcanoes. This activity comes not from radioactive decay but from tidal heating.',
+    connection: 'Jupiter\'s immense gravity and orbital resonances with other moons cause Io\'s orbit to be slightly elliptical, constantly flexing the moon and generating internal heat.',
+    howItWorks: 'As Io\'s distance from Jupiter changes, tidal forces stretch and squeeze it differently. This flexing creates friction that heats the interior to over 1000C, driving volcanism.',
+    stats: [
+      { value: '400+', label: 'Active volcanoes', icon: '🌋' },
+      { value: '100TW', label: 'Tidal heat output', icon: '🔥' },
+      { value: '500km', label: 'Lava plume heights', icon: '📈' }
+    ],
+    examples: ['Io', 'Europa (subsurface ocean)', 'Enceladus', 'Triton'],
+    companies: ['NASA Juno mission', 'ESA JUICE', 'Research universities', 'Planetary science'],
+    futureImpact: 'Europa\'s tidally heated subsurface ocean may harbor life, making it a prime astrobiology target.',
+    color: '#EF4444'
+  },
+  {
+    icon: '⚫',
+    title: 'Spaghettification Near Black Holes',
+    short: 'Extreme tidal forces that stretch matter',
+    tagline: 'Where gravity gradient becomes deadly',
+    description: 'Near a black hole, tidal forces become so extreme that they stretch objects into long thin strands - a process called spaghettification. This demonstrates tidal forces taken to their ultimate extreme.',
+    connection: 'The same 1/r^3 tidal force law applies, but black holes are so compact that the gradient becomes immense over small distances.',
+    howItWorks: 'Your feet would be pulled much harder than your head when falling into a black hole. For stellar-mass black holes, this stretching begins millions of kilometers away and quickly becomes fatal.',
+    stats: [
+      { value: '10^12g', label: 'Tidal acceleration', icon: '📐' },
+      { value: '10km', label: 'Stellar BH radius', icon: '⚫' },
+      { value: '0', label: 'Survival probability', icon: '💀' }
+    ],
+    examples: ['Stellar black holes', 'Supermassive black holes', 'Neutron star mergers', 'Tidal disruption events'],
+    companies: ['LIGO', 'Event Horizon Telescope', 'NASA Chandra', 'Research observatories'],
+    futureImpact: 'Observations of tidal disruption events reveal black hole masses and properties across the universe.',
+    color: '#1E293B'
+  }
+];
+
 const TEST_QUESTIONS = [
   {
     question: 'Why are there TWO tidal bulges on Earth, not just one toward the Moon?',

@@ -56,6 +56,81 @@ interface Props {
   onPhaseComplete?: (phase: string) => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🌉',
+    title: 'Bridge Resonance Disasters',
+    short: 'Why soldiers break step crossing bridges',
+    tagline: 'When rhythm becomes destruction',
+    description: 'The Tacoma Narrows Bridge collapse in 1940 and the Millennium Bridge wobble in 2000 demonstrate resonance catastrophe. When external forces match a structure\'s natural frequency, oscillations grow until failure.',
+    connection: 'Just as you saw amplitude peak when driving frequency matched natural frequency, wind vortices or synchronized footsteps can drive bridges at their resonant frequency, causing dangerous amplification.',
+    howItWorks: 'Structures have natural frequencies determined by mass and stiffness. When periodic forces (wind, footsteps) match these frequencies, energy accumulates with each cycle. Without damping, amplitude grows until structural limits are exceeded.',
+    stats: [
+      { value: '0.2 Hz', label: 'Typical bridge sway frequency', icon: '🌊' },
+      { value: '$28M', label: 'Millennium Bridge retrofit cost', icon: '💰' },
+      { value: '40 mph', label: 'Tacoma Narrows failure wind speed', icon: '💨' }
+    ],
+    examples: ['Tacoma Narrows collapse (1940)', 'Millennium Bridge wobble (2000)', 'Broughton Suspension Bridge (1831)', 'Wind-induced building sway'],
+    companies: ['Arup', 'AECOM', 'Thornton Tomasetti', 'Mott MacDonald'],
+    futureImpact: 'Smart damping systems with real-time frequency monitoring will automatically adjust to prevent resonance in next-generation structures.',
+    color: '#EF4444'
+  },
+  {
+    icon: '📻',
+    title: 'Radio Tuning & Filters',
+    short: 'Selecting stations by matching frequencies',
+    tagline: 'Resonance picks your favorite station',
+    description: 'Radio receivers use resonant LC circuits to select specific stations. The circuit responds strongly only to signals matching its resonant frequency, amplifying the desired station while rejecting all others.',
+    connection: 'The frequency-selective amplification you explored is exactly how radios work: the LC circuit\'s resonant frequency is tuned to match the station, maximizing response at that frequency.',
+    howItWorks: 'An LC (inductor-capacitor) circuit has a resonant frequency f = 1/(2π√LC). By adjusting C (variable capacitor), you tune the resonance to match the broadcast frequency. The circuit amplifies this frequency while attenuating others.',
+    stats: [
+      { value: '540-1600 kHz', label: 'AM radio band', icon: '📻' },
+      { value: '88-108 MHz', label: 'FM radio band', icon: '🎵' },
+      { value: '10,000+', label: 'Radio stations in USA', icon: '📡' }
+    ],
+    examples: ['AM/FM radio tuning', 'TV channel selection', 'Cell phone band filters', 'Guitar amplifier tone circuits'],
+    companies: ['Qualcomm', 'Skyworks', 'Qorvo', 'Broadcom'],
+    futureImpact: 'Software-defined radio will use digital resonance, enabling devices to receive any frequency band with programmable filters.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎸',
+    title: 'Musical Instrument Acoustics',
+    short: 'Why guitars and violins have distinctive sounds',
+    tagline: 'Resonant bodies amplify string vibrations',
+    description: 'String instruments use resonant bodies (sound boxes) to amplify vibrations. The body resonates at specific frequencies, amplifying some harmonics more than others, giving each instrument its unique timbre.',
+    connection: 'The driving frequency (vibrating string) forces the instrument body to oscillate. When string harmonics match body resonances, those frequencies are strongly amplified.',
+    howItWorks: 'The string vibrates at multiple harmonics. The sound box has its own resonant modes. Where these overlap, sound is amplified. Luthiers carefully shape bodies to produce desired resonances and tonal qualities.',
+    stats: [
+      { value: '440 Hz', label: 'Concert A pitch', icon: '🎵' },
+      { value: '~20', label: 'Resonant modes in violin body', icon: '🎻' },
+      { value: '$16M', label: 'Most expensive violin sold', icon: '💰' }
+    ],
+    examples: ['Acoustic guitar bodies', 'Violin f-holes', 'Piano soundboards', 'Drum shell resonance'],
+    companies: ['Fender', 'Gibson', 'Steinway', 'Stradivarius (historical)'],
+    futureImpact: 'Computational design and 3D printing will enable optimized resonance patterns, creating instruments with unprecedented tonal control.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🏢',
+    title: 'Earthquake Engineering',
+    short: 'Designing buildings to avoid resonance with seismic waves',
+    tagline: 'Survival depends on frequency mismatch',
+    description: 'Earthquakes produce ground motion at various frequencies. Buildings also have natural frequencies. When these match, resonance causes catastrophic amplification. Engineers design buildings to avoid resonance with likely seismic frequencies.',
+    connection: 'Just as you observed maximum amplitude when driving frequency matched natural frequency, buildings experience maximum stress when earthquake frequencies match their natural sway frequency.',
+    howItWorks: 'Tall buildings sway at low frequencies (0.1-1 Hz), matching some earthquake motions. Base isolation systems, tuned mass dampers, and structural bracing detune the building or add damping to limit resonant amplification.',
+    stats: [
+      { value: '0.5-2 Hz', label: 'Dangerous earthquake frequencies', icon: '🌍' },
+      { value: '730 tons', label: 'Taipei 101 damper mass', icon: '⚖️' },
+      { value: '$300B', label: 'Annual global earthquake losses', icon: '💰' }
+    ],
+    examples: ['Taipei 101 tuned mass damper', 'Japan base isolation systems', 'Mexico City 1985 resonance disaster', 'Cross-bracing systems'],
+    companies: ['Skidmore, Owings & Merrill', 'Arup', 'Shimizu Corporation', 'Taylor Devices'],
+    futureImpact: 'Active control systems will dynamically adjust building properties during earthquakes, actively avoiding resonance in real-time.',
+    color: '#22C55E'
+  }
+];
+
 const ForcedOscillationsRenderer: React.FC<Props> = ({
   onGameEvent,
   gamePhase,

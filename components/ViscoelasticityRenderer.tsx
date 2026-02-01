@@ -24,6 +24,81 @@ const colors = {
   material: '#a855f7',
 };
 
+const realWorldApps = [
+  {
+    icon: '👟',
+    title: 'Athletic Shoe Technology',
+    short: 'Cushioning that adapts to your stride',
+    tagline: 'Energy return meets protection',
+    description: 'Running shoe midsoles use viscoelastic foams that absorb impact energy on landing (viscous response) but return energy during push-off (elastic response). The Deborah number changes with footstrike speed.',
+    connection: 'Fast impacts from heel strike trigger solid-like behavior for protection. Slower push-off allows elastic energy return for efficiency.',
+    howItWorks: 'EVA and TPU foams have tuned relaxation times. Fast compression causes high stress (cushioning). Energy stored elastically releases during toe-off, improving running economy.',
+    stats: [
+      { value: '85%', label: 'Energy return (top foams)', icon: '⚡' },
+      { value: '10ms', label: 'Impact duration', icon: '⏱️' },
+      { value: '40mm', label: 'Max stack height', icon: '📏' }
+    ],
+    examples: ['Nike ZoomX', 'Adidas Boost', 'ASICS Gel', 'Hoka Profly'],
+    companies: ['Nike', 'Adidas', 'ASICS', 'Brooks'],
+    futureImpact: 'Smart foams with adjustable stiffness will adapt to running speed and terrain.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Suspension',
+    short: 'Balancing comfort and control',
+    tagline: 'The ride quality equation',
+    description: 'Car suspension uses viscoelastic bushings and dampers that feel stiff during quick maneuvers (solid-like) but soft over gradual bumps (fluid-like). This dual behavior optimizes both handling and comfort.',
+    connection: 'High Deborah number during cornering provides precise control. Low Deborah number over slow undulations delivers smooth ride quality.',
+    howItWorks: 'Rubber bushings isolate vibration. Hydraulic dampers control oscillation. Frequency-dependent stiffness filters high-frequency harshness while maintaining body control.',
+    stats: [
+      { value: '10Hz', label: 'Body resonance', icon: '📊' },
+      { value: '2Hz', label: 'Wheel hop frequency', icon: '🔄' },
+      { value: '40%', label: 'NVH reduction', icon: '📉' }
+    ],
+    examples: ['Luxury sedan suspension', 'Adaptive dampers', 'Engine mounts', 'Subframe bushings'],
+    companies: ['Bilstein', 'KYB', 'ZF', 'Continental'],
+    futureImpact: 'Magnetorheological dampers with real-time control will eliminate the comfort/handling tradeoff.',
+    color: '#10B981'
+  },
+  {
+    icon: '🎾',
+    title: 'Sports Equipment Design',
+    short: 'Power transfer through flexible materials',
+    tagline: 'Timing is everything',
+    description: 'Tennis rackets, golf clubs, and baseball bats use viscoelastic polymers to optimize energy transfer. The material must be stiff enough during the quick impact to transfer power, but damped enough to reduce vibration.',
+    connection: 'Impact duration determines effective stiffness. Shorter impact = higher De = stiffer feel. Post-impact, lower De allows vibration damping.',
+    howItWorks: 'Composite layups and polymer grips tune frequency response. High-frequency vibrations are damped; low-frequency bending transmits power. Sweet spot optimization maximizes effective hitting area.',
+    stats: [
+      { value: '5ms', label: 'Ball contact time', icon: '⏱️' },
+      { value: '150mph', label: 'Golf ball speed', icon: '⛳' },
+      { value: '30%', label: 'Vibration reduction', icon: '📉' }
+    ],
+    examples: ['Tennis rackets', 'Golf clubs', 'Baseball bats', 'Hockey sticks'],
+    companies: ['Wilson', 'Callaway', 'Titleist', 'Bauer'],
+    futureImpact: 'Personalized equipment tuned to individual swing characteristics and preferences.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏭',
+    title: 'Polymer Processing',
+    short: 'Shaping materials through controlled flow',
+    tagline: 'Timing the transition',
+    description: 'Manufacturing plastics requires understanding viscoelastic flow. Injection molding, extrusion, and blow molding all depend on managing the solid-to-liquid transition through temperature and strain rate control.',
+    connection: 'The Deborah number determines whether polymer acts moldable (low De) or resists flow (high De). Process parameters control this transition.',
+    howItWorks: 'Heating reduces relaxation time, making polymers flow. Rapid cooling freezes the shape. Strain rate during filling must stay in the moldable regime.',
+    stats: [
+      { value: '200-300C', label: 'Processing temp', icon: '🌡️' },
+      { value: '0.1-10s', label: 'Fill time range', icon: '⏱️' },
+      { value: '1000+ psi', label: 'Injection pressure', icon: '📈' }
+    ],
+    examples: ['Injection molding', 'Blow molding', 'Extrusion', '3D printing'],
+    companies: ['BASF', 'DuPont', 'Arburg', 'Engel'],
+    futureImpact: 'AI-controlled processing will optimize cycle times while eliminating defects.',
+    color: '#8B5CF6'
+  }
+];
+
 const ViscoelasticityRenderer: React.FC<ViscoelasticityRendererProps> = ({
   phase,
   onPhaseComplete,

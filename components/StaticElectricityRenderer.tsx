@@ -79,6 +79,81 @@ const phaseLabels: Record<Phase, string> = {
   'mastery': 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🖨️',
+    title: 'Laser Printers & Photocopiers',
+    short: 'Electrostatic image transfer',
+    tagline: 'Printing with static electricity',
+    description: 'Laser printers and photocopiers use static electricity to create images. A photosensitive drum is charged, selectively discharged by laser light, and attracts toner particles that transfer to paper.',
+    connection: 'The triboelectric effect and Coulomb\'s law govern toner adhesion. Charged toner particles are attracted to oppositely charged areas on the drum, then transferred to paper using even stronger charge.',
+    howItWorks: 'Corona wires charge the drum uniformly. A laser discharges areas that should be white. Charged toner sticks to remaining charged areas. Heat fuses toner to paper permanently.',
+    stats: [
+      { value: '1200dpi', label: 'Print resolution', icon: '🖼️' },
+      { value: '6kV', label: 'Charging voltage', icon: '⚡' },
+      { value: '50ppm', label: 'Pages per minute', icon: '📄' }
+    ],
+    examples: ['Office laser printers', 'Commercial copiers', 'Digital presses', 'Label printers'],
+    companies: ['HP', 'Canon', 'Xerox', 'Brother'],
+    futureImpact: 'Electrostatic printing will enable new materials like printed electronics, 3D-printed circuits, and solar cells manufactured through electrostatic deposition.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🎨',
+    title: 'Electrostatic Painting',
+    short: 'Charged droplets coat evenly',
+    tagline: 'Paint that wraps around corners',
+    description: 'Industrial painting uses electrostatic attraction to coat objects evenly with minimal waste. Charged paint droplets are attracted to grounded workpieces, even wrapping around to coat hidden surfaces.',
+    connection: 'Electric field lines guide charged droplets to the grounded target. The attractive force overcomes gravity and air resistance, enabling efficient coating of complex shapes.',
+    howItWorks: 'Paint atomizers impart negative charge to droplets. Grounded workpiece creates electric field. Droplets follow field lines to surface. Even recessed areas receive coating as field penetrates.',
+    stats: [
+      { value: '95%', label: 'Transfer efficiency', icon: '🎯' },
+      { value: '50-100kV', label: 'Charging voltage', icon: '⚡' },
+      { value: '60%', label: 'Paint savings vs spray', icon: '💰' }
+    ],
+    examples: ['Car manufacturing', 'Appliance coating', 'Furniture finishing', 'Aerospace components'],
+    companies: ['Graco', 'Nordson', 'SAMES KREMLIN', 'Wagner'],
+    futureImpact: 'Robotic electrostatic painting with real-time charge control will enable custom, waste-free coating of complex geometries for personalized manufacturing.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🏭',
+    title: 'Electrostatic Precipitators',
+    short: 'Cleaning industrial emissions',
+    tagline: 'Capturing pollution with charge',
+    description: 'Power plants and factories use electrostatic precipitators to remove particulate pollution from exhaust gases. Corona discharge charges particles, which are then collected on oppositely charged plates.',
+    connection: 'Particles acquire charge through corona discharge and migrate to collection electrodes under Coulomb forces. The same physics that makes dust cling to TV screens cleans industrial emissions.',
+    howItWorks: 'High-voltage wires create corona discharge, ionizing gas and charging particles. Charged particles drift toward grounded collection plates. Periodic rapping dislodges collected dust into hoppers.',
+    stats: [
+      { value: '99.9%', label: 'Particle removal', icon: '🌬️' },
+      { value: '100kV', label: 'Operating voltage', icon: '⚡' },
+      { value: '1M+', label: 'CFM capacity', icon: '💨' }
+    ],
+    examples: ['Coal power plants', 'Steel mills', 'Cement factories', 'Paper mills'],
+    companies: ['Babcock & Wilcox', 'GE Power', 'Mitsubishi Power', 'FLSmidth'],
+    futureImpact: 'Advanced precipitators will capture ultrafine particles and mercury, while recovered materials become valuable industrial feedstocks.',
+    color: '#22c55e'
+  },
+  {
+    icon: '⚡',
+    title: 'ESD Protection',
+    short: 'Protecting electronics from static discharge',
+    tagline: 'Invisible killer of microchips',
+    description: 'Electrostatic discharge (ESD) can destroy sensitive electronics in microseconds. The semiconductor industry uses grounding, ionizers, and special materials to prevent static buildup and protect components.',
+    connection: 'The same triboelectric charging that creates static shocks can discharge thousands of volts through microscopic transistors, vaporizing connections. Understanding charge accumulation enables prevention.',
+    howItWorks: 'Conductive flooring and wrist straps keep workers grounded. Ionizers neutralize charged objects. Antistatic packaging prevents charge accumulation. ESD-safe workstations protect components during assembly.',
+    stats: [
+      { value: '100V', label: 'Can damage MOSFETs', icon: '⚠️' },
+      { value: '$5B', label: 'Annual ESD losses', icon: '💰' },
+      { value: '25kV', label: 'Human body charge', icon: '👤' }
+    ],
+    examples: ['Chip fabrication', 'Circuit board assembly', 'Hard drive manufacturing', 'Medical device production'],
+    companies: ['3M', 'Desco', 'Simco-Ion', 'StaticTek'],
+    futureImpact: 'As transistors shrink below 3nm, ESD sensitivity increases. New protection circuits and materials will be essential for next-generation chip manufacturing.',
+    color: '#8b5cf6'
+  }
+];
+
 interface ChargedObject {
   id: number;
   x: number;

@@ -39,6 +39,85 @@ interface GeneratorStartupRendererProps {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ────────────────────────────────────────────────────────────────────────────
+
+const realWorldApps = [
+  {
+    icon: '🏥',
+    title: 'Hospital Backup Power',
+    short: 'Life-critical systems demand instant power transfer',
+    tagline: 'When seconds determine survival',
+    description: 'Hospitals maintain diesel generators that must start, synchronize, and accept load within 10 seconds of a power failure. ICU ventilators, surgical equipment, and life support systems cannot tolerate extended outages.',
+    connection: 'The startup sequence you explored - engine acceleration, voltage stabilization, and load acceptance - is life-critical in hospitals where power transfer must be seamless.',
+    howItWorks: 'Hospital generators use stored compressed air or battery starters for fast cranking. Automatic transfer switches detect outages within milliseconds. Generators must synchronize within 10 seconds and accept stepped loads to avoid frequency droop.',
+    stats: [
+      { value: '10 sec', label: 'Maximum transfer time required', icon: '⏱️' },
+      { value: '96 hrs', label: 'Fuel reserve requirement', icon: '⛽' },
+      { value: '$500K+', label: 'Typical hospital generator cost', icon: '💰' }
+    ],
+    examples: ['ICU backup power', 'Operating room systems', 'Pharmacy refrigeration', 'Medical imaging equipment'],
+    companies: ['Caterpillar', 'Cummins', 'Kohler', 'Generac'],
+    futureImpact: 'Battery-generator hybrids will provide instant power while generators start, eliminating even sub-second transfer gaps.',
+    color: '#EF4444'
+  },
+  {
+    icon: '💾',
+    title: 'Data Center Reliability',
+    short: 'Ensuring 99.999% uptime for the cloud',
+    tagline: 'Five nines depends on perfect startup',
+    description: 'Data centers promise 99.999% uptime (5.26 minutes downtime/year). Multiple generator systems, UPS batteries, and sophisticated load management ensure continuous power. Generator synchronization is critical for seamless failover.',
+    connection: 'The load acceptance and frequency stability you studied are precisely engineered in data centers to prevent server crashes during power transitions.',
+    howItWorks: 'UPS batteries provide instant bridge power. Generators start and synchronize within 10-15 seconds. Sophisticated controls manage load acceptance in steps to prevent frequency droop. Multiple generators operate in parallel for redundancy.',
+    stats: [
+      { value: '99.999%', label: 'Target uptime (Tier IV)', icon: '📊' },
+      { value: '2N+1', label: 'Generator redundancy', icon: '🔌' },
+      { value: '$10M/hr', label: 'Cost of major outage', icon: '💰' }
+    ],
+    examples: ['Amazon AWS facilities', 'Google data centers', 'Microsoft Azure', 'Facebook infrastructure'],
+    companies: ['Equinix', 'Digital Realty', 'CyrusOne', 'QTS'],
+    futureImpact: 'AI-predictive maintenance will anticipate generator issues before failure, achieving true continuous availability.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⛽',
+    title: 'Oil & Gas Operations',
+    short: 'Powering remote drilling and processing facilities',
+    tagline: 'Isolated operations demand self-reliance',
+    description: 'Offshore platforms and remote drilling sites operate as isolated microgrids with no utility connection. Multiple generators must coordinate startup, load sharing, and synchronization autonomously in harsh conditions.',
+    connection: 'The frequency droop and governor response you explored are essential for load sharing when multiple generators operate in parallel without grid support.',
+    howItWorks: 'Droop control allows multiple generators to share load proportionally. Each unit\'s governor reduces frequency slightly as load increases, naturally balancing load between units. Fast ramp rates handle sudden pump and compressor startups.',
+    stats: [
+      { value: '100+ MW', label: 'Large platform power demand', icon: '⚡' },
+      { value: '6-8', label: 'Generators per major platform', icon: '🔧' },
+      { value: '$1M/day', label: 'Platform operating cost', icon: '💰' }
+    ],
+    examples: ['Offshore drilling rigs', 'FPSO vessels', 'Remote pipeline stations', 'Arctic exploration camps'],
+    companies: ['Schlumberger', 'Halliburton', 'Baker Hughes', 'Wärtsilä'],
+    futureImpact: 'Hybrid systems combining generators with battery storage and wind will reduce fuel consumption and emissions at remote sites.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⚡',
+    title: 'Grid Black Start Recovery',
+    short: 'Restarting civilization after total blackout',
+    tagline: 'The ultimate startup challenge',
+    description: 'After a total grid blackout, power plants cannot restart without external power. Black start generators - specially designed for self-starting - provide the initial power to restart the grid in a careful, sequenced restoration.',
+    connection: 'Black start extends everything you learned to extreme scale: massive generators must start from zero, synchronize, and gradually energize transmission lines and other power plants.',
+    howItWorks: 'Black start units use battery banks or small diesel sets to crank. They energize local equipment, then transmission lines (energizing unloaded lines requires careful voltage control). Other plants are restarted in sequence until the grid is restored.',
+    stats: [
+      { value: '24-48 hrs', label: 'Full grid restoration time', icon: '⏰' },
+      { value: '$1B+', label: 'Major blackout economic cost', icon: '💰' },
+      { value: '50 MW', label: 'Typical black start unit size', icon: '⚡' }
+    ],
+    examples: ['2003 Northeast blackout recovery', 'Texas 2021 grid failure', 'Italy 2003 nationwide outage', 'India 2012 grid collapse'],
+    companies: ['ERCOT', 'PJM Interconnection', 'National Grid', 'Électricité de France'],
+    futureImpact: 'Grid-forming inverters on solar and battery systems will enable renewable-first black start, reducing reliance on fossil fuel generators.',
+    color: '#8B5CF6'
+  }
+];
+
+// ────────────────────────────────────────────────────────────────────────────
 // 10-QUESTION TEST DATA
 // ────────────────────────────────────────────────────────────────────────────
 

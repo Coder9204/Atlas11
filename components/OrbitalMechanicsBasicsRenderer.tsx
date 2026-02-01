@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🛰️',
+    title: 'Satellite Communications',
+    short: 'Geostationary satellites enable global connectivity',
+    tagline: 'Orbits that match Earth\'s rotation',
+    description: 'Communications satellites in geostationary orbit (35,786 km) complete one orbit in exactly 24 hours, appearing stationary above a fixed point on Earth. This enables continuous coverage for TV broadcasts, internet, and phone services.',
+    connection: 'Kepler\'s Third Law determines that this specific altitude produces a 24-hour orbital period, perfectly matching Earth\'s rotation for seamless communications.',
+    howItWorks: 'Satellites are launched to low Earth orbit, then use onboard propulsion to reach transfer orbits. Final circularization at GEO altitude requires precise velocity adjustments.',
+    stats: [
+      { value: '2,000+', label: 'GEO satellites', icon: '📡' },
+      { value: '3 km/s', label: 'orbital velocity', icon: '⚡' },
+      { value: '$280B', label: 'satellite industry', icon: '📈' }
+    ],
+    examples: ['DirecTV broadcasts', 'Global internet backhaul', 'Weather monitoring (GOES)', 'Military communications'],
+    companies: ['SpaceX', 'Boeing', 'Lockheed Martin', 'Intelsat'],
+    futureImpact: 'Mega-constellations in LEO and new GEO high-throughput satellites will provide global broadband access to underserved regions.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌍',
+    title: 'GPS Navigation',
+    short: 'Medium Earth orbit enables precise positioning',
+    tagline: '31 satellites guiding billions of devices',
+    description: 'GPS satellites orbit at 20,200 km altitude, completing two orbits per day. This medium Earth orbit provides optimal coverage geometry, allowing any location on Earth to see at least 4 satellites for triangulation.',
+    connection: 'The orbital velocity at this altitude (3.9 km/s) and 12-hour period are direct consequences of the gravitational relationship v = sqrt(GM/r).',
+    howItWorks: 'Each satellite broadcasts precise timing signals. Receivers calculate distance from signal travel time and use at least 4 satellites to determine 3D position plus time correction.',
+    stats: [
+      { value: '31', label: 'active satellites', icon: '🛰️' },
+      { value: '3m', label: 'position accuracy', icon: '📍' },
+      { value: '6.5B', label: 'GPS-enabled devices', icon: '📱' }
+    ],
+    examples: ['Smartphone navigation', 'Aviation guidance', 'Precision agriculture', 'Fleet tracking'],
+    companies: ['Trimble', 'Garmin', 'Qualcomm', 'u-blox'],
+    futureImpact: 'GPS III satellites and multi-constellation receivers will enable centimeter-level positioning for autonomous vehicles and advanced applications.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔭',
+    title: 'Space Telescopes',
+    short: 'Orbital observatories see the universe clearly',
+    tagline: 'Above the atmosphere, clarity awaits',
+    description: 'Space telescopes like Hubble and James Webb operate in orbits that provide stable thermal environments and unobstructed views. Their orbital mechanics are carefully chosen to optimize scientific observations.',
+    connection: 'Orbital altitude determines the thermal environment, communication geometry, and observing time. Webb\'s L2 orbit demonstrates advanced orbital mechanics beyond simple Earth orbits.',
+    howItWorks: 'Hubble orbits at 540 km for serviceability. JWST orbits the L2 Lagrange point, 1.5 million km from Earth, where gravitational forces create a stable observation platform.',
+    stats: [
+      { value: '1.5M', label: 'km to L2 point', icon: '🌌' },
+      { value: '30', label: 'years of Hubble', icon: '📷' },
+      { value: '$10B', label: 'JWST cost', icon: '💰' }
+    ],
+    examples: ['Hubble deep field images', 'JWST exoplanet observations', 'Chandra X-ray astronomy', 'Gaia star mapping'],
+    companies: ['NASA', 'ESA', 'Northrop Grumman', 'Ball Aerospace'],
+    futureImpact: 'Next-generation observatories like Roman and future interferometers will push orbital mechanics to enable direct imaging of exoplanets.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🌙',
+    title: 'Lunar Missions',
+    short: 'Trans-lunar injection requires precise orbital changes',
+    tagline: 'From Earth orbit to the Moon',
+    description: 'Reaching the Moon requires a carefully calculated trajectory that uses orbital mechanics to minimize fuel consumption. Spacecraft enter highly elliptical transfer orbits before lunar capture.',
+    connection: 'The escape velocity and transfer orbit calculations are direct applications of orbital mechanics principles, balancing Earth and Moon gravity fields.',
+    howItWorks: 'Spacecraft first reach low Earth orbit, then fire engines for trans-lunar injection, entering a trajectory that intersects the Moon\'s orbit. Lunar gravity capture requires precise timing and braking.',
+    stats: [
+      { value: '384K', label: 'km to Moon', icon: '🌙' },
+      { value: '3 days', label: 'transit time', icon: '⏱️' },
+      { value: '$93B', label: 'Artemis program', icon: '📈' }
+    ],
+    examples: ['Apollo Moon landings', 'Artemis lunar gateway', 'Chang\'e lunar rovers', 'Chandrayaan missions'],
+    companies: ['NASA', 'SpaceX', 'Blue Origin', 'ISRO'],
+    futureImpact: 'Sustainable lunar presence and Mars missions will require mastery of orbital mechanics for efficient trajectory planning and fuel optimization.',
+    color: '#F59E0B'
+  }
+];
+
 interface OrbitalMechanicsBasicsRendererProps {
   gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;

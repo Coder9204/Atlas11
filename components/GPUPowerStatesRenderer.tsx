@@ -29,6 +29,84 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'Laptop Battery Life',
+    short: 'How GPUs switch states to extend unplugged runtime',
+    tagline: 'From 8 hours browsing to 45 minutes gaming',
+    description: 'Modern laptops use aggressive GPU power management to achieve 8+ hour battery life for light tasks. The GPU drops to <5W idle states when browsing, then instantly ramps to 100W+ for gaming, maximizing both battery life and performance.',
+    connection: 'The DVFS (voltage/frequency scaling) you explored enables this: idle states run at 300 MHz/0.7V consuming 5W, while gaming states reach 2000 MHz/1.1V consuming 100W+.',
+    howItWorks: 'NVIDIA Optimus and AMD Switchable Graphics can completely power off discrete GPUs, using integrated graphics for desktop tasks. When games launch, the discrete GPU powers on within milliseconds.',
+    stats: [
+      { value: '5W vs 150W', label: 'Idle vs gaming power', icon: '🔋' },
+      { value: '10+ hours', label: 'Light use battery life', icon: '⏰' },
+      { value: '<1 hour', label: 'Gaming battery life', icon: '🎮' }
+    ],
+    examples: ['MacBook Pro GPU switching', 'ASUS ROG laptops', 'Dell XPS hybrid graphics', 'Razer Blade power profiles'],
+    companies: ['NVIDIA', 'AMD', 'Intel', 'Qualcomm'],
+    futureImpact: 'AI workload prediction will pre-emptively adjust GPU states, eliminating micro-stutters during transitions.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🖥️',
+    title: 'Data Center Efficiency',
+    short: 'Millions of GPUs optimizing power 24/7',
+    tagline: 'Every watt matters at hyperscale',
+    description: 'Cloud data centers operate millions of GPUs. Power efficiency directly impacts operating costs and carbon footprint. Advanced power states and DVFS reduce idle power consumption by 80%, saving billions in electricity annually.',
+    connection: 'The P = CV²f relationship you learned means that reducing voltage from 1.0V to 0.8V at idle cuts power by 36% - multiplied across millions of GPUs.',
+    howItWorks: 'Hyperscalers use custom power profiles: "power-saver" states for inference, "turbo" for training bursts. GPU telemetry informs cooling, allowing higher boost clocks when thermal headroom exists.',
+    stats: [
+      { value: '700W', label: 'H100 TDP', icon: '⚡' },
+      { value: '15 GW', label: 'US data center power', icon: '🏭' },
+      { value: '$10B+', label: 'Annual electricity cost', icon: '💰' }
+    ],
+    examples: ['AWS Inferentia instances', 'Google TPU power management', 'Azure GPU optimization', 'Meta AI infrastructure'],
+    companies: ['NVIDIA', 'Google', 'Amazon', 'Microsoft'],
+    futureImpact: 'Liquid cooling will enable higher power limits while waste heat recovery powers adjacent buildings.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎮',
+    title: 'Overclocking & Enthusiast Tuning',
+    short: 'Pushing beyond stock limits for maximum FPS',
+    tagline: 'When milliseconds per frame matter',
+    description: 'Enthusiasts manipulate GPU power states to extract maximum performance. By increasing power limits, optimizing voltage curves, and improving cooling, 15-25% performance gains are achievable beyond stock settings.',
+    connection: 'Understanding that higher clocks require higher voltage (and quadratically more power) lets overclockers find the optimal balance between performance, power, and thermals.',
+    howItWorks: 'Custom BIOS or software unlocks higher power limits. Undervolting finds minimum stable voltage per clock speed. Custom cooling allows sustained boost without thermal throttling. Power delivery must handle increased current.',
+    stats: [
+      { value: '15-25%', label: 'Typical OC performance gain', icon: '📈' },
+      { value: '450W+', label: 'Extreme RTX 4090 power draw', icon: '⚡' },
+      { value: '2700 MHz', label: 'World record core clocks', icon: '🏆' }
+    ],
+    examples: ['MSI Afterburner tuning', 'EVGA Precision X1', 'Custom water cooling loops', 'LN2 extreme overclocking'],
+    companies: ['EVGA', 'MSI', 'ASUS', 'Corsair'],
+    futureImpact: 'AI-assisted auto-tuning will find each GPU\'s optimal voltage/frequency curve automatically, democratizing overclocking.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive GPU Power Management',
+    short: 'Balancing infotainment, ADAS, and vehicle range',
+    tagline: 'Every watt affects how far you can drive',
+    description: 'Electric vehicles use GPUs for infotainment, driver assistance, and autonomous driving. These GPUs must carefully manage power states because every watt consumed reduces driving range.',
+    connection: 'The power state transitions you studied are critical in EVs: the GPU must sleep during highway cruise, wake for map updates, and max out for autonomous navigation - all while minimizing energy drain.',
+    howItWorks: 'Automotive GPUs use specialized power profiles: minimal power for instrument cluster, moderate for infotainment, maximum for ADAS and autonomous driving. Wake-on-event allows instant response from deep sleep states.',
+    stats: [
+      { value: '300-500W', label: 'Autonomous driving GPU power', icon: '🚗' },
+      { value: '2-3%', label: 'Range impact from compute', icon: '🔋' },
+      { value: '10W idle', label: 'Parked vehicle consumption', icon: '💤' }
+    ],
+    examples: ['Tesla FSD computer', 'NVIDIA DRIVE platform', 'Mobileye EyeQ', 'Qualcomm Snapdragon Ride'],
+    companies: ['Tesla', 'NVIDIA', 'Qualcomm', 'Intel Mobileye'],
+    futureImpact: 'Edge AI accelerators with <10W TDP will enable always-on autonomous features without significant range penalty.',
+    color: '#8B5CF6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const colors = {

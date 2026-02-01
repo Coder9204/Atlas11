@@ -17,6 +17,84 @@ interface Props {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🔬',
+    title: 'Fluorescence Microscopy',
+    short: 'Illuminating the invisible machinery of life',
+    tagline: 'See individual molecules inside living cells',
+    description: 'Fluorescence microscopy uses fluorescent dyes and proteins (like GFP) to tag specific molecules in cells, allowing scientists to watch proteins move, cells divide, and diseases progress in real time with incredible precision.',
+    connection: 'The Stokes shift you learned about - absorbing UV/blue light and emitting green/red - allows microscopes to filter out excitation light and see only the fluorescent signal from labeled molecules.',
+    howItWorks: 'Specimens are labeled with fluorescent molecules that bind to specific targets. UV or blue light excites the fluorophores, which emit longer-wavelength light. Filters block the excitation light, letting only fluorescence reach the detector.',
+    stats: [
+      { value: '20 nm', label: 'Super-resolution limit', icon: '🔍' },
+      { value: '$6B', label: 'Microscopy market', icon: '💰' },
+      { value: '2008', label: 'Nobel Prize for GFP', icon: '🏆' }
+    ],
+    examples: ['Cancer cell tracking', 'Neuron activity imaging', 'Protein localization studies', 'Live cell imaging'],
+    companies: ['Zeiss', 'Leica Microsystems', 'Nikon Instruments', 'Olympus'],
+    futureImpact: 'Expansion microscopy and new fluorophores will enable nanometer-scale imaging of individual proteins in living tissue.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🧬',
+    title: 'DNA Sequencing',
+    short: 'Reading the genetic code with fluorescent markers',
+    tagline: 'Four colors spell out life\'s instructions',
+    description: 'Modern DNA sequencing uses four different fluorescent dyes - one for each base (A, T, G, C). As DNA is synthesized, each added base emits a specific color, allowing machines to read genetic sequences at millions of bases per hour.',
+    connection: 'Each dye absorbs the same excitation wavelength but emits a different color due to its unique molecular structure - the same fluorescence principles you explored with different substances.',
+    howItWorks: 'In Illumina sequencing, DNA fragments are amplified on a chip. Fluorescently labeled nucleotides are added one at a time. After each addition, a camera captures which color each spot emits, recording the sequence.',
+    stats: [
+      { value: '$1B', label: 'First human genome cost (2003)', icon: '💰' },
+      { value: '$200', label: 'Current whole genome cost', icon: '📉' },
+      { value: '600 GB', label: 'Data per sequencing run', icon: '💾' }
+    ],
+    examples: ['Whole genome sequencing', 'Cancer mutation detection', 'Prenatal genetic testing', 'Pathogen identification'],
+    companies: ['Illumina', 'Pacific Biosciences', 'Oxford Nanopore', 'BGI Genomics'],
+    futureImpact: 'Single-molecule sequencing will enable real-time reading of DNA modifications, revealing the epigenetic code that controls gene expression.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '💡',
+    title: 'Fluorescent Lighting',
+    short: 'Efficient illumination through phosphor conversion',
+    tagline: 'Mercury UV becomes visible light',
+    description: 'Fluorescent tubes generate UV light from mercury vapor, then convert it to visible white light using phosphor coatings on the tube walls. This two-step process is 4-5 times more efficient than incandescent bulbs.',
+    connection: 'The phosphor coating demonstrates the Stokes shift perfectly: it absorbs invisible UV photons and re-emits visible photons, with the energy difference released as heat.',
+    howItWorks: 'Electric current excites mercury vapor, producing UV at 254 nm. Phosphor crystals on the tube interior absorb UV and emit visible light. Different phosphor mixtures create warm or cool white light.',
+    stats: [
+      { value: '100 lm/W', label: 'Fluorescent efficacy', icon: '💡' },
+      { value: '15 lm/W', label: 'Incandescent efficacy', icon: '🔥' },
+      { value: '10,000 hrs', label: 'Typical tube lifespan', icon: '⏰' }
+    ],
+    examples: ['Office lighting', 'Compact fluorescent bulbs', 'Blacklight fixtures', 'Aquarium lighting'],
+    companies: ['Philips Lighting', 'Osram', 'GE Lighting', 'Sylvania'],
+    futureImpact: 'LED phosphor technology is replacing fluorescent tubes, using blue LEDs with phosphor conversion for even greater efficiency.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Diagnostics',
+    short: 'Detecting diseases with glowing antibodies',
+    tagline: 'Your immune system lights up infections',
+    description: 'Immunofluorescence tests use antibodies labeled with fluorescent dyes to detect specific pathogens, autoimmune conditions, and cancer markers. From COVID tests to cancer screening, fluorescence saves millions of lives.',
+    connection: 'Antibodies tagged with fluorophores work like molecular highlighters - they bind only to specific targets, and the fluorescence reveals exactly where those targets are located.',
+    howItWorks: 'Fluorescent antibodies are added to patient samples (blood, tissue). They bind to specific antigens (viral proteins, cancer markers). UV excitation reveals bound antibodies as bright spots, indicating positive detection.',
+    stats: [
+      { value: '$25B', label: 'Immunodiagnostics market', icon: '💰' },
+      { value: 'Minutes', label: 'Rapid test results', icon: '⏱️' },
+      { value: '99%', label: 'Sensitivity achievable', icon: '🎯' }
+    ],
+    examples: ['COVID-19 antigen tests', 'HIV screening', 'Autoimmune disease diagnosis', 'Cancer biomarker detection'],
+    companies: ['Roche Diagnostics', 'Abbott', 'Siemens Healthineers', 'Bio-Rad'],
+    futureImpact: 'Quantum dot fluorophores will enable multiplexed tests detecting dozens of diseases from a single drop of blood.',
+    color: '#8B5CF6'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const TEST_QUESTIONS = [

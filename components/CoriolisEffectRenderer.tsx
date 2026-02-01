@@ -65,6 +65,81 @@ const phaseNames: Record<Phase, string> = {
   mastery: 'Mastery'
 };
 
+const realWorldApps = [
+  {
+    icon: '🌀',
+    title: 'Hurricane & Cyclone Formation',
+    short: 'Storm rotation patterns',
+    tagline: 'Why hurricanes spin counterclockwise',
+    description: 'The Coriolis effect causes large-scale weather systems to rotate. In the Northern Hemisphere, low-pressure systems (hurricanes) spin counterclockwise; in the Southern Hemisphere, clockwise.',
+    connection: 'Air rushing toward a low-pressure center is deflected right (Northern) or left (Southern) by the Coriolis effect, creating rotation. The effect is too weak to influence small systems like tornadoes.',
+    howItWorks: 'Warm ocean air rises, creating low pressure. Surrounding air rushes in but is deflected by Coriolis, creating rotation. Heat from condensation powers the storm, and Coriolis maintains the spin.',
+    stats: [
+      { value: '500 km', label: 'Hurricane diameter', icon: '🌀' },
+      { value: '250 km/h', label: 'Max wind speeds', icon: '💨' },
+      { value: '5°', label: 'Min latitude for formation', icon: '🌍' }
+    ],
+    examples: ['Atlantic hurricanes', 'Pacific typhoons', 'Indian Ocean cyclones', 'Australian willy-willies'],
+    companies: ['NOAA', 'NHC', 'JTWC', 'Met Office'],
+    futureImpact: 'Climate change may intensify hurricanes as warmer oceans provide more energy, while Coriolis continues to determine their rotation direction.',
+    color: '#EF4444'
+  },
+  {
+    icon: '✈️',
+    title: 'Long-Range Navigation',
+    short: 'Flight path planning',
+    tagline: 'Accounting for Earth\'s rotation',
+    description: 'Long-haul flights must account for the Coriolis effect. A plane flying from New York to London experiences an apparent deflection due to Earth rotating beneath it during the journey.',
+    connection: 'Aircraft navigation systems continuously compensate for Coriolis deflection. Without correction, a flight across the Atlantic would miss its destination by hundreds of kilometers.',
+    howItWorks: 'Inertial navigation systems use gyroscopes to maintain reference frames. GPS corrections account for Earth rotation. Flight computers adjust heading to compensate for Coriolis drift.',
+    stats: [
+      { value: '100+ km', label: 'Uncorrected drift', icon: '📍' },
+      { value: '0.1°/hr', label: 'Gyro drift rate', icon: '🎯' },
+      { value: '1 m', label: 'GPS accuracy', icon: '📡' }
+    ],
+    examples: ['Transatlantic flights', 'Transpacific routes', 'Polar navigation', 'Ballistic missiles'],
+    companies: ['Boeing', 'Airbus', 'Honeywell', 'Northrop Grumman'],
+    futureImpact: 'Quantum navigation systems using atom interferometry may provide Coriolis compensation without GPS, enabling navigation even when satellites are unavailable.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎯',
+    title: 'Long-Range Ballistics',
+    short: 'Sniper and artillery corrections',
+    tagline: 'Why bullets curve over distance',
+    description: 'Military snipers and artillery must account for Coriolis when shooting over long distances. A bullet fired north in the Northern Hemisphere curves slightly east during flight.',
+    connection: 'The Coriolis effect deflects moving objects perpendicular to their motion and the rotation axis. For a 1km shot, the deflection is about 10cm - enough to miss a target.',
+    howItWorks: 'Ballistic computers calculate Coriolis deflection based on latitude, direction of fire, and projectile flight time. Shooters adjust aim point or use "spin drift" corrections.',
+    stats: [
+      { value: '10 cm', label: 'Drift at 1 km', icon: '🎯' },
+      { value: '1.5 m', label: 'Drift at 2.5 km', icon: '📏' },
+      { value: '0.00007°/s', label: 'Earth rotation rate', icon: '🌍' }
+    ],
+    examples: ['Military sniping', 'Artillery fire', 'Naval gunnery', 'Competitive shooting'],
+    companies: ['Leupold', 'Nightforce', 'Kestrel', 'Applied Ballistics'],
+    futureImpact: 'Smart rifle scopes with integrated sensors automatically calculate Coriolis corrections, enabling accurate first-round hits at extreme ranges.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🌊',
+    title: 'Ocean Currents',
+    short: 'Gyres and circulation',
+    tagline: 'How Earth\'s spin moves the oceans',
+    description: 'The Coriolis effect shapes global ocean circulation, creating the great gyres that transport heat and nutrients around the planet. Wind-driven currents are deflected into circular patterns.',
+    connection: 'Wind pushes surface water, which is deflected by Coriolis (Ekman transport). The result is net water movement 90° from wind direction, creating clockwise gyres in the Northern Hemisphere.',
+    howItWorks: 'Trade winds push water westward near the equator. Coriolis deflects this flow poleward along western boundaries (Gulf Stream). The gyre completes as water returns via eastern boundary currents.',
+    stats: [
+      { value: '30 Sv', label: 'Gulf Stream flow', icon: '🌊' },
+      { value: '100x', label: 'vs Amazon River', icon: '📊' },
+      { value: '2 m/s', label: 'Current speed', icon: '💨' }
+    ],
+    examples: ['Gulf Stream', 'Kuroshio Current', 'North Pacific Gyre', 'Great Pacific Garbage Patch'],
+    companies: ['NOAA', 'Woods Hole', 'Scripps', 'MBARI'],
+    futureImpact: 'Climate change may weaken ocean circulation as temperature gradients decrease, potentially disrupting the heat transport that moderates European climate.',
+    color: '#06B6D4'
+  }
+];
+
 const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);

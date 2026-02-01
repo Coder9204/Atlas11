@@ -44,6 +44,81 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery',
 };
 
+const realWorldApps = [
+  {
+    icon: '🌱',
+    title: 'Indoor Plant Monitoring',
+    short: 'LEDs sensing their own light',
+    tagline: 'Self-powered grow light sensors',
+    description: 'LEDs in plant grow lights can double as light sensors, measuring the light actually reaching plants without additional hardware. By briefly switching LEDs to photovoltaic mode, systems can verify light levels and detect obstructions.',
+    connection: 'The reciprocal nature of LEDs—emitting light when forward biased and generating voltage when illuminated—enables dual-use sensing. The wavelength sensitivity matches what the same LED would emit.',
+    howItWorks: 'During sensing intervals, drive current is removed and LED voltage is measured. Illumination generates photovoltage proportional to light intensity. Microcontrollers alternate between emitting and sensing modes thousands of times per second.',
+    stats: [
+      { value: '10mV/klux', label: 'Sensitivity', icon: '⚡' },
+      { value: '$0', label: 'Extra cost', icon: '📈' },
+      { value: '$8B', label: 'Grow light market', icon: '🚀' }
+    ],
+    examples: ['Smart grow lights', 'Greenhouse automation', 'Vertical farming', 'Aquarium lighting'],
+    companies: ['Signify', 'Fluence', 'Heliospectra', 'Gavita'],
+    futureImpact: 'Intelligent grow lights will optimize spectra in real-time based on plant feedback, creating closed-loop systems that maximize growth while minimizing energy.',
+    color: '#10B981'
+  },
+  {
+    icon: '📡',
+    title: 'Visible Light Communication',
+    short: 'Data through illumination',
+    tagline: 'Every light becomes a transmitter',
+    description: 'Li-Fi systems use LEDs for both illumination and data transmission. The same reciprocity principle allows LEDs to receive as well as transmit, potentially enabling bidirectional optical wireless communication using existing lighting.',
+    connection: 'LEDs can detect modulated light from other LEDs because of photovoltaic behavior. When receiving, the LED generates current proportional to incident light intensity, demodulating the transmitted data.',
+    howItWorks: 'Transmitting LEDs modulate intensity at megahertz rates—invisible to humans but detectable by receivers. Using LEDs as receivers eliminates the need for separate photodiodes. Time-division multiplexing allows bidirectional communication.',
+    stats: [
+      { value: '10+ Gbps', label: 'Data rate', icon: '⚡' },
+      { value: '300 THz', label: 'Spectrum', icon: '📈' },
+      { value: '$75B', label: 'LiFi potential', icon: '🚀' }
+    ],
+    examples: ['Office Li-Fi networks', 'Museum guide systems', 'Aircraft cabin connectivity', 'Hospital EMI-free comms'],
+    companies: ['pureLiFi', 'Oledcomm', 'Signify', 'VLNComm'],
+    futureImpact: 'Integration of Li-Fi into standard LED lighting will provide secure, high-speed wireless connectivity in every illuminated space.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔬',
+    title: 'Spectral Sensing',
+    short: 'Color detection without spectrometers',
+    tagline: 'LEDs as narrowband detectors',
+    description: 'LEDs respond primarily to photons near their emission wavelength. By using arrays of different colored LEDs as detectors, simple spectral analysis becomes possible without expensive spectrometers or filters.',
+    connection: 'An LED\'s photovoltaic response peaks near its bandgap energy—the same energy that determines emission color. Red LEDs preferentially detect red light, blue LEDs detect blue, enabling spectral discrimination.',
+    howItWorks: 'RGB LED arrays measure light in three spectral bands when used as sensors. The photocurrent from each color indicates intensity in that wavelength range. Simple algorithms extract color information or detect specific spectral signatures.',
+    stats: [
+      { value: '3-6 bands', label: 'Typical channels', icon: '⚡' },
+      { value: '$0.10', label: 'LED cost', icon: '📈' },
+      { value: '$2.8B', label: 'Sensor market', icon: '🚀' }
+    ],
+    examples: ['Color sorting machines', 'Water quality monitors', 'Plant health sensing', 'Food freshness detection'],
+    companies: ['ams-OSRAM', 'Texas Instruments', 'Broadcom', 'Vishay'],
+    futureImpact: 'Multispectral LED sensor arrays will enable low-cost chemical and biological sensing for environmental monitoring and point-of-care diagnostics.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔋',
+    title: 'Emergency Power Harvesting',
+    short: 'Scavenging light energy',
+    tagline: 'When every photon counts',
+    description: 'In IoT devices with exhausted batteries, LEDs can harvest ambient light energy. While less efficient than dedicated solar cells, LED power harvesting requires no additional components and can provide enough power for emergency beacons or low-power sensing.',
+    connection: 'LEDs convert light to electricity through the same photovoltaic effect as solar cells. Efficiency is lower because LEDs are optimized for emission, but the principle is identical.',
+    howItWorks: 'Under illumination, LEDs generate open-circuit voltages near their bandgap (1.8-3.2V). Short-circuit currents are small but sufficient for micropower applications. MPPT circuits maximize harvested energy.',
+    stats: [
+      { value: '3-5%', label: 'Efficiency', icon: '⚡' },
+      { value: '100μW', label: 'Typical power', icon: '📈' },
+      { value: '$1.2B', label: 'Harvest market', icon: '🚀' }
+    ],
+    examples: ['Low-battery alert beacons', 'Sensor node backup', 'Display ambient sensing', 'Toy light sensors'],
+    companies: ['e-peas', 'Analog Devices', 'STMicroelectronics', 'Atmosic'],
+    futureImpact: 'As IoT devices proliferate, dual-use LED components will extend product lifespans and reduce battery waste.',
+    color: '#F59E0B'
+  }
+];
+
 const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   gamePhase,
   onCorrectAnswer,

@@ -42,6 +42,81 @@ interface Props {
 const AIR_DENSITY = 1.2; // kg/m^3 at sea level
 const REFERENCE_PRESSURE = 100; // kPa
 
+const realWorldApps = [
+  {
+    icon: '✈️',
+    title: 'Aircraft Airspeed Indicators',
+    short: 'Measuring speed through pressure difference',
+    tagline: 'Bernoulli in the cockpit',
+    description: 'Pitot tubes measure aircraft speed using the Venturi principle. The difference between ram air pressure and static pressure directly indicates airspeed - critical for safe flight.',
+    connection: 'Higher velocity means lower static pressure (Bernoulli). The pitot tube compares stagnation pressure to static pressure to calculate airspeed.',
+    howItWorks: 'A forward-facing tube captures ram air (stagnation pressure). Side ports measure static pressure. The pressure difference is proportional to velocity squared.',
+    stats: [
+      { value: '600+ mph', label: 'Airspeed range', icon: '✈️' },
+      { value: '±2kt', label: 'Accuracy', icon: '🎯' },
+      { value: '1732', label: 'Year invented', icon: '📅' }
+    ],
+    examples: ['Commercial aircraft', 'Fighter jets', 'Drones', 'Wind tunnels'],
+    companies: ['Thales', 'Collins Aerospace', 'Honeywell', 'L3Harris'],
+    futureImpact: 'LIDAR and GPS-based systems may replace pitot tubes for greater redundancy.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Carburetor Fuel Mixing',
+    short: 'Drawing fuel without a pump',
+    tagline: 'Physics as fuel delivery',
+    description: 'Classic carburetors use a venturi throat to draw fuel into the airstream. As air accelerates through the narrow section, pressure drops, sucking fuel from the float bowl without any pump.',
+    connection: 'The low pressure in the venturi throat creates suction that draws fuel through jets. Air velocity controls fuel flow automatically.',
+    howItWorks: 'Air enters the carburetor and accelerates through a tapered venturi. Fuel jets open into the low-pressure zone. The fuel atomizes and mixes with air.',
+    stats: [
+      { value: '14.7:1', label: 'Ideal air/fuel ratio', icon: '⚗️' },
+      { value: '0.5psi', label: 'Typical vacuum', icon: '📉' },
+      { value: '100yr+', label: 'Technology age', icon: '📅' }
+    ],
+    examples: ['Classic cars', 'Small engines', 'Motorcycles', 'Lawnmowers'],
+    companies: ['Holley', 'Weber', 'Mikuni', 'Keihin'],
+    futureImpact: 'While replaced by fuel injection in cars, carburetors remain in small engines for simplicity.',
+    color: '#EF4444'
+  },
+  {
+    icon: '💨',
+    title: 'HVAC Flow Measurement',
+    short: 'Monitoring air distribution in buildings',
+    tagline: 'Balancing comfort and efficiency',
+    description: 'Building ventilation systems use venturi meters to measure airflow through ducts. Accurate measurement enables proper air distribution and energy-efficient HVAC operation.',
+    connection: 'The pressure drop across a venturi is proportional to flow rate squared. Calibrated meters convert pressure readings to CFM.',
+    howItWorks: 'A constriction in the duct accelerates airflow. Pressure taps before and in the throat measure the difference. Flow computers calculate volume from differential pressure.',
+    stats: [
+      { value: '±1%', label: 'Meter accuracy', icon: '🎯' },
+      { value: '10,000+ CFM', label: 'Flow capacity', icon: '💨' },
+      { value: '30yr', label: 'Service life', icon: '⏰' }
+    ],
+    examples: ['Office buildings', 'Hospitals', 'Clean rooms', 'Data centers'],
+    companies: ['Johnson Controls', 'Carrier', 'Trane', 'Dwyer'],
+    futureImpact: 'IoT-connected meters enable real-time optimization of building energy use.',
+    color: '#10B981'
+  },
+  {
+    icon: '🏥',
+    title: 'Medical Oxygen Delivery',
+    short: 'Venturi masks for precise oxygen therapy',
+    tagline: 'Lifesaving physics in healthcare',
+    description: 'Venturi masks deliver precise oxygen concentrations to patients. The venturi effect entrains room air in exact proportions, providing 24-60% oxygen regardless of patient breathing pattern.',
+    connection: 'Oxygen flowing through a small orifice creates low pressure that draws in room air. The orifice size determines the oxygen concentration.',
+    howItWorks: 'High-pressure oxygen flows through color-coded adapters with different orifice sizes. Room air entrains through side ports. The mixture is delivered at controlled concentration.',
+    stats: [
+      { value: '24-60%', label: 'O2 concentration range', icon: '🫁' },
+      { value: '±2%', label: 'Concentration accuracy', icon: '🎯' },
+      { value: '4-15 L/min', label: 'Flow rates', icon: '💨' }
+    ],
+    examples: ['COPD treatment', 'Post-surgery recovery', 'Emergency medicine', 'Respiratory therapy'],
+    companies: ['Hudson RCI', 'Teleflex', 'Vyaire', 'Fisher & Paykel'],
+    futureImpact: 'Smart masks with real-time SpO2 feedback will automatically adjust oxygen delivery.',
+    color: '#8B5CF6'
+  }
+];
+
 const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);

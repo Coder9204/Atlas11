@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '☀️',
+    title: 'High-Efficiency Solar Cells',
+    short: 'Passivation enables 25%+ cell efficiency',
+    tagline: 'Every electron counts in solar power',
+    description: 'Modern PERC, TOPCon, and HJT solar cells use advanced passivation layers to prevent electron-hole recombination at surfaces, pushing efficiencies beyond 25% for commercial production.',
+    connection: 'Surface recombination velocity (SRV) directly impacts open-circuit voltage and efficiency. Passivation reduces SRV from 10,000+ cm/s to under 10 cm/s in premium cells.',
+    howItWorks: 'Dielectric layers like Al2O3 and SiNx create negative charges that repel electrons from surfaces. Amorphous silicon in HJT cells chemically saturates dangling bonds.',
+    stats: [
+      { value: '26.8%', label: 'record Si efficiency', icon: '⚡' },
+      { value: '<10', label: 'cm/s SRV (HJT)', icon: '📉' },
+      { value: '$180B', label: 'solar market', icon: '📈' }
+    ],
+    examples: ['LONGi PERC modules', 'JinkoSolar TOPCon cells', 'Panasonic HIT panels', 'REC Alpha series'],
+    companies: ['LONGi', 'JinkoSolar', 'Canadian Solar', 'First Solar'],
+    futureImpact: 'Tandem perovskite-silicon cells will require even better passivation to achieve 30%+ efficiencies and accelerate the energy transition.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '💡',
+    title: 'LED Lighting',
+    short: 'Surface treatment maximizes light output',
+    tagline: 'Efficiency from atomic-level engineering',
+    description: 'LED efficiency depends on minimizing non-radiative recombination. Passivation of quantum well surfaces and interfaces prevents electrons and holes from recombining without emitting light.',
+    connection: 'Internal quantum efficiency measures what fraction of injected carriers produce photons. Surface recombination at active layer interfaces directly reduces this efficiency.',
+    howItWorks: 'Epitaxial growth creates precisely controlled interfaces. Surface treatments and carefully designed heterostructures confine carriers and reduce surface state density.',
+    stats: [
+      { value: '90%', label: 'IQE top LEDs', icon: '💡' },
+      { value: '200+', label: 'lumens/watt', icon: '⚡' },
+      { value: '$75B', label: 'LED market', icon: '📈' }
+    ],
+    examples: ['Automotive headlights', 'Display backlights', 'General illumination', 'UV-C sterilization'],
+    companies: ['Lumileds', 'Cree', 'Nichia', 'Osram'],
+    futureImpact: 'Micro-LEDs for displays will require exceptional surface passivation at small scales to maintain efficiency in next-generation screens.',
+    color: '#22C55E'
+  },
+  {
+    icon: '📱',
+    title: 'Semiconductor Manufacturing',
+    short: 'Passivation protects billion-dollar chips',
+    tagline: 'The invisible shield on every transistor',
+    description: 'Every integrated circuit uses passivation layers to protect transistors and interconnects. These layers prevent contamination, moisture ingress, and electrical leakage.',
+    connection: 'Gate oxide interfaces in transistors must have minimal surface states to achieve proper threshold voltages and prevent mobility degradation from carrier scattering.',
+    howItWorks: 'Silicon dioxide and silicon nitride layers are deposited by CVD processes. Interface quality is optimized through annealing in hydrogen-containing atmospheres.',
+    stats: [
+      { value: '10^10', label: 'interface states/cm²', icon: '🔬' },
+      { value: '<1nm', label: 'oxide thickness', icon: '📏' },
+      { value: '$580B', label: 'chip market', icon: '📈' }
+    ],
+    examples: ['Logic processors', 'Memory chips', 'Power devices', 'Image sensors'],
+    companies: ['TSMC', 'Samsung', 'Intel', 'GlobalFoundries'],
+    futureImpact: 'Sub-2nm transistors will require atomic-level interface engineering to maintain device performance as dimensions shrink.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔬',
+    title: 'Quantum Devices',
+    short: 'Ultra-pure surfaces enable quantum coherence',
+    tagline: 'Where every defect matters',
+    description: 'Quantum computers and sensors require surfaces with minimal defects to maintain quantum coherence. Surface states create charge noise and decoherence that limit device performance.',
+    connection: 'Quantum dots and superconducting qubits are extremely sensitive to surface recombination and charge fluctuations from interface traps.',
+    howItWorks: 'Atomic layer deposition and molecular beam epitaxy create pristine interfaces. Surface cleaning and encapsulation preserve quantum properties.',
+    stats: [
+      { value: '100+', label: 'microseconds T1', icon: '⏱️' },
+      { value: '99.9%', label: 'gate fidelity', icon: '✅' },
+      { value: '$65B', label: 'quantum market 2030', icon: '📈' }
+    ],
+    examples: ['Superconducting qubits', 'Quantum dot displays', 'Single-photon sources', 'Spin qubits'],
+    companies: ['IBM', 'Google', 'IQM', 'Rigetti'],
+    futureImpact: 'Practical quantum computers will require near-perfect surface passivation to achieve error rates low enough for useful quantum advantage.',
+    color: '#8B5CF6'
+  }
+];
+
 // Phase type for internal state management
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

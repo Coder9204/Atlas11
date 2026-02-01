@@ -3,6 +3,82 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { playSound } from '../lib/audio';
 
+// Real-world applications for microphone physics
+const realWorldApps = [
+  {
+    icon: '🎙️',
+    title: 'Professional Audio Recording',
+    short: 'Studio microphones for music production',
+    tagline: 'Capturing sound with electromagnetic precision',
+    description: 'Recording studios use condenser and dynamic microphones that convert sound waves to electrical signals via electromagnetic induction. The diaphragm vibrates with sound pressure, moving a coil through a magnetic field to generate voltage proportional to sound amplitude.',
+    connection: 'The game demonstrated how moving conductors in magnetic fields generate current. Studio microphones scale this to capture frequencies from 20Hz to 20kHz with incredible fidelity, using the same F = BIL and induced EMF principles.',
+    howItWorks: 'Sound waves vibrate thin diaphragm attached to voice coil. Coil moves in permanent magnet field, inducing voltage (Faraday\'s law). Signal proportional to velocity of movement. Phantom power (48V) polarizes condenser capsules.',
+    stats: [
+      { value: '20Hz-20kHz', label: 'Frequency response', icon: '📊' },
+      { value: '-60dB', label: 'Typical sensitivity', icon: '🎚️' },
+      { value: '$40B', label: 'Pro audio market', icon: '📈' }
+    ],
+    examples: ['Neumann U87', 'Shure SM58', 'AKG C414', 'Rode NT1'],
+    companies: ['Shure', 'Sennheiser', 'Audio-Technica', 'Neumann'],
+    futureImpact: 'MEMS microphone arrays will enable spatial audio capture that perfectly recreates 3D soundscapes for VR/AR experiences.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '📱',
+    title: 'MEMS Microphones',
+    short: 'Miniature mics in every smartphone',
+    tagline: 'Silicon sensors hear everything',
+    description: 'Every smartphone contains multiple MEMS (Micro-Electro-Mechanical Systems) microphones - tiny silicon devices where sound pressure moves a microscopic diaphragm, changing capacitance. These enable voice assistants, noise cancellation, and spatial audio recording.',
+    connection: 'MEMS microphones use capacitance changes instead of electromagnetic induction, but the core physics of diaphragm displacement from sound pressure remains identical. Both transduce mechanical vibration to electrical signals.',
+    howItWorks: 'Sound pressure deflects silicon diaphragm (backplate). Capacitance between diaphragm and electrode changes. ASIC amplifies and digitizes signal. Multiple mics enable beamforming for noise rejection.',
+    stats: [
+      { value: '8B', label: 'MEMS mics sold yearly', icon: '📱' },
+      { value: '<1mm', label: 'Package size', icon: '🔬' },
+      { value: '65dB', label: 'Signal-to-noise ratio', icon: '📊' }
+    ],
+    examples: ['iPhone microphones', 'AirPods', 'Alexa devices', 'Hearing aids'],
+    companies: ['Knowles', 'Goertek', 'AAC Technologies', 'Infineon'],
+    futureImpact: 'Piezoelectric MEMS microphones will work underwater and in extreme temperatures, enabling new sensing applications.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🎧',
+    title: 'Active Noise Cancellation',
+    short: 'Microphones that create silence',
+    tagline: 'Hearing to stop hearing',
+    description: 'ANC headphones use microphones to sample ambient noise, then generate anti-phase signals that cancel unwanted sound. Multiple feedforward and feedback microphones work together, processing audio in real-time to create zones of silence.',
+    connection: 'Understanding microphone physics - how sound pressure converts to electrical signal - is essential for ANC. The same electromagnetic principles enable both capturing noise and generating precisely timed cancellation signals.',
+    howItWorks: 'External mic samples incoming noise. DSP calculates anti-phase waveform. Internal mic measures residual noise at ear. Adaptive filters continuously optimize cancellation. Latency must be <1ms for effectiveness.',
+    stats: [
+      { value: '30dB', label: 'Noise reduction possible', icon: '🔇' },
+      { value: '$15B', label: 'ANC headphone market', icon: '📈' },
+      { value: '<1ms', label: 'Processing latency', icon: '⚡' }
+    ],
+    examples: ['Sony WH-1000XM5', 'Apple AirPods Pro', 'Bose 700', 'Quiet car cabins'],
+    companies: ['Sony', 'Apple', 'Bose', 'Qualcomm'],
+    futureImpact: 'Personalized ANC using bone conduction feedback will achieve 50dB reduction, enabling focus in any environment.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🩺',
+    title: 'Medical Acoustic Sensors',
+    short: 'Digital stethoscopes and ultrasound',
+    tagline: 'Listening to the body\'s signals',
+    description: 'Digital stethoscopes use sensitive microphones to capture heart sounds, lung sounds, and blood flow. The signals are amplified, filtered, and analyzed by AI to detect murmurs, arrhythmias, and respiratory conditions with superhuman accuracy.',
+    connection: 'Medical acoustic sensors use the same transduction principles as studio microphones, optimized for different frequencies. Understanding diaphragm physics helps design sensors that capture subtle body sounds.',
+    howItWorks: 'Piezoelectric or electret microphone contacts patient skin. Analog filters remove ambient noise. ADC digitizes signal at high resolution. Machine learning classifies sounds against pathological patterns.',
+    stats: [
+      { value: '20-2000Hz', label: 'Heart sound range', icon: '💓' },
+      { value: '95%', label: 'AI diagnostic accuracy', icon: '🎯' },
+      { value: '$200M', label: 'Digital stethoscope market', icon: '📈' }
+    ],
+    examples: ['Eko stethoscopes', 'Thinklabs One', 'Littmann CORE', 'Ultrasound probes'],
+    companies: ['Eko Health', '3M Littmann', 'Thinklabs', 'Butterfly Network'],
+    futureImpact: 'Wearable acoustic patches will continuously monitor heart and lung sounds, detecting disease weeks before symptoms appear.',
+    color: '#ef4444'
+  }
+];
+
 // ────────────────────────────────────────────────────────────────────────────
 // TYPE DEFINITIONS
 // ────────────────────────────────────────────────────────────────────────────

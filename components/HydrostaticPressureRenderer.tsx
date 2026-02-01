@@ -45,6 +45,82 @@ const colors = {
 
 const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
+// Real World Applications
+const realWorldApps = [
+  {
+    icon: '🤿',
+    title: 'Scuba Diving & Decompression',
+    short: 'Why divers can\'t surface too quickly',
+    tagline: 'Pressure changes can be deadly',
+    description: 'Divers experience 1 additional atmosphere of pressure for every 10 meters of depth. Nitrogen dissolves into blood under pressure; surfacing too fast causes it to bubble out (the bends), which can be fatal.',
+    connection: 'The P = ρgh formula you explored explains exactly why: at 30m, divers experience 4 atmospheres total pressure, quadrupling the nitrogen dissolved in their blood.',
+    howItWorks: 'At depth, high pressure forces extra nitrogen into blood and tissues. Slow ascent allows nitrogen to diffuse back into lungs gradually. Too fast, and nitrogen forms bubbles in blood vessels and joints.',
+    stats: [
+      { value: '4 atm', label: 'Pressure at 30m depth', icon: '🌊' },
+      { value: '9m/min', label: 'Safe ascent rate', icon: '⬆️' },
+      { value: '1,000+', label: 'DCS cases annually in US', icon: '🏥' }
+    ],
+    examples: ['Recreational scuba diving', 'Commercial saturation diving', 'Navy submarine escape', 'Scientific diving'],
+    companies: ['PADI', 'Divers Alert Network', 'Aqua Lung', 'Shearwater Research'],
+    futureImpact: 'Dive computers with real-time tissue modeling will enable safer, longer dives with optimized decompression schedules.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚢',
+    title: 'Submarine Engineering',
+    short: 'Designing hulls to withstand crushing depths',
+    tagline: 'Where pressure increases by 1 atm every 10 meters',
+    description: 'Military submarines operate at 300+ meters depth (30+ atmospheres). Their pressure hulls must withstand millions of pounds of force. The hydrostatic paradox means even small leaks can be catastrophic.',
+    connection: 'Your exploration of P = ρgh explains submarine depth limits: at 300m, every square meter of hull experiences 3 million Newtons of force - regardless of hull shape (the paradox).',
+    howItWorks: 'Submarines use cylindrical pressure hulls (optimal for uniform compression) made of high-strength steel or titanium. Hull thickness is calculated using hydrostatic pressure at maximum operating depth plus safety margins.',
+    stats: [
+      { value: '300-500m', label: 'Military sub operating depth', icon: '🎯' },
+      { value: '30-50 atm', label: 'Hull design pressure', icon: '💪' },
+      { value: '10,994m', label: 'Deepest dive (Trieste)', icon: '🏆' }
+    ],
+    examples: ['US Virginia-class submarines', 'Deep-sea research vessels', 'Titanic exploration subs', 'James Cameron\'s Deepsea Challenger'],
+    companies: ['General Dynamics', 'BAE Systems', 'Triton Submarines', 'OceanGate'],
+    futureImpact: 'Advanced composites and glass spheres will enable routine access to the deepest ocean trenches.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🏗️',
+    title: 'Dam & Reservoir Design',
+    short: 'Engineering walls to hold back billions of gallons',
+    tagline: 'The bottom of the dam feels the weight of the lake',
+    description: 'Dam engineers must design structures to withstand hydrostatic pressure that increases with depth. The base of Hoover Dam experiences 2,500 psi from 180m of water - pressure that never stops pushing.',
+    connection: 'The triangular pressure distribution you observed explains dam shape: thick at the base (where pressure is highest) and thin at the top (where pressure is zero).',
+    howItWorks: 'Gravity dams use their massive weight to resist water pressure. Arch dams transfer force to canyon walls. The pressure distribution (linear with depth) determines the required thickness at each level.',
+    stats: [
+      { value: '180m', label: 'Hoover Dam height', icon: '📏' },
+      { value: '2,500 psi', label: 'Base pressure', icon: '💪' },
+      { value: '$49M', label: 'Hoover Dam cost (1936)', icon: '💰' }
+    ],
+    examples: ['Hoover Dam (USA)', 'Three Gorges Dam (China)', 'Itaipu Dam (Brazil/Paraguay)', 'Aswan High Dam (Egypt)'],
+    companies: ['Bechtel', 'US Bureau of Reclamation', 'China Three Gorges Corp', 'Strabag'],
+    futureImpact: 'Smart dams with embedded sensors will monitor stress in real-time, predicting failures before they occur.',
+    color: '#22C55E'
+  },
+  {
+    icon: '💧',
+    title: 'Municipal Water Systems',
+    short: 'How water towers provide pressure without pumps',
+    tagline: 'Gravity does the work for free',
+    description: 'Water towers use hydrostatic pressure to maintain constant water pressure in distribution systems. By elevating water 30-50 meters, utilities provide 3-5 atmospheres of pressure purely through gravity.',
+    connection: 'This is P = ρgh in daily life: a 40m water tower creates 4 atm (60 psi) at ground level, enough to push water to upper floors and through showers.',
+    howItWorks: 'Pumps fill elevated tanks during low-demand periods. During peak demand, gravity-fed water supplements pumped supply. Tank height determines pressure; volume provides buffer capacity.',
+    stats: [
+      { value: '40-60 psi', label: 'Typical home water pressure', icon: '🚿' },
+      { value: '30-50m', label: 'Water tower height', icon: '📏' },
+      { value: '1M+ gallons', label: 'Large tower capacity', icon: '💧' }
+    ],
+    examples: ['Municipal water towers', 'Rooftop tanks (NYC)', 'Elevated storage reservoirs', 'Pressure zones by elevation'],
+    companies: ['American Water', 'Veolia', 'Suez', 'Xylem'],
+    futureImpact: 'Smart pressure management will reduce pipe bursts and water loss by 30%, saving billions of gallons annually.',
+    color: '#F59E0B'
+  }
+];
+
 // Constants
 const GRAVITY = 9.81;
 const ATM_PRESSURE = 101325;

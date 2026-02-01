@@ -47,6 +47,85 @@ interface GyroscopeStabilityRendererProps {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// REAL WORLD APPLICATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const realWorldApps = [
+  {
+    icon: '🛰️',
+    title: 'Spacecraft Attitude Control',
+    short: 'Pointing satellites with spinning wheels',
+    tagline: 'No thrusters needed in the vacuum of space',
+    description: 'Spacecraft use reaction wheels - spinning masses that transfer angular momentum to rotate the vehicle. By speeding up or slowing down wheels on different axes, satellites can point precisely without expending fuel.',
+    connection: 'Conservation of angular momentum means the total spin of spacecraft + wheels stays constant. Speed up a wheel, and the spacecraft rotates the opposite direction - exactly the principle you explored.',
+    howItWorks: 'Three or four reaction wheels mounted along different axes allow full 3D attitude control. To point a telescope at a star, the computer calculates required wheel speed changes. Momentum buildup is periodically "dumped" using thrusters.',
+    stats: [
+      { value: '0.001°', label: 'Pointing accuracy achievable', icon: '🎯' },
+      { value: '6,000 RPM', label: 'Typical wheel speed', icon: '🔄' },
+      { value: '$200M', label: 'Hubble gyroscope replacement cost', icon: '💰' }
+    ],
+    examples: ['Hubble Space Telescope', 'ISS attitude control', 'GPS satellite pointing', 'James Webb Space Telescope'],
+    companies: ['Honeywell Aerospace', 'Collins Aerospace', 'Northrop Grumman', 'Ball Aerospace'],
+    futureImpact: 'Control moment gyroscopes with variable-speed control will enable even faster slewing for next-generation space observatories.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📱',
+    title: 'Smartphone Motion Sensing',
+    short: 'How your phone knows which way is up',
+    tagline: 'MEMS gyroscopes in your pocket',
+    description: 'Every smartphone contains tiny MEMS gyroscopes that detect rotation rates. Combined with accelerometers and magnetometers, they enable screen rotation, VR/AR tracking, image stabilization, and navigation.',
+    connection: 'While not spinning masses, MEMS gyroscopes use the Coriolis effect on vibrating elements to detect rotation - a related principle of how spinning systems respond to rotation.',
+    howItWorks: 'A vibrating mass experiences Coriolis force when rotated. This force causes displacement proportional to rotation rate. Capacitive sensors detect this displacement with extreme precision, thousands of times per second.',
+    stats: [
+      { value: '1 mm', label: 'MEMS gyroscope size', icon: '📏' },
+      { value: '$0.50', label: 'Per-unit cost at scale', icon: '💰' },
+      { value: '5B+', label: 'MEMS gyroscopes shipped annually', icon: '📊' }
+    ],
+    examples: ['Phone screen rotation', 'VR headset tracking', 'Camera stabilization', 'Fitness tracker motion'],
+    companies: ['STMicroelectronics', 'Bosch', 'InvenSense (TDK)', 'Analog Devices'],
+    futureImpact: 'Next-gen MEMS will enable indoor navigation accuracy within centimeters, transforming AR and robotics.',
+    color: '#22C55E'
+  },
+  {
+    icon: '✈️',
+    title: 'Aircraft Navigation Systems',
+    short: 'Flying blind with gyroscopic precision',
+    tagline: 'The artificial horizon that never lies',
+    description: 'Aircraft attitude indicators and navigation systems rely on gyroscopes to maintain reference to true vertical and heading. Ring laser and fiber optic gyroscopes now provide inertial navigation accurate to meters over hours of flight.',
+    connection: 'Gyroscopic rigidity - the property you observed where spinning objects resist orientation changes - keeps attitude indicators stable even in turbulence and maneuvers.',
+    howItWorks: 'Traditional mechanical gyroscopes maintain a stable reference frame due to angular momentum. Modern ring laser gyroscopes use the Sagnac effect - light traveling opposite directions in a rotating ring experiences different path lengths.',
+    stats: [
+      { value: '0.01°/hr', label: 'Navigation-grade gyro drift', icon: '🧭' },
+      { value: '$50K', label: 'Ring laser gyro cost', icon: '💰' },
+      { value: '1 m/hr', label: 'Position error accumulation', icon: '📍' }
+    ],
+    examples: ['Boeing 787 navigation', 'Airbus fly-by-wire systems', 'Military aircraft INS', 'Drone autopilots'],
+    companies: ['Honeywell', 'Northrop Grumman', 'Safran', 'KVH Industries'],
+    futureImpact: 'Quantum gyroscopes using atomic spin will achieve drift rates 1000x better, enabling GPS-free precision navigation.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🚢',
+    title: 'Ship Stabilization Systems',
+    short: 'Massive gyroscopes that calm the seas',
+    tagline: 'Turning ship-wrecking rolls into gentle sways',
+    description: 'Luxury yachts and naval vessels use large gyroscopic stabilizers to reduce roll motion by up to 90%. A spinning flywheel of several tons resists the ship\'s roll, transferring energy to controlled precession.',
+    connection: 'The gyroscopic resistance to tilting you explored scales up dramatically: a 10-ton flywheel spinning at 200+ RPM generates enormous stabilizing torque.',
+    howItWorks: 'A large flywheel spins in a gimbal mount. When the ship rolls, the gyroscope resists and precesses. Active control adjusts precession to counteract waves. Multiple units combine for total roll reduction.',
+    stats: [
+      { value: '90%', label: 'Roll reduction achievable', icon: '📉' },
+      { value: '10+ tons', label: 'Large stabilizer mass', icon: '⚖️' },
+      { value: '$500K+', label: 'System cost for yachts', icon: '💰' }
+    ],
+    examples: ['Seakeeper yacht stabilizers', 'Naval vessel stabilization', 'Cruise ship comfort systems', 'Research vessel platforms'],
+    companies: ['Seakeeper', 'SKF', 'Quantum Marine', 'Naiad Dynamics'],
+    futureImpact: 'Compact, high-speed carbon fiber flywheels will bring gyro stabilization to smaller boats and even offshore wind platforms.',
+    color: '#F59E0B'
+  }
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════════════
 

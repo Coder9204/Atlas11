@@ -52,6 +52,81 @@ interface CloudParticle {
   vy: number;
 }
 
+const realWorldApps = [
+  {
+    icon: '🌧️',
+    title: 'Cloud Seeding',
+    short: 'Making it rain on demand',
+    tagline: 'Engineering precipitation through nucleation',
+    description: 'Cloud seeding introduces artificial condensation nuclei (silver iodide, dry ice) to clouds, triggering precipitation. This technology is used for drought relief, snow pack enhancement, and hail suppression.',
+    connection: 'Just like adding smoke to our bottle experiment, cloud seeding provides nucleation sites. Water vapor that would remain supersaturated can now condense into droplets large enough to fall as rain.',
+    howItWorks: 'Aircraft release silver iodide flares into clouds with supercooled water. The silver iodide crystals have a structure similar to ice, acting as nucleation sites for ice crystals that grow and fall.',
+    stats: [
+      { value: '10-15%', label: 'Precipitation increase', icon: '🌧️' },
+      { value: '50+', label: 'Countries using it', icon: '🌍' },
+      { value: '$15/acre-ft', label: 'Water cost', icon: '💰' }
+    ],
+    examples: ['Dubai rain enhancement', 'Colorado snowpack', 'Beijing Olympics', 'Australian drought relief'],
+    companies: ['Weather Modification Inc', 'North American Weather', 'Seeding Operations', 'Cloud Seeding Technologies'],
+    futureImpact: 'Drone-based seeding and AI-optimized targeting could make cloud seeding more precise and effective for water resource management.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '✈️',
+    title: 'Aircraft Contrail Formation',
+    short: 'Jet engine cloud creation',
+    tagline: 'How airplanes make their own weather',
+    description: 'Jet contrails are human-made clouds formed when hot, humid exhaust meets cold air. The exhaust provides both water vapor and nucleation particles, creating visible trails that can persist for hours.',
+    connection: 'Jet exhaust contains water vapor and soot particles (nuclei). In cold, humid upper atmosphere, this triggers the same cloud formation process we see in our bottle experiment.',
+    howItWorks: 'Jet fuel combustion produces water vapor and particulates. At cruise altitude (-40°C), exhaust humidity exceeds saturation. Soot provides nucleation sites, forming ice crystals that create the visible trail.',
+    stats: [
+      { value: '-40°C', label: 'Formation temp', icon: '❄️' },
+      { value: '1-2%', label: 'Climate forcing', icon: '🌡️' },
+      { value: '100,000', label: 'Flights daily', icon: '✈️' }
+    ],
+    examples: ['Commercial aviation', 'Military aircraft', 'Private jets', 'Cargo flights'],
+    companies: ['Boeing', 'Airbus', 'Rolls-Royce', 'GE Aviation'],
+    futureImpact: 'Sustainable aviation fuels and flight path optimization may reduce contrail formation, addressing their contribution to climate change.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🌬️',
+    title: 'Fog Machines & Special Effects',
+    short: 'Creating atmospheric effects',
+    tagline: 'Controlled cloud generation for entertainment',
+    description: 'Stage fog machines create artificial clouds by rapidly cooling glycol or glycerin vapor. The cooled vapor condenses on aerosol particles in the air, mimicking natural cloud formation.',
+    connection: 'Fog machines work exactly like our bottle experiment - rapid cooling (from liquid CO2 or thermoelectric coolers) causes water or glycol vapor to condense on nucleation particles.',
+    howItWorks: 'A heating element vaporizes fog fluid (glycol/glycerin mix). The hot vapor exits into cooler air where it condenses into tiny droplets. Some machines add CO2 cooling for low-lying fog effects.',
+    stats: [
+      { value: '10,000', label: 'CFM output (large)', icon: '💨' },
+      { value: '400°F', label: 'Heater temp', icon: '🔥' },
+      { value: '$5B', label: 'FX industry size', icon: '🎬' }
+    ],
+    examples: ['Concert productions', 'Haunted houses', 'Film production', 'Theme parks'],
+    companies: ['Ultratec', 'MDG', 'Antari', 'Chauvet'],
+    futureImpact: 'Water-based fog and advanced particle control are creating more realistic and environmentally friendly atmospheric effects for entertainment.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '☁️',
+    title: 'Weather Prediction',
+    short: 'Understanding cloud physics',
+    tagline: 'Forecasting through condensation science',
+    description: 'Accurate weather prediction requires understanding how clouds form and evolve. The same physics in our bottle experiment - pressure changes, cooling, nucleation - drives real atmospheric processes.',
+    connection: 'Weather models simulate adiabatic cooling in rising air, nucleation on atmospheric aerosols, and droplet growth. Our bottle demonstrates these fundamental processes at human scale.',
+    howItWorks: 'Numerical weather models solve equations for air motion, temperature, and moisture. Microphysics schemes calculate condensation rates and precipitation based on nucleation theory.',
+    stats: [
+      { value: '10-day', label: 'Useful forecast range', icon: '📅' },
+      { value: '90%', label: '24hr accuracy', icon: '✅' },
+      { value: '10 km', label: 'Global model resolution', icon: '🌍' }
+    ],
+    examples: ['ECMWF forecasts', 'GFS model', 'Local forecasts', 'Hurricane prediction'],
+    companies: ['NOAA', 'ECMWF', 'The Weather Company', 'AccuWeather'],
+    futureImpact: 'AI-enhanced weather models and higher resolution simulations are extending accurate forecast range and improving severe weather warnings.',
+    color: '#10B981'
+  }
+];
+
 const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }) => {
   const [currentPhase, setCurrentPhase] = useState<PhaseType>(phase || 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);

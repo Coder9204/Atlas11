@@ -28,6 +28,81 @@ const colors = {
   primary: '#8b5cf6',
 };
 
+const realWorldApps = [
+  {
+    icon: '📱',
+    title: 'Smartphone Chip Manufacturing',
+    short: 'Billions of transistors per chip',
+    tagline: 'Printing the future of mobile',
+    description: 'Every smartphone processor is manufactured using lithography where focus and dose control determines feature quality. At 3nm process nodes, pattern placement must be accurate to fractions of a nanometer. The process window—the range of acceptable focus and dose—shrinks with each generation.',
+    connection: 'The focus-dose relationship we explored directly determines chip yield. Too much dose causes pattern widening; too little leaves features undeveloped. Out-of-focus exposure blurs edges, increasing line edge roughness.',
+    howItWorks: 'EUV lithography uses 13.5nm wavelength light focused through mirrors onto photoresist. Scanner focus is controlled to ±15nm accuracy. Dose meters measure exposure energy to 0.1% precision. Millions of chips are produced from each wafer.',
+    stats: [
+      { value: '3nm', label: 'Process node', icon: '⚡' },
+      { value: '$150M', label: 'EUV scanner cost', icon: '📈' },
+      { value: '95%+', label: 'Target yield', icon: '🚀' }
+    ],
+    examples: ['Apple A17 Pro', 'Qualcomm Snapdragon 8 Gen 3', 'Samsung Exynos 2400', 'MediaTek Dimensity 9300'],
+    companies: ['ASML', 'TSMC', 'Samsung Foundry', 'Intel'],
+    futureImpact: 'High-NA EUV lithography will enable 2nm and beyond, but will require even tighter focus control as the depth of focus shrinks.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🧠',
+    title: 'AI Accelerator Production',
+    short: 'Manufacturing intelligence',
+    tagline: 'Lithography powers AI',
+    description: 'AI chips like NVIDIA\'s H100 contain 80 billion transistors manufactured with cutting-edge lithography. The large die sizes make these chips extremely sensitive to focus and dose variations—any defect across the huge area can kill the chip.',
+    connection: 'Large AI chips push lithography to its limits. The process window must be maintained across 800mm² of patterning. Focus and dose uniformity across the full exposure field directly impacts yield.',
+    howItWorks: 'Multiple EUV exposures pattern the most critical layers. Process control monitors measure CD and edge roughness across the wafer. Advanced process control (APC) adjusts focus and dose in real-time to maintain the process window.',
+    stats: [
+      { value: '80B', label: 'Transistors', icon: '⚡' },
+      { value: '814 mm²', label: 'Die size', icon: '📈' },
+      { value: '$40,000', label: 'Chip price', icon: '🚀' }
+    ],
+    examples: ['NVIDIA H100/B100', 'Google TPU v5', 'AMD MI300X', 'Intel Gaudi 3'],
+    companies: ['NVIDIA', 'TSMC', 'AMD', 'Google'],
+    futureImpact: 'Chiplet architectures will enable even larger effective die sizes while managing lithography yield challenges through smaller individual chiplets.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🔬',
+    title: 'MEMS Sensor Fabrication',
+    short: 'Microscopic machines',
+    tagline: 'Lithography in three dimensions',
+    description: 'MEMS accelerometers, gyroscopes, and microphones are manufactured using lithography with unique focus challenges. Multiple patterning steps on 3D structures require precise alignment and focus at different heights within the same device.',
+    connection: 'MEMS lithography must maintain focus across topography—raised and recessed features on the wafer surface. Depth of focus becomes critical when patterning on non-planar surfaces.',
+    howItWorks: 'MEMS devices are built up in layers with etching creating 3D structures. Lithography must focus accurately on top surfaces while ignoring recessed areas. Some processes use thick resists requiring extended depth of focus.',
+    stats: [
+      { value: '1-10 μm', label: 'Feature sizes', icon: '⚡' },
+      { value: '100+ μm', label: 'Structure depth', icon: '📈' },
+      { value: '$20B', label: 'MEMS market', icon: '🚀' }
+    ],
+    examples: ['iPhone accelerometers', 'Car airbag sensors', 'Digital microphones', 'Pressure sensors'],
+    companies: ['Bosch', 'STMicroelectronics', 'TDK InvenSense', 'Analog Devices'],
+    futureImpact: 'Advanced MEMS will combine sensing, processing, and communication on single chips, requiring hybrid lithography for mixed 2D/3D structures.',
+    color: '#10B981'
+  },
+  {
+    icon: '💾',
+    title: 'Memory Chip Manufacturing',
+    short: 'Storing the world\'s data',
+    tagline: 'Density demands precision',
+    description: 'DRAM and NAND flash memory push lithography density limits. Memory cells are repeated billions of times per chip, making pattern uniformity critical. Focus and dose variations cause cell-to-cell differences that impact storage reliability.',
+    connection: 'Memory lithography requires extreme uniformity. Every cell must have identical dimensions for consistent electrical behavior. The process window must be maintained across billions of repetitions.',
+    howItWorks: 'Memory uses the most aggressive lithography available at each generation. Multiple patterning (LELE, SADP) creates features smaller than the wavelength limit. 3D NAND stacks 200+ layers, each requiring precise focus.',
+    stats: [
+      { value: '200+ layers', label: '3D NAND height', icon: '⚡' },
+      { value: '1Tb', label: 'Chip capacity', icon: '📈' },
+      { value: '$130B', label: 'Memory market', icon: '🚀' }
+    ],
+    examples: ['Samsung 3D V-NAND', 'Micron DDR5 DRAM', 'SK Hynix HBM3', 'Kioxia BiCS flash'],
+    companies: ['Samsung', 'SK Hynix', 'Micron', 'Kioxia'],
+    futureImpact: 'Emerging memory technologies like MRAM and RRAM will require new lithography approaches for their unique material stacks.',
+    color: '#F59E0B'
+  }
+];
+
 const LithoFocusDoseRenderer: React.FC<LithoFocusDoseRendererProps> = ({
   gamePhase,
   onGameEvent,

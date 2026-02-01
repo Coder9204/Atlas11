@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '📱',
+      title: 'Smartphone AI Chips',
+      short: 'Neural engines in your pocket',
+      tagline: 'INT8 powers mobile AI',
+      description: 'Apple\'s Neural Engine and Qualcomm\'s AI accelerators run INT8 quantized models for face recognition, voice processing, and camera enhancement - enabling real-time AI in power-constrained devices.',
+      connection: 'Quantization from FP32 to INT8 reduces model size 4x and enables hardware acceleration, making complex AI feasible on battery-powered mobile devices.',
+      howItWorks: 'Dedicated neural processing units (NPUs) have INT8 matrix multiply hardware. Models are quantized post-training or with quantization-aware training for minimal accuracy loss.',
+      stats: [
+         { value: '17 TOPS', label: 'A17 Neural Engine', icon: '⚡' },
+         { value: '4x', label: 'Memory reduction', icon: '💾' },
+         { value: '<1%', label: 'Accuracy loss', icon: '🎯' }
+      ],
+      examples: ['Face ID', 'Siri on-device', 'Computational photography', 'Real-time translation'],
+      companies: ['Apple', 'Qualcomm', 'Google', 'MediaTek'],
+      futureImpact: 'On-device large language models will enable private, offline AI assistants.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '🤖',
+      title: 'Large Language Model Inference',
+      short: 'Running GPT on consumer hardware',
+      tagline: 'From 1.7TB to 200GB',
+      description: 'GPT-4 scale models would need 1.7TB in FP32. Techniques like GPTQ and GGML enable 4-bit quantization, fitting models on consumer GPUs with less than 1% quality degradation.',
+      connection: 'Neural network weights follow Gaussian distributions that quantize efficiently. Smart algorithms minimize reconstruction error by quantizing weights in optimal order.',
+      howItWorks: 'GPTQ uses second-order information (Hessian) to quantize weights layer-by-layer, compensating for quantization error. NF4 uses non-uniform levels matched to weight distributions.',
+      stats: [
+         { value: '8x', label: 'Compression ratio', icon: '📦' },
+         { value: '70B', label: 'Params on 24GB GPU', icon: '💻' },
+         { value: '<1%', label: 'Perplexity increase', icon: '📊' }
+      ],
+      examples: ['llama.cpp', 'GPTQ models', 'QLoRA fine-tuning', 'ExLlama inference'],
+      companies: ['Meta', 'Hugging Face', 'Together AI', 'Fireworks AI'],
+      futureImpact: 'Consumer devices will run trillion-parameter models locally.',
+      color: '#8B5CF6'
+   },
+   {
+      icon: '🚗',
+      title: 'Autonomous Vehicle Inference',
+      short: 'Real-time perception at the edge',
+      tagline: 'Every millisecond matters',
+      description: 'Tesla\'s FSD computer processes camera feeds in real-time using INT8 inference. Lower precision enables higher throughput, essential for processing multiple camera streams at highway speeds.',
+      connection: 'Autonomous driving requires low latency - INT8 operations are 4x faster than FP32, enabling the 36 FPS processing needed for safe highway driving.',
+      howItWorks: 'Custom silicon with INT8 tensor cores processes neural networks for object detection, lane keeping, and path planning. Calibrated models maintain detection accuracy.',
+      stats: [
+         { value: '144 TOPS', label: 'FSD chip power', icon: '⚡' },
+         { value: '36 FPS', label: 'Camera processing', icon: '🎥' },
+         { value: '8', label: 'Camera inputs', icon: '📷' }
+      ],
+      examples: ['Tesla Autopilot', 'Waymo Driver', 'Cruise Origin', 'Mobileye EyeQ'],
+      companies: ['Tesla', 'Waymo', 'NVIDIA', 'Mobileye'],
+      futureImpact: 'More aggressive quantization will enable full autonomy on cheaper hardware.',
+      color: '#10B981'
+   },
+   {
+      icon: '🎨',
+      title: 'Image Generation on Device',
+      short: 'Stable Diffusion everywhere',
+      tagline: 'Art in your pocket',
+      description: 'Stable Diffusion runs on iPhones using INT8 CoreML models. What required a datacenter GPU in 2022 now generates images on phones in seconds through aggressive quantization.',
+      connection: 'Diffusion models are surprisingly robust to quantization because the iterative denoising process smooths out small numerical errors.',
+      howItWorks: 'Models are converted to CoreML or TensorFlow Lite with INT8 weights. The neural engine handles quantized convolutions while critical layers may stay at higher precision.',
+      stats: [
+         { value: '5s', label: 'Generation time', icon: '⏱️' },
+         { value: '2GB', label: 'Model size', icon: '💾' },
+         { value: '512px', label: 'Output resolution', icon: '🖼️' }
+      ],
+      examples: ['Draw Things app', 'Lensa AI', 'Prisma', 'On-device Midjourney'],
+      companies: ['Stability AI', 'Apple', 'Google', 'Adobe'],
+      futureImpact: 'Real-time video generation will be possible on mobile devices.',
+      color: '#EC4899'
+   }
+];
+
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

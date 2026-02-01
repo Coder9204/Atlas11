@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🏠',
+    title: 'Residential Solar Power',
+    short: 'Rooftop panels convert sunlight to electricity for homes',
+    tagline: 'Power from your roof',
+    description: 'Over 4 million US homes have solar panels, generating electricity that reduces utility bills and carbon emissions. Modern systems can provide 80-100% of a household\'s electricity needs.',
+    connection: 'This game demonstrates the inverse-square law and angle dependence of solar cell output. Home solar installers must optimize tilt angle for latitude and consider shading to maximize annual energy production.',
+    howItWorks: 'Photovoltaic cells convert photons to electron-hole pairs in semiconductor junctions. Series-connected cells create 30-40V panels, which inverters convert to 120/240V AC. Net metering lets excess power flow to the grid.',
+    stats: [
+      { value: '4M+', label: 'US solar homes', icon: '🏘️' },
+      { value: '25 yrs', label: 'Panel warranty life', icon: '📅' },
+      { value: '$30K', label: 'Average savings over lifetime', icon: '💰' }
+    ],
+    examples: ['Rooftop arrays', 'Ground-mount systems', 'Solar carports', 'Battery backup systems'],
+    companies: ['Tesla', 'SunPower', 'Enphase', 'SolarEdge'],
+    futureImpact: 'Building-integrated photovoltaics will turn entire building surfaces into power generators, with solar windows and facades becoming standard in new construction.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🛰️',
+    title: 'Space Power Systems',
+    short: 'Satellites rely exclusively on solar cells for electrical power',
+    tagline: 'Powering exploration beyond Earth',
+    description: 'Every satellite, space station, and Mars rover depends on solar arrays. In space, panels receive full solar intensity without atmospheric losses, generating about 1.4 kW/m² at Earth\'s orbit.',
+    connection: 'The inverse-square law is critical for space missions. Mars rovers receive only 40% of Earth\'s solar intensity. The simulation shows how distance dramatically affects power output.',
+    howItWorks: 'Space-grade multi-junction cells stack 3-6 semiconductor layers, each optimized for different wavelengths, achieving 30-47% efficiency. Arrays deploy from folded configurations and track the sun with gimbal mechanisms.',
+    stats: [
+      { value: '47%', label: 'Record space cell efficiency', icon: '⚡' },
+      { value: '109 kW', label: 'ISS solar array power', icon: '🔋' },
+      { value: '$400M', label: 'NASA solar tech investment/yr', icon: '🚀' }
+    ],
+    examples: ['International Space Station', 'Mars rovers', 'Starlink satellites', 'James Webb Telescope'],
+    companies: ['NASA', 'SpaceX', 'Airbus Defence', 'Northrop Grumman'],
+    futureImpact: 'Space-based solar power stations could beam gigawatts of clean energy to Earth, providing constant power unaffected by weather or nighttime.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '⚡',
+    title: 'Utility-Scale Solar Farms',
+    short: 'Massive installations provide clean power to millions',
+    tagline: 'Industrial-scale clean energy',
+    description: 'Solar farms spanning hundreds of hectares now provide cheaper electricity than fossil fuels in many regions. The largest installations exceed 2 GW capacity, powering entire cities.',
+    connection: 'This game shows how tracking systems that keep panels perpendicular to sunlight (cosine factor = 1) can increase output by 25-40% compared to fixed mounts - essential knowledge for utility-scale optimization.',
+    howItWorks: 'Single-axis trackers follow the sun east to west, while dual-axis trackers also adjust for seasonal elevation changes. Central inverters convert DC from thousands of panels into grid-synchronized AC power.',
+    stats: [
+      { value: '1200 GW', label: 'Global solar capacity', icon: '🌍' },
+      { value: '$0.02/kWh', label: 'Lowest solar electricity cost', icon: '💵' },
+      { value: '75%', label: 'Cost decline since 2010', icon: '📉' }
+    ],
+    examples: ['Bhadla Solar Park (India)', 'Solar Star (USA)', 'Tengger Desert Solar (China)', 'Noor Complex (Morocco)'],
+    companies: ['NextEra Energy', 'First Solar', 'JinkoSolar', 'Canadian Solar'],
+    futureImpact: 'Agrivoltaics combining solar with farming, and floating solar on reservoirs, will expand suitable land area and add benefits like reduced water evaporation.',
+    color: '#10B981'
+  },
+  {
+    icon: '🔬',
+    title: 'Concentrated Photovoltaics',
+    short: 'Lenses and mirrors focus sunlight onto high-efficiency cells',
+    tagline: 'Magnifying solar potential',
+    description: 'CPV systems use optics to concentrate sunlight 500-1000x onto tiny multi-junction cells. This achieves the highest efficiencies of any solar technology, exceeding 47% conversion.',
+    connection: 'The magnifying glass option in this game demonstrates light concentration. CPV takes this to the extreme, trading larger collection areas of cheap optics for smaller areas of expensive high-performance cells.',
+    howItWorks: 'Fresnel lenses or parabolic mirrors focus direct sunlight onto cells just millimeters across. Active cooling prevents overheating. Dual-axis tracking maintains focus within 0.1° to capture the solar disk image.',
+    stats: [
+      { value: '47%', label: 'World record efficiency', icon: '🏆' },
+      { value: '1000x', label: 'Typical concentration ratio', icon: '🔍' },
+      { value: '500°C', label: 'Cell operating temperature', icon: '🌡️' }
+    ],
+    examples: ['Desert power plants', 'Space solar arrays', 'Remote microgrids', 'Research installations'],
+    companies: ['Soitec', 'Suncore', 'SolFocus', 'NREL'],
+    futureImpact: 'Micro-CPV systems could integrate into buildings, while advances in multi-junction cells may push efficiencies toward 60%.',
+    color: '#8B5CF6'
+  }
+];
+
 interface SolarCellRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
   onPhaseComplete?: () => void;

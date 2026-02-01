@@ -2,6 +2,82 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+// Real-world applications for microwave standing waves
+const realWorldApps = [
+  {
+    icon: '🔬',
+    title: 'Microwave Chemistry',
+    short: 'Accelerated chemical reactions',
+    tagline: 'Heating molecules from the inside out',
+    description: 'Industrial microwave reactors use precisely controlled standing wave patterns to heat chemical reactions. By placing reactants at antinodes (hot spots), chemists achieve uniform heating that can accelerate reactions 100x while reducing energy consumption.',
+    connection: 'The game showed how standing waves create fixed hot spots at antinodes. Industrial microwave reactors position reaction vessels at these maxima for optimal energy coupling, using the same λ/2 spacing principles.',
+    howItWorks: 'Microwave cavity tuned to create specific standing wave pattern. Reaction vessel placed at antinode position. Dielectric heating excites polar molecules uniformly throughout volume. Temperature sensors and feedback adjust power.',
+    stats: [
+      { value: '100x', label: 'Reaction speed increase', icon: '⚡' },
+      { value: '90%', label: 'Energy efficiency', icon: '📈' },
+      { value: '$2B', label: 'Industrial microwave market', icon: '💰' }
+    ],
+    examples: ['Pharmaceutical synthesis', 'Polymer curing', 'Organic chemistry', 'Materials processing'],
+    companies: ['CEM Corporation', 'Anton Paar', 'Milestone', 'Biotage'],
+    futureImpact: 'Continuous flow microwave reactors will enable on-demand pharmaceutical manufacturing at point of care.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '📡',
+    title: 'Antenna Design',
+    short: 'Standing wave ratio in RF systems',
+    tagline: 'Maximizing signal, minimizing reflections',
+    description: 'Radio engineers obsess over standing wave ratio (SWR) - the measure of how much energy reflects back versus being radiated. Impedance mismatches create standing waves that waste power and can damage transmitters. Perfect matching means SWR = 1.',
+    connection: 'The game demonstrated how wave reflections create standing patterns. In antennas, these same reflections from impedance mismatches create standing waves on transmission lines, reducing efficiency.',
+    howItWorks: 'Antenna impedance must match transmission line (typically 50Ω). Mismatch causes partial reflection. Forward and reflected waves superpose into standing wave. SWR meter measures ratio. Matching networks tune out reflections.',
+    stats: [
+      { value: '1.5:1', label: 'Acceptable SWR', icon: '📊' },
+      { value: '50Ω', label: 'Standard impedance', icon: '⚡' },
+      { value: '$30B', label: 'RF component market', icon: '📈' }
+    ],
+    examples: ['Cell tower antennas', 'Ham radio stations', 'WiFi routers', 'Satellite uplinks'],
+    companies: ['Ericsson', 'CommScope', 'Amphenol', 'TE Connectivity'],
+    futureImpact: 'Reconfigurable intelligent surfaces will dynamically shape standing wave patterns to optimize 6G wireless coverage.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🎸',
+    title: 'Musical Instrument Acoustics',
+    short: 'Standing waves make music',
+    tagline: 'Every note is a resonant mode',
+    description: 'Musical instruments work by creating standing waves - on strings, in air columns, or on vibrating surfaces. The fundamental frequency and overtones that give each instrument its timbre are simply different standing wave patterns with nodes and antinodes.',
+    connection: 'The microwave standing wave patterns directly parallel acoustic standing waves. The λ/2 spacing between nodes, the relationship between cavity size and wavelength, and resonance conditions apply to guitars, flutes, and drums alike.',
+    howItWorks: 'String or air column length determines fundamental wavelength. Boundary conditions (fixed ends, open/closed pipes) set node positions. Multiple standing wave modes produce harmonics. Body/cavity shapes amplify certain frequencies.',
+    stats: [
+      { value: '440Hz', label: 'A4 concert pitch', icon: '🎵' },
+      { value: '20-20kHz', label: 'Human hearing range', icon: '👂' },
+      { value: '$20B', label: 'Musical instrument market', icon: '📈' }
+    ],
+    examples: ['Guitar harmonics', 'Organ pipes', 'Violin resonances', 'Drum modes'],
+    companies: ['Fender', 'Yamaha', 'Steinway', 'Gibson'],
+    futureImpact: 'Computational acoustics will enable 3D-printed instruments with impossible geometries optimized for specific tonal qualities.',
+    color: '#22c55e'
+  },
+  {
+    icon: '⚛️',
+    title: 'Particle Accelerators',
+    short: 'RF cavities for atom smashing',
+    tagline: 'Surfing on electromagnetic waves',
+    description: 'Particle accelerators use radio frequency cavities where standing electromagnetic waves accelerate charged particles. Particles arrive at the cavity just as the electric field reaches maximum (antinode), gaining energy each pass like surfers catching waves.',
+    connection: 'The game showed antinodes as energy maxima. In accelerator cavities, particles must arrive when the standing wave electric field peaks - timing synchronized to λ/2 spacing between cavities determines the achievable energy.',
+    howItWorks: 'RF power creates standing wave in resonant cavity. Electric field oscillates at GHz frequencies. Particle bunches timed to arrive at field maximum. Each cavity adds ~1 MeV. Thousands of cavities achieve TeV energies.',
+    stats: [
+      { value: '14TeV', label: 'LHC collision energy', icon: '⚡' },
+      { value: '400MHz', label: 'LHC RF frequency', icon: '📡' },
+      { value: '$10B', label: 'Accelerator construction', icon: '📈' }
+    ],
+    examples: ['Large Hadron Collider', 'Cancer proton therapy', 'X-ray synchrotrons', 'Spallation sources'],
+    companies: ['CERN', 'Fermilab', 'SLAC', 'Varian Medical'],
+    futureImpact: 'Plasma wakefield accelerators will achieve LHC energies in meters instead of kilometers using different wave physics.',
+    color: '#f59e0b'
+  }
+];
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════

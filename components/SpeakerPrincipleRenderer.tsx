@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🔊',
+    title: 'Audio Speaker Design',
+    short: 'Converting electrical signals to sound waves',
+    tagline: 'The voice of electronics',
+    description: 'Every speaker from phone earbuds to stadium concert systems uses the Lorentz force. A voice coil in a magnetic field moves in response to electrical current, pushing air to create sound waves.',
+    connection: 'This simulation demonstrates F = BIL - the force on the voice coil depends on magnetic field strength, current, and wire length. Speaker designers optimize all three to maximize efficiency and sound quality.',
+    howItWorks: 'The voice coil is wound copper wire sitting in a gap between permanent magnets. Alternating current creates alternating force, moving the coil and attached cone. Suspension springs return the cone to center. The cone pushes air, creating pressure waves we hear as sound.',
+    stats: [
+      { value: '$35B', label: 'Global speaker market', icon: '💰' },
+      { value: '20-20kHz', label: 'Human hearing range', icon: '👂' },
+      { value: '99%', label: 'Of audio devices use this tech', icon: '📊' }
+    ],
+    examples: ['Smartphone speakers', 'Studio monitors', 'PA systems', 'Automotive audio'],
+    companies: ['JBL', 'Bose', 'Harman', 'Sonos'],
+    futureImpact: 'Planar magnetic and electrostatic designs offer alternatives, while smart speakers integrate AI assistants, transforming how we interact with audio.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎸',
+    title: 'Electric Guitar Pickups',
+    short: 'Turning string vibrations into electrical signals',
+    tagline: 'The soul of rock and roll',
+    description: 'Guitar pickups work as speakers in reverse. Magnetized strings vibrating in a coil induce electrical current through electromagnetic induction - the opposite of the Lorentz force that drives speakers.',
+    connection: 'This simulation shows the motor effect (current to motion). Pickups use the generator effect (motion to current). Both rely on the same physics - the interaction of magnetic fields and moving charges.',
+    howItWorks: 'Permanent magnets magnetize the steel strings. When strings vibrate, the changing magnetic flux through copper coils induces a voltage (Faraday\'s law). The tiny signal (millivolts) is amplified to drive speakers.',
+    stats: [
+      { value: '6000+', label: 'Coil windings typical', icon: '🔄' },
+      { value: '8-15kΩ', label: 'Pickup impedance range', icon: '⚡' },
+      { value: '$2B', label: 'Guitar market annually', icon: '🎸' }
+    ],
+    examples: ['Single-coil pickups', 'Humbuckers', 'Active pickups', 'Bass pickups'],
+    companies: ['Fender', 'Gibson', 'Seymour Duncan', 'DiMarzio'],
+    futureImpact: 'Modeling amplifiers and digital processing are expanding tonal possibilities, while traditional pickups remain essential for authentic analog tone.',
+    color: '#10B981'
+  },
+  {
+    icon: '🚄',
+    title: 'Maglev Transportation',
+    short: 'Trains that float on magnetic force',
+    tagline: 'Friction-free travel',
+    description: 'Maglev trains use powerful electromagnets to levitate above the track and propel forward. Linear motors in the track create traveling magnetic waves that push the train at speeds over 600 km/h.',
+    connection: 'Linear motors are essentially unrolled versions of the rotary motors in this simulation. The Lorentz force on current-carrying conductors in magnetic fields provides both levitation and propulsion.',
+    howItWorks: 'Superconducting magnets on the train interact with powered coils in the track. For levitation, induced currents create repulsive forces. For propulsion, a traveling magnetic wave in the track pulls the train forward like a surfboard riding a wave.',
+    stats: [
+      { value: '603 km/h', label: 'Maglev speed record', icon: '🚄' },
+      { value: '0 mm', label: 'Contact with track', icon: '🧲' },
+      { value: '$100B', label: 'Japan maglev project cost', icon: '💹' }
+    ],
+    examples: ['Shanghai Maglev', 'Japan Chuo Shinkansen', 'Hyperloop concepts', 'Inductrack systems'],
+    companies: ['JR Central', 'Transrapid', 'Virgin Hyperloop', 'CRRC'],
+    futureImpact: 'Hyperloop systems could achieve near-supersonic ground transport in vacuum tubes, revolutionizing intercity travel.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🏥',
+    title: 'MRI Machines',
+    short: 'Imaging the body with magnetic fields and radio waves',
+    tagline: 'Seeing without radiation',
+    description: 'MRI scanners use powerful magnetic fields and precisely controlled RF pulses to image soft tissue in exquisite detail. Gradient coils create spatial encoding through Lorentz-force-generated magnetic field variations.',
+    connection: 'MRI gradient coils work like the voice coil in this simulation - current through wires in a magnetic field creates forces. These forces are managed structurally while the coils create precisely shaped magnetic fields for imaging.',
+    howItWorks: 'A superconducting main magnet aligns hydrogen protons. Gradient coils (using Lorentz forces) create position-dependent fields. RF pulses tip protons, which then emit signals revealing tissue properties. Fourier transforms reconstruct 3D images.',
+    stats: [
+      { value: '100M+', label: 'MRI scans yearly worldwide', icon: '🏥' },
+      { value: '7 Tesla', label: 'Highest clinical field strength', icon: '🧲' },
+      { value: '$8B', label: 'MRI equipment market', icon: '💵' }
+    ],
+    examples: ['Brain imaging', 'Joint diagnosis', 'Cardiac MRI', 'Fetal monitoring'],
+    companies: ['Siemens Healthineers', 'GE Healthcare', 'Philips', 'Canon Medical'],
+    futureImpact: 'Faster imaging, AI-assisted diagnosis, and lower-field portable MRI are expanding access to this radiation-free imaging modality.',
+    color: '#F59E0B'
+  }
+];
+
 // ============================================================================
 // SPEAKER PRINCIPLE GAME
 // Core Concept: Lorentz force on current-carrying wire in magnetic field

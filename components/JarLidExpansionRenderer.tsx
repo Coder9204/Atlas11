@@ -49,6 +49,84 @@ interface JarLidExpansionRendererProps {
 }
 
 // ============================================================================
+// REAL-WORLD APPLICATIONS
+// ============================================================================
+const realWorldApps = [
+  {
+    icon: '🌉',
+    title: 'Bridge Expansion Joints',
+    short: 'Preventing structural damage',
+    tagline: 'Engineering flexibility into rigidity',
+    description: 'Long bridges incorporate expansion joints every 50-100 meters to accommodate thermal expansion. Without these gaps, temperature changes would create enormous stresses that could crack concrete and buckle steel. The Golden Gate Bridge expands up to 1.5 meters on hot days.',
+    connection: 'Just as heating a jar lid causes it to expand more than the glass, bridge components expand at different rates. Expansion joints allow steel and concrete to grow and shrink independently without building up destructive thermal stress.',
+    howItWorks: 'Expansion joints use interlocking finger plates or elastomeric bearings that allow horizontal movement while supporting vertical loads. Engineers calculate required gap width using ΔL = αL₀ΔT, considering local temperature extremes.',
+    stats: [
+      { value: '3.6cm', label: 'Expansion/50m', icon: '⚡' },
+      { value: '60°C', label: 'Temp range', icon: '📈' },
+      { value: '50+ years', label: 'Bridge life', icon: '🚀' }
+    ],
+    examples: ['Golden Gate Bridge expansion system', 'Interstate highway joints', 'Railway track expansion gaps', 'Pipeline expansion loops'],
+    companies: ['Watson Bowman', 'Mageba', 'DS Brown', 'Trelleborg'],
+    futureImpact: 'Smart expansion joints with embedded sensors will monitor movement and stress in real-time, providing early warning of structural issues and enabling predictive maintenance.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🔩',
+    title: 'Shrink-Fit Assembly',
+    short: 'Ultra-tight mechanical joints',
+    tagline: 'Thermal expansion as a precision tool',
+    description: 'Industrial machinery uses thermal expansion to create incredibly tight mechanical connections. By heating an outer ring and cooling an inner shaft, components can be assembled with interference fits that would be impossible at room temperature.',
+    connection: 'This is the jar lid principle in reverse—controlled thermal expansion creates the gap needed for assembly. When temperatures equalize, the differential contraction creates a joint stronger than threading or welding.',
+    howItWorks: 'The outer component is heated until it expands enough to slip over the inner piece (typically 150-300°C). As it cools and contracts, it grips the inner component with enormous pressure. The interference fit can transmit huge torques without keys or splines.',
+    stats: [
+      { value: '100MPa', label: 'Joint pressure', icon: '⚡' },
+      { value: '0.1mm', label: 'Interference', icon: '📈' },
+      { value: '10x', label: 'Torque capacity', icon: '🚀' }
+    ],
+    examples: ['Railway wheel mounting', 'Bearing installation', 'Gear shaft assembly', 'Turbine blade roots'],
+    companies: ['SKF', 'Timken', 'Siemens', 'GE Aerospace'],
+    futureImpact: 'Precision induction heating systems will enable automated shrink-fit assembly in robotic manufacturing, with temperature control accurate to 1°C for consistent joint quality.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🌡️',
+    title: 'Bimetallic Thermostats',
+    short: 'Temperature sensing without electronics',
+    tagline: 'Two metals, one solution',
+    description: 'Bimetallic strips use differential thermal expansion to create mechanical thermostats. By bonding two metals with different expansion coefficients, temperature changes cause bending that can open or close electrical contacts.',
+    connection: 'The jar lid opens because metal expands more than glass. Bimetallic strips exploit this same principle—brass expands more than steel, so a bonded strip curves toward the slower-expanding metal when heated.',
+    howItWorks: 'Two metals (typically brass and steel or invar) are bonded face-to-face. Different expansion rates cause the strip to curve when temperature changes. This mechanical motion actuates switches in thermostats, circuit breakers, and fire alarms.',
+    stats: [
+      { value: '±0.5°C', label: 'Accuracy', icon: '⚡' },
+      { value: '1M+', label: 'Cycles life', icon: '📈' },
+      { value: '$0.50', label: 'Unit cost', icon: '🚀' }
+    ],
+    examples: ['Home heating thermostats', 'Oven temperature controls', 'Circuit breaker trips', 'Fire sprinkler triggers'],
+    companies: ['Honeywell', 'Emerson', 'Sensata', 'Texas Instruments'],
+    futureImpact: 'While electronic sensors dominate new designs, bimetallic devices remain crucial for safety applications where simplicity and reliability matter more than precision.',
+    color: '#10B981'
+  },
+  {
+    icon: '⚡',
+    title: 'Power Line Sag Management',
+    short: 'Keeping electricity flowing safely',
+    tagline: 'Calculating clearance for safety',
+    description: 'Overhead power lines expand significantly on hot days, causing them to sag closer to the ground. Engineers must calculate maximum sag under worst-case conditions to ensure safe clearance from trees, buildings, and the ground.',
+    connection: 'Like the expanding jar lid, aluminum power lines grow in length with temperature. A 100-meter span can extend by 10+ centimeters on a hot day, dramatically increasing sag between towers.',
+    howItWorks: 'Utilities use conductor temperature monitoring systems to calculate real-time sag. High-temperature low-sag (HTLS) conductors use composite cores that expand less than aluminum. Dynamic line rating systems adjust power limits based on actual conditions.',
+    stats: [
+      { value: '23×10⁻⁶', label: 'α aluminum/°C', icon: '⚡' },
+      { value: '10m', label: 'Typical sag', icon: '📈' },
+      { value: '$45B', label: 'Grid investment', icon: '🚀' }
+    ],
+    examples: ['High-voltage transmission lines', 'Rural distribution networks', 'Railway electrification', 'Submarine cable systems'],
+    companies: ['General Cable', 'Southwire', 'Prysmian', 'Nexans'],
+    futureImpact: 'Carbon fiber composite conductors will virtually eliminate thermal sag, allowing existing corridors to carry more power and reducing wildfire risk from sagging lines.',
+    color: '#F59E0B'
+  }
+];
+
+// ============================================================================
 // COMPREHENSIVE TEST QUESTIONS (10 questions with scenarios)
 // ============================================================================
 const testQuestions: TestQuestion[] = [

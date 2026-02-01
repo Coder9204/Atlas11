@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+   {
+      icon: '🔷',
+      title: 'Monocrystalline PERC Cells',
+      short: 'Pyramid texturing',
+      tagline: 'Random pyramids trap light',
+      description: 'Monocrystalline silicon solar cells use alkaline etching (KOH/NaOH) to create random pyramid textures. The anisotropic etch reveals <111> crystal planes, forming four-sided pyramids that reduce reflection to under 10%.',
+      connection: 'Light hitting a pyramid face reflects at an angle that directs it into an adjacent pyramid, giving photons multiple chances to enter the silicon before escaping.',
+      howItWorks: 'The <100> wafer surface etches slowly while <111> planes etch faster, naturally forming inverted pyramids. Texture depth and uniformity depend on etch time, temperature, and additive concentration.',
+      stats: [
+         { value: '<3%', label: 'Reflection with ARC', icon: '✨' },
+         { value: '5-10μm', label: 'Pyramid height', icon: '📐' },
+         { value: '23%+', label: 'Cell efficiency', icon: '⚡' }
+      ],
+      examples: ['Rooftop solar panels', 'Utility-scale installations', 'Premium modules', 'Space solar arrays'],
+      companies: ['LONGi', 'JA Solar', 'Trina', 'Canadian Solar'],
+      futureImpact: 'Inverted pyramid textures and nano-texturing may push reflection below 1%.',
+      color: '#3B82F6'
+   },
+   {
+      icon: '⬛',
+      title: 'Black Silicon Technology',
+      short: 'Nano-scale light trapping',
+      tagline: 'The darkest silicon ever made',
+      description: 'Black silicon uses plasma etching or femtosecond laser processing to create nano-scale needle structures. These needles trap light so effectively that the surface appears completely black, absorbing over 99% of incident light.',
+      connection: 'The extreme aspect ratio of nano-needles creates a gradient refractive index effect, virtually eliminating surface reflection across all wavelengths and angles.',
+      howItWorks: 'Reactive ion etching (RIE) with SF6/O2 plasma creates random nano-structures through mask-less self-organization. The needles are 100-500nm wide and several microns tall.',
+      stats: [
+         { value: '>99%', label: 'Light absorption', icon: '⬛' },
+         { value: '0.5μm', label: 'Needle diameter', icon: '📏' },
+         { value: '22%+', label: 'Cell efficiency', icon: '⚡' }
+      ],
+      examples: ['Multi-crystalline solar cells', 'Photodetectors', 'Anti-glare surfaces', 'Stealth coatings'],
+      companies: ['SunPower', 'Hanwha Q Cells', 'Oxford Instruments', 'Applied Materials'],
+      futureImpact: 'Black silicon enables high efficiency on lower-cost multi-crystalline wafers.',
+      color: '#1F2937'
+   },
+   {
+      icon: '🔬',
+      title: 'Anti-Glare Display Coatings',
+      short: 'Matte vs glossy screens',
+      tagline: 'Scattering reflections',
+      description: 'Matte display coatings use micro-scale surface texturing to convert specular reflections into diffuse scattering. This reduces eye strain in bright environments but slightly reduces contrast and sharpness.',
+      connection: 'Like solar cell texturing in reverse, display anti-glare coatings scatter incoming light in many directions rather than directing it into the material.',
+      howItWorks: 'Micro-particles or etched patterns on the screen surface scatter reflected light over a wide range of angles. This prevents bright spots from light sources while letting display light through with minimal loss.',
+      stats: [
+         { value: '40%', label: 'Glare reduction', icon: '👁️' },
+         { value: '5-50μm', label: 'Texture scale', icon: '📏' },
+         { value: '~5%', label: 'Transmission loss', icon: '📉' }
+      ],
+      examples: ['Laptop screens', 'Monitors', 'Tablets', 'E-readers'],
+      companies: ['Apple', 'LG Display', 'Samsung', '3M'],
+      futureImpact: 'Nano-structured anti-glare coatings will reduce glare without sacrificing image quality.',
+      color: '#6B7280'
+   },
+   {
+      icon: '🎯',
+      title: 'Stealth Aircraft Coatings',
+      short: 'Radar-absorbing surfaces',
+      tagline: 'Invisible to radar',
+      description: 'Stealth aircraft use specialized surface coatings and textures to absorb and scatter radar waves. The principles of light trapping apply equally to radio frequencies, making planes nearly invisible to detection.',
+      connection: 'Just as textured silicon traps light through multiple reflections, RAM (radar-absorbing material) coatings trap and dissipate radar energy through geometric and material properties.',
+      howItWorks: 'Serrated edges and angled surfaces reflect radar away from the source. RAM coatings contain carbon or iron particles that convert radar energy to heat. Multiple layers create interference effects.',
+      stats: [
+         { value: '-40dB', label: 'Radar reflection', icon: '📡' },
+         { value: '0.001m²', label: 'Radar cross-section', icon: '🎯' },
+         { value: '$2B', label: 'B-2 bomber cost', icon: '💰' }
+      ],
+      examples: ['F-22 Raptor', 'B-2 Spirit', 'F-35 Lightning', 'Naval vessels'],
+      companies: ['Lockheed Martin', 'Northrop Grumman', 'BAE Systems', 'Raytheon'],
+      futureImpact: 'Meta-materials and active camouflage may provide tunable stealth across multiple frequencies.',
+      color: '#374151'
+   }
+];
+
 // Phase type for internal state management
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 

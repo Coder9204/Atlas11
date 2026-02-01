@@ -24,6 +24,81 @@ const phaseLabels: Record<Phase, string> = {
   mastery: 'Mastery',
 };
 
+const realWorldApps = [
+  {
+    icon: '🔆',
+    title: 'Solar Panel Testing',
+    short: 'Standardized spectrum for accurate measurements',
+    tagline: 'The sun simulator challenge',
+    description: 'Solar panel manufacturers must test panels under standardized AM1.5 spectrum conditions. Using the wrong light source gives inaccurate efficiency ratings that mislead customers and fail certification.',
+    connection: 'Spectral mismatch directly affects measured efficiency - a panel tested under tungsten light will show lower output than under actual sunlight because the spectrum differs significantly.',
+    howItWorks: 'Solar simulators use xenon lamps with filters to match the AM1.5 solar spectrum. Multi-source simulators combine LEDs and arc lamps to achieve class AAA spectral match within 0.75-1.25x of reference at each wavelength band.',
+    stats: [
+      { value: '0.25%', label: 'Allowed spectral deviation', icon: '📊' },
+      { value: '$15B', label: 'Annual PV testing market', icon: '💰' },
+      { value: '25%+', label: 'Efficiency overestimate risk', icon: '⚠️' }
+    ],
+    examples: ['NREL certification testing', 'Factory quality control', 'Research cell characterization', 'Outdoor performance prediction'],
+    companies: ['Newport', 'Abet Technologies', 'Pasan', 'Eternal Sun'],
+    futureImpact: 'As multi-junction cells with 3-6 junctions become standard, spectral matching requirements will become even more stringent to properly evaluate each sub-cell.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🌱',
+    title: 'Agrivoltaics',
+    short: 'Optimizing spectrum for crops and power',
+    tagline: 'Growing food under solar panels',
+    description: 'Agrivoltaics combines farming with solar power generation. Special panels can be tuned to absorb certain wavelengths for electricity while transmitting the spectrum plants need for photosynthesis.',
+    connection: 'Understanding spectral mismatch helps design semi-transparent panels that capture UV and non-photosynthetic wavelengths while letting through red and blue light that plants actually use.',
+    howItWorks: 'Wavelength-selective PV uses organic or perovskite cells tuned to absorb green light (which plants reflect anyway) and UV, while transmitting photosynthetically active radiation (PAR) in red and blue bands.',
+    stats: [
+      { value: '30%', label: 'Higher land efficiency', icon: '🌍' },
+      { value: '160%', label: 'Combined crop+energy value', icon: '📈' },
+      { value: '20%', label: 'Water savings from shade', icon: '💧' }
+    ],
+    examples: ['Vineyard overhead solar', 'Berry farm shade panels', 'Greenhouse integrated PV', 'Pollinator habitat corridors'],
+    companies: ['Sun Agri', 'Insolight', 'BayWa r.e.', 'Silicon Ranch'],
+    futureImpact: 'Spectrally-tuned agrivoltaics could provide 10% of global electricity while increasing crop yields in warming climates through strategic shading.',
+    color: '#22c55e'
+  },
+  {
+    icon: '🏠',
+    title: 'Indoor Light Harvesting',
+    short: 'Powering IoT devices from ambient light',
+    tagline: 'Every lamp is a power source',
+    description: 'Indoor photovoltaics power billions of IoT sensors, smart labels, and wearables using artificial light. But indoor spectra differ dramatically from sunlight, requiring specially designed cells.',
+    connection: 'Indoor light sources like LEDs and fluorescents have narrow spectral peaks. Cells optimized for sunlight waste most indoor light energy - spectral mismatch can reduce efficiency by 80%.',
+    howItWorks: 'Indoor-optimized cells use materials like amorphous silicon, organic semiconductors, or perovskites with bandgaps tuned to match LED emission peaks around 450nm and 600nm rather than the broad solar spectrum.',
+    stats: [
+      { value: '30%', label: 'Indoor cell efficiency', icon: '⚡' },
+      { value: '50B', label: 'IoT devices by 2030', icon: '📱' },
+      { value: '10+', label: 'Year battery-free lifetime', icon: '🔋' }
+    ],
+    examples: ['Self-powered sensors', 'Electronic shelf labels', 'Smart home devices', 'Wearable health monitors'],
+    companies: ['Ambient Photonics', 'Dracula Technologies', 'Exeger', 'Ricoh'],
+    futureImpact: 'Indoor light harvesting will eliminate billions of disposable batteries annually, enabling truly maintenance-free smart buildings and wearables.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🛰️',
+    title: 'Multi-Junction Space Cells',
+    short: 'Maximum efficiency through spectrum splitting',
+    tagline: 'Every photon counts in orbit',
+    description: 'Spacecraft use multi-junction cells that split the solar spectrum between 3-6 different semiconductor layers, each optimized for a specific wavelength range to minimize spectral mismatch losses.',
+    connection: 'Each junction in a multi-junction cell has a different bandgap, capturing photons at nearly optimal energy. This reduces both sub-bandgap transmission losses and thermalization losses from excess photon energy.',
+    howItWorks: 'Stacked junctions with decreasing bandgaps (InGaP/GaAs/Ge or similar) absorb high-energy blue photons first, then green, then red/IR. Current matching between junctions requires precise spectral tuning.',
+    stats: [
+      { value: '47%', label: 'Record cell efficiency', icon: '🏆' },
+      { value: '$250k', label: 'Cost per square meter', icon: '💎' },
+      { value: '15yr', label: 'Space mission lifetime', icon: '🚀' }
+    ],
+    examples: ['Mars rovers', 'GPS satellites', 'Space station arrays', 'Deep space probes'],
+    companies: ['SpectroLab', 'Azur Space', 'SolAero', 'Sharp'],
+    futureImpact: 'Six-junction cells approaching 50% efficiency will enable more powerful spacecraft with smaller arrays, crucial for deep space exploration and satellite megaconstellations.',
+    color: '#8b5cf6'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

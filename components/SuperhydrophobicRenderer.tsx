@@ -7,6 +7,81 @@ interface SuperhydrophobicRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+const realWorldApps = [
+  {
+    icon: '🏢',
+    title: 'Self-Cleaning Buildings',
+    short: 'Architecture that washes itself',
+    tagline: 'Let the rain do the work',
+    description: 'Superhydrophobic coatings on buildings, bridges, and monuments cause water droplets to bead up and roll off, carrying dirt and pollution with them. Inspired by the lotus leaf effect.',
+    connection: 'The Cassie-Baxter state traps air under water droplets on rough hydrophobic surfaces, creating contact angles above 150 degrees. Dirt particles are picked up by rolling drops.',
+    howItWorks: 'Nanostructured surfaces with low surface energy chemistry create stable air pockets. Water droplets ball up and roll, gathering contaminants. Solar photocatalysts can enhance cleaning action.',
+    stats: [
+      { value: '150°+', label: 'Contact angle', icon: '💧' },
+      { value: '70%', label: 'Cleaning cost reduction', icon: '💰' },
+      { value: '10yr', label: 'Coating lifespan', icon: '⏰' }
+    ],
+    examples: ['Museum facades', 'Bridge cables', 'Solar panels', 'Traffic signs'],
+    companies: ['Sto Corp', 'PPG Industries', 'NeverWet', 'Ultra-Ever Dry'],
+    futureImpact: 'Self-healing superhydrophobic surfaces will maintain water-repellency even after abrasion, making maintenance-free infrastructure a reality.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '✈️',
+    title: 'Anti-Icing Surfaces',
+    short: 'Preventing ice formation on aircraft',
+    tagline: 'When ice wont stick',
+    description: 'Superhydrophobic surfaces prevent ice accumulation by repelling water before it freezes. Aircraft wings, wind turbines, and power lines can stay ice-free without energy-intensive heating.',
+    connection: 'Ice formation requires water to first wet the surface. Superhydrophobic textures prevent wetting, so water drops roll off before freezing. Even in freezing conditions, ice adhesion is dramatically reduced.',
+    howItWorks: 'Nanotextured surfaces with icephobic chemistry minimize ice adhesion. Water droplets bounce off or roll away before nucleation. Any ice that does form sheds under its own weight or airflow.',
+    stats: [
+      { value: '90%', label: 'Ice adhesion reduction', icon: '❄️' },
+      { value: '$3B', label: 'Annual de-icing costs', icon: '💰' },
+      { value: '-40°C', label: 'Operating temperature', icon: '🌡️' }
+    ],
+    examples: ['Aircraft wings', 'Wind turbine blades', 'Power transmission lines', 'Satellite antennas'],
+    companies: ['Aerospace coating companies', 'GE Renewable Energy', 'NASA', 'Rolls-Royce'],
+    futureImpact: 'Durable icephobic coatings will enable renewable energy in cold climates and safer aviation without chemical de-icers that harm the environment.',
+    color: '#06b6d4'
+  },
+  {
+    icon: '👕',
+    title: 'Stain-Resistant Textiles',
+    short: 'Fabrics that repel spills',
+    tagline: 'Spill, dont worry',
+    description: 'Superhydrophobic fabric treatments cause liquids to bead up and roll off clothing and upholstery. Water, wine, and coffee slide off without leaving stains.',
+    connection: 'Textile fibers coated with hydrophobic nanostructures create a Cassie state where water cannot penetrate. The fabric stays dry even under splash impacts.',
+    howItWorks: 'Silane or fluoropolymer treatments create low surface energy. Nanoparticles add roughness. Air trapped between treated fibers prevents liquid infiltration. Breathability is maintained for comfort.',
+    stats: [
+      { value: '130°', label: 'Fabric contact angle', icon: '👔' },
+      { value: '100+', label: 'Wash cycle durability', icon: '🧺' },
+      { value: '40%', label: 'Less laundry needed', icon: '💧' }
+    ],
+    examples: ['Dress shirts', 'Outdoor gear', 'Medical scrubs', 'Automotive interiors'],
+    companies: ['Nanotex', 'Schoeller', 'HeiQ', 'Nano-Tex'],
+    futureImpact: 'Eco-friendly superhydrophobic treatments using plant-based chemistry will provide stain resistance without persistent fluorinated compounds.',
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🚢',
+    title: 'Drag-Reducing Ship Hulls',
+    short: 'Saving fuel through surface engineering',
+    tagline: 'Slipping through the water',
+    description: 'Superhydrophobic ship hull coatings trap a thin air layer underwater, reducing friction between the hull and water. This can significantly reduce fuel consumption for maritime vessels.',
+    connection: 'The plastron (air layer) trapped by superhydrophobic surfaces acts as a slip boundary. Water flows over air rather than directly touching the hull, reducing drag.',
+    howItWorks: 'Hierarchical textures trap stable air pockets. Special geometries prevent air dissolution. The lubricating air layer reduces skin friction by up to 30%. Coatings also prevent biofouling.',
+    stats: [
+      { value: '10-30%', label: 'Drag reduction', icon: '⛽' },
+      { value: '$50B', label: 'Annual shipping fuel', icon: '💰' },
+      { value: '3%', label: 'Global CO2 from shipping', icon: '🌍' }
+    ],
+    examples: ['Container ships', 'Tankers', 'Navy vessels', 'Racing yachts'],
+    companies: ['International Paint', 'Jotun', 'Hempel', 'PPG Marine'],
+    futureImpact: 'Durable underwater superhydrophobic coatings could reduce shipping emissions by millions of tons annually, with major climate benefits.',
+    color: '#22c55e'
+  }
+];
+
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',

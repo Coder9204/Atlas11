@@ -1,5 +1,80 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🚗',
+    title: 'Hydraulic Brakes',
+    short: 'Cars multiply pedal force to stop safely',
+    tagline: 'Pascal\'s Law saves lives daily',
+    description: 'When you press the brake pedal, Pascal\'s Law multiplies your foot force through hydraulic fluid to push brake pads against rotors with hundreds of pounds of force, safely stopping tons of vehicle.',
+    connection: 'The brake master cylinder has a small piston that creates pressure transmitted equally throughout the brake lines. Larger wheel cylinders multiply this force at each wheel.',
+    howItWorks: 'Brake fluid is incompressible, transmitting pressure instantly. The ratio of master to slave cylinder areas determines force multiplication, typically 4:1 to 10:1 for each wheel.',
+    stats: [
+      { value: '1,000+', label: 'lbs braking force', icon: '🛑' },
+      { value: '4:1', label: 'force multiplication', icon: '⚡' },
+      { value: '$40B', label: 'brake market', icon: '📈' }
+    ],
+    examples: ['Passenger car brakes', 'Truck air-over-hydraulic brakes', 'Motorcycle disc brakes', 'ABS anti-lock systems'],
+    companies: ['Brembo', 'Bosch', 'Continental', 'Akebono'],
+    futureImpact: 'Brake-by-wire and regenerative braking in EVs still use hydraulic backup systems, maintaining Pascal\'s Law as a safety foundation.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏗️',
+    title: 'Construction Equipment',
+    short: 'Excavators lift tons with fluid power',
+    tagline: 'Moving mountains with pressure',
+    description: 'Excavators, cranes, and bulldozers use hydraulic systems to lift enormous loads. Pumps create pressure that acts on large cylinder areas, generating hundreds of thousands of pounds of force.',
+    connection: 'A small pump creating 3,000 PSI acts on large cylinder pistons to generate massive forces. The area ratio determines the mechanical advantage of the entire system.',
+    howItWorks: 'Engine-driven pumps pressurize hydraulic oil to 3,000-5,000 PSI. Control valves direct flow to cylinders and motors. Force equals pressure times piston area.',
+    stats: [
+      { value: '200+', label: 'ton lift capacity', icon: '🏗️' },
+      { value: '5,000', label: 'PSI pressure', icon: '⚡' },
+      { value: '$50B', label: 'equipment market', icon: '📈' }
+    ],
+    examples: ['Excavator arms', 'Crane booms', 'Backhoe buckets', 'Dump truck beds'],
+    companies: ['Caterpillar', 'John Deere', 'Komatsu', 'Volvo CE'],
+    futureImpact: 'Electrification of construction equipment maintains hydraulic systems for force generation while using electric motors for pump power.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '✈️',
+    title: 'Aircraft Flight Controls',
+    short: 'Hydraulics move flight surfaces precisely',
+    tagline: 'Pressure at 35,000 feet',
+    description: 'Aircraft hydraulic systems power flight control surfaces, landing gear, and brakes. Pilots need only small control inputs because hydraulics multiply force thousands of times.',
+    connection: 'At 3,000 PSI, small servo valves control huge actuators that can move ailerons, elevators, and rudders against massive aerodynamic loads.',
+    howItWorks: 'Multiple redundant hydraulic systems ensure safety. Engine-driven and electric pumps maintain pressure. Fly-by-wire systems translate pilot inputs to hydraulic actuator commands.',
+    stats: [
+      { value: '3,000', label: 'PSI typical pressure', icon: '⚡' },
+      { value: '3x', label: 'redundant systems', icon: '🔧' },
+      { value: '$7B', label: 'aerospace hydraulics', icon: '📈' }
+    ],
+    examples: ['Boeing 777 flight controls', 'Airbus A350 systems', 'Landing gear retraction', 'Thrust reverser actuation'],
+    companies: ['Parker Hannifin', 'Moog', 'Eaton', 'Safran'],
+    futureImpact: 'More electric aircraft are replacing some hydraulics with electromechanical actuators, but hydraulics remain critical for high-force applications.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🏋️',
+    title: 'Hydraulic Lifts',
+    short: 'Car lifts raise vehicles effortlessly',
+    tagline: 'Heavy lifting made simple',
+    description: 'Automotive service lifts use hydraulic cylinders to raise entire vehicles for repair. A small electric pump creates pressure that supports thousands of pounds with ease.',
+    connection: 'The large diameter lifting cylinder multiplies the pump pressure into massive upward force, allowing one person to lift a 5,000 lb vehicle.',
+    howItWorks: 'Pumps fill cylinders from a reservoir. Check valves prevent backflow for safety. Lowering releases fluid through control valves. Multiple cylinders provide stability.',
+    stats: [
+      { value: '10,000', label: 'lb lift capacity', icon: '🏋️' },
+      { value: '150', label: 'PSI working pressure', icon: '⚡' },
+      { value: '$2B', label: 'lift market', icon: '📈' }
+    ],
+    examples: ['Two-post car lifts', 'Scissor lifts', 'Alignment racks', 'Motorcycle lifts'],
+    companies: ['Rotary Lift', 'BendPak', 'Challenger', 'Snap-on'],
+    futureImpact: 'Smart lifts with integrated diagnostics and safety sensors enhance the fundamental hydraulic lifting principle for modern repair shops.',
+    color: '#10B981'
+  }
+];
+
 // ============================================================================
 // PASCAL'S LAW - GOLD STANDARD RENDERER
 // ============================================================================

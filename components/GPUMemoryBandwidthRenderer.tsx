@@ -29,6 +29,84 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// REAL WORLD APPLICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const realWorldApps = [
+  {
+    icon: '🤖',
+    title: 'AI & Large Language Models',
+    short: 'Why AI training needs the fastest memory on Earth',
+    tagline: 'Bandwidth is the bottleneck for AI',
+    description: 'Training large language models like GPT-4 requires moving trillions of parameters through memory billions of times. Memory bandwidth, not compute power, is often the limiting factor. HBM3 at 3+ TB/s enables models that were impossible just years ago.',
+    connection: 'The bandwidth formula you learned (width × speed × transfers) explains why AI uses HBM: 1024-bit buses provide 4x the bandwidth of consumer 256-bit GDDR, enabling massive parallel weight updates.',
+    howItWorks: 'During training, every weight in the neural network must be read, gradients calculated, and weights updated - billions of times per batch. Each training step requires reading/writing the entire model, making bandwidth the critical path.',
+    stats: [
+      { value: '3.35 TB/s', label: 'H100 HBM3 bandwidth', icon: '⚡' },
+      { value: '175B', label: 'GPT-3 parameters', icon: '🧠' },
+      { value: '$150B', label: 'AI chip market by 2028', icon: '💰' }
+    ],
+    examples: ['ChatGPT training infrastructure', 'Stable Diffusion image generation', 'AlphaFold protein prediction', 'Tesla Autopilot training'],
+    companies: ['NVIDIA', 'AMD', 'Google TPU', 'Cerebras'],
+    futureImpact: 'HBM4 and 3D-stacked compute will merge memory and processing, potentially 10x-ing effective bandwidth for AI workloads.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🎮',
+    title: 'High-Resolution Gaming',
+    short: 'Feeding pixels to 4K displays at 120+ FPS',
+    tagline: 'Every frame is a bandwidth race',
+    description: 'Rendering a 4K frame at 120 FPS requires moving gigabytes of texture data, geometry, and frame buffers every second. A GPU\'s memory bandwidth determines whether it can sustain smooth, high-resolution gameplay.',
+    connection: 'The bandwidth calculation you explored (256-bit × clock × DDR) explains why the RTX 4090\'s 1 TB/s enables 4K gaming while lower-bandwidth cards struggle.',
+    howItWorks: 'Each frame requires reading massive texture maps, computing millions of shaded pixels, and writing to multiple render targets. At 4K/120Hz, that\'s 995 million pixels per second, each requiring multiple memory accesses.',
+    stats: [
+      { value: '1 TB/s', label: 'RTX 4090 bandwidth', icon: '🎮' },
+      { value: '8.3M pixels', label: 'Per 4K frame', icon: '📺' },
+      { value: '120+ FPS', label: 'Target frame rate', icon: '⚡' }
+    ],
+    examples: ['Cyberpunk 2077 at 4K', 'Flight Simulator scenery', 'Unreal Engine 5 Nanite', 'VR at 90Hz per eye'],
+    companies: ['NVIDIA', 'AMD', 'Sony PlayStation', 'Microsoft Xbox'],
+    futureImpact: '8K gaming and true photorealistic graphics will require 2+ TB/s, driving HBM adoption in consumer GPUs.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🔬',
+    title: 'Scientific Supercomputing',
+    short: 'Simulating climate, proteins, and nuclear reactions',
+    tagline: 'Memory bandwidth enables scientific discovery',
+    description: 'Supercomputers like Frontier use GPU memory bandwidth to simulate complex systems. Climate models, molecular dynamics, and physics simulations are all "memory-bound" - limited by how fast data moves, not compute speed.',
+    connection: 'Scientific simulations often read neighbor data for each grid point, requiring memory accesses proportional to problem size. Your bandwidth understanding explains why HPC GPUs prioritize bandwidth over raw compute.',
+    howItWorks: 'Stencil computations read surrounding data for each point. For a billion-cell weather model, that\'s billions of memory accesses per timestep. Higher bandwidth = more timesteps per second = faster science.',
+    stats: [
+      { value: '10+ EB/s', label: 'Frontier aggregate bandwidth', icon: '🖥️' },
+      { value: '37,000', label: 'GPUs in Frontier', icon: '🔢' },
+      { value: '1.2 EF', label: 'Peak performance', icon: '⚡' }
+    ],
+    examples: ['Climate change modeling', 'COVID protein folding', 'Nuclear fusion simulation', 'Earthquake prediction'],
+    companies: ['Oak Ridge National Lab', 'Lawrence Livermore', 'CERN', 'ECMWF'],
+    futureImpact: 'Exascale computing with advanced memory will enable digital twins of Earth\'s climate at 1km resolution.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🎬',
+    title: 'Video Production & Rendering',
+    short: 'Real-time 8K video editing and CGI rendering',
+    tagline: 'Hollywood runs on memory bandwidth',
+    description: 'Professional video editing and VFX rendering require moving 8K video frames through memory in real-time. GPU memory bandwidth determines whether timeline scrubbing is smooth and whether renders complete in hours or days.',
+    connection: 'An 8K ProRes frame is ~80 MB. At 60 FPS playback, that\'s 4.8 GB/s just for video data - explaining why professional workstations need high-bandwidth GPUs.',
+    howItWorks: 'Video editing GPUs decode compressed frames, apply color corrections and effects, composite layers, and re-encode. Each operation touches every pixel. Real-time playback requires all this in 16.7ms per frame.',
+    stats: [
+      { value: '48 GB', label: 'RTX 6000 Ada VRAM', icon: '💾' },
+      { value: '960 GB/s', label: 'Workstation GPU bandwidth', icon: '⚡' },
+      { value: '8K', label: 'Maximum resolution', icon: '📹' }
+    ],
+    examples: ['DaVinci Resolve color grading', 'After Effects compositing', 'Blender 3D rendering', 'Unreal Engine virtual production'],
+    companies: ['NVIDIA Quadro/RTX', 'AMD Pro', 'Blackmagic', 'Adobe'],
+    futureImpact: 'AI-accelerated video editing will require even more bandwidth for real-time neural enhancement and generation.',
+    color: '#F59E0B'
+  }
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const colors = {

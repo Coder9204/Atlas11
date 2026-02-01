@@ -69,6 +69,84 @@ interface LatentHeatRendererProps {
 type PhaseState = 'solid' | 'melting' | 'liquid' | 'boiling' | 'gas';
 
 // ============================================================================
+// REAL-WORLD APPLICATIONS
+// ============================================================================
+const realWorldApps = [
+  {
+    icon: '🧊',
+    title: 'Ice-Based Thermal Storage',
+    short: 'Shifting cooling loads to off-peak',
+    tagline: 'Freezing savings into every building',
+    description: 'Large buildings make ice at night when electricity is cheap, then melt it during the day for air conditioning. The latent heat of fusion stores far more energy per kilogram than simply cooling water, making ice storage incredibly space-efficient.',
+    connection: 'Just as we observed temperature staying constant during phase changes while heat is absorbed, ice storage exploits this phenomenon. Melting ice absorbs 334 kJ/kg without temperature change—10x more than cooling water by 8°C.',
+    howItWorks: 'Chillers run overnight to freeze water in storage tanks. During peak hours, warm return air passes through coils surrounded by ice. The ice melts, absorbing heat and cooling the air. Phase change stores far more energy than sensible heat.',
+    stats: [
+      { value: '334 kJ/kg', label: 'Latent heat', icon: '⚡' },
+      { value: '30%', label: 'Cost savings', icon: '📈' },
+      { value: '$2.5B', label: 'Market size', icon: '🚀' }
+    ],
+    examples: ['Empire State Building ice system', 'Data center cooling', 'Hospital HVAC systems', 'University campus cooling'],
+    companies: ['CALMAC', 'Ice Energy', 'DN Tanks', 'Baltimore Aircoil'],
+    futureImpact: 'Phase change materials beyond ice will enable thermal storage at various temperatures, shifting heating and cooling loads to optimize renewable energy usage.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🔥',
+    title: 'Steam Power Generation',
+    short: 'Converting heat to electricity',
+    tagline: 'The phase change that powers civilization',
+    description: 'Power plants boil water to create steam that drives turbines. The massive latent heat of vaporization (2,260 kJ/kg) allows steam to carry enormous energy. Condensing the steam releases this energy to reheat feedwater, improving efficiency.',
+    connection: 'Our simulation showed temperature staying constant during boiling as energy converts water to steam. Power plants exploit this: high-pressure steam carries latent heat energy that converts to mechanical work in turbines.',
+    howItWorks: 'Burning fuel or nuclear reactions boil water at high pressure. Steam expands through turbine stages, converting thermal energy to rotation. Condensers use cooling water to remove latent heat, returning steam to liquid for reheating.',
+    stats: [
+      { value: '2,260 kJ/kg', label: 'Latent heat', icon: '⚡' },
+      { value: '45%', label: 'Plant efficiency', icon: '📈' },
+      { value: '60%', label: 'World electricity', icon: '🚀' }
+    ],
+    examples: ['Nuclear power plants', 'Coal-fired generators', 'Combined-cycle gas plants', 'Geothermal power stations'],
+    companies: ['GE Vernova', 'Siemens Energy', 'Mitsubishi Power', 'Westinghouse'],
+    futureImpact: 'Supercritical CO₂ cycles operating above the critical point will eliminate phase change inefficiencies while maintaining the energy density benefits of high-pressure working fluids.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🏠',
+    title: 'Phase Change Building Materials',
+    short: 'Walls that store heat',
+    tagline: 'Passive temperature regulation',
+    description: 'Building materials embedded with phase change materials (PCMs) absorb excess heat during the day by melting and release it at night by freezing. This passive thermal mass smooths temperature swings without active cooling.',
+    connection: 'Like our melting ice experiment, PCMs absorb heat at constant temperature during melting. Walls with microencapsulated PCMs act as thermal batteries, storing daytime heat for nighttime release.',
+    howItWorks: 'Microencapsulated paraffin wax (melting point 21-25°C) is embedded in drywall, ceiling tiles, or concrete. During hot periods, the wax melts and absorbs heat. At night, it solidifies and releases heat, maintaining comfortable temperatures.',
+    stats: [
+      { value: '200 kJ/kg', label: 'PCM capacity', icon: '⚡' },
+      { value: '25%', label: 'Energy reduction', icon: '📈' },
+      { value: '$1.8B', label: 'PCM market', icon: '🚀' }
+    ],
+    examples: ['PCM-enhanced drywall', 'Thermal mass concrete', 'Cool roof coatings', 'Window shading systems'],
+    companies: ['Phase Change Energy', 'Microtek', 'Rubitherm', 'Entropy Solutions'],
+    futureImpact: 'Bio-based PCMs from coconut oil and other renewables will replace petroleum-based materials, creating truly sustainable thermal storage for net-zero buildings.',
+    color: '#10B981'
+  },
+  {
+    icon: '🍦',
+    title: 'Food Preservation',
+    short: 'Keeping food fresh and safe',
+    tagline: 'Cold chain science in every bite',
+    description: 'Freezing food removes latent heat of fusion, dramatically slowing spoilage by immobilizing water molecules. Understanding phase change is crucial for flash-freezing that preserves texture and for maintaining the cold chain during transport.',
+    connection: 'Removing 334 kJ/kg to freeze water is far more demanding than just cooling to 0°C. This is why freezing food requires powerful refrigeration, but once frozen, the food stays cold much longer—the latent heat must be re-added to thaw it.',
+    howItWorks: 'Flash freezing passes food through -40°C environments in minutes, creating small ice crystals that don\'t damage cell walls. During transport, eutectic plates provide phase-change thermal mass that maintains temperature even if refrigeration fails.',
+    stats: [
+      { value: '-18°C', label: 'Storage temp', icon: '⚡' },
+      { value: '$300B', label: 'Cold chain market', icon: '📈' },
+      { value: '1 year+', label: 'Shelf life', icon: '🚀' }
+    ],
+    examples: ['IQF frozen vegetables', 'Ice cream production', 'Vaccine cold chain', 'Frozen seafood shipping'],
+    companies: ['Carrier', 'Thermo King', 'Lineage Logistics', 'Americold'],
+    futureImpact: 'Smart packaging with PCM indicators will show if temperature excursions occurred during shipping, ensuring food safety and reducing waste from precautionary disposal.',
+    color: '#F59E0B'
+  }
+];
+
+// ============================================================================
 // COMPREHENSIVE TEST QUESTIONS (10 questions with scenarios)
 // ============================================================================
 const testQuestions: TestQuestion[] = [

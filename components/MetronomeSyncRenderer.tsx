@@ -6,6 +6,82 @@ import React, { useState, useEffect, useCallback } from 'react';
 // Demonstrates coupled oscillators and self-organization
 // ============================================================================
 
+// Real-world applications for coupled oscillator synchronization
+const realWorldApps = [
+  {
+    icon: '💓',
+    title: 'Cardiac Pacemaker Cells',
+    short: 'Heart cells synchronize spontaneously',
+    tagline: 'Your heart is a coupled oscillator',
+    description: 'The sinoatrial node contains thousands of pacemaker cells that spontaneously synchronize their electrical firing. Like metronomes on a platform, these cells couple through gap junctions, producing the coordinated heartbeat that keeps you alive.',
+    connection: 'The game showed how independent oscillators synchronize through weak coupling. Heart cells use the same physics - each cell is an oscillator, gap junctions provide coupling, and the result is synchronized contraction.',
+    howItWorks: 'Individual pacemaker cells have intrinsic oscillation frequencies. Gap junctions allow ions to flow between cells (coupling). Faster cells speed up slower neighbors. Phase locking emerges. Result: coordinated ~1Hz heartbeat.',
+    stats: [
+      { value: '10,000', label: 'Pacemaker cells', icon: '💓' },
+      { value: '60-100', label: 'Beats per minute', icon: '⏱️' },
+      { value: '3B', label: 'Beats in lifetime', icon: '📈' }
+    ],
+    examples: ['Sinoatrial node rhythm', 'Atrial fibrillation', 'Cardiac resynchronization', 'Heart transplant'],
+    companies: ['Medtronic', 'Abbott', 'Boston Scientific', 'Biotronik'],
+    futureImpact: 'Biological pacemakers using gene therapy will restore natural synchronization without electronic devices.',
+    color: '#ef4444'
+  },
+  {
+    icon: '🌉',
+    title: 'Bridge Resonance Engineering',
+    short: 'Preventing dangerous oscillations',
+    tagline: 'When crowds become coupled oscillators',
+    description: 'The Millennium Bridge in London swayed dangerously when pedestrians unconsciously synchronized their steps. Engineers must understand coupled oscillator dynamics to design bridges that prevent this positive feedback loop from developing.',
+    connection: 'The metronome demonstration shows how coupling leads to synchronization. On bridges, pedestrians adjust their gait to match bridge motion (coupling), amplifying oscillations. Breaking this feedback prevents resonance disasters.',
+    howItWorks: 'Bridge has natural oscillation frequency. Walking pedestrians apply periodic force. People naturally synchronize gait to bridge motion. Synchronized forces amplify oscillation. Dampers break the coupling feedback loop.',
+    stats: [
+      { value: '0.5Hz', label: 'Dangerous lateral frequency', icon: '🌊' },
+      { value: '2000', label: 'People trigger resonance', icon: '👥' },
+      { value: '$5B', label: 'Bridge engineering market', icon: '📈' }
+    ],
+    examples: ['Millennium Bridge London', 'Tacoma Narrows', 'Brooklyn Bridge', 'Clifton Suspension'],
+    companies: ['Arup', 'Mott MacDonald', 'WSP', 'Aecom'],
+    futureImpact: 'Smart bridges with active damping will sense crowd-induced oscillations and counteract them in real-time.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '⚡',
+    title: 'Power Grid Synchronization',
+    short: 'Keeping generators in phase',
+    tagline: 'The world\'s largest coupled oscillator',
+    description: 'Every generator on a power grid must maintain precise phase synchronization - they\'re coupled oscillators connected by transmission lines. Loss of synchronization causes blackouts. Grid operators use the same physics to maintain stability.',
+    connection: 'Power generators are exactly like the metronomes - rotating at specific frequencies and coupled through the network. The synchronization dynamics you observed scale up to continental power systems.',
+    howItWorks: 'Generators rotate at synchronous speed (60Hz in US). Electrical coupling through transmission lines. Faster generators transfer power to slower ones (coupling force). Phase angles adjust to balance load. Loss of sync triggers protective relays.',
+    stats: [
+      { value: '60Hz', label: 'US grid frequency', icon: '⚡' },
+      { value: '±0.05Hz', label: 'Normal variation', icon: '📊' },
+      { value: '12,000', label: 'Generators in US grid', icon: '🔌' }
+    ],
+    examples: ['Northeast blackout 2003', 'Texas freeze 2021', 'European grid split', 'Frequency response'],
+    companies: ['GE Grid', 'Siemens Energy', 'ABB', 'Schneider Electric'],
+    futureImpact: 'Inverter-based renewables require new synchronization methods, as solar/wind don\'t naturally couple like rotating generators.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '🧠',
+    title: 'Neural Oscillations',
+    short: 'Brain waves from neuron synchronization',
+    tagline: 'Thought emerges from coupled firing',
+    description: 'Brain waves (alpha, beta, gamma) arise from synchronized neural firing - billions of neurons acting as coupled oscillators. Understanding this synchronization helps explain consciousness, treat epilepsy, and develop brain-computer interfaces.',
+    connection: 'The metronome synchronization demonstrates how coupling leads to coherent oscillation. Neurons couple through synapses and gap junctions, producing the synchronized activity measured in EEG as brain waves.',
+    howItWorks: 'Individual neurons fire at characteristic rates. Synaptic connections and gap junctions provide coupling. Inhibitory interneurons pace network oscillations. Different frequencies emerge in different brain states. Pathological sync = seizures.',
+    stats: [
+      { value: '86B', label: 'Neurons in brain', icon: '🧠' },
+      { value: '8-13Hz', label: 'Alpha wave frequency', icon: '📊' },
+      { value: '$15B', label: 'Neurotechnology market', icon: '📈' }
+    ],
+    examples: ['EEG brain imaging', 'Epilepsy treatment', 'Sleep staging', 'Neuralink BCI'],
+    companies: ['Neuralink', 'Kernel', 'Emotiv', 'NeuroSky'],
+    futureImpact: 'Targeted neural synchronization through transcranial stimulation may treat depression, ADHD, and cognitive decline.',
+    color: '#8b5cf6'
+  }
+];
+
 interface MetronomeSyncRendererProps {
   phase: string;
   onPhaseComplete?: () => void;

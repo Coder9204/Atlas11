@@ -40,6 +40,81 @@ interface MetalPair {
   description: string;
 }
 
+const realWorldApps = [
+  {
+    icon: '🌡️',
+    title: 'HVAC Thermostats',
+    short: 'Home temperature control',
+    tagline: 'Temperature sensing without batteries',
+    description: 'For over a century, bimetallic strips have been the heart of mechanical thermostats. They sense temperature and actuate switches without any external power, providing reliable climate control.',
+    connection: 'As room temperature changes, the coiled bimetallic strip winds or unwinds due to differential thermal expansion. At the setpoint, it makes or breaks an electrical contact to control heating/cooling.',
+    howItWorks: 'A coiled brass-steel bimetal strip rotates as temperature changes. The coil amplifies small deflections into larger rotation angles. A mercury switch or snap-action contact is triggered at the set temperature.',
+    stats: [
+      { value: '3-5°F', label: 'Typical hysteresis', icon: '📊' },
+      { value: '0W', label: 'Standby power', icon: '⚡' },
+      { value: '100+', label: 'Years of technology', icon: '📅' }
+    ],
+    examples: ['Honeywell Round thermostat', 'Baseboard heaters', 'Window AC units', 'Industrial controllers'],
+    companies: ['Honeywell', 'White-Rodgers', 'Johnson Controls', 'Emerson'],
+    futureImpact: 'While smart thermostats dominate new installations, bimetallic technology remains essential for fail-safe backup systems and off-grid applications.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🍞',
+    title: 'Toaster Browning Control',
+    short: 'Perfect toast every time',
+    tagline: 'Mechanical timing through heat sensing',
+    description: 'The classic pop-up toaster uses a bimetallic strip as both timer and thermostat. As the strip heats from radiant heat, it bends until it releases the toast carriage - no electronics needed.',
+    connection: 'The bimetallic strip absorbs radiant heat from the heating elements. As it bends due to differential expansion, it eventually trips a latch. The darkness dial adjusts the trip point distance.',
+    howItWorks: 'The darkness control moves the contact point closer or farther from the bending strip. More distance means more bending needed, more heating time, and darker toast.',
+    stats: [
+      { value: '2-4min', label: 'Toast cycle time', icon: '⏱️' },
+      { value: '500+°F', label: 'Element temperature', icon: '🔥' },
+      { value: '1920s', label: 'Invention era', icon: '📅' }
+    ],
+    examples: ['Pop-up toasters', 'Toaster ovens', 'Waffle makers', 'Griddles'],
+    companies: ['Sunbeam', 'Cuisinart', 'Breville', 'Hamilton Beach'],
+    futureImpact: 'Modern toasters increasingly use electronic sensors and microcontrollers, but the elegant simplicity of bimetallic timing remains popular in basic models.',
+    color: '#EF4444'
+  },
+  {
+    icon: '⚡',
+    title: 'Circuit Breaker Protection',
+    short: 'Overload detection',
+    tagline: 'Protecting circuits from thermal damage',
+    description: 'Circuit breakers use bimetallic strips for thermal overload protection. Sustained overcurrent heats the strip, which bends and trips the breaker before wires overheat.',
+    connection: 'Current flowing through the bimetallic strip generates I²R heating. The strip bends proportionally to its temperature, which reflects the thermal state of the protected circuit.',
+    howItWorks: 'The bimetal provides time-delayed tripping - brief overloads (motor startup) are tolerated, but sustained overloads trip the breaker. Magnetic trips handle instant short circuits.',
+    stats: [
+      { value: '10-30s', label: 'Trip delay at 2x rated', icon: '⏱️' },
+      { value: '< 0.1s', label: 'Magnetic trip time', icon: '⚡' },
+      { value: '10K+', label: 'Cycle lifetime', icon: '🔄' }
+    ],
+    examples: ['Home circuit breakers', 'Motor overload relays', 'Fuse alternatives', 'Industrial breakers'],
+    companies: ['Siemens', 'ABB', 'Schneider Electric', 'Eaton'],
+    futureImpact: 'Smart breakers with electronic sensing are emerging, but bimetallic protection remains the reliable, cost-effective standard for most applications.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Thermal Clutches',
+    short: 'Engine cooling control',
+    tagline: 'Fan engagement through temperature sensing',
+    description: 'Many vehicles use bimetallic-controlled fan clutches that engage the cooling fan only when the engine is hot. This saves fuel and reduces noise when cooling isn\'t needed.',
+    connection: 'A bimetallic spring in the clutch hub senses air temperature from the radiator. When hot, it opens a valve that engages the viscous clutch, driving the fan at engine speed.',
+    howItWorks: 'The bimetallic coil controls silicone fluid flow in the viscous coupling. Cold = minimal engagement, fan freewheels. Hot = full engagement, fan spins with engine. Saves 5-10 HP.',
+    stats: [
+      { value: '5-10 HP', label: 'Power savings', icon: '⚡' },
+      { value: '180°F', label: 'Engagement temp', icon: '🌡️' },
+      { value: '3-5%', label: 'Fuel economy gain', icon: '⛽' }
+    ],
+    examples: ['Truck cooling fans', 'Heavy equipment', 'RV engines', 'Marine applications'],
+    companies: ['Horton', 'Borg Warner', 'GMB', 'Aisin'],
+    futureImpact: 'Electric fans are replacing mechanical clutches in most new vehicles, but bimetallic clutches remain common in heavy-duty and off-road applications.',
+    color: '#10B981'
+  }
+];
+
 // Props interface
 interface BimetalThermostatRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';

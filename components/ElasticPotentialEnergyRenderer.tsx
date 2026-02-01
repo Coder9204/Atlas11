@@ -62,6 +62,81 @@ interface TransferApp {
   color: string;
 }
 
+const realWorldApps = [
+  {
+    icon: '🏹',
+    title: 'Archery & Crossbows',
+    short: 'Stored energy weapons',
+    tagline: 'Converting spring energy to kinetic energy',
+    description: 'Bows and crossbows store elastic potential energy when drawn. Upon release, this energy converts to kinetic energy of the arrow, following E = ½kx² for the bow and E = ½mv² for the arrow.',
+    connection: 'Drawing a bow stretches its limbs like springs, storing energy proportional to displacement squared. A compound bow with 70 lb draw weight and 30 inch draw stores about 80 joules.',
+    howItWorks: 'Bow limbs are elastic beams that bend when the string is pulled. The stiffer the limbs (higher k) and greater the draw length (x), the more energy stored. Compound cams optimize energy transfer.',
+    stats: [
+      { value: '80 J', label: 'Compound bow energy', icon: '🏹' },
+      { value: '350 fps', label: 'Arrow speed', icon: '⚡' },
+      { value: '85%', label: 'Energy efficiency', icon: '📊' }
+    ],
+    examples: ['Recurve bows', 'Compound bows', 'Crossbows', 'Slingshots'],
+    companies: ['Hoyt', 'Mathews', 'PSE', 'TenPoint'],
+    futureImpact: 'Advanced carbon fiber and synthetic materials are pushing bow efficiency limits while reducing weight and improving consistency.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '⌚',
+    title: 'Mechanical Watches',
+    short: 'Timekeeping through springs',
+    tagline: 'Mainsprings power precision',
+    description: 'Mechanical watches store energy in wound mainsprings, releasing it gradually through the escapement. The balance spring oscillates at a precise frequency, keeping accurate time.',
+    connection: 'The mainspring stores elastic potential energy when wound (E = ½kx²). This energy is metered out to the escapement, which drives the balance wheel at its natural frequency.',
+    howItWorks: 'Winding coils the mainspring, storing energy. The gear train transfers energy to the escapement. The balance spring (hairspring) provides restoring force for the oscillating balance wheel.',
+    stats: [
+      { value: '48-72 hr', label: 'Power reserve', icon: '⏰' },
+      { value: '28,800 vph', label: 'Beat rate', icon: '💓' },
+      { value: '+/-2 s/day', label: 'Chronometer accuracy', icon: '🎯' }
+    ],
+    examples: ['Rolex movements', 'Omega Co-Axial', 'Seiko Spring Drive', 'Swiss automatics'],
+    companies: ['Rolex', 'Omega', 'Patek Philippe', 'Seiko'],
+    futureImpact: 'Silicon escapements and new spring materials are pushing mechanical accuracy to levels previously only achievable with quartz movements.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '🚀',
+    title: 'Spacecraft Deployment Systems',
+    short: 'Spring-powered deployments',
+    tagline: 'Zero-power solar panel release',
+    description: 'Satellites use spring mechanisms to deploy solar panels, antennas, and booms once in orbit. These systems store elastic energy during launch and release it reliably in the vacuum of space.',
+    connection: 'Deployment springs are preloaded on Earth, storing E = ½kx². In orbit, when restraints are released (by pyrotechnic bolts or shape memory alloys), springs push panels to their deployed position.',
+    howItWorks: 'Constant-force springs or torsion springs provide deployment force. Dampers prevent damage from sudden release. Latches lock panels in final position. No motors or power required.',
+    stats: [
+      { value: '100%', label: 'Reliability required', icon: '✅' },
+      { value: '0 W', label: 'Power needed', icon: '⚡' },
+      { value: '-269°C', label: 'Operating temp range', icon: '❄️' }
+    ],
+    examples: ['Solar panel deployment', 'Antenna unfurling', 'Boom extension', 'CubeSat separation'],
+    companies: ['Northrop Grumman', 'Lockheed Martin', 'Airbus', 'NASA'],
+    futureImpact: 'Shape memory alloy springs and inflatable structures are enabling more compact stowage and more reliable deployments for ever-larger space structures.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '🏃',
+    title: 'Running Shoe Energy Return',
+    short: 'Athletic performance',
+    tagline: 'Storing and returning stride energy',
+    description: 'Modern running shoes use foam midsoles and carbon plates that store elastic energy during foot strike and return it during toe-off, improving running economy by up to 4%.',
+    connection: 'When you land, the shoe compresses, storing E = ½kx² in the foam. As you push off, this energy is returned. Higher energy return means less metabolic energy needed per stride.',
+    howItWorks: 'Specialized foams (TPU, PEBA) compress under load and spring back quickly. Carbon fiber plates store bending energy and enhance forefoot leverage. Together they create a "super shoe" effect.',
+    stats: [
+      { value: '85%+', label: 'Energy return', icon: '⚡' },
+      { value: '4%', label: 'Efficiency improvement', icon: '📈' },
+      { value: '40+ min', label: 'Marathon records', icon: '🏆' }
+    ],
+    examples: ['Nike Vaporfly', 'Adidas Adizero', 'Asics Metaspeed', 'New Balance FuelCell'],
+    companies: ['Nike', 'Adidas', 'Asics', 'New Balance'],
+    futureImpact: 'Personalized midsole tuning based on individual biomechanics and running style could optimize energy return for each athlete.',
+    color: '#10B981'
+  }
+];
+
 const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhase = 'hook', onPhaseComplete }) => {
   // Gold standard: String phase system
   const [phase, setPhase] = useState<Phase>((gamePhase as Phase) || 'hook');

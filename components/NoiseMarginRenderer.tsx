@@ -26,6 +26,81 @@ const colors = {
   vdd: '#a855f7',
 };
 
+const realWorldApps = [
+  {
+    icon: '💻',
+    title: 'Computer Processors',
+    short: 'CPUs rely on noise margins for reliable operation',
+    tagline: 'Billions of transistors switching correctly',
+    description: 'Modern processors contain billions of transistors that must correctly interpret 0s and 1s. Noise margins ensure that electrical interference, temperature variations, and manufacturing tolerances don\'t cause bit errors.',
+    connection: 'The voltage thresholds VIH and VIL define safe regions where logic states are guaranteed. Without adequate noise margins, processors would make constant errors from electrical noise.',
+    howItWorks: 'CMOS logic uses complementary transistor pairs that switch between VDD and ground. The threshold voltages are set at approximately 30% and 70% of VDD, leaving margin for noise immunity.',
+    stats: [
+      { value: '100B+', label: 'transistors (M3)', icon: '⚡' },
+      { value: '3nm', label: 'process node', icon: '🔬' },
+      { value: '$574B', label: 'semiconductor market', icon: '📈' }
+    ],
+    examples: ['Intel and AMD processors', 'Apple M-series chips', 'Server CPUs', 'Mobile SoCs'],
+    companies: ['Intel', 'AMD', 'Apple', 'Qualcomm'],
+    futureImpact: 'As transistors shrink below 2nm, maintaining noise margins becomes increasingly challenging, driving innovation in materials and circuit design.',
+    color: '#3B82F6'
+  },
+  {
+    icon: '📡',
+    title: 'Digital Communication',
+    short: 'Data transmission requires robust signal levels',
+    tagline: 'Bits traveling through noisy channels',
+    description: 'Digital communication systems like USB, HDMI, and Ethernet define strict voltage levels for 0 and 1. Noise margins allow data to travel through cables and across boards without corruption.',
+    connection: 'Signal integrity depends on maintaining voltage levels within specified thresholds. The noise margin provides headroom for reflections, crosstalk, and EMI.',
+    howItWorks: 'Differential signaling in high-speed interfaces compares two complementary signals, doubling noise immunity. Eye diagrams measure actual noise margins in real systems.',
+    stats: [
+      { value: '40', label: 'Gbps (USB4)', icon: '⚡' },
+      { value: '48', label: 'Gbps (HDMI 2.1)', icon: '📺' },
+      { value: '$52B', label: 'interface market', icon: '📈' }
+    ],
+    examples: ['USB connections', 'HDMI video cables', 'Ethernet networking', 'PCIe data buses'],
+    companies: ['USB-IF', 'HDMI Licensing', 'IEEE', 'PCI-SIG'],
+    futureImpact: 'Faster interfaces like USB5 and PCIe 7.0 will require advanced equalization and error correction to maintain margins at 100+ Gbps speeds.',
+    color: '#10B981'
+  },
+  {
+    icon: '🚗',
+    title: 'Automotive Electronics',
+    short: 'Vehicles operate in extreme electrical environments',
+    tagline: 'Reliability in the harshest conditions',
+    description: 'Cars contain hundreds of electronic modules that must function despite ignition noise, motor switching, temperature extremes, and vibration. Enhanced noise margins are essential for safety-critical systems.',
+    connection: 'Automotive-grade chips have wider noise margins than consumer electronics to handle load dumps, ESD, and EMI from engines and power systems.',
+    howItWorks: 'ISO 16750 and AEC-Q100 standards define stringent voltage tolerance requirements. Automotive chips use larger transistors and more robust I/O circuits for reliability.',
+    stats: [
+      { value: '3,000+', label: 'chips per vehicle', icon: '🔧' },
+      { value: '-40/150', label: '°C temp range', icon: '🌡️' },
+      { value: '$50B', label: 'auto chip market', icon: '📈' }
+    ],
+    examples: ['Engine control units', 'ABS brake systems', 'Infotainment displays', 'ADAS sensors'],
+    companies: ['NXP', 'Infineon', 'Texas Instruments', 'Renesas'],
+    futureImpact: 'Electric vehicles and autonomous driving demand even higher reliability, pushing noise margin requirements for mission-critical automotive systems.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🏭',
+    title: 'Industrial Control Systems',
+    short: 'Factory automation requires noise immunity',
+    tagline: 'Reliable signals in noisy factories',
+    description: 'PLCs and industrial controllers operate alongside motors, welders, and high-power equipment. Extended noise margins and industrial communication protocols ensure reliable operation in electrically hostile environments.',
+    connection: 'Industrial voltage standards like 24V logic provide massive noise margins compared to 3.3V CMOS, allowing signals to survive factory floor interference.',
+    howItWorks: 'Opto-isolation, differential signaling, and shielded cables create physical barriers to noise. Industrial Ethernet uses robust PHYs designed for high EMI environments.',
+    stats: [
+      { value: '24V', label: 'industrial logic', icon: '⚡' },
+      { value: '99.99%', label: 'uptime required', icon: '✅' },
+      { value: '$200B', label: 'automation market', icon: '📈' }
+    ],
+    examples: ['Assembly line robotics', 'Chemical plant control', 'Power grid SCADA', 'Water treatment systems'],
+    companies: ['Siemens', 'Rockwell', 'ABB', 'Schneider Electric'],
+    futureImpact: 'Industry 4.0 and smart factories will deploy more sensors and edge computing, requiring robust noise margins for reliable real-time control.',
+    color: '#8B5CF6'
+  }
+];
+
 const NoiseMarginRenderer: React.FC<NoiseMarginRendererProps> = ({
   phase,
   onPhaseComplete,

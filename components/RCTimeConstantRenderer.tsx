@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '📸',
+    title: 'Camera Flash Circuits',
+    short: 'RC charging cycles power the capacitors that create bright camera flashes',
+    tagline: 'Storing energy for that perfect shot',
+    description: 'Camera flash units use large capacitors (100-1000μF) that charge through resistors from batteries. The RC time constant determines how long you wait between photos - typically 1-5 seconds for full charge. High-end cameras optimize this circuit for faster recycling times, letting photographers capture rapid sequences.',
+    connection: 'This game teaches the exact exponential charging behavior that camera flash circuits follow - understanding tau = RC explains flash recycle times.',
+    howItWorks: 'A battery charges a high-voltage capacitor through a resistor and boost converter. The voltage rises as 1-e^(-t/RC). When charged, triggering the flash dumps the stored energy through a xenon tube in milliseconds, creating the bright burst. Then the cycle repeats.',
+    stats: [
+      { value: '300V+', label: 'Flash capacitor voltage', icon: '⚡' },
+      { value: '1-5s', label: 'Typical recycle time', icon: '⏱️' },
+      { value: '100-1000μF', label: 'Flash capacitor size', icon: '🔋' }
+    ],
+    examples: ['DSLR built-in flash', 'Speedlight units', 'Studio strobes', 'Ring flashes'],
+    companies: ['Canon', 'Nikon', 'Sony', 'Godox'],
+    futureImpact: 'LED flashes with supercapacitors are replacing xenon tubes, offering faster recycling and more flexibility in flash duration and intensity.',
+    color: '#F59E0B'
+  },
+  {
+    icon: '🎹',
+    title: 'Audio Equalizer Filters',
+    short: 'RC time constants shape frequency response in mixing consoles and synthesizers',
+    tagline: 'Sculpting sound with resistors and capacitors',
+    description: 'Every audio equalizer, from guitar pedals to studio mixing consoles, uses RC circuits to filter frequencies. The time constant tau = RC determines the cutoff frequency: f = 1/(2*pi*RC). Bass, midrange, and treble controls each use different RC values to shape the sound spectrum.',
+    connection: 'The RC time constant directly determines filter cutoff frequency - this game teaches the physics behind every tone control you have ever adjusted.',
+    howItWorks: 'Low-pass filters pass frequencies below f = 1/(2*pi*RC) while attenuating higher frequencies. High-pass filters do the opposite. Combining multiple RC stages creates steeper filter slopes. Variable resistors (potentiometers) let users adjust the cutoff frequency in real time.',
+    stats: [
+      { value: '20-20kHz', label: 'Audio frequency range', icon: '🎵' },
+      { value: '6 dB/oct', label: 'First-order filter slope', icon: '📉' },
+      { value: '$11B', label: 'Pro audio market', icon: '💰' }
+    ],
+    examples: ['Mixing console EQ', 'Guitar tone controls', 'Synthesizer filters', 'DJ mixers'],
+    companies: ['SSL', 'Neve', 'Moog', 'Pioneer DJ'],
+    futureImpact: 'Digital signal processing is replacing analog RC filters in many applications, but analog warmth remains prized by audio enthusiasts.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '❤️',
+    title: 'Cardiac Defibrillators',
+    short: 'Life-saving RC circuits deliver precisely timed electrical shocks to restart hearts',
+    tagline: 'When milliseconds save lives',
+    description: 'Defibrillators store up to 360 joules of energy in capacitors that discharge through the patient in carefully controlled waveforms. The RC time constants of the circuit and patient determine the shock shape. Modern defibrillators use biphasic waveforms optimized through RC circuit engineering.',
+    connection: 'The capacitor discharge curves explored in this game are exactly what biomedical engineers optimize when designing life-saving defibrillator waveforms.',
+    howItWorks: 'A capacitor bank charges to 1500-3000V. When triggered, it discharges through electrodes placed on the patient. The patient body acts as a resistor (50-150 ohms), creating an RC circuit with the capacitor. The resulting exponential decay delivers the therapeutic shock.',
+    stats: [
+      { value: '360J', label: 'Maximum energy per shock', icon: '⚡' },
+      { value: '3000V', label: 'Peak charging voltage', icon: '🔌' },
+      { value: '10-20ms', label: 'Shock duration', icon: '⏱️' }
+    ],
+    examples: ['Hospital defibrillators', 'AEDs in public spaces', 'Implantable ICDs', 'Ambulance units'],
+    companies: ['Philips', 'ZOLL', 'Medtronic', 'Abbott'],
+    futureImpact: 'Wearable defibrillators and smaller implantable devices will save more lives through faster intervention and continuous monitoring.',
+    color: '#EF4444'
+  },
+  {
+    icon: '🔌',
+    title: 'Power Supply Filtering',
+    short: 'RC time constants smooth voltage ripples in electronics power supplies',
+    tagline: 'The secret to clean DC power',
+    description: 'Every electronic device needs smooth DC power, but rectified AC contains significant ripple. RC filters smooth these voltage variations using the time constant principle - capacitors charge during peaks and discharge during valleys, with the RC time constant determining how much smoothing occurs.',
+    connection: 'The capacitor charging/discharging behavior in this game explains exactly how power supply filtering works to create stable voltages for electronics.',
+    howItWorks: 'After rectification, a capacitor charges quickly during voltage peaks. Between peaks, it discharges through the load resistance. If RC >> ripple period, the voltage stays nearly constant. Larger capacitors and lower load resistance give better smoothing.',
+    stats: [
+      { value: '<50mV', label: 'Typical ripple spec', icon: '📊' },
+      { value: '1000-10000μF', label: 'Filter capacitor size', icon: '🔋' },
+      { value: '$40B', label: 'Power supply market', icon: '💵' }
+    ],
+    examples: ['Phone chargers', 'Computer power supplies', 'Audio amplifiers', 'Industrial equipment'],
+    companies: ['Mean Well', 'Delta Electronics', 'TDK-Lambda', 'Corsair'],
+    futureImpact: 'GaN and SiC semiconductors enable higher switching frequencies, allowing smaller capacitors to achieve the same RC filtering effect.',
+    color: '#10B981'
+  }
+];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'

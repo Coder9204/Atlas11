@@ -2,6 +2,81 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+const realWorldApps = [
+  {
+    icon: '🎮',
+    title: 'Gaming Graphics Cards',
+    short: 'PCIe enables high-performance GPU gaming',
+    tagline: 'Feeding the graphics beast',
+    description: 'Modern gaming GPUs like the RTX 4090 connect via PCIe x16 slots, providing up to 64 GB/s bandwidth. This enables rapid texture loading, asset streaming, and frame buffer transfers for 4K gaming.',
+    connection: 'GPU bandwidth requirements scale with resolution and frame rate. PCIe 4.0 x16 provides enough headroom that most gaming workloads are compute-bound, not PCIe-limited.',
+    howItWorks: 'The GPU fetches textures and geometry from system memory over PCIe. Once in VRAM, the GPU\'s internal 900+ GB/s memory bandwidth handles rendering. Completed frames transfer back for display.',
+    stats: [
+      { value: '64', label: 'GB/s (PCIe 5.0 x16)', icon: '⚡' },
+      { value: '900+', label: 'GB/s VRAM bandwidth', icon: '📊' },
+      { value: '$45B', label: 'GPU market', icon: '📈' }
+    ],
+    examples: ['NVIDIA GeForce gaming', 'AMD Radeon gaming', 'Ray tracing workloads', 'VR rendering'],
+    companies: ['NVIDIA', 'AMD', 'Intel', 'EVGA'],
+    futureImpact: 'DirectStorage and PCIe 5.0 will enable instant loading and streaming of massive open-world game environments.',
+    color: '#22C55E'
+  },
+  {
+    icon: '🧠',
+    title: 'AI Training Clusters',
+    short: 'NVLink surpasses PCIe for GPU-GPU communication',
+    tagline: 'Bandwidth for billion-parameter models',
+    description: 'Training large language models requires multiple GPUs working together. NVLink provides 900 GB/s total bandwidth between GPUs, far exceeding PCIe limits for gradient synchronization.',
+    connection: 'PCIe bottlenecks multi-GPU training when gradients must be exchanged. NVLink\'s 10-18x higher bandwidth enables efficient distributed training of trillion-parameter models.',
+    howItWorks: 'NVSwitch fabrics connect 8 GPUs in a fully-connected topology. Each GPU has 900 GB/s total NVLink bandwidth, enabling collective operations at near-memory speeds.',
+    stats: [
+      { value: '900', label: 'GB/s (NVLink 4)', icon: '⚡' },
+      { value: '8', label: 'GPUs per node', icon: '🔧' },
+      { value: '$200B', label: 'AI chip market 2030', icon: '📈' }
+    ],
+    examples: ['ChatGPT training', 'Stable Diffusion models', 'AlphaFold protein folding', 'Autonomous driving AI'],
+    companies: ['NVIDIA', 'OpenAI', 'Google', 'Meta'],
+    futureImpact: 'Grace Hopper superchips and future NVLink generations will push aggregate bandwidth beyond 1 TB/s per GPU.',
+    color: '#8B5CF6'
+  },
+  {
+    icon: '💾',
+    title: 'NVMe Storage',
+    short: 'PCIe enables 14+ GB/s SSD speeds',
+    tagline: 'Storage at memory speeds',
+    description: 'NVMe SSDs connect directly via PCIe lanes, eliminating the SATA bottleneck. PCIe 5.0 x4 drives achieve 14+ GB/s sequential reads, revolutionizing storage performance.',
+    connection: 'NVMe performance is directly limited by PCIe bandwidth. A PCIe 4.0 x4 drive maxes at ~7 GB/s, while PCIe 5.0 x4 doubles this to ~14 GB/s.',
+    howItWorks: 'NVMe is a purpose-built protocol for flash storage over PCIe. It supports 64K queues with 64K commands each, enabling massive parallelism that saturates PCIe bandwidth.',
+    stats: [
+      { value: '14+', label: 'GB/s read speed', icon: '⚡' },
+      { value: '2M', label: 'IOPS', icon: '📊' },
+      { value: '$50B', label: 'SSD market', icon: '📈' }
+    ],
+    examples: ['Samsung 990 Pro', 'WD Black SN850X', 'Crucial T700', 'Seagate FireCuda'],
+    companies: ['Samsung', 'Western Digital', 'Micron', 'SK Hynix'],
+    futureImpact: 'PCIe 6.0 SSDs will approach 28 GB/s, blurring the line between storage and memory tiers.',
+    color: '#06B6D4'
+  },
+  {
+    icon: '🌐',
+    title: 'Network Interface Cards',
+    short: 'High-speed networking demands PCIe bandwidth',
+    tagline: 'Connecting data centers at scale',
+    description: 'Modern NICs support 100-400 Gbps speeds, requiring PCIe 4.0 x16 or PCIe 5.0 x8 to avoid becoming the bottleneck. Data center networks depend on this bandwidth.',
+    connection: 'A 400 Gbps NIC needs 50 GB/s of PCIe bandwidth. PCIe 5.0 x8 provides 32 GB/s bidirectional, requiring careful attention to avoid bottlenecks.',
+    howItWorks: 'DMA engines transfer packets directly between NIC and system memory over PCIe. RDMA bypasses the CPU entirely for ultra-low latency.',
+    stats: [
+      { value: '400', label: 'Gbps per port', icon: '🌐' },
+      { value: '50', label: 'GB/s required', icon: '⚡' },
+      { value: '$8B', label: 'NIC market', icon: '📈' }
+    ],
+    examples: ['NVIDIA ConnectX-7', 'Intel E810', 'Broadcom Thor', 'AMD Pensando'],
+    companies: ['NVIDIA Mellanox', 'Intel', 'Broadcom', 'Marvell'],
+    futureImpact: '800 Gbps and 1.6 Tbps NICs will require PCIe 6.0 and CXL for next-generation data center fabrics.',
+    color: '#3B82F6'
+  }
+];
+
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
