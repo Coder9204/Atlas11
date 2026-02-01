@@ -250,6 +250,101 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  const realWorldApps = [
+    {
+      icon: '📡',
+      title: 'Radio Direction Finding',
+      short: 'Navigation & Aviation',
+      tagline: 'Finding signals in the electromagnetic wilderness',
+      description: 'Radio Direction Finding (RDF) uses antenna arrays to determine the bearing of radio transmitters. By measuring phase differences and signal strength across multiple receivers - analogous to ITD and ILD in hearing - navigators can locate beacons, emergency signals, and communication sources with remarkable precision.',
+      connection: 'Just as your ears compare arrival times and intensities to locate sounds, RDF systems compare signals across antenna elements. The same wave physics applies - longer wavelengths require larger antenna spacing for accurate direction finding, just as bass frequencies challenge our smaller-spaced ears.',
+      howItWorks: 'Multiple antennas receive the same radio signal with slight time delays based on their positions relative to the source. A processor calculates the phase difference between antenna pairs, translating these into bearing angles. Modern systems use phased arrays with dozens of elements for sub-degree accuracy.',
+      stats: [
+        { value: '< 1°', label: 'Modern RDF Accuracy' },
+        { value: '1906', label: 'Year RDF Invented' },
+        { value: '500+ km', label: 'Long-range Detection' }
+      ],
+      examples: [
+        'Aircraft VOR/DME navigation using ground-based radio beacons',
+        'Maritime distress signal location for search and rescue',
+        'Amateur radio "fox hunting" competitions for skill building',
+        'Tracking wildlife with radio collar transmitters'
+      ],
+      companies: ['Rohde & Schwarz', 'Thales Group', 'L3Harris', 'Collins Aerospace', 'NARDA'],
+      futureImpact: 'As autonomous vehicles and drones proliferate, RDF technology is evolving to enable precise localization without GPS dependency. Software-defined radio is making direction finding more accessible, while AI integration promises real-time tracking of multiple simultaneous signal sources.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🦁',
+      title: 'Wildlife Tracking',
+      short: 'Conservation Biology',
+      tagline: 'Following nature\'s wanderers across continents',
+      description: 'Wildlife biologists use radio telemetry and acoustic monitoring to track animal movements, study behavior patterns, and protect endangered species. Direction finding techniques allow researchers to locate tagged animals without disturbing them, collecting crucial data for conservation efforts.',
+      connection: 'The direction finding principles mirror binaural hearing - researchers use directional antennas that act like ears, detecting signal strength differences (ILD equivalent) and sometimes phase differences (ITD equivalent) to triangulate animal positions. Animals themselves use similar acoustic localization to hunt and evade predators.',
+      howItWorks: 'Animals wear small radio transmitters (VHF or satellite-based) that emit periodic signals. Researchers use handheld Yagi antennas or automated receiving stations to detect signals. By taking bearings from multiple locations, they triangulate the animal\'s position. Acoustic arrays can similarly locate animals by their vocalizations.',
+      stats: [
+        { value: '10,000+', label: 'Species Tracked via Radio' },
+        { value: '5 grams', label: 'Smallest VHF Transmitter' },
+        { value: '98%', label: 'Location Success Rate' }
+      ],
+      examples: [
+        'Tracking elephant migration corridors across African savannas',
+        'Monitoring endangered sea turtle nesting and ocean travels',
+        'Locating wolf packs to study pack dynamics and territory',
+        'Following bird migration routes spanning thousands of miles'
+      ],
+      companies: ['Lotek Wireless', 'Vectronic Aerospace', 'Advanced Telemetry Systems', 'Wildlife Computers'],
+      futureImpact: 'Miniaturization and solar power are enabling lifetime tracking of smaller species. Satellite constellations like ICARUS provide global coverage, while AI analyzes movement patterns to predict poaching threats and climate adaptation. Passive acoustic monitoring is revolutionizing marine mammal research.',
+      color: '#22c55e'
+    },
+    {
+      icon: '🚁',
+      title: 'Search and Rescue Operations',
+      short: 'Emergency Response',
+      tagline: 'When every minute counts in finding the lost',
+      description: 'Search and Rescue (SAR) teams use radio direction finding to locate emergency beacons from downed aircraft, distressed vessels, lost hikers, and avalanche victims. The same principles that let us locate sounds enable rescuers to find people in life-threatening situations.',
+      connection: 'SAR direction finding directly applies ITD/ILD concepts - emergency locator transmitters (ELTs) and personal locator beacons (PLBs) emit signals that rescuers locate by comparing reception across antenna elements. Just as covering one ear destroys localization, losing antenna diversity cripples rescue efforts.',
+      howItWorks: 'Emergency beacons transmit on designated frequencies (406 MHz internationally). Satellites detect activations and provide initial position estimates. Ground teams then use portable direction finders with rotating loop antennas to home in on the signal, switching between antenna configurations to determine bearing like switching between ears.',
+      stats: [
+        { value: '48,000+', label: 'Lives Saved by COSPAS-SARSAT' },
+        { value: '< 5 min', label: 'Initial Alert Time' },
+        { value: '100 meters', label: 'Final Localization Accuracy' }
+      ],
+      examples: [
+        'Locating aircraft emergency locator transmitters after crashes',
+        'Finding avalanche victims using RECCO reflectors and transceivers',
+        'Tracking distress signals from boats in maritime emergencies',
+        'Locating hikers with personal locator beacons in wilderness'
+      ],
+      companies: ['ACR Electronics', 'McMurdo Group', 'RECCO AB', 'Garmin', 'Ocean Signal'],
+      futureImpact: 'Next-generation beacons include return link capability to confirm rescue is underway. Drone-mounted direction finders can search vast areas quickly. Integration with smartphone emergency features extends protection to everyday adventures. AI-enhanced signal processing improves detection in challenging terrain.',
+      color: '#ef4444'
+    },
+    {
+      icon: '🎯',
+      title: 'Electronic Warfare',
+      short: 'Defense Technology',
+      tagline: 'The invisible battlefield of signals and silence',
+      description: 'Electronic Warfare (EW) encompasses detecting, locating, and countering hostile electromagnetic emissions. Military forces use sophisticated direction finding to identify enemy radar, communications, and jamming sources - turning the physics of wave propagation into tactical advantage.',
+      connection: 'EW systems are essentially superhuman "ears" for radio waves. They measure microsecond time differences across antenna arrays (like ITD) and signal strength variations (like ILD) to pinpoint emitters. The challenge of localizing low-frequency signals mirrors why bass is hard to locate - physics imposes fundamental limits.',
+      howItWorks: 'EW platforms carry antenna arrays spanning the electromagnetic spectrum. When hostile emissions are detected, digital receivers measure arrival time differences across the array with nanosecond precision. Sophisticated algorithms separate multiple simultaneous signals and calculate emitter locations, often from a single moving platform using time-difference-of-arrival techniques.',
+      stats: [
+        { value: '0.1°', label: 'Direction Finding Accuracy' },
+        { value: '< 1 sec', label: 'Threat Detection Time' },
+        { value: '18+ GHz', label: 'Frequency Coverage' }
+      ],
+      examples: [
+        'Locating enemy air defense radar for suppression missions',
+        'Detecting and geolocating adversary communications networks',
+        'Identifying jamming sources to restore friendly communications',
+        'Providing early warning of incoming radar-guided missiles'
+      ],
+      companies: ['Northrop Grumman', 'Raytheon', 'BAE Systems', 'Leonardo DRS', 'Elbit Systems'],
+      futureImpact: 'Cognitive EW systems use AI to adapt in real-time to novel threats. Distributed sensing networks share data to achieve unprecedented localization accuracy. Quantum sensing promises detection capabilities approaching fundamental physical limits. The electromagnetic spectrum is becoming an increasingly contested domain.',
+      color: '#8b5cf6'
+    }
+  ];
+
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
     const height = 380;

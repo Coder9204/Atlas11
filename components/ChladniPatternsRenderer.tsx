@@ -704,6 +704,124 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
     </div>
   );
 
+  // Real-world applications data for expanded transfer phase
+  const realWorldApps = [
+    {
+      icon: '🎻',
+      title: 'Musical Instrument Design',
+      short: 'Instrument Acoustics',
+      tagline: 'Crafting perfect sound through vibration analysis',
+      description: 'Luthiers and instrument makers use Chladni patterns to analyze how the body of stringed instruments vibrates. By sprinkling fine particles on violin tops, guitar bodies, and piano soundboards, craftsmen can see the modal shapes that determine an instrument\'s tonal quality. Different wood thicknesses, bracing patterns, and arching profiles create distinct Chladni figures, allowing makers to tune instruments before they\'re completed.',
+      connection: 'Just like sand reveals nodal lines on our vibrating plate, fine powder shows luthiers exactly where a violin top moves and where it stays still. The symmetry and complexity of these patterns directly correlate to the richness and balance of the instrument\'s sound.',
+      howItWorks: 'When a violin plate is excited at specific frequencies, it vibrates in characteristic mode shapes. Areas of maximum displacement throw off particles, while nodal lines retain them. Master luthiers compare these patterns against reference instruments (like Stradivarius violins) to guide their carving and achieve optimal acoustic response.',
+      stats: [
+        { value: '70+', label: 'Distinct modes in a violin top below 5 kHz' },
+        { value: '2-3mm', label: 'Precision in thickness graduation' },
+        { value: '300+', label: 'Years of Chladni-guided lutherie' }
+      ],
+      examples: [
+        'Stradivarius violin analysis and replication studies',
+        'Classical guitar bracing pattern optimization',
+        'Piano soundboard resonance mapping',
+        'Drum head tuning and membrane selection'
+      ],
+      companies: [
+        'Yamaha Musical Instruments',
+        'C.F. Martin & Company',
+        'Steinway & Sons',
+        'Taylor Guitars'
+      ],
+      futureImpact: 'AI-assisted lutherie is emerging, where machine learning algorithms analyze Chladni patterns to predict acoustic quality before an instrument is assembled. 3D printing combined with modal analysis may enable custom-optimized instruments tailored to individual musicians.',
+      color: '#f59e0b'
+    },
+    {
+      icon: '✈️',
+      title: 'Structural Vibration Analysis',
+      short: 'Aerospace & Automotive',
+      tagline: 'Ensuring safety through resonance understanding',
+      description: 'Engineers in aerospace and automotive industries use modal analysis—a sophisticated extension of Chladni\'s principles—to identify dangerous resonant frequencies in aircraft wings, car body panels, and engine components. Understanding where structures vibrate helps prevent catastrophic failures and reduces noise, vibration, and harshness (NVH) in vehicles.',
+      connection: 'The nodal lines we observe on our simple plate scale up to complex 3D structures. Aircraft wings, car doors, and bridge decks all have natural modes where certain regions move dramatically while others remain relatively still—exactly like our Chladni patterns.',
+      howItWorks: 'Engineers use laser vibrometry and accelerometer arrays to measure vibration patterns across structures. Finite element analysis (FEA) software predicts modal shapes before physical testing. By comparing predicted and measured Chladni-like patterns, engineers validate designs and identify resonance risks that could cause fatigue failure or uncomfortable vibrations.',
+      stats: [
+        { value: '1000+', label: 'Modes analyzed in modern aircraft' },
+        { value: '99.9%', label: 'Correlation target for FEA validation' },
+        { value: '$2M+', label: 'Saved per avoided design iteration' }
+      ],
+      examples: [
+        'Boeing 787 composite wing flutter analysis',
+        'Formula 1 car chassis NVH optimization',
+        'Wind turbine blade resonance mapping',
+        'Suspension bridge deck vibration studies'
+      ],
+      companies: [
+        'Boeing',
+        'Airbus',
+        'Tesla',
+        'General Motors',
+        'Siemens'
+      ],
+      futureImpact: 'Real-time structural health monitoring using embedded sensors will continuously track modal patterns, detecting damage or fatigue before failure occurs. Digital twins will predict vibration behavior throughout a structure\'s entire service life.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🧹',
+      title: 'Ultrasonic Cleaning Optimization',
+      short: 'Industrial Cleaning',
+      tagline: 'Maximizing cleaning power through standing wave engineering',
+      description: 'Ultrasonic cleaning tanks rely on standing waves in liquid to create cavitation bubbles that scrub contaminants from surfaces. The placement of nodal and antinodal regions determines cleaning effectiveness. Engineers design tank geometries and transducer arrays to create optimal Chladni-like patterns in the cleaning fluid, ensuring uniform cavitation across the entire working volume.',
+      connection: 'Just as sand collects at nodal lines on our plate, cavitation intensity varies spatially in ultrasonic tanks. Parts placed at antinodal regions receive maximum cleaning, while those at nodes may be undertreated. Understanding these standing wave patterns is crucial for consistent results.',
+      howItWorks: 'Piezoelectric transducers excite the tank at ultrasonic frequencies (typically 20-80 kHz), creating standing pressure waves in the cleaning solution. Multiple transducers operating at slightly different frequencies or with sweep modulation help distribute cavitation more uniformly. Hydrophone mapping reveals the 3D "Chladni pattern" of cavitation intensity.',
+      stats: [
+        { value: '40 kHz', label: 'Common industrial cleaning frequency' },
+        { value: '50,000', label: 'Cavitation implosions per second per cm³' },
+        { value: '10x', label: 'Cleaning efficiency vs. manual methods' }
+      ],
+      examples: [
+        'Semiconductor wafer cleaning in chip fabrication',
+        'Surgical instrument sterilization',
+        'Jewelry and precision parts cleaning',
+        'Automotive fuel injector restoration'
+      ],
+      companies: [
+        'Branson Ultrasonics',
+        'Crest Ultrasonics',
+        'Blue Wave Ultrasonics',
+        'Elma Schmidbauer'
+      ],
+      futureImpact: 'Smart ultrasonic systems will use real-time acoustic monitoring to adapt frequency and power, automatically optimizing the standing wave pattern for different part geometries. AI-controlled multi-frequency arrays will eliminate dead zones entirely.',
+      color: '#14b8a6'
+    },
+    {
+      icon: '🔊',
+      title: 'Speaker Cone Design',
+      short: 'Audio Engineering',
+      tagline: 'Engineering perfect sound reproduction',
+      description: 'Speaker designers use laser vibrometry to visualize Chladni patterns on speaker cones, revealing "breakup modes" where the cone stops moving as a rigid piston and begins flexing. These breakup patterns cause distortion and coloration in audio. By optimizing cone materials, geometry, and suspension, engineers push breakup frequencies above the audible range.',
+      connection: 'A speaker cone is essentially a circular Chladni plate. At low frequencies, it moves uniformly (like our plate before patterns form). As frequency increases, standing wave patterns emerge—the cone\'s equivalent of our nodal lines—causing the sound to become distorted.',
+      howItWorks: 'Scanning laser vibrometers measure thousands of points across a cone\'s surface while it plays test tones. Software reconstructs the vibration pattern at each frequency, showing exactly how the cone deforms. Engineers use this data to choose materials (paper, polypropylene, Kevlar, beryllium) and shapes (straight, curved, ribbed) that delay breakup onset.',
+      stats: [
+        { value: '15 kHz+', label: 'Target breakup frequency for tweeters' },
+        { value: '0.01mm', label: 'Vibrometer measurement precision' },
+        { value: '120 dB', label: 'Dynamic range in premium speakers' }
+      ],
+      examples: [
+        'Beryllium tweeter dome development',
+        'Subwoofer cone material optimization',
+        'Studio monitor flat response design',
+        'Automotive speaker cabin integration'
+      ],
+      companies: [
+        'Bowers & Wilkins',
+        'JBL Professional',
+        'Focal',
+        'KEF',
+        'Harman International'
+      ],
+      futureImpact: 'Metamaterial speaker cones with engineered microstructures will control vibration patterns at the molecular level. Active cone materials with embedded sensors and actuators may dynamically suppress breakup modes in real-time.',
+      color: '#8b5cf6'
+    }
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (

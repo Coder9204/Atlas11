@@ -552,6 +552,102 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
     );
   }
 
+  // Real-World Applications Data
+  const realWorldApps = [
+    {
+      icon: "🎢",
+      title: "Electromagnetic Brakes",
+      short: "Roller Coasters & Trains",
+      tagline: "Stopping thrill rides with invisible force",
+      description: "Electromagnetic brakes are the silent guardians of amusement parks worldwide. Unlike traditional friction brakes that wear down and can fail, electromagnetic brakes use eddy currents to slow vehicles without any physical contact. When a roller coaster car passes through a series of powerful permanent magnets or electromagnets, eddy currents are induced in metal fins attached to the car. These currents create opposing magnetic fields that resist motion, providing smooth, reliable braking that never wears out. The faster the vehicle moves, the stronger the braking force—a self-regulating safety feature that makes them ideal for high-speed applications.",
+      connection: "Just like our falling magnet slows down in the copper tube, the metal fins on roller coaster cars experience eddy currents when passing through magnetic fields. The opposing magnetic force converts kinetic energy into heat, bringing multi-ton vehicles to a smooth stop without any mechanical contact or wear.",
+      howItWorks: "Powerful neodymium magnets are arranged in alternating poles along the brake section. As conductive fins on the train pass between these magnets, the changing magnetic flux induces circular eddy currents in the metal. According to Lenz's Law, these currents create their own magnetic fields that oppose the motion. The braking force is proportional to velocity—faster approach means stronger braking. Heat generated in the fins dissipates naturally into the air.",
+      stats: [
+        { val: "120+ mph", label: "Maximum braking speeds" },
+        { val: "0", label: "Mechanical contact points" },
+        { val: "50+ years", label: "Operational lifespan" }
+      ],
+      examples: [
+        "Tower of Terror drop tower brakes at Disney parks",
+        "Kingda Ka's 128 mph launch braking system",
+        "Magnetic levitation (maglev) train emergency brakes",
+        "High-speed rail eddy current track brakes"
+      ],
+      companies: ["Intamin", "Bolliger & Mabillard", "Siemens", "Magnetic Technologies"],
+      futureImpact: "Next-generation hyperloop systems will rely entirely on electromagnetic braking for their 700+ mph pods. Advanced superconducting electromagnets will provide even stronger braking forces while regenerative systems capture braking energy to recharge onboard batteries, making transportation both safer and more sustainable.",
+      color: "#EF4444"
+    },
+    {
+      icon: "🪙",
+      title: "Coin Sorting Machines",
+      short: "Vending & Banking",
+      tagline: "Sorting billions of coins at lightning speed",
+      description: "Every day, billions of coins flow through vending machines, arcade games, and bank sorting equipment. Eddy current coin validators can distinguish genuine coins from counterfeits and sort different denominations in milliseconds. When a coin rolls past a coil carrying alternating current, eddy currents are induced in the metal. The size, composition, and thickness of each coin produces a unique electromagnetic signature. Copper coins respond differently than nickel-plated steel, allowing machines to instantly reject slugs, foreign coins, or counterfeits while sorting valid currency at speeds exceeding 3,000 coins per minute.",
+      connection: "Just as different conductor materials in our experiment (copper vs aluminum vs air) produced different eddy current strengths, different coin compositions create unique electromagnetic signatures. The machine essentially performs our experiment thousands of times per minute, measuring how strongly each coin interacts with the magnetic field.",
+      howItWorks: "An oscillating electromagnetic coil generates an alternating magnetic field. As a coin passes through, eddy currents induced in the metal create a secondary magnetic field that opposes and modifies the original. Sensors measure changes in coil inductance and energy absorption—parameters that depend on the coin's conductivity, permeability, size, and thickness. A microprocessor compares these readings against stored profiles to identify the coin in under 20 milliseconds.",
+      stats: [
+        { val: "3,000+", label: "Coins sorted per minute" },
+        { val: "20ms", label: "Validation time per coin" },
+        { val: "99.9%", label: "Counterfeit detection rate" }
+      ],
+      examples: [
+        "Self-checkout machines at grocery stores",
+        "Casino slot machine coin acceptors",
+        "Bank coin counting and sorting equipment",
+        "Parking meter payment systems"
+      ],
+      companies: ["Crane Payment Innovations", "MEI Conlux", "Azkoyen", "Suzohapp", "Glory Global Solutions"],
+      futureImpact: "As cashless payments grow, eddy current technology is finding new applications in metal recycling—sorting aluminum, copper, and precious metals from electronic waste with unprecedented precision. Future smart recycling facilities will use advanced eddy current sensors to recover valuable materials from the 50 million tons of e-waste generated annually.",
+      color: "#F59E0B"
+    },
+    {
+      icon: "🔥",
+      title: "Induction Heating",
+      short: "Industrial Manufacturing",
+      tagline: "Heating metal without flame or contact",
+      description: "Induction heating revolutionized industrial metalworking by generating heat directly inside the workpiece through eddy currents. A copper coil carrying high-frequency alternating current creates a rapidly oscillating magnetic field. When a metal part is placed inside this coil, powerful eddy currents are induced that heat the material through resistive losses. This contactless heating method is incredibly efficient, precisely controllable, and can reach temperatures exceeding 2,000°C in seconds. From hardening automotive gears to melting precious metals for jewelry casting, induction heating has become indispensable in modern manufacturing.",
+      connection: "Our experiment showed how eddy currents convert kinetic energy into heat through electrical resistance. Induction heating exploits this same energy conversion on an industrial scale—instead of motion causing the changing magnetic field, alternating current in a coil creates it, and the resulting eddy currents heat the metal directly.",
+      howItWorks: "A power supply converts standard electricity to high-frequency alternating current (typically 10 kHz to 400 kHz). This flows through a water-cooled copper coil, generating an intense oscillating magnetic field. Metal placed in or near the coil experiences rapid magnetic flux changes, inducing powerful eddy currents. The metal's electrical resistance converts these currents to heat. The 'skin effect' concentrates heating at the surface for hardening applications, while lower frequencies penetrate deeper for through-heating.",
+      stats: [
+        { val: "2,000°C", label: "Maximum achievable temperature" },
+        { val: "90%+", label: "Energy efficiency vs. flame" },
+        { val: "1-2 sec", label: "Typical heating time" }
+      ],
+      examples: [
+        "Automotive crankshaft and gear hardening",
+        "Aerospace turbine blade heat treatment",
+        "Precious metal melting for jewelry and dental work",
+        "Semiconductor wafer processing"
+      ],
+      companies: ["Inductotherm", "EFD Induction", "Ajax Tocco", "Ambrell", "GH Induction"],
+      futureImpact: "Induction technology is enabling the electrification of traditionally fossil-fuel-powered processes. Steel manufacturers are developing electric induction furnaces powered by renewable energy to produce 'green steel' with near-zero carbon emissions. This shift could eliminate up to 8% of global CO2 emissions currently generated by conventional steelmaking.",
+      color: "#10B981"
+    },
+    {
+      icon: "🏥",
+      title: "MRI Gradient Coils",
+      short: "Medical Imaging",
+      tagline: "Seeing inside the body with magnetic precision",
+      description: "Magnetic Resonance Imaging (MRI) machines use rapidly switching gradient coils to create detailed 3D images of soft tissues inside the human body. These coils produce precisely controlled magnetic field gradients that vary linearly across the imaging volume, allowing the machine to pinpoint exactly where signals originate. However, the rapid switching of these gradients—up to 1,000 times per second—induces eddy currents in nearby conductive structures. These unwanted currents distort the intended magnetic fields and degrade image quality. Understanding and compensating for eddy currents is crucial for obtaining the sharp, artifact-free images that modern medicine depends on.",
+      connection: "Just as our falling magnet induced eddy currents in stationary copper, the changing magnetic fields from MRI gradient coils induce currents in the machine's metal structures. Engineers must carefully design shielding and compensation systems to counteract these effects—turning our simple physics demonstration into a sophisticated medical imaging challenge.",
+      howItWorks: "Gradient coils rapidly switch on and off to encode spatial information in the MRI signal. These fast-changing fields induce eddy currents in the cryostat (the superconducting magnet's housing), RF shields, and other conductive components. These parasitic currents create their own magnetic fields that oppose and distort the intended gradients. Modern MRI systems use active shielding (counter-wound coils), pre-emphasis (modified input waveforms), and real-time field monitoring to detect and correct for eddy current effects.",
+      stats: [
+        { val: "200 T/m/s", label: "Gradient slew rate" },
+        { val: "1,000 Hz", label: "Gradient switching frequency" },
+        { val: "0.1mm", label: "Achievable spatial resolution" }
+      ],
+      examples: [
+        "Brain functional MRI (fMRI) for neurological research",
+        "Cardiac MRI for heart disease diagnosis",
+        "Diffusion tensor imaging for nerve fiber mapping",
+        "MRI-guided surgery and radiation therapy"
+      ],
+      companies: ["Siemens Healthineers", "GE Healthcare", "Philips Healthcare", "Canon Medical"],
+      futureImpact: "Ultra-high-field MRI machines (7 Tesla and beyond) promise revolutionary imaging detail but face even greater eddy current challenges. New superconducting gradient coil designs and AI-powered real-time compensation algorithms will enable these systems to image individual neurons and early-stage cancers with unprecedented clarity, transforming early disease detection.",
+      color: "#8B5CF6"
+    }
+  ];
+
   // Phase Renderers
   function renderHookPhase() {
     return (

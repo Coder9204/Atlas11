@@ -350,6 +350,102 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🔬',
+      title: 'Semiconductor Chip Fabrication',
+      short: 'Microelectronics',
+      tagline: 'Building the foundation of modern computing',
+      description: 'Thin film deposition is the backbone of semiconductor manufacturing, enabling the creation of transistors, interconnects, and memory cells at the nanometer scale. Every smartphone, computer, and electronic device relies on precisely deposited layers of metals, insulators, and semiconductors.',
+      connection: 'The step coverage concepts you learned directly determine whether transistors can be made smaller. As chips shrink below 5nm, only ALD can deposit the conformal barrier and liner layers needed in high aspect ratio contact holes and vias.',
+      howItWorks: 'Fabs use a combination of PVD for metal seed layers, CVD for bulk dielectric fills, and ALD for conformal barrier/liner layers. A single chip may require over 1000 deposition steps across 50+ distinct layers, each with specific thickness tolerances of just a few angstroms.',
+      stats: [
+        { value: '>1000', label: 'Deposition steps per chip' },
+        { value: '<1nm', label: 'Thickness control precision' },
+        { value: '$20B+', label: 'Annual deposition equipment market' }
+      ],
+      examples: [
+        'Gate dielectrics in FinFET transistors using ALD hafnium oxide',
+        'Copper interconnect barrier/seed layers using PVD tantalum and copper',
+        'Tungsten contact plugs using CVD for void-free fills',
+        'Spacer formation using conformal ALD silicon nitride'
+      ],
+      companies: ['TSMC', 'Samsung', 'Intel', 'Applied Materials', 'Lam Research'],
+      futureImpact: 'As transistors approach atomic dimensions, selective deposition and area-selective ALD will enable self-aligned structures that reduce overlay requirements. Gate-all-around (GAA) transistors require even more conformal coatings than FinFETs.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '☀️',
+      title: 'Solar Cell Manufacturing',
+      short: 'Photovoltaics',
+      tagline: 'Harnessing sunlight through precision coatings',
+      description: 'Solar cells convert sunlight to electricity using carefully engineered thin films that absorb photons and generate electron-hole pairs. The efficiency, durability, and cost of solar panels depend critically on the quality and uniformity of deposited layers.',
+      connection: 'The conformality principles apply directly to texturing: solar cells use pyramid-textured surfaces to trap light, and these 3D structures need conformal anti-reflection coatings. ALD passivation layers on textured silicon achieve the uniformity needed for high-efficiency cells.',
+      howItWorks: 'Silicon solar cells use PECVD silicon nitride for anti-reflection coatings and surface passivation. Thin-film solar (CdTe, CIGS, perovskite) uses sputtering and evaporation to deposit absorber layers. ALD aluminum oxide provides excellent surface passivation for PERC cells.',
+      stats: [
+        { value: '26.8%', label: 'Record silicon cell efficiency' },
+        { value: '<$0.20/W', label: 'Module manufacturing cost' },
+        { value: '1+ TW', label: 'Global installed solar capacity' }
+      ],
+      examples: [
+        'Silicon nitride anti-reflection coatings via PECVD',
+        'ALD aluminum oxide passivation layers for PERC cells',
+        'Sputtered transparent conductive oxides (TCO)',
+        'Evaporated metal contacts and back reflectors'
+      ],
+      companies: ['First Solar', 'LONGi', 'JinkoSolar', 'Meyer Burger', 'Oxford Instruments'],
+      futureImpact: 'Tandem solar cells stacking perovskite on silicon require atomic-level interface control. ALD interlayers prevent ion migration between materials and enable stable, high-efficiency tandems approaching 30% efficiency.',
+      color: '#f59e0b'
+    },
+    {
+      icon: '✨',
+      title: 'Decorative and Protective Coatings',
+      short: 'Consumer Products',
+      tagline: 'Beauty and durability at the atomic scale',
+      description: 'From the shiny chrome finish on car emblems to scratch-resistant coatings on eyeglasses, thin film deposition transforms everyday products. These coatings provide wear resistance, corrosion protection, and aesthetic appeal across countless consumer goods.',
+      connection: 'PVD directional deposition creates the mirror-like finishes on watches and jewelry, while understanding step coverage explains why complex 3D shapes require rotation during coating. ALD enables ultra-thin protective layers on intricate surfaces.',
+      howItWorks: 'Decorative PVD coatings like titanium nitride (gold color) and chromium (silver) are sputtered in vacuum chambers with rotating fixtures to ensure coverage. DLC (diamond-like carbon) coatings from PECVD provide extreme hardness. ALD barrier layers protect against moisture and corrosion.',
+      stats: [
+        { value: '0.5-5 μm', label: 'Typical decorative coating thickness' },
+        { value: '10x', label: 'Hardness improvement with DLC' },
+        { value: '$15B+', label: 'Decorative coatings market size' }
+      ],
+      examples: [
+        'PVD titanium nitride gold-colored coatings on watches',
+        'DLC scratch-resistant coatings on automotive parts',
+        'Sputtered chrome alternatives for plastic trim',
+        'ALD moisture barriers on electronics and jewelry'
+      ],
+      companies: ['Oerlikon', 'IHI Ionbond', 'Vapor Technologies', 'Buhler', 'Picosun'],
+      futureImpact: 'Sustainable alternatives to electroplated chrome and cadmium coatings are driving PVD adoption in automotive. New high-entropy alloy coatings and self-healing surfaces will expand protective coating capabilities.',
+      color: '#a855f7'
+    },
+    {
+      icon: '🔭',
+      title: 'Optical Thin Films',
+      short: 'Precision Optics',
+      tagline: 'Engineering light at the nanometer scale',
+      description: 'Optical coatings manipulate light through interference effects in precisely controlled thin film stacks. From anti-reflective coatings on camera lenses to mirrors in telescopes and filters in spectrometers, optical thin films are essential to photonics.',
+      connection: 'Optical coatings require extreme thickness uniformity because interference depends on precise path lengths. The deposition methods you learned achieve the angstrom-level control needed: slight variations cause color shifts or performance degradation.',
+      howItWorks: 'Ion beam sputtering and e-beam evaporation deposit alternating high/low refractive index layers (like titanium dioxide and silicon dioxide). Optical monitoring during deposition tracks thickness in real-time. ALD enables ultrathin layers for advanced metasurfaces.',
+      stats: [
+        { value: '<0.1%', label: 'Reflection with AR coating' },
+        { value: '>99.99%', label: 'Reflectivity of laser mirrors' },
+        { value: '100+', label: 'Layers in bandpass filters' }
+      ],
+      examples: [
+        'Multi-layer anti-reflection coatings on camera lenses',
+        'High-reflectivity dielectric mirrors for lasers',
+        'Narrow bandpass filters for astronomy and spectroscopy',
+        'Dichroic coatings for projectors and lighting'
+      ],
+      companies: ['II-VI', 'Coherent', 'Edmund Optics', 'VIAVI Solutions', 'Materion'],
+      futureImpact: 'Metasurfaces using ALD-deposited nanostructures will replace bulky optical elements with flat optics. Atomically smooth interfaces from ALD enable lower scatter losses for next-generation astronomical and quantum optical systems.',
+      color: '#22c55e'
+    }
+  ];
+
   const renderVisualization = (interactive: boolean, showAspectRatioControl: boolean = false) => {
     const width = 500;
     const height = 420;

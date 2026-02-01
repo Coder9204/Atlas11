@@ -1693,6 +1693,104 @@ export default function DispersionRenderer() {
   ];
 
   // =============================================================================
+  // REAL WORLD APPLICATIONS DATA
+  // =============================================================================
+  const realWorldApps = [
+    {
+      icon: "📡",
+      title: "Fiber Optic Communications",
+      short: "Telecom",
+      tagline: "Transmitting data at the speed of light",
+      description: "Modern telecommunications rely on fiber optic cables that carry internet traffic, phone calls, and streaming video as pulses of light. Dispersion is a critical challenge in fiber optics because different wavelengths of light travel at slightly different speeds through the glass fiber, causing pulses to spread out and blur together over long distances. Engineers must carefully manage chromatic dispersion to maintain signal clarity across thousands of kilometers.",
+      connection: "Just like our prism separates white light because different wavelengths refract differently, fiber optic signals spread out because different wavelength components travel at different speeds. A sharp light pulse containing multiple wavelengths gradually 'smears' as it travels, exactly like how the spectrum fans out after passing through a prism.",
+      howItWorks: "Optical transmitters use precisely tuned laser diodes that emit light at specific wavelengths (typically 1550nm). The fiber's silica glass has wavelength-dependent refractive index, causing chromatic dispersion. Engineers counteract this using dispersion-compensating fiber segments with opposite dispersion characteristics, or dispersion-shifted fiber designed to minimize dispersion at the operating wavelength. Advanced systems use coherent detection and digital signal processing to mathematically reverse dispersion effects.",
+      stats: [
+        { val: "99%", label: "Internet traffic via fiber" },
+        { val: "17 ps/nm·km", label: "Typical fiber dispersion" },
+        { val: "10,000+ km", label: "Transoceanic cable lengths" }
+      ],
+      examples: [
+        "Transatlantic submarine cables connecting continents",
+        "Metropolitan area networks for city-wide connectivity",
+        "Data center interconnects handling cloud traffic",
+        "5G fronthaul networks linking cell towers"
+      ],
+      companies: ["Corning", "Ciena", "Infinera", "Nokia", "Huawei"],
+      futureImpact: "Next-generation hollow-core fibers will guide light through air instead of glass, dramatically reducing dispersion and enabling even higher data rates. Quantum communication networks will use dispersion management to preserve quantum states across global distances, enabling unhackable encryption.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "💎",
+      title: "Gemstone Cutting",
+      short: "Jewelry",
+      tagline: "Engineering brilliance through light physics",
+      description: "The 'fire' that makes diamonds and other gemstones sparkle with rainbow colors is a direct result of dispersion. Gem cutters carefully calculate facet angles to maximize the separation of white light into its spectral colors, creating the dazzling play of color that makes precious gems so valuable. High-dispersion stones like diamonds spread light into more vivid rainbows than low-dispersion materials.",
+      connection: "When light enters a diamond, it disperses just like in our prism experiment—violet bends more than red. But unlike a simple prism, a gem's many facets bounce this dispersed light around internally, amplifying the color separation. The precise angles ensure light exits as dramatic rainbow flashes rather than washed-out white.",
+      howItWorks: "Diamond has exceptionally high dispersion (0.044) compared to glass (0.017), meaning it spreads colors over wider angles. The classic round brilliant cut uses 57 facets at mathematically optimized angles to maximize total internal reflection and dispersion. Light enters the table (top flat facet), disperses through the pavilion (bottom cone), reflects off back facets, and exits through crown facets as separated spectral colors. Each tiny movement creates new color combinations.",
+      stats: [
+        { val: "0.044", label: "Diamond dispersion value" },
+        { val: "57", label: "Facets in round brilliant" },
+        { val: "2.42", label: "Diamond refractive index" }
+      ],
+      examples: [
+        "Round brilliant cut diamonds maximizing fire",
+        "Sphene gemstones with dispersion exceeding diamond",
+        "Moissanite jewelry prized for exceptional fire",
+        "Antique rose cuts designed for candlelight dispersion"
+      ],
+      companies: ["De Beers", "Tiffany & Co.", "Cartier", "GIA"],
+      futureImpact: "AI-powered cutting optimization will analyze rough stones and calculate custom facet patterns that maximize both brilliance and fire for each unique gem. Lab-grown diamonds with controlled compositions will be engineered for enhanced dispersion, creating fire effects impossible in natural stones.",
+      color: "#8b5cf6"
+    },
+    {
+      icon: "🔬",
+      title: "Prism Spectrometers",
+      short: "Analytical Chemistry",
+      tagline: "Reading the fingerprints of matter",
+      description: "Prism spectrometers exploit dispersion to separate light into its component wavelengths, allowing scientists to identify elements and molecules by their unique spectral signatures. Every substance absorbs or emits light at characteristic wavelengths—dispersion spreads these wavelengths apart so they can be individually measured, turning light into a powerful analytical tool.",
+      connection: "Our prism demonstration shows how white light fans out into ROYGBIV. Spectrometers do exactly this, but with extreme precision. They spread the spectrum across a detector array, measuring the exact intensity at thousands of individual wavelengths. This creates a 'barcode' that uniquely identifies what produced or modified the light.",
+      howItWorks: "Light from a sample enters through a narrow slit that creates a thin beam. A collimating lens makes the rays parallel before they hit the prism. The prism's dispersion bends each wavelength to a different angle—shorter wavelengths more than longer ones. A focusing lens then projects this spread spectrum onto a CCD detector array. Software analyzes the intensity pattern, comparing it against spectral databases to identify compounds, measure concentrations, or detect contaminants.",
+      stats: [
+        { val: "0.1 nm", label: "Wavelength resolution" },
+        { val: "ppm", label: "Detection sensitivity" },
+        { val: "190-1100 nm", label: "Typical spectral range" }
+      ],
+      examples: [
+        "Pharmaceutical purity testing and drug identification",
+        "Environmental water quality monitoring",
+        "Forensic analysis of trace evidence",
+        "Astronomical observation of stellar compositions"
+      ],
+      companies: ["Thermo Fisher", "Agilent", "PerkinElmer", "Shimadzu", "Ocean Insight"],
+      futureImpact: "Miniaturized spectrometers will be embedded in smartphones, enabling consumers to verify food freshness, detect allergens, or authenticate products. Hyperspectral imaging combining millions of spectra will revolutionize medical diagnostics, detecting cancers and diseases from tissue light signatures.",
+      color: "#10b981"
+    },
+    {
+      icon: "🌅",
+      title: "Atmospheric Optics",
+      short: "Meteorology",
+      tagline: "Nature's light show in the sky",
+      description: "The atmosphere acts as a giant optical system where dispersion creates spectacular phenomena. Rainbows, sundogs, halos, and the green flash at sunset all result from sunlight dispersing through water droplets or ice crystals. Meteorologists study these optical effects to understand atmospheric conditions, while the physics explains why we see such beautiful displays.",
+      connection: "Every raindrop acts like a tiny prism, dispersing sunlight into colors. But unlike our tabletop prism, millions of droplets at different positions each contribute one specific color to your eye. The geometry means red always appears at 42° and violet at 40° from the antisolar point—the same dispersion physics, scaled up to fill the sky.",
+      howItWorks: "Sunlight enters a water droplet, refracting at the air-water interface. Inside the droplet, the light reflects off the back surface and exits, refracting again. Each refraction disperses the colors slightly. The spherical geometry concentrates the exiting light near a specific angle (~42° for primary rainbows). Since violet refracts more than red, violet light exits at a steeper angle. Your eye sees red from higher droplets and violet from lower ones, creating the rainbow arc. Ice crystal halos use similar dispersion through hexagonal prism shapes.",
+      stats: [
+        { val: "42°", label: "Primary rainbow angle" },
+        { val: "51°", label: "Secondary rainbow angle" },
+        { val: "22°", label: "Common ice halo radius" }
+      ],
+      examples: [
+        "Primary and secondary rainbows after storms",
+        "Sundogs flanking the sun through ice clouds",
+        "22-degree halos around sun and moon",
+        "Green flash visible at sunset over ocean"
+      ],
+      companies: ["NOAA", "NASA", "Met Office", "Weather Underground"],
+      futureImpact: "Advanced atmospheric modeling will predict optical phenomena hours in advance, alerting photographers and sky watchers. Climate research will use systematic rainbow and halo observations to track changes in cloud microphysics and atmospheric water content as indicators of climate change.",
+      color: "#f59e0b"
+    }
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
 

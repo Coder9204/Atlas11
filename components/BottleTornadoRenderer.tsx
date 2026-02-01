@@ -654,6 +654,102 @@ const BottleTornadoRenderer: React.FC<BottleTornadoRendererProps> = ({
     },
   ];
 
+  // ==================== REAL-WORLD APPLICATIONS ====================
+  const realWorldApps = [
+    {
+      icon: '🌀',
+      title: 'Cyclone Dust Separators',
+      short: 'Industrial Filtration',
+      tagline: 'Spinning air cleans itself',
+      description: 'Cyclone separators use vortex physics to remove dust and particles from air streams without filters. Dirty air enters tangentially, creating a powerful vortex that flings heavier particles to the walls while clean air exits through the center.',
+      connection: 'The same vortex dynamics that create the bottle tornado funnel are used to separate particles by density. Heavy particles spiral outward while lighter air escapes through the low-pressure center.',
+      howItWorks: 'Air enters the cylindrical chamber at high speed tangentially, creating a spinning vortex. Centrifugal forces push heavier dust particles to the outer walls where they spiral down and collect. Clean air, being lighter, moves to the low-pressure center and exits upward through a central tube.',
+      stats: [
+        { value: '99%', label: 'Particle removal efficiency', icon: '✨' },
+        { value: '10,000+', label: 'Operating hours without maintenance', icon: '⚙️' },
+        { value: '50%', label: 'Energy savings vs. bag filters', icon: '⚡' },
+      ],
+      examples: [
+        'Dyson vacuum cleaners',
+        'Sawdust collection in woodshops',
+        'Cement plant dust control',
+        'Grain elevator air cleaning',
+      ],
+      companies: ['Dyson', 'Donaldson', 'AAF International', 'Camfil', 'Nederman'],
+      futureImpact: 'Next-generation cyclone separators with AI-optimized geometries could achieve near-perfect particle capture while using 70% less energy, revolutionizing air quality in factories and cities.',
+      color: '#06b6d4',
+    },
+    {
+      icon: '🌪️',
+      title: 'Tornado Research and Prediction',
+      short: 'Weather Forecasting',
+      tagline: 'Understanding nature\'s most violent storms',
+      description: 'Meteorologists study vortex dynamics to predict tornado formation and intensity. By understanding how rotating air columns intensify through angular momentum conservation, they can issue earlier and more accurate warnings.',
+      connection: 'Tornadoes are massive versions of the bottle vortex. As rotating air is stretched vertically, it spins faster due to angular momentum conservation - the same principle that makes water accelerate toward the drain.',
+      howItWorks: 'Supercell thunderstorms create rotating updrafts called mesocyclones. When this rotating air is stretched vertically by the storm\'s updraft, it intensifies dramatically. Doppler radar detects the rotation velocity, while computer models simulate vortex dynamics to predict tornado formation.',
+      stats: [
+        { value: '13 min', label: 'Average warning lead time', icon: '⏱️' },
+        { value: '300 mph', label: 'Maximum recorded wind speed', icon: '💨' },
+        { value: '75%', label: 'Detection rate with modern radar', icon: '📡' },
+      ],
+      examples: [
+        'Doppler radar velocity analysis',
+        'Storm chaser research vehicles',
+        'Tornado wind tunnel experiments',
+        'Numerical weather prediction models',
+      ],
+      companies: ['NOAA', 'National Weather Service', 'NCAR', 'Vaisala', 'Baron Weather'],
+      futureImpact: 'Phased-array radar systems and machine learning could extend tornado warning times to 30+ minutes, potentially saving thousands of lives annually through earlier evacuations.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '❄️',
+      title: 'Vortex Tubes for Cooling',
+      short: 'Industrial Cooling',
+      tagline: 'Cold air from a spinning tube',
+      description: 'Vortex tubes use compressed air to produce extreme cold without refrigerants or moving parts. Compressed air entering tangentially creates a vortex that separates into hot and cold streams through angular momentum effects.',
+      connection: 'The Ranque-Hilsch vortex tube exploits the same rotational physics as the bottle tornado. Fast-spinning air in the center becomes cold while slower outer air becomes hot, creating temperature separation without any refrigeration.',
+      howItWorks: 'Compressed air enters a cylindrical chamber tangentially at high velocity, creating an intense vortex. The outer layers slow down and heat up from friction with the walls, while the inner core accelerates and cools dramatically. A valve separates the hot outer flow from the cold inner flow.',
+      stats: [
+        { value: '-50°C', label: 'Minimum achievable temperature', icon: '🥶' },
+        { value: '100°C', label: 'Temperature differential possible', icon: '🌡️' },
+        { value: '0', label: 'Moving parts required', icon: '🔧' },
+      ],
+      examples: [
+        'CNC machine tool cooling',
+        'Electronic enclosure cooling',
+        'Laboratory sample cooling',
+        'Plastic injection mold cooling',
+      ],
+      companies: ['Vortec', 'Exair', 'ITW Vortec', 'Nex Flow', 'Meech'],
+      futureImpact: 'Vortex tube technology could enable portable, eco-friendly cooling systems for remote locations and developing nations, providing refrigeration without electricity or harmful refrigerants.',
+      color: '#0ea5e9',
+    },
+    {
+      icon: '⛏️',
+      title: 'Hydrocyclones in Mining',
+      short: 'Mineral Separation',
+      tagline: 'Spinning slurry reveals treasure',
+      description: 'Hydrocyclones use vortex action to separate valuable minerals from waste rock in water slurries. Heavy mineral particles spiral outward while lighter material exits through the center, enabling efficient ore processing.',
+      connection: 'Like water spiraling in the bottle tornado, mineral slurries in hydrocyclones experience centrifugal separation. Dense particles move outward in the vortex while lighter particles follow the low-pressure core upward.',
+      howItWorks: 'Mineral-laden water enters the conical hydrocyclone tangentially, creating a powerful vortex. Centrifugal forces thousands of times stronger than gravity push heavy ore particles to the walls, where they spiral down to the underflow. Lighter gangue material moves to the center and exits through the overflow at the top.',
+      stats: [
+        { value: '3000g', label: 'Centrifugal force generated', icon: '💫' },
+        { value: '10μm', label: 'Minimum particle size separated', icon: '🔬' },
+        { value: '500+', label: 'Tons per hour throughput', icon: '⚖️' },
+      ],
+      examples: [
+        'Gold ore concentration',
+        'Iron ore beneficiation',
+        'Coal washing and cleaning',
+        'Diamond recovery operations',
+      ],
+      companies: ['Weir Minerals', 'FLSmidth', 'Metso Outotec', 'Krebs', 'Multotec'],
+      futureImpact: 'Smart hydrocyclones with real-time sensors and AI control could recover 30% more valuable minerals from tailings, reducing mining waste while extracting critical materials for renewable energy technology.',
+      color: '#f59e0b',
+    },
+  ];
+
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{

@@ -305,6 +305,104 @@ const applications: Application[] = [
 ];
 
 // =============================================================================
+// REAL-WORLD APPLICATIONS DATA (Rich Transfer Phase)
+// =============================================================================
+const realWorldApps = [
+  {
+    icon: '🔬',
+    title: 'X-Ray Crystallography',
+    short: 'Protein structure determination',
+    tagline: 'Revealing Molecular Architecture',
+    description: 'X-ray crystallography uses diffraction patterns to determine the atomic structure of proteins, DNA, and other complex molecules. When X-rays pass through a crystal, they diffract off the regularly arranged atoms, creating a pattern that encodes the 3D structure.',
+    connection: 'Just like light diffracting through your slit creates a pattern that reveals wavelength information, X-rays diffracting through crystals create patterns that reveal atomic positions. The mathematics is identical - both use wave interference!',
+    howItWorks: 'A crystal is bombarded with X-rays (wavelength ~0.1nm, similar to atomic spacing). Each atom scatters the X-rays, creating interference patterns on a detector. Fourier transforms convert these patterns into electron density maps, revealing atomic positions.',
+    stats: [
+      { value: '100,000+', label: 'Protein structures solved', icon: '🧬' },
+      { value: '0.1 nm', label: 'Resolution achieved', icon: '🎯' },
+      { value: '29', label: 'Nobel Prizes awarded', icon: '🏆' }
+    ],
+    examples: [
+      'Rosalind Franklin used X-ray diffraction to capture Photo 51, revealing DNA\'s helical structure',
+      'COVID-19 spike protein structure was solved in weeks using modern crystallography',
+      'Drug discovery relies on seeing how molecules fit into protein binding sites',
+      'Ribosome structure (2009 Nobel Prize) required solving millions of diffraction spots'
+    ],
+    companies: ['Diamond Light Source', 'SLAC National Lab', 'European Synchrotron (ESRF)', 'Rigaku', 'Bruker'],
+    futureImpact: 'AI-assisted crystallography and cryo-EM are revolutionizing structural biology, enabling rapid drug discovery and understanding of disease mechanisms at the atomic level.',
+    color: defined.colors.primary
+  },
+  {
+    icon: '✨',
+    title: 'Holography',
+    short: '3D imaging technology',
+    tagline: 'Recording Light Waves in Full',
+    description: 'Holograms are created by recording the interference pattern between a reference beam and light scattered from an object. When illuminated, the hologram diffracts light to recreate the original wavefront - producing a true 3D image.',
+    connection: 'Your double-slit experiment shows how two coherent sources create interference patterns. A hologram records the interference between object and reference beams. When illuminated, diffraction from this pattern reconstructs the original 3D wavefront.',
+    howItWorks: 'A laser beam is split into reference and object beams. The object beam illuminates the subject, and both beams meet at a photographic plate. The resulting interference pattern is recorded. When the hologram is illuminated by the reference beam, diffraction recreates the original light field.',
+    stats: [
+      { value: '$5.5B', label: 'Holography market (2025)', icon: '💰' },
+      { value: '10,000+', label: 'Lines per mm resolution', icon: '📏' },
+      { value: '1971', label: 'Gabor Nobel Prize', icon: '🏅' }
+    ],
+    examples: [
+      'Security holograms on credit cards and banknotes prevent counterfeiting',
+      'Holographic data storage can store terabytes in a sugar-cube-sized crystal',
+      'Medical holography creates 3D models of organs for surgical planning',
+      'Holographic displays in museums show artifacts viewable from all angles'
+    ],
+    companies: ['Microsoft HoloLens', 'Looking Glass Factory', 'HOLOEYE', 'Zebra Imaging', 'Light Field Lab'],
+    futureImpact: 'True holographic displays and holographic telepresence are becoming reality, promising to transform communication, entertainment, and how we interact with digital information.',
+    color: defined.colors.secondary
+  },
+  {
+    icon: '🌈',
+    title: 'Diffraction Gratings',
+    short: 'Precision spectrometers',
+    tagline: 'Separating Light by Wavelength',
+    description: 'Diffraction gratings contain thousands of precisely spaced slits that spread light into its component wavelengths. This is the same physics as your double-slit experiment, but with millions of slits for extreme precision.',
+    connection: 'Your double-slit shows how path difference creates constructive interference at specific angles depending on wavelength. Gratings multiply this effect with thousands of slits - each wavelength diffracts to a unique angle with incredible precision.',
+    howItWorks: 'Light hits a surface with thousands of parallel grooves (slits). Each groove acts as a source of diffracted light. Constructive interference occurs at angles where d·sin(θ)=mλ. Different wavelengths meet this condition at different angles, separating the spectrum.',
+    stats: [
+      { value: '1,200', label: 'Lines per mm typical', icon: '📐' },
+      { value: '0.001 nm', label: 'Wavelength resolution', icon: '🔍' },
+      { value: '$2.3B', label: 'Spectrometer market', icon: '📊' }
+    ],
+    examples: [
+      'Astronomers identify elements in distant stars by their spectral fingerprints',
+      'Smartphones use miniature spectrometers for color calibration',
+      'Environmental monitors detect pollutants by their absorption spectra',
+      'Raman spectrometers identify unknown chemicals in seconds'
+    ],
+    companies: ['Ocean Insight', 'Horiba', 'Thorlabs', 'Newport', 'Shimadzu'],
+    futureImpact: 'Portable spectrometers are democratizing chemical analysis - soon your phone may identify food freshness, counterfeit drugs, or environmental pollutants instantly.',
+    color: defined.colors.accent
+  },
+  {
+    icon: '💿',
+    title: 'CD/DVD Data Storage',
+    short: 'Optical media technology',
+    tagline: 'Data Encoded in Diffraction',
+    description: 'CDs and DVDs store data as microscopic pits along spiral tracks. The track spacing acts as a diffraction grating - that\'s why discs show rainbow colors! The laser reads data by detecting intensity changes from interference.',
+    connection: 'The rainbow you see on a CD is diffraction in action - the same phenomenon as your slit experiment. Track spacing (~1.6μm for CDs) is similar to visible light wavelengths, creating beautiful diffraction patterns.',
+    howItWorks: 'A focused laser reads pits and lands on the disc surface. When the beam spans a pit edge, part reflects from the pit and part from the land. These paths differ by λ/4, causing destructive interference - a drop in reflected intensity that encodes binary data.',
+    stats: [
+      { value: '700 MB', label: 'CD capacity', icon: '💾' },
+      { value: '25 GB', label: 'Blu-ray capacity', icon: '📀' },
+      { value: '200B+', label: 'Discs manufactured', icon: '🏭' }
+    ],
+    examples: [
+      'CD track pitch (1.6μm) matches red laser wavelength for optimal reading',
+      'DVD uses shorter wavelength red laser to fit more data (650nm vs 780nm)',
+      'Blu-ray\'s 405nm blue laser enables 0.32μm track pitch - 5x CD density',
+      'Holographic discs may store 1TB using 3D diffraction patterns'
+    ],
+    companies: ['Sony', 'Philips', 'Panasonic', 'Pioneer'],
+    futureImpact: 'While streaming dominates, optical archival storage using advanced diffraction techniques offers century-long data preservation for libraries and archives.',
+    color: defined.colors.success
+  }
+];
+
+// =============================================================================
 // MAIN COMPONENT
 // =============================================================================
 const PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];

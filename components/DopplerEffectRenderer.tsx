@@ -478,6 +478,102 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     },
   ], []);
 
+  // --- REAL-WORLD APPLICATIONS DATA (comprehensive) ---
+  const realWorldApps = useMemo(() => [
+    {
+      icon: '🚔',
+      title: 'Radar Speed Guns',
+      short: 'Law enforcement',
+      tagline: 'Catching Speeders with Double-Doppler',
+      description: 'Police radar guns use the Doppler effect to measure vehicle speeds with remarkable precision. By emitting microwave signals and analyzing the reflected frequency shift, officers can determine exactly how fast a vehicle is traveling within milliseconds.',
+      connection: 'Just like the ambulance siren shifts pitch as it passes, radar waves shift frequency when bouncing off moving vehicles. The faster the vehicle, the greater the frequency shift—making speed detection instantaneous and accurate.',
+      howItWorks: 'A radar gun emits a continuous microwave beam (typically 24.125 GHz or 34.7 GHz). When this beam hits a moving vehicle, it reflects back with a shifted frequency. The gun measures this shift and uses the Doppler formula to calculate speed. Because the wave is shifted TWICE (once hitting the car, once returning), sensitivity is doubled.',
+      stats: [
+        { value: '±1 mph', label: 'Accuracy', icon: '🎯' },
+        { value: '10,000+', label: 'Range (feet)', icon: '📡' },
+        { value: '0.3s', label: 'Detection time', icon: '⚡' }
+      ],
+      examples: [
+        'Stationary patrol cars measuring oncoming traffic speed',
+        'Moving patrol vehicles calculating relative velocities',
+        'LIDAR guns using laser pulses for even higher precision',
+        'Speed cameras with automated ticketing systems'
+      ],
+      companies: ['Stalker Radar', 'Kustom Signals', 'Decatur Electronics', 'MPH Industries', 'Applied Concepts'],
+      futureImpact: 'Next-generation multi-target tracking systems can simultaneously measure speeds of multiple vehicles in different lanes, while AI integration enables automatic plate recognition and violation documentation.',
+      color: design.colors.accentPrimary
+    },
+    {
+      icon: '❤️',
+      title: 'Medical Ultrasound',
+      short: 'Blood flow imaging',
+      tagline: 'Seeing Blood Flow in Real-Time',
+      description: 'Doppler ultrasound revolutionized cardiovascular medicine by allowing doctors to visualize and measure blood flow non-invasively. By analyzing frequency shifts of ultrasound waves reflected from moving red blood cells, clinicians can diagnose heart conditions, detect blockages, and monitor fetal health.',
+      connection: 'Red blood cells act like millions of tiny moving reflectors. As ultrasound waves bounce off them, the frequency shifts proportionally to blood velocity—the same principle as our ambulance siren, but with sound waves too high for humans to hear.',
+      howItWorks: 'A transducer emits ultrasound pulses (2-18 MHz) into the body. When these waves encounter moving blood cells, they reflect back with Doppler-shifted frequencies. Color Doppler displays flow direction (red = toward probe, blue = away), while spectral Doppler graphs velocity over time to show pulsatile flow patterns.',
+      stats: [
+        { value: '0.1 cm/s', label: 'Min detectable velocity', icon: '🔬' },
+        { value: '5 MHz', label: 'Typical frequency', icon: '📊' },
+        { value: 'Real-time', label: 'Imaging speed', icon: '⏱️' }
+      ],
+      examples: [
+        'Echocardiograms measuring heart valve blood flow',
+        'Carotid artery scans detecting stroke-risk blockages',
+        'Fetal monitoring checking umbilical cord circulation',
+        'Deep vein thrombosis (DVT) detection in legs'
+      ],
+      companies: ['GE Healthcare', 'Philips', 'Siemens Healthineers', 'Canon Medical'],
+      futureImpact: 'Portable handheld Doppler devices and AI-powered analysis are democratizing cardiovascular diagnostics, enabling point-of-care screening in remote areas and real-time surgical guidance.',
+      color: design.colors.accentSecondary
+    },
+    {
+      icon: '🌪️',
+      title: 'Weather Radar',
+      short: 'Storm tracking',
+      tagline: 'Detecting Tornadoes Before They Strike',
+      description: 'Doppler weather radar is the cornerstone of modern meteorology, enabling forecasters to track storm systems, measure precipitation, and most critically—detect rotation in severe thunderstorms that may spawn tornadoes.',
+      connection: 'Just as our ambulance siren reveals motion direction, Doppler radar reveals wind motion. When radar waves bounce off raindrops and debris moving toward or away from the radar, the frequency shift indicates wind velocity and direction.',
+      howItWorks: 'Weather radar transmits microwave pulses (typically S-band at 2.7-3.0 GHz) that reflect off precipitation. By measuring the Doppler shift of returns, the radar determines if rain/debris is moving toward (higher frequency) or away (lower frequency). A "velocity couplet" showing opposite motions side-by-side indicates rotation—the signature of a potential tornado.',
+      stats: [
+        { value: '250 km', label: 'Detection range', icon: '📡' },
+        { value: '15 min', label: 'Advance warning', icon: '⏰' },
+        { value: '1 m/s', label: 'Velocity precision', icon: '🎯' }
+      ],
+      examples: [
+        'NEXRAD network covering continental United States',
+        'Tornado vortex signatures (TVS) triggering warnings',
+        'Hurricane intensity estimation from wind speeds',
+        'Dual-polarization detecting hail vs rain'
+      ],
+      companies: ['Raytheon', 'Lockheed Martin', 'Baron Services', 'DTN', 'The Weather Company'],
+      futureImpact: 'Phased array radar technology promises faster volume scans (every 60 seconds vs 5 minutes), dramatically improving severe weather warning lead times and potentially saving thousands of lives.',
+      color: design.colors.info
+    },
+    {
+      icon: '🌌',
+      title: 'Astronomy Redshift',
+      short: 'Cosmic measurements',
+      tagline: 'Measuring the Expanding Universe',
+      description: 'The cosmic Doppler effect—observed as redshift in light from distant galaxies—provided the first evidence that our universe is expanding. This discovery revolutionized cosmology and led to the Big Bang theory.',
+      connection: 'Light waves behave just like sound waves when sources move. As galaxies recede from us, their light stretches to longer (redder) wavelengths. The greater the distance, the faster they\'re moving away—Hubble\'s Law.',
+      howItWorks: 'Astronomers analyze light spectra from distant objects, looking for characteristic emission or absorption lines (like hydrogen\'s signature at 656 nm). When these lines appear at longer wavelengths than expected, the shift indicates recession velocity. For very distant objects, this "cosmological redshift" is actually caused by space itself expanding, stretching light waves in transit.',
+      stats: [
+        { value: 'z = 11.1', label: 'Highest galaxy redshift', icon: '🔭' },
+        { value: '13.4 By', label: 'Lookback time', icon: '⏳' },
+        { value: '71 km/s/Mpc', label: 'Hubble constant', icon: '📈' }
+      ],
+      examples: [
+        'Hubble\'s 1929 discovery of universal expansion',
+        'Quasar redshifts revealing the early universe',
+        'Exoplanet detection via stellar radial velocity wobble',
+        'Binary star orbital measurements'
+      ],
+      companies: ['NASA', 'ESA', 'SpaceX (Starlink for astronomy)', 'Caltech', 'MIT'],
+      futureImpact: 'The James Webb Space Telescope is observing the most distant and ancient galaxies ever seen, using redshift to peer back to when the universe was just 300 million years old.',
+      color: design.colors.warning
+    }
+  ], []);
+
   // --- RENDER HELPERS ---
   const renderProgressBar = () => {
     const currentIndex = phaseOrder.indexOf(phase);

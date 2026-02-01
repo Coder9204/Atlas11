@@ -919,6 +919,127 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onP
   ];
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // REAL-WORLD APPLICATIONS (Comprehensive)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const realWorldApps = [
+    {
+      icon: "🧬",
+      title: "Centrifuges",
+      short: "Medical & Industrial Separation",
+      tagline: "Spinning at thousands of RPM to separate matter by density",
+      description: "Centrifuges use extremely high rotational speeds to create centripetal acceleration many times greater than gravity. This 'relative centrifugal force' causes denser materials to migrate outward faster than less dense materials, enabling precise separation of blood components, cell cultures, chemical compounds, and industrial materials.",
+      connection: "The centripetal force equation F = mv²/r explains why faster spinning creates stronger separation. At high RPM, the required centripetal force becomes enormous - particles that can't be held in circular motion by intermolecular forces move outward relative to the spinning container.",
+      howItWorks: "When a centrifuge spins, every particle experiences centripetal acceleration a = v²/r = ω²r. Denser particles require more centripetal force to maintain circular motion. Since the container walls provide equal force to all particles at the same radius, denser particles 'fall' outward while lighter particles remain closer to the center.",
+      stats: [
+        { value: "100,000+", label: "RPM in ultracentrifuges" },
+        { value: "1,000,000 g", label: "Maximum relative centrifugal force" },
+        { value: "0.1 nm", label: "Particle separation resolution" }
+      ],
+      examples: [
+        "Blood separation into plasma, platelets, red cells, and white cells",
+        "Uranium enrichment for nuclear fuel using gas centrifuges",
+        "DNA/RNA extraction in molecular biology laboratories",
+        "Cream separation from milk in dairy processing"
+      ],
+      companies: [
+        "Beckman Coulter",
+        "Thermo Fisher Scientific",
+        "Eppendorf",
+        "Sigma Laborzentrifugen"
+      ],
+      futureImpact: "Advanced microcentrifuges are enabling point-of-care diagnostics, allowing blood tests to be performed in minutes at a doctor's office rather than requiring laboratory processing. Ultracentrifuges continue to push boundaries in nanotechnology and virus research.",
+      color: "#8b5cf6"
+    },
+    {
+      icon: "🛣️",
+      title: "Banked Curves on Roads",
+      short: "Highway Engineering",
+      tagline: "Tilted roads that help cars turn safely at high speeds",
+      description: "Highway engineers design banked curves with precise angles calculated using centripetal force principles. The banking angle allows a component of the normal force from the road to provide centripetal force, reducing or eliminating the need for friction. This enables safer turns at higher speeds, especially in wet or icy conditions.",
+      connection: "On a banked curve, the normal force N has a horizontal component N·sin(θ) pointing toward the center of the turn. For an ideal banking angle at a specific speed: tan(θ) = v²/(rg). At this speed, no friction is needed to maintain the circular path.",
+      howItWorks: "When a road is banked at angle θ, the normal force from the road surface is perpendicular to the road, not vertical. This creates a horizontal component that provides centripetal force. The vertical component balances gravity. The ideal banking angle depends on the design speed and curve radius.",
+      stats: [
+        { value: "33°", label: "Maximum NASCAR track banking" },
+        { value: "12%", label: "Typical highway superelevation" },
+        { value: "70+ mph", label: "Design speeds for banked highways" }
+      ],
+      examples: [
+        "NASCAR and Formula 1 race track turns with extreme banking",
+        "Highway on-ramps and off-ramps with calculated superelevation",
+        "Velodrome cycling tracks with 42-45 degree banking",
+        "Railway curves with tilted tracks for high-speed trains"
+      ],
+      companies: [
+        "AECOM",
+        "Jacobs Engineering",
+        "WSP Global",
+        "Stantec",
+        "HDR Inc"
+      ],
+      futureImpact: "Smart road surfaces with variable banking are being researched, potentially using electromagnetic or mechanical systems to adjust banking angles based on traffic speed and weather conditions. Autonomous vehicles may communicate with infrastructure to optimize cornering.",
+      color: "#f97316"
+    },
+    {
+      icon: "🌀",
+      title: "Washing Machine Spin Cycles",
+      short: "Home Appliances",
+      tagline: "High-speed rotation that extracts water from your clothes",
+      description: "The spin cycle of a washing machine uses centripetal force principles to remove water from fabrics. As the drum spins rapidly, clothes are pressed against the perforated drum wall. Water, being less constrained than fabric fibers, escapes through the holes while the clothes remain inside.",
+      connection: "During the spin cycle, clothes require centripetal force F = mv²/r to move in a circle. The drum wall provides this force. Water droplets in the fabric also need centripetal force, but when the required force exceeds what surface tension and fabric structure can provide, water is 'flung' through the drum perforations.",
+      howItWorks: "At high RPM, the centripetal acceleration can reach 300-500 times gravity (300-500 g). The drum wall provides centripetal force to the clothes, pressing them outward. Water molecules, loosely held by surface tension in the fabric, cannot maintain circular motion at this acceleration and escape through the drum holes.",
+      stats: [
+        { value: "1,400", label: "Maximum RPM in premium machines" },
+        { value: "500 g", label: "Centripetal acceleration force" },
+        { value: "90%", label: "Water extraction efficiency" }
+      ],
+      examples: [
+        "Front-loading washing machines with horizontal drum rotation",
+        "Industrial laundry extractors in hotels and hospitals",
+        "Salad spinners using the same centripetal principle",
+        "Industrial parts washing and degreasing equipment"
+      ],
+      companies: [
+        "LG Electronics",
+        "Samsung",
+        "Whirlpool",
+        "Bosch",
+        "Miele"
+      ],
+      futureImpact: "Next-generation washing machines are incorporating AI to optimize spin cycles based on fabric type and load weight, maximizing water extraction while minimizing fabric wear. Some designs explore magnetic bearings for quieter, more efficient high-speed spinning.",
+      color: "#06b6d4"
+    },
+    {
+      icon: "🚀",
+      title: "Space Station Artificial Gravity",
+      short: "Future Space Habitats",
+      tagline: "Rotating structures that simulate gravity for astronaut health",
+      description: "Long-duration spaceflight causes significant health problems due to microgravity, including bone loss, muscle atrophy, and cardiovascular deconditioning. Rotating space stations can create artificial gravity through centripetal acceleration, providing the constant force astronauts' bodies need to maintain health during extended missions.",
+      connection: "In a rotating space station, the floor pushes on astronauts with centripetal force F = mω²r, where ω is the angular velocity and r is the radius. This force feels exactly like gravity to the inhabitants. To simulate Earth gravity: ω²r = g, so for a given radius, the required rotation rate can be calculated.",
+      howItWorks: "Astronauts inside a rotating habitat stand on the outer rim with their heads pointing toward the rotation axis. The floor provides centripetal force to keep them moving in a circle. From their reference frame, they experience an apparent outward force (centrifugal effect) that feels identical to gravitational pull.",
+      stats: [
+        { value: "450 m", label: "Ideal habitat radius for 1g at 1 RPM" },
+        { value: "2 RPM", label: "Maximum comfortable rotation rate" },
+        { value: "0.5-1 g", label: "Target artificial gravity level" }
+      ],
+      examples: [
+        "Von Braun's 1952 rotating wheel space station concept",
+        "Stanford Torus design for 10,000-person space colony",
+        "Nautilus-X multi-mission space exploration vehicle",
+        "Gateway Foundation's planned Voyager Station orbital hotel"
+      ],
+      companies: [
+        "SpaceX",
+        "Blue Origin",
+        "Orbital Assembly",
+        "Axiom Space",
+        "NASA"
+      ],
+      futureImpact: "Rotating habitats are essential for Mars missions and permanent space settlements. Current research focuses on determining minimum effective gravity levels and managing the Coriolis effects that occur in rotating reference frames. The first commercial rotating station could be operational by the 2030s.",
+      color: "#10b981"
+    }
+  ];
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // PHASE RENDERERS
   // ═══════════════════════════════════════════════════════════════════════════
 

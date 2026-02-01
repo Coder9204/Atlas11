@@ -501,6 +501,102 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
     </div>
   );
 
+  // Real-world applications for Transfer phase
+  const realWorldApps = [
+    {
+      icon: "🚢",
+      title: "Ship Propeller Design",
+      short: "Marine engineering solutions",
+      tagline: "Protecting vessels from invisible destruction",
+      description: "Naval architects and marine engineers design propellers that minimize cavitation damage while maximizing thrust efficiency. Cavitation on ship propellers causes pitting, erosion, and can reduce a propeller's lifespan from decades to just years if not properly managed.",
+      connection: "When propeller blades spin rapidly, they create low-pressure zones on their surfaces. If pressure drops below water's vapor pressure, cavitation bubbles form and collapse against the metal, causing progressive erosion damage.",
+      howItWorks: "Engineers use computational fluid dynamics (CFD) to model pressure distributions across blade surfaces. By optimizing blade geometry, pitch angles, and rotation speeds, they can keep local pressures above the cavitation threshold while maintaining propulsive efficiency.",
+      stats: [
+        { label: "Bubble Collapse Pressure", value: "Up to 1,500 MPa" },
+        { label: "Erosion Rate", value: "0.1-5 mm/year" },
+        { label: "Efficiency Loss", value: "15-30% when cavitating" }
+      ],
+      examples: [
+        "Container ship propellers with skewed blade designs",
+        "Submarine propellers optimized for silent operation",
+        "High-speed ferry water jet impellers",
+        "Tugboat propellers designed for high-thrust, low-speed operation"
+      ],
+      companies: ["Wärtsilä", "MAN Energy Solutions", "Rolls-Royce Marine", "Kongsberg Maritime", "Schottel"],
+      futureImpact: "Advanced composite materials and AI-driven design optimization are enabling propellers that self-adjust pitch in real-time, virtually eliminating cavitation while maximizing fuel efficiency and reducing underwater noise pollution.",
+      color: "#3B82F6"
+    },
+    {
+      icon: "🔊",
+      title: "Ultrasonic Cleaning",
+      short: "Industrial precision cleaning",
+      tagline: "Millions of microscopic scrub brushes",
+      description: "Ultrasonic cleaners harness controlled cavitation to remove contaminants from intricate surfaces that traditional cleaning cannot reach. From surgical instruments to aerospace components, cavitation bubbles provide unparalleled cleaning at the microscopic level.",
+      connection: "High-frequency sound waves create rapid pressure oscillations in cleaning fluid. During low-pressure phases, microscopic cavitation bubbles nucleate. During high-pressure phases, these bubbles implode violently, releasing energy that dislodges contaminants.",
+      howItWorks: "Piezoelectric transducers convert electrical energy into ultrasonic vibrations (typically 20-400 kHz). These vibrations propagate through the cleaning solution, creating millions of cavitation events per second. The implosion energy scrubs surfaces at the molecular level without damaging delicate parts.",
+      stats: [
+        { label: "Frequency Range", value: "20-400 kHz" },
+        { label: "Cavitation Bubbles", value: "10-150 micrometers" },
+        { label: "Cleaning Time", value: "2-15 minutes typical" }
+      ],
+      examples: [
+        "Surgical instrument sterilization in hospitals",
+        "Semiconductor wafer cleaning in chip fabrication",
+        "Carburetor and fuel injector restoration",
+        "Jewelry and watchmaking precision cleaning"
+      ],
+      companies: ["Branson Ultrasonics", "Crest Ultrasonics", "Elma Schmidbauer", "L&R Manufacturing", "Kemet International"],
+      futureImpact: "Next-generation ultrasonic systems use AI-controlled frequency sweeping to optimize cavitation intensity for specific materials and contaminants, enabling damage-free cleaning of increasingly delicate nanotechnology components.",
+      color: "#8B5CF6"
+    },
+    {
+      icon: "🏥",
+      title: "Kidney Stone Treatment",
+      short: "Lithotripsy medical therapy",
+      tagline: "Shattering stones without surgery",
+      description: "Extracorporeal Shock Wave Lithotripsy (ESWL) uses focused acoustic waves to create cavitation bubbles inside kidney stones, fragmenting them into passable pieces. This non-invasive procedure has revolutionized urology, eliminating the need for surgery in most cases.",
+      connection: "Shock waves focused on kidney stones create intense pressure gradients. These pressure differentials nucleate cavitation bubbles within and around the stone. When bubbles collapse asymmetrically against the stone surface, they generate microjets that erode and fragment it.",
+      howItWorks: "An electromagnetic or piezoelectric source generates shock waves outside the body. These waves are focused using acoustic lenses or reflectors to converge at the kidney stone location (guided by X-ray or ultrasound imaging). Repeated cavitation events progressively break the stone into fragments small enough to pass naturally.",
+      stats: [
+        { label: "Success Rate", value: "70-90% for stones <2cm" },
+        { label: "Shock Waves", value: "2,000-4,000 per session" },
+        { label: "Treatment Duration", value: "30-60 minutes" }
+      ],
+      examples: [
+        "Calcium oxalate kidney stone fragmentation",
+        "Ureteral stone treatment for blocked urinary flow",
+        "Gallstone lithotripsy (less common application)",
+        "Salivary gland stone (sialolith) treatment"
+      ],
+      companies: ["Dornier MedTech", "Boston Scientific", "Olympus Corporation", "Richard Wolf GmbH", "Storz Medical"],
+      futureImpact: "Histotripsy, an emerging technique, uses precisely controlled cavitation clouds to mechanically destroy tumors and kidney stones with unprecedented precision, potentially replacing many surgical procedures with completely non-invasive treatments.",
+      color: "#EF4444"
+    },
+    {
+      icon: "⚙️",
+      title: "Hydraulic Pump Protection",
+      short: "Fluid power system design",
+      tagline: "Keeping industrial muscles healthy",
+      description: "Hydraulic systems power everything from excavators to aircraft. Cavitation in pumps, valves, and actuators causes noise, vibration, erosion, and catastrophic failures. Engineers design systems to prevent the pressure drops that trigger destructive cavitation.",
+      connection: "When hydraulic fluid flows through restrictions or around sharp corners, local pressure can drop below the fluid's vapor pressure. Cavitation bubbles form in these low-pressure zones and collapse downstream when pressure recovers, eroding pump components and valve seats.",
+      howItWorks: "Engineers prevent hydraulic cavitation through multiple strategies: maintaining adequate inlet pressure (NPSH), using properly sized suction lines, avoiding air ingestion, controlling fluid temperature, and selecting appropriate fluid viscosity. Pump designs incorporate anti-cavitation grooves and optimized flow passages.",
+      stats: [
+        { label: "Damage Threshold", value: "Pressure drops >25% below vapor pressure" },
+        { label: "Noise Increase", value: "10-20 dB when cavitating" },
+        { label: "Pump Life Reduction", value: "Up to 90% if uncorrected" }
+      ],
+      examples: [
+        "Excavator hydraulic system optimization",
+        "Aircraft flight control actuator protection",
+        "Industrial press hydraulic circuit design",
+        "Injection molding machine pump systems"
+      ],
+      companies: ["Parker Hannifin", "Bosch Rexroth", "Eaton Hydraulics", "Danfoss"],
+      futureImpact: "Smart hydraulic systems with embedded sensors detect early cavitation signatures and automatically adjust operating parameters, predicting and preventing failures before they occur while optimizing energy efficiency.",
+      color: "#F59E0B"
+    }
+  ];
+
   // PHASE RENDERS
 
   // Hook Phase

@@ -1281,6 +1281,102 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     }
   ];
 
+  // Real-world applications with comprehensive details
+  const realWorldApps = [
+    {
+      icon: '🎹',
+      title: 'Musical Instrument Tuning',
+      short: 'Perfect Pitch',
+      tagline: 'Zero beats means perfect harmony',
+      description: 'Professional piano tuners and musicians have relied on beat frequencies for centuries to achieve precise tuning. By comparing a reference tone with the instrument string, tuners listen for the characteristic pulsating sound and adjust until it disappears completely.',
+      connection: 'When two nearly identical frequencies sound together, they create audible beats. The beat frequency equals the difference between the two tones. Zero beats indicates the frequencies match exactly - perfect tuning achieved.',
+      howItWorks: 'A tuning fork or electronic reference produces a standard pitch (e.g., A4 = 440 Hz). When played alongside an instrument string, any frequency mismatch creates beats. Fast beats (5-10 Hz) indicate significant detuning. As the tuner adjusts string tension, beats slow down. When beats disappear entirely, the frequencies are identical within human perception limits (typically ±0.5 Hz accuracy).',
+      stats: [
+        { value: '0.5 Hz', label: 'Tuning Precision', icon: '🎯' },
+        { value: '440 Hz', label: 'Concert Pitch A4', icon: '🎵' },
+        { value: '200+', label: 'Years of Practice', icon: '📜' }
+      ],
+      examples: [
+        'Concert grand piano tuning and maintenance',
+        'Guitar intonation and string calibration',
+        'Orchestra warm-up and section tuning',
+        'Choir pitch matching and vocal harmony'
+      ],
+      companies: ['Steinway & Sons', 'Yamaha', 'Gibson', 'Fender', 'Roland'],
+      futureImpact: 'AI-assisted tuning apps are making professional-quality tuning accessible to amateur musicians, while master tuners continue to use beats for the nuanced art of stretch tuning in pianos.',
+      color: '#14b8a6'
+    },
+    {
+      icon: '✈️',
+      title: 'Aircraft Engine Synchronization',
+      short: 'Propeller Sync',
+      tagline: 'Eliminating cabin drone through frequency matching',
+      description: 'Multi-engine aircraft use beat frequency principles to synchronize propeller speeds, reducing cabin noise and vibration. Pilots and automatic systems listen for or detect beats between engines and adjust RPM until the pulsating sound disappears.',
+      connection: 'When propellers rotate at slightly different speeds, the sound waves they produce interfere, creating an annoying low-frequency throbbing in the cabin. This beat frequency equals the RPM difference between engines.',
+      howItWorks: 'Each propeller generates a fundamental frequency based on its rotation speed and blade count. A 3-blade prop at 2400 RPM produces 120 Hz (2400/60 × 3). If another engine runs at 2406 RPM (120.3 Hz), passengers hear a 0.3 Hz beat - a slow throbbing every 3 seconds. Synchrophaser systems automatically detect phase differences and adjust fuel flow to match engine speeds precisely.',
+      stats: [
+        { value: '0.1 Hz', label: 'Sync Precision', icon: '⚙️' },
+        { value: '15 dB', label: 'Noise Reduction', icon: '🔇' },
+        { value: '95%', label: 'Twin Aircraft Use', icon: '✈️' }
+      ],
+      examples: [
+        'Twin-engine propeller aircraft synchronization',
+        'Turboprop regional airliner comfort systems',
+        'Helicopter rotor blade tracking',
+        'Multi-engine drone motor matching'
+      ],
+      companies: ['Beechcraft', 'Cessna', 'Piper', 'De Havilland', 'ATR'],
+      futureImpact: 'Electric aircraft with multiple motors will use digital beat detection for precise synchronization, enabling quieter urban air mobility vehicles and passenger drones.',
+      color: '#06b6d4'
+    },
+    {
+      icon: '🏥',
+      title: 'Medical Ultrasound Doppler',
+      short: 'Blood Flow Imaging',
+      tagline: 'Hearing the heartbeat through frequency shifts',
+      description: 'Doppler ultrasound measures blood flow velocity by detecting beat frequencies between transmitted and reflected ultrasound waves. The frequency shift caused by moving blood cells creates a beat that reveals flow speed and direction.',
+      connection: 'When ultrasound reflects off moving blood cells, the Doppler effect shifts its frequency. Mixing the original transmitted frequency with the shifted received frequency produces a beat in the audible range, directly proportional to blood velocity.',
+      howItWorks: 'A transducer emits ultrasound at 2-10 MHz into blood vessels. Red blood cells reflect these waves, but their motion causes a frequency shift (Doppler effect). The device mixes the transmitted and received frequencies, producing a beat frequency typically between 200 Hz and 15 kHz. This beat is converted to the characteristic "whoosh" sound and displayed as a velocity spectrogram. Flow toward the transducer produces positive shifts; flow away produces negative shifts.',
+      stats: [
+        { value: '1 mm/s', label: 'Flow Sensitivity', icon: '🩸' },
+        { value: '10 MHz', label: 'Ultrasound Frequency', icon: '📡' },
+        { value: '50M+', label: 'Annual Scans', icon: '🏥' }
+      ],
+      examples: [
+        'Fetal heart rate monitoring during pregnancy',
+        'Deep vein thrombosis detection in legs',
+        'Carotid artery stenosis assessment',
+        'Cardiac valve blood flow analysis'
+      ],
+      companies: ['GE Healthcare', 'Philips', 'Siemens Healthineers', 'Canon Medical', 'Fujifilm'],
+      futureImpact: 'Wearable Doppler devices will enable continuous blood flow monitoring for early detection of cardiovascular issues, while AI analysis will automate interpretation of complex flow patterns.',
+      color: '#f59e0b'
+    },
+    {
+      icon: '📻',
+      title: 'Radio Frequency Mixing',
+      short: 'Superheterodyne Receivers',
+      tagline: 'Converting invisible waves to audible signals',
+      description: 'Superheterodyne radio receivers use beat frequencies to convert high-frequency radio waves into manageable intermediate frequencies. This fundamental principle enables everything from AM/FM radios to cell phones and radar systems.',
+      connection: 'Mixing two RF signals produces sum and difference frequencies - the difference frequency is a beat. By choosing a local oscillator frequency appropriately, any incoming radio signal can be converted to a fixed intermediate frequency for easier processing.',
+      howItWorks: 'An incoming radio signal (e.g., 100 MHz FM station) is mixed with a local oscillator signal (e.g., 110.7 MHz). The mixer produces the difference frequency: 10.7 MHz - the standard FM intermediate frequency (IF). This IF signal is easier to filter and amplify than the original RF. The same IF stage works for any station by simply adjusting the local oscillator. For AM radio, the IF is typically 455 kHz. This "superheterodyne" architecture, invented in 1918, remains the foundation of virtually all radio receivers.',
+      stats: [
+        { value: '10.7 MHz', label: 'FM IF Standard', icon: '📻' },
+        { value: '455 kHz', label: 'AM IF Standard', icon: '🔊' },
+        { value: '99%', label: 'Receivers Using This', icon: '📶' }
+      ],
+      examples: [
+        'AM/FM broadcast radio receivers',
+        'Cellular phone RF front-ends',
+        'Software-defined radio systems',
+        'Satellite communication downconverters'
+      ],
+      companies: ['Qualcomm', 'Broadcom', 'Texas Instruments', 'Analog Devices', 'NXP'],
+      futureImpact: 'Next-generation 6G communications will use advanced frequency mixing techniques with terahertz carriers, while quantum receivers may eventually replace traditional superheterodyne architectures.',
+      color: '#10b981'
+    }
+  ];
+
   // ==================== PHASE RENDERS ====================
 
   // HOOK - Premium welcome screen

@@ -651,6 +651,82 @@ const AIInferenceLatencyRenderer: React.FC<AIInferenceLatencyRendererProps> = ({
     </div>
   );
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🤖',
+      title: 'Real-Time AI Assistants',
+      short: 'Voice assistants',
+      tagline: 'Instant AI Responses',
+      description: 'AI inference latency determines how quickly voice assistants like Siri, Alexa, and Google Assistant can respond to queries, directly impacting user experience.',
+      connection: 'Lower inference latency means faster response times, making AI feel more natural and conversational.',
+      howItWorks: 'Edge TPUs and optimized neural networks process voice commands locally, reducing round-trip latency to cloud servers.',
+      stats: [
+        { value: '<100ms', label: 'Target latency', icon: '⚡' },
+        { value: '10B+', label: 'Daily queries', icon: '📊' },
+        { value: '95%', label: 'On-device processing', icon: '📱' }
+      ],
+      examples: ['Siri voice commands', 'Alexa smart home control', 'Google Assistant queries', 'Real-time translation'],
+      companies: ['Apple', 'Amazon', 'Google', 'Microsoft'],
+      futureImpact: 'Sub-10ms inference will enable truly real-time AI conversations indistinguishable from human interaction.',
+      color: '#3B82F6'
+    },
+    {
+      icon: '🚗',
+      title: 'Autonomous Vehicles',
+      short: 'Self-driving cars',
+      tagline: 'Split-Second Decisions',
+      description: 'Self-driving vehicles rely on AI inference to process sensor data and make critical driving decisions in milliseconds, where latency can mean the difference between safety and collision.',
+      connection: 'Ultra-low inference latency enables real-time object detection, path planning, and emergency braking decisions.',
+      howItWorks: 'Custom AI accelerators like Tesla FSD chips and NVIDIA DRIVE process multiple neural networks in parallel for perception, prediction, and planning.',
+      stats: [
+        { value: '<10ms', label: 'Decision latency', icon: '⏱️' },
+        { value: '2TB/hr', label: 'Sensor data processed', icon: '📡' },
+        { value: '99.99%', label: 'Required reliability', icon: '🎯' }
+      ],
+      examples: ['Pedestrian detection', 'Lane change decisions', 'Emergency obstacle avoidance', 'Traffic sign recognition'],
+      companies: ['Tesla', 'Waymo', 'NVIDIA', 'Cruise', 'Mobileye'],
+      futureImpact: 'Sub-millisecond inference will enable fully autonomous Level 5 vehicles capable of handling any driving scenario.',
+      color: '#10B981'
+    },
+    {
+      icon: '🏥',
+      title: 'Healthcare AI Diagnostics',
+      short: 'Medical imaging',
+      tagline: 'Rapid Medical Analysis',
+      description: 'AI-powered medical imaging analysis helps radiologists detect tumors, fractures, and diseases faster, where inference speed directly impacts patient throughput and emergency care.',
+      connection: 'Faster inference allows real-time analysis during procedures and enables AI-assisted screening at scale.',
+      howItWorks: 'Specialized medical AI models run on GPU clusters, using techniques like model quantization and batch inference to process high-resolution scans efficiently.',
+      stats: [
+        { value: '<2sec', label: 'Scan analysis time', icon: '🔬' },
+        { value: '94%', label: 'Detection accuracy', icon: '✅' },
+        { value: '3x', label: 'Radiologist throughput', icon: '📈' }
+      ],
+      examples: ['Chest X-ray screening', 'MRI tumor detection', 'Retinal disease diagnosis', 'Pathology slide analysis'],
+      companies: ['Google Health', 'IBM Watson Health', 'Zebra Medical', 'Aidoc', 'Viz.ai'],
+      futureImpact: 'Real-time intraoperative AI will guide surgeons with instant tissue analysis and surgical recommendations.',
+      color: '#EF4444'
+    },
+    {
+      icon: '📈',
+      title: 'Financial Trading Systems',
+      short: 'Algorithmic trading',
+      tagline: 'Microsecond Advantage',
+      description: 'High-frequency trading systems use AI to analyze market patterns and execute trades, where microseconds of latency advantage translate to millions in profits or losses.',
+      connection: 'AI inference latency directly determines trading speed, with firms investing heavily in custom hardware for competitive advantage.',
+      howItWorks: 'FPGA-accelerated neural networks and co-located servers minimize inference time, using quantized models and speculative execution for maximum speed.',
+      stats: [
+        { value: '<1ms', label: 'Trade decision time', icon: '💹' },
+        { value: '$6.7T', label: 'Daily forex volume', icon: '💰' },
+        { value: '70%', label: 'Trades by algorithms', icon: '🤖' }
+      ],
+      examples: ['Market prediction models', 'Risk assessment', 'Fraud detection', 'Portfolio optimization'],
+      companies: ['Citadel', 'Two Sigma', 'Renaissance Technologies', 'Jane Street', 'DE Shaw'],
+      futureImpact: 'Quantum-accelerated AI inference may enable predictive trading strategies currently computationally impossible.',
+      color: '#F59E0B'
+    }
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return wrapPhaseContent(

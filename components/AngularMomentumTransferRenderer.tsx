@@ -1839,6 +1839,104 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
     </div>
   );
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // REAL-WORLD APPLICATIONS DATA
+  // ─────────────────────────────────────────────────────────────────────────
+  const realWorldApps = [
+    {
+      icon: '🛰️',
+      title: 'Reaction Wheels in Spacecraft',
+      short: 'Satellite Pointing',
+      tagline: 'Precision Control Without Propellant',
+      description: 'Reaction wheels are spinning flywheels used to control spacecraft orientation without using thrusters. By accelerating or decelerating these internal wheels, satellites can rotate with extreme precision to point cameras, antennas, and solar panels exactly where needed.',
+      connection: 'When a reaction wheel spins faster, the spacecraft rotates in the opposite direction to conserve total angular momentum. This internal transfer of angular momentum allows precise attitude control without expending fuel.',
+      howItWorks: 'A typical spacecraft has 3-4 reaction wheels oriented along different axes. Electric motors speed up or slow down each wheel, causing equal and opposite rotation of the spacecraft body. The Hubble Space Telescope uses six reaction wheels to achieve pointing accuracy of 0.007 arcseconds - precise enough to hold a laser on a dime 200 miles away.',
+      stats: [
+        { value: '0.007"', label: 'Arcsecond Accuracy', icon: '🎯' },
+        { value: '6,000', label: 'RPM Max Speed', icon: '⚡' },
+        { value: '15+', label: 'Years Lifespan', icon: '🔋' }
+      ],
+      examples: [
+        'Hubble Space Telescope imaging distant galaxies',
+        'GPS satellites maintaining precise Earth orientation',
+        'Earth observation satellites tracking ground targets',
+        'Deep space probes pointing antennas toward Earth'
+      ],
+      companies: ['NASA', 'SpaceX', 'Lockheed Martin', 'Northrop Grumman', 'Boeing'],
+      futureImpact: 'Next-generation reaction wheels using magnetic bearings will enable even longer missions and more precise pointing for exoplanet detection and gravitational wave observatories.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🚁',
+      title: 'Helicopter Tail Rotors',
+      short: 'Torque Compensation',
+      tagline: 'Fighting Physics to Fly Straight',
+      description: 'The main rotor of a helicopter generates enormous torque that would spin the fuselage in the opposite direction. The tail rotor provides a sideways thrust that counteracts this torque, allowing pilots to control the heading and prevent uncontrolled rotation.',
+      connection: 'As the main rotor spins, it imparts angular momentum to the air. By Newton\'s third law, the helicopter body experiences an equal and opposite torque. The tail rotor generates a force that creates a counter-torque, maintaining angular momentum balance.',
+      howItWorks: 'The main rotor can produce over 50,000 lb-ft of torque. The tail rotor, typically spinning at 3-6x the main rotor speed, creates sideways thrust at the tail boom. Pilots control yaw by adjusting tail rotor blade pitch via foot pedals. Without it, the fuselage would spin at roughly 1/10th the main rotor speed.',
+      stats: [
+        { value: '50,000', label: 'lb-ft Main Torque', icon: '🔄' },
+        { value: '10-15%', label: 'Power Consumed', icon: '⛽' },
+        { value: '1,500', label: 'Tail Rotor RPM', icon: '💨' }
+      ],
+      examples: [
+        'Medical evacuation helicopters in hover',
+        'News helicopters maintaining steady shots',
+        'Military Apaches during precision maneuvers',
+        'Search and rescue hovering over survivors'
+      ],
+      companies: ['Bell', 'Sikorsky', 'Airbus Helicopters', 'Leonardo', 'Boeing'],
+      futureImpact: 'NOTAR (No Tail Rotor) systems and electric tail rotors are emerging, using ducted fans and Coanda effect for quieter, safer anti-torque systems in urban air mobility vehicles.',
+      color: '#10b981'
+    },
+    {
+      icon: '🐱',
+      title: 'Cat Righting Reflex',
+      short: 'Biomechanics',
+      tagline: 'Nature\'s Angular Momentum Master',
+      description: 'Cats possess an innate ability to reorient themselves during a fall to land on their feet, even with zero initial angular momentum. This remarkable reflex involves a complex sequence of body shape changes that exploit angular momentum conservation.',
+      connection: 'By bending at the spine and extending/tucking limbs asymmetrically, cats change the moment of inertia of their front and back halves independently. The half with lower moment of inertia rotates more, allowing net reorientation while total angular momentum remains zero.',
+      howItWorks: 'The cat first bends its spine to separate front and back rotation axes. It then tucks front legs (low I) and extends back legs (high I), rotating the front half quickly. Next it reverses: extends front legs and tucks back legs to rotate the back half. The whole sequence takes about 0.3 seconds and requires only 30cm of falling distance.',
+      stats: [
+        { value: '0.3s', label: 'Reflex Duration', icon: '⏱️' },
+        { value: '30cm', label: 'Minimum Height', icon: '📏' },
+        { value: '180°', label: 'Max Rotation', icon: '🔃' }
+      ],
+      examples: [
+        'Cats falling from trees and windowsills',
+        'Kittens learning the reflex at 3-4 weeks',
+        'Inspired robotic self-righting mechanisms',
+        'Studied by NASA for astronaut training'
+      ],
+      companies: ['MIT Biomechanics Lab', 'Boston Dynamics', 'NASA', 'Stanford Robotics', 'ETH Zurich'],
+      futureImpact: 'Cat-inspired algorithms are being developed for drones and robots to self-right after falls, and for designing safer wearable airbag systems for elderly fall protection.',
+      color: '#f97316'
+    },
+    {
+      icon: '🏊',
+      title: 'Diver Twist Technique',
+      short: 'Sports Physics',
+      tagline: 'Adding Rotation in Mid-Air',
+      description: 'Elite divers can initiate twisting rotations after leaving the springboard, even when they push off with zero twist. This "cat twist" technique allows them to add complex multi-twist maneuvers to their dives, dramatically increasing difficulty scores.',
+      connection: 'Like cats, divers use asymmetric limb movements to transfer angular momentum between body parts. By dropping one shoulder and moving arms asymmetrically, they create twist while conserving total angular momentum in the somersault direction.',
+      howItWorks: 'A diver initiates twist by tilting their body axis (dropping one shoulder) while somersaulting. Asymmetric arm positions - one wrapped, one extended - create different moments of inertia. The body naturally rotates toward the side with lower moment of inertia. Top divers can add 3-4 twists to a 3.5 somersault dive this way.',
+      stats: [
+        { value: '4.5', label: 'Max Twists Added', icon: '🌀' },
+        { value: '1.8s', label: 'Flight Time 10m', icon: '⏱️' },
+        { value: '34mph', label: 'Entry Speed', icon: '💨' }
+      ],
+      examples: [
+        'Olympic platform diving 10m events',
+        'Springboard diving 3m competitions',
+        'Cliff diving from 27m heights',
+        'Synchronized diving pair coordination'
+      ],
+      companies: ['USA Diving', 'FINA', 'Red Bull Cliff Diving', 'British Diving', 'Chinese Diving Team'],
+      futureImpact: 'Motion capture and AI analysis are helping divers optimize their twist initiation timing, potentially enabling new dive combinations previously thought impossible.',
+      color: '#8b5cf6'
+    }
+  ];
+
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();

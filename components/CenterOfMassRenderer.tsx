@@ -308,6 +308,104 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   ];
 
   // ============================================================================
+  // REAL WORLD APPLICATIONS - Comprehensive industry applications
+  // ============================================================================
+  const realWorldApps = [
+    {
+      icon: "🚗",
+      title: "Vehicle Rollover Prevention",
+      short: "Automotive Safety",
+      tagline: "Keeping vehicles grounded through physics",
+      description: "Modern vehicles use sophisticated electronic stability control (ESC) systems that continuously monitor the vehicle's center of mass position relative to its wheelbase. When sensors detect that the COM is shifting dangerously during sharp turns, sudden maneuvers, or uneven terrain, the system automatically applies selective braking to individual wheels and reduces engine power to prevent rollover accidents. SUVs and trucks, with their inherently higher centers of mass, require more aggressive intervention thresholds than low-slung sports cars.",
+      connection: "Just like our fork experiment, vehicle stability depends on keeping the center of mass low and within the base of support (the wheels). When cornering forces push the COM beyond the tire contact patches, the vehicle tips—exactly like adding clay to the wrong side of our toothpick.",
+      howItWorks: "Gyroscopic sensors measure roll rate and lateral acceleration 100+ times per second. An onboard computer compares these readings against a dynamic model of the vehicle's COM position, factoring in cargo load and passenger weight. When rollover risk exceeds safety thresholds, hydraulic brake modulators pulse individual wheel brakes while the throttle controller cuts engine power, all within milliseconds.",
+      stats: [
+        { val: "35%", label: "Rollover reduction with ESC" },
+        { val: "100+", label: "Sensor readings per second" },
+        { val: "50ms", label: "System response time" }
+      ],
+      examples: [
+        "Electronic Stability Control in passenger cars",
+        "Active Roll Stabilization in luxury SUVs",
+        "Cargo load monitoring in commercial trucks",
+        "Anti-rollover systems in military vehicles"
+      ],
+      companies: ["Bosch", "Continental", "Toyota", "Volvo", "Tesla"],
+      futureImpact: "Next-generation vehicles will feature predictive rollover prevention using AI that analyzes road conditions, weather, and driving patterns to anticipate dangerous situations before they occur. Autonomous vehicles will optimize their routing to avoid high-rollover-risk maneuvers entirely.",
+      color: "#ef4444"
+    },
+    {
+      icon: "🛰️",
+      title: "Spacecraft Attitude Control",
+      short: "Aerospace Engineering",
+      tagline: "Precision orientation in the vacuum of space",
+      description: "Spacecraft must maintain precise orientation for solar panel positioning, antenna pointing, and scientific observations. Unlike on Earth, there's no gravity to provide a natural 'down' reference, and no air resistance to dampen unwanted rotations. Engineers use the center of mass as the fundamental reference point for all attitude control calculations. Reaction wheels, control moment gyroscopes, and thrusters all work by applying torques around the spacecraft's COM to achieve and maintain desired orientations.",
+      connection: "Our fork balances because the COM is positioned relative to the pivot point. In space, the spacecraft IS the pivot point—every rotation happens around the COM. Fuel consumption, cargo deployment, and even crew movement shift the COM, requiring constant recalculation of control algorithms.",
+      howItWorks: "Star trackers and sun sensors determine current orientation. The flight computer calculates required rotation using quaternion mathematics centered on the current COM position. Reaction wheels spin up or down to generate angular momentum, causing equal and opposite spacecraft rotation. For larger maneuvers, thrusters fire in calculated pairs to rotate around the COM without inducing unwanted translation.",
+      stats: [
+        { val: "0.001°", label: "Pointing accuracy achievable" },
+        { val: "6+", label: "Degrees of freedom controlled" },
+        { val: "24/7", label: "Continuous attitude monitoring" }
+      ],
+      examples: [
+        "Hubble Space Telescope precision pointing",
+        "ISS orientation for docking and solar tracking",
+        "Mars rovers balancing on uneven terrain",
+        "Communication satellites maintaining Earth lock"
+      ],
+      companies: ["NASA", "SpaceX", "Blue Origin", "Northrop Grumman", "Lockheed Martin"],
+      futureImpact: "Future deep space missions will use AI-driven attitude control that autonomously adapts to unexpected COM shifts from micrometeorite impacts or equipment failures. Spacecraft will self-reconfigure their mass distribution for optimal stability during long-duration missions.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "🤸",
+      title: "Gymnastics and Diving",
+      short: "Sports Biomechanics",
+      tagline: "Athletic mastery through body physics",
+      description: "Elite gymnasts and divers are intuitive physicists who manipulate their body's center of mass with remarkable precision. During aerial maneuvers, athletes tuck, pike, and twist by repositioning their limbs to shift their COM and control rotation speed. The famous 'Fosbury Flop' high jump technique works because arching the back allows the athlete's COM to pass under the bar while their body clears it. Coaches use motion capture and physics simulations to optimize technique for maximum height, rotation speed, and landing stability.",
+      connection: "When a diver tucks into a ball, they're doing exactly what we explored—moving mass closer to the rotation axis (like adding clay near the pivot) to change rotational behavior. Extending arms and legs moves mass outward, slowing rotation for a controlled landing, just like how weight position affected our fork's stability.",
+      howItWorks: "Angular momentum is conserved during flight—athletes can't change their total rotation, but they CAN change how fast they rotate by redistributing mass. Tucking brings the COM closer to the rotation axis, reducing moment of inertia and increasing spin rate. Extending slows rotation. Elite athletes shift their COM by centimeters to control triple and quadruple somersaults with split-second timing.",
+      stats: [
+        { val: "4x", label: "Rotation speed increase when tucked" },
+        { val: "0.3s", label: "Time to complete a tuck" },
+        { val: "10m", label: "Height for platform diving" }
+      ],
+      examples: [
+        "Triple somersaults in platform diving",
+        "Quadruple twists in figure skating",
+        "Fosbury Flop high jump technique",
+        "Aerial skiing rotations and grabs"
+      ],
+      companies: ["USA Gymnastics", "FINA (World Aquatics)", "Red Bull Athletes", "Olympic Training Centers"],
+      futureImpact: "Wearable sensors will provide real-time COM feedback during training, allowing athletes to make micro-adjustments to perfect their technique. VR training systems will let athletes practice dangerous maneuvers virtually, with physics-accurate COM simulation, before attempting them physically.",
+      color: "#10b981"
+    },
+    {
+      icon: "🏗️",
+      title: "Crane Load Balancing",
+      short: "Construction Engineering",
+      tagline: "Moving mountains with mathematical precision",
+      description: "Tower cranes and mobile cranes must constantly account for their shifting center of mass as they lift and move heavy loads. The combined COM of the crane structure plus its load determines whether the system remains stable or tips over catastrophically. Modern cranes use load moment indicators (LMIs) that calculate the real-time position of the system's COM and prevent operators from exceeding safe lifting envelopes. Counterweights are precisely positioned to offset load moments, keeping the overall COM within the crane's base of support.",
+      connection: "A crane with a heavy load extended outward is exactly like our fork with clay added to the wrong side—if the combined COM moves outside the support base (the crane's foundation or outriggers), the whole system tips. Counterweights act like adding clay to the fork side, shifting the COM back to a stable position.",
+      howItWorks: "Load cells measure the weight being lifted while angle sensors track boom position. The LMI computer continuously calculates the load moment (weight times distance from the crane's center) and compares it against the stabilizing moment from counterweights and the crane's own mass. When the load moment approaches the tipping threshold, alarms sound and automatic limiters prevent further extension or lifting.",
+      stats: [
+        { val: "20,000 kg", label: "Typical tower crane capacity" },
+        { val: "100+ m", label: "Maximum boom reach" },
+        { val: "85%", label: "Load chart safety margin" }
+      ],
+      examples: [
+        "Tower cranes in skyscraper construction",
+        "Mobile cranes for bridge building",
+        "Ship-to-shore container cranes at ports",
+        "Offshore platform heavy-lift vessels"
+      ],
+      companies: ["Liebherr", "Manitowoc", "Tadano", "XCMG"],
+      futureImpact: "Autonomous cranes will use computer vision and AI to plan optimal lift sequences that minimize COM excursions and maximize stability margins. Digital twins will simulate every lift before execution, predicting wind effects and load dynamics to prevent accidents before they can occur.",
+      color: "#f59e0b"
+    }
+  ];
+
+  // ============================================================================
   // TEST QUESTIONS - Scenario-based multiple choice questions
   // ============================================================================
   const testQuestions = [

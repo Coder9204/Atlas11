@@ -304,6 +304,127 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
     { title: "Neutron Stars", icon: "⭐", description: "When massive stars collapse, angular momentum is compressed into tiny volume.", details: "Fastest pulsar spins 716 times per second. Surface moves at 24% speed of light!" }
   ];
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // REAL WORLD APPLICATIONS - Comprehensive data for transfer phase
+  // ─────────────────────────────────────────────────────────────────────────
+  const realWorldApps = [
+    {
+      icon: "⛸️",
+      title: "Figure Skating",
+      short: "Spin Speed Control",
+      tagline: "Mastering the art of controlled rotation",
+      description: "Figure skaters manipulate their moment of inertia by changing body position during spins. By pulling arms and legs close to the body, they dramatically reduce their moment of inertia, causing angular velocity to increase proportionally to conserve angular momentum.",
+      connection: "When a skater pulls their arms in, moment of inertia decreases. Since angular momentum (L = Iω) must be conserved, angular velocity must increase. This allows skaters to accelerate from 2 rotations per second to over 6 rotations per second without any external push.",
+      howItWorks: "Starting with arms extended (high I, low ω), the skater initiates rotation. By smoothly pulling arms to the chest, I decreases by up to 4x. Conservation of L means ω increases by the same factor. The skater controls spin speed by adjusting arm position, using muscle work to change I while L remains constant throughout the spin.",
+      stats: [
+        { value: "342", label: "RPM World Record", icon: "🏆" },
+        { value: "6+", label: "Rotations/Second", icon: "🔄" },
+        { value: "4x", label: "Speed Increase", icon: "⚡" }
+      ],
+      examples: [
+        "Scratch spin - starting position with one leg extended",
+        "Camel spin - horizontal leg position changes I distribution",
+        "Sit spin - compact position for maximum speed",
+        "Layback spin - artistic variation with controlled deceleration"
+      ],
+      companies: [
+        "International Skating Union",
+        "US Figure Skating",
+        "Skate Canada",
+        "Japan Skating Federation"
+      ],
+      futureImpact: "Advanced motion capture and biomechanical analysis will enable skaters to optimize their body positions for maximum angular momentum transfer, potentially breaking the 400 RPM barrier.",
+      color: "#60a5fa"
+    },
+    {
+      icon: "🛰️",
+      title: "Satellites and Spacecraft",
+      short: "Attitude Control",
+      tagline: "Precision orientation in the void of space",
+      description: "Spacecraft use angular momentum principles for attitude control without expending fuel. Reaction wheels and control moment gyroscopes store and transfer angular momentum, allowing precise orientation adjustments for communication antennas, solar panels, and scientific instruments.",
+      connection: "In the vacuum of space, there's nothing to push against. Spacecraft rotate reaction wheels in one direction, causing the spacecraft body to rotate in the opposite direction. The total angular momentum of the system remains zero, but momentum transfers between components.",
+      howItWorks: "Reaction wheels are flywheels mounted inside the spacecraft. When a wheel spins faster, the spacecraft rotates in the opposite direction to conserve total angular momentum. Three orthogonal wheels provide full 3-axis control. Control moment gyroscopes (CMGs) provide higher torque by tilting spinning gyroscopes, transferring their angular momentum to the spacecraft.",
+      stats: [
+        { value: "0.001°", label: "Pointing Accuracy", icon: "🎯" },
+        { value: "6000", label: "RPM Wheel Speed", icon: "⚙️" },
+        { value: "20+", label: "Years Lifespan", icon: "📅" }
+      ],
+      examples: [
+        "Hubble Space Telescope - 4 reaction wheels for arcsecond precision",
+        "International Space Station - 4 CMGs for station attitude",
+        "Mars rovers - reaction wheels for communication pointing",
+        "James Webb Telescope - reaction wheels for mirror alignment"
+      ],
+      companies: [
+        "NASA",
+        "SpaceX",
+        "Northrop Grumman",
+        "Honeywell Aerospace",
+        "Collins Aerospace"
+      ],
+      futureImpact: "Next-generation spacecraft will use superconducting magnetic bearings for frictionless reaction wheels, enabling decades of maintenance-free attitude control for deep space missions.",
+      color: "#a855f7"
+    },
+    {
+      icon: "🧭",
+      title: "Gyroscope Navigation",
+      short: "Inertial Navigation",
+      tagline: "Finding your way without looking outside",
+      description: "Gyroscopes exploit angular momentum conservation to maintain a fixed orientation in space regardless of how their mounting platform moves. This enables inertial navigation systems that can track position and orientation without external references like GPS.",
+      connection: "A spinning gyroscope resists changes to its axis of rotation due to conservation of angular momentum. Any attempt to tilt the gyroscope requires applying torque, which the gyro resists. This rigidity in space makes gyroscopes ideal for maintaining reference directions.",
+      howItWorks: "A mechanical gyroscope consists of a rapidly spinning rotor mounted in gimbals that allow free rotation. The rotor's angular momentum vector maintains its direction in inertial space. Modern systems use ring laser gyroscopes or fiber optic gyroscopes that measure rotation through the Sagnac effect, detecting phase shifts in counter-propagating light beams.",
+      stats: [
+        { value: "0.01°", label: "Drift Per Hour", icon: "📐" },
+        { value: "1M+", label: "Aircraft Using INS", icon: "✈️" },
+        { value: "99.99%", label: "Reliability Rate", icon: "✓" }
+      ],
+      examples: [
+        "Aircraft inertial navigation - backup when GPS fails",
+        "Submarine navigation - weeks underwater without surfacing",
+        "Missile guidance - precision targeting without external signals",
+        "Smartphone orientation - MEMS gyros detect rotation"
+      ],
+      companies: [
+        "Honeywell",
+        "Northrop Grumman",
+        "Safran",
+        "KVH Industries",
+        "STMicroelectronics"
+      ],
+      futureImpact: "Quantum gyroscopes using atom interferometry will achieve navigation accuracy 1000x better than current systems, enabling GPS-free navigation for autonomous vehicles and urban environments.",
+      color: "#f59e0b"
+    },
+    {
+      icon: "🔋",
+      title: "Flywheels for Energy Storage",
+      short: "Grid Stabilization",
+      tagline: "Storing power in pure rotation",
+      description: "Flywheel energy storage systems store kinetic energy in a rotating mass, exploiting the relationship between angular momentum and rotational kinetic energy. They provide rapid response grid stabilization, bridging gaps between power generation and demand.",
+      connection: "A flywheel's stored energy depends on its angular momentum and moment of inertia (E = ½Iω²). By spinning a massive rotor at high speed, significant energy can be stored. The flywheel maintains its angular momentum until energy is extracted by a motor-generator.",
+      howItWorks: "Modern flywheels use carbon fiber composite rotors spinning at 20,000-50,000 RPM in vacuum chambers on magnetic bearings to eliminate friction. Energy is added by using electricity to spin up the rotor. Energy is extracted by using the spinning rotor to drive a generator. Response time is milliseconds, making flywheels ideal for frequency regulation.",
+      stats: [
+        { value: "50,000", label: "RPM Maximum", icon: "🔄" },
+        { value: "20MW", label: "Grid Installations", icon: "⚡" },
+        { value: "20+", label: "Year Lifespan", icon: "📅" }
+      ],
+      examples: [
+        "Grid frequency regulation - instant power balancing",
+        "UPS systems - bridging power during outages",
+        "Regenerative braking - storing vehicle kinetic energy",
+        "Renewable integration - smoothing solar and wind output"
+      ],
+      companies: [
+        "Beacon Power",
+        "Amber Kinetics",
+        "Temporal Power",
+        "Stornetic",
+        "Chakratec"
+      ],
+      futureImpact: "Advanced superconducting flywheels will store gigawatt-hours of renewable energy, replacing chemical batteries for grid-scale storage and enabling 100% renewable electricity grids.",
+      color: "#10b981"
+    }
+  ];
+
   const renderSpinningFigure = () => {
     const personRotation = angle * 180 / Math.PI;
     const armLength = 20 + armExtension * 50;

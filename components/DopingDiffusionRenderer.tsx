@@ -771,6 +771,102 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
     );
   };
 
+  // Real-world applications for the Transfer phase
+  const realWorldApps = [
+    {
+      icon: '🔬',
+      title: 'Transistor Manufacturing',
+      short: 'Microprocessors',
+      tagline: 'Billions of precisely doped junctions in every chip',
+      description: 'Modern CPUs contain billions of transistors, each requiring precisely controlled source/drain doping. Diffusion and ion implantation create junctions as shallow as 5-10 nanometers with atomic-level precision. The exponential temperature sensitivity means even 1°C variation can shift electrical properties.',
+      connection: 'The same diffusion physics you explored governs how every transistor in your computer, phone, and car is manufactured. Temperature control during doping directly determines if your chip runs at 3 GHz or fails completely.',
+      howItWorks: 'Silicon wafers are patterned with photoresist masks, then exposed to dopant gases (phosphorus for n-type, boron for p-type) in diffusion furnaces. Rapid thermal processing (RTP) uses precisely timed temperature spikes of 1000-1100°C lasting only seconds to achieve nanometer-scale junction control. Ion implantation accelerates dopant atoms to embed them at exact depths.',
+      stats: [
+        { value: '5nm', label: 'Junction Depth', detail: 'Modern transistor junctions are just ~20 atoms deep' },
+        { value: '100B+', label: 'Transistors/Chip', detail: 'Apple M2 Ultra has 134 billion transistors' },
+        { value: '±0.5°C', label: 'Temp Precision', detail: 'Furnace temperature must be controlled within half a degree' },
+      ],
+      examples: [
+        'Intel and TSMC 3nm process nodes use advanced doping for billions of FinFET transistors',
+        'DRAM memory chips require precise doping for capacitor access transistors',
+        'Flash memory uses doping to create floating gate charge storage structures',
+        'Power management ICs in phones use doped regions for voltage regulation',
+      ],
+      companies: ['Intel', 'TSMC', 'Samsung', 'GlobalFoundries', 'SK Hynix'],
+      futureImpact: 'As transistors shrink below 2nm, atomic-level doping precision becomes critical. New techniques like atomic layer doping (ALD) and plasma doping are replacing traditional diffusion for the most advanced nodes, pushing Moore\'s Law forward.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '☀️',
+      title: 'Solar Cell Efficiency',
+      short: 'Photovoltaics',
+      tagline: 'Optimal junctions capture more sunlight',
+      description: 'Solar cell efficiency depends critically on emitter junction design. The n+ emitter layer is created by phosphorus diffusion at 850-900°C. Shallow emitters (0.3 μm) maximize blue light response, while selective emitters use variable depth for optimal performance across the cell.',
+      connection: 'The temperature-time tradeoffs you experimented with directly determine solar cell efficiency. A 10°C change in diffusion temperature can shift cell efficiency by 0.5% absolute—worth millions of dollars in a gigawatt-scale factory.',
+      howItWorks: 'P-type silicon wafers enter a quartz tube furnace where POCl₃ gas deposits phosphorus on the surface. At 850-900°C, phosphorus atoms diffuse into the silicon following Fick\'s laws. Sheet resistance is measured with four-point probes to verify junction quality. Advanced cells use laser doping for selective emitter patterns.',
+      stats: [
+        { value: '26.8%', label: 'Record Efficiency', detail: 'HIT solar cells with optimized emitter doping' },
+        { value: '850°C', label: 'Typical Temp', detail: 'Standard emitter diffusion temperature' },
+        { value: '60 Ω/sq', label: 'Sheet Resistance', detail: 'Target emitter sheet resistance for PERC cells' },
+      ],
+      examples: [
+        'PERC cells use rear-side aluminum doping for back surface field passivation',
+        'TOPCon technology uses ultra-thin tunnel oxide with polysilicon doping',
+        'Heterojunction (HJT) cells combine crystalline and amorphous doped layers',
+        'IBC cells have all doping on the rear for maximum front surface light capture',
+      ],
+      companies: ['LONGi', 'JinkoSolar', 'Canadian Solar', 'First Solar', 'SunPower'],
+      futureImpact: 'Next-generation tandem solar cells stack perovskite on silicon, requiring precise doping of the silicon bottom cell to match current with the top cell. Passivating contact technologies demand atomic-scale doping control at interfaces.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '💡',
+      title: 'LED Production',
+      short: 'Solid-State Lighting',
+      tagline: 'Doped semiconductors that emit light',
+      description: 'LEDs work by recombining electrons and holes at a doped p-n junction. The dopant concentrations and junction abruptness determine emission efficiency and wavelength. Gallium nitride (GaN) LEDs use magnesium (p-type) and silicon (n-type) doping achieved through metalorganic vapor phase epitaxy.',
+      connection: 'The diffusion principles you learned apply to LED manufacturing, though with different semiconductors. Controlling dopant profiles in GaN is even more challenging than in silicon due to the material\'s properties, making precise temperature control essential.',
+      howItWorks: 'GaN LED epitaxy grows doped layers at 1000-1100°C using metalorganic precursors. Trimethylgallium and ammonia form GaN, while silane adds n-type silicon doping and bis(cyclopentadienyl)magnesium provides p-type magnesium. Layer-by-layer growth with precise dopant flow creates the quantum well active region.',
+      stats: [
+        { value: '200 lm/W', label: 'Efficacy', detail: 'Best white LEDs exceed 200 lumens per watt' },
+        { value: '10¹⁸/cm³', label: 'Doping Level', detail: 'Typical carrier concentration in LED layers' },
+        { value: '50,000 hrs', label: 'Lifetime', detail: 'LED lifespan enabled by stable doped junctions' },
+      ],
+      examples: [
+        'White LEDs in smartphones use blue GaN LEDs with phosphor conversion',
+        'Automotive headlights use high-power doped GaN LED arrays',
+        'Display backlights use precisely doped mini-LED and micro-LED arrays',
+        'UV-C LEDs for disinfection require aluminum gallium nitride with controlled doping',
+      ],
+      companies: ['Nichia', 'Lumileds', 'Osram', 'Cree', 'Seoul Semiconductor'],
+      futureImpact: 'Micro-LED displays for AR/VR require millions of individually doped LED pixels smaller than 10 μm. Deep UV LEDs for water purification need better p-type doping of aluminum-rich AlGaN. Laser diodes for LiDAR demand ultra-precise junction control.',
+      color: '#10b981',
+    },
+    {
+      icon: '⚡',
+      title: 'Power Electronics',
+      short: 'High-Voltage Devices',
+      tagline: 'Handling kilowatts with doped semiconductors',
+      description: 'Power devices like IGBTs and MOSFETs handle hundreds of amps and thousands of volts. Deep diffusion creates thick drift regions that block high voltages, while surface doping forms the control structures. Silicon carbide (SiC) devices use ion implantation and high-temperature activation anneals.',
+      connection: 'The deep junctions you explored at high temperatures are exactly what power electronics need. A 1200V IGBT might have drift region doping extending 100+ micrometers—achieved through long, high-temperature diffusion cycles.',
+      howItWorks: 'Power device fabrication uses multiple diffusion steps. N-drift regions are formed by epitaxial growth with controlled doping. P-body regions are created by boron diffusion or implantation. N+ source regions use heavy phosphorus doping. SiC devices require 1600-1800°C activation anneals to activate implanted dopants.',
+      stats: [
+        { value: '6.5kV', label: 'Blocking Voltage', detail: 'High-voltage IGBTs for grid applications' },
+        { value: '99.5%', label: 'Efficiency', detail: 'SiC inverter efficiency in EVs' },
+        { value: '175°C', label: 'Operating Temp', detail: 'Junction temperature in automotive power modules' },
+      ],
+      examples: [
+        'Tesla Model S uses SiC MOSFETs in the main inverter for 5% range improvement',
+        'High-speed rail uses IGBT modules with 3300V blocking capability',
+        'Grid-scale solar inverters use 1700V SiC devices for 99%+ efficiency',
+        'EV fast chargers use 1200V SiC MOSFETs for compact, efficient power conversion',
+      ],
+      companies: ['Infineon', 'ON Semiconductor', 'STMicroelectronics', 'Wolfspeed', 'ROHM'],
+      futureImpact: 'Wide-bandgap semiconductors (SiC, GaN) are revolutionizing power electronics. These materials require much higher temperatures for dopant activation—SiC needs 1700°C anneals versus 1000°C for silicon. Gallium oxide promises even better performance with novel doping challenges.',
+      color: '#8b5cf6',
+    },
+  ];
+
   const renderControls = (showTwist: boolean = false) => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {showTwist && (

@@ -322,6 +322,105 @@ const testQuestions = [
 ];
 
 // ============================================================================
+// REAL-WORLD APPLICATIONS DATA
+// ============================================================================
+
+const realWorldApps = [
+  {
+    icon: '✈️',
+    title: 'Airplane Wing Lift',
+    short: 'Aviation flight',
+    tagline: 'The Science of Taking Flight',
+    description: 'Airplane wings are specifically shaped (airfoil) so that air travels faster over the curved upper surface than the flatter lower surface. This speed difference creates a pressure differential that generates lift, enabling aircraft weighing hundreds of tons to soar through the sky.',
+    connection: 'Bernoulli\'s principle directly explains lift generation: faster airflow over the wing creates lower pressure above, while slower airflow below maintains higher pressure. This pressure difference pushes the wing upward, overcoming gravity.',
+    howItWorks: 'The wing\'s camber (curvature) and angle of attack force air to travel a longer path over the top surface, increasing its velocity. According to Bernoulli\'s equation (P + ½ρv² = constant), higher velocity means lower static pressure. The pressure difference across the wing multiplied by wing area equals lift force.',
+    stats: [
+      { value: '400+ tons', label: 'Max aircraft weight', icon: '⚖️' },
+      { value: '180 mph', label: 'Takeoff speed (747)', icon: '🛫' },
+      { value: '500,000 lbs', label: 'Lift force generated', icon: '📈' }
+    ],
+    examples: [
+      'Boeing 747 wings generate over 500,000 pounds of lift at cruise',
+      'Supersonic jets use delta wings for high-speed efficiency',
+      'Gliders maximize lift-to-drag ratio for unpowered flight',
+      'Fighter jets use variable-sweep wings for different flight regimes'
+    ],
+    companies: ['Boeing', 'Airbus', 'Lockheed Martin', 'Bombardier', 'Embraer'],
+    futureImpact: 'Morphing wing technology and laminar flow control will increase fuel efficiency by 20-30%, while electric aircraft will revolutionize short-haul aviation.',
+    color: '#3b82f6'
+  },
+  {
+    icon: '⛽',
+    title: 'Carburetors and Fuel Injection',
+    short: 'Fuel-air mixing',
+    tagline: 'Powering Internal Combustion',
+    description: 'Carburetors use the Venturi effect to draw fuel into the airstream without mechanical pumps. As air accelerates through the narrowed throat section, pressure drops, pulling fuel from the bowl through the jet and atomizing it into a fine mist for combustion.',
+    connection: 'The carburetor venturi is a direct application of Bernoulli\'s principle: air velocity increases in the constriction, pressure decreases proportionally, and this low-pressure zone draws fuel upward against gravity through the fuel jet.',
+    howItWorks: 'Air enters the carburetor and passes through the venturi (narrow section). By continuity (A₁v₁ = A₂v₂), velocity increases in the throat. Bernoulli\'s equation shows pressure drops, creating suction on the fuel jet. The pressure differential draws fuel from the float bowl, atomizing it into the airstream.',
+    stats: [
+      { value: '14.7:1', label: 'Ideal air-fuel ratio', icon: '⚖️' },
+      { value: '-2 psi', label: 'Venturi vacuum', icon: '📉' },
+      { value: '50 microns', label: 'Fuel droplet size', icon: '💧' }
+    ],
+    examples: [
+      'Motorcycle carburetors use multiple venturis for throttle response',
+      'Aircraft carburetors have altitude compensation for pressure changes',
+      'Racing carburetors feature adjustable jets for tuning',
+      'Small engine carburetors power lawnmowers and chainsaws'
+    ],
+    companies: ['Holley', 'Edelbrock', 'Weber', 'Mikuni', 'Keihin'],
+    futureImpact: 'While fuel injection has largely replaced carburetors in vehicles, understanding Venturi principles drives innovations in fuel atomization, emissions control, and alternative fuel systems.',
+    color: '#f59e0b'
+  },
+  {
+    icon: '🩺',
+    title: 'Blood Flow in Arteries',
+    short: 'Cardiovascular dynamics',
+    tagline: 'The Fluid Mechanics of Life',
+    description: 'Blood flow through arteries follows Bernoulli\'s principle, especially at constrictions caused by atherosclerotic plaques. When arteries narrow, blood velocity increases dramatically while pressure on the vessel walls drops, which can lead to dangerous conditions like vessel collapse or aneurysm formation.',
+    connection: 'Bernoulli\'s principle explains why narrowed arteries are dangerous: as blood speeds up through a stenosis, the low pressure can cause the vessel to collapse or promote turbulent flow that damages the endothelium and accelerates plaque growth.',
+    howItWorks: 'In a healthy artery, blood flows at about 30 cm/s. At a 75% stenosis, velocity can exceed 400 cm/s. Using Bernoulli\'s equation, this 10x velocity increase causes pressure to drop by approximately 100 mmHg, potentially reducing wall pressure below the critical collapse threshold.',
+    stats: [
+      { value: '5 L/min', label: 'Cardiac output', icon: '❤️' },
+      { value: '120/80', label: 'Normal BP (mmHg)', icon: '📊' },
+      { value: '30 cm/s', label: 'Aortic blood velocity', icon: '🌊' }
+    ],
+    examples: [
+      'Carotid stenosis uses Doppler ultrasound velocity to estimate narrowing',
+      'Aortic valve stenosis increases velocity from 1 to 5 m/s',
+      'Coronary artery disease causes ischemia from pressure drops',
+      'Aneurysms form where low pressure weakens vessel walls'
+    ],
+    companies: ['Medtronic', 'Boston Scientific', 'Abbott Vascular', 'Edwards Lifesciences', 'Johnson & Johnson'],
+    futureImpact: 'Computational fluid dynamics modeling of blood flow enables personalized treatment planning, while bioresorbable stents and gene therapy offer new approaches to vascular disease.',
+    color: '#ef4444'
+  },
+  {
+    icon: '📏',
+    title: 'Venturi Meters',
+    short: 'Industrial flow measurement',
+    tagline: 'Precision Flow Measurement',
+    description: 'Venturi meters measure fluid flow rate by measuring the pressure difference between the wide inlet and narrow throat sections. The pressure drop, caused by the velocity increase in the constriction, is directly related to flow rate through Bernoulli\'s equation.',
+    connection: 'Venturi meters are perhaps the purest application of Bernoulli\'s principle: by measuring the pressure difference between two known cross-sections, the flow velocity and volumetric flow rate can be calculated precisely without any moving parts.',
+    howItWorks: 'Fluid enters the convergent section, accelerates through the throat, then decelerates in the divergent section recovering most pressure. Pressure taps at the inlet and throat connect to a differential pressure gauge. Using Bernoulli\'s equation: Q = A₂√(2ΔP/ρ(1-(A₂/A₁)²)), flow rate is determined from the pressure difference.',
+    stats: [
+      { value: '±0.5%', label: 'Measurement accuracy', icon: '🎯' },
+      { value: '95%', label: 'Pressure recovery', icon: '📈' },
+      { value: '50+ years', label: 'Service life', icon: '⏳' }
+    ],
+    examples: [
+      'Water treatment plants measure millions of gallons daily',
+      'Oil refineries monitor pipeline flow for process control',
+      'HVAC systems balance airflow through duct venturis',
+      'Natural gas pipelines use venturi meters for custody transfer'
+    ],
+    companies: ['Emerson', 'Honeywell', 'Siemens', 'ABB', 'Yokogawa'],
+    futureImpact: 'Smart venturi meters with IoT connectivity enable real-time monitoring and predictive maintenance, while advanced materials extend use to extreme temperatures and corrosive fluids.',
+    color: '#06b6d4'
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 

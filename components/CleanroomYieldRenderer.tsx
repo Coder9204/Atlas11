@@ -951,6 +951,102 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
     </div>
   );
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🔬',
+      title: 'Semiconductor Manufacturing',
+      short: 'Chip Fabs',
+      tagline: 'Where atoms become processors',
+      description: 'Modern semiconductor fabs are the most sophisticated manufacturing facilities ever built. With transistors now smaller than 5 nanometers, even a single dust particle can destroy millions of dollars worth of chips. These facilities maintain Class 1 cleanrooms where air is filtered to remove particles larger than 0.1 microns.',
+      connection: 'The Poisson yield model directly governs chip fab economics. Understanding Y = e^(-D*A) explains why Intel, TSMC, and Samsung invest billions in contamination control - every 0.1 reduction in defect density can mean hundreds of millions in additional revenue.',
+      howItWorks: 'Wafers move through hundreds of processing steps over 2-3 months. At each step, particles can deposit on the wafer surface. Photolithography patterns features using light, etching removes material, and deposition adds layers. Each defect that lands on active circuitry kills that die.',
+      stats: [
+        { value: '$20B+', label: 'Cost of a leading-edge fab' },
+        { value: '0.09/cm²', label: 'Target defect density at 3nm' },
+        { value: '1000+', label: 'Process steps per wafer' },
+      ],
+      examples: [
+        'TSMC N3 process achieving 80%+ yield on Apple M3 chips',
+        'Intel recovering from 10nm yield problems that delayed products',
+        'Samsung improving 3nm GAA transistor defect density',
+        'ASML EUV machines enabling sub-5nm patterning precision',
+      ],
+      companies: ['TSMC', 'Intel', 'Samsung', 'GlobalFoundries', 'ASML'],
+      futureImpact: 'As transistors approach atomic scales at 2nm and below, yield engineering becomes even more critical. New techniques like chiplets and advanced packaging allow combining smaller, higher-yield dies into larger systems, fundamentally changing how we design chips.',
+      color: '#6366f1',
+    },
+    {
+      icon: '💊',
+      title: 'Pharmaceutical Production',
+      short: 'Drug Manufacturing',
+      tagline: 'Cleanrooms save lives',
+      description: 'Pharmaceutical manufacturing requires extreme cleanliness to prevent contamination of injectable drugs, vaccines, and sterile medications. A single bacterial spore or particulate in an IV solution can cause life-threatening infections. Pharma cleanrooms follow strict GMP (Good Manufacturing Practice) regulations.',
+      connection: 'The same Poisson statistics that govern chip yield apply to pharmaceutical contamination. The probability of a batch containing zero contaminants follows P = e^(-contamination_rate * volume). This drives the massive investment in sterile manufacturing environments.',
+      howItWorks: 'Drug production occurs in classified cleanrooms with HEPA-filtered laminar airflow. Workers wear full gowning including suits, gloves, masks, and booties. Air pressure differentials prevent contamination from entering critical zones. Every batch undergoes extensive testing before release.',
+      stats: [
+        { value: 'Class 100', label: 'Typical pharma cleanroom class' },
+        { value: '99.97%', label: 'HEPA filter particle capture rate' },
+        { value: '$1M+', label: 'Cost per contaminated batch recall' },
+      ],
+      examples: [
+        'COVID-19 mRNA vaccine production at unprecedented scale and purity',
+        'Insulin manufacturing requiring zero particulate contamination',
+        'Cancer drug production with cytotoxic containment requirements',
+        'Gene therapy manufacturing in Grade A aseptic environments',
+      ],
+      companies: ['Pfizer', 'Moderna', 'Johnson & Johnson', 'Merck', 'Novartis'],
+      futureImpact: 'Cell and gene therapies require even more stringent contamination control than traditional drugs. Personalized medicine manufacturing, where each patient receives a unique treatment, demands new approaches to maintaining sterility at small batch sizes.',
+      color: '#10b981',
+    },
+    {
+      icon: '🛰️',
+      title: 'Aerospace Component Assembly',
+      short: 'Satellites',
+      tagline: 'No second chances in orbit',
+      description: 'Satellites and spacecraft must operate flawlessly for years in the harsh environment of space with no possibility of repair. Contamination during assembly can cause optical system degradation, mechanism failures, or electrical shorts. Aerospace cleanrooms ensure components survive launch vibrations and space conditions.',
+      connection: 'Satellite reliability follows similar statistical models to chip yield. The probability of mission success depends on every component being defect-free. With thousands of critical parts, even a 99.9% per-component reliability means significant failure risk for the whole system.',
+      howItWorks: 'Spacecraft assembly occurs in ISO Class 5-7 cleanrooms. Technicians use precision tools and follow detailed procedures. Every component is tracked, tested, and certified. Molecular contamination control prevents outgassing that could coat sensitive optics or solar panels.',
+      stats: [
+        { value: '15+ years', label: 'Typical satellite design life' },
+        { value: '$500M', label: 'Average large satellite cost' },
+        { value: '0%', label: 'Acceptable on-orbit failure rate' },
+      ],
+      examples: [
+        'James Webb Space Telescope mirror assembly in Class 10000 cleanroom',
+        'Starlink satellite mass production with contamination control',
+        'Mars rover assembly requiring planetary protection protocols',
+        'GPS satellite construction with radiation-hardened electronics',
+      ],
+      companies: ['SpaceX', 'Lockheed Martin', 'Boeing', 'Northrop Grumman'],
+      futureImpact: 'Mega-constellations of thousands of satellites require new approaches to cleanroom manufacturing at scale. Reusable spacecraft add complexity as vehicles must be refurbished between flights while maintaining cleanliness standards.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '📺',
+      title: 'Display Panel Manufacturing',
+      short: 'Screens',
+      tagline: 'Millions of perfect pixels',
+      description: 'Modern displays contain millions of thin-film transistors (TFTs) that control individual pixels. A 4K TV has over 8 million pixels, each requiring multiple defect-free transistors. Display fabs rival semiconductor fabs in cleanliness requirements, processing glass substrates larger than king-size beds.',
+      connection: 'Display yield follows the same exponential model as chip yield, but with even larger areas. A single particle defect creates a visible "dead pixel" that ruins the entire panel. The larger the display, the more challenging yield becomes - this is why large OLED TVs cost so much.',
+      howItWorks: 'Giant glass substrates (Gen 10.5 is 2940mm x 3370mm) move through deposition, photolithography, and etching steps similar to chip manufacturing. Organic materials for OLED displays are extremely sensitive to moisture and oxygen contamination. Every panel is optically inspected for defects.',
+      stats: [
+        { value: '8.3M', label: 'Pixels in a 4K display' },
+        { value: '10m²', label: 'Gen 10.5 glass substrate size' },
+        { value: '<3 ppm', label: 'Acceptable dead pixel rate' },
+      ],
+      examples: [
+        'Samsung QD-OLED panel production achieving commercial yields',
+        'LG large OLED TV panel manufacturing optimization',
+        'BOE Gen 10.5 LCD fab achieving 90%+ yield rates',
+        'Apple ProMotion display manufacturing for iPhone/iPad',
+      ],
+      companies: ['Samsung Display', 'LG Display', 'BOE', 'Sharp'],
+      futureImpact: 'MicroLED displays promise superior performance but face enormous yield challenges - a 4K microLED TV needs 24 million perfectly functioning LEDs. New mass transfer and repair technologies are essential for commercial viability of this next-generation display technology.',
+      color: '#f59e0b',
+    },
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (

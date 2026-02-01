@@ -939,6 +939,102 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
     </div>
   );
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🔲',
+      title: 'ASIC Design Flow',
+      short: 'Custom Chips',
+      tagline: 'From RTL to silicon in 12-18 months',
+      description: 'Application-Specific Integrated Circuits (ASICs) are custom-designed chips optimized for specific tasks. The design-to-fabrication translation is the most critical phase, where abstract logic becomes physical geometry that must meet timing, power, and manufacturability constraints.',
+      connection: 'The parasitic extraction and DRC concepts you learned are performed millions of times during ASIC tapeout. A single DRC violation can delay production by months and cost millions in re-spins.',
+      howItWorks: 'ASIC design starts with RTL (Register Transfer Level) code, which is synthesized into gates, then placed and routed into physical layout. Parasitic extraction generates a SPEF (Standard Parasitic Exchange Format) file containing R/C values for every net. This feeds into timing analysis to verify the chip meets speed targets.',
+      stats: [
+        { label: 'Design Cost', value: '$50-500M', detail: 'Full custom ASIC at advanced nodes' },
+        { label: 'Tapeout Time', value: '12-18 months', detail: 'RTL to GDS2 handoff' },
+        { label: 'Parasitic Nets', value: '1B+', detail: 'Extraction points per chip' },
+      ],
+      examples: [
+        'Apple M-series chips - custom ARM cores with integrated GPU, neural engine',
+        'Google TPU - tensor processing optimized for AI workloads',
+        'Bitcoin mining ASICs - SHA-256 hash computation at maximum efficiency',
+        'Cisco network processors - packet routing at terabit speeds',
+      ],
+      companies: ['Apple', 'Google', 'Amazon (Graviton)', 'Tesla (FSD Chip)', 'Bitmain'],
+      futureImpact: 'As Moores Law slows, ASIC design becomes more critical for achieving performance gains. Domain-specific accelerators will dominate, requiring engineers who understand the full design-to-fab flow.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🧩',
+      title: 'FPGA Development',
+      short: 'Programmable Logic',
+      tagline: 'Reconfigurable hardware for rapid prototyping',
+      description: 'Field-Programmable Gate Arrays contain millions of configurable logic blocks connected by programmable interconnects. Understanding wire parasitics is crucial because FPGA routing dominates timing - the same logic placed differently can run at vastly different speeds.',
+      connection: 'FPGA place-and-route tools perform the same parasitic-aware optimization you explored. The routing resources have known R/C characteristics, and timing closure requires understanding how wire length affects delay.',
+      howItWorks: 'FPGA synthesis maps HDL code to Look-Up Tables (LUTs) and flip-flops. The place-and-route tool assigns logic to specific tiles and routes signals through the programmable interconnect matrix. Each routing segment has characterized parasitics, and the tool iteratively optimizes placement to meet timing.',
+      stats: [
+        { label: 'Logic Cells', value: '5M+', detail: 'In high-end FPGAs' },
+        { label: 'Routing Delay', value: '60-80%', detail: 'Of total path delay' },
+        { label: 'Reconfig Time', value: '<100ms', detail: 'Full device reprogram' },
+      ],
+      examples: [
+        'Data center SmartNICs - programmable network acceleration',
+        'Broadcast video processing - real-time 8K encoding/decoding',
+        'Radar/sonar systems - adaptive signal processing',
+        'Quantitative trading - sub-microsecond market data processing',
+      ],
+      companies: ['AMD/Xilinx', 'Intel/Altera', 'Lattice', 'Microchip', 'Efinix'],
+      futureImpact: 'FPGAs are becoming the platform for AI inference at the edge, enabling hardware that adapts to evolving neural network architectures without chip redesign.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '🔌',
+      title: 'PCB Manufacturing',
+      short: 'Circuit Boards',
+      tagline: 'Connecting chips with controlled impedance',
+      description: 'Printed Circuit Boards connect ICs with copper traces on laminated substrates. At multi-gigabit speeds, PCB traces exhibit transmission line behavior where parasitic L and C determine characteristic impedance. Impedance mismatches cause reflections that corrupt signals.',
+      connection: 'The same R/L/C extraction principles apply at the PCB level, but at larger scales. A 50-ohm trace requires specific width-to-height ratios, and via transitions between layers need careful modeling to avoid signal integrity problems.',
+      howItWorks: 'PCB design tools calculate trace impedance from geometry (width, thickness, dielectric height) and material properties (Dk, Df). Designers route differential pairs with matched lengths, add ground vias for return current, and simulate S-parameters to verify signal integrity. Manufacturing tolerances directly affect parasitic values.',
+      stats: [
+        { label: 'Layer Count', value: '20-50', detail: 'In server motherboards' },
+        { label: 'Trace Width', value: '75-100μm', detail: 'Minimum for high-speed' },
+        { label: 'Via Stub Effect', value: '>5GHz', detail: 'Requires back-drilling' },
+      ],
+      examples: [
+        'DDR5 memory channels - 4800-8400 MT/s with tight timing margins',
+        'PCIe Gen5/Gen6 backplanes - 32-64 GT/s per lane',
+        '5G mmWave antennas - 28GHz signals on PCB substrates',
+        'Automotive radar modules - 77GHz with laminate antenna arrays',
+      ],
+      companies: ['TTM Technologies', 'AT&S', 'Unimicron', 'Ibiden', 'Shinko'],
+      futureImpact: 'PCB technology is evolving toward embedded components (capacitors/resistors inside layers) and glass substrates for lower loss at mmWave frequencies.',
+      color: '#22c55e',
+    },
+    {
+      icon: '📦',
+      title: '3D IC Packaging',
+      short: 'Advanced Packaging',
+      tagline: 'Stacking dies for heterogeneous integration',
+      description: '3D IC packaging stacks multiple silicon dies vertically with Through-Silicon Vias (TSVs) or bonds them side-by-side on silicon interposers. This creates new parasitic challenges: TSVs add capacitance and stress, interposer traces have different characteristics than on-chip metal, and thermal coupling affects performance.',
+      connection: 'Advanced packaging extends parasitic extraction beyond single chips. Engineers must model TSV arrays (each adding ~50fF), micro-bump connections, and interposer RDL (redistribution layers). The design-to-fab translation now spans multiple dies and substrates.',
+      howItWorks: 'Chiplets (smaller dies with specific functions) are designed with standardized interfaces like UCIe. The package designer places dies on an interposer, routes power/signals through RDL layers, and connects to the substrate with micro-bumps. Full-system parasitic extraction captures die-to-die coupling and package-level resonances.',
+      stats: [
+        { label: 'TSV Pitch', value: '9-36μm', detail: 'Density vs. stress tradeoff' },
+        { label: 'Micro-bump', value: '25-55μm', detail: 'Pitch for HBM memory' },
+        { label: 'Interposer Size', value: '2500mm²', detail: 'Largest production reticle' },
+      ],
+      examples: [
+        'AMD MI300 - CPU + GPU + HBM3 in single package',
+        'Apple M2 Ultra - two M2 Max dies with UltraFusion interconnect',
+        'NVIDIA H100 - GPU with HBM3 on CoWoS interposer',
+        'Intel Ponte Vecchio - 47 chiplets with EMIB and Foveros',
+      ],
+      companies: ['TSMC (CoWoS/InFO)', 'Intel (EMIB/Foveros)', 'Samsung (I-Cube)', 'ASE', 'Amkor'],
+      futureImpact: 'Chiplet-based design enables mixing process nodes (3nm logic + mature analog) and reduces design cost by reusing proven IP blocks. This is the future of high-performance computing.',
+      color: '#f59e0b',
+    },
+  ];
+
   const renderProgressBar = () => {
     const currentIdx = phaseOrder.indexOf(phase);
     return (

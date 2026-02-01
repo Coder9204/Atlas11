@@ -537,6 +537,102 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
     );
   }
 
+  // Real-world applications data for Echo Time of Flight
+  const realWorldApps = [
+    {
+      icon: '🚢',
+      title: 'Sonar Systems',
+      short: 'Underwater navigation and detection',
+      tagline: 'Seeing Through Sound in the Deep',
+      description: 'Sonar (SOund NAvigation and Ranging) uses acoustic pulses to detect objects underwater where light cannot penetrate. Submarines, ships, and marine researchers rely on this technology to navigate, map the ocean floor, and locate objects in the murky depths.',
+      connection: 'Just like your echo experiment measures distance using sound travel time, sonar sends out acoustic pings and measures the time for echoes to return. The formula Distance = (Speed × Time) / 2 is identical - sonar just uses sound in water (~1500 m/s) instead of air!',
+      howItWorks: 'A transducer converts electrical signals into sound waves (typically 1-500 kHz). These waves propagate through water, reflect off objects or the seafloor, and return as echoes. The transducer converts echoes back to electrical signals, and processors calculate distance from the round-trip time.',
+      stats: [
+        { value: '1500 m/s', label: 'Sound speed in water', icon: '🌊' },
+        { value: '11 km', label: 'Maximum detection depth', icon: '📏' },
+        { value: '0.1 m', label: 'Resolution achievable', icon: '🎯' }
+      ],
+      examples: [
+        'Naval submarines use passive sonar to detect enemy vessels without revealing their position',
+        'Fishing boats locate schools of fish using commercial fish finders',
+        'Oceanographers map underwater terrain and discover shipwrecks on the seafloor',
+        'Marine biologists track whale migrations using acoustic monitoring arrays'
+      ],
+      companies: ['Raytheon', 'Kongsberg', 'Thales', 'Garmin', 'Furuno'],
+      futureImpact: 'Advanced AI-powered sonar systems are enabling autonomous underwater vehicles (AUVs) to explore the 80% of ocean floor still unmapped, potentially discovering new species and valuable resources.',
+      color: premiumDesign.colors.primary
+    },
+    {
+      icon: '🤖',
+      title: 'Ultrasonic Distance Sensors',
+      short: 'Robotics and automation',
+      tagline: 'Giving Machines Spatial Awareness',
+      description: 'Ultrasonic sensors emit high-frequency sound waves (typically 40 kHz) and measure echo return time to detect obstacles and measure distances. These affordable, reliable sensors are the workhorses of robotics, automation, and proximity detection systems worldwide.',
+      connection: 'Your echo experiment demonstrates the exact principle these sensors use. The HC-SR04 sensor you might find in a robotics kit works identically - it sends an ultrasonic pulse, measures echo time, and calculates distance using the speed of sound formula you learned!',
+      howItWorks: 'A piezoelectric transducer vibrates at ultrasonic frequencies (above human hearing) to emit sound pulses. A separate receiver transducer detects returning echoes. A microcontroller measures the time between transmission and reception, then calculates distance considering that sound travels roughly 343 m/s in air at room temperature.',
+      stats: [
+        { value: '2-400 cm', label: 'Typical range', icon: '📐' },
+        { value: '3 mm', label: 'Accuracy achievable', icon: '🎯' },
+        { value: '40 kHz', label: 'Operating frequency', icon: '〰️' }
+      ],
+      examples: [
+        'Warehouse robots navigate aisles and avoid collisions using ultrasonic arrays',
+        'Smart trash cans measure fill levels to optimize collection routes',
+        'Industrial liquid tanks monitor fluid levels without contact',
+        'Security systems detect intruders using ultrasonic motion sensing'
+      ],
+      companies: ['Murata', 'MaxBotix', 'Pepperl+Fuchs', 'Sick AG', 'Honeywell'],
+      futureImpact: 'Integration with machine learning enables ultrasonic sensors to not just detect distance but classify objects by their acoustic signatures, making robots smarter at understanding their environment.',
+      color: premiumDesign.colors.secondary
+    },
+    {
+      icon: '🚗',
+      title: 'LIDAR Mapping',
+      short: 'Autonomous vehicle navigation',
+      tagline: 'Painting the World with Light',
+      description: 'LIDAR (Light Detection and Ranging) applies the same time-of-flight principle as your echo experiment, but uses laser light instead of sound. By firing millions of laser pulses per second and measuring return times, LIDAR creates detailed 3D maps of the environment in real-time.',
+      connection: 'The physics is identical to your sound echo experiment! Instead of Distance = (Speed of Sound × Time) / 2, LIDAR uses Distance = (Speed of Light × Time) / 2. Light travels nearly a million times faster than sound, enabling measurements in nanoseconds.',
+      howItWorks: 'A laser emits brief pulses of light (often 905nm or 1550nm wavelength). Scanning mirrors or solid-state arrays direct beams in multiple directions. Photodetectors measure the time for reflected light to return with picosecond precision. Millions of measurements combine into a 3D point cloud showing the environment.',
+      stats: [
+        { value: '300,000 pts/s', label: 'Points measured', icon: '✨' },
+        { value: '200+ m', label: 'Detection range', icon: '🎯' },
+        { value: '±2 cm', label: 'Distance accuracy', icon: '📏' }
+      ],
+      examples: [
+        'Self-driving cars create real-time 3D maps to navigate safely through traffic',
+        'Archaeologists discover ancient structures hidden under dense forest canopy',
+        'Surveyors map construction sites with millimeter precision in hours instead of weeks',
+        'Forestry services measure tree heights and biomass across vast wilderness areas'
+      ],
+      companies: ['Velodyne', 'Luminar', 'Waymo', 'Hesai', 'Ouster'],
+      futureImpact: 'Solid-state LIDAR sensors are becoming smaller and cheaper, soon enabling every vehicle, drone, and mobile device to perceive the 3D world in real-time.',
+      color: premiumDesign.colors.accent
+    },
+    {
+      icon: '✈️',
+      title: 'Radar Altimeters',
+      short: 'Aviation altitude measurement',
+      tagline: 'Precision Height Above Ground',
+      description: 'Radar altimeters measure an aircraft\'s exact height above the terrain by bouncing radio waves off the ground and timing the return. Unlike barometric altimeters that measure pressure, radar altimeters give true height above ground - critical for safe landings and low-altitude flight.',
+      connection: 'Your echo experiment measures distance to a wall using sound. Radar altimeters do the same thing from aircraft to ground using radio waves. The time-of-flight formula is identical, just using the speed of light (300,000 km/s) instead of sound!',
+      howItWorks: 'A transmitter sends radio frequency pulses (typically 4.2-4.4 GHz) straight down. The ground reflects these signals back to a receiver antenna. Sophisticated electronics measure the round-trip time with nanosecond precision. Since radio waves travel at light speed, a 1-microsecond delay indicates 150 meters altitude.',
+      stats: [
+        { value: '0-2500 ft', label: 'Typical range', icon: '📊' },
+        { value: '±2 ft', label: 'Accuracy at low altitude', icon: '🎯' },
+        { value: '4.3 GHz', label: 'Operating frequency', icon: '📡' }
+      ],
+      examples: [
+        'Commercial aircraft use radar altimeters for automated landing systems in zero visibility',
+        'Military jets fly terrain-following missions at high speed using continuous altitude updates',
+        'Helicopters maintain precise hover heights during rescue operations and cargo loading',
+        'Spacecraft measure altitude during planetary landings, like the Mars rovers'
+      ],
+      companies: ['Honeywell', 'Collins Aerospace', 'Thales', 'FreeFlight Systems', 'Garmin'],
+      futureImpact: 'Next-generation radar altimeters with improved interference resistance and integration with GPS are enabling fully autonomous aircraft operations, from drone deliveries to air taxis.',
+      color: premiumDesign.colors.success
+    }
+  ];
+
   // ==================== PHASE RENDERERS ====================
 
   function renderHookPhase() {

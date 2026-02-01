@@ -407,6 +407,102 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
     }
   };
 
+  // Real-world applications of battery internal resistance
+  const realWorldApps = [
+    {
+      icon: '🚗',
+      title: 'Electric Vehicle Batteries',
+      short: 'Range & Performance',
+      tagline: 'The hidden physics behind EV range anxiety',
+      description: 'Electric vehicles rely on massive battery packs that must deliver hundreds of kilowatts during acceleration. Internal resistance directly impacts how much energy reaches the motors versus being wasted as heat inside the pack.',
+      connection: 'Higher internal resistance means more voltage sag during hard acceleration, reduced regenerative braking efficiency, and faster battery degradation from internal heating.',
+      howItWorks: 'EV battery packs use thousands of cells in parallel to minimize effective internal resistance. Battery Management Systems continuously monitor cell voltages under load to estimate resistance and state of health. Pre-conditioning heats batteries in cold weather to reduce resistance before driving.',
+      stats: [
+        { value: '15-25%', label: 'Range loss in cold weather due to increased resistance', icon: '❄️' },
+        { value: '200-400A', label: 'Peak current draw during full acceleration', icon: '⚡' },
+        { value: '2-3x', label: 'Resistance increase at -20°C vs 25°C', icon: '📊' },
+      ],
+      examples: [
+        'Tesla Model 3 battery preheating before Supercharging',
+        'Porsche Taycan 800V architecture reducing current for same power',
+        'Rivian thermal management maintaining optimal cell temperature',
+        'BYD Blade Battery design minimizing internal resistance',
+      ],
+      companies: ['Tesla', 'BYD', 'CATL', 'Panasonic', 'LG Energy Solution'],
+      futureImpact: 'Solid-state batteries promise 50% lower internal resistance, enabling faster charging and better cold-weather performance. By 2030, EVs may charge 0-80% in under 10 minutes with minimal heat generation.',
+      color: '#10b981',
+    },
+    {
+      icon: '📱',
+      title: 'Smartphone Battery Health',
+      short: 'Charging Optimization',
+      tagline: 'Why your phone dies at 20% under heavy use',
+      description: 'Smartphone batteries must balance high performance demands with longevity. Internal resistance monitoring enables adaptive charging speeds and accurate state-of-charge estimation that prevents unexpected shutdowns.',
+      connection: 'As phone batteries age, internal resistance increases. This causes larger voltage drops under load, triggering shutdowns even when the battery shows remaining charge. Fast charging at high resistance accelerates degradation.',
+      howItWorks: 'Modern smartphones measure battery impedance during charging cycles to track health. Adaptive charging algorithms reduce current as resistance increases. iOS and Android now display battery health percentages based largely on resistance measurements.',
+      stats: [
+        { value: '500+', label: 'Charge cycles before significant resistance increase', icon: '🔄' },
+        { value: '80%', label: 'Health threshold when resistance impacts performance', icon: '📉' },
+        { value: '2-3A', label: 'Typical fast charging current in smartphones', icon: '🔌' },
+      ],
+      examples: [
+        'iPhone optimized battery charging learning your schedule',
+        'Samsung adaptive fast charging based on temperature',
+        'OnePlus battery health monitoring and charging limits',
+        'Pixel adaptive charging reducing overnight charge speed',
+      ],
+      companies: ['Apple', 'Samsung', 'Qualcomm', 'MediaTek', 'OPPO'],
+      futureImpact: 'AI-powered charging will predict optimal current based on real-time resistance measurements, potentially extending battery lifespan by 40%. Graphene-enhanced electrodes may reduce resistance degradation by 60%.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🏭',
+      title: 'Grid Energy Storage',
+      short: 'Efficiency Optimization',
+      tagline: 'Powering cities with minimal waste',
+      description: 'Utility-scale battery installations store renewable energy and stabilize power grids. Internal resistance determines round-trip efficiency and thermal management requirements for megawatt-hour systems.',
+      connection: 'Grid batteries cycle frequently at high currents. Internal resistance losses compound into significant energy waste and heat generation requiring expensive cooling systems. Lower resistance means higher profitability.',
+      howItWorks: 'Grid storage systems use sophisticated power electronics to optimize charge/discharge rates based on real-time resistance measurements. Cell balancing ensures uniform resistance across thousands of cells. Thermal management maintains cells in the optimal temperature range.',
+      stats: [
+        { value: '85-95%', label: 'Round-trip efficiency depending on C-rate', icon: '⚡' },
+        { value: '100MW+', label: 'Power capacity of large grid installations', icon: '🏗️' },
+        { value: '15-20yr', label: 'Expected lifespan with proper resistance management', icon: '📅' },
+      ],
+      examples: [
+        'Hornsdale Power Reserve in Australia providing grid stability',
+        'California Moss Landing 400MWh facility peak shaving',
+        'UK National Grid frequency response from battery farms',
+        'Tesla Megapack installations for renewable integration',
+      ],
+      companies: ['Tesla Energy', 'Fluence', 'BYD', 'Samsung SDI', 'Northvolt'],
+      futureImpact: 'Iron-air and sodium-ion batteries will offer lower-cost grid storage with acceptable resistance characteristics. By 2035, battery storage may provide 30% of grid flexibility, requiring precise resistance monitoring for optimal dispatch.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '🏥',
+      title: 'Medical Device Batteries',
+      short: 'Reliability Monitoring',
+      tagline: 'When battery failure is not an option',
+      description: 'Life-critical medical devices like pacemakers, insulin pumps, and defibrillators depend on batteries that must perform reliably for years. Internal resistance monitoring provides early warning of potential failures.',
+      connection: 'Medical devices require predictable battery behavior. Increasing internal resistance signals approaching end-of-life, triggering replacement alerts before critical failures. High-current devices like defibrillators must account for voltage sag.',
+      howItWorks: 'Medical batteries undergo extensive characterization of resistance vs. state-of-charge and temperature. Implanted devices periodically measure impedance during therapy delivery to track degradation. External devices may perform automatic load tests to verify capacity.',
+      stats: [
+        { value: '5-15yr', label: 'Pacemaker battery lifespan with resistance monitoring', icon: '❤️' },
+        { value: '750V', label: 'Defibrillator discharge requiring low resistance', icon: '⚡' },
+        { value: '99.99%', label: 'Required reliability for life-critical devices', icon: '✅' },
+      ],
+      examples: [
+        'Medtronic pacemaker elective replacement indicator based on impedance',
+        'Abbott continuous glucose monitor battery management',
+        'Philips AED battery status monitoring and alerts',
+        'Cochlear implant processor battery health tracking',
+      ],
+      companies: ['Medtronic', 'Abbott', 'Boston Scientific', 'Philips', 'Stryker'],
+      futureImpact: 'Wireless charging and energy harvesting may supplement medical device batteries, while advanced lithium chemistries with ultra-stable resistance profiles enable 20+ year implant lifespans without replacement surgery.',
+      color: '#ec4899',
+    },
+  ];
+
   const renderVisualization = (interactive: boolean, showTempControl: boolean = false) => {
     const width = 700;
     const height = 450;

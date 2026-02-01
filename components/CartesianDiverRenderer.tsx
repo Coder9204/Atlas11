@@ -312,6 +312,105 @@ const testQuestions = [
 ];
 
 // ============================================================================
+// REAL-WORLD APPLICATIONS - COMPREHENSIVE DATA
+// ============================================================================
+
+const realWorldApps = [
+  {
+    icon: '🚢',
+    title: 'Submarine Depth Control',
+    short: 'Naval engineering',
+    tagline: 'Mastering the Deep with Ballast Tanks',
+    description: 'Submarines use ballast tanks that can be filled with water or compressed air to control buoyancy and depth. By precisely adjusting the air-to-water ratio in these tanks, submarines can dive, surface, or maintain neutral buoyancy at any depth, enabling silent underwater operations for extended periods.',
+    connection: 'Submarines operate on the exact same principle as the Cartesian diver: adjusting the volume of air relative to water changes overall density. When ballast tanks flood with water, the submarine becomes denser than seawater and sinks. When compressed air forces water out, buoyancy increases and the vessel rises.',
+    howItWorks: 'Submarines have multiple ballast tanks along their hull. To dive, vents open at the top of the tanks while flood ports open at the bottom, allowing seawater to enter and air to escape. To surface, high-pressure air (stored at 3000+ psi) blasts water out through the flood ports. Fine-tuning is achieved with trim tanks that adjust pitch and small buoyancy changes.',
+    stats: [
+      { value: '400+ m', label: 'Operating depth (attack sub)', icon: '🌊' },
+      { value: '3,000 psi', label: 'Compressed air pressure', icon: '💨' },
+      { value: '±0.1%', label: 'Buoyancy precision needed', icon: '⚖️' }
+    ],
+    examples: [
+      'Los Angeles-class submarines use 6 main ballast tanks for depth control',
+      'Ohio-class submarines can dive to over 800 feet with 24 Trident missiles aboard',
+      'Nuclear submarines can remain submerged for months with unlimited air supply',
+      'Emergency ballast blow can surface a submarine in under 60 seconds'
+    ],
+    companies: ['General Dynamics', 'Huntington Ingalls', 'BAE Systems', 'Naval Group', 'ThyssenKrupp'],
+    futureImpact: 'Next-generation submarines will feature advanced composite hulls for deeper diving, lithium-ion batteries for quieter operation, and AI-controlled buoyancy systems for autonomous missions.',
+    color: '#1e40af'
+  },
+  {
+    icon: '🐟',
+    title: 'Fish Swim Bladders',
+    short: 'Marine biology',
+    tagline: 'Nature\'s Built-In Buoyancy Control',
+    description: 'Most bony fish possess a swim bladder - an internal gas-filled organ that acts as a natural Cartesian diver. By inflating or deflating this organ through gas gland secretion or absorption, fish can adjust their buoyancy to hover effortlessly at any depth without expending energy swimming.',
+    connection: 'The swim bladder demonstrates Archimedes\' principle in biology: by changing the volume of gas inside, fish alter the amount of water they displace. When the bladder expands, buoyancy increases; when it contracts, the fish becomes denser and sinks - exactly like the Cartesian diver\'s air bubble.',
+    howItWorks: 'Fish have two main strategies: physostomous fish (like trout) gulp air at the surface to fill their bladder, while physoclistous fish (like perch) use a specialized gas gland that secretes gases from the bloodstream. The oval body or resorbent area removes gas when the fish needs to descend. This allows precise neutral buoyancy at different depths.',
+    stats: [
+      { value: '4-11%', label: 'Body volume (swim bladder)', icon: '🎈' },
+      { value: '0.00 m/s', label: 'Velocity when neutrally buoyant', icon: '⚖️' },
+      { value: '80%', label: 'Energy saved vs constant swimming', icon: '⚡' }
+    ],
+    examples: [
+      'Goldfish can hover motionless by fine-tuning swim bladder gas volume',
+      'Deep-sea fish brought up quickly suffer fatal swim bladder expansion (barotrauma)',
+      'Sharks lack swim bladders and must swim constantly to avoid sinking',
+      'Cuttlefish use a chambered cuttlebone with gas/liquid ratio control instead'
+    ],
+    companies: ['Marine Biological Laboratory', 'Woods Hole Oceanographic', 'Monterey Bay Aquarium Research', 'NOAA Fisheries'],
+    futureImpact: 'Biomimetic research on swim bladders is inspiring new underwater robot designs with energy-efficient buoyancy control systems for ocean exploration and environmental monitoring.',
+    color: '#06b6d4'
+  },
+  {
+    icon: '🤿',
+    title: 'Scuba Diving BCD Vests',
+    short: 'Recreational diving',
+    tagline: 'Personal Buoyancy at Your Fingertips',
+    description: 'Scuba divers wear a Buoyancy Control Device (BCD) - an inflatable vest that allows precise buoyancy adjustment underwater. By adding air from the tank or releasing it through dump valves, divers can achieve neutral buoyancy at any depth, hover effortlessly, and control ascent and descent rates.',
+    connection: 'The BCD works identically to a Cartesian diver: adding air increases volume without adding significant mass, reducing overall density below seawater so the diver rises. Releasing air does the opposite. Pressure changes with depth make this even more critical - compressed air occupies less volume deeper down.',
+    howItWorks: 'BCDs connect to the scuba tank via a low-pressure inflator hose. The diver presses an inflate button to add air or a deflate button to vent it. As depth increases, water pressure compresses the BCD air (Boyle\'s Law), requiring more air to maintain neutral buoyancy. Ascending requires venting expanding air to prevent uncontrolled ascent.',
+    stats: [
+      { value: '18-40 lbs', label: 'BCD lift capacity', icon: '🎈' },
+      { value: '4x', label: 'Air compression at 30m depth', icon: '📉' },
+      { value: '30 ft/min', label: 'Safe ascent rate', icon: '⬆️' }
+    ],
+    examples: [
+      'Technical divers use wing-style BCDs for streamlined deep diving',
+      'At 30 meters, a BCD with 20L capacity only provides 5L effective volume',
+      'Photographers achieve perfect neutral buoyancy to stabilize camera shots',
+      'Rescue divers adjust buoyancy to lift unconscious victims to the surface'
+    ],
+    companies: ['Aqua Lung', 'Scubapro', 'Mares', 'Cressi', 'Oceanic'],
+    futureImpact: 'Smart BCDs with depth sensors and automatic compensation are being developed, along with closed-circuit rebreathers that recycle breathing gas for extended dive times.',
+    color: '#0ea5e9'
+  },
+  {
+    icon: '🤖',
+    title: 'Underwater ROVs',
+    short: 'Remotely Operated Vehicles',
+    tagline: 'Exploring the Abyss with Precision Control',
+    description: 'Remotely Operated Vehicles (ROVs) are unmanned submersibles used for deep-sea exploration, offshore oil operations, and scientific research. They use sophisticated buoyancy control systems combining syntactic foam, variable ballast, and thrusters to maintain precise depth and positioning at extreme pressures.',
+    connection: 'ROVs face the same buoyancy challenges as Cartesian divers but at extreme depths where pressures exceed 1000 atmospheres. Understanding how pressure affects gas volume is critical - that\'s why many ROVs use incompressible syntactic foam for primary buoyancy instead of air.',
+    howItWorks: 'ROVs achieve neutral buoyancy through syntactic foam (glass microspheres in resin) that resists compression at depth. Fine adjustments use variable ballast systems - some pump oil between internal reservoirs and external bladders, avoiding the compression issues of air. Thrusters provide final positioning and can overcome slight buoyancy imbalances.',
+    stats: [
+      { value: '11,000 m', label: 'Max depth achieved', icon: '🌊' },
+      { value: '1,100 atm', label: 'Pressure at full depth', icon: '💪' },
+      { value: '72+ hrs', label: 'Continuous operation time', icon: '⏱️' }
+    ],
+    examples: [
+      'James Cameron\'s Deepsea Challenger reached 10,908m in the Mariana Trench',
+      'BP uses ROVs for deepwater oil well maintenance at 3000m depth',
+      'NOAA\'s Deep Discoverer explores shipwrecks and hydrothermal vents',
+      'Cable companies deploy ROVs to repair undersea internet cables'
+    ],
+    companies: ['Oceaneering', 'Saab Seaeye', 'Forum Energy Technologies', 'Deep Trekker', 'VideoRay'],
+    futureImpact: 'Autonomous underwater vehicles (AUVs) with AI navigation will revolutionize ocean mapping, while hybrid ROV-AUV designs will enable longer missions with human oversight for complex tasks.',
+    color: '#8b5cf6'
+  }
+];
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 

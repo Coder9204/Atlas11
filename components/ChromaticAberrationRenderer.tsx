@@ -1276,6 +1276,104 @@ export default function ChromaticAberrationRenderer({
   ];
 
   // =============================================================================
+  // REAL-WORLD APPLICATIONS - Comprehensive industry applications
+  // =============================================================================
+  const realWorldApps = [
+    {
+      icon: "📷",
+      title: "Camera Lens Design",
+      short: "Photography",
+      tagline: "Capturing crisp, color-accurate images across the frame",
+      description: "Professional camera lenses are marvels of optical engineering, employing multiple glass elements with carefully selected dispersive properties to minimize chromatic aberration. Modern lenses use 10-20 elements including ED (Extra-low Dispersion) glass, aspherical surfaces, and fluorite crystals to ensure that red, green, and blue light all focus at precisely the same point. Without these corrections, every photograph would show colored fringes around high-contrast edges, making sharp images impossible.",
+      connection: "Just as we observed different wavelengths focusing at different distances in our simulation, camera designers must counteract this same dispersion effect. The achromatic doublet principle—pairing crown and flint glass—is the foundation of every quality lens, from smartphones to cinema cameras.",
+      howItWorks: "Lens designers use ray tracing software to model how thousands of light rays of different wavelengths traverse each lens element. By selecting glass types with complementary dispersion curves and precisely calculating element curvatures, they create systems where the focal point spread across the visible spectrum is minimized. ED glass elements provide anomalous dispersion that cancels residual color errors that normal glass combinations cannot eliminate.",
+      stats: [
+        { val: "15+", label: "Elements in premium zoom lenses" },
+        { val: "< 1μm", label: "Focus accuracy across wavelengths" },
+        { val: "$15B", label: "Annual camera lens market" }
+      ],
+      examples: [
+        "Professional DSLR and mirrorless camera lenses",
+        "Smartphone camera modules with ED elements",
+        "Cinema lenses for film and television production",
+        "Machine vision lenses for industrial inspection"
+      ],
+      companies: ["Canon", "Nikon", "Sony", "ZEISS", "Leica"],
+      futureImpact: "Computational photography is revolutionizing lens design by allowing software correction of residual chromatic aberration. AI-powered algorithms can now remove color fringing in real-time, enabling smaller, lighter lens designs that rely on digital correction for perfection. Metalenses—flat optical elements using nanoscale structures—promise to eliminate chromatic aberration entirely through wavelength-independent focusing.",
+      color: "#6366F1"
+    },
+    {
+      icon: "🔭",
+      title: "Telescope Optics",
+      short: "Astronomy",
+      tagline: "Revealing the universe with optical precision",
+      description: "Astronomical telescopes demand the highest optical quality because they must resolve faint, distant objects across the entire visible spectrum and beyond. Refracting telescopes use achromatic or apochromatic objective lenses to bring starlight to a common focus, while reflecting telescopes (using mirrors) avoid chromatic aberration entirely since reflection angles don't depend on wavelength. The largest ground-based telescopes all use mirrors precisely because eliminating chromatic aberration in large refracting elements is prohibitively difficult and expensive.",
+      connection: "Our simulation showed how a simple lens creates a 'spectrum' of focal points. For astronomers, this would mean blurry, rainbow-fringed images of stars and planets. The achromatic doublet we explored is exactly what 18th-century astronomers invented to solve this problem, revolutionizing our view of the cosmos.",
+      howItWorks: "Refractor telescopes use crown-flint achromatic doublets for cost-effective instruments, or triplet and quadruplet apochromatic designs using fluorite or ED glass for premium visual and photographic performance. Reflector telescopes use parabolic or hyperbolic mirrors coated with aluminum or silver, which reflect all wavelengths identically. Modern professional observatories use segmented mirror arrays with adaptive optics that correct for atmospheric distortion in real-time.",
+      stats: [
+        { val: "10.4m", label: "Largest single-mirror telescope (GTC)" },
+        { val: "0.001°", label: "Color correction in APO refractors" },
+        { val: "39m", label: "Planned ELT mirror diameter" }
+      ],
+      examples: [
+        "Apochromatic refractors for planetary observation",
+        "Newtonian reflectors for deep-sky imaging",
+        "Space telescopes like Hubble and James Webb",
+        "Amateur telescopes with ED glass objectives"
+      ],
+      companies: ["Celestron", "Sky-Watcher", "Takahashi", "Tele Vue", "Meade"],
+      futureImpact: "Next-generation extremely large telescopes (ELTs) will use segmented mirrors spanning 30-40 meters, capable of directly imaging exoplanets around nearby stars. Space-based interferometers will link multiple telescopes to achieve angular resolutions impossible for single apertures. These systems will search for biosignatures in exoplanet atmospheres, potentially answering whether we are alone in the universe.",
+      color: "#3B82F6"
+    },
+    {
+      icon: "👓",
+      title: "Eyeglasses and Vision Correction",
+      short: "Optometry",
+      tagline: "Clear vision through optimized optical materials",
+      description: "Prescription eyeglasses must correct refractive errors while minimizing chromatic aberration that causes visual discomfort. The Abbe number—a measure of a material's dispersion—is a critical specification when selecting lens materials. High-index plastics that make thin, lightweight lenses often have low Abbe numbers, producing noticeable color fringes in peripheral vision. Optometrists must balance aesthetics (thin lenses) against optical quality (high Abbe number) for each patient's prescription strength and visual demands.",
+      connection: "The wavelength-dependent refraction we explored directly affects everyday vision through glasses. When looking through the edge of a strong prescription lens at a steep angle, different colors focus at different points on the retina, just like in our simulation—creating the rainbow fringes some glasses wearers experience.",
+      howItWorks: "Lens material selection balances refractive index (higher = thinner lens), Abbe number (higher = less chromatic aberration), specific gravity (lower = lighter), and impact resistance. CR-39 plastic (Abbe ~58) offers excellent optics but produces thick lenses for strong prescriptions. Polycarbonate (Abbe ~30) is thin and impact-resistant but produces more color fringing. Premium materials like Trivex (Abbe ~43) and high-index glasses attempt to optimize all properties simultaneously.",
+      stats: [
+        { val: "75%", label: "Of adults need vision correction" },
+        { val: "58", label: "CR-39 Abbe number (excellent)" },
+        { val: "30", label: "Polycarbonate Abbe number (lower)" }
+      ],
+      examples: [
+        "High-prescription single vision lenses",
+        "Progressive multifocal lenses",
+        "Sports eyewear with impact-resistant materials",
+        "Computer glasses optimized for intermediate distance"
+      ],
+      companies: ["Essilor", "ZEISS", "Hoya", "Rodenstock"],
+      futureImpact: "Smart glasses incorporating AR displays will require optical systems that project digital information while maintaining natural vision quality. Liquid crystal lenses with electronically adjustable focal length may eliminate the need for progressive lenses. Advanced materials combining high refractive index with high Abbe numbers will enable ultra-thin lenses without optical compromises.",
+      color: "#10B981"
+    },
+    {
+      icon: "🔬",
+      title: "Microscope Objectives",
+      short: "Scientific Imaging",
+      tagline: "Revealing the microscopic world in true color",
+      description: "Research microscopes require objectives that maintain chromatic correction while achieving extreme magnification and resolution. Plan-apochromat objectives—the gold standard for scientific imaging—correct chromatic aberration for three or more wavelengths while also flattening field curvature across the entire field of view. These complex optical systems may contain 15+ lens elements and cost more than entire entry-level microscopes, but they're essential for accurate fluorescence imaging where different cellular components are labeled with dyes emitting at different wavelengths.",
+      connection: "Our simulation demonstrated how uncorrected lenses create focus errors between colors. In fluorescence microscopy, this would cause apparent shifts between structures labeled with different colored dyes, leading researchers to false conclusions about whether proteins colocalize or structures overlap—the stakes of chromatic aberration in science are real discoveries.",
+      howItWorks: "Microscope objectives are classified by chromatic correction level: achromats (2 wavelengths), semi-apochromats/fluorites (partial correction), and apochromats (3+ wavelengths). The 'plan' prefix indicates correction for field curvature. Objectives are designed for specific tube lens focal lengths, cover slip thicknesses, and immersion media (air, water, oil). Oil immersion objectives must also correct for the optical properties of the immersion medium between the lens and specimen.",
+      stats: [
+        { val: "100x", label: "Maximum useful magnification" },
+        { val: "1.4 NA", label: "Oil immersion numerical aperture" },
+        { val: "$5,000+", label: "Cost of premium plan-apo objectives" }
+      ],
+      examples: [
+        "Confocal fluorescence microscopy for cell biology",
+        "Pathology microscopes for medical diagnosis",
+        "Semiconductor inspection systems",
+        "Super-resolution microscopy for nanoscale imaging"
+      ],
+      companies: ["Olympus", "Nikon Instruments", "ZEISS Microscopy", "Leica Microsystems"],
+      futureImpact: "Adaptive optics originally developed for astronomy are being integrated into microscopes to correct aberrations introduced by thick biological specimens. AI-powered deconvolution algorithms can computationally reverse the effects of residual aberrations. New super-resolution techniques are pushing microscopy beyond the diffraction limit, requiring even more precise chromatic correction to achieve nanometer-scale accuracy.",
+      color: "#F59E0B"
+    }
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
   const renderHook = () => (

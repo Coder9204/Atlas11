@@ -666,6 +666,126 @@ const CellToModuleLossesRenderer: React.FC<CellToModuleLossesRendererProps> = ({
 
   const currentIdx = phaseOrder.indexOf(phase);
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🏭',
+      title: 'Solar Module Manufacturing',
+      short: 'Yield Optimization',
+      tagline: 'Maximizing watt output per manufacturing dollar',
+      description: 'Solar module manufacturing is a precision process where understanding and minimizing cell-to-module (CTM) losses directly impacts profitability. Every percentage point of CTM improvement translates to millions of dollars in revenue for gigawatt-scale manufacturers.',
+      connection: 'Manufacturing lines must optimize every loss mechanism we explored: ribbon soldering quality affects series resistance, cell binning reduces mismatch losses, and encapsulant selection determines optical transmission. A 1% CTM improvement on a 5 GW annual production line represents 50 MW of additional power output.',
+      howItWorks: 'Automated optical inspection systems measure cell current output before assembly, sorting cells into bins with matching characteristics. Precision soldering robots apply optimized ribbon geometries with controlled solder volume. Lamination processes are tuned for maximum EVA transmission while ensuring 25-year durability. Statistical process control monitors CTM ratios in real-time.',
+      stats: [
+        { value: '98-100%', label: 'Modern CTM ratio targets' },
+        { value: '0.1%', label: 'Binning precision tolerance' },
+        { value: '$2-5M', label: 'Value of 1% CTM improvement per GW' },
+      ],
+      examples: [
+        'High-efficiency PERC and TOPCon module production',
+        'Heterojunction cell assembly with ultra-thin wafers',
+        'Shingled cell module manufacturing',
+        'Tandem cell integration requiring precise matching',
+      ],
+      companies: [
+        'LONGi Green Energy',
+        'JinkoSolar',
+        'Trina Solar',
+        'Canadian Solar',
+        'JA Solar',
+      ],
+      futureImpact: 'AI-powered manufacturing is enabling real-time CTM optimization. Machine learning algorithms predict optimal cell pairing, adjust soldering parameters on-the-fly, and identify process drift before yield impacts occur. The goal is zero-loss CTM ratios where module power exceeds cell power sum through light capture enhancements.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '🚗',
+      title: 'Electric Vehicle Solar Roofs',
+      short: 'Integrated PV',
+      tagline: 'Harvesting sunlight to extend EV driving range',
+      description: 'Automotive-integrated photovoltaics embed solar cells into vehicle body panels, particularly roofs, to generate supplemental charging power. The curved, space-constrained environment makes CTM optimization critical for maximizing the limited available area.',
+      connection: 'EV solar roofs face unique CTM challenges: cells must follow compound curves, interconnects must survive vehicle vibration, and optical layers must meet automotive durability standards. Mismatch losses are amplified because partial shading from buildings, trees, and roof racks is constant during driving.',
+      howItWorks: 'Flexible or segmented cells conform to roof curvature using specialized interconnect designs that accommodate thermal expansion mismatch between cells and metal body panels. Multi-string architectures with per-string power optimizers minimize shading losses. Automotive-grade lamination uses tough materials that maintain optical clarity after years of UV exposure and car washes.',
+      stats: [
+        { value: '200W', label: 'Typical EV solar roof peak output' },
+        { value: '1000-1500', label: 'Annual km range extension' },
+        { value: '3-5%', label: 'Additional CTM loss vs flat panels' },
+      ],
+      examples: [
+        'Hyundai Ioniq 5/6 solar roof option',
+        'Toyota Prius Prime solar package',
+        'Lightyear 0 full-body solar integration',
+        'Sono Sion 456-cell solar body panels',
+      ],
+      companies: [
+        'Hyundai',
+        'Toyota',
+        'Lightyear',
+        'Sono Motors',
+        'Panasonic',
+      ],
+      futureImpact: 'Vehicle-integrated solar is advancing toward full-body coverage with cells embedded in hoods, doors, and rear panels. Perovskite-silicon tandem cells may double efficiency in the same area. Smart routing algorithms will optimize power flow as different body sections experience varying shade patterns throughout the day.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🏢',
+      title: 'Building-Integrated Photovoltaics',
+      short: 'BIPV',
+      tagline: 'Turning building facades into power plants',
+      description: 'Building-integrated photovoltaics replace conventional building materials with electricity-generating components. Facades, skylights, and cladding become active power sources, but architectural constraints create significant CTM optimization challenges.',
+      connection: 'BIPV installations face extreme CTM challenges: vertical facades receive oblique sunlight, partial shading from neighboring structures is unavoidable, and aesthetic requirements may prohibit optimal cell arrangements. Understanding mismatch and optical losses is essential for predicting realistic BIPV output.',
+      howItWorks: 'BIPV modules use specialized glass-glass construction for structural integrity and fire safety. Cells may be spaced apart for semi-transparency, accepting optical losses for daylighting benefits. Multiple independent strings with micro-inverters handle the varying irradiance across building surfaces. Low-iron glass and anti-reflective coatings recover precious photons from low sun angles.',
+      stats: [
+        { value: '50-70%', label: 'BIPV output vs optimal rooftop' },
+        { value: '40%', label: 'Of building energy from facades possible' },
+        { value: '25-30yr', label: 'BIPV system design life' },
+      ],
+      examples: [
+        'Solar facade cladding on commercial towers',
+        'Semi-transparent solar skylights and atriums',
+        'Solar shading louvers and awnings',
+        'Photovoltaic noise barriers along highways',
+      ],
+      companies: [
+        'Onyx Solar',
+        'SunPower',
+        'Hanwha Q Cells',
+        'Tesla Solar Glass',
+        'Mitrex',
+      ],
+      futureImpact: 'Colored and patterned solar cells are enabling BIPV that matches any architectural vision without visible solar cell appearance. Transparent solar windows using organic or quantum dot technology may turn entire glass facades into power sources. Digital twin modeling optimizes cell string layouts for each building unique shadow patterns.',
+      color: '#10b981',
+    },
+    {
+      icon: '🛰️',
+      title: 'Space Solar Panels',
+      short: 'Extreme Efficiency',
+      tagline: 'Where every watt matters for mission success',
+      description: 'Space solar arrays power satellites and spacecraft where mass and reliability are paramount. CTM losses in space applications are engineered to absolute minimums because every gram of solar panel mass costs thousands of dollars to launch, and there are no repair options.',
+      connection: 'Space solar pushes CTM optimization to extremes: triple-junction cells costing $300/watt demand zero mismatch losses, interconnects must survive 10,000+ thermal cycles from -150°C to +150°C, and optical coatings must resist atomic oxygen and UV degradation for 15+ year missions.',
+      howItWorks: 'Space-grade cells are individually characterized and matched within 0.5% current tolerance. Welded interconnects using specialized alloys maintain conductivity through extreme thermal cycling. Coverglass with anti-reflective coatings optimized for the AM0 spectrum maximizes absorption. Bypass diodes protect strings from single-cell failures that would otherwise cascade.',
+      stats: [
+        { value: '>30%', label: 'Triple-junction cell efficiency' },
+        { value: '99%+', label: 'Space solar CTM ratio target' },
+        { value: '$1M/kg', label: 'Cost to launch to GEO orbit' },
+      ],
+      examples: [
+        'International Space Station solar arrays',
+        'Mars rovers and landers solar power',
+        'Geostationary communication satellites',
+        'Deep space probe deployable arrays',
+      ],
+      companies: [
+        'SpaceX',
+        'Boeing',
+        'Airbus Defence and Space',
+        'Northrop Grumman',
+        'SolAero Technologies',
+      ],
+      futureImpact: 'Space-based solar power stations may beam gigawatts of energy to Earth using microwave transmission. Six-junction cells approaching 50% efficiency are in development. Autonomous assembly robots could construct massive solar arrays in orbit, making CTM losses from manufacturing imperfections a thing of the past through in-space quality control.',
+      color: '#8b5cf6',
+    },
+  ];
+
   // Progress bar component
   const renderProgressBar = () => (
     <div style={{

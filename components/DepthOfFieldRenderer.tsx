@@ -1042,6 +1042,127 @@ export default function DepthOfFieldRenderer({
   ];
 
   // =============================================================================
+  // REAL WORLD APPLICATIONS DATA
+  // =============================================================================
+  const realWorldApps = [
+    {
+      icon: 'Camera',
+      title: 'Portrait Photography',
+      short: 'Creating artistic background blur to isolate subjects',
+      tagline: 'Where focus meets artistry',
+      description: 'Portrait photography leverages shallow depth of field to separate subjects from their backgrounds, creating the iconic "bokeh" effect that makes professional portraits stand out. By using wide apertures and careful distance management, photographers can transform distracting backgrounds into creamy, aesthetically pleasing blur that draws all attention to the subject.',
+      connection: 'The depth of field simulation demonstrates exactly how aperture size and subject distance work together to create portrait blur. A wider aperture (lower f-number) creates larger circles of confusion for out-of-focus areas, producing smoother bokeh. Moving closer to the subject while maintaining the same framing amplifies this effect dramatically.',
+      howItWorks: 'Portrait photographers typically use fast prime lenses (f/1.4 to f/2.8) at focal lengths between 50mm and 135mm. The wide aperture creates a narrow plane of focus, often just centimeters deep at close distances. Light from out-of-focus points spreads into circular disks (the circle of confusion), and when these disks overlap sufficiently, they create the smooth, painterly blur characteristic of professional portraits.',
+      stats: [
+        { value: 'f/1.2-f/2.8', label: 'Typical portrait aperture range' },
+        { value: '85mm', label: 'Classic portrait focal length' },
+        { value: '2-5cm', label: 'Depth of field at close range with wide aperture' },
+      ],
+      examples: [
+        'Wedding photography with bride sharp against blurred venue backgrounds',
+        'Headshot photography for actors and executives with creamy studio bokeh',
+        'Environmental portraits balancing subject focus with contextual blur',
+        'Pet photography using shallow depth to emphasize eyes and expressions',
+      ],
+      companies: [
+        'Canon',
+        'Sony',
+        'Nikon',
+        'Sigma Art',
+        'Zeiss',
+      ],
+      futureImpact: 'The demand for portrait-quality blur is driving innovation in both optical and computational photography. New lens designs with aspherical elements create smoother bokeh, while AI-powered cameras can now optimize aperture and focus in real-time for ideal subject separation.',
+      color: '#a855f7',
+    },
+    {
+      icon: 'Search',
+      title: 'Macro Photography',
+      short: 'Extreme close-ups revealing microscopic worlds',
+      tagline: 'Where millimeters become mountains',
+      description: 'Macro photography pushes depth of field to its absolute limits. At extreme magnifications, the depth of field can shrink to fractions of a millimeter, making focus precision critical. This razor-thin focus plane creates stunning images where tiny subjects emerge from completely abstract, blurred surroundings.',
+      connection: 'The depth of field principles shown in this simulation become dramatically amplified at macro distances. When the subject distance approaches the focal length, depth of field collapses exponentially. Even at f/16 or f/22, macro photographers may have less than a millimeter in focus, requiring techniques like focus stacking to achieve full sharpness.',
+      howItWorks: 'Macro lenses allow 1:1 or greater magnification ratios, projecting life-size or larger images onto the sensor. At these close distances, the circle of confusion grows rapidly for any point not precisely at the focus distance. Photographers combat this by using smaller apertures (higher f-numbers), focus stacking multiple exposures, or specialized tilt-shift techniques to angle the focal plane.',
+      stats: [
+        { value: '1:1', label: 'Life-size magnification ratio' },
+        { value: '0.5-2mm', label: 'Typical macro depth of field' },
+        { value: '50-100', label: 'Images stacked for full-depth macro shots' },
+      ],
+      examples: [
+        'Insect photography revealing compound eye structures in sharp detail',
+        'Botanical macro showing pollen grains and stamen at cellular scale',
+        'Product photography for jewelry with selective focus on gemstone facets',
+        'Scientific imaging of specimens requiring precise focal plane control',
+      ],
+      companies: [
+        'Laowa',
+        'Canon MP-E 65mm',
+        'Olympus',
+        'Zerene Stacker',
+      ],
+      futureImpact: 'Computational focus stacking is becoming automated in cameras, with some mirrorless systems capturing and combining dozens of focal planes in-camera. This democratizes macro photography by eliminating the need for complex post-processing workflows.',
+      color: '#22c55e',
+    },
+    {
+      icon: 'Film',
+      title: 'Cinematography',
+      short: 'Focus pulling for visual storytelling',
+      tagline: 'Guiding eyes through motion',
+      description: 'Cinematographers use depth of field as a powerful storytelling tool, controlling exactly where audiences look within each frame. The technique of "pulling focus" - smoothly transitioning focus between subjects - creates dramatic reveals and emotional connections that have defined the visual language of cinema for over a century.',
+      connection: 'This simulation shows why cinema cameras use large sensors and fast lenses: to achieve shallow depth of field that isolates subjects from backgrounds. The rack focus technique exploits the transition zone between sharp focus and blur, smoothly shifting the circle of confusion from one subject to another to redirect viewer attention.',
+      howItWorks: 'Cinema cameras use sensors ranging from Super 35 to full-frame or larger, paired with cinema lenses featuring smooth, precise focus rings with long rotation throws. A first assistant camera operator (focus puller) uses wireless focus motors and distance markers to execute planned focus transitions. The shallow depth of field means errors of just centimeters can result in soft subjects.',
+      stats: [
+        { value: 'T1.3-T2.0', label: 'Common cinema lens aperture range' },
+        { value: '270-330 degrees', label: 'Focus ring rotation for precision' },
+        { value: '$50K+', label: 'Professional cinema lens set cost' },
+      ],
+      examples: [
+        'Rack focus from foreground character to approaching threat in thrillers',
+        'Shallow DOF close-ups isolating actors from busy set environments',
+        'Split diopter shots keeping two focal planes sharp simultaneously',
+        'Deep focus compositions in Citizen Kane using small apertures and lighting',
+      ],
+      companies: [
+        'ARRI',
+        'RED Digital Cinema',
+        'Cooke Optics',
+        'Zeiss Cinema',
+        'Panavision',
+      ],
+      futureImpact: 'Autofocus technology is revolutionizing cinema production. Eye-tracking AF systems can now maintain perfect focus on moving subjects, potentially reducing the need for dedicated focus pullers while enabling new creative possibilities for small crews and documentary filmmakers.',
+      color: '#f59e0b',
+    },
+    {
+      icon: 'Smartphone',
+      title: 'Smartphone Computational Photography',
+      short: 'AI-powered bokeh simulation',
+      tagline: 'Making physics optional',
+      description: 'Smartphone cameras face a fundamental physics problem: their tiny sensors and short focal lengths create naturally deep depth of field, making everything sharp. Computational photography solves this by using AI and depth sensing to artificially blur backgrounds, simulating the optical bokeh of much larger cameras entirely through software.',
+      connection: 'This simulation explains exactly why phones struggle with natural bokeh - small sensors require short focal lengths, which creates large depth of field regardless of aperture. Portrait Mode reverses-engineers the optical process: instead of blur arising naturally from circles of confusion, AI estimates depth and artificially enlarges the "virtual" circle of confusion for each pixel based on its distance from the subject.',
+      howItWorks: 'Modern smartphones use multiple techniques to estimate scene depth: stereo vision from dual cameras, phase-detection patterns, structured light projectors, or LIDAR sensors. AI models trained on millions of images then segment the subject from the background and apply distance-based blur. The most advanced systems even simulate lens-specific bokeh characteristics, including the shape of out-of-focus highlights.',
+      stats: [
+        { value: '4.5mm', label: 'Typical smartphone focal length (vs 50mm+ for DSLRs)' },
+        { value: 'LIDAR', label: 'Most advanced depth sensing technology' },
+        { value: '1M+', label: 'Depth points mapped per frame' },
+      ],
+      examples: [
+        'Portrait Mode on iPhones separating subjects from backgrounds',
+        'Google Pixel computational bokeh using machine learning depth estimation',
+        'Samsung dual-camera systems for live focus adjustment',
+        'Cinematic Mode on iPhone applying rack focus to video in real-time',
+      ],
+      companies: [
+        'Apple',
+        'Google',
+        'Samsung',
+        'Qualcomm',
+        'Sony Semiconductor',
+      ],
+      futureImpact: 'Computational photography is advancing rapidly toward optical-quality results. Future systems may render bokeh indistinguishable from large-format cameras, complete with accurate lens aberrations and light diffraction. The line between computational and optical imaging continues to blur - pun intended.',
+      color: '#06b6d4',
+    },
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
   const renderHook = () => (

@@ -1085,6 +1085,102 @@ const ChipletsVsMonolithsRenderer: React.FC<ChipletsVsMonolithsRendererProps> = 
     </div>
   );
 
+  // Real-world applications data for chiplets vs monolithic
+  const realWorldApps = [
+    {
+      icon: 'Server',
+      title: 'Server Processors',
+      short: 'Data Center Economics',
+      tagline: 'Powering the cloud with modular silicon',
+      description: 'Modern server processors leverage chiplet architectures to deliver unprecedented core counts and performance while maintaining manufacturable die sizes. By disaggregating compute, I/O, and memory controllers onto separate optimized dies, server chips achieve better yield economics and enable flexible product configurations from a common silicon building block.',
+      connection: 'Server processors exemplify the yield economics we explored. A 64-core monolithic die would exceed 800mm² with catastrophic yield. Chiplets allow AMD EPYC and Intel Xeon to scale core counts while keeping individual dies at manufacturable sizes around 75-100mm² each.',
+      howItWorks: 'Server chiplet designs typically use identical compute complex dies (CCDs) containing 8-16 cores each, connected to a central I/O die (IOD) that handles memory controllers, PCIe lanes, and inter-socket links. This separation allows compute chiplets to use the most advanced process node for performance, while I/O dies use mature nodes for cost efficiency and robust analog circuits.',
+      stats: [
+        { label: 'Core Count', value: '64-128', detail: 'cores per socket' },
+        { label: 'Chiplet Yield', value: '85-92%', detail: 'vs 15-25% monolithic equivalent' },
+        { label: 'TCO Savings', value: '30-50%', detail: 'total cost of ownership improvement' },
+      ],
+      examples: [
+        'AMD EPYC Genoa uses 12 CCD chiplets plus 1 IOD for 96 cores',
+        'Intel Xeon Max uses HBM memory tiles with Sapphire Rapids compute',
+        'AWS Graviton3 uses custom Arm chiplets for cloud-native workloads',
+        'Google TPU v4 uses multiple tensor processing chiplets interconnected',
+      ],
+      companies: ['AMD', 'Intel', 'AWS', 'Google', 'Ampere'],
+      futureImpact: 'Server chiplets will continue scaling with UCIe standardization enabling multi-vendor chiplet ecosystems. Expect 256+ core processors using 3D-stacked cache chiplets and CXL-connected memory expansion, fundamentally changing data center architectures.',
+      color: '#ef4444',
+    },
+    {
+      icon: 'Cpu',
+      title: 'Consumer CPUs',
+      short: 'Desktop & Laptop Chips',
+      tagline: 'Bringing datacenter innovation to your desk',
+      description: 'Consumer processors are increasingly adopting chiplet designs to deliver better performance per watt and enable product segmentation without multiple unique silicon designs. This approach allows manufacturers to offer a range of products from mainstream to enthusiast using common building blocks.',
+      connection: 'Consumer CPUs demonstrate how chiplet economics apply beyond servers. While desktop dies are smaller than server parts, the yield benefits and product flexibility still provide advantages. AMD Ryzen uses the same CCD chiplets as EPYC, amortizing design costs across consumer and enterprise markets.',
+      howItWorks: 'Consumer chiplet CPUs typically combine compute chiplets with an I/O die that includes memory controllers, display outputs, and platform connectivity. Some designs like Apple M-series use monolithic for mainstream products but transition to chiplets (M1 Ultra, M2 Ultra) for high-end variants requiring more compute than a single die can provide.',
+      stats: [
+        { label: 'Performance', value: '+40%', detail: 'gen-over-gen improvement' },
+        { label: 'Power Efficiency', value: '2-3x', detail: 'better than 5 years ago' },
+        { label: 'Product Variants', value: '8-12', detail: 'SKUs from common chiplets' },
+      ],
+      examples: [
+        'AMD Ryzen 7000 series uses Zen 4 CCDs with RDNA3 iGPU IOD',
+        'Intel Core Ultra uses compute, GPU, and SoC tiles on Foveros 3D',
+        'Apple M1/M2 Ultra connects two dies via UltraFusion bridge',
+        'AMD Ryzen 9 7950X3D uses 3D V-Cache stacked chiplet for gaming',
+      ],
+      companies: ['AMD', 'Intel', 'Apple', 'Qualcomm'],
+      futureImpact: 'Consumer chiplets will enable unprecedented customization, with users potentially selecting core count, cache size, and GPU capability independently. 3D stacking will become standard, putting massive caches directly on compute dies for latency-sensitive applications.',
+      color: '#3b82f6',
+    },
+    {
+      icon: 'Smartphone',
+      title: 'Mobile SoCs',
+      short: 'Smartphone Processors',
+      tagline: 'Maximum integration meets modular design',
+      description: 'Mobile system-on-chips face unique challenges balancing performance, power consumption, and thermal constraints in thin devices. While traditionally monolithic for maximum integration density, mobile SoCs are exploring disaggregated designs to enable heterogeneous integration of memory, modems, and specialized accelerators.',
+      connection: 'Mobile SoCs showcase the trade-off between monolithic integration (lower power, smaller package) and chiplet flexibility. As die sizes grow with more AI accelerators and camera ISPs, the yield economics we studied increasingly favor disaggregation even in mobile.',
+      howItWorks: 'Current mobile designs primarily use monolithic SoCs integrating CPU, GPU, NPU, ISP, and connectivity. However, flagship phones increasingly use separate modem chiplets for 5G, and future designs will disaggregate components further using advanced fan-out packaging and 3D stacking to meet diverse requirements.',
+      stats: [
+        { label: 'Transistors', value: '15-20B', detail: 'per flagship SoC' },
+        { label: 'AI Performance', value: '30+ TOPS', detail: 'neural engine capability' },
+        { label: 'Power Budget', value: '5-8W', detail: 'sustained thermal limit' },
+      ],
+      examples: [
+        'Apple A17 Pro uses industry-first 3nm process for main SoC',
+        'Qualcomm Snapdragon 8 Gen 3 separates modem for flexibility',
+        'MediaTek Dimensity 9300 uses all big-core heterogeneous design',
+        'Google Tensor G3 integrates custom TPU for on-device AI',
+      ],
+      companies: ['Apple', 'Qualcomm', 'MediaTek', 'Samsung', 'Google'],
+      futureImpact: 'Mobile chiplets will enable mix-and-match of modem generations, AI accelerator updates, and memory technology independent of main SoC redesigns. Expect disaggregated smartphone SoCs by 2026-2027 as advanced packaging costs decrease.',
+      color: '#10b981',
+    },
+    {
+      icon: 'Car',
+      title: 'Automotive Chips',
+      short: 'Vehicle Computing',
+      tagline: 'Safety-critical silicon for the road ahead',
+      description: 'Automotive processors demand exceptional reliability, long product lifecycles, and the ability to integrate diverse functions from infotainment to autonomous driving. Chiplet architectures enable automotive manufacturers to update compute capabilities while maintaining certified safety-critical components.',
+      connection: 'Automotive chips uniquely benefit from chiplet modularity. Safety-certified components can remain unchanged while compute chiplets are upgraded. This addresses the long automotive development cycles (5-7 years) where technology evolves faster than vehicle platforms.',
+      howItWorks: 'Automotive chiplet designs separate safety-critical real-time processors (ASIL-D certified) from high-performance AI accelerators and general compute. This allows the safety cores to maintain certification while compute elements are upgraded. Redundant chiplet configurations enable fail-operational systems required for autonomous driving.',
+      stats: [
+        { label: 'Compute Power', value: '500+ TOPS', detail: 'for L4 autonomy' },
+        { label: 'Operating Range', value: '-40 to 125C', detail: 'automotive grade' },
+        { label: 'Lifespan', value: '15+ years', detail: 'reliability requirement' },
+      ],
+      examples: [
+        'NVIDIA DRIVE Thor uses chiplet architecture for 2000 TOPS',
+        'Mobileye EyeQ Ultra combines radar and vision processing tiles',
+        'Tesla FSD computer uses dual redundant AI chiplets',
+        'Qualcomm Snapdragon Ride Flex scales via chiplet configurations',
+      ],
+      companies: ['NVIDIA', 'Mobileye', 'Tesla', 'Qualcomm', 'AMD'],
+      futureImpact: 'Automotive chiplets will enable software-defined vehicles where compute capability can be upgraded throughout the vehicle lifecycle. Expect standardized automotive chiplet interfaces and centralized compute architectures replacing dozens of distributed ECUs.',
+      color: '#f59e0b',
+    },
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return (

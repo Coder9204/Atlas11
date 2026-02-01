@@ -260,6 +260,102 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
   const [testScore, setTestScore] = useState(0);
   const [testComplete, setTestComplete] = useState(false);
 
+  // Real-world applications for transfer phase
+  const realWorldApps = [
+    {
+      icon: '💊',
+      title: 'Drug Delivery Systems',
+      short: 'Controlled pharmaceutical release',
+      tagline: 'Medicine That Knows When and Where to Act',
+      description: 'Pharmaceutical companies engineer drug delivery systems that use diffusion and convection principles to release medications at precise rates. From time-release capsules to transdermal patches, understanding how molecules move through tissues is essential for effective treatment.',
+      connection: 'Just like dye spreading through water, drug molecules diffuse from high concentration areas (the pill or patch) to low concentration areas (your bloodstream). Temperature and blood flow (convection) dramatically affect absorption rates.',
+      howItWorks: 'Drug delivery systems use polymer matrices with carefully designed pore sizes to control diffusion rates. Some advanced systems respond to body temperature or pH, using convection-like mechanisms to trigger drug release exactly where needed.',
+      stats: [
+        { value: '$300B+', label: 'Global drug delivery market', icon: '📊' },
+        { value: '12-24 hrs', label: 'Extended release duration', icon: '⏱️' },
+        { value: '70%', label: 'Better patient compliance', icon: '✓' }
+      ],
+      examples: [
+        'Nicotine patches release medication through skin diffusion over 24 hours',
+        'Insulin pumps deliver precise doses using controlled convective flow',
+        'Chemotherapy nanoparticles target tumors using enhanced permeation effects',
+        'Time-release pain medications use polymer diffusion barriers'
+      ],
+      companies: ['Johnson & Johnson', 'Pfizer', 'Novartis', 'AbbVie', 'Merck'],
+      futureImpact: 'Smart drug delivery systems will use real-time body monitoring to adjust medication release, potentially eliminating overdoses and improving treatment outcomes for millions of patients.',
+      color: premiumDesign.colors.primary
+    },
+    {
+      icon: '💻',
+      title: 'Semiconductor Doping',
+      short: 'Atomic-level chip fabrication',
+      tagline: 'The Foundation of Every Computer Chip',
+      description: 'Every smartphone, computer, and electronic device relies on semiconductor doping - a process where dopant atoms diffuse into silicon wafers at high temperatures. This precise diffusion creates the electrical properties that make transistors work.',
+      connection: 'Dopant atoms spread through silicon crystals via thermal diffusion, exactly like dye in hot water. Higher temperatures dramatically increase diffusion rates, allowing engineers to control penetration depth by adjusting time and temperature.',
+      howItWorks: 'Silicon wafers are heated to 900-1200°C and exposed to dopant gases (phosphorus for N-type, boron for P-type). Atoms diffuse into the crystal lattice, creating regions with different electrical properties that form transistors.',
+      stats: [
+        { value: '3nm', label: 'Smallest chip features', icon: '🔬' },
+        { value: '$580B', label: 'Semiconductor market 2024', icon: '📈' },
+        { value: '100B+', label: 'Transistors per chip', icon: '⚡' }
+      ],
+      examples: [
+        'Apple M-series chips use precise boron diffusion for billions of transistors',
+        'Solar cells rely on phosphorus diffusion to create photovoltaic junctions',
+        'LED manufacturing uses gallium and indium diffusion for light emission',
+        'Quantum computer qubits require ultra-precise single-atom doping'
+      ],
+      companies: ['TSMC', 'Intel', 'Samsung', 'ASML'],
+      futureImpact: 'As chips approach atomic limits, new diffusion techniques will enable 3D chip architectures and quantum computing, continuing the exponential growth of computing power.',
+      color: premiumDesign.colors.accent
+    },
+    {
+      icon: '🌍',
+      title: 'Air Quality and Pollution Dispersion',
+      short: 'Atmospheric transport modeling',
+      tagline: 'Predicting Where Pollution Goes',
+      description: 'Environmental scientists use diffusion-convection equations to predict how pollutants spread through the atmosphere. This knowledge is critical for air quality forecasting, emergency response to chemical spills, and urban planning.',
+      connection: 'Smoke from a factory chimney demonstrates both processes: molecular diffusion spreads particles in all directions, while atmospheric convection (wind and thermal currents) carries pollution across cities and continents.',
+      howItWorks: 'Computer models solve advection-diffusion equations that combine random molecular spreading (diffusion) with bulk air movement (convection). Temperature inversions can trap pollutants by suppressing vertical convection.',
+      stats: [
+        { value: '7M', label: 'Deaths from air pollution yearly', icon: '⚠️' },
+        { value: '99%', label: 'World breathes polluted air', icon: '🌐' },
+        { value: '72 hrs', label: 'Forecast accuracy window', icon: '📅' }
+      ],
+      examples: [
+        'Wildfire smoke tracking predicts hazardous air quality days in advance',
+        'Nuclear accident modeling (like Fukushima) uses diffusion-convection equations',
+        'City planners use pollution dispersion models to locate industrial zones',
+        'Real-time air quality apps predict ozone and particulate levels'
+      ],
+      companies: ['EPA', 'NOAA', 'European Environment Agency', 'IQAir', 'BreezoMeter'],
+      futureImpact: 'AI-enhanced pollution models will enable personalized air quality warnings and help cities design smarter ventilation corridors, potentially saving millions of lives annually.',
+      color: premiumDesign.colors.success
+    },
+    {
+      icon: '🔥',
+      title: 'Heat Exchangers',
+      short: 'Industrial thermal engineering',
+      tagline: 'Moving Heat Where It Needs to Go',
+      description: 'Heat exchangers are everywhere - in your car radiator, refrigerator, power plants, and HVAC systems. They use convection to efficiently transfer thermal energy between fluids without mixing them, making modern life possible.',
+      connection: 'Your experiment showed how convection currents accelerate heat transport. Heat exchangers maximize this effect by forcing fluids through channels that enhance convective heat transfer, far faster than diffusion alone.',
+      howItWorks: 'Two fluids flow through separate channels in close contact. Convection carries heat from the hot fluid to the channel walls, conduction transfers it through the wall, and convection carries it into the cold fluid. Counter-flow designs maximize efficiency.',
+      stats: [
+        { value: '$20B', label: 'Global market value', icon: '💰' },
+        { value: '95%+', label: 'Heat recovery possible', icon: '♻️' },
+        { value: '500°C+', label: 'Operating temperatures', icon: '🌡️' }
+      ],
+      examples: [
+        'Car radiators use forced convection to cool engine coolant',
+        'Nuclear power plants transfer reactor heat to steam generators',
+        'Data center cooling systems prevent server overheating',
+        'Geothermal heat pumps extract ground warmth for home heating'
+      ],
+      companies: ['Alfa Laval', 'Kelvion', 'Danfoss', 'Chart Industries', 'SPX Flow'],
+      futureImpact: 'Advanced heat exchangers will capture waste heat from industrial processes and data centers, potentially recycling enough energy to power millions of homes and significantly reduce carbon emissions.',
+      color: premiumDesign.colors.warning
+    }
+  ];
+
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -1817,167 +1913,281 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
   }
 
   function renderTransferPhase() {
-    const applications = [
-      {
-        title: "🌊 Ocean Currents",
-        description: "The world's oceans are giant convection systems! Warm water near the equator rises and flows toward the poles, while cold polar water sinks and flows back. This 'global conveyor belt' distributes heat around the planet and drives weather patterns.",
-        fact: "The Gulf Stream carries 30 times more water than all the world's rivers combined, warming Northern Europe by 5-10°C!",
-      },
-      {
-        title: "🏠 Home Heating & Cooling",
-        description: "HVAC systems are designed around convection. Heating vents are placed low (warm air rises), while AC vents are placed high (cool air sinks). This creates natural circulation that distributes air efficiently without fans.",
-        fact: "A well-designed convection heating system can reduce energy costs by 30% compared to forced-air systems!",
-      },
-      {
-        title: "🌋 Plate Tectonics",
-        description: "Earth's mantle undergoes slow convection over millions of years! Hot rock rises at mid-ocean ridges, spreads across the seafloor, cools, and sinks at subduction zones. This drives continental drift and causes earthquakes.",
-        fact: "Convection in Earth's mantle moves plates at about the same rate your fingernails grow - a few centimeters per year!",
-      },
-      {
-        title: "☕ Cooking & Food Science",
-        description: "Boiling water, baking bread, and brewing coffee all rely on convection. That's why we heat from below - it creates efficient circulation. Convection ovens use fans to enhance this effect for more even cooking.",
-        fact: "A convection oven cooks food 25% faster than a conventional oven because forced air increases heat transfer!",
-      },
-    ];
+    const currentApp = realWorldApps[activeApp];
+    const isCurrentCompleted = completedApps.has(activeApp);
+    const allCompleted = completedApps.size === realWorldApps.length;
+
+    const handleCompleteApp = () => {
+      const newCompleted = new Set(completedApps);
+      newCompleted.add(activeApp);
+      setCompletedApps(newCompleted);
+      playSound('success');
+      emitEvent('app_explored', { appNumber: activeApp + 1, appTitle: currentApp.title });
+
+      // Auto-advance to next app
+      if (activeApp < realWorldApps.length - 1) {
+        setTimeout(() => setActiveApp(activeApp + 1), 500);
+      }
+    };
 
     return (
-      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
         {renderProgressBar()}
 
-        <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.xl }}>
-          <h2 style={{
-            fontSize: isMobile ? '22px' : '28px',
+        {/* Header */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: premiumDesign.spacing.lg,
+          padding: `0 ${premiumDesign.spacing.md}px`,
+        }}>
+          <p style={{
+            fontSize: '10px',
             fontWeight: 700,
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.sm,
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            color: premiumDesign.colors.success,
+            marginBottom: premiumDesign.spacing.xs,
           }}>
-            🌍 Diffusion & Convection in the Real World
-          </h2>
-          <p style={{ color: premiumDesign.colors.text.secondary }}>
-            Explore all {applications.length} applications to unlock the quiz
+            Step 8 - Real World Applications
+          </p>
+          <p style={{
+            fontSize: '12px',
+            color: premiumDesign.colors.text.muted,
+          }}>
+            {completedApps.size}/{realWorldApps.length} completed - {allCompleted ? 'Ready for test!' : 'Complete all to proceed'}
           </p>
         </div>
 
-        {/* Tab Navigation */}
+        {/* App tabs */}
         <div style={{
           display: 'flex',
           gap: premiumDesign.spacing.sm,
           marginBottom: premiumDesign.spacing.lg,
           flexWrap: 'wrap',
           justifyContent: 'center',
+          padding: `0 ${premiumDesign.spacing.md}px`,
         }}>
-          {applications.map((app, index) => (
-            <button
-              key={index}
-              style={{
-                padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
-                borderRadius: premiumDesign.radius.full,
-                border: activeApp === index
-                  ? `2px solid ${premiumDesign.colors.primary}`
-                  : '2px solid rgba(255,255,255,0.1)',
-                background: activeApp === index
-                  ? 'rgba(168, 85, 247, 0.2)'
-                  : completedApps.has(index)
-                    ? 'rgba(16, 185, 129, 0.2)'
-                    : premiumDesign.colors.background.tertiary,
-                color: premiumDesign.colors.text.primary,
-                cursor: 'pointer',
-                fontSize: '14px',
-                transition: 'all 0.3s ease',
-              }}
-              onClick={() => {
-                safeNavigate(() => setActiveApp(index));
-              }}
-            >
-              {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
-            </button>
-          ))}
-        </div>
+          {realWorldApps.map((app, i) => {
+            const isCompleted = completedApps.has(i);
+            const isCurrent = activeApp === i;
+            const isLocked = i > 0 && !completedApps.has(i - 1) && !isCompleted;
 
-        {/* Application Content */}
-        <div style={{
-          background: premiumDesign.colors.background.card,
-          borderRadius: premiumDesign.radius.xl,
-          padding: premiumDesign.spacing.xl,
-          border: '1px solid rgba(255,255,255,0.1)',
-          flex: 1,
-        }}>
-          <h3 style={{
-            fontSize: '22px',
-            color: premiumDesign.colors.text.primary,
-            marginBottom: premiumDesign.spacing.md,
-          }}>
-            {applications[activeApp].title}
-          </h3>
-
-          <p style={{
-            color: premiumDesign.colors.text.secondary,
-            fontSize: '16px',
-            lineHeight: 1.7,
-            marginBottom: premiumDesign.spacing.lg,
-          }}>
-            {applications[activeApp].description}
-          </p>
-
-          <div style={{
-            background: 'rgba(168, 85, 247, 0.1)',
-            borderRadius: premiumDesign.radius.lg,
-            padding: premiumDesign.spacing.lg,
-            border: '1px solid rgba(168, 85, 247, 0.3)',
-          }}>
-            <p style={{ margin: 0, color: premiumDesign.colors.primary, fontWeight: 600 }}>
-              💡 Fun Fact
-            </p>
-            <p style={{ margin: `${premiumDesign.spacing.sm}px 0 0`, color: premiumDesign.colors.text.secondary }}>
-              {applications[activeApp].fact}
-            </p>
-          </div>
-
-          {!completedApps.has(activeApp) && (
-            <button
-              style={{
-                display: 'block',
-                width: '100%',
-                marginTop: premiumDesign.spacing.lg,
-                padding: premiumDesign.spacing.md,
-                borderRadius: premiumDesign.radius.md,
-                border: 'none',
-                background: premiumDesign.colors.gradient.primary,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                safeNavigate(() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  if (activeApp < applications.length - 1) {
-                    setActiveApp(activeApp + 1);
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  if (!isLocked) {
+                    safeNavigate(() => setActiveApp(i));
+                    playSound('click');
                   }
-                });
-              }}
-            >
-              ✓ Mark as Read
-            </button>
-          )}
+                }}
+                disabled={isLocked}
+                style={{
+                  padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px`,
+                  borderRadius: premiumDesign.radius.md,
+                  border: isCurrent ? `2px solid ${app.color}` : `1px solid rgba(255,255,255,0.1)`,
+                  backgroundColor: isCurrent ? `${app.color}20` : isCompleted ? 'rgba(16, 185, 129, 0.15)' : premiumDesign.colors.background.tertiary,
+                  color: isLocked ? premiumDesign.colors.text.muted : premiumDesign.colors.text.primary,
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
+                  opacity: isLocked ? 0.5 : 1,
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <span>{app.icon}</span>
+                <span>{isMobile ? '' : app.short}</span>
+                {isCompleted && <span style={{ color: premiumDesign.colors.success }}>&#10003;</span>}
+                {isLocked && <span>&#128274;</span>}
+              </button>
+            );
+          })}
         </div>
 
+        {/* Scrollable content */}
         <div style={{
-          textAlign: 'center',
-          marginTop: premiumDesign.spacing.lg,
-          color: premiumDesign.colors.text.muted,
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          paddingBottom: '120px',
         }}>
-          {completedApps.size} of {applications.length} applications explored
+          <div style={{ maxWidth: '800px', margin: '0 auto', padding: `0 ${premiumDesign.spacing.md}px` }}>
+            {/* App header */}
+            <div style={{ textAlign: 'center', marginBottom: premiumDesign.spacing.lg }}>
+              <span style={{ fontSize: '56px' }}>{currentApp.icon}</span>
+              <h2 style={{
+                fontSize: isMobile ? '24px' : '32px',
+                fontWeight: 800,
+                color: premiumDesign.colors.text.primary,
+                marginTop: premiumDesign.spacing.sm,
+              }}>
+                {currentApp.title}
+              </h2>
+              <p style={{ color: currentApp.color, fontSize: '16px', fontWeight: 600 }}>
+                {currentApp.tagline}
+              </p>
+            </div>
+
+            {/* Description */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              marginBottom: premiumDesign.spacing.md,
+              borderLeft: `4px solid ${currentApp.color}`,
+            }}>
+              <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '16px', lineHeight: 1.7, margin: 0 }}>
+                {currentApp.description}
+              </p>
+            </div>
+
+            {/* Connection to diffusion/convection */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              marginBottom: premiumDesign.spacing.md,
+              borderLeft: `4px solid ${premiumDesign.colors.primary}`,
+            }}>
+              <h3 style={{ color: premiumDesign.colors.primary, fontSize: '16px', fontWeight: 700, marginBottom: premiumDesign.spacing.sm }}>
+                &#128279; Connection to Your Experiment
+              </h3>
+              <p style={{ color: premiumDesign.colors.text.secondary, lineHeight: 1.7, margin: 0 }}>
+                {currentApp.connection}
+              </p>
+            </div>
+
+            {/* How it works */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              <h3 style={{ color: premiumDesign.colors.text.primary, fontSize: '16px', fontWeight: 700, marginBottom: premiumDesign.spacing.sm }}>
+                &#9881;&#65039; How It Works
+              </h3>
+              <p style={{ color: premiumDesign.colors.text.secondary, lineHeight: 1.7, margin: 0 }}>
+                {currentApp.howItWorks}
+              </p>
+            </div>
+
+            {/* Stats */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: premiumDesign.spacing.sm,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              {currentApp.stats.map((stat, i) => (
+                <div key={i} style={{
+                  background: premiumDesign.colors.background.card,
+                  borderRadius: premiumDesign.radius.md,
+                  padding: premiumDesign.spacing.md,
+                  textAlign: 'center',
+                  border: `1px solid rgba(255,255,255,0.1)`,
+                }}>
+                  <div style={{ fontSize: '24px', marginBottom: '4px' }}>{stat.icon}</div>
+                  <div style={{ color: currentApp.color, fontSize: isMobile ? '16px' : '20px', fontWeight: 800 }}>{stat.value}</div>
+                  <div style={{ color: premiumDesign.colors.text.muted, fontSize: '11px' }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Examples */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              <h3 style={{ color: premiumDesign.colors.text.primary, fontSize: '16px', fontWeight: 700, marginBottom: premiumDesign.spacing.sm }}>
+                &#128203; Real Examples
+              </h3>
+              <ul style={{ color: premiumDesign.colors.text.secondary, paddingLeft: '20px', lineHeight: 1.8, margin: 0 }}>
+                {currentApp.examples.map((ex, i) => (
+                  <li key={i}>{ex}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Companies */}
+            <div style={{
+              background: premiumDesign.colors.background.card,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              marginBottom: premiumDesign.spacing.md,
+            }}>
+              <h3 style={{ color: premiumDesign.colors.text.primary, fontSize: '16px', fontWeight: 700, marginBottom: premiumDesign.spacing.sm }}>
+                &#127970; Industry Leaders
+              </h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: premiumDesign.spacing.sm }}>
+                {currentApp.companies.map((company, i) => (
+                  <span key={i} style={{
+                    background: `${currentApp.color}20`,
+                    color: currentApp.color,
+                    padding: `${premiumDesign.spacing.xs}px ${premiumDesign.spacing.sm}px`,
+                    borderRadius: premiumDesign.radius.full,
+                    fontSize: '12px',
+                    fontWeight: 600,
+                  }}>
+                    {company}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Future impact */}
+            <div style={{
+              background: `linear-gradient(135deg, ${currentApp.color}20 0%, ${premiumDesign.colors.background.card} 100%)`,
+              borderRadius: premiumDesign.radius.lg,
+              padding: premiumDesign.spacing.lg,
+              marginBottom: premiumDesign.spacing.md,
+              border: `1px solid ${currentApp.color}40`,
+            }}>
+              <h3 style={{ color: currentApp.color, fontSize: '16px', fontWeight: 700, marginBottom: premiumDesign.spacing.sm }}>
+                &#128640; Future Impact
+              </h3>
+              <p style={{ color: premiumDesign.colors.text.secondary, lineHeight: 1.7, margin: 0 }}>
+                {currentApp.futureImpact}
+              </p>
+            </div>
+
+            {/* Complete button */}
+            {!isCurrentCompleted && (
+              <button
+                onClick={handleCompleteApp}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: premiumDesign.spacing.md,
+                  borderRadius: premiumDesign.radius.md,
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${currentApp.color} 0%, ${premiumDesign.colors.accent} 100%)`,
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: `0 4px 20px ${currentApp.color}40`,
+                }}
+              >
+                {activeApp < realWorldApps.length - 1 ? 'Got It! Continue &#8594;' : '&#10003; Complete All Topics'}
+              </button>
+            )}
+          </div>
         </div>
 
         {renderBottomBar(
           { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
-            text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
+            text: allCompleted ? 'Take the Quiz &#8594;' : `Explore ${realWorldApps.length - completedApps.size} More &#8594;`,
             onClick: goNext,
-            disabled: completedApps.size < applications.length,
+            disabled: !allCompleted,
           }
         )}
       </div>

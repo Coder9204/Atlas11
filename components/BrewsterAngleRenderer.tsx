@@ -269,6 +269,101 @@ const BrewsterAngleRenderer: React.FC<BrewsterAngleRendererProps> = ({
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  const realWorldApps = [
+    {
+      icon: '🔬',
+      title: 'Laser Cavity Windows',
+      short: 'Zero-loss optics',
+      tagline: 'Where every photon counts',
+      description: 'Brewster windows are optical elements tilted at Brewster angle inside laser cavities. They allow p-polarized laser light to pass through with zero reflection loss, maximizing laser efficiency and naturally selecting a single polarization state for the output beam.',
+      connection: 'At Brewster angle, p-polarized light experiences zero reflection at the air-glass interface. This eliminates power loss at cavity windows and forces the laser to operate with a specific polarization, which is essential for many scientific and industrial applications.',
+      howItWorks: 'The window is mounted at Brewster angle (typically ~56° for glass). When light hits the surface, the reflected and refracted rays are perpendicular. This geometry prevents p-polarized oscillations from coupling into the reflected direction, so 100% of p-polarized light transmits through. Multiple passes through the cavity amplify this polarization selection.',
+      stats: [
+        { value: '0%', label: 'Reflection loss for p-polarized light', icon: '✨' },
+        { value: '99.9%', label: 'Polarization purity achievable', icon: '📊' },
+        { value: '56.7°', label: 'Brewster angle for BK7 glass', icon: '📐' },
+      ],
+      examples: [
+        'HeNe gas lasers with internal Brewster tubes',
+        'Ti:Sapphire ultrafast laser cavities',
+        'CO2 industrial cutting lasers',
+        'Research-grade dye lasers',
+      ],
+      companies: ['Coherent', 'Spectra-Physics', 'Trumpf', 'IPG Photonics', 'Thorlabs'],
+      futureImpact: 'As quantum computing and quantum communication advance, Brewster windows will be crucial for maintaining polarization states in quantum optical systems, enabling more reliable qubit manipulation and entanglement distribution.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '🕶️',
+      title: 'Polarized Sunglasses',
+      short: 'Glare elimination',
+      tagline: 'See clearly through the glare',
+      description: 'Polarized sunglasses use vertically-oriented polarizing filters to block horizontally polarized light. Since glare from horizontal surfaces like roads, water, and snow is predominantly horizontally polarized due to reflection near Brewster angle, these glasses dramatically reduce eye strain and improve visibility.',
+      connection: 'When sunlight reflects off horizontal surfaces at angles near Brewster angle, the reflected light becomes strongly horizontally polarized (s-polarized). Polarized lenses with vertical transmission axes block this specific polarization while allowing other light through, effectively eliminating glare without darkening the entire scene.',
+      howItWorks: 'The lens contains a polarizing film with molecules aligned in vertical chains. Light waves oscillating horizontally (the glare) are absorbed by these chains, while vertically oscillating light passes through. The effectiveness peaks when viewing surfaces at angles close to Brewster angle, where polarization is strongest.',
+      stats: [
+        { value: '99%', label: 'Glare reduction at optimal angles', icon: '☀️' },
+        { value: '53°', label: 'Brewster angle for water surfaces', icon: '🌊' },
+        { value: '400nm', label: 'UV protection cutoff', icon: '🛡️' },
+      ],
+      examples: [
+        'Fishing glasses for seeing through water surface',
+        'Driving glasses reducing road glare',
+        'Skiing goggles for snow glare reduction',
+        'Boating eyewear for ocean surface visibility',
+      ],
+      companies: ['Ray-Ban', 'Oakley', 'Maui Jim', 'Costa Del Mar', 'Smith Optics'],
+      futureImpact: 'Smart polarized lenses with electronically adjustable polarization axes will allow users to optimize glare reduction in real-time based on viewing angle and light conditions, providing personalized visual comfort for any environment.',
+      color: '#06b6d4',
+    },
+    {
+      icon: '💎',
+      title: 'Optical Coatings',
+      short: 'Thin film design',
+      tagline: 'Engineering light at the nanoscale',
+      description: 'Anti-reflective and specialized optical coatings use thin film interference principles combined with Brewster angle physics to control reflection and transmission. Multi-layer coatings can achieve near-zero reflection across broad wavelength ranges by exploiting polarization-dependent reflection at each interface.',
+      connection: 'Each layer in a thin film coating creates an interface where Fresnel reflection occurs. By understanding how reflection varies with angle and polarization (including Brewster angle effects), engineers design layer thicknesses and materials to create destructive interference for reflected light, minimizing reflection across desired wavelength and angle ranges.',
+      howItWorks: 'Thin films of alternating high and low refractive index materials are deposited on substrates. Each film thickness is typically a quarter wavelength of the target light. Reflections from each interface interfere destructively when the optical path difference equals half wavelengths. For angles near Brewster angle, p-polarized reflection is naturally minimized, while s-polarized light requires more coating layers.',
+      stats: [
+        { value: '<0.1%', label: 'Reflection with premium AR coating', icon: '🔍' },
+        { value: '6-12', label: 'Typical layer count for broadband AR', icon: '📚' },
+        { value: '100nm', label: 'Typical single layer thickness', icon: '📏' },
+      ],
+      examples: [
+        'Camera lens anti-reflective coatings',
+        'Eyeglass AR coatings for clarity',
+        'Solar cell efficiency enhancement coatings',
+        'Laser mirror high-reflector coatings',
+      ],
+      companies: ['Zeiss', 'Leica', 'Nikon', 'Edmund Optics', 'II-VI Incorporated'],
+      futureImpact: 'Metamaterial and nanostructured coatings will enable perfect anti-reflection at any angle, revolutionizing solar energy harvesting, display technology, and stealth applications by achieving properties impossible with conventional thin films.',
+      color: '#10b981',
+    },
+    {
+      icon: '📷',
+      title: 'Photography',
+      short: 'Polarizing filters',
+      tagline: 'Capture the world without glare',
+      description: 'Circular polarizing filters (CPL) are essential tools for photographers to reduce reflections from water, glass, and foliage while enhancing color saturation and contrast. By rotating the filter, photographers can control how much polarized glare is blocked, revealing details hidden beneath reflective surfaces.',
+      connection: 'Light reflecting off non-metallic surfaces at angles near Brewster angle becomes partially polarized. A polarizing filter aligned perpendicular to this polarization blocks the glare while transmitting the unpolarized light from the scene behind the reflection. The filter is most effective when the viewing angle approaches Brewster angle for the reflecting surface.',
+      howItWorks: 'A CPL consists of a linear polarizer followed by a quarter-wave plate. The linear polarizer blocks light polarized in one direction (typically the glare). The quarter-wave plate converts the remaining linearly polarized light to circularly polarized light, ensuring camera autofocus and metering systems work correctly. Rotating the outer ring adjusts which polarization direction is blocked.',
+      stats: [
+        { value: '1-2', label: 'Stops of light reduction', icon: '🌓' },
+        { value: '90°', label: 'Optimal angle from sun for sky darkening', icon: '🌤️' },
+        { value: '35%', label: 'Maximum polarization of clear sky', icon: '🌈' },
+      ],
+      examples: [
+        'Landscape photography with vivid skies',
+        'Architectural shots through windows',
+        'Underwater photography seeing through surface',
+        'Autumn foliage without leaf glare',
+      ],
+      companies: ['B+W', 'Hoya', 'Tiffen', 'Breakthrough Photography', 'NiSi'],
+      futureImpact: 'Computational photography combined with motorized polarizing filters will enable cameras to automatically capture multiple polarization states, allowing post-processing removal of any reflection and even separation of surface and subsurface details for revolutionary imaging capabilities.',
+      color: '#f59e0b',
+    },
+  ];
+
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
     const height = 400;

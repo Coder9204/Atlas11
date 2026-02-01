@@ -523,6 +523,102 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
     );
   }
 
+  // Real-World Applications Data
+  const realWorldApps = [
+    {
+      icon: "📱",
+      title: "Smartphone Electronics",
+      short: "Mobile Devices",
+      tagline: "Powering billions of pocket computers worldwide",
+      description: "Every smartphone contains hundreds of miniaturized circuits that work together to deliver computing power, wireless communication, and sensing capabilities in a device that fits in your palm. These circuits use Ohm's Law principles at microscopic scales, with voltage regulators managing power delivery from the battery to various components like the processor, display, and radios. The intricate circuit designs balance power consumption against performance, enabling all-day battery life while running complex applications.",
+      connection: "Just like our Ohm's Law simulation showed V = IR, smartphone power management circuits constantly adjust voltage and current to different components. When your phone dims the screen to save battery, it's reducing voltage to the display backlight. When the processor runs demanding apps, power circuits increase current flow to deliver more energy.",
+      howItWorks: "Smartphone power management ICs (PMICs) contain dozens of voltage regulators that convert battery voltage (3.7-4.2V) to the specific voltages each component needs. The processor might need 0.8-1.2V, the display 5V, and the camera sensors 2.8V. These regulators use feedback loops based on Ohm's Law to maintain stable voltages as current demands fluctuate. Capacitors and inductors smooth power delivery, while thermal sensors monitor for excessive current that could cause overheating.",
+      stats: [
+        { val: "500+", label: "Circuit components in a typical smartphone" },
+        { val: "3.7V", label: "Standard lithium battery voltage" },
+        { val: "15W", label: "Peak power consumption during gaming" }
+      ],
+      examples: [
+        "Battery management systems preventing overcharge",
+        "Display driver circuits controlling pixel brightness",
+        "RF circuits amplifying cellular signals",
+        "Charging circuits managing fast-charge protocols"
+      ],
+      companies: ["Apple", "Samsung", "Qualcomm", "MediaTek", "Texas Instruments"],
+      futureImpact: "Future smartphones will feature adaptive power circuits that use AI to predict user behavior and pre-configure power states. Gallium nitride (GaN) circuits will enable faster charging in smaller form factors, while energy-harvesting circuits will capture ambient RF energy to extend battery life.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "🚗",
+      title: "Electric Vehicle Power Systems",
+      short: "Automotive",
+      tagline: "Driving the future with high-voltage engineering",
+      description: "Electric vehicles represent the most sophisticated application of circuit principles in consumer products. EV powertrains manage enormous currents—often 300+ amps—flowing from battery packs operating at 400-800 volts. These systems must efficiently convert stored chemical energy to mechanical motion while maintaining safety, managing thermal loads, and optimizing range. Every aspect of EV power electronics relies on precise application of Ohm's Law to minimize energy losses and maximize performance.",
+      connection: "Our series and parallel circuit exploration directly applies to EV battery design. Thousands of individual cells are connected in series to increase voltage (just like our series resistors increased total resistance) and in parallel to increase capacity. The total resistance of the battery pack, including internal resistance of cells and connections, determines how much current can flow and how much energy is lost as heat.",
+      howItWorks: "The battery management system (BMS) monitors voltage, current, and temperature of each cell module using precise measurements based on Ohm's Law. The main inverter converts DC battery power to three-phase AC for the motor, switching massive currents thousands of times per second. Regenerative braking reverses the power flow, using the motor as a generator to recharge the battery. All these systems use power electronics that must handle extreme currents while minimizing I²R losses.",
+      stats: [
+        { val: "800V", label: "High-voltage EV architecture" },
+        { val: "350kW", label: "Peak charging power capability" },
+        { val: "90%+", label: "Powertrain efficiency rating" }
+      ],
+      examples: [
+        "Battery pack thermal management systems",
+        "DC-DC converters for 12V accessory systems",
+        "Motor inverters controlling torque output",
+        "Onboard chargers for AC power conversion"
+      ],
+      companies: ["Tesla", "BYD", "Rivian", "Lucid Motors", "Bosch"],
+      futureImpact: "Next-generation EVs will feature solid-state batteries with lower internal resistance for faster charging and longer range. Vehicle-to-grid (V2G) technology will allow EVs to act as distributed power storage, selling electricity back to the grid. Wireless charging roads will power vehicles while driving using inductive circuit principles.",
+      color: "#10b981"
+    },
+    {
+      icon: "🏠",
+      title: "Home Electrical Wiring",
+      short: "Residential",
+      tagline: "Safely powering modern living",
+      description: "Every home contains an intricate network of electrical circuits that safely deliver power to outlets, lights, and appliances. Residential wiring uses parallel circuit topology so each device operates independently at the standard voltage (120V in North America, 230V in Europe). This design means turning off one light doesn't affect others, and each circuit can be protected by its own breaker. The entire system is engineered around Ohm's Law principles to prevent fires, shocks, and equipment damage.",
+      connection: "Our parallel circuit simulation demonstrates exactly why homes use parallel wiring—each branch gets the full voltage and operates independently. The circuit breakers in your electrical panel act like the current-limiting principles we explored: when too much current flows (I = V/R with too little R), the breaker trips to prevent wire overheating. This is Ohm's Law protecting your home.",
+      howItWorks: "Power enters through the service panel where a main breaker limits total current. Individual branch circuits fan out in parallel, each protected by breakers sized for the wire gauge (14 AWG wire gets 15A breaker, 12 AWG gets 20A). Wire resistance causes small voltage drops over long runs, calculated using V = IR. Ground-fault circuit interrupters (GFCIs) detect when current takes an unintended path (through a person!) by measuring the difference between hot and neutral conductors.",
+      stats: [
+        { val: "200A", label: "Typical home service capacity" },
+        { val: "120/240V", label: "Standard residential voltages" },
+        { val: "14-6 AWG", label: "Common residential wire gauges" }
+      ],
+      examples: [
+        "Circuit breaker panels distributing power",
+        "GFCI outlets protecting wet areas",
+        "Dimmer switches controlling light brightness",
+        "240V circuits for heavy appliances"
+      ],
+      companies: ["Square D", "Eaton", "Siemens", "Leviton", "Lutron"],
+      futureImpact: "Smart home electrical systems will feature intelligent circuit breakers that monitor power usage in real-time, detect electrical faults before they cause fires, and optimize energy consumption. DC microgrids may supplement AC wiring, directly powering LED lights and electronics more efficiently.",
+      color: "#f59e0b"
+    },
+    {
+      icon: "💻",
+      title: "Computer Motherboards",
+      short: "Computing",
+      tagline: "The nervous system of digital intelligence",
+      description: "A computer motherboard is a marvel of circuit engineering, containing dozens of layers of copper traces connecting billions of transistors. These circuits must deliver precise voltages to components operating at wildly different power levels—from the CPU drawing 150+ watts to memory chips needing just a few watts. Signal integrity depends on carefully controlled impedances (resistance to AC signals) to maintain data integrity at gigahertz frequencies. Every trace, via, and plane is designed using principles that extend from basic Ohm's Law.",
+      connection: "The voltage regulator modules (VRMs) on motherboards demonstrate Ohm's Law in action continuously. They convert 12V from the power supply to the 0.8-1.5V the CPU needs, dynamically adjusting current delivery based on processor demand. When your CPU runs intensive tasks, the VRM increases current flow—exactly the V = IR relationship we explored, where the processor's effective resistance drops as it works harder.",
+      howItWorks: "Multi-phase VRMs use parallel power stages to deliver hundreds of amps while minimizing I²R losses in each stage. High-frequency switching (500kHz+) with inductors and capacitors smooth the output voltage. Thermal sensors trigger throttling when circuits exceed safe temperatures. For data signals, controlled-impedance traces (typically 50-100 ohms) prevent reflections and ensure clean signal transmission at multi-gigabit speeds.",
+      stats: [
+        { val: "16+", label: "VRM phases in high-end boards" },
+        { val: "300A+", label: "Peak CPU current delivery" },
+        { val: "10+ Gbps", label: "High-speed signal rates" }
+      ],
+      examples: [
+        "CPU voltage regulator modules (VRMs)",
+        "DDR5 memory power delivery systems",
+        "PCIe slot power management circuits",
+        "USB-C power delivery controllers"
+      ],
+      companies: ["Intel", "AMD", "NVIDIA", "ASUS", "Gigabyte"],
+      futureImpact: "Future motherboards will integrate more power delivery directly into CPU packages, reducing losses and enabling higher performance. Optical interconnects may replace some electrical traces for even higher bandwidth. AI-driven power management will anticipate workloads and pre-configure voltage rails for optimal efficiency.",
+      color: "#8b5cf6"
+    }
+  ];
+
   // Phase Renderers
   function renderHookPhase() {
     return (

@@ -703,6 +703,101 @@ const BallisticPendulumRenderer: React.FC<BallisticPendulumRendererProps> = ({
     { id: 3, title: '🛡️ Armor Testing', description: 'Ballistic armor is tested by measuring how it absorbs and spreads impact momentum. The goal is to stop bullets without transferring too much force to the wearer.', insight: 'Modern body armor uses multiple layers that deform, extending the collision time and reducing peak force.' },
   ];
 
+  const realWorldApps = [
+    {
+      icon: '🔫',
+      title: 'Bullet Velocity Measurement',
+      short: 'Forensic Ballistics',
+      tagline: 'Where Physics Solves Crimes',
+      description: 'Forensic scientists use ballistic pendulums and modern chronographs to precisely measure bullet velocities. This critical data helps reconstruct crime scenes, match bullets to weapons, and determine shooting distances with scientific accuracy.',
+      connection: 'The ballistic pendulum was the original method for measuring bullet velocity - by measuring how high the pendulum swings after catching a bullet, scientists could calculate the projectile\'s speed using conservation of momentum.',
+      howItWorks: 'When a bullet embeds in the pendulum block, momentum is conserved (mv = (m+M)V). The combined mass then swings upward, converting kinetic energy to potential energy. By measuring the swing height, we work backward to find the original bullet velocity: v = ((m+M)/m) × √(2gh).',
+      stats: [
+        { value: '99.9%', label: 'Accuracy in forensic labs', icon: '🎯' },
+        { value: '1740', label: 'Year ballistic pendulum invented', icon: '📅' },
+        { value: '4000+', label: 'Feet per second (high-velocity rounds)', icon: '💨' }
+      ],
+      examples: [
+        'Crime scene bullet velocity reconstruction',
+        'Ammunition quality control testing',
+        'Firearm performance certification',
+        'Historical weapon analysis in museums'
+      ],
+      companies: ['FBI Laboratory', 'ATF Forensics', 'Hornady', 'Federal Premium', 'SAAMI'],
+      futureImpact: 'AI-powered ballistic analysis will enable real-time crime scene reconstruction, automatically matching bullets to weapons from databases of millions of samples.',
+      color: '#ef4444'
+    },
+    {
+      icon: '🚗',
+      title: 'Crash Test Analysis',
+      short: 'Automotive Safety',
+      tagline: 'Engineering That Saves Lives',
+      description: 'Automotive engineers use momentum transfer principles to design vehicles that protect occupants during collisions. Crash test analysis relies on the same physics as the ballistic pendulum to understand how energy dissipates during impact.',
+      connection: 'Like a bullet embedding in a pendulum block, a car crash is an inelastic collision where momentum is conserved but kinetic energy is deliberately converted to deformation energy, protecting passengers.',
+      howItWorks: 'During a crash, the vehicle\'s crumple zones absorb energy through controlled deformation. Engineers measure the momentum before and after impact to calculate energy absorption. The longer the collision time (crumple distance), the lower the peak force on occupants: F = Δp/Δt.',
+      stats: [
+        { value: '40%', label: 'Reduction in fatalities since 1990', icon: '📉' },
+        { value: '35mph', label: 'Standard frontal crash test speed', icon: '🏎️' },
+        { value: '150ms', label: 'Typical collision duration', icon: '⏱️' }
+      ],
+      examples: [
+        'NCAP 5-star safety rating tests',
+        'Side-impact barrier testing',
+        'Pedestrian collision analysis',
+        'Airbag deployment timing calibration'
+      ],
+      companies: ['NHTSA', 'Euro NCAP', 'IIHS', 'Tesla Safety', 'Volvo Cars'],
+      futureImpact: 'Autonomous vehicles will use predictive crash algorithms to dynamically adjust crumple zone stiffness milliseconds before unavoidable collisions, optimizing energy absorption for specific impact scenarios.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '⚾',
+      title: 'Sports Impact Measurement',
+      short: 'Equipment Testing',
+      tagline: 'The Science Behind the Sweet Spot',
+      description: 'Sports equipment manufacturers use momentum transfer analysis to optimize bats, clubs, helmets, and protective gear. Understanding how energy transfers during impact leads to better performance and safer equipment.',
+      connection: 'When a bat hits a ball, it\'s a collision where momentum is transferred. The "coefficient of restitution" determines how much energy returns to the ball - similar to how a ballistic pendulum measures energy loss in inelastic collisions.',
+      howItWorks: 'Engineers measure the incoming and outgoing velocities of balls hitting equipment to calculate momentum transfer efficiency. For helmets, they measure how much impact energy is absorbed versus transmitted to the head, using accelerometers and force sensors.',
+      stats: [
+        { value: '110mph', label: 'Baseball exit velocity (pro)', icon: '⚡' },
+        { value: '0.546', label: 'Baseball coefficient of restitution', icon: '🔢' },
+        { value: '1000g', label: 'Peak g-force helmet must absorb', icon: '🛡️' }
+      ],
+      examples: [
+        'Baseball bat sweet spot optimization',
+        'Golf club face impact testing',
+        'Football helmet safety certification',
+        'Tennis racket string tension analysis'
+      ],
+      companies: ['Louisville Slugger', 'Titleist', 'Riddell', 'Wilson Sporting', 'HEAD'],
+      futureImpact: 'Smart equipment with embedded sensors will provide real-time momentum transfer data to athletes, optimizing technique and preventing injuries through instant feedback.',
+      color: '#22c55e'
+    },
+    {
+      icon: '🛡️',
+      title: 'Armor Testing',
+      short: 'Ballistic Protection',
+      tagline: 'Stopping Power Meets Physics',
+      description: 'Ballistic armor is rigorously tested using principles identical to the ballistic pendulum. Engineers must ensure armor stops projectiles while spreading the momentum over time and area to prevent blunt force trauma.',
+      connection: 'Body armor works by making the bullet-armor collision as inelastic as possible - absorbing and spreading the bullet\'s momentum rather than letting it penetrate. This is exactly the physics of a bullet embedding in a pendulum block.',
+      howItWorks: 'When a bullet hits armor, the goal is to extend the collision time (Δt) to reduce peak force (F = Δp/Δt). Multiple layers deform progressively, each absorbing energy. Clay backing measures backface deformation to ensure the wearer survives even when the armor stops the bullet.',
+      stats: [
+        { value: '44mm', label: 'Max allowed backface deformation', icon: '📏' },
+        { value: 'NIJ IV', label: 'Highest protection level (armor-piercing)', icon: '🎖️' },
+        { value: '7.62mm', label: 'Standard rifle round test caliber', icon: '🔫' }
+      ],
+      examples: [
+        'Military body armor certification',
+        'Police vest ballistic testing',
+        'Vehicle armor plating validation',
+        'Spacecraft micrometeorite shielding'
+      ],
+      companies: ['DuPont Kevlar', 'Safariland', 'Point Blank', 'Hardwire LLC', 'BAE Systems'],
+      futureImpact: 'Liquid armor using shear-thickening fluids will provide flexible protection that instantly hardens on impact, revolutionizing both military and civilian protective equipment.',
+      color: '#8b5cf6'
+    }
+  ];
+
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
       {showButton && (

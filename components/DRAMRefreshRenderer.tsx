@@ -207,6 +207,101 @@ const TRANSFER_APPLICATIONS = [
   },
 ];
 
+const realWorldApps = [
+  {
+    icon: "☁️",
+    title: "Data Center Memory",
+    short: "Cloud Computing",
+    tagline: "Powering the cloud with persistent memory",
+    description: "Hyperscale data centers running cloud services rely on massive DRAM arrays to store active workloads for millions of users simultaneously. Each server contains hundreds of gigabytes of DDR5 ECC memory that must maintain data integrity 24/7/365 while consuming minimal power. The refresh challenge becomes critical at scale—a single data center may have petabytes of DRAM all requiring continuous refresh cycles.",
+    connection: "Just like our simulation showed charge leaking from capacitors, data center DRAM faces the same physics. The difference is scale—instead of 8 cells, we're talking about trillions of capacitors per server, all leaking simultaneously. ECC memory adds extra bits to detect and correct the inevitable single-bit errors from charge loss, cosmic rays, and electrical noise.",
+    howItWorks: "Server DRAM uses registered DIMMs (RDIMMs) with a buffer chip that re-drives signals for reliability across long memory traces. Each DIMM contains multiple ranks of memory chips, each chip containing billions of capacitor cells. The memory controller schedules refresh commands across all ranks, staggering them to maintain bandwidth for compute operations. Temperature sensors adjust refresh rates dynamically—hotter servers refresh more frequently to compensate for accelerated charge leakage.",
+    stats: [
+      { val: "512 GB", label: "RAM per server typical" },
+      { val: "15-40%", label: "DRAM power from refresh" },
+      { val: "99.999%", label: "Required uptime SLA" }
+    ],
+    examples: [
+      "AWS EC2 instances with up to 24 TB RAM",
+      "Google Cloud in-memory databases",
+      "Azure Redis Cache clusters",
+      "Meta's social graph caching layer"
+    ],
+    companies: ["Amazon AWS", "Google Cloud", "Microsoft Azure", "Meta", "Oracle"],
+    futureImpact: "Future data centers will adopt CXL (Compute Express Link) memory pooling, allowing flexible allocation of DRAM across servers. Persistent memory technologies like Intel Optane and emerging CXL-attached DRAM will blur the line between memory and storage, while AI-driven memory management will predict access patterns to optimize refresh scheduling and reduce power consumption by up to 30%.",
+    color: "#3b82f6"
+  },
+  {
+    icon: "📱",
+    title: "Smartphone RAM",
+    short: "Mobile Devices",
+    tagline: "Maximum performance from minimum power",
+    description: "Modern smartphones pack 8-16 GB of LPDDR5X memory into a space smaller than a postage stamp, delivering desktop-class performance while sipping battery power. The memory must instantly wake from deep sleep states to handle notifications, maintain app state across dozens of background applications, and sustain high bandwidth for gaming and camera processing—all while maximizing battery life.",
+    connection: "Our temperature slider demonstrated how heat accelerates charge leakage. In a smartphone, the memory sits millimeters from a hot processor, and the device can go from a cold pocket to a sun-baked car dashboard. LPDDR memory uses the same refresh physics we explored, but with sophisticated power-saving modes that would cause data loss in standard DRAM.",
+    howItWorks: "LPDDR (Low Power DDR) memory operates at lower voltages (0.5V vs 1.1V for DDR5) and includes partial array self-refresh—only memory regions containing active data are refreshed during sleep, while empty regions power down completely. Temperature-compensated self-refresh adjusts timing based on on-die thermal sensors. Deep power-down mode can retain data for extended periods by using the minimum refresh rate the physics allows at the current temperature.",
+    stats: [
+      { val: "16 GB", label: "Flagship phone RAM (2024)" },
+      { val: "0.5V", label: "LPDDR5X operating voltage" },
+      { val: "8533 MT/s", label: "LPDDR5X peak transfer rate" }
+    ],
+    examples: [
+      "iPhone 16 Pro with 8 GB LPDDR5X",
+      "Samsung Galaxy S24 Ultra with 12 GB",
+      "Gaming phones with 16-24 GB RAM",
+      "Foldable devices with dual-screen memory management"
+    ],
+    companies: ["Apple", "Samsung", "Qualcomm", "MediaTek", "SK Hynix"],
+    futureImpact: "Next-generation smartphones will feature on-device AI that requires even more memory bandwidth for large language models and real-time image processing. LPDDR6 will double bandwidth while further reducing power consumption. Memory compression and intelligent app hibernation will allow phones to keep more apps truly instant-resume ready without proportionally increasing power consumption.",
+    color: "#10b981"
+  },
+  {
+    icon: "🎮",
+    title: "Gaming Systems",
+    short: "Consoles and PCs",
+    tagline: "Zero latency for ultimate immersion",
+    description: "Gaming demands the most from memory systems—massive open worlds require streaming gigabytes of textures and geometry, while competitive esports demand sub-millisecond response times. Modern gaming PCs use DDR5 at 6000+ MHz with carefully tuned timings, while consoles employ unified memory architectures where CPU and GPU share the same high-bandwidth pool.",
+    connection: "Our simulation showed how refresh cycles interrupt memory access. In gaming, every microsecond of refresh overhead steals bandwidth from rendering the next frame. GDDR (Graphics DDR) memory on dedicated GPUs uses optimized refresh patterns that hide latency behind parallel memory channels, but the fundamental capacitor physics remains identical to what we explored.",
+    howItWorks: "Gaming systems use aggressive memory timing configurations that push refresh intervals to their limits based on temperature monitoring. Enthusiast overclockers tune primary timings (CAS latency, tRCD, tRP, tRAS) and secondary timings to minimize the delay between requesting data and receiving it. GPU memory controllers interleave refresh commands with texture fetches across multiple channels, ensuring the GPU never stalls waiting for refresh to complete.",
+    stats: [
+      { val: "32 GB", label: "Standard gaming PC RAM" },
+      { val: "24 GB", label: "RTX 4090 GDDR6X VRAM" },
+      { val: "6000+ MHz", label: "Enthusiast DDR5 speeds" }
+    ],
+    examples: [
+      "PlayStation 5 with 16 GB unified GDDR6",
+      "Xbox Series X with 16 GB split GDDR6",
+      "High-end gaming PCs with DDR5-8000+",
+      "Steam Deck with LPDDR5 unified memory"
+    ],
+    companies: ["NVIDIA", "AMD", "Sony", "Microsoft", "Corsair"],
+    futureImpact: "Ray tracing and AI upscaling are driving demand for even more memory bandwidth. GDDR7 will deliver over 1.5 TB/s per GPU, while DDR5 speeds will push past 10,000 MT/s for enthusiasts. Cloud gaming will shift memory demands to data centers, but local gaming will adopt new memory architectures like 3D-stacked HBM in high-end systems for ultimate bandwidth.",
+    color: "#8b5cf6"
+  },
+  {
+    icon: "🚗",
+    title: "Autonomous Vehicle Computing",
+    short: "Automotive AI",
+    tagline: "Safety-critical memory for self-driving futures",
+    description: "Self-driving vehicles process terabytes of sensor data per hour through neural networks that must make life-or-death decisions in milliseconds. Automotive-grade memory must operate reliably from -40°C in arctic winters to +125°C under desert sun, all while meeting stringent automotive safety standards (ISO 26262) that demand error rates approaching zero.",
+    connection: "Our temperature experiment showed leakage doubling with every 10°C increase. Automotive memory faces this challenge at extremes—a cold-soaked car might start at -30°C with minimal leakage, then heat to 85°C during operation, requiring the memory controller to dynamically adjust refresh rates by 8x or more. Any bit flip could cause catastrophic decisions.",
+    howItWorks: "Automotive LPDDR4X/5 memory uses inline ECC that corrects single-bit errors and detects multi-bit errors in real-time. Temperature sensors throughout the memory system continuously report to the memory controller, which adjusts refresh timing using lookup tables calibrated for each temperature range. Redundant memory channels allow the system to continue operating if one channel fails, while built-in self-test (BIST) continuously validates memory integrity during vehicle operation.",
+    stats: [
+      { val: "32+ GB", label: "RAM in L4 autonomous systems" },
+      { val: "-40 to 125°C", label: "Operating temperature range" },
+      { val: "ASIL-D", label: "Highest automotive safety level" }
+    ],
+    examples: [
+      "Tesla Full Self-Driving computer",
+      "Waymo Driver perception system",
+      "NVIDIA DRIVE Orin platform",
+      "Mobileye EyeQ Ultra processors"
+    ],
+    companies: ["Tesla", "Waymo", "NVIDIA", "Mobileye", "Qualcomm"],
+    futureImpact: "Level 5 autonomy will require even more on-vehicle processing power and memory bandwidth for real-time world modeling. Radiation-hardened automotive memory will become standard as cosmic ray soft errors gain attention. Vehicle-to-everything (V2X) communication will demand ultra-low-latency memory access for real-time coordination between vehicles, while over-the-air updates will require safe memory management during software upgrades.",
+    color: "#f59e0b"
+  }
+];
+
 const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   gamePhase,
   onCorrectAnswer,

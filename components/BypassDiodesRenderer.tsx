@@ -600,6 +600,128 @@ const BypassDiodesRenderer: React.FC<BypassDiodesRendererProps> = ({
     },
   ];
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // REAL-WORLD APPLICATIONS DATA
+  // ────────────────────────────────────────────────────────────────────────────
+
+  const realWorldApps = [
+    {
+      icon: '☀️',
+      title: 'Solar Panel Shading Protection',
+      short: 'Photovoltaics',
+      tagline: 'Maximizing energy harvest in partially shaded conditions',
+      description: 'Bypass diodes are fundamental protection devices in photovoltaic systems. When shadows from trees, buildings, or debris fall on solar panels, bypass diodes prevent catastrophic power loss and dangerous hot spots by providing alternative current paths around shaded cell groups.',
+      connection: 'Solar panels use series-connected cells to achieve high voltages, but this makes them vulnerable to partial shading. A single shaded cell can limit current through an entire string of 20+ cells, causing 80-90% power loss. Bypass diodes segment panels into protected groups, limiting losses to just the shaded sections.',
+      howItWorks: 'When a cell is shaded, it cannot generate current but the string tries to push current through it. This reverse-biases the shaded cell, causing it to dissipate power as heat. The bypass diode, connected in parallel with a group of cells, becomes forward-biased when shading occurs, allowing current to flow around the affected cells with only a 0.6-0.7V voltage drop.',
+      stats: [
+        { value: '3-6', label: 'Bypass diodes per panel' },
+        { value: '80%', label: 'Power recovery in partial shade' },
+        { value: '150°C', label: 'Hot spot temp without protection' },
+      ],
+      examples: [
+        'Residential rooftop systems with chimney shadows',
+        'Commercial installations with HVAC equipment shading',
+        'Utility-scale farms with cloud edge shading',
+        'Building-integrated photovoltaics (BIPV)',
+      ],
+      companies: [
+        'SunPower',
+        'First Solar',
+        'Canadian Solar',
+        'JinkoSolar',
+        'LONGi Green Energy',
+      ],
+      futureImpact: 'Next-generation solar panels are integrating cell-level bypass protection and smart junction boxes with monitoring capabilities. Bifacial panels and half-cut cell designs are reducing the impact of partial shading while maintaining bypass diode protection as the last line of defense.',
+      color: '#fbbf24',
+    },
+    {
+      icon: '💡',
+      title: 'LED String Light Reliability',
+      short: 'Lighting',
+      tagline: 'Keeping holiday lights glowing when LEDs fail',
+      description: 'LED string lights use bypass mechanisms to ensure that when one LED fails open-circuit, the entire string does not go dark. This is the modern solution to the classic Christmas light problem where one burned-out bulb killed an entire strand.',
+      connection: 'LEDs in string lights are connected in series to share a voltage source efficiently. However, if one LED fails as an open circuit, it breaks the entire current path. Bypass components provide an alternate route for current, isolating failed LEDs while keeping the rest illuminated.',
+      howItWorks: 'Modern LED strings incorporate shunt resistors or bypass diodes parallel to each LED. When an LED fails open, the full string voltage appears across that position, triggering the bypass element to conduct. Some designs use anti-fuse shunts that permanently short when exposed to high voltage from an open LED.',
+      stats: [
+        { value: '99.9%', label: 'String survival rate with bypass' },
+        { value: '50-100', label: 'LEDs per string typical' },
+        { value: '<1W', label: 'Power waste per bypassed LED' },
+      ],
+      examples: [
+        'Holiday and decorative string lights',
+        'Architectural facade lighting',
+        'Outdoor patio and landscape lighting',
+        'Commercial signage with LED strings',
+      ],
+      companies: [
+        'Philips Lighting',
+        'GE Lighting',
+        'Osram',
+        'Cree',
+      ],
+      futureImpact: 'Smart LED strings with wireless communication and individual LED addressing are emerging. These systems can detect and report failed LEDs while bypass circuits maintain operation. Self-healing LED technology using redundant parallel paths may eventually eliminate the need for traditional bypass protection.',
+      color: '#a855f7',
+    },
+    {
+      icon: '🔋',
+      title: 'Battery Pack Cell Balancing',
+      short: 'Electric Vehicles',
+      tagline: 'Protecting EV batteries from cell mismatch damage',
+      description: 'Electric vehicle battery packs contain thousands of cells connected in series and parallel. Bypass circuitry protects against weak or failed cells that could limit the entire pack capacity or create dangerous thermal runaway conditions.',
+      connection: 'Like solar panels, EV battery packs use series connections to achieve high voltages (400V-800V). Cell manufacturing variations and aging cause capacity mismatches. Without bypass protection, the weakest cell determines pack capacity and can be driven into dangerous over-discharge or reversal conditions.',
+      howItWorks: 'Battery management systems (BMS) use active or passive bypass circuits during charging to balance cell voltages. During discharge, bypass MOSFETs can route current around weak cells. Advanced systems use DC-DC converters to actively transfer energy between cells, maximizing pack capacity while protecting weak cells.',
+      stats: [
+        { value: '7000+', label: 'Cells in Tesla Model S pack' },
+        { value: '10-15%', label: 'Capacity gain from balancing' },
+        { value: '<1mV', label: 'Voltage matching precision' },
+      ],
+      examples: [
+        'Tesla electric vehicle battery packs',
+        'Rivian truck and SUV powertrains',
+        'Electric bus fleet batteries',
+        'Grid-scale energy storage systems',
+      ],
+      companies: [
+        'Tesla',
+        'Panasonic',
+        'CATL',
+        'LG Energy Solution',
+        'BYD',
+      ],
+      futureImpact: 'Solid-state batteries may reduce cell-to-cell variation, but bypass protection will remain critical for safety. AI-powered BMS systems are learning optimal bypass strategies that extend pack life by 20-30%. Wireless BMS architectures are eliminating wiring complexity while maintaining comprehensive cell monitoring.',
+      color: '#22c55e',
+    },
+    {
+      icon: '🛰️',
+      title: 'Satellite Power Systems',
+      short: 'Aerospace',
+      tagline: 'Ensuring spacecraft survival through solar array failures',
+      description: 'Satellites depend on solar arrays for power, operating in harsh space environments where radiation can damage individual cells. Bypass diodes are mission-critical components that prevent single cell failures from cascading into complete power system failure.',
+      connection: 'Space solar arrays face unique challenges: micrometeorite impacts, radiation damage, and extreme temperature cycling. A single damaged cell without bypass protection could disable an entire solar panel string, potentially ending a billion-dollar mission. Redundant bypass paths ensure graceful degradation.',
+      howItWorks: 'Space-grade bypass diodes are radiation-hardened and qualified for extreme temperatures (-150°C to +150°C). They activate when a cell is damaged or shadowed by spacecraft structures. Triple-junction gallium arsenide cells used in space are particularly sensitive to current mismatch, making bypass protection essential.',
+      stats: [
+        { value: '15-20yr', label: 'Mission design life' },
+        { value: '30%', label: 'Efficiency of space solar cells' },
+        { value: '-150/+150°C', label: 'Operating temp range' },
+      ],
+      examples: [
+        'International Space Station solar arrays',
+        'GPS satellite constellation power systems',
+        'James Webb Space Telescope sunshield',
+        'Mars rover solar panels',
+      ],
+      companies: [
+        'Northrop Grumman',
+        'Lockheed Martin',
+        'Airbus Defence and Space',
+        'Boeing',
+        'SpaceX',
+      ],
+      futureImpact: 'Next-generation space solar arrays are using flexible, rollout designs with integrated bypass protection at the cell level. Starlink and other mega-constellations are driving cost reduction in radiation-hardened bypass diodes. Solar electric propulsion systems require even more robust bypass protection for their high-power arrays.',
+      color: '#3b82f6',
+    },
+  ];
+
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;

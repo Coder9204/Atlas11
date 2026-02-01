@@ -235,6 +235,124 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: 'Camera',
+      title: 'Pinhole Photography',
+      short: 'Artistic photography using camera obscura principles',
+      tagline: 'Where patience meets pure optics',
+      description: 'Pinhole photography strips imaging down to its most fundamental form - a tiny aperture creating images without any lens. This minimalist approach produces uniquely ethereal photographs with infinite depth of field, soft focus, and extended exposures that capture the passage of time in a single frame.',
+      connection: 'The camera obscura demonstrates exactly how pinhole cameras work: light from every point in a scene passes through the tiny aperture and projects an inverted image on the opposite surface. The smaller the hole, the sharper but dimmer the image - a tradeoff that pinhole photographers embrace artistically.',
+      howItWorks: 'A pinhole camera is simply a light-tight box with a tiny hole (typically 0.2-0.5mm) on one side and photographic film or paper on the opposite side. Light travels in straight lines through the aperture, creating an inverted image. Because the hole is so small, exposure times range from seconds to hours, creating dreamy motion blur and unique temporal effects.',
+      stats: [
+        { value: '0.3mm', label: 'Optimal pinhole diameter for 35mm format' },
+        { value: 'Infinite', label: 'Depth of field (everything in focus)' },
+        { value: '1-60 min', label: 'Typical exposure times in daylight' },
+      ],
+      examples: [
+        'Long-exposure cityscapes showing ghost-like people movement',
+        'Solargraphs tracking the sun\'s path over 6 months',
+        'Architectural photography with no perspective distortion',
+        'Abstract light paintings using extended exposures',
+      ],
+      companies: [
+        'Zero Image',
+        'Ondu Pinhole',
+        'Ilford',
+        'Harman Technology',
+      ],
+      futureImpact: 'Pinhole photography is experiencing a renaissance as artists seek alternatives to digital perfection. New materials like laser-cut precision pinholes and specialized papers are making the technique more accessible while maintaining its analog charm.',
+      color: '#a855f7',
+    },
+    {
+      icon: 'Sun',
+      title: 'Solar Eclipse Viewing',
+      short: 'Safe observation of solar phenomena',
+      tagline: 'Projecting the cosmos safely',
+      description: 'Pinhole projection provides a completely safe method to observe solar eclipses and sunspots without risking eye damage. By projecting the sun\'s image through a small aperture onto a surface, observers can witness celestial events that would otherwise require expensive specialized equipment.',
+      connection: 'The camera obscura principle enables safe solar viewing by dramatically reducing light intensity. A pinhole only allows a tiny fraction of sunlight through, and the projected image is dim enough to view safely while still showing the eclipse\'s progression with remarkable detail.',
+      howItWorks: 'Sunlight passes through a small hole (a few millimeters) and projects onto a shaded white surface several feet away. The projected image shows the sun\'s disk, and during an eclipse, the moon\'s shadow crossing the sun becomes clearly visible. The larger the projection distance, the bigger and dimmer the image.',
+      stats: [
+        { value: '100%', label: 'Safe - no direct viewing required' },
+        { value: '2-5mm', label: 'Ideal pinhole size for solar projection' },
+        { value: '1m+', label: 'Projection distance for clear viewing' },
+      ],
+      examples: [
+        'Eclipse viewing events at schools and public gatherings',
+        'Colander shadow projections showing multiple eclipse images',
+        'Tree leaf gaps creating natural pinhole projections',
+        'DIY cardboard box eclipse viewers',
+      ],
+      companies: [
+        'NASA Education',
+        'Astronomical Society of the Pacific',
+        'Sky & Telescope',
+        'National Science Foundation',
+        'Exploratorium',
+      ],
+      futureImpact: 'With major solar eclipses generating worldwide interest, pinhole projection remains the most accessible and foolproof method for safe viewing. Educational programs increasingly incorporate this ancient technique to teach optics while experiencing cosmic events.',
+      color: '#f59e0b',
+    },
+    {
+      icon: 'Eye',
+      title: 'Eye and Vision Science',
+      short: 'Understanding and correcting human vision',
+      tagline: 'Your eye is nature\'s camera obscura',
+      description: 'The human eye operates on camera obscura principles - the pupil acts as a variable aperture controlling both light intensity and depth of field. Understanding this connection has revolutionized ophthalmology, optometry, and our treatment of vision disorders from myopia to cataracts.',
+      connection: 'Just like adjusting the pinhole size affects image brightness and sharpness, your pupil dilates and constricts to optimize vision. Squinting works exactly like using a smaller pinhole - it reduces blur from refractive errors by limiting rays to a narrower path, improving focus without corrective lenses.',
+      howItWorks: 'The pupil contracts in bright light (2-4mm) and dilates in darkness (up to 8mm). Smaller pupils increase depth of field and reduce optical aberrations, which is why people with uncorrected vision often squint. Eye doctors use this principle in the "pinhole test" to distinguish refractive errors from other vision problems.',
+      stats: [
+        { value: '2-8mm', label: 'Human pupil diameter range' },
+        { value: '20/20', label: 'Vision improvement possible through pinhole' },
+        { value: '337M', label: 'People worldwide with uncorrected refractive errors' },
+      ],
+      examples: [
+        'Pinhole occluders used in eye exams to test correctable vision',
+        'Pinhole glasses marketed as vision training devices',
+        'Pupil response testing for neurological assessment',
+        'Accommodative research studying focus mechanisms',
+      ],
+      companies: [
+        'Zeiss Vision Care',
+        'Essilor',
+        'Johnson & Johnson Vision',
+        'Alcon',
+        'Bausch + Lomb',
+      ],
+      futureImpact: 'Emerging technologies like small-aperture intraocular lenses use pinhole principles to extend depth of focus for presbyopia patients. Research continues into how aperture-based solutions can reduce dependence on traditional corrective lenses.',
+      color: '#06b6d4',
+    },
+    {
+      icon: 'Building',
+      title: 'Architectural Light Studies',
+      short: 'Designing spaces with natural illumination',
+      tagline: 'Sculpting with light and shadow',
+      description: 'Architects and lighting designers use camera obscura principles to understand how light enters and moves through spaces. From ancient temples aligned with solstices to modern museums with carefully controlled natural lighting, aperture-based design creates spaces that respond dynamically to the sun.',
+      connection: 'The camera obscura teaches how light behaves when passing through openings - lessons directly applicable to windows, skylights, and oculi. Understanding the relationship between aperture size, light intensity, and image formation helps architects create spaces where natural light becomes a design element.',
+      howItWorks: 'By studying how light projects through various apertures, architects can predict illumination patterns throughout the day and seasons. Small openings create dramatic shafts of light, while larger ones provide diffuse illumination. The angle, size, and shape of openings determine how spaces feel from dawn to dusk.',
+      stats: [
+        { value: '70%', label: 'Energy savings possible with optimized daylighting' },
+        { value: '365 days', label: 'Light patterns architects must consider annually' },
+        { value: '3000+ years', label: 'History of aperture-based architectural lighting' },
+      ],
+      examples: [
+        'Pantheon\'s oculus projecting a moving sun disk',
+        'Tadao Ando\'s Church of the Light with its cross aperture',
+        'Museum skylights designed to eliminate direct sun on art',
+        'Sustainable buildings maximizing daylight penetration',
+      ],
+      companies: [
+        'Foster + Partners',
+        'Renzo Piano Building Workshop',
+        'ARUP Lighting',
+        'Daylighting Innovations',
+      ],
+      futureImpact: 'As buildings strive for net-zero energy, intelligent use of natural light becomes crucial. Dynamic apertures, responsive facades, and AI-optimized light wells are emerging from the same principles demonstrated in the camera obscura.',
+      color: '#10b981',
+    },
+  ];
+
   const renderVisualization = (interactive: boolean) => {
     const width = 450;
     const height = 300;

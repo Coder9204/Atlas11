@@ -822,6 +822,102 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
     </div>
   );
 
+  // Real-world applications data for the transfer phase
+  const realWorldApps = [
+    {
+      icon: '⚙️',
+      title: 'Gear Tooth Design',
+      short: 'Mechanical engineering',
+      tagline: 'Smooth power transfer through rolling contact',
+      description: 'Cycloidal gear teeth were the gold standard before involute gears. The mathematical curve ensures that meshing teeth maintain pure rolling contact, eliminating sliding friction and reducing wear. Clock mechanisms and precision instruments still use cycloidal gears for their smooth, quiet operation.',
+      connection: 'When gear teeth are shaped as cycloids, they replicate the rolling-without-slipping motion of a wheel on a surface. Each tooth rolls against its mating tooth rather than sliding, transferring rotational energy with minimal friction losses.',
+      howItWorks: 'The generating circle rolls along the pitch circle to create the tooth profile. The epicycloid forms the addendum (top) and the hypocycloid forms the dedendum (bottom). When two such gears mesh, their teeth engage with pure rolling contact at every point.',
+      stats: [
+        { value: '0%', label: 'Sliding friction at contact' },
+        { value: '98%', label: 'Mechanical efficiency' },
+        { value: '400+', label: 'Years of proven use' },
+      ],
+      examples: [
+        'Mechanical clock escapements',
+        'Roots-type superchargers',
+        'Precision instrument drives',
+        'Historical windmill gearing',
+      ],
+      companies: ['Rolex', 'Eaton', 'Patek Philippe', 'Seiko', 'Hamilton'],
+      futureImpact: 'Modern CNC machining enables complex cycloidal profiles impossible to cut historically. New applications include micro-electromechanical systems (MEMS), surgical robots, and ultra-quiet electric vehicle transmissions where noise reduction is paramount.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🎢',
+      title: 'Roller Coaster Loop Design',
+      short: 'Amusement park engineering',
+      tagline: 'Thrills without the danger of circular loops',
+      description: 'Early roller coasters used circular loops, but riders experienced dangerous G-forces at the bottom and near-weightlessness at the top. The clothoid (a cousin of the cycloid) and cycloid-inspired curves revolutionized coaster design by varying the radius to maintain comfortable, consistent G-forces throughout the loop.',
+      connection: 'The cycloid\'s unique property of isochronism (equal-time descent) inspired engineers to study curves that optimize acceleration. This led to loop shapes where the rate of curvature change matches the physics of circular motion.',
+      howItWorks: 'Instead of a constant radius, modern loops use a teardrop or clothoid shape. The radius is smallest at the top where velocity is lowest, and largest at the bottom where velocity is highest. This keeps centripetal acceleration (and G-forces) roughly constant.',
+      stats: [
+        { value: '3-4 G', label: 'Controlled G-force range' },
+        { value: '60%', label: 'Smaller than circular equivalent' },
+        { value: '0', label: 'Dangerous force spikes' },
+      ],
+      examples: [
+        'Vertical loop inversions',
+        'Cobra roll elements',
+        'Immelmann turns',
+        'Dive loop maneuvers',
+      ],
+      companies: ['Bolliger & Mabillard', 'Intamin', 'Vekoma', 'Mack Rides'],
+      futureImpact: 'Computer simulation now optimizes entire track layouts for the smoothest possible ride. Future coasters may use magnetic propulsion with dynamically adjusted curves, personalizing the experience in real-time based on rider preferences.',
+      color: '#ef4444',
+    },
+    {
+      icon: '📐',
+      title: 'Brachistochrone Problem',
+      short: 'Optimal path mathematics',
+      tagline: 'The fastest path isn\'t always the shortest',
+      description: 'In 1696, Johann Bernoulli challenged mathematicians: What curve between two points allows a ball to roll down in minimum time? The answer stunned everyone - an inverted cycloid. Even when the cycloid path is longer than a straight line, a ball reaches the destination faster due to optimal acceleration.',
+      connection: 'The cycloid emerges naturally from rolling motion. Its arc length, curvature, and gravitational acceleration combine perfectly so that initial steep descent builds speed quickly, then a gentler curve maintains that speed to the endpoint.',
+      howItWorks: 'The cycloid\'s slope is steepest at the start, maximizing early acceleration. As the ball gains speed, the curve flattens to use that velocity efficiently. The mathematics (calculus of variations) proves no other curve is faster.',
+      stats: [
+        { value: '1696', label: 'Year problem was posed' },
+        { value: '5', label: 'Famous mathematicians who solved it' },
+        { value: '∞', label: 'Applications in optimization' },
+      ],
+      examples: [
+        'Ski jump ramp profiles',
+        'Water slide design',
+        'Particle accelerator injection',
+        'Spacecraft trajectory planning',
+      ],
+      companies: ['CERN', 'NASA', 'SpaceX', 'WhiteWater West', 'ProSlide'],
+      futureImpact: 'The brachistochrone principle extends to any optimization problem involving trade-offs between distance and speed. AI path-planning algorithms use these insights for drone delivery routes, autonomous vehicle navigation, and robotic arm movements.',
+      color: '#10b981',
+    },
+    {
+      icon: '🕰️',
+      title: 'Cycloidal Pendulum Clocks',
+      short: 'Precision horology',
+      tagline: 'Perfect timekeeping through mathematical curves',
+      description: 'Christiaan Huygens discovered in 1659 that a pendulum swinging along a cycloidal path has perfectly constant period regardless of amplitude. He invented cycloidal "cheeks" that constrain the pendulum bob to follow this curve, creating the first truly isochronous timepiece.',
+      connection: 'The cycloid is the tautochrone - the curve of equal time. A ball released from any height on an inverted cycloid reaches the bottom in exactly the same time. This property makes cycloid-constrained pendulums immune to amplitude variations.',
+      howItWorks: 'Curved metal plates (cycloidal cheeks) are mounted at the pendulum pivot. As the pendulum swings wide, the string wraps against these cheeks, effectively shortening the pendulum length. This shortening exactly compensates for the longer arc, maintaining constant period.',
+      stats: [
+        { value: '1659', label: 'Year Huygens made discovery' },
+        { value: '±0.5s', label: 'Daily accuracy achieved' },
+        { value: '100%', label: 'Amplitude independence' },
+      ],
+      examples: [
+        'Marine chronometers',
+        'Observatory regulators',
+        'Grandfather clocks',
+        'Scientific timing instruments',
+      ],
+      companies: ['Huygens original', 'John Harrison', 'Breguet', 'Shortt-Synchronome'],
+      futureImpact: 'While quartz and atomic clocks surpassed mechanical accuracy, the principle of using geometry to compensate for physical variations inspires modern engineering. MEMS oscillators and optical lattice clocks use analogous mathematical principles for stability.',
+      color: '#f59e0b',
+    },
+  ];
+
   const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',

@@ -376,6 +376,102 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
     },
   ];
 
+  // Real-world applications with comprehensive details
+  const realWorldApps = [
+    {
+      icon: "🚗",
+      title: "Electric Vehicle Charging",
+      short: "Automotive",
+      tagline: "Powering the future of transportation",
+      description: "Electric vehicle charging systems rely heavily on DC-DC converters to manage power flow between the grid, charging station, and vehicle battery. From fast chargers that deliver 350kW to onboard converters that supply auxiliary systems, DC-DC conversion is the backbone of EV infrastructure.",
+      connection: "Just like our buck converter demonstration, EV charging systems must efficiently step down high voltages from the grid (often 400-800V DC link) to the battery's optimal charging voltage, which varies as the battery fills. The same duty cycle principles apply—adjusting the conversion ratio in real-time to maximize charging speed while protecting battery health.",
+      howItWorks: "Fast chargers first rectify AC grid power to high-voltage DC, then use phase-shifted full-bridge or LLC resonant converters to step down voltage while maintaining galvanic isolation. The charger continuously adjusts output voltage and current based on the battery management system's requests, using closed-loop control to track the battery's changing requirements throughout the charge cycle.",
+      stats: [
+        { val: "350 kW", label: "Peak DC fast charging power" },
+        { val: "95%+", label: "Converter efficiency achieved" },
+        { val: "15 min", label: "Time to 80% charge" }
+      ],
+      examples: [
+        "Tesla Supercharger V3 stations",
+        "CCS DC fast charging networks",
+        "Vehicle-to-grid bidirectional charging",
+        "Onboard DC-DC for 12V auxiliary power"
+      ],
+      companies: ["Tesla", "ChargePoint", "Electrify America", "ABB", "Tritium"],
+      futureImpact: "Next-generation EV charging will feature megawatt-scale charging for trucks and buses, wireless power transfer using resonant converters, and vehicle-to-everything (V2X) bidirectional power flow that turns parked EVs into grid storage assets. Silicon carbide and gallium nitride semiconductors will push efficiencies above 98%.",
+      color: "#ef4444"
+    },
+    {
+      icon: "☀️",
+      title: "Solar Power Systems",
+      short: "Renewable Energy",
+      tagline: "Harvesting sunlight with maximum efficiency",
+      description: "Solar power systems use DC-DC converters at every stage—from maximum power point tracking (MPPT) at the panel level to battery charging and grid integration. These converters extract maximum energy from variable sunlight conditions and route power to where it's needed most.",
+      connection: "Our exploration of how duty cycle affects output voltage directly applies to MPPT. Solar panels have an optimal operating voltage that maximizes power output, but this voltage shifts with temperature and irradiance. MPPT converters continuously adjust their duty cycle—just like we did manually—to keep the panel at its power-maximizing voltage while delivering the right voltage to batteries or inverters.",
+      howItWorks: "MPPT controllers sample panel voltage and current hundreds of times per second, calculating instantaneous power. Using algorithms like Perturb & Observe or Incremental Conductance, they adjust duty cycle to find the voltage that maximizes power. Buck topology is used when panel voltage exceeds battery voltage; boost topology when it's lower. Advanced systems use multi-stage conversion for wide input ranges.",
+      stats: [
+        { val: "30%", label: "More energy vs. PWM charging" },
+        { val: "99%", label: "MPPT tracking efficiency" },
+        { val: "150V+", label: "Typical panel string voltage" }
+      ],
+      examples: [
+        "Rooftop solar with microinverters",
+        "Off-grid battery charging systems",
+        "Solar farms with string optimizers",
+        "Portable solar generators for camping"
+      ],
+      companies: ["Enphase", "SolarEdge", "Victron Energy", "Morningstar", "Outback Power"],
+      futureImpact: "Distributed MPPT at the cell level will squeeze every watt from partially shaded panels. AI-driven predictive algorithms will anticipate cloud cover and pre-position converters for optimal response. Hybrid solar-storage systems will use intelligent DC-DC routing to minimize conversion losses by matching solar output directly to loads when possible.",
+      color: "#f59e0b"
+    },
+    {
+      icon: "🔌",
+      title: "USB Power Delivery",
+      short: "Consumer Electronics",
+      tagline: "One cable to charge them all",
+      description: "USB Power Delivery (USB-PD) revolutionized portable device charging by enabling a single USB-C cable to deliver anywhere from 5V to 48V at up to 240W. This flexibility is achieved through sophisticated DC-DC converters in both chargers and devices that negotiate and regulate power delivery.",
+      connection: "USB-PD chargers are essentially programmable DC-DC converters. When you plug in a device, the charger and device negotiate over the CC pins to agree on a voltage. The charger's internal converter then adjusts its duty cycle to produce exactly that voltage—the same fundamental process we explored, but with digital control and multiple voltage options.",
+      howItWorks: "A USB-PD charger contains a PFC stage that converts AC to high-voltage DC (typically 380-400V), followed by a flyback or LLC resonant converter that steps down to the negotiated output voltage. The PD controller chip manages communication with connected devices, commanding voltage changes and monitoring for faults. Power contracts are renegotiated within milliseconds when devices are connected or disconnected.",
+      stats: [
+        { val: "240W", label: "Maximum USB-PD 3.1 power" },
+        { val: "5-48V", label: "Programmable voltage range" },
+        { val: "93%", label: "Typical charger efficiency" }
+      ],
+      examples: [
+        "Laptop charging via USB-C",
+        "Smartphone fast charging protocols",
+        "Portable power banks with PD",
+        "USB-C monitors with power passthrough"
+      ],
+      companies: ["Anker", "Apple", "Samsung", "Belkin", "RAVPower"],
+      futureImpact: "USB-PD will expand to power everything from kitchen appliances to power tools, creating a universal DC power ecosystem. Gallium nitride (GaN) chargers will shrink to pocket size while delivering laptop-level power. Smart homes will feature USB-PD outlets that negotiate optimal voltage for each device, reducing conversion losses throughout the home.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "🖥️",
+      title: "Data Center Power",
+      short: "Computing Infrastructure",
+      tagline: "Efficiency at hyperscale",
+      description: "Modern data centers are massive DC-DC conversion machines. They take high-voltage AC from the grid, convert it to 48V DC distribution, then use thousands of point-of-load converters to generate the precise voltages each processor, memory chip, and storage device requires—often below 1V for cutting-edge CPUs.",
+      connection: "Data center power architecture directly mirrors our converter principles at massive scale. The 48V bus acts like our input voltage, and point-of-load (POL) converters at each server are buck converters stepping down to CPU voltage—exactly what we simulated. Every fraction of a percent efficiency improvement saves megawatts across a hyperscale facility.",
+      howItWorks: "Grid power enters at medium voltage (13.8kV typical) and is stepped down through transformers. Rectifiers convert AC to 380V DC, which feeds 48V intermediate bus converters (IBCs). This 48V is distributed throughout the facility on busbars, minimizing I²R losses. At each compute node, multi-phase buck converters with interleaving produce sub-1V rails for processors, with extremely fast transient response to handle load steps from software workload changes.",
+      stats: [
+        { val: "1.1", label: "PUE in best-in-class facilities" },
+        { val: "48V", label: "Emerging DC distribution standard" },
+        { val: "500A+", label: "CPU power delivery current" }
+      ],
+      examples: [
+        "Hyperscale cloud computing facilities",
+        "AI training cluster power systems",
+        "Edge computing micro data centers",
+        "Telecom central office power plants"
+      ],
+      companies: ["Google", "Microsoft", "Meta", "Nvidia", "Vicor"],
+      futureImpact: "Data centers will transition fully to DC distribution, eliminating AC/DC conversion losses. AI accelerators requiring 1000W+ per chip will drive innovations in ultra-high-current delivery. On-chip voltage regulators will bring conversion to within millimeters of transistors, and liquid-cooled power stages will enable unprecedented power densities.",
+      color: "#10b981"
+    }
+  ];
+
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;

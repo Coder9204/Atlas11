@@ -442,6 +442,101 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  const realWorldApps = [
+    {
+      icon: '🖥️',
+      title: 'High-Performance CPUs',
+      short: 'Server & Desktop Processors',
+      tagline: 'Scaling core counts beyond monolithic limits',
+      description: 'Modern server and desktop CPUs from AMD and Intel use chiplet architectures to achieve unprecedented core counts and performance. AMD\'s EPYC processors combine multiple compute chiplets with a central I/O die, enabling up to 128 cores in a single socket while maintaining excellent manufacturing yields.',
+      connection: 'The chiplet approach allows CPU designers to overcome the reticle limit and yield challenges that would make monolithic high-core-count processors economically unfeasible. By separating compute and I/O functions onto optimized process nodes, manufacturers achieve better performance per dollar.',
+      howItWorks: 'Compute Core Dies (CCDs) are manufactured on the latest process node for maximum density and efficiency, while the I/O Die (IOD) uses a mature process better suited for analog circuits like memory controllers and PCIe lanes. An advanced packaging substrate connects all chiplets with high-bandwidth, low-latency interconnects.',
+      stats: [
+        { value: '128', label: 'Max Cores', detail: 'AMD EPYC Genoa' },
+        { value: '12', label: 'Chiplets', detail: 'In flagship configs' },
+        { value: '40%', label: 'Cost Savings', detail: 'vs monolithic design' },
+      ],
+      examples: [
+        'AMD EPYC server processors powering cloud data centers',
+        'AMD Ryzen desktop CPUs with 3D V-Cache stacking',
+        'Intel Xeon Scalable with multiple compute tiles',
+        'AMD Threadripper workstation processors with 64+ cores',
+      ],
+      companies: ['AMD', 'Intel', 'IBM', 'Ampere Computing'],
+      futureImpact: 'Future CPUs will push beyond 256 cores per socket using advanced 3D stacking and even more chiplets. UCIe (Universal Chiplet Interconnect Express) standardization will enable mixing chiplets from different vendors, creating a modular CPU ecosystem.',
+      color: '#6366f1',
+    },
+    {
+      icon: '🤖',
+      title: 'AI Accelerators',
+      short: 'Data Center AI Chips',
+      tagline: 'Massive compute for machine learning workloads',
+      description: 'AI training and inference require enormous computational power that exceeds what any single monolithic die can deliver. Chiplet architectures enable AI accelerators to pack thousands of compute cores, massive amounts of high-bandwidth memory, and specialized tensor processing units into cohesive systems.',
+      connection: 'The insatiable demand for AI compute pushes chip designs far beyond the reticle limit. Chiplets allow designers to create effective die sizes of 2000mm² or more by combining multiple compute tiles with HBM memory stacks and high-speed interconnects, all while maintaining manufacturable yields.',
+      howItWorks: 'Multiple compute chiplets containing tensor cores and matrix engines are connected via silicon interposers or embedded multi-die interconnect bridges (EMIB). HBM memory stacks are placed adjacent to compute dies for maximum bandwidth. A base die handles power delivery, I/O, and inter-chiplet communication.',
+      stats: [
+        { value: '47', label: 'Chiplets', detail: 'Intel Ponte Vecchio' },
+        { value: '5', label: 'Process Nodes', detail: 'Mixed in one package' },
+        { value: '2TB/s', label: 'Memory BW', detail: 'HBM3 stacks' },
+      ],
+      examples: [
+        'Intel Ponte Vecchio GPU with 47 active tiles',
+        'AMD Instinct MI300 series with integrated CPU and GPU chiplets',
+        'NVIDIA Grace Hopper superchip combining CPU and GPU',
+        'Google TPU v5 with custom AI accelerator tiles',
+      ],
+      companies: ['NVIDIA', 'AMD', 'Intel', 'Google', 'Amazon'],
+      futureImpact: 'AI accelerators will evolve into wafer-scale systems where entire wafers become single compute units. Optical interconnects between chiplets will enable rack-scale AI computers with unprecedented parallelism for training foundation models.',
+      color: '#22c55e',
+    },
+    {
+      icon: '🎮',
+      title: 'Gaming GPUs',
+      short: 'Graphics Processing Units',
+      tagline: 'Rendering billions of pixels with parallel compute',
+      description: 'Gaming GPUs have grown so large that chiplet architectures are becoming essential for next-generation graphics cards. By splitting the GPU into multiple chiplets, manufacturers can build more powerful graphics processors while keeping yields high and costs manageable.',
+      connection: 'High-end gaming GPUs now approach or exceed the 800mm² reticle limit. Chiplet designs allow graphics cards to scale beyond physical manufacturing constraints while enabling different components (shader cores, ray tracing units, memory controllers) to be optimized on appropriate process nodes.',
+      howItWorks: 'Graphics Compute Dies (GCDs) contain shader arrays and ray tracing hardware on cutting-edge nodes. Memory Cache Dies (MCDs) provide large L3 cache using dense SRAM processes. Infinity Fabric or NVLink interconnects provide the bandwidth needed for seamless multi-chiplet operation with minimal performance penalty.',
+      stats: [
+        { value: '12', label: 'Chiplets', detail: 'AMD RDNA 3 design' },
+        { value: '384MB', label: 'Infinity Cache', detail: 'On MCD chiplets' },
+        { value: '61B', label: 'Transistors', detail: 'Total package' },
+      ],
+      examples: [
+        'AMD Radeon RX 7900 series with GCD and MCD chiplets',
+        'Future NVIDIA GeForce with multi-chip modules',
+        'Intel Arc graphics with disaggregated design',
+        'Console GPUs using chiplet-based custom silicon',
+      ],
+      companies: ['AMD', 'NVIDIA', 'Intel', 'Sony', 'Microsoft'],
+      futureImpact: 'Next-gen gaming GPUs will use 3D-stacked cache for near-compute memory, dramatically improving ray tracing performance. MCM (multi-chip module) designs will enable enthusiast graphics cards with 2x or more the compute power of today\'s flagships.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '🌐',
+      title: 'Networking ASICs',
+      short: 'High-Speed Network Switches',
+      tagline: 'Moving petabits of data with minimal latency',
+      description: 'Modern data center networks require switching chips that handle hundreds of ports at 400Gbps or 800Gbps each. Chiplet architectures enable these massive networking ASICs to scale bandwidth while maintaining the low latency critical for cloud and AI infrastructure.',
+      connection: 'Networking chips face unique challenges: they need massive I/O bandwidth for SerDes (serializer/deserializer) circuits, large packet buffers, and complex switching fabrics. Chiplets allow separation of high-speed analog SerDes (on optimized nodes) from digital logic (on dense nodes), maximizing both performance and yield.',
+      howItWorks: 'SerDes chiplets handle the analog complexity of high-speed signaling at 112Gbps per lane. A central switching fabric chiplet contains the packet processing logic on an advanced digital process. Memory chiplets provide deep packet buffers. All components connect via ultra-low-latency die-to-die interfaces.',
+      stats: [
+        { value: '51.2', label: 'Tbps', detail: 'Switch capacity' },
+        { value: '800G', label: 'Per Port', detail: 'Latest generation' },
+        { value: '<400ns', label: 'Latency', detail: 'Cut-through' },
+      ],
+      examples: [
+        'Broadcom Memory chiplet architectures for Memory chiplets in Tomahawk series',
+        'Cisco Silicon One with modular die design',
+        'Marvell Teralynx switching platforms',
+        'Juniper Express chiplet-based routing silicon',
+      ],
+      companies: ['Broadcom', 'Marvell', 'Cisco', 'Juniper', 'Intel'],
+      futureImpact: 'Networking ASICs will evolve toward co-packaged optics where optical transceivers are integrated directly with the switch chiplet, eliminating electrical interconnect losses. This will enable single switches with 100+ Tbps capacity for AI cluster interconnects.',
+      color: '#a855f7',
+    },
+  ];
+
   const renderVisualization = () => {
     const metrics = calculateMetrics();
 

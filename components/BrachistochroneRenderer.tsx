@@ -619,6 +619,102 @@ const BrachistochroneRenderer: React.FC<BrachistochroneRendererProps> = ({
     { id: 3, title: '⏱️ Isochronous Pendulums', description: 'Huygens designed pendulum clocks with cycloid-shaped cheeks so the period was independent of swing amplitude - perfect timekeeping!', insight: 'The same curve that\'s fastest down is also the curve where time doesn\'t depend on starting position.' },
   ];
 
+  // Real-world applications of brachistochrone/optimal path principles
+  const realWorldApps = [
+    {
+      icon: '🎢',
+      title: 'Roller Coaster Design',
+      short: 'Thrill Engineering',
+      tagline: 'Where Physics Meets Adrenaline',
+      description: 'Roller coaster engineers apply brachistochrone principles to design the perfect first drop. By using a steeper initial descent curve rather than a straight slope, coasters achieve maximum speed faster, delivering the gut-dropping sensation riders crave.',
+      connection: 'The cycloid curve principle shows that a steeper initial drop accelerates riders faster than a straight decline. This counterintuitive insight from 1696 directly shapes how modern thrill rides are engineered for maximum excitement.',
+      howItWorks: 'Engineers model the track as a series of connected curves optimized for speed, g-forces, and safety. The first drop often approximates a clothoid or cycloid curve, ensuring smooth acceleration. Computer simulations test thousands of curve variations to find the optimal path that maximizes velocity while keeping g-forces within safe limits for human physiology.',
+      stats: [
+        { value: '150+ mph', label: 'Top Speed (Formula Rossa)', icon: '💨' },
+        { value: '456 ft', label: 'Tallest Drop (Kingda Ka)', icon: '📏' },
+        { value: '6.3 Gs', label: 'Max G-Force Experienced', icon: '🎯' },
+      ],
+      examples: [
+        'Steel Vengeance at Cedar Point uses optimized drop curves',
+        'Formula Rossa uses launch systems informed by trajectory optimization',
+        'Millennium Force pioneered computer-designed drop profiles',
+        'Fury 325 employs parabolic-cycloid hybrid curves',
+      ],
+      companies: ['Intamin', 'Bolliger & Mabillard', 'Rocky Mountain Construction', 'Mack Rides', 'Vekoma'],
+      futureImpact: 'Future coasters will use AI-driven real-time track adjustment systems that modify curve profiles based on weather conditions and rider weight distribution, creating personalized optimal experiences for each train.',
+      color: '#ef4444',
+    },
+    {
+      icon: '⛷️',
+      title: 'Ski Jump Ramp Design',
+      short: 'Sports Engineering',
+      tagline: 'Launching Athletes into Flight',
+      description: 'Modern ski jump ramps are marvels of physics engineering, designed using calculus of variations to give athletes maximum takeoff speed and optimal launch angles. The ramp profile is the result of solving an optimization problem similar to the brachistochrone.',
+      connection: 'Just as the brachistochrone finds the fastest descent path, ski jump engineers find the curve that converts potential energy into maximum kinetic energy at takeoff while maintaining athlete control and safety.',
+      howItWorks: 'The in-run (approach ramp) follows a carefully calculated curve that balances speed gain with skier stability. The takeoff table angle and curvature are optimized using differential equations. Wind tunnel testing and CFD simulations refine the design. The landing hill profile is equally optimized to reduce impact forces using parabolic curves that match the jumper\'s trajectory.',
+      stats: [
+        { value: '253.5 m', label: 'World Record Jump', icon: '🏆' },
+        { value: '105 km/h', label: 'Typical Takeoff Speed', icon: '🚀' },
+        { value: '5-7°', label: 'Optimal Takeoff Angle', icon: '📐' },
+      ],
+      examples: [
+        'Vikersund ski flying hill with 225m hill size',
+        'Planica Nordic Center hosting World Championships',
+        'Holmenkollen redesigned for 2011 World Championships',
+        'Oberstdorf Four Hills Tournament venue',
+      ],
+      companies: ['FIS (International Ski Federation)', 'Doppelmayr', 'AUT Engineering', 'Nordic Engineering Partners', 'WSC Sports Facilities'],
+      futureImpact: 'Next-generation ski jumps will incorporate adjustable ramp sections with embedded sensors that can modify the approach curve based on real-time wind conditions and individual athlete biomechanics.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🚀',
+      title: 'Optimal Spacecraft Trajectories',
+      short: 'Orbital Mechanics',
+      tagline: 'The Cosmic Brachistochrone',
+      description: 'Space mission planners solve a cosmic version of the brachistochrone problem when designing spacecraft trajectories. Finding the optimal path between planets involves trading off fuel consumption, travel time, and payload mass.',
+      connection: 'The calculus of variations developed to solve the brachistochrone is the same mathematical framework used to compute optimal spacecraft trajectories. Both seek paths that minimize or maximize a quantity (time, fuel, or delta-v) under physical constraints.',
+      howItWorks: 'Mission designers use Pontryagin\'s maximum principle and optimal control theory to compute fuel-optimal or time-optimal trajectories. The Hohmann transfer ellipse is the "brachistochrone of space" for minimum-fuel transfers. Low-thrust missions use continuous optimization to compute spiral trajectories. Gravity assists exploit planetary motion to gain free velocity changes.',
+      stats: [
+        { value: '7 years', label: 'Cassini Saturn Journey', icon: '🪐' },
+        { value: '35%', label: 'Fuel Savings via Gravity Assists', icon: '⛽' },
+        { value: '17 km/s', label: 'Voyager 1 Escape Velocity', icon: '🌟' },
+      ],
+      examples: [
+        'Voyager missions used gravity slingshots for Grand Tour',
+        'Parker Solar Probe uses Venus gravity assists',
+        'JWST traveled to L2 point via optimal trajectory',
+        'Mars missions use Hohmann transfer windows',
+      ],
+      companies: ['NASA JPL', 'SpaceX', 'ESA', 'Blue Origin', 'Rocket Lab'],
+      futureImpact: 'AI-powered trajectory optimization will enable autonomous spacecraft to dynamically recalculate optimal paths in real-time, adapting to unexpected conditions and discovering more efficient routes through the solar system.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '📦',
+      title: 'Automated Material Handling',
+      short: 'Warehouse Logistics',
+      tagline: 'Optimizing Every Movement',
+      description: 'Modern fulfillment centers use brachistochrone-inspired path optimization to move millions of packages daily. Conveyor systems, robotic pickers, and automated guided vehicles all rely on optimal path algorithms to maximize throughput.',
+      connection: 'The principle that the fastest path isn\'t always the shortest directly applies to warehouse logistics. Optimal routing considers acceleration limits, traffic congestion, and system constraints—just like the brachistochrone considers gravity and curve geometry.',
+      howItWorks: 'Warehouse management systems use variants of the traveling salesman problem combined with time-optimal control theory. Conveyor systems are designed with banked curves and optimal inclines. Robotic arms compute minimum-time trajectories using the same calculus of variations. Machine learning continuously refines path predictions based on real-time congestion data.',
+      stats: [
+        { value: '1M+', label: 'Packages/Day (Amazon FC)', icon: '📦' },
+        { value: '400%', label: 'Efficiency Gain with Optimization', icon: '📈' },
+        { value: '< 2 hrs', label: 'Avg Order Fulfillment Time', icon: '⏱️' },
+      ],
+      examples: [
+        'Amazon robotics uses path optimization algorithms',
+        'Ocado automated grocery fulfillment centers',
+        'Alibaba smart warehouses with 1000+ robots',
+        'DHL automated sorting hubs processing 60K/hour',
+      ],
+      companies: ['Amazon Robotics', 'Ocado Technology', 'Dematic', 'KUKA', 'Fetch Robotics'],
+      futureImpact: 'Quantum computing will solve complex multi-robot path optimization problems that are currently intractable, enabling warehouses where thousands of autonomous agents coordinate in real-time for near-perfect efficiency.',
+      color: '#f59e0b',
+    },
+  ];
+
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', background: 'linear-gradient(to top, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))', borderTop: '1px solid rgba(148, 163, 184, 0.2)', zIndex: 1000 }}>
       {showButton && (

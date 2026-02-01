@@ -1651,6 +1651,127 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, gamePhase, o
     </div>
   );
 
+  // ============================================================================
+  // REAL-WORLD APPLICATIONS DATA
+  // Comprehensive applications showcasing buoyancy principles in action
+  // ============================================================================
+  const realWorldApps = [
+    {
+      icon: '🛥️',
+      title: 'Submarine Ballast Systems',
+      short: 'Naval Engineering',
+      tagline: 'Mastering depth through controlled buoyancy',
+      description: 'Submarines achieve precise depth control by manipulating their buoyancy through ballast tanks. By filling tanks with seawater, the submarine becomes heavier and descends. By forcing water out with compressed air, it becomes lighter and ascends. This elegant application of Archimedes\' principle allows submarines to hover at any depth, transition between surface and submerged operations, and perform emergency surfacing maneuvers.',
+      connection: 'The ballast system directly applies the buoyancy equation F_b = ρ_fluid × V × g. By changing the submarine\'s total mass while keeping volume constant, operators shift between positive buoyancy (floating), neutral buoyancy (hovering), and negative buoyancy (sinking). Fine-tuning with trim tanks allows for precise attitude control.',
+      howItWorks: 'Main ballast tanks (MBT) handle large buoyancy changes for diving/surfacing. Variable ballast tanks (VBT) provide fine depth control. Trim tanks adjust fore-aft balance. Compressed air stored in flasks can rapidly evacuate ballast for emergency surfacing. Modern submarines also use pump-jet propulsion and hydroplanes for dynamic depth control during movement.',
+      stats: [
+        { value: '600m+', label: 'Operating Depth' },
+        { value: '240 days', label: 'Submerged Duration' },
+        { value: '99.7%', label: 'Buoyancy Precision' }
+      ],
+      examples: [
+        'Virginia-class attack submarines use advanced ballast systems for stealth operations',
+        'Research submersibles like Alvin reach 4,500m depths with precise buoyancy control',
+        'Nuclear submarines maintain neutral buoyancy while stationary for months',
+        'Rescue submarines adjust buoyancy to mate with distressed vessels'
+      ],
+      companies: [
+        'General Dynamics Electric Boat',
+        'BAE Systems Submarines',
+        'ThyssenKrupp Marine Systems',
+        'Naval Group'
+      ],
+      futureImpact: 'Next-generation submarines will feature automated buoyancy management systems using AI to optimize depth control, reduce noise signatures, and improve energy efficiency. Biomimetic designs inspired by fish swim bladders promise even more precise and silent depth adjustment.',
+      color: '#06B6D4'
+    },
+    {
+      icon: '🎈',
+      title: 'Hot Air Balloons',
+      short: 'Aviation',
+      tagline: 'Riding the atmosphere through thermal buoyancy',
+      description: 'Hot air balloons demonstrate buoyancy in a gaseous medium - the atmosphere. By heating air inside the envelope to approximately 100°C, its density drops to about 0.95 kg/m³ compared to ambient air at 1.2 kg/m³. This density difference creates an upward buoyant force. A typical balloon envelope of 2,800 m³ can generate enough lift to carry 600+ kg, including passengers, basket, and fuel.',
+      connection: 'The same buoyancy principle applies: F_b = ρ_air × V × g. Hot air is less dense than cold air because heating causes gas molecules to move faster and spread apart. The weight of displaced cool air exceeds the weight of hot air inside, creating net upward force. Pilots control altitude by adjusting burner output.',
+      howItWorks: 'Propane burners heat air inside the envelope, decreasing its density. Opening the parachute valve at the top releases hot air, allowing cooling and descent. Pilots use natural wind patterns at different altitudes for directional control. Morning flights preferred for stable atmospheric conditions and predictable thermal behavior.',
+      stats: [
+        { value: '2,800 m³', label: 'Typical Envelope Volume' },
+        { value: '100°C', label: 'Operating Air Temp' },
+        { value: '600 kg', label: 'Lifting Capacity' }
+      ],
+      examples: [
+        'Tourist balloon rides over Cappadocia carry passengers using thermal buoyancy',
+        'Scientific balloons reach stratosphere heights of 40+ km for research',
+        'Balloon festivals demonstrate precise buoyancy control in formation flights',
+        'Long-distance balloon races cross continents using altitude-based wind navigation'
+      ],
+      companies: [
+        'Cameron Balloons',
+        'Lindstrand Technologies',
+        'Ultramagic',
+        'Kubicek Balloons',
+        'Aerostar International'
+      ],
+      futureImpact: 'Solar-powered hot air balloons using transparent envelopes are being developed for sustainable tourism. High-altitude pseudo-satellites (HAPS) use buoyancy principles to maintain position in the stratosphere for telecommunications and Earth observation.',
+      color: '#F59E0B'
+    },
+    {
+      icon: '🧪',
+      title: 'Hydrometer Density Measurement',
+      short: 'Chemistry',
+      tagline: 'Precision measurement through equilibrium buoyancy',
+      description: 'Hydrometers are elegant instruments that measure liquid density by exploiting buoyancy equilibrium. A weighted glass tube floats at different depths depending on fluid density - sinking deeper in less dense liquids and riding higher in denser ones. The scale on the stem directly reads density or related measurements like specific gravity, alcohol content, or sugar concentration.',
+      connection: 'At equilibrium, buoyant force exactly equals the hydrometer\'s weight: ρ_liquid × V_submerged × g = m_hydrometer × g. Since the hydrometer\'s mass is constant, the submerged volume inversely relates to liquid density. More dense liquid means less volume submerged, so the instrument floats higher.',
+      howItWorks: 'The hydrometer\'s weighted bulb provides stability and ensures it floats upright. The narrow stem amplifies small density differences into readable scale movements. Specialized hydrometers are calibrated for specific applications - saccharometers for sugar content, alcoholmeters for ethanol percentage, lactometers for milk quality.',
+      stats: [
+        { value: '0.001', label: 'Density Resolution' },
+        { value: '±0.1%', label: 'Measurement Accuracy' },
+        { value: '3000+ yrs', label: 'Technology Age' }
+      ],
+      examples: [
+        'Winemakers measure sugar content to predict alcohol levels during fermentation',
+        'Battery technicians check electrolyte density to assess charge state',
+        'Dairy inspectors verify milk hasn\'t been diluted with water',
+        'Petroleum engineers measure crude oil API gravity for classification'
+      ],
+      companies: [
+        'Thermo Fisher Scientific',
+        'Anton Paar',
+        'METTLER TOLEDO',
+        'Brannan Thermometers'
+      ],
+      futureImpact: 'Digital density meters using oscillating U-tube technology offer higher precision than traditional hydrometers. Integration with IoT enables real-time density monitoring in industrial processes, while microfluidic devices bring hydrometer principles to lab-on-a-chip applications.',
+      color: '#8B5CF6'
+    },
+    {
+      icon: '🦺',
+      title: 'Life Jackets and Flotation Devices',
+      short: 'Safety Equipment',
+      tagline: 'Engineering survival through applied buoyancy',
+      description: 'Life jackets save lives by dramatically reducing the wearer\'s effective density below that of water. Closed-cell foam or inflatable chambers filled with air (density ~0.03 kg/L) combine with the human body (density ~1.06 kg/L) to create an average density well below water\'s 1.0 kg/L. This guarantees flotation and, in advanced designs, automatically orients an unconscious person face-up.',
+      connection: 'The combined system floats when average density < water density. A 70 kg person with 10 L of foam (mass ~0.3 kg) has average density = 70.3 kg / (66 + 10) L ≈ 0.92 kg/L. Since 0.92 < 1.0, the person floats. The buoyant force is distributed to keep airways above water.',
+      howItWorks: 'Inherently buoyant jackets use closed-cell foam that cannot absorb water. Inflatable jackets use CO2 cartridges triggered manually or automatically by water contact. Type ratings indicate buoyancy force: Type I (150+ N) for offshore, Type II (100 N) for nearshore, Type III (100 N) for conscious swimmers. Placement of flotation material determines self-righting capability.',
+      stats: [
+        { value: '150 N', label: 'Offshore Buoyancy Rating' },
+        { value: '35 lbs', label: 'Minimum Buoyancy Force' },
+        { value: '< 5 sec', label: 'Self-Righting Time' }
+      ],
+      examples: [
+        'Offshore workers wear auto-inflating jackets with integrated harnesses',
+        'Pilots use survival vests combining flotation with emergency equipment',
+        'Children\'s swim aids use graduated buoyancy for learning to swim',
+        'Military personnel use tactical flotation devices compatible with equipment'
+      ],
+      companies: [
+        'Survitec Group',
+        'Mustang Survival',
+        'Spinlock',
+        'Stearns',
+        'Kent Sporting Goods'
+      ],
+      futureImpact: 'Smart life jackets with GPS, AIS beacons, and biometric sensors are becoming standard. Research into thermally-activated inflation and self-deploying designs promises to save more lives. Sustainable materials are replacing petroleum-based foams in next-generation flotation devices.',
+      color: '#10B981'
+    }
+  ];
+
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();

@@ -328,6 +328,101 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  const realWorldApps = [
+    {
+      icon: '💻',
+      title: 'High-Speed Processors',
+      short: 'CPU Clock Trees',
+      tagline: 'The heartbeat of modern computing',
+      description: 'Modern CPUs running at 5+ GHz require clock signals to reach billions of transistors within picoseconds of each other. Clock tree synthesis is one of the most critical steps in chip design, using H-tree topologies and matched buffer chains to minimize skew across the entire die.',
+      connection: 'Just like our simulation shows, real processors face the speed-of-light limit. A 20mm die at 5 GHz has a clock period of only 200ps, but light in silicon takes about 235ps to cross the diagonal. Engineers use hierarchical clock domains and careful buffer placement to manage this fundamental constraint.',
+      howItWorks: 'Clock tree synthesis tools automatically insert buffers to balance delays. The H-tree structure ensures equal wire length from the PLL to every flip-flop. Modern chips also use mesh clock networks where redundant paths provide multiple routes for the clock signal, averaging out local variations.',
+      stats: [
+        { value: '5+ GHz', label: 'Modern CPU frequencies' },
+        { value: '<10ps', label: 'Skew tolerance target' },
+        { value: '40%', label: 'Power from clock network' }
+      ],
+      examples: [
+        'Intel Alder Lake uses hybrid clock domains for P-cores and E-cores',
+        'Apple M-series chips have independent clock islands for GPU clusters',
+        'AMD Zen 4 uses mesh clock distribution for low skew',
+        'ARM Cortex designs include built-in clock gating for power savings'
+      ],
+      companies: ['Intel', 'AMD', 'Apple', 'ARM', 'Qualcomm'],
+      futureImpact: 'As chips approach 3nm and beyond, clock distribution becomes even more challenging. Future designs will likely use optical clock distribution, on-chip resonators, or fully asynchronous architectures to overcome the fundamental limits of electrical signal propagation.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🌐',
+      title: 'Data Center Synchronization',
+      short: 'Network Timing',
+      tagline: 'Keeping the cloud in perfect time',
+      description: 'Data centers must synchronize thousands of servers to coordinate distributed transactions, ensure cache coherency, and maintain accurate timestamps. Precision Time Protocol (PTP) can achieve sub-microsecond synchronization across entire facilities, critical for financial transactions and distributed databases.',
+      connection: 'The clock skew challenges on a chip scale up to building-wide networks. Just as different corners of a CPU see the clock at different times, different racks in a data center experience varying network delays. The same principles of careful path matching and hierarchical distribution apply.',
+      howItWorks: 'PTP uses a master-slave hierarchy where grandmaster clocks (often GPS-synchronized) distribute time through boundary clocks to end devices. Hardware timestamping at each network interface eliminates software jitter. White Rabbit technology extends PTP to sub-nanosecond accuracy using synchronous Ethernet.',
+      stats: [
+        { value: '<1 us', label: 'PTP synchronization accuracy' },
+        { value: '<100 ns', label: 'White Rabbit precision' },
+        { value: '10,000+', label: 'Servers synchronized per cluster' }
+      ],
+      examples: [
+        'Google Spanner uses TrueTime API with GPS and atomic clocks',
+        'Stock exchanges require nanosecond timestamps for trade ordering',
+        'AWS Time Sync Service provides microsecond accuracy to instances',
+        '5G networks use precise timing for handoff coordination'
+      ],
+      companies: ['Google', 'Amazon AWS', 'Microsoft Azure', 'Cisco', 'Meinberg'],
+      futureImpact: 'Quantum computing and distributed quantum networks will require even tighter synchronization. Future data centers may use optical atomic clocks and quantum-entangled timing distribution to achieve femtosecond-level synchronization across continental distances.',
+      color: '#10b981'
+    },
+    {
+      icon: '📡',
+      title: '5G Base Stations',
+      short: 'Telecom Timing',
+      tagline: 'Precision timing enables next-gen wireless',
+      description: '5G networks require unprecedented timing precision for features like beamforming, massive MIMO, and carrier aggregation. Base stations must synchronize their transmissions to within nanoseconds to prevent interference and enable seamless handoffs between cells.',
+      connection: 'Each antenna element in a 5G massive MIMO array needs precisely timed signals, similar to flip-flops on a chip needing synchronized clock edges. Phase coherence across 64 or more antenna elements requires managing picosecond-level timing differences.',
+      howItWorks: 'Base stations use GNSS receivers for absolute time reference, combined with IEEE 1588 PTP for backhaul synchronization. Fronthaul connections to remote radio heads use enhanced Common Public Radio Interface (eCPRI) with strict timing requirements. Local oscillators are disciplined to maintain holdover during GPS outages.',
+      stats: [
+        { value: '±130 ns', label: 'Phase sync requirement' },
+        { value: '64-256', label: 'MIMO antenna elements' },
+        { value: '100 MHz', label: 'Carrier bandwidth' }
+      ],
+      examples: [
+        'Massive MIMO requires phase-coherent signals across antenna arrays',
+        'Time Division Duplex relies on precise up/downlink switching',
+        'Carrier aggregation combines signals that must be time-aligned',
+        'Network slicing needs synchronized resource allocation'
+      ],
+      companies: ['Ericsson', 'Nokia', 'Huawei', 'Samsung Networks', 'Qualcomm'],
+      futureImpact: '6G networks will push timing requirements even further, with terahertz frequencies requiring femtosecond synchronization. Satellite-terrestrial integration will need global timing coordination, potentially using quantum-secure time distribution.',
+      color: '#8b5cf6'
+    },
+    {
+      icon: '📈',
+      title: 'Financial Trading Systems',
+      short: 'Low-Latency Timing',
+      tagline: 'Where nanoseconds mean millions',
+      description: 'High-frequency trading systems compete on timing at the nanosecond level. Accurate timestamps are legally required for trade ordering, and firms spend millions minimizing latency between exchanges. Clock synchronization accuracy directly translates to trading edge.',
+      connection: 'Just as clock skew on a chip can cause data errors, timing uncertainty in trading can cause regulatory violations or missed opportunities. The same principles of measuring and minimizing propagation delays apply, but across network distances.',
+      howItWorks: 'Trading firms use GPS-disciplined atomic clocks at each location, with nanosecond-accurate timestamping hardware. Custom FPGA-based systems minimize processing latency. Some firms use microwave links between exchanges for lower latency than fiber, as microwaves travel closer to the speed of light in air versus glass.',
+      stats: [
+        { value: '<10 ns', label: 'Timestamp accuracy required' },
+        { value: '84 us', label: 'Chicago-NJ microwave latency' },
+        { value: '$14M/ns', label: 'Value of 1ns advantage' }
+      ],
+      examples: [
+        'MiFID II regulations require microsecond-accurate trade timestamps',
+        'Co-location places servers physically next to exchange matching engines',
+        'Microwave networks shave microseconds off fiber routes',
+        'FPGA trading systems process market data in nanoseconds'
+      ],
+      companies: ['Citadel Securities', 'Jump Trading', 'Virtu Financial', 'Two Sigma', 'Jane Street'],
+      futureImpact: 'As markets become faster, timing advantages shrink. Future systems may use quantum synchronization for unhackable timestamps, and regulators may mandate synchronized global market clocks to ensure fairness across geographic locations.',
+      color: '#f59e0b'
+    }
+  ];
+
   const renderVisualization = () => {
     const metrics = calculateClockMetrics();
     const width = 700;

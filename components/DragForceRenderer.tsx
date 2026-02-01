@@ -620,6 +620,102 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     }
   ];
 
+  // Real-world applications of drag force principles
+  const realWorldApps = [
+    {
+      icon: '🚗',
+      title: 'Aerodynamic Vehicle Design',
+      short: 'Automotive drag reduction',
+      tagline: 'Engineering Fuel Efficiency Through Airflow',
+      description: 'Modern vehicles are sculpted in wind tunnels to minimize drag coefficients. Every curve, vent, and surface is optimized to reduce air resistance, directly improving fuel economy and performance at highway speeds.',
+      connection: 'The drag equation F = ½ρv²CdA is the foundation of automotive aerodynamics. Engineers work to minimize both the drag coefficient (Cd) through streamlined shapes and frontal area (A) through compact designs.',
+      howItWorks: 'Designers use computational fluid dynamics (CFD) and wind tunnel testing to visualize airflow around vehicles. They smooth body panels, add underbody covers, optimize mirror shapes, and design rear diffusers to reduce turbulent wake formation.',
+      stats: [
+        { value: '0.20-0.25', label: 'Best car Cd values', icon: '💨' },
+        { value: '5-10%', label: 'Fuel savings per 10% drag reduction', icon: '⛽' },
+        { value: '$50B+', label: 'Annual automotive aero R&D', icon: '📊' }
+      ],
+      examples: [
+        'Tesla Model S achieves Cd of 0.208, among the lowest for production cars',
+        'Active grille shutters close at highway speeds to reduce drag',
+        'Wheel designs now include aerodynamic covers to smooth airflow',
+        'Boat-tail rear designs reduce the low-pressure wake zone'
+      ],
+      companies: ['Tesla', 'Mercedes-Benz', 'Porsche', 'BMW', 'Lucid Motors'],
+      futureImpact: 'Electric vehicles are pushing aerodynamic boundaries further since drag directly impacts range. Active aerodynamic elements that adjust based on speed are becoming standard.',
+      color: colors.success
+    },
+    {
+      icon: '🪂',
+      title: 'Parachute Engineering',
+      short: 'Controlled drag deployment',
+      tagline: 'Maximizing Air Resistance for Safe Descent',
+      description: 'Parachutes are precision-engineered drag devices that harness air resistance to slow descent from terminal velocity speeds. Modern designs balance stability, control, and reliable deployment under extreme conditions.',
+      connection: 'While vehicles minimize drag, parachutes maximize it. The massive canopy surface area (A) and high drag coefficient (Cd) create enough force to balance gravitational weight, achieving safe terminal velocities.',
+      howItWorks: 'When deployed, the canopy inflates and presents a large cross-sectional area to the airflow. Air molecules impact the fabric, creating pressure drag. Vents and slots in the canopy provide stability and steering control.',
+      stats: [
+        { value: '~1.5', label: 'Typical parachute Cd', icon: '🎯' },
+        { value: '200→15 mph', label: 'Speed reduction', icon: '⬇️' },
+        { value: '99.97%', label: 'Modern reliability rate', icon: '✅' }
+      ],
+      examples: [
+        'Military paratroopers use round canopies for vertical descent stability',
+        'Sport skydivers use ram-air rectangular chutes for maneuverability',
+        'Drogue chutes slow supersonic vehicles before main chute deployment',
+        'Mars rovers used parachutes despite thin atmosphere requiring enormous sizes'
+      ],
+      companies: ['Airborne Systems', 'Safran Aerosystems', 'Zodiac Aerospace', 'Performance Designs'],
+      futureImpact: 'Advanced materials like ultra-high-molecular-weight polyethylene enable lighter, stronger canopies. Steerable cargo parachutes with GPS guidance can land supplies within meters of targets.',
+      color: colors.primary
+    },
+    {
+      icon: '🏊',
+      title: 'Competitive Swimming',
+      short: 'Hydrodynamic body positioning',
+      tagline: 'Minimizing Drag in Elite Aquatics',
+      description: 'Olympic swimmers shave milliseconds by reducing drag through body position, technique, and equipment. Water is 800x denser than air, making drag reduction critical for competitive performance.',
+      connection: 'The same drag equation applies in water with higher density (ρ). Swimmers minimize frontal area (A) by streamlining their bodies and reduce drag coefficient (Cd) through smooth, efficient strokes.',
+      howItWorks: 'Swimmers adopt streamlined positions with arms extended overhead and body horizontal. Tight-fitting suits reduce surface friction. Underwater dolphin kicks exploit the reduced wave drag below the surface.',
+      stats: [
+        { value: '800x', label: 'Water vs air density', icon: '💧' },
+        { value: '90%+', label: 'Effort fighting drag', icon: '💪' },
+        { value: '0.1 sec', label: 'Typical winning margins', icon: '⏱️' }
+      ],
+      examples: [
+        'Swimmers shave body hair to reduce surface friction drag',
+        'Tech suits compress the body for a more streamlined profile',
+        'Underwater phases after turns minimize wave drag at the surface',
+        'Head position changes can alter drag by 10% or more'
+      ],
+      companies: ['Speedo', 'Arena', 'TYR Sport', 'FINA (governing body)'],
+      futureImpact: 'Biomechanical analysis using AI and motion capture helps swimmers optimize stroke mechanics. Future suits may incorporate micro-textures inspired by sharkskin to reduce turbulent drag.',
+      color: colors.secondary
+    },
+    {
+      icon: '🌬️',
+      title: 'Wind Turbine Blades',
+      short: 'Aerodynamic energy capture',
+      tagline: 'Harnessing Wind Through Blade Design',
+      description: 'Wind turbine blades are airfoils designed to convert wind energy into rotation. Engineers carefully balance lift and drag forces to maximize energy capture while ensuring structural integrity in variable conditions.',
+      connection: 'While drag is usually undesirable, turbine blades use controlled drag and lift together. The blade shape creates pressure differences that generate lift, while minimizing parasitic drag that would waste energy.',
+      howItWorks: 'Blades are twisted along their length because tip speeds differ from root speeds. Airfoil profiles vary from thick near the hub (for strength) to thin at tips (for efficiency). Pitch control adjusts blade angle as wind speed changes.',
+      stats: [
+        { value: '100+ m', label: 'Modern blade length', icon: '📏' },
+        { value: '45-50%', label: 'Max efficiency (Betz limit: 59%)', icon: '⚡' },
+        { value: '200+ mph', label: 'Tip speeds achieved', icon: '🌀' }
+      ],
+      examples: [
+        'Serrated trailing edges reduce noise from turbulent vortices',
+        'Vortex generators on blade surfaces improve efficiency in variable winds',
+        'Blade icing detection prevents dangerous imbalances and drag increases',
+        'Offshore turbines use larger blades due to consistent wind conditions'
+      ],
+      companies: ['Vestas', 'Siemens Gamesa', 'GE Renewable Energy', 'Nordex', 'Enercon'],
+      futureImpact: 'Flexible blades that bend in high winds, recyclable composite materials, and AI-controlled pitch systems are advancing turbine efficiency while reducing costs toward grid parity.',
+      color: colors.terminal
+    }
+  ];
+
   const renderPhaseContent = () => {
     switch (phase) {
       // ========== HOOK PHASE ==========

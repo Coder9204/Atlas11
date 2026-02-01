@@ -617,6 +617,102 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
     );
   }
 
+  // Real-World Applications Data
+  const realWorldApps = [
+    {
+      icon: "🌪️",
+      title: "Weather Systems and Climate",
+      short: "Meteorology",
+      tagline: "The engine that drives global weather patterns",
+      description: "Atmospheric convection is the primary mechanism driving weather systems across the globe. When the sun heats Earth's surface unevenly—land warms faster than water, dark surfaces absorb more heat than light ones—the air above these regions heats up, expands, becomes less dense, and rises. This creates low-pressure zones that draw in cooler, denser air from surrounding areas, generating winds. The rising warm air eventually cools at altitude, releases moisture as precipitation, and descends elsewhere, completing the convection cycle. This process creates everything from gentle sea breezes to massive hurricane systems spanning hundreds of kilometers.",
+      connection: "Just like our simulation where heated particles rise and cooler ones sink, atmospheric convection creates vertical circulation cells. The temperature differential between Earth's equator and poles drives global wind patterns, while local temperature differences create regional weather phenomena like thunderstorms and monsoons.",
+      howItWorks: "Solar radiation heats Earth's surface unevenly. Hot air rises, creating low pressure zones. Cooler air rushes in horizontally (wind) to replace it. Rising air cools adiabatically, water vapor condenses forming clouds. Cooled air descends in high-pressure zones, completing the cycle. The Coriolis effect from Earth's rotation deflects these flows, creating prevailing wind patterns and rotating storm systems.",
+      stats: [
+        { val: "12 km", label: "Troposphere convection height" },
+        { val: "300 km/h", label: "Max hurricane wind speeds" },
+        { val: "40%", label: "Earth's heat redistribution via convection" }
+      ],
+      examples: [
+        "Hadley cells driving tropical trade winds",
+        "Sea and land breezes in coastal regions",
+        "Thunderstorm formation from summer heating",
+        "Monsoon systems in South Asia"
+      ],
+      companies: ["NOAA", "NASA Earth Science", "European Centre for Medium-Range Weather Forecasts", "The Weather Company", "AccuWeather"],
+      futureImpact: "Climate change is altering global convection patterns, shifting weather systems poleward and intensifying extreme events. Advanced climate models now simulate convection at unprecedented resolution, enabling more accurate long-term predictions. Understanding these changes is crucial for agriculture, disaster preparedness, and urban planning in a warming world.",
+      color: "#06B6D4"
+    },
+    {
+      icon: "🌊",
+      title: "Ocean Circulation",
+      short: "Oceanography",
+      tagline: "The global conveyor belt regulating Earth's climate",
+      description: "Thermohaline circulation—driven by differences in water temperature and salinity—creates a planet-spanning 'conveyor belt' that moves heat around the globe and profoundly influences climate. In polar regions, cold, salty water (made saltier by sea ice formation which excludes salt) becomes extremely dense and sinks to the ocean floor. This deep water flows toward the equator, while warm surface currents like the Gulf Stream flow poleward to replace it. This circulation takes about 1,000 years to complete one full cycle and transports an amount of heat equivalent to a million power plants.",
+      connection: "Our convection simulation demonstrates this principle perfectly: temperature differences create density differences, which drive circulation. In the ocean, the 'heat source' is the tropical sun warming surface waters, while polar regions act as the 'cold sink' where water cools, increases in density, and descends—exactly like the particles in our simulation.",
+      howItWorks: "Warm, less saline water flows poleward near the surface (e.g., Gulf Stream). In the North Atlantic, this water cools and evaporation increases salinity. Cold, salty water becomes dense enough to sink 2-4 km to the ocean floor. Deep water flows slowly toward the equator and into other ocean basins. Upwelling brings nutrients and cold water back to the surface, completing the cycle over centuries.",
+      stats: [
+        { val: "30 Sv", label: "Gulf Stream flow rate (Sverdrups)" },
+        { val: "1000 yrs", label: "Full circulation cycle time" },
+        { val: "5°C", label: "Europe warmer due to Gulf Stream" }
+      ],
+      examples: [
+        "Gulf Stream warming Western Europe",
+        "Antarctic Bottom Water formation",
+        "El Niño oscillation disrupting normal patterns",
+        "Coastal upwelling supporting fisheries"
+      ],
+      companies: ["NOAA Ocean Service", "Woods Hole Oceanographic Institution", "Scripps Institution of Oceanography", "GEOMAR Helmholtz Centre"],
+      futureImpact: "Climate scientists warn that melting polar ice could disrupt thermohaline circulation by adding freshwater that prevents dense water formation. A weakened Gulf Stream could paradoxically cool Europe even as global temperatures rise. Monitoring ocean circulation patterns has become critical for predicting climate tipping points and understanding our planet's thermal regulation system.",
+      color: "#3B82F6"
+    },
+    {
+      icon: "💻",
+      title: "Computer Cooling Systems",
+      short: "Electronics Engineering",
+      tagline: "Keeping processors cool through fluid dynamics",
+      description: "Modern computer processors generate tremendous heat—up to 250 watts in high-performance CPUs—concentrated in an area smaller than a postage stamp. Without effective cooling, temperatures would quickly exceed safe limits, causing thermal throttling, system instability, or permanent damage. Convection-based cooling systems, from simple heatsinks with fans to sophisticated liquid cooling loops, use the principle that heated fluid naturally rises and carries heat away. This allows continuous heat removal without requiring the fluid to be actively pumped in some designs, making convection a fundamental principle in thermal management.",
+      connection: "Our simulation shows how heated particles gain kinetic energy, spread apart, and rise while cooler, denser particles sink. In a heatsink, metal fins conduct heat from the CPU into the surrounding air. The heated air rises by natural convection, drawing cooler air in from below. Adding a fan forces this convection, dramatically increasing heat transfer rates.",
+      howItWorks: "Heat conducts from the processor through thermal paste to a metal heatsink base. The heatsink's extended fins increase surface area for air contact. Natural convection causes heated air to rise between fins. Fans add forced convection, moving air at 1-3 m/s across fin surfaces. In liquid cooling, water or coolant absorbs heat, flows to a radiator where convection transfers heat to air, then returns cooled to the CPU block.",
+      stats: [
+        { val: "250W", label: "Max TDP in high-end CPUs" },
+        { val: "95°C", label: "Typical CPU thermal limit" },
+        { val: "10-20x", label: "Forced vs natural convection improvement" }
+      ],
+      examples: [
+        "Tower heatsinks in desktop computers",
+        "All-in-one liquid coolers for gaming PCs",
+        "Passive convection cooling in fanless designs",
+        "Data center hot/cold aisle configurations"
+      ],
+      companies: ["Noctua", "Corsair", "NZXT", "CoolerMaster", "EKWB"],
+      futureImpact: "As processors become more powerful and compact, innovative cooling solutions are emerging. Two-phase immersion cooling submerges entire servers in dielectric fluid that boils at low temperatures, using phase-change convection for extreme efficiency. 3D-printed microstructured heatsinks optimize convection patterns, while AI-controlled fans dynamically adjust airflow based on predictive thermal models.",
+      color: "#8B5CF6"
+    },
+    {
+      icon: "🌋",
+      title: "Mantle Convection and Plate Tectonics",
+      short: "Geology",
+      tagline: "The slow churning that shapes continents",
+      description: "Deep beneath Earth's surface, the mantle—a 2,900 km thick layer of hot rock—flows like an extremely viscous fluid over geological timescales. Radioactive decay and residual heat from Earth's formation create temperature differences of over 3,000°C between the core-mantle boundary and the surface. This drives convection cells that slowly circulate mantle material, taking hundreds of millions of years to complete. These convection currents are the driving force behind plate tectonics: they drag continental and oceanic plates, creating mid-ocean ridges where plates spread apart and subduction zones where they collide.",
+      connection: "Our simulation demonstrates convection in minutes; Earth's mantle performs the same process over millions of years. Hot material rises at mid-ocean ridges (like heated particles rising from our heat source), spreads laterally while cooling, then descends at subduction zones (like cooled particles sinking). The same physics applies regardless of timescale.",
+      howItWorks: "Heat from Earth's core and radioactive decay warms the lower mantle. Hot, less dense rock rises in plumes toward the lithosphere. Rising material spreads horizontally, pushing tectonic plates. Rock cools near the surface, becomes denser, and eventually descends at subduction zones. Sinking slabs pull plates, adding to convection-driven plate motion. Complete circulation takes 100-200 million years.",
+      stats: [
+        { val: "1-10 cm/yr", label: "Plate movement speed" },
+        { val: "2900 km", label: "Mantle thickness" },
+        { val: "4000°C", label: "Core-mantle boundary temperature" }
+      ],
+      examples: [
+        "Mid-Atlantic Ridge seafloor spreading",
+        "Pacific Ring of Fire subduction volcanism",
+        "Hawaiian hotspot from mantle plume",
+        "Continental drift over geological time"
+      ],
+      companies: ["USGS", "Geological Society of America", "British Geological Survey", "GeoForschungsZentrum Potsdam"],
+      futureImpact: "Seismic tomography now maps mantle convection in unprecedented detail, revealing plume structures and subducted slabs. Understanding mantle dynamics helps predict volcanic activity, earthquake patterns, and long-term continental configurations. This knowledge is essential for assessing geothermal energy potential and understanding how plate tectonics regulates Earth's carbon cycle and climate over geological timescales.",
+      color: "#EF4444"
+    }
+  ];
+
   // Phase Renderers
   function renderHookPhase() {
     return (

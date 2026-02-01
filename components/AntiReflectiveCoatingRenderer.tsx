@@ -377,6 +377,102 @@ const AntiReflectiveCoatingRenderer: React.FC<AntiReflectiveCoatingRendererProps
     return '#991b1b';
   };
 
+  // Real-world applications of anti-reflective coatings
+  const realWorldApps = [
+    {
+      icon: '👓',
+      title: 'Eyeglasses and Lenses',
+      short: 'Vision Clarity',
+      tagline: 'See the world, not reflections',
+      description: 'Anti-reflective coatings on eyeglasses eliminate distracting reflections that cause eye strain and reduce visual clarity. Modern AR coatings use multiple thin-film layers to minimize reflections across the visible spectrum, making lenses nearly invisible.',
+      connection: 'The same quarter-wave interference principle used in solar cells applies to eyeglass lenses. Multiple coating layers are tuned to cancel reflections at different wavelengths, achieving less than 0.5% reflection compared to 8% for uncoated glass.',
+      howItWorks: 'Eyeglass AR coatings typically use 4-7 alternating layers of high and low refractive index materials (like titanium dioxide and silicon dioxide). Each layer is precisely deposited at quarter-wave thickness for specific wavelengths, creating destructive interference that cancels reflected light across 400-700nm.',
+      stats: [
+        { value: '99.5%', label: 'Light transmission', icon: '💡' },
+        { value: '8x', label: 'Glare reduction', icon: '✨' },
+        { value: '7', label: 'Coating layers typical', icon: '📚' },
+      ],
+      examples: [
+        'Premium prescription glasses',
+        'High-end sunglasses',
+        'Computer glasses for blue light',
+        'Safety goggles and visors',
+      ],
+      companies: ['Zeiss', 'Essilor', 'Hoya', 'Nikon', 'Crizal'],
+      futureImpact: 'Next-generation AR coatings will incorporate self-cleaning hydrophobic properties, blue-light filtering, and adaptive tinting while maintaining superior anti-reflective performance.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '☀️',
+      title: 'Solar Panels',
+      short: 'Energy Efficiency',
+      tagline: 'Capturing more sunlight, generating more power',
+      description: 'Solar cells use silicon nitride AR coatings to reduce reflection from over 30% to under 5%. This single improvement increases power output by 25-30%, making solar energy more economically viable worldwide.',
+      connection: 'Silicon nitride (n≈2.0) is nearly ideal for silicon substrates (n≈3.5) because it approximates the geometric mean √(1×3.5)≈1.87. A 75nm coating creates quarter-wave interference at peak solar wavelengths, dramatically reducing reflection losses.',
+      howItWorks: 'Solar cell AR coatings are deposited using plasma-enhanced chemical vapor deposition (PECVD). The silicon nitride layer serves dual purposes: reducing optical reflection through thin-film interference and passivating surface defects that would otherwise cause electron recombination losses.',
+      stats: [
+        { value: '30%', label: 'Power gain from AR', icon: '⚡' },
+        { value: '75nm', label: 'Optimal coating thickness', icon: '📏' },
+        { value: '<5%', label: 'Reflection with coating', icon: '🎯' },
+      ],
+      examples: [
+        'Rooftop solar installations',
+        'Utility-scale solar farms',
+        'Space satellite solar arrays',
+        'Portable solar chargers',
+      ],
+      companies: ['First Solar', 'SunPower', 'JinkoSolar', 'LONGi', 'Canadian Solar'],
+      futureImpact: 'Advanced multi-layer and nano-textured AR coatings could push solar cell efficiency beyond 30% for single-junction cells, while tandem cells with optimized AR could exceed 40% efficiency.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '📷',
+      title: 'Camera Lenses',
+      short: 'Photography Quality',
+      tagline: 'Crystal clear images, zero ghosting',
+      description: 'Professional camera lenses use sophisticated multi-layer AR coatings to eliminate lens flare, ghosting, and contrast loss. Without AR coatings, each glass-air interface would reflect 4% of light, severely degrading image quality in complex lens systems.',
+      connection: 'Camera lenses with 10-15 glass elements would lose over 50% of light to reflections without AR coatings. Multi-layer thin-film coatings using the same interference principles reduce total reflection to under 0.2%, preserving contrast and preventing ghost images.',
+      howItWorks: 'Modern camera lens coatings use nano-structured surfaces combined with traditional thin-film layers. Technologies like Canon\'s SWC (Subwavelength Structure Coating) create gradient refractive index surfaces that virtually eliminate reflections even at extreme angles of incidence.',
+      stats: [
+        { value: '0.1%', label: 'Reflection per surface', icon: '🔍' },
+        { value: '15+', label: 'Coating layers on premium lenses', icon: '🎨' },
+        { value: '99.9%', label: 'Light transmission achieved', icon: '💫' },
+      ],
+      examples: [
+        'Professional DSLR lenses',
+        'Cinema camera optics',
+        'Smartphone camera modules',
+        'Telescope and microscope optics',
+      ],
+      companies: ['Canon', 'Nikon', 'Sony', 'Zeiss', 'Leica'],
+      futureImpact: 'Nano-imprint AR coatings and metamaterial surfaces will enable even thinner smartphone cameras with superior low-light performance and zero lens flare artifacts.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '📱',
+      title: 'Smartphone Screens',
+      short: 'Display Visibility',
+      tagline: 'Brilliant displays in any light',
+      description: 'Smartphone displays use anti-reflective coatings to remain visible in bright sunlight. AR treatments reduce surface reflections that wash out screen content, improving readability while reducing eye strain during extended use.',
+      connection: 'Display AR coatings must balance reflection reduction with durability and fingerprint resistance. Multi-layer designs minimize reflection while oleophobic top layers repel oils. The interference principles are identical to other AR applications but optimized for touch-screen durability.',
+      howItWorks: 'Smartphone AR coatings combine thin-film interference layers with nano-textured surfaces. Some displays use circular polarizers that block external reflections while passing display light. Advanced coatings integrate anti-fingerprint oleophobic layers without compromising AR performance.',
+      stats: [
+        { value: '50%', label: 'Reflection reduction', icon: '📉' },
+        { value: '2x', label: 'Sunlight readability improvement', icon: '☀️' },
+        { value: '10K', label: 'Touch cycles durability', icon: '👆' },
+      ],
+      examples: [
+        'Flagship smartphone displays',
+        'Tablet screens',
+        'Smartwatch faces',
+        'Automotive touchscreens',
+      ],
+      companies: ['Apple', 'Samsung', 'Corning', 'AGC', 'Schott'],
+      futureImpact: 'Self-healing AR coatings and integrated anti-microbial properties will become standard, while foldable displays will require flexible AR solutions that maintain performance through thousands of fold cycles.',
+      color: '#10b981',
+    },
+  ];
+
   const renderVisualization = () => {
     const width = 700;
     const height = 520;

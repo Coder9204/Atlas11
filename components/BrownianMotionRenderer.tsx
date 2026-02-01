@@ -366,6 +366,102 @@ const BrownianMotionRenderer: React.FC<BrownianMotionRendererProps> = ({
     if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  // Real-world applications of Brownian motion
+  const realWorldApps = [
+    {
+      icon: '💊',
+      title: 'Drug Delivery Nanoparticles',
+      short: 'Nanomedicine',
+      tagline: 'Harnessing Random Motion for Targeted Healing',
+      description: 'Nanoparticles used in drug delivery exploit Brownian motion to diffuse through tissues and reach target cells. Their tiny size means they experience strong random motion, helping them penetrate biological barriers.',
+      connection: 'Just like the jittering particles in this simulation, drug-carrying nanoparticles undergo random walks through the bloodstream and tissues. Their small size amplifies Brownian motion, enhancing tissue penetration.',
+      howItWorks: 'Nanoparticles (10-200nm) are loaded with drugs and injected into the body. Brownian motion helps them diffuse out of blood vessels, through the extracellular matrix, and into cells. Surface coatings control how they interact with the immune system.',
+      stats: [
+        { value: '10-200nm', label: 'Typical particle size', icon: '🔬' },
+        { value: '100x', label: 'Enhanced tumor uptake', icon: '🎯' },
+        { value: '$100B+', label: 'Global market by 2030', icon: '💰' }
+      ],
+      examples: [
+        'Lipid nanoparticles in mRNA COVID vaccines deliver genetic material to cells',
+        'Doxil uses liposomes for targeted cancer chemotherapy',
+        'Gold nanoparticles for photothermal tumor ablation',
+        'Iron oxide nanoparticles for MRI contrast and drug delivery'
+      ],
+      companies: ['Pfizer/BioNTech', 'Moderna', 'Alnylam', 'Bind Therapeutics', 'Arrowhead'],
+      futureImpact: 'Smart nanoparticles that respond to pH, temperature, or enzymes will enable precision medicine with minimal side effects.',
+      color: colors.success
+    },
+    {
+      icon: '📈',
+      title: 'Stock Market Modeling',
+      short: 'Financial Mathematics',
+      tagline: 'Random Walks on Wall Street',
+      description: 'Stock prices are modeled using geometric Brownian motion, treating price changes as random walks. This forms the foundation of modern options pricing and risk management.',
+      connection: 'Just as particles jitter unpredictably due to molecular collisions, stock prices fluctuate due to countless random buy/sell decisions. The same mathematical framework describes both phenomena.',
+      howItWorks: 'The Black-Scholes model assumes stock prices follow geometric Brownian motion: dS = μS dt + σS dW, where dW is a Wiener process (continuous Brownian motion). This allows calculation of option prices and portfolio risk.',
+      stats: [
+        { value: '$1.2Q', label: 'Derivatives market size', icon: '💵' },
+        { value: '1973', label: 'Black-Scholes published', icon: '📅' },
+        { value: '10M+', label: 'Trades/day using models', icon: '📊' }
+      ],
+      examples: [
+        'Options pricing using Black-Scholes-Merton equations',
+        'Monte Carlo simulations for portfolio risk assessment',
+        'Value-at-Risk (VaR) calculations for bank regulations',
+        'High-frequency trading algorithms modeling price movements'
+      ],
+      companies: ['Goldman Sachs', 'Jane Street', 'Citadel', 'Two Sigma'],
+      futureImpact: 'Quantum computing may enable more sophisticated stochastic models, while AI augments traditional Brownian motion frameworks with pattern recognition.',
+      color: colors.warning
+    },
+    {
+      icon: '🔌',
+      title: 'Diffusion in Semiconductors',
+      short: 'Chip Manufacturing',
+      tagline: 'Atomic Random Walks That Power Your Devices',
+      description: 'Semiconductor doping relies on thermal diffusion of impurity atoms, which move through the crystal lattice via Brownian-like random walks. Controlling this process is essential for modern electronics.',
+      connection: 'Dopant atoms in silicon undergo random thermal motion, hopping between lattice sites. This is Brownian motion at the atomic scale - the same physics, just with atoms instead of visible particles.',
+      howItWorks: 'At high temperatures (900-1100°C), dopant atoms like boron or phosphorus diffuse into silicon wafers. The diffusion coefficient D follows the Arrhenius equation. Precise control of time and temperature creates exact concentration profiles.',
+      stats: [
+        { value: '5nm', label: 'Modern transistor size', icon: '📏' },
+        { value: '100B+', label: 'Transistors per chip', icon: '🔢' },
+        { value: '1000°C', label: 'Diffusion temperature', icon: '🌡️' }
+      ],
+      examples: [
+        'Boron and phosphorus doping to create p-n junctions',
+        'Thermal oxidation of silicon for gate insulators',
+        'Copper interconnect formation in advanced chips',
+        'Defect engineering in quantum dot displays'
+      ],
+      companies: ['Intel', 'TSMC', 'Samsung', 'ASML', 'Applied Materials'],
+      futureImpact: 'As chips shrink below 3nm, controlling atomic diffusion becomes critical. New materials and atomic-layer deposition techniques push the boundaries of semiconductor physics.',
+      color: colors.accent
+    },
+    {
+      icon: '🌸',
+      title: 'Pollen Analysis',
+      short: 'Forensics and Archaeology',
+      tagline: 'Ancient Particles Tell Modern Stories',
+      description: 'Palynology (pollen analysis) uses the same particles Robert Brown first observed! Pollen grains preserved in sediments reveal past climates, crime scene locations, and archaeological diets.',
+      connection: 'Robert Brown discovered Brownian motion in 1827 while studying pollen grains in water. Today, those same pollen particles help forensic scientists and archaeologists solve mysteries.',
+      howItWorks: 'Pollen grains have unique shapes that identify plant species. In forensics, pollen on clothing links suspects to crime scenes. In archaeology, sediment pollen profiles reveal ancient vegetation and climate.',
+      stats: [
+        { value: '10-100μm', label: 'Pollen grain size', icon: '🔍' },
+        { value: '10,000yr', label: 'Pollen preservation', icon: '⏳' },
+        { value: '95%', label: 'Species ID accuracy', icon: '✓' }
+      ],
+      examples: [
+        'Forensic palynology linking suspects to burial sites',
+        'Ice core pollen revealing 800,000 years of climate history',
+        'Honey authentication by identifying source flower pollen',
+        'Archaeological diet reconstruction from dental calculus pollen'
+      ],
+      companies: ['FBI Forensic Labs', 'Palynology Research Facility', 'National Ice Core Lab', 'Natural History Museums'],
+      futureImpact: 'AI-powered pollen identification and ancient DNA extraction from pollen are revolutionizing both forensic science and our understanding of prehistoric ecosystems.',
+      color: colors.particle
+    }
+  ];
+
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
     const height = 350;

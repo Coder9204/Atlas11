@@ -1122,6 +1122,105 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
   ];
 
   // ============================================================================
+  // REAL-WORLD APPLICATIONS
+  // ============================================================================
+
+  const realWorldApps = [
+    {
+      icon: "🔋",
+      title: "Regenerative Braking",
+      short: "Electric Vehicles",
+      tagline: "Turning motion into stored energy",
+      description: "Electric vehicles use regenerative braking to capture kinetic energy that would otherwise be lost as heat. When the driver lifts off the accelerator or presses the brake, the electric motor reverses its role and becomes a generator. The moving vehicle's wheels spin the motor, inducing eddy currents in the motor windings that generate electricity. This electricity flows back to the battery, extending driving range by 10-25%. The same principle applies to hybrid vehicles, electric trains, and even some elevators.",
+      connection: "Just like our pendulum slows down when moving through a magnetic field, an electric vehicle slows when its motor is switched to generator mode. The kinetic energy of both systems is converted to electrical energy through electromagnetic induction—our pendulum dissipates it as heat in the metal, while EVs cleverly store it in batteries.",
+      howItWorks: "When regenerative braking is activated, the motor controller switches the drive motor to generator mode. As the wheels turn the motor shaft, the permanent magnets induce changing magnetic flux in the stator windings, creating eddy currents that generate AC electricity. Power electronics convert this to DC and regulate voltage to safely charge the battery. The resistance to turning (back-EMF) creates the braking force, proportional to rotational speed.",
+      stats: [
+        { val: "30%", label: "Energy recovered in city driving" },
+        { val: "70%", label: "Of braking handled regeneratively" },
+        { val: "15-25%", label: "Range extension per charge" }
+      ],
+      examples: [
+        "Tesla one-pedal driving system",
+        "Formula E racing cars with adjustable regen",
+        "Electric trains returning power to the grid",
+        "Hybrid vehicles capturing stop-and-go energy"
+      ],
+      companies: ["Tesla", "BMW", "Rivian", "Toyota", "Porsche"],
+      futureImpact: "Next-generation EVs will feature predictive regenerative braking using AI and GPS to anticipate stops and hills, maximizing energy recovery. Vehicle-to-grid technology will allow parked EVs to sell stored regenerated energy back to the power grid during peak demand, turning cars into mobile power stations.",
+      color: "#22c55e"
+    },
+    {
+      icon: "🚨",
+      title: "Metal Detectors",
+      short: "Security Systems",
+      tagline: "Finding hidden metal without contact",
+      description: "Metal detectors use alternating magnetic fields to detect metallic objects through electromagnetic induction. A transmitter coil generates a changing magnetic field that penetrates materials like clothing, soil, and walls. When this field encounters metal, it induces eddy currents that create a secondary magnetic field detectable by a receiver coil. The strength, phase shift, and frequency response of this secondary field reveal information about the metal's size, depth, conductivity, and magnetic properties.",
+      connection: "Our pendulum demonstrates the same principle in reverse—metal moving through a magnetic field creates eddy currents and braking. Metal detectors flip this: a moving (alternating) magnetic field passes through stationary metal, still creating eddy currents. In both cases, the interaction between conductors and changing magnetic fields is the key physics.",
+      howItWorks: "The detector's transmitter coil creates an oscillating magnetic field (typically 5-25 kHz). When this field passes through metal, it induces circular eddy currents proportional to the metal's conductivity and the field's rate of change. These eddy currents generate their own magnetic field that opposes the original, causing a measurable change in the receiver coil's signal. Signal processing algorithms analyze the response pattern to identify metal type and reject false positives from mineralized soil.",
+      stats: [
+        { val: "99.9%", label: "Detection rate for weapons" },
+        { val: "3m", label: "Detection depth for large objects" },
+        { val: "1000+", label: "People screened per hour" }
+      ],
+      examples: [
+        "Airport security walkthrough detectors",
+        "Archaeological survey equipment",
+        "Landmine and UXO detection systems",
+        "Industrial conveyor contamination sensors"
+      ],
+      companies: ["Garrett", "Minelab", "Fisher Research Labs", "CEIA"],
+      futureImpact: "AI-enhanced metal detectors will distinguish between harmless items and threats with near-perfect accuracy, eliminating most false alarms. Multi-sensor fusion combining eddy current detection with millimeter-wave imaging will enable walk-through screening at normal pace, revolutionizing security checkpoints at airports, stadiums, and public venues.",
+      color: "#ef4444"
+    },
+    {
+      icon: "🍳",
+      title: "Induction Cooktops",
+      short: "Kitchen Appliances",
+      tagline: "Cooking with invisible magnetic heat",
+      description: "Induction cooktops heat cookware directly through electromagnetic induction rather than thermal conduction from a hot surface. A coil beneath the ceramic surface generates a high-frequency alternating magnetic field (20-100 kHz). When ferromagnetic cookware is placed on top, this field induces powerful eddy currents in the pan's base. The electrical resistance of the metal converts these currents into heat, cooking food with remarkable efficiency and precise temperature control.",
+      connection: "Our pendulum converts kinetic energy to heat through eddy current resistance—the same physics powers induction cooking. The pan's base is like our metal plate, except the magnetic field oscillates in place rather than the metal moving through it. In both cases, electrical resistance in eddy current paths generates heat proportional to the field strength and material properties.",
+      howItWorks: "An induction coil creates a rapidly alternating magnetic field. Ferromagnetic pans (iron, steel, certain stainless) concentrate this field and develop strong eddy currents. The pan's electrical resistance converts eddy current energy to heat. Additionally, ferromagnetic materials experience hysteresis heating as magnetic domains repeatedly flip direction. Power is controlled by adjusting field frequency and strength. Because only the pan heats, efficiency reaches 85-90% compared to 40% for gas.",
+      stats: [
+        { val: "90%", label: "Energy efficiency rating" },
+        { val: "50%", label: "Faster than gas cooking" },
+        { val: "1°C", label: "Temperature precision" }
+      ],
+      examples: [
+        "Professional restaurant cooking stations",
+        "Home kitchen cooktop ranges",
+        "Portable induction hot plates",
+        "Industrial food processing equipment"
+      ],
+      companies: ["Miele", "Samsung", "Bosch", "GE Appliances", "Thermador"],
+      futureImpact: "Smart induction cooktops will use sensors and AI to automatically adjust power based on pan contents, preventing boiling over and ensuring perfect results. Wireless power zones will allow pans to be placed anywhere on the surface, with the system automatically detecting cookware position and energizing only the needed coils.",
+      color: "#f59e0b"
+    },
+    {
+      icon: "🔬",
+      title: "Non-Destructive Testing",
+      short: "Quality Control",
+      tagline: "Finding flaws without causing damage",
+      description: "Eddy current testing (ECT) is a non-destructive inspection technique used to detect cracks, corrosion, and material defects in conductive materials without damaging the part. A probe containing a coil generates an alternating magnetic field that induces eddy currents in the test material. Defects like cracks, voids, or material changes disrupt the normal eddy current flow, causing measurable changes in the probe's impedance. This technique inspects aircraft components, pipes, heat exchangers, and precision machinery.",
+      connection: "Our pendulum shows how material properties affect eddy current strength—slits disrupted the currents and reduced braking. NDT uses the same principle: defects in metal disrupt eddy current paths, just like our slits do. By measuring these disruptions, inspectors can find hidden flaws without cutting the material open.",
+      howItWorks: "An ECT probe coil generates an AC magnetic field that induces eddy currents in the test material. These currents flow in closed loops perpendicular to the magnetic field. Defects like cracks create barriers that force currents to detour, changing the current distribution. This alters the magnetic field, which changes the probe coil's impedance. Phase and amplitude analysis reveals defect depth, size, and orientation. Multi-frequency testing can distinguish surface from subsurface flaws.",
+      stats: [
+        { val: "0.1mm", label: "Minimum detectable crack size" },
+        { val: "25mm", label: "Subsurface detection depth" },
+        { val: "100%", label: "Coverage with automated scanning" }
+      ],
+      examples: [
+        "Aircraft fuselage fatigue crack inspection",
+        "Heat exchanger tube wall thickness measurement",
+        "Weld quality verification in pipelines",
+        "Turbine blade coating thickness testing"
+      ],
+      companies: ["Olympus NDT", "Eddyfi Technologies", "GE Inspection", "Zetec"],
+      futureImpact: "AI-powered ECT systems will automatically interpret signals and classify defects in real-time, reducing inspection time by 80%. Flexible array probes conforming to complex geometries will enable rapid scanning of turbine blades, aerospace structures, and additive-manufactured parts with unprecedented detail. Robotic inspection systems will access dangerous or confined spaces autonomously.",
+      color: "#8b5cf6"
+    }
+  ];
+
+  // ============================================================================
   // PHASE RENDERERS
   // ============================================================================
 

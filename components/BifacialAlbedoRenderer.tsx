@@ -366,6 +366,101 @@ const BifacialAlbedoRenderer: React.FC<BifacialAlbedoRendererProps> = ({
     }
   };
 
+  const realWorldApps = [
+    {
+      icon: '🏭',
+      title: 'Utility-Scale Solar Farms',
+      short: 'Ground Optimization',
+      tagline: 'Maximizing Every Photon from the Ground Up',
+      description: 'Large-scale solar installations spanning hundreds of acres use engineered ground surfaces to boost bifacial panel performance. By optimizing albedo beneath panel arrays, utilities can extract 10-15% more energy without adding a single panel.',
+      connection: 'Ground albedo directly determines how much light reflects back to bifacial panel rear surfaces. Higher albedo materials like white gravel or crushed limestone significantly increase the rear-side irradiance, translating to measurable gains in energy production.',
+      howItWorks: 'Utility projects install reflective ground cover materials such as white gravel, crusite limestone, or specialized reflective membranes beneath panel rows. The spacing between rows is optimized to maximize ground illumination while the panel mounting height is raised to increase the view factor from ground to panel rear surface.',
+      stats: [
+        { value: '5-15%', label: 'Additional Energy Yield', icon: '⚡' },
+        { value: '50-60%', label: 'Albedo with White Gravel', icon: '🪨' },
+        { value: '$2-5M', label: 'Added Revenue per 100MW', icon: '💰' },
+      ],
+      examples: [
+        'White limestone gravel installations in desert solar farms',
+        'Reflective membrane deployment between panel rows',
+        'Optimized row spacing for maximum ground illumination',
+        'Bifacial-specific inverter configurations for rear-side gains',
+      ],
+      companies: ['First Solar', 'NextEra Energy', 'Lightsource BP', 'EDF Renewables', 'Canadian Solar'],
+      futureImpact: 'By 2030, over 80% of new utility-scale installations will feature bifacial panels with engineered high-albedo ground surfaces, becoming the industry standard for ground-mount solar.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '🌊',
+      title: 'Floating Solar Installations',
+      short: 'Water Reflection',
+      tagline: 'Harnessing Sunlight on Reservoirs and Lakes',
+      description: 'Floating photovoltaic systems (floatovoltaics) installed on reservoirs, lakes, and water treatment ponds leverage water\'s unique reflective properties. While water has low diffuse albedo, specular reflections at optimal angles boost bifacial performance.',
+      connection: 'Water surfaces create strong specular (mirror-like) reflections at certain sun angles, directing concentrated light to panel rear surfaces. Additionally, the cooling effect of water reduces panel operating temperatures, improving overall efficiency by 3-5%.',
+      howItWorks: 'Bifacial panels are mounted on floating platforms with optimized tilt angles to capture both direct sunlight and water-reflected irradiance. The water\'s thermal mass keeps panels cooler than land-based installations, reducing temperature-related efficiency losses while the wave-induced reflections create dynamic rear-side illumination.',
+      stats: [
+        { value: '8-12%', label: 'Higher Output vs Land', icon: '📈' },
+        { value: '3-5%', label: 'Cooling Efficiency Gain', icon: '❄️' },
+        { value: '2,000+', label: 'Floatovoltaic Projects Worldwide', icon: '🌍' },
+      ],
+      examples: [
+        'Reservoir-based floating arrays in Singapore',
+        'Hydroelectric dam floatovoltaic installations',
+        'Wastewater treatment pond solar covers',
+        'Irrigation canal floating solar systems',
+      ],
+      companies: ['Ciel & Terre', 'Sungrow', 'Trina Solar', 'Ocean Sun', 'Swimsol'],
+      futureImpact: 'Floating solar capacity is projected to reach 60 GW by 2030, with bifacial panels becoming the default choice due to water reflection benefits and superior thermal performance.',
+      color: '#0ea5e9',
+    },
+    {
+      icon: '❄️',
+      title: 'Snow-Covered Regions',
+      short: 'High Albedo Environment',
+      tagline: 'Turning Winter into an Advantage',
+      description: 'Installations in northern latitudes and mountainous regions experience dramatically enhanced bifacial gains during snow-covered months. Fresh snow reflects up to 80-90% of incoming sunlight, creating exceptional rear-side illumination.',
+      connection: 'Snow\'s extremely high albedo (70-90%) provides the maximum possible ground reflection for bifacial panels. This natural high-albedo surface can boost bifacial gains to 25-30%, partially compensating for shorter winter days and lower sun angles.',
+      howItWorks: 'Panels in snow regions are mounted at steeper tilt angles (40-50 degrees) to shed snow from the front surface quickly while still capturing high-albedo reflected light from snow-covered ground. The steep tilt also helps panels self-clean and maintains rear surface exposure to the bright snow surface below.',
+      stats: [
+        { value: '25-30%', label: 'Peak Bifacial Gain on Snow', icon: '📊' },
+        { value: '80-90%', label: 'Fresh Snow Albedo', icon: '⬜' },
+        { value: '40-50°', label: 'Optimal Tilt for Snow Regions', icon: '📐' },
+      ],
+      examples: [
+        'Alpine solar installations in Switzerland and Austria',
+        'Nordic bifacial farms in Norway and Sweden',
+        'Canadian winter-optimized solar arrays',
+        'High-altitude installations in the Rocky Mountains',
+      ],
+      companies: ['Suntech', 'Hanwha Q Cells', 'LONGi Green Energy', 'Jinko Solar', 'Meyer Burger'],
+      futureImpact: 'Nordic and alpine regions are increasingly adopting bifacial technology, with some installations achieving winter production levels that rival summer months thanks to snow-enhanced rear-side gains.',
+      color: '#e0f2fe',
+    },
+    {
+      icon: '🌾',
+      title: 'Agrivoltaics',
+      short: 'Dual Land Use',
+      tagline: 'Growing Crops and Kilowatts Together',
+      description: 'Agrivoltaic systems elevate solar panels high above agricultural land, enabling farming to continue beneath while generating clean energy. The crop type and soil conditions directly influence bifacial performance through varying ground albedo.',
+      connection: 'Different crops and soil types create varying albedo conditions beneath panels. Light-colored crops like wheat (25% albedo) provide better bifacial gains than dark leafy greens (10-15%). Some farmers install reflective tarps between rows, boosting albedo to 60% while still allowing cultivation.',
+      howItWorks: 'Bifacial panels are mounted 3-5 meters above ground on elevated structures, allowing farm equipment to pass underneath. The increased height improves the view factor for rear-side light capture while crops benefit from partial shading that reduces water stress. Seasonal crop rotations create dynamic albedo conditions throughout the year.',
+      stats: [
+        { value: '60-70%', label: 'Land Use Efficiency', icon: '🗺️' },
+        { value: '3-5m', label: 'Typical Mounting Height', icon: '📏' },
+        { value: '20-30%', label: 'Crop Water Savings', icon: '💧' },
+      ],
+      examples: [
+        'Vineyard agrivoltaic installations in France',
+        'Berry farm dual-use systems in Germany',
+        'Sheep grazing beneath elevated panels in Australia',
+        'Vegetable cultivation under bifacial arrays in Japan',
+      ],
+      companies: ['Sun\'Agri', 'Agri-PV', 'BayWa r.e.', 'Enel Green Power', 'Axial Structural Solutions'],
+      futureImpact: 'Agrivoltaics could provide 20% of global solar capacity by 2050, addressing land-use conflicts while bifacial technology maximizes energy harvest from these elevated installations.',
+      color: '#22c55e',
+    },
+  ];
+
   const renderVisualization = (interactive: boolean, showComparison: boolean = false) => {
     const width = 500;
     const height = 420;
