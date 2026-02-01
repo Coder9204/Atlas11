@@ -1136,6 +1136,102 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
     </div>
   );
 
+  // Real-world applications of etch anisotropy
+  const realWorldApps = [
+    {
+      icon: 'Cpu',
+      title: 'FinFET Transistor Fabrication',
+      short: 'Advanced Processors',
+      tagline: 'Sculpting the 3D fins that power modern CPUs',
+      description: 'FinFET (Fin Field-Effect Transistor) technology revolutionized processor design by creating tall, thin silicon fins that wrap the gate around three sides of the channel. This 3D structure provides superior electrostatic control, enabling transistors at 14nm and below. Precise anisotropic etching is essential to create these high-aspect-ratio fins with perfectly vertical sidewalls and uniform dimensions across billions of transistors.',
+      connection: 'The tall, narrow fin structures in FinFETs require extremely precise anisotropic etching. Any lateral etch or undercut would cause fin width variation, leading to transistor mismatch and chip failure. Sidewall passivation during plasma etching ensures fins maintain their designed width from top to bottom, critical for consistent electrical performance.',
+      howItWorks: 'Silicon fins are etched using a hard mask pattern. Deep reactive ion etching (DRIE) with fluorine-based chemistry creates vertical trenches between fins. Sidewall passivation using polymer-forming gases (like CHF3) protects fin sidewalls from lateral attack. The process must achieve aspect ratios of 10:1 or higher while maintaining sub-nanometer dimensional control across 300mm wafers.',
+      stats: [
+        { value: '5nm', label: 'Fin Width' },
+        { value: '50nm', label: 'Fin Height' },
+        { value: '10:1', label: 'Aspect Ratio' },
+      ],
+      examples: [
+        'Apple M-series chips use FinFET architecture for high performance and efficiency',
+        'Intel 10th-12th gen processors employ FinFET for desktop and laptop CPUs',
+        'AMD Ryzen processors leverage FinFET for multi-core performance',
+        'Qualcomm Snapdragon mobile chips use FinFET for power-efficient smartphones',
+      ],
+      companies: ['Intel', 'TSMC', 'Samsung', 'GlobalFoundries', 'Apple'],
+      futureImpact: 'As FinFETs approach physical limits, Gate-All-Around (GAA) nanowire and nanosheet transistors are emerging. These require even more precise anisotropic etching to create suspended channel structures, pushing etch technology to atomic-level precision with aspect ratios exceeding 20:1.',
+      color: '#3b82f6',
+    },
+    {
+      icon: 'Gauge',
+      title: 'MEMS Device Manufacturing',
+      short: 'Sensors',
+      tagline: 'Carving microscopic machines that sense our world',
+      description: 'Micro-Electro-Mechanical Systems (MEMS) are tiny devices that combine mechanical and electrical components on a silicon chip. From accelerometers in smartphones to pressure sensors in cars, MEMS devices require precise 3D structures etched into silicon. The Bosch process, a specialized anisotropic etch technique, enables the high-aspect-ratio trenches and suspended structures that make MEMS possible.',
+      connection: 'MEMS devices require deep trenches with vertical sidewalls to create proof masses, springs, and comb drives. Isotropic etching would create rounded, weak structures. The Bosch process alternates between etching (SF6) and passivation (C4F8) steps, enabling trenches hundreds of microns deep with nearly perfect verticality essential for precise mechanical response.',
+      howItWorks: 'The Bosch deep reactive ion etch (DRIE) process cycles between two steps: (1) an etch step using SF6 plasma that isotropically etches silicon, and (2) a passivation step using C4F8 that deposits a Teflon-like polymer on all surfaces. The next etch step preferentially removes the polymer from horizontal surfaces via ion bombardment, while sidewalls remain protected. This creates a characteristic scalloped but highly vertical profile.',
+      stats: [
+        { value: '500um', label: 'Etch Depth' },
+        { value: '50:1', label: 'Aspect Ratio' },
+        { value: '<1deg', label: 'Sidewall Angle' },
+      ],
+      examples: [
+        'Smartphone accelerometers detect motion and orientation for screen rotation',
+        'Automotive airbag sensors measure sudden deceleration to trigger deployment',
+        'Inkjet printer heads use MEMS nozzles for precise droplet control',
+        'Medical pressure sensors monitor blood pressure and respiratory function',
+      ],
+      companies: ['Bosch', 'STMicroelectronics', 'Texas Instruments', 'InvenSense', 'Analog Devices'],
+      futureImpact: 'Next-generation MEMS are enabling miniaturized LIDAR for autonomous vehicles, implantable medical devices, and environmental sensors for IoT. Advanced etch processes now achieve aspect ratios exceeding 100:1, enabling new device architectures like through-silicon MEMS integration.',
+      color: '#10b981',
+    },
+    {
+      icon: 'HardDrive',
+      title: '3D NAND Flash Memory',
+      short: 'Storage',
+      tagline: 'Stacking memory layers to store more data',
+      description: '3D NAND technology stacks memory cells vertically, dramatically increasing storage density. Modern 3D NAND has over 200 layers, requiring channels and word lines to be etched through alternating oxide and nitride films several microns thick. This extreme high-aspect-ratio etching is among the most challenging processes in semiconductor manufacturing.',
+      connection: 'The channel holes in 3D NAND must be perfectly vertical through 200+ alternating layers. Any taper or bowing would cause cells at different depths to have different characteristics, leading to data errors. Anisotropic etching with careful passivation control maintains vertical profiles through aspect ratios exceeding 60:1, enabling the memory revolution.',
+      howItWorks: 'Channel holes are etched using fluorocarbon-based plasma chemistry (like C4F6/C4F8/O2/Ar). The process must balance high etch rate for productivity with profile control for quality. Ion energy and angular distribution are precisely controlled, while polymer-forming gases passivate sidewalls. As holes get deeper, the process is tuned to prevent tapering (narrowing) and bowing (widening) at depth.',
+      stats: [
+        { value: '200+', label: 'Memory Layers' },
+        { value: '8um', label: 'Channel Depth' },
+        { value: '60:1', label: 'Aspect Ratio' },
+      ],
+      examples: [
+        'Samsung 980 PRO SSDs use 176-layer 3D NAND for fast storage',
+        'iPhone storage chips employ 3D NAND for compact high-capacity memory',
+        'Data center SSDs use 3D NAND for reliable, high-density storage',
+        'USB flash drives leverage 3D NAND for affordable portable storage',
+      ],
+      companies: ['Samsung', 'SK Hynix', 'Micron', 'Kioxia', 'Western Digital'],
+      futureImpact: 'The industry is racing toward 500+ layer 3D NAND, requiring channel holes exceeding 15 microns deep with sub-100nm diameter. New techniques like string stacking (etching and filling in stages) and alternative materials are being developed to overcome the limits of single-step high-aspect-ratio etching.',
+      color: '#f59e0b',
+    },
+    {
+      icon: 'Layers',
+      title: 'Through-Silicon Vias',
+      short: '3D Packaging',
+      tagline: 'Connecting chip stacks with vertical highways',
+      description: 'Through-Silicon Vias (TSVs) are vertical electrical connections that pass completely through a silicon die. They enable 3D chip stacking, where multiple dies are stacked vertically and connected through TSVs, dramatically reducing interconnect length and power consumption. High-performance computing, AI accelerators, and high-bandwidth memory all rely on TSV technology.',
+      connection: 'TSVs must be etched as deep, straight holes through silicon wafers (50-100 microns) that are later filled with copper. Any taper or sidewall roughness increases resistance and reduces reliability. Anisotropic Bosch-style etching creates the vertical, smooth-walled vias essential for reliable electrical connections in 3D-stacked chips.',
+      howItWorks: 'TSV etching uses the Bosch process to create holes typically 5-10 microns in diameter and 50-100 microns deep. After etching, the sidewalls are coated with a dielectric liner for insulation, then a copper seed layer, and finally filled with copper using electroplating. The via bottom must be flat and defect-free to ensure good electrical contact when the wafer is thinned from the backside.',
+      stats: [
+        { value: '100um', label: 'Via Depth' },
+        { value: '10um', label: 'Via Diameter' },
+        { value: '10:1', label: 'Aspect Ratio' },
+      ],
+      examples: [
+        'AMD 3D V-Cache stacks SRAM on top of CPU dies for gaming performance',
+        'HBM (High Bandwidth Memory) stacks DRAM dies for AI accelerators',
+        'Intel Foveros technology stacks logic dies for compact, efficient processors',
+        'Image sensors stack pixel arrays on processing logic for smartphone cameras',
+      ],
+      companies: ['TSMC', 'Intel', 'Samsung', 'AMD', 'SK Hynix'],
+      futureImpact: 'Hybrid bonding and die-to-wafer stacking are enabling ever-finer TSV pitch, approaching 1 micron. This enables chiplet architectures where specialized dies from different processes are integrated into single packages, revolutionizing how processors and AI accelerators are designed and manufactured.',
+      color: '#8b5cf6',
+    },
+  ];
+
   // HOOK PHASE
   if (phase === 'hook') {
     return renderWrapper(

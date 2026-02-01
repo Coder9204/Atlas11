@@ -946,6 +946,105 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     </div>
   );
 
+  // ============================================================================
+  // REAL-WORLD APPLICATIONS DATA
+  // ============================================================================
+
+  const realWorldApps = [
+    {
+      icon: '🧤',
+      title: 'Hand Warmers and Cold Packs',
+      short: 'Consumer Products',
+      tagline: 'Instant Temperature Control in Your Pocket',
+      description: 'Portable heating and cooling products harness the power of endothermic and exothermic reactions to provide on-demand temperature relief. Hand warmers use iron oxidation or supersaturated sodium acetate crystallization to generate heat, while instant cold packs rely on ammonium nitrate dissolution to absorb heat from surroundings.',
+      connection: 'The dissolution processes you explored directly power these products. Cold packs use ammonium nitrate (endothermic dissolution) to cool injuries, while some hand warmers use calcium chloride or sodium acetate (exothermic) to warm hands in cold weather.',
+      howItWorks: 'Cold packs contain water and ammonium nitrate in separate compartments. Squeezing breaks the barrier, initiating endothermic dissolution that absorbs heat. Reusable hand warmers use supersaturated sodium acetate that releases heat when crystallization is triggered by a metal disc.',
+      stats: [
+        { value: '0-5°C', label: 'Cold pack temperature', icon: '❄️' },
+        { value: '54°C', label: 'Hand warmer peak temp', icon: '🔥' },
+        { value: '$2.5B', label: 'Global market size', icon: '📊' }
+      ],
+      examples: [
+        'Instant cold packs for sports injuries use ammonium nitrate dissolution',
+        'Air-activated hand warmers use iron oxidation (slow exothermic reaction)',
+        'Reusable sodium acetate warmers can be recharged by boiling',
+        'Therapeutic hot/cold gel packs for medical treatment'
+      ],
+      companies: ['HotHands', 'Grabber', 'ThermaCare', 'Ace Brand', 'Carex'],
+      futureImpact: 'Advances in phase-change materials are creating longer-lasting, more environmentally friendly heating and cooling products with precise temperature control.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🚀',
+      title: 'Rocket Propulsion',
+      short: 'Aerospace',
+      tagline: 'Harnessing Explosive Exothermic Reactions for Space Travel',
+      description: 'Rocket engines are perhaps the most dramatic application of exothermic reactions. The controlled combustion of propellants releases enormous amounts of energy, converting chemical potential energy into kinetic energy that propels rockets into orbit and beyond.',
+      connection: 'The energy balance principles you learned apply at massive scale in rockets. The net energy released (always highly exothermic) determines thrust. Engineers carefully select propellant combinations to maximize energy release while controlling reaction rates.',
+      howItWorks: 'Fuel and oxidizer combine in the combustion chamber, triggering highly exothermic reactions. The extreme heat (3,000-4,000°C) causes rapid gas expansion, which is directed through the nozzle to produce thrust via Newton\'s third law.',
+      stats: [
+        { value: '3,500°C', label: 'Combustion temperature', icon: '🔥' },
+        { value: '11.2 km/s', label: 'Earth escape velocity', icon: '⚡' },
+        { value: '35 MN', label: 'Saturn V thrust', icon: '💪' }
+      ],
+      examples: [
+        'SpaceX Falcon 9 uses RP-1 kerosene with liquid oxygen',
+        'Space Shuttle main engines burned hydrogen and oxygen',
+        'Solid rocket boosters use aluminum powder with ammonium perchlorate',
+        'Hypergolic propellants ignite on contact for reliable ignition'
+      ],
+      companies: ['SpaceX', 'NASA', 'Blue Origin', 'Rocket Lab', 'Aerojet Rocketdyne'],
+      futureImpact: 'New propellant combinations and advanced cooling techniques are enabling more efficient, reusable rockets that could make space travel routine and affordable.',
+      color: '#f97316'
+    },
+    {
+      icon: '🏭',
+      title: 'Industrial Chemical Processes',
+      short: 'Manufacturing',
+      tagline: 'Controlling Heat in Large-Scale Production',
+      description: 'Industrial chemistry relies heavily on understanding and managing endothermic and exothermic reactions. From ammonia synthesis to polymer production, controlling reaction temperatures is critical for safety, efficiency, and product quality.',
+      connection: 'The dissolution energy balance you observed scales up to industrial processes. Engineers must account for heat released or absorbed to prevent runaway reactions, optimize energy use, and maintain consistent product quality.',
+      howItWorks: 'Industrial reactors use heat exchangers, cooling systems, and precise temperature controls to manage reaction energetics. Exothermic reactions often require cooling to prevent overheating, while endothermic processes need external heat input.',
+      stats: [
+        { value: '150M tons', label: 'Annual ammonia production', icon: '🧪' },
+        { value: '450°C', label: 'Haber process temperature', icon: '🌡️' },
+        { value: '$5T', label: 'Global chemical industry', icon: '💰' }
+      ],
+      examples: [
+        'Haber-Bosch process for ammonia is exothermic but requires high temperature catalyst activation',
+        'Cement production uses endothermic calcination followed by exothermic hydration',
+        'Sulfuric acid manufacturing through exothermic contact process',
+        'Endothermic steam reforming for hydrogen production'
+      ],
+      companies: ['BASF', 'Dow Chemical', 'DuPont', 'LyondellBasell', 'SABIC'],
+      futureImpact: 'Green chemistry initiatives are developing new reaction pathways that operate at lower temperatures, using renewable energy and producing less waste while maintaining industrial efficiency.',
+      color: '#22c55e'
+    },
+    {
+      icon: '👨‍🍳',
+      title: 'Cooking and Food Science',
+      short: 'Culinary',
+      tagline: 'The Chemistry Behind Every Delicious Meal',
+      description: 'Cooking is applied chemistry, with endothermic and exothermic reactions transforming raw ingredients into delicious meals. From caramelization to the Maillard reaction, understanding heat transfer and energy changes is essential to culinary mastery.',
+      connection: 'The temperature changes from dissolution reactions mirror what happens in cooking. Dissolving sugar (slightly endothermic) cools a solution, while the Maillard reaction (exothermic) releases heat that browns food and creates complex flavors.',
+      howItWorks: 'Heat energy drives endothermic reactions like protein denaturation and starch gelatinization, while exothermic reactions like caramelization and oxidation release energy. Chefs control these reactions through temperature, timing, and technique.',
+      stats: [
+        { value: '140-165°C', label: 'Maillard reaction range', icon: '🍳' },
+        { value: '170°C', label: 'Caramelization start', icon: '🍬' },
+        { value: '62°C', label: 'Egg protein coagulation', icon: '🥚' }
+      ],
+      examples: [
+        'Maillard reaction creates the brown crust on seared steaks (exothermic)',
+        'Dissolving salt in ice cream mixture is endothermic, enabling sub-zero freezing',
+        'Caramelization breaks down sugars through endothermic then exothermic steps',
+        'Baking soda reacting with acid releases CO2 (exothermic) for leavening'
+      ],
+      companies: ['Modernist Cuisine', 'ChefSteps', 'Serious Eats', 'Americas Test Kitchen'],
+      futureImpact: 'Molecular gastronomy and precision cooking technologies are giving chefs unprecedented control over chemical reactions, enabling new textures, flavors, and culinary experiences.',
+      color: '#ec4899'
+    }
+  ];
+
   // Render hook phase
   if (phase === 'hook') {
     return (

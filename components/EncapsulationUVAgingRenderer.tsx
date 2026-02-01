@@ -335,6 +335,101 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
     },
   ];
 
+  const realWorldApps = [
+    {
+      icon: 'Sun',
+      title: 'Solar Panel Longevity',
+      short: 'Photovoltaics',
+      tagline: 'Protecting cells for 25+ year warranties',
+      description: 'Solar panel encapsulants must withstand decades of intense UV radiation while maintaining optical clarity. The choice of encapsulant material directly determines whether a panel meets its 25-30 year performance warranty, affecting billions of dollars in solar investments worldwide.',
+      connection: 'This simulation demonstrates exactly how UV photons break polymer chains in encapsulants, causing yellowing that reduces light transmission to solar cells. Understanding degradation kinetics helps engineers select materials that minimize power loss over the panel lifetime.',
+      howItWorks: 'UV photons with energies of 3-4 eV break carbon-carbon and carbon-oxygen bonds in polymer encapsulants. This chain scission creates chromophores (light-absorbing structures) that cause yellowing. The yellowed material absorbs blue light that would otherwise generate electricity, directly reducing power output by 0.3-0.5% per year.',
+      stats: [
+        { value: '25-30', label: 'Year warranties standard for solar panels' },
+        { value: '3-8%', label: 'Power loss from encapsulant yellowing over lifetime' },
+        { value: '$2B+', label: 'Annual global encapsulant market value' },
+      ],
+      examples: [
+        'Utility-scale solar farms selecting POE over EVA for desert installations',
+        'Rooftop panels in tropical climates using UV-stabilized formulations',
+        'Bifacial modules requiring clear encapsulants on both sides',
+        'Building-integrated PV where aesthetics demand minimal yellowing',
+      ],
+      companies: ['First Solar', 'LONGi Green Energy', 'JA Solar', 'Trina Solar', 'Canadian Solar'],
+      futureImpact: 'Next-generation encapsulants using silicone and advanced polyolefins promise 40+ year lifetimes. Combined with bifacial glass-glass construction, these materials will enable solar panels that outlast the buildings they power, fundamentally changing solar project economics.',
+      color: '#f59e0b',
+    },
+    {
+      icon: 'Car',
+      title: 'Automotive Coatings',
+      short: 'Vehicle Durability',
+      tagline: 'Keeping cars looking new for decades',
+      description: 'Automotive clear coats and paints must resist UV degradation to maintain appearance and protect underlying metal from corrosion. The same photodegradation chemistry that yellows solar encapsulants causes automotive finishes to fade, chalk, and crack.',
+      connection: 'The UV degradation model in this simulation applies directly to automotive coatings. Just as encapsulants yellow through chain scission, car paint binders break down under UV exposure. The saturating exponential degradation pattern explains why cars fade quickly at first, then more slowly.',
+      howItWorks: 'Automotive clear coats use acrylic or polyurethane polymers with UV absorbers (like benzotriazoles) and hindered amine light stabilizers (HALS). UV photons are absorbed by stabilizers instead of damaging the polymer. When stabilizers are depleted, the coating rapidly degrades, causing gloss loss, chalking, and eventual cracking.',
+      stats: [
+        { value: '10-15', label: 'Years of UV protection from modern clear coats' },
+        { value: '50%+', label: 'Gloss reduction in unprotected paint after 5 years' },
+        { value: '$8B', label: 'Global automotive coatings market annually' },
+      ],
+      examples: [
+        'Premium vehicles with ceramic-reinforced clear coats for extended protection',
+        'Fleet vehicles in sunny climates requiring frequent recoating',
+        'Classic car restoration using UV-stable basecoat/clearcoat systems',
+        'Electric vehicle batteries with UV-resistant thermal management coatings',
+      ],
+      companies: ['PPG Industries', 'BASF Coatings', 'Axalta', 'Nippon Paint', 'AkzoNobel'],
+      futureImpact: 'Self-healing clear coats using microencapsulated UV stabilizers will automatically replenish protection as it depletes. Combined with hydrophobic nanocoatings, future automotive finishes may maintain showroom appearance for the entire vehicle lifetime.',
+      color: '#3b82f6',
+    },
+    {
+      icon: 'Smartphone',
+      title: 'Outdoor Electronics',
+      short: 'Weatherproofing',
+      tagline: 'Protecting devices from environmental extremes',
+      description: 'Electronic devices deployed outdoors face continuous UV exposure that degrades housings, seals, and optical components. From security cameras to weather stations, UV-resistant encapsulation is critical for reliable long-term operation.',
+      connection: 'This simulation shows how polymer degradation follows predictable kinetics based on material properties and UV dose. Outdoor electronics designers use these same models to select housings and conformal coatings that will protect sensitive components for the required service life.',
+      howItWorks: 'UV radiation degrades polymer housings causing embrittlement and cracking that allows moisture ingress. Optical windows yellow and reduce sensor sensitivity. Conformal coatings on circuit boards break down, exposing copper traces to corrosion. Multi-layer protection strategies combine UV-stable outer shells with moisture barriers.',
+      stats: [
+        { value: '5-20', label: 'Year outdoor service life requirements' },
+        { value: '40-60%', label: 'Device failures linked to environmental exposure' },
+        { value: '$15B', label: 'Outdoor electronics enclosure market' },
+      ],
+      examples: [
+        'Traffic cameras with polycarbonate housings requiring UV stabilization',
+        'Agricultural sensors using silicone potting for decades of field operation',
+        'Telecommunications equipment with UV-resistant fiber optic connectors',
+        'Solar-powered IoT devices combining PV and electronics protection',
+      ],
+      companies: ['Axis Communications', 'Honeywell', 'Bosch Security', 'Texas Instruments', 'Analog Devices'],
+      futureImpact: 'Transparent conducting oxides and graphene-based encapsulants will provide electromagnetic shielding while blocking UV. Self-powered outdoor sensors with integrated energy harvesting will require encapsulation systems lasting 30+ years without maintenance.',
+      color: '#10b981',
+    },
+    {
+      icon: 'Rocket',
+      title: 'Aerospace Materials',
+      short: 'Spacecraft Protection',
+      tagline: 'Surviving the harshest UV environment',
+      description: 'Spacecraft experience UV intensities 30-40% higher than Earth surface, with no atmospheric filtering of damaging short-wavelength UV-C. Thermal control coatings, solar array encapsulants, and optical surfaces must withstand decades of unfiltered solar radiation.',
+      connection: 'The degradation physics in this simulation scale directly to space conditions. Higher UV flux accelerates the same chain scission reactions, but without oxygen the degradation chemistry differs. Space qualification uses accelerated testing based on these fundamental kinetic models.',
+      howItWorks: 'In low Earth orbit, spacecraft receive ~1366 W/m2 of unfiltered solar radiation including UV-C below 280nm. This high-energy UV causes rapid polymer degradation through direct photolysis. Atomic oxygen (abundant in LEO) simultaneously erodes exposed polymers. Protection requires specialized materials like polyimides, fluoropolymers, and inorganic coatings.',
+      stats: [
+        { value: '15-30', label: 'Year design life for geostationary satellites' },
+        { value: '1000x', label: 'More intense UV-C exposure than Earth surface' },
+        { value: '$400B', label: 'Global space economy dependent on material durability' },
+      ],
+      examples: [
+        'International Space Station solar arrays using specialized cover glasses',
+        'Satellite thermal blankets with UV-reflective outer layers',
+        'James Webb Space Telescope sunshield using Kapton polyimide',
+        'Mars rovers with UV-resistant coatings for multi-year surface operations',
+      ],
+      companies: ['NASA', 'SpaceX', 'Northrop Grumman', 'Boeing', 'Lockheed Martin'],
+      futureImpact: 'Lunar and Martian bases will require UV protection for habitats, equipment, and spacesuits. Advanced ceramic-polymer composites and self-healing materials will enable permanent human presence beyond Earth, where replacing degraded components is not an option.',
+      color: '#8b5cf6',
+    },
+  ];
+
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;

@@ -925,6 +925,102 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
     );
   };
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🧠',
+      title: 'Large Language Model Training',
+      short: 'LLM Training',
+      tagline: 'Powering the next generation of AI understanding',
+      description: 'Training massive language models like GPT-4 and Claude requires processing trillions of tokens across thousands of GPUs over weeks or months. Energy efficiency during training directly impacts the feasibility and cost of creating new AI capabilities.',
+      connection: 'Energy per token during training determines how many tokens can be processed within power and budget constraints. A 10% improvement in energy efficiency could enable training on 10% more data or reduce costs by millions of dollars.',
+      howItWorks: 'During training, each token requires forward and backward passes through billions of parameters. GPUs consume 300-700W each, and large training runs use 1,000-10,000+ GPUs simultaneously. The total energy for training a frontier model can exceed 1 GWh - equivalent to powering 100 homes for a year.',
+      stats: [
+        { label: 'GPT-4 Training Energy', value: '~50 GWh', detail: 'Estimated total energy consumption' },
+        { label: 'GPU Power Draw', value: '300-700W', detail: 'Per GPU during intensive training' },
+        { label: 'Training Duration', value: '3-6 months', detail: 'For frontier model development' }
+      ],
+      examples: [
+        'OpenAI training GPT models on Azure supercomputers with 10,000+ A100 GPUs',
+        'Google DeepMind optimizing Gemini training across TPU pods for energy efficiency',
+        'Anthropic using constitutional AI methods to reduce required training iterations',
+        'Meta releasing Llama models after extensive energy-intensive pretraining phases'
+      ],
+      companies: ['OpenAI', 'Google DeepMind', 'Anthropic', 'Meta AI', 'Mistral AI'],
+      futureImpact: 'As models scale to trillions of parameters, energy-efficient training becomes essential. Innovations in sparse attention, mixture-of-experts, and efficient optimizers could reduce training energy by 50-90% while maintaining model quality.',
+      color: '#8b5cf6'
+    },
+    {
+      icon: '📱',
+      title: 'Edge AI Inference',
+      short: 'Edge AI',
+      tagline: 'Bringing intelligence to battery-powered devices',
+      description: 'Running AI models directly on smartphones, wearables, and IoT devices requires extreme energy efficiency. Every milliwatt-hour counts when operating on limited battery power while delivering real-time AI experiences.',
+      connection: 'Energy per token on edge devices directly determines battery life and thermal constraints. A smartphone running local AI must balance response quality with power consumption to avoid draining the battery or overheating.',
+      howItWorks: 'Edge AI uses quantized models (4-8 bit weights instead of 32-bit) running on specialized neural processing units (NPUs). These chips are designed for matrix operations at minimal power. Techniques like speculative decoding and early exit help reduce tokens processed.',
+      stats: [
+        { label: 'Mobile NPU Power', value: '1-5W', detail: 'During active inference' },
+        { label: 'Efficiency Gain', value: '10-100x', detail: 'vs cloud GPU per token' },
+        { label: 'Model Size', value: '1-7B', detail: 'Parameters for edge deployment' }
+      ],
+      examples: [
+        'Apple Intelligence running local LLMs on iPhone neural engine for Siri responses',
+        'Google Pixel phones using on-device Gemini Nano for real-time translation',
+        'Samsung Galaxy AI performing photo editing with local diffusion models',
+        'Qualcomm Snapdragon chips running whisper speech recognition offline'
+      ],
+      companies: ['Apple', 'Google', 'Qualcomm', 'Samsung', 'MediaTek'],
+      futureImpact: 'Sub-1W AI inference will enable always-on AI assistants in earbuds, glasses, and watches. Specialized edge chips may achieve 100+ tokens per second at milliwatt power levels, enabling conversational AI without cloud dependency.',
+      color: '#06b6d4'
+    },
+    {
+      icon: '🌱',
+      title: 'Data Center Sustainability',
+      short: 'Green Computing',
+      tagline: 'Minimizing AI environmental footprint at scale',
+      description: 'AI data centers consume gigawatts of power globally, with energy use projected to rival small countries. Optimizing energy per token is crucial for sustainable AI scaling as demand grows exponentially.',
+      connection: 'Reducing energy per token across millions of daily queries translates to megawatt-hours of savings. A 20% efficiency improvement in a major AI service could eliminate the energy consumption of a small city.',
+      howItWorks: 'Sustainable AI combines hardware efficiency (newer GPU architectures), software optimization (batching, caching, model distillation), renewable energy sourcing, and waste heat recovery. PUE (Power Usage Effectiveness) measures data center overhead efficiency.',
+      stats: [
+        { label: 'AI Energy Share', value: '3-4%', detail: 'Projected global electricity by 2030' },
+        { label: 'Best PUE', value: '1.1-1.2', detail: 'Top hyperscale data centers' },
+        { label: 'Carbon Reduction', value: '40-60%', detail: 'Possible with optimization' }
+      ],
+      examples: [
+        'Microsoft achieving carbon negative operations with 100% renewable energy matching',
+        'Google using AI to optimize data center cooling, reducing energy 30%',
+        'Amazon Web Services building custom Graviton chips for better performance per watt',
+        'Equinix capturing waste heat from data centers to warm nearby buildings'
+      ],
+      companies: ['Microsoft Azure', 'Google Cloud', 'AWS', 'Meta', 'Equinix'],
+      futureImpact: 'Carbon-aware computing will schedule AI workloads when and where renewable energy is abundant. Liquid cooling and underwater data centers may reduce cooling overhead. The goal is carbon-neutral AI by 2030.',
+      color: '#22c55e'
+    },
+    {
+      icon: '🚗',
+      title: 'Autonomous Vehicle AI',
+      short: 'Self-Driving AI',
+      tagline: 'Real-time decisions with every joule counting',
+      description: 'Self-driving vehicles run multiple AI models simultaneously for perception, prediction, and planning - all within strict power budgets. Energy efficiency directly impacts vehicle range and thermal management.',
+      connection: 'Energy per inference affects how many frames can be processed per second and how far the vehicle can travel. A 50W reduction in AI compute power could add 5-10 miles of range to an electric vehicle.',
+      howItWorks: 'Autonomous vehicles use dedicated AI accelerators processing camera, lidar, and radar inputs at 10-60 frames per second. Models must balance accuracy with latency - decisions happen in milliseconds. Power budgets typically allow 50-200W for all AI compute.',
+      stats: [
+        { label: 'AI Power Budget', value: '50-200W', detail: 'Typical autonomous vehicle' },
+        { label: 'Processing Rate', value: '10-60 FPS', detail: 'For real-time perception' },
+        { label: 'Latency Target', value: '<100ms', detail: 'End-to-end decision time' }
+      ],
+      examples: [
+        'Tesla FSD running on custom Dojo chips with 144 TOPS at minimal power draw',
+        'Waymo using TPU-based systems for perception and planning in robotaxis',
+        'Mobileye EyeQ chips processing 8 cameras with under 10W total power',
+        'NVIDIA Drive Orin delivering 254 TOPS for autonomous applications'
+      ],
+      companies: ['Tesla', 'Waymo', 'Mobileye', 'NVIDIA', 'Cruise'],
+      futureImpact: 'Next-gen vehicle AI will achieve 1000+ TOPS (trillion operations per second) at under 100W, enabling more sophisticated world models and longer range. Efficient AI is essential for fully autonomous electric vehicles.',
+      color: '#f59e0b'
+    }
+  ];
+
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>

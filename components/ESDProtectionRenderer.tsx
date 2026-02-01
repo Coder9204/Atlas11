@@ -1341,6 +1341,125 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({
     </div>
   );
 
+  const realWorldApps = [
+    {
+      icon: '🏭',
+      title: 'Electronics Manufacturing',
+      short: 'Assembly Lines',
+      tagline: 'Protecting components from human touch on the production floor',
+      description: 'Electronics manufacturing facilities handle millions of sensitive components daily, from microprocessors to memory chips. A single uncontrolled ESD event during assembly can destroy expensive ICs, cause latent defects that fail in the field, or result in costly product recalls. ESD protection is a critical quality control measure that spans the entire production process.',
+      connection: 'The same ESD protection principles we explored apply here at industrial scale. Workers become walking capacitors charged to thousands of volts, and every component touch is a potential discharge event. Grounding systems, ionizers, and protective packaging all work together to prevent the voltage spikes that would overwhelm on-chip protection.',
+      howItWorks: 'Manufacturing floors use a multi-layered ESD control strategy. Workers wear grounded wrist straps and heel straps connected to the facility ground. ESD-safe flooring and workstation mats provide continuous paths to ground. Ionizers neutralize charge on ungrounded items. Components travel in conductive or static-dissipative packaging. Humidity control above 40% RH reduces charge generation. Real-time monitoring systems alert operators to grounding failures.',
+      stats: [
+        { value: '$5B+', label: 'Annual ESD Damage' },
+        { value: '<100V', label: 'Damage Threshold for Some ICs' },
+        { value: '99.9%', label: 'Required Yield Target' }
+      ],
+      examples: [
+        'PCB assembly lines with grounded conveyor systems and ionizing bars',
+        'Semiconductor packaging facilities with full-body grounding suits',
+        'Smartphone assembly where workers handle exposed flex circuits',
+        'Automotive ECU production requiring zero-defect quality standards'
+      ],
+      companies: [
+        'Foxconn',
+        'Jabil',
+        'Flex Ltd',
+        'Celestica',
+        'Sanmina'
+      ],
+      futureImpact: 'As components shrink to 3nm and below, ESD sensitivity increases dramatically. Future factories will use AI-powered monitoring systems, automated handling robots to minimize human contact, and novel materials with self-dissipating properties to maintain yield as device vulnerability grows.',
+      color: '#F59E0B'
+    },
+    {
+      icon: '💾',
+      title: 'Semiconductor Fabs',
+      short: 'Chip Production',
+      tagline: 'Ultra-clean environments where a single spark means disaster',
+      description: 'Semiconductor fabrication facilities represent the most extreme ESD-sensitive environments on Earth. Here, transistors with gate oxides only a few atoms thick are manufactured on wafers worth millions of dollars. A single ESD event can destroy thousands of chips in an instant or create invisible defects that cause failures months later in customer devices.',
+      connection: 'The on-chip ESD protection structures we simulated are actually built during fab processing, but during manufacturing, those structures dont exist yet. Bare wafers and in-process chips have no protection whatsoever, making them vulnerable to even tiny static charges that would be harmless to finished products.',
+      howItWorks: 'Fabs implement the most stringent ESD protocols in any industry. Cleanroom suits include conductive fibers woven throughout. All wafer handling equipment is grounded and ionized. FOUP (Front Opening Unified Pod) carriers are made from static-dissipative materials. Process tools have built-in charge neutralization. Gate oxide integrity testing catches ESD damage early. Even the air handling systems use ionization to neutralize airborne particles.',
+      stats: [
+        { value: '<10V', label: 'Gate Oxide Breakdown' },
+        { value: '$100M+', label: 'Cost Per Wafer Lot' },
+        { value: '1000+', label: 'ESD Monitors Per Fab' }
+      ],
+      examples: [
+        'Wafer probing stations with grounded chuck and ionized enclosures',
+        'Photolithography tools where charge can attract killer particles',
+        'Ion implantation systems with inherent charging from the beam',
+        'Wafer transport robots with continuous ground monitoring'
+      ],
+      companies: [
+        'TSMC',
+        'Samsung Foundry',
+        'Intel',
+        'GlobalFoundries',
+        'ASML'
+      ],
+      futureImpact: 'As EUV lithography and 2nm nodes become standard, new materials like high-k dielectrics and nanosheets increase ESD vulnerability. Fabs are developing real-time charge sensing at the wafer level and exploring plasma-based neutralization to protect these incredibly delicate structures.',
+      color: '#6366F1'
+    },
+    {
+      icon: '🖥️',
+      title: 'Data Centers',
+      short: 'Server Protection',
+      tagline: 'Keeping the cloud running through industrial-scale ESD management',
+      description: 'Data centers house millions of servers processing the worlds digital information. Technicians frequently access equipment for maintenance, upgrades, and repairs in environments where low humidity, raised floors, and constant movement create ideal conditions for static charge buildup. ESD damage to a single server can cause data loss, service outages, and cascade failures.',
+      connection: 'Every server contains the same types of chips we explored with ESD protection diodes. But data center scale means thousands of potential discharge events daily. The protection philosophy shifts from protecting individual chips to creating ESD-safe zones where equipment can be safely serviced without risk.',
+      howItWorks: 'Data centers implement zoned ESD protection. Hot aisles and cold aisles use static-dissipative flooring. Technicians must ground themselves at entry points using wrist straps or floor mats. Server rails and rack frames are bonded to facility ground. Humidity is maintained above 45% where possible. Hot-swappable components like drives and memory have gold-plated contacts that resist ESD damage. All packaging and transport containers are ESD-safe.',
+      stats: [
+        { value: '99.999%', label: 'Uptime Requirement' },
+        { value: '$9K/min', label: 'Outage Cost (Large DCs)' },
+        { value: '10K+', label: 'Service Events/Year' }
+      ],
+      examples: [
+        'Hot-swap drive replacement in running storage arrays',
+        'Memory DIMM upgrades requiring direct PCB contact',
+        'Network card installation in high-availability clusters',
+        'GPU replacement in AI training server racks'
+      ],
+      companies: [
+        'Google Cloud',
+        'Amazon AWS',
+        'Microsoft Azure',
+        'Meta',
+        'Equinix'
+      ],
+      futureImpact: 'Liquid cooling and immersion cooling reduce static from airflow but introduce new grounding challenges. Robotic maintenance systems will minimize human-equipment contact. AI diagnostics will detect ESD-induced latent failures before they cause outages.',
+      color: '#10B981'
+    },
+    {
+      icon: '✈️',
+      title: 'Aerospace and Aviation',
+      short: 'Aircraft Electronics',
+      tagline: 'Mission-critical systems that must survive lightning and cosmic rays',
+      description: 'Aircraft electronics face the most demanding ESD environment imaginable. At altitude, low humidity and dry air maximize static generation. Composite airframes dont conduct charge like metal ones. And the ultimate ESD event, a lightning strike delivering 200,000+ amps, occurs regularly. Every avionic system must survive these threats while maintaining safety-critical operation.',
+      connection: 'The ESD protection concepts scale up dramatically for aerospace. While we explored protecting chips from human-body discharge of a few thousand volts, aircraft systems must handle direct lightning attachment, P-static (precipitation static) from ice and rain, and charge accumulation from engine exhaust. Multi-stage protection with massive current-handling capability is essential.',
+      howItWorks: 'Aircraft use layered ESD protection starting with the airframe. Lightning strike zones are designed with conductive pathways to route current safely around the fuselage. Internal bonding networks connect all equipment to a common ground plane. Avionic boxes have external TVS diodes and spark gaps rated for lightning-induced transients. Internal circuits use the same on-chip ESD structures we explored, but with higher robustness ratings. Fiber optic connections eliminate some ESD paths entirely.',
+      stats: [
+        { value: '200kA', label: 'Lightning Current Peak' },
+        { value: '1-2/yr', label: 'Strikes Per Aircraft' },
+        { value: 'DO-160G', label: 'Aviation ESD Standard' }
+      ],
+      examples: [
+        'Flight computers with MIL-spec ESD protection on all interfaces',
+        'Fuel system electronics that must never create ignition sources',
+        'Composite radomes with embedded lightning diverter strips',
+        'Satellite avionics hardened against space charging and cosmic rays'
+      ],
+      companies: [
+        'Boeing',
+        'Airbus',
+        'Lockheed Martin',
+        'Honeywell Aerospace',
+        'Collins Aerospace'
+      ],
+      futureImpact: 'More-electric aircraft with higher power systems create new ESD challenges. Carbon nanotube composites may provide better charge dissipation than current materials. Solid-state power distribution will require revolutionary protection approaches for the all-electric aviation future.',
+      color: '#3B82F6'
+    }
+  ];
+
   const renderPhase = () => {
     switch (phase) {
       case 'hook': return renderHook();

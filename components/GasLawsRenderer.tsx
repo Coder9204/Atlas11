@@ -764,6 +764,102 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCompl
     }
   ];
 
+  // Real-world applications with comprehensive data
+  const realWorldApps = [
+    {
+      icon: 'diving',
+      title: 'Scuba Diving',
+      short: 'Decompression Science',
+      tagline: 'Understanding pressure changes underwater saves lives',
+      description: 'Scuba diving relies fundamentally on gas laws to keep divers safe. As divers descend, water pressure increases by 1 atmosphere for every 10 meters of depth. This increased pressure causes nitrogen from the breathing gas to dissolve into body tissues. When ascending, this dissolved gas must be released slowly to prevent decompression sickness (the bends), which occurs when nitrogen forms bubbles in the bloodstream and tissues.',
+      connection: 'Boyle\'s Law (PV = constant) explains why air in a diver\'s lungs expands during ascent. At 30 meters depth, pressure is 4 atmospheres, so a lungful of air would expand to 4 times its volume at the surface. This is why divers must never hold their breath while ascending - the expanding air could cause fatal lung overexpansion injuries.',
+      howItWorks: 'Dive computers use gas law calculations to track nitrogen absorption in different tissue compartments with varying half-times. They calculate no-decompression limits and required safety stops based on depth, time, and ascent rate. Henry\'s Law governs gas solubility, while Boyle\'s Law determines volume changes during ascent.',
+      stats: [
+        { value: '4 atm', label: 'Pressure at 30m depth' },
+        { value: '18 m/min', label: 'Maximum safe ascent rate' },
+        { value: '3-5 min', label: 'Safety stop at 5m depth' }
+      ],
+      examples: [
+        'Decompression stops during technical diving',
+        'Nitrox mixtures to extend bottom time',
+        'Dive computer algorithms for multi-level dives',
+        'Treatment of decompression sickness in hyperbaric chambers'
+      ],
+      companies: ['PADI', 'Suunto', 'Shearwater', 'Aqua Lung', 'Mares'],
+      futureImpact: 'Advanced dive computers with real-time tissue saturation monitoring, AI-powered dive planning algorithms, and rebreather technology for extended deep diving are making underwater exploration safer and more accessible.',
+      color: 'cyan'
+    },
+    {
+      icon: 'balloon',
+      title: 'Weather Balloons',
+      short: 'Atmospheric Meteorology',
+      tagline: 'Probing the atmosphere with gas law principles',
+      description: 'Weather balloons are essential tools for atmospheric research and weather forecasting. These helium or hydrogen-filled balloons carry instrument packages called radiosondes that measure temperature, humidity, pressure, and wind conditions as they ascend through the atmosphere. The data collected is critical for numerical weather prediction models and understanding atmospheric dynamics.',
+      connection: 'As a weather balloon rises, atmospheric pressure decreases exponentially. According to Boyle\'s Law, the balloon\'s volume increases as external pressure drops. Charles\'s Law also plays a role: as the balloon rises into colder air, the gas would contract, but the pressure decrease effect dominates. Eventually, the balloon expands until its latex envelope can no longer stretch, causing it to burst at altitudes of 25-35 km.',
+      howItWorks: 'The radiosonde transmits data via radio as it ascends at about 5 m/s. GPS tracking provides wind speed and direction data. The ideal gas law PV=nRT allows meteorologists to calculate air density at different altitudes. Twice daily, over 800 stations worldwide release weather balloons simultaneously for coordinated atmospheric sampling.',
+      stats: [
+        { value: '35 km', label: 'Maximum burst altitude' },
+        { value: '5 m/s', label: 'Typical ascent rate' },
+        { value: '800+', label: 'Daily global launches' }
+      ],
+      examples: [
+        'Twice-daily radiosonde launches worldwide',
+        'Ozone monitoring in the stratosphere',
+        'Hurricane reconnaissance flights',
+        'Climate research high-altitude sampling'
+      ],
+      companies: ['Vaisala', 'NOAA', 'Lockheed Martin', 'GRAW Radiosondes'],
+      futureImpact: 'Next-generation weather balloons with biodegradable materials, miniaturized sensors, and autonomous recovery systems will provide higher-resolution atmospheric data while reducing environmental impact.',
+      color: 'violet'
+    },
+    {
+      icon: 'engine',
+      title: 'Internal Combustion Engines',
+      short: 'Automotive Power',
+      tagline: 'Converting fuel to motion through controlled gas expansion',
+      description: 'Internal combustion engines power most vehicles worldwide by converting chemical energy in fuel into mechanical motion. The engine operates through a four-stroke cycle: intake, compression, combustion, and exhaust. Each stroke involves precise control of gas pressure, volume, and temperature to maximize power output and efficiency while minimizing emissions.',
+      connection: 'The compression stroke demonstrates Boyle\'s Law as the piston compresses the air-fuel mixture to 1/10th its original volume, increasing pressure dramatically. During combustion, the rapid temperature increase (to about 2500°C) causes explosive pressure rise following Gay-Lussac\'s Law. This high-pressure gas then expands (Boyle\'s Law again), pushing the piston down and producing useful work.',
+      howItWorks: 'The ideal gas law governs each phase of the Otto cycle. Higher compression ratios extract more work from the expanding gases but risk pre-ignition (knock). Modern engines use variable valve timing, direct injection, and turbocharging to optimize the pressure-volume-temperature relationship throughout the cycle. Engine management computers adjust parameters in real-time based on gas law principles.',
+      stats: [
+        { value: '10:1', label: 'Typical compression ratio' },
+        { value: '2500°C', label: 'Peak combustion temperature' },
+        { value: '35-40%', label: 'Thermal efficiency range' }
+      ],
+      examples: [
+        'Turbocharging for increased power density',
+        'Variable compression ratio engines',
+        'Homogeneous charge compression ignition (HCCI)',
+        'Atkinson cycle for hybrid vehicle efficiency'
+      ],
+      companies: ['Toyota', 'Volkswagen', 'BMW', 'Honda', 'Ford'],
+      futureImpact: 'Advanced combustion strategies, synthetic fuels, and hybrid integration are pushing internal combustion efficiency to new heights. Even as electrification grows, gas law principles remain crucial for range extenders and sustainable fuel applications.',
+      color: 'amber'
+    },
+    {
+      icon: 'airplane',
+      title: 'Pressurized Aircraft Cabins',
+      short: 'Aviation Safety',
+      tagline: 'Maintaining breathable air at 40,000 feet',
+      description: 'Commercial aircraft cruise at altitudes of 35,000-40,000 feet where atmospheric pressure is only about 20% of sea level pressure. At these altitudes, humans would lose consciousness within seconds without supplemental oxygen. Cabin pressurization systems maintain a safe, comfortable environment by compressing outside air and regulating cabin pressure to simulate lower altitude conditions.',
+      connection: 'The ideal gas law PV=nRT is fundamental to aircraft pressurization. As the aircraft climbs, cabin pressure is maintained by pumping compressed air from the engines (bleed air) into the cabin. The pressure differential between cabin and outside air can reach 8-9 psi at cruise altitude. This creates enormous structural loads on the fuselage - a typical cabin door experiences over 10 tons of outward force.',
+      howItWorks: 'Outflow valves precisely regulate cabin pressure by controlling air release rate. Cabin altitude is typically maintained at 6,000-8,000 feet equivalent pressure. The pressurization system must account for temperature changes, passenger count (oxygen consumption), and altitude changes. Emergency oxygen systems deploy automatically if cabin pressure drops, following Dalton\'s Law of partial pressures.',
+      stats: [
+        { value: '8.9 psi', label: 'Maximum pressure differential' },
+        { value: '8,000 ft', label: 'Typical cabin altitude' },
+        { value: '10+ tons', label: 'Force on cabin door' }
+      ],
+      examples: [
+        'Automatic cabin pressure scheduling during climb/descent',
+        'Emergency oxygen mask deployment systems',
+        'Pressure bulkhead design and testing',
+        'Hypoxia training for flight crews'
+      ],
+      companies: ['Boeing', 'Airbus', 'Honeywell', 'Collins Aerospace', 'Liebherr'],
+      futureImpact: 'New composite materials allow higher cabin pressures for improved passenger comfort. The Boeing 787 maintains cabin altitude at 6,000 feet versus 8,000 feet for older aircraft. Future designs may use electric compressors instead of engine bleed air for more efficient pressurization.',
+      color: 'sky'
+    }
+  ];
+
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER PHASES
   // ═══════════════════════════════════════════════════════════════════════════

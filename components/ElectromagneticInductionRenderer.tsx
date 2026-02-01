@@ -571,6 +571,122 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     }
   ];
 
+  // Real-World Applications for Transfer Phase
+  const realWorldApps: TransferApp[] = [
+    {
+      icon: "⚡",
+      title: "Power Generation",
+      short: "Generators",
+      tagline: "Spinning magnets into electricity",
+      description: "Every power plant on Earth—from massive hydroelectric dams to nuclear facilities to wind farms—relies on electromagnetic induction to convert mechanical rotation into electrical current. Generators contain coils of wire rotating within powerful magnetic fields, creating the changing magnetic flux that induces electromotive force. This fundamental principle, discovered by Faraday in 1831, powers our entire modern electrical grid and generates over 28,000 terawatt-hours of electricity globally each year.",
+      connection: "Faraday's Law (EMF = -dΦ/dt) is the heart of every generator. As coils rotate through magnetic fields, the continuously changing flux induces alternating current. The negative sign in Faraday's Law, representing Lenz's Law, explains why generators require mechanical input—the induced current creates opposing forces that must be overcome.",
+      howItWorks: [
+        "Mechanical energy (water, steam, wind) rotates a shaft connected to the rotor",
+        "The rotor contains electromagnets or permanent magnets creating a strong magnetic field",
+        "Stationary stator coils surrounding the rotor experience changing magnetic flux as the rotor spins",
+        "The changing flux induces AC voltage in the stator windings according to Faraday's Law"
+      ],
+      stats: [
+        { value: "28,000 TWh", label: "Global electricity generation annually" },
+        { value: "99.5%", label: "Peak generator efficiency (large hydro)" },
+        { value: "3,600 RPM", label: "Typical turbine speed for 60Hz AC" }
+      ],
+      examples: [
+        "Three Gorges Dam producing 22,500 MW from 32 turbines",
+        "Nuclear plant steam turbines generating 1,000+ MW each",
+        "Offshore wind turbines with 15 MW direct-drive generators",
+        "Portable gasoline generators for emergency backup power"
+      ],
+      companies: ["GE Vernova", "Siemens Energy", "Vestas", "Hitachi Energy", "ABB"],
+      futureImpact: "Superconducting generators using zero-resistance coils could boost efficiency by 50% while dramatically reducing size and weight. Direct-drive generators eliminate mechanical gearboxes in wind turbines, improving reliability. Fusion power plants will use advanced induction systems to harness plasma energy, potentially providing unlimited clean electricity.",
+      color: "from-yellow-500 to-amber-600"
+    },
+    {
+      icon: "📱",
+      title: "Wireless Charging",
+      short: "Consumer Electronics",
+      tagline: "Power through thin air",
+      description: "Wireless charging has revolutionized how we power our devices, eliminating tangled cables and worn-out connectors. Using electromagnetic induction, a transmitter coil in the charging pad creates an oscillating magnetic field that induces current in a receiver coil inside your phone or smartwatch. The Qi standard, now used by billions of devices worldwide, transfers up to 15W for phones and 50W for laptops. This same principle scales up to wirelessly charge electric vehicles with 11kW or more.",
+      connection: "Wireless charging is mutual induction in action—the same principle as a transformer. The transmitter coil acts as the primary, creating changing magnetic flux that links to the receiver (secondary) coil. Faraday's Law determines the induced voltage, while careful coil design and frequency selection (typically 100-200 kHz) maximize power transfer efficiency.",
+      howItWorks: [
+        "Transmitter coil receives AC power and generates an oscillating magnetic field",
+        "Receiver coil in the device captures the changing magnetic flux",
+        "Induced AC voltage in receiver is rectified to DC for battery charging",
+        "Communication between coils adjusts power level for optimal charging"
+      ],
+      stats: [
+        { value: "2.5B+", label: "Qi-enabled devices shipped" },
+        { value: "93%", label: "Maximum power transfer efficiency" },
+        { value: "15W", label: "Standard smartphone wireless charging" }
+      ],
+      examples: [
+        "iPhone and Android Qi wireless charging pads",
+        "Apple Watch magnetic inductive charger",
+        "Wireless charging electric toothbrush bases",
+        "BMW and Mercedes wireless EV charging systems"
+      ],
+      companies: ["Apple", "Samsung", "Belkin", "Anker", "WiTricity"],
+      futureImpact: "Resonant wireless charging will enable room-scale power transfer, charging devices anywhere in a room without precise alignment. Dynamic wireless charging embedded in roads could power EVs while driving, eliminating range anxiety. Medical implants will use wireless inductive charging, avoiding surgical battery replacements.",
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      icon: "🎸",
+      title: "Electric Guitar Pickups",
+      short: "Music Technology",
+      tagline: "Turning vibrations into rock and roll",
+      description: "The electric guitar transformed music in the 20th century, and electromagnetic induction made it possible. Guitar pickups contain magnets wrapped with thousands of turns of thin copper wire. When steel strings vibrate above the pickup, they disturb the magnetic field, creating changing flux through the coil. This induces a tiny voltage—typically just millivolts—that perfectly mirrors the string's vibration pattern. Amplified millions of times, this signal becomes the sound that defined rock, blues, jazz, and countless other genres.",
+      connection: "Electric guitar pickups are elegant demonstrations of Faraday's Law. The vibrating ferromagnetic string modulates the magnetic field, creating changing flux through the pickup coil. The induced EMF is proportional to the rate of flux change (dΦ/dt), which is why faster string vibrations (higher notes) produce stronger signals that must be equalized.",
+      howItWorks: [
+        "Permanent magnets (often Alnico or ceramic) create a static magnetic field around steel strings",
+        "Strings become magnetized and their vibration alters the magnetic field geometry",
+        "Copper coil (typically 5,000-10,000 turns) experiences changing magnetic flux",
+        "Induced voltage follows the string vibration pattern, encoding pitch and timbre"
+      ],
+      stats: [
+        { value: "8,000", label: "Average wire turns per pickup" },
+        { value: "5-15 mV", label: "Typical pickup output voltage" },
+        { value: "42 AWG", label: "Standard pickup wire gauge" }
+      ],
+      examples: [
+        "Fender single-coil pickups with bright, twangy tone",
+        "Gibson humbucker pickups with warm, thick sound",
+        "Active EMG pickups with built-in preamps for metal",
+        "Piezoelectric acoustic guitar pickups for amplification"
+      ],
+      companies: ["Fender", "Gibson", "Seymour Duncan", "DiMarzio", "EMG"],
+      futureImpact: "Digital modeling pickups use electromagnetic sensing combined with DSP to emulate any guitar sound. Hexaphonic pickups sense each string individually for advanced synthesis and MIDI conversion. Wireless embedded pickups eliminate cables entirely while maintaining signal purity through advanced induction coupling.",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      icon: "🏭",
+      title: "Induction Motors",
+      short: "Industrial Power",
+      tagline: "The workhorse of modern industry",
+      description: "Induction motors power nearly half of all global electricity consumption, driving everything from factory assembly lines to HVAC systems to electric vehicles. Unlike other motors, induction motors have no electrical connection to the spinning rotor—instead, rotating magnetic fields in the stator induce currents in the rotor through electromagnetic induction. These induced currents create their own magnetic field that chases the stator field, producing smooth, reliable torque. Their simplicity, durability, and efficiency make them the backbone of industrial civilization.",
+      connection: "Induction motors brilliantly combine Faraday's Law and Lenz's Law. The rotating stator field creates changing flux through the rotor conductors, inducing currents (Faraday). By Lenz's Law, these currents oppose the flux change by generating force to 'catch up' with the rotating field—this is the motor torque. The rotor never quite catches up, maintaining the slip that sustains induction.",
+      howItWorks: [
+        "Three-phase AC creates a smoothly rotating magnetic field in stator windings",
+        "Rotating field passes through conductive rotor bars (squirrel cage design)",
+        "Changing flux induces circulating currents in rotor conductors",
+        "Induced rotor currents interact with stator field, producing rotational torque"
+      ],
+      stats: [
+        { value: "45%", label: "Global electricity used by motors" },
+        { value: "97%", label: "Peak efficiency of premium motors" },
+        { value: "100+ yrs", label: "Technology proven reliability" }
+      ],
+      examples: [
+        "Tesla Model 3 rear motor (AC induction, 211 kW)",
+        "Industrial conveyor belt drive systems",
+        "HVAC compressors and building ventilation fans",
+        "Elevator and escalator drive mechanisms"
+      ],
+      companies: ["ABB", "Siemens", "Nidec", "WEG", "Regal Rexnord"],
+      futureImpact: "Variable frequency drives now optimize induction motor efficiency across all speeds, saving enormous energy. Copper rotor technology improves efficiency by 15-20%. In transportation, induction motors compete with permanent magnet motors for EV dominance, with Tesla pioneering their use. Smart motors with embedded sensors enable predictive maintenance and Industry 4.0 integration.",
+      color: "from-emerald-500 to-teal-500"
+    }
+  ];
+
   const calculateScore = () => {
     const score = testAnswers.reduce((score, answer, index) => {
       return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);

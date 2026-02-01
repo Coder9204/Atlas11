@@ -959,6 +959,102 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({
     border: `1px solid ${colors.accent}`,
   };
 
+  // Real-world applications for transfer phase
+  const realWorldApps = [
+    {
+      icon: "🖥️",
+      title: "Microprocessor Reliability",
+      short: "CPU Design",
+      tagline: "Engineering chips that last a decade",
+      description: "Modern microprocessors contain billions of transistors connected by kilometers of copper interconnects, some as narrow as 7 nanometers. At these scales, electromigration becomes a critical design constraint that determines whether a CPU will last 10 years or fail within months. Every wire must be carefully sized and current-limited to ensure reliable operation throughout the product lifetime.",
+      connection: "Just like our simulation showed atoms migrating under electron wind, real CPU interconnects face the same physics at massive scale. The voids and hillocks we observed can form in any of the billions of metal lines, and a single open circuit means chip failure. Engineers use Black's equation—the same J^-2 relationship we explored—to set maximum current density limits for every wire in the design.",
+      howItWorks: "CPU designers use Electronic Design Automation (EDA) tools that analyze current density in every interconnect segment. Wires carrying high current are automatically widened, and redundant vias connect layers to provide backup paths. Power delivery networks use thick metal layers and mesh structures to distribute current evenly. Current density violations trigger design rule checks that must be fixed before manufacturing.",
+      stats: [
+        { val: "2 MA/cm²", label: "Typical current density limit" },
+        { val: "10+ years", label: "Target MTTF for consumer CPUs" },
+        { val: "100+ km", label: "Total interconnect length per chip" }
+      ],
+      examples: [
+        "Intel Core processors with copper/low-k interconnects",
+        "AMD Ryzen chips using advanced 5nm nodes",
+        "Apple M-series SoCs with optimized power delivery",
+        "Server Xeon processors with 10+ year reliability targets"
+      ],
+      companies: ["Intel", "AMD", "Apple", "TSMC", "Samsung Foundry"],
+      futureImpact: "As transistors shrink to 2nm and beyond, interconnects become even narrower while carrying similar currents, dramatically increasing current density. Future chips will use new materials like ruthenium and cobalt for the thinnest wires, advanced barrier layers to prevent atomic diffusion, and 3D stacking to shorten interconnect paths. AI-driven design tools will optimize every wire for both performance and reliability simultaneously.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "💡",
+      title: "LED Packaging",
+      short: "Lighting",
+      tagline: "Bright lights that last 50,000 hours",
+      description: "High-power LEDs used in automotive headlights, stadium lighting, and industrial applications push hundreds of milliamps through bond wires and die attach materials. These tiny gold or copper wires, often just 25 micrometers in diameter, must survive extreme current densities and thermal cycling for decades. Electromigration in LED packaging directly determines whether a light lasts 50,000 hours or fails prematurely.",
+      connection: "Our simulation demonstrated how current density and temperature combine to accelerate electromigration. LED bond wires experience both factors intensely—high currents in tiny wires create extreme current densities, while the LED junction generates significant heat. The exponential temperature dependence we explored means even small improvements in thermal management dramatically extend LED lifetime.",
+      howItWorks: "LED packages use multiple parallel bond wires to share current and reduce density in each wire. Copper ball bonding has largely replaced gold wire bonding for high-power LEDs due to copper's superior electromigration resistance. Thermal management through ceramic substrates and metal-core PCBs keeps junction temperatures low, slowing atomic diffusion. Package designers simulate current distribution to ensure uniform loading across all connections.",
+      stats: [
+        { val: "50,000 hrs", label: "Target LED lifetime" },
+        { val: "350+ mA", label: "High-power LED drive current" },
+        { val: "25 μm", label: "Typical bond wire diameter" }
+      ],
+      examples: [
+        "Automotive LED headlights and DRLs",
+        "Stadium and arena lighting systems",
+        "High-bay industrial lighting fixtures",
+        "UV-C LEDs for water purification"
+      ],
+      companies: ["Cree/Wolfspeed", "Lumileds", "OSRAM", "Nichia", "Seoul Semiconductor"],
+      futureImpact: "Next-generation LED packaging will use flip-chip designs that eliminate bond wires entirely, connecting the LED die directly to the substrate through solder bumps. Chip-scale packaging will integrate thermal management directly into the LED chip. Emerging micro-LED displays for AR/VR will face new electromigration challenges as millions of tiny LEDs switch rapidly at high current densities.",
+      color: "#10b981"
+    },
+    {
+      icon: "🔌",
+      title: "PCB Trace Design",
+      short: "Electronics",
+      tagline: "Invisible highways of electron flow",
+      description: "Every electronic device relies on printed circuit board traces to connect components. High-current applications like power supplies, motor drivers, and fast chargers push significant current through copper traces that may be only 35 micrometers thick. Undersized traces experience localized heating and electromigration that can cause catastrophic failures, fires, or gradual performance degradation over years of use.",
+      connection: "The void formation we observed in our nanoscale simulation scales up to PCB traces carrying amps of current. While PCB traces are much larger than chip interconnects, the same physics applies—electrons transfer momentum to copper atoms, creating voids at high-stress points. Thermal hotspots from concentrated current flow accelerate the process exactly as our temperature slider demonstrated.",
+      howItWorks: "PCB designers use IPC standards that specify minimum trace widths for given current levels, accounting for temperature rise and long-term reliability. Current-carrying traces are often doubled or tripled in width beyond the minimum for safety margin. Via stitching—multiple vias in parallel—distributes current between layers. Thermal relief patterns and copper pours help dissipate heat that would otherwise accelerate electromigration at solder joints.",
+      stats: [
+        { val: "35 μm", label: "Standard 1oz copper thickness" },
+        { val: "20A/mm²", label: "Typical max current density" },
+        { val: "10°C", label: "Target max temperature rise" }
+      ],
+      examples: [
+        "USB-C Power Delivery chargers (100W+)",
+        "Electric vehicle battery management systems",
+        "Industrial motor drive controllers",
+        "Server power distribution boards"
+      ],
+      companies: ["TTM Technologies", "Jabil", "Flex", "Amphenol", "Molex"],
+      futureImpact: "High-density interconnect (HDI) PCBs with finer traces will require more careful electromigration analysis as current densities increase. Embedded components and package-on-package designs will create new thermal challenges. Advanced thermal interface materials and embedded heat spreaders will become standard in high-power designs. AI-assisted PCB layout tools will automatically optimize trace widths for both signal integrity and long-term reliability.",
+      color: "#8b5cf6"
+    },
+    {
+      icon: "🚗",
+      title: "Automotive Electronics",
+      short: "Harsh Environments",
+      tagline: "Reliability when failure is not an option",
+      description: "Automotive electronics must survive extreme temperature swings from -40°C arctic cold to 150°C under-hood heat, mechanical vibration, and decades of operation. Engine control units, power steering modules, and battery management systems contain interconnects that experience thermal cycling thousands of times per year. Electromigration-induced failures in safety-critical systems can endanger lives.",
+      connection: "Our temperature experiment showed how electromigration accelerates exponentially with heat. Automotive environments take this to the extreme—a car might sit at -30°C overnight, then have under-hood electronics reach 125°C during highway driving. This 155°C temperature swing repeatedly stresses every interconnect. The activation energy relationship in Black's equation means high-temperature operation dominates lifetime even if the car spends most time cold.",
+      howItWorks: "Automotive-grade chips use special metallization schemes with copper alloys (adding aluminum, manganese, or other elements) that resist atomic diffusion. Barrier layers like tantalum nitride prevent copper atoms from migrating into surrounding dielectrics. Design rules are more conservative than consumer electronics, with larger safety margins on current density. Qualification testing includes 1000+ hours at 150°C to verify electromigration resistance.",
+      stats: [
+        { val: "-40 to 150°C", label: "Automotive temp range" },
+        { val: "15+ years", label: "Required component lifetime" },
+        { val: "AEC-Q100", label: "Automotive qualification standard" }
+      ],
+      examples: [
+        "Engine control units (ECUs) near hot engines",
+        "EV battery management systems with high currents",
+        "ADAS processors for autonomous driving",
+        "Power electronics in electric vehicle inverters"
+      ],
+      companies: ["NXP Semiconductors", "Infineon", "Texas Instruments", "STMicroelectronics", "Renesas"],
+      futureImpact: "Electric vehicles demand even more robust electronics with higher current densities for motor control and fast charging. Autonomous driving requires safety-critical processors that must never fail. Wide-bandgap semiconductors (SiC, GaN) operating at higher temperatures will need new interconnect materials. Functional safety standards (ISO 26262) increasingly require demonstrated electromigration reliability for ASIL-D systems.",
+      color: "#f59e0b"
+    }
+  ];
+
   // Render content based on phase
   const renderContent = () => {
     switch (phase) {

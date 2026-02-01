@@ -927,6 +927,102 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     );
   }
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: "💓",
+      title: "Cardiac Electrophysiology",
+      short: "Heart Rhythm",
+      tagline: "Mapping the heart's electrical symphony",
+      description: "Cardiac electrophysiology studies the electrical activity of the heart by mapping electric fields across heart tissue. Cardiologists use electrode catheters inserted into the heart to measure voltage potentials at thousands of points, creating detailed 3D electric field maps. These maps reveal abnormal electrical pathways causing arrhythmias like atrial fibrillation, ventricular tachycardia, and Wolff-Parkinson-White syndrome. By visualizing how electrical impulses propagate through heart muscle, doctors can precisely target problem areas for treatment.",
+      connection: "Just like our simulation shows electric field lines radiating from charges and connecting between opposites, the heart generates its own electric fields as cardiac cells depolarize and repolarize. The SA node acts like a positive charge source, initiating electrical waves that spread through the atria and ventricles. Mapping these biological electric fields uses the same physics principles—field strength decreases with distance, and field direction shows the path electrical signals travel through tissue.",
+      howItWorks: "During an electrophysiology study, multi-electrode catheters are threaded through blood vessels into the heart chambers. Each electrode measures local voltage relative to a reference, sampling the electric potential field. Advanced mapping systems like CARTO and EnSite NavX use magnetic localization and impedance sensing to track catheter position in 3D space. Software interpolates voltage measurements to generate color-coded activation maps showing electrical propagation timing and voltage amplitude maps revealing scarred tissue. Abnormal circuits appear as rotating patterns or focal sources on these maps.",
+      stats: [
+        { val: "3500+", label: "Mapping points per procedure" },
+        { val: "0.1mV", label: "Voltage detection threshold" },
+        { val: "95%", label: "Success rate for ablation" }
+      ],
+      examples: [
+        "Atrial fibrillation ablation procedures",
+        "Ventricular tachycardia substrate mapping",
+        "Accessory pathway localization in WPW",
+        "Cardiac resynchronization therapy optimization"
+      ],
+      companies: ["Biosense Webster", "Abbott", "Boston Scientific", "Medtronic", "Acutus Medical"],
+      futureImpact: "AI-powered mapping systems will automatically identify arrhythmia mechanisms and suggest optimal ablation targets in real-time. Non-invasive body surface mapping using vest electrodes will enable electric field reconstruction without catheters, making diagnostic mapping accessible in outpatient settings. Digital twin technology will simulate treatment outcomes before procedures, personalizing therapy for each patient's unique cardiac anatomy.",
+      color: "#ef4444"
+    },
+    {
+      icon: "🔬",
+      title: "Semiconductor Device Design",
+      short: "Chip Engineering",
+      tagline: "Sculpting electron highways at the nanoscale",
+      description: "Semiconductor engineers use electric field mapping to design transistors, memory cells, and integrated circuits at the nanometer scale. Electric fields control how electrons flow through silicon, determining device speed, power consumption, and reliability. TCAD (Technology Computer-Aided Design) software simulates electric field distributions in complex 3D structures, revealing potential problems like field crowding at sharp corners, leakage paths, and breakdown risks. Understanding field patterns is essential for pushing Moore's Law to its physical limits.",
+      connection: "Our simulation demonstrates fundamental field behavior that directly applies to semiconductors—how fields concentrate near charges, superpose from multiple sources, and create equipotential surfaces. In a transistor, the gate electrode acts like our charged particles, creating an electric field that controls current flow in the channel. The field patterns around doped regions, interfaces, and electrodes follow the same physics we explore, just at a billion times smaller scale.",
+      howItWorks: "TCAD simulators solve Poisson's equation coupled with carrier transport equations to compute electric fields throughout semiconductor structures. Engineers define device geometry, material properties, and doping profiles. The simulator meshes the structure into millions of tiny elements and iteratively solves for electrostatic potential. Electric field vectors are derived from potential gradients. Results reveal peak field locations where oxide breakdown might occur, depletion region shapes affecting capacitance, and channel field profiles influencing mobility. Designers iterate geometries to optimize field distributions for performance and reliability.",
+      stats: [
+        { val: "3nm", label: "Smallest commercial transistor gate" },
+        { val: "10⁸", label: "V/m peak field in modern devices" },
+        { val: "100B+", label: "Transistors per chip" }
+      ],
+      examples: [
+        "FinFET transistor channel optimization",
+        "DRAM capacitor field enhancement design",
+        "Power MOSFET breakdown voltage engineering",
+        "Flash memory tunnel oxide field calculations"
+      ],
+      companies: ["Intel", "TSMC", "Samsung", "Synopsys", "Cadence"],
+      futureImpact: "Machine learning will revolutionize device design by predicting optimal geometries from specifications without exhaustive simulation. Sub-1nm transistors will require quantum-accurate field calculations as classical electrostatics breaks down. 3D stacked chips will demand sophisticated thermal-electric co-design as field interactions between vertically adjacent devices become critical. Neuromorphic chips mimicking brain synapses will use precisely engineered field profiles to enable analog in-memory computing.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "⚡",
+      title: "Lightning Protection Systems",
+      short: "Electrical Safety",
+      tagline: "Taming nature's most powerful discharge",
+      description: "Lightning protection engineers use electric field mapping to design systems that safely intercept and conduct lightning strikes to ground. During thunderstorms, massive charge separation creates electric fields exceeding 10,000 V/m near ground level. Tall structures concentrate these fields at their tips, creating preferential strike attachment points. By understanding field enhancement and propagation, engineers position air terminals, down conductors, and grounding systems to protect buildings, aircraft, wind turbines, and electrical infrastructure from devastating lightning damage.",
+      connection: "Our simulation shows how electric fields concentrate around charged objects and how opposite charges create field lines connecting them—exactly what happens during a lightning strike. Storm clouds accumulate negative charge at their base (like our negative charges), inducing positive charge on ground objects (like our positive charges). Field lines stretch between them, and when the field strength exceeds air's breakdown threshold, a lightning channel forms along these field paths. Franklin rods work by concentrating fields to initiate controlled attachment.",
+      howItWorks: "Lightning protection design begins with field analysis of the structure under storm conditions. Software models the building geometry and simulates induced surface charges from an approaching stepped leader. Electric field calculations identify high-field points where upward streamers will initiate. The rolling sphere method uses a virtual sphere (typically 46m radius for standard protection) rolling over the structure—any contact points need air terminals. Down conductors provide low-impedance paths sized to handle 200+ kA peak currents. Grounding electrodes dissipate charge into soil while controlling step and touch voltages. Surge protection devices clamp transient fields on electrical systems.",
+      stats: [
+        { val: "300M", label: "Volts in a typical lightning bolt" },
+        { val: "30,000", label: "Amps average peak current" },
+        { val: "99.7%", label: "Protection level for Level I systems" }
+      ],
+      examples: [
+        "Skyscraper rooftop lightning rod arrays",
+        "Aircraft static discharge wicks and nose cones",
+        "Wind turbine blade protection systems",
+        "Data center surge protection infrastructure"
+      ],
+      companies: ["Lightning Master", "ERICO/nVent", "DEHN", "ABB", "Siemens"],
+      futureImpact: "Advanced materials like carbon nanotube-enhanced composites will provide lighter, more effective strike attachment points for aircraft and wind turbines. Real-time electric field monitoring networks will predict lightning strikes seconds before they occur, enabling automated protective actions. Smart buildings will dynamically adjust their protection topology based on storm conditions, optimizing both safety and cost. Laser-triggered lightning channels may eventually allow controlled discharge of storm energy for research and protection applications.",
+      color: "#f59e0b"
+    },
+    {
+      icon: "📱",
+      title: "Touchscreen Technology",
+      short: "Capacitive Sensing",
+      tagline: "Detecting touch through invisible fields",
+      description: "Capacitive touchscreens detect finger position by measuring changes in electric fields across a sensor grid. A transparent electrode array beneath the screen surface creates a carefully mapped electric field pattern. When a conductive object like a finger approaches, it couples with this field, locally changing capacitance at nearby electrodes. By measuring capacitance changes across the entire grid, the controller precisely locates one or more touch points. This technology powers billions of smartphones, tablets, laptops, and interactive displays worldwide.",
+      connection: "Our simulation shows how charges create electric fields that extend into surrounding space—capacitive touchscreens exploit this same principle. The screen electrodes create electric field lines that project above the glass surface. Your finger, being conductive, disturbs these field lines when it approaches, much like placing a charge in our simulation changes the overall field pattern. The controller measures these field disturbances as capacitance changes, translating electric field physics into touch coordinates.",
+      howItWorks: "Projected capacitive touch (PCT) screens use two layers of transparent ITO (indium tin oxide) electrodes arranged in perpendicular X and Y patterns, separated by thin insulation. The controller rapidly drives one axis while measuring the other, scanning the entire grid hundreds of times per second. Each intersection forms a tiny capacitor. When a finger approaches, its capacitance adds to the intersection capacitance, increasing measured signal strength. Signal processing algorithms calculate touch centroids from the pattern of capacitance changes across multiple electrodes. Mutual capacitance sensing between crossing electrodes enables robust multi-touch detection, while self-capacitance mode provides hover detection.",
+      stats: [
+        { val: "240Hz", label: "Touch sampling rate" },
+        { val: "10+", label: "Simultaneous touch points" },
+        { val: "1mm", label: "Touch position accuracy" }
+      ],
+      examples: [
+        "Smartphone and tablet displays",
+        "Laptop trackpads and touch bars",
+        "Automotive infotainment systems",
+        "Interactive kiosks and digital signage"
+      ],
+      companies: ["Synaptics", "Goodix", "Parade Technologies", "STMicroelectronics", "Cypress"],
+      futureImpact: "Under-display fingerprint sensors will use electric field imaging to capture 3D fingerprint details through OLED panels. Force-sensitive touchscreens will combine capacitive sensing with pressure detection for new interaction paradigms. Transparent touchscreens on windows and glasses will enable augmented reality interfaces. Whole-surface touch sensing will transform furniture, walls, and vehicles into interactive interfaces, detecting not just touch location but hand gestures and proximity in 3D space above the surface.",
+      color: "#10b981"
+    }
+  ];
+
   // Phase Renderers
   function renderHookPhase() {
     const hookContent = [

@@ -192,7 +192,7 @@ const realWorldApps = [
     tagline: 'Protection in All Temperatures',
     description: 'Modern motor oils (like 5W-30) are engineered to maintain proper viscosity across a huge temperature range — from cold winter startups to hot engine operation.',
     connection: 'Just like your syrup experiment, engine oil gets thicker when cold. Engineers add polymer additives that prevent excessive thickening at low temps and thinning at high temps.',
-    howItWorks: 'Multi-grade oils contain viscosity index improvers — long polymer chains that coil up when cold (less thickening effect) and expand when hot (preventing excessive thinning).',
+    howItWorks: 'Multi-grade oils contain viscosity index improvers — long polymer chains that coil up when cold (less thickening effect) and expand when hot (preventing excessive thinning). The "W" in 5W-30 stands for "winter" rating, indicating cold-start performance.',
     stats: [
       { value: '-30°C', label: 'Cold pour point', icon: '❄️' },
       { value: '150°C', label: 'Operating temp', icon: '🔥' },
@@ -204,78 +204,78 @@ const realWorldApps = [
       'Racing oils optimized for high-temperature stability',
       'Electric vehicle fluids designed for motor cooling'
     ],
-    companies: ['Mobil', 'Castrol', 'Shell', 'Valvoline'],
-    futureImpact: 'Advanced synthetic lubricants could extend oil change intervals to 50,000+ miles while improving fuel efficiency.',
+    companies: ['Mobil', 'Castrol', 'Shell', 'Valvoline', 'Pennzoil'],
+    futureImpact: 'Advanced synthetic lubricants could extend oil change intervals to 50,000+ miles while improving fuel efficiency by 2-3% through optimized viscosity profiles.',
     color: colors.primary
   },
   {
-    icon: '🌋',
-    title: 'Volcanic Lava Flow',
-    short: 'Predicting eruptions',
-    tagline: 'Life-Saving Viscosity Science',
-    description: 'Volcanologists use viscosity-temperature relationships to predict how far and fast lava will flow, crucial for evacuation planning and hazard assessment.',
-    connection: 'Like your warm vs cold syrup, lava viscosity depends dramatically on temperature. Hot lava near the vent flows fast; cooled lava becomes sluggish and eventually stops.',
-    howItWorks: 'Lava viscosity depends on temperature, silica content, and crystal formation. Basaltic lava (low silica) flows freely; rhyolitic lava (high silica) is extremely viscous even when hot.',
-    stats: [
-      { value: '1200°C', label: 'Fresh lava temp', icon: '🌡️' },
-      { value: '100 km/h', label: 'Max flow speed', icon: '⚡' },
-      { value: '10^12', label: 'Viscosity range (Pa·s)', icon: '📈' }
-    ],
-    examples: [
-      'Hawaiian shield volcanoes: low-viscosity basaltic lava',
-      'Mount St. Helens: high-viscosity explosive eruptions',
-      'Lava tubes form when outer flow cools but inside stays hot',
-      'Pahoehoe vs aa lava: viscosity determines surface texture'
-    ],
-    companies: ['USGS Volcano Hazards Program', 'Global Volcanism Program', 'University research labs'],
-    futureImpact: 'Better viscosity models enable more accurate eruption forecasting and safer evacuation planning for millions living near active volcanoes.',
-    color: colors.error
-  },
-  {
     icon: '🍫',
-    title: 'Chocolate Manufacturing',
-    short: 'Tempering and flow',
-    tagline: 'The Science of Perfect Chocolate',
-    description: 'Chocolate processing requires precise temperature control to achieve the right viscosity for molding, coating, and that satisfying snap when you bite into it.',
-    connection: 'Like your syrup flowing faster when warm, chocolate viscosity is highly temperature-dependent. Even a few degrees difference changes how it flows and sets.',
-    howItWorks: 'Tempering involves heating chocolate to melt all crystals, then cooling to form stable cocoa butter crystals. The viscosity-temperature curve must be carefully controlled throughout.',
+    title: 'Chocolate Tempering',
+    short: 'Perfect crystal formation',
+    tagline: 'The Science of Silky Smooth Chocolate',
+    description: 'Chocolate tempering is a precise heating and cooling process that controls cocoa butter crystallization, creating that perfect snap and glossy finish in premium chocolates.',
+    connection: 'Like your syrup flowing faster when warm, chocolate viscosity is highly temperature-dependent. Chocolatiers must control viscosity precisely to achieve proper crystal formation and smooth coating.',
+    howItWorks: 'Tempering involves heating chocolate to 45-50°C to melt all crystal forms, cooling to 27-28°C to form stable Type V crystals, then reheating to 31-32°C for optimal working viscosity. The viscosity-temperature curve must be carefully controlled throughout.',
     stats: [
-      { value: '31°C', label: 'Melting point', icon: '🌡️' },
-      { value: '45°C', label: 'Tempering temp', icon: '🍫' },
-      { value: '27°C', label: 'Crystallization', icon: '💎' }
+      { value: '45°C', label: 'Melting temp', icon: '🌡️' },
+      { value: '27°C', label: 'Seed temp', icon: '💎' },
+      { value: '32°C', label: 'Working temp', icon: '🍫' }
     ],
     examples: [
       'Chocolate fountains maintain 40-50°C for smooth flow',
       'Enrobing (coating) requires precise viscosity control',
       'Molding temperature affects final texture and shine',
-      'Dark, milk, and white chocolate have different curves'
+      'Dark, milk, and white chocolate have different tempering curves'
     ],
-    companies: ['Lindt', 'Callebaut', 'Valrhona', 'Ghirardelli'],
-    futureImpact: 'Precision temperature control and new cocoa butter alternatives are enabling sugar-free and vegan chocolates with perfect texture.',
+    companies: ['Lindt', 'Callebaut', 'Valrhona', 'Ghirardelli', 'Guittard'],
+    futureImpact: 'Precision temperature control and new cocoa butter alternatives are enabling sugar-free and vegan chocolates with perfect texture, while reducing energy consumption in manufacturing by 25%.',
     color: colors.syrup
   },
   {
-    icon: '🏭',
-    title: 'Glass Manufacturing',
-    short: 'Shaping molten silica',
-    tagline: 'From Sand to Smartphone Screens',
-    description: 'Glass must be heated to extremely high temperatures where its viscosity drops enough to be shaped, then cooled slowly to prevent cracking.',
-    connection: 'Glass is the ultimate example of viscosity-temperature dependence. At room temperature, glass has essentially infinite viscosity. At 1500°C, it flows like honey.',
-    howItWorks: 'Glass transitions gradually from solid to liquid over a wide temperature range. The "working range" is the temperature span where viscosity allows shaping but holds form.',
+    icon: '🎨',
+    title: 'Paint Formulation',
+    short: 'Coatings technology',
+    tagline: 'Flow When Applied, Set When Dried',
+    description: 'Paint scientists engineer viscosity to achieve the perfect balance: thin enough to apply smoothly with brush or spray, thick enough to resist dripping and sagging on vertical surfaces.',
+    connection: 'Like your temperature-viscosity experiment, paints are designed with specific flow characteristics. Thixotropic paints thin under shear (brushing) but thicken when resting — preventing drips.',
+    howItWorks: 'Paints use rheology modifiers and thixotropic agents that create temporary viscosity changes. When you brush paint, shear forces break molecular structures, lowering viscosity. At rest, structures rebuild, increasing viscosity to prevent sagging.',
     stats: [
-      { value: '1500°C', label: 'Melting temp', icon: '🔥' },
-      { value: '10^12 Pa·s', label: 'Room temp viscosity', icon: '🧊' },
-      { value: '10^2 Pa·s', label: 'Working viscosity', icon: '🔧' }
+      { value: '85-120 KU', label: 'Brush viscosity', icon: '🖌️' },
+      { value: '0.5 sec', label: 'Recovery time', icon: '⏱️' },
+      { value: '10-25°C', label: 'Optimal temp range', icon: '🌡️' }
     ],
     examples: [
-      'Gorilla Glass for phones: special composition for strength',
-      'Fiber optic cables: drawn at precise viscosity',
-      'Blown glass art: artist controls viscosity with heat',
-      'Float glass (windows): molten glass floats on tin'
+      'Latex house paint: flows on brush, resists dripping',
+      'Automotive clear coats: spray thin, level perfectly',
+      'Anti-graffiti coatings: temperature-stable viscosity',
+      'Industrial primers: thixotropic for vertical application'
     ],
-    companies: ['Corning', 'Saint-Gobain', 'AGC', 'Schott'],
-    futureImpact: 'New glass compositions with optimized viscosity-temperature profiles enable ultra-thin, flexible, and foldable displays.',
-    color: colors.cold
+    companies: ['Sherwin-Williams', 'PPG Industries', 'Benjamin Moore', 'Behr', 'Dulux'],
+    futureImpact: 'Smart paints with temperature-responsive viscosity could self-heal scratches when heated and enable one-coat coverage, reducing VOC emissions and application time by 40%.',
+    color: colors.accent
+  },
+  {
+    icon: '🩸',
+    title: 'Blood Viscosity Diagnosis',
+    short: 'Clinical hemorheology',
+    tagline: 'Flowing Biomarker for Cardiovascular Health',
+    description: 'Blood viscosity is a critical diagnostic parameter in medicine. Abnormal blood viscosity can indicate cardiovascular disease, diabetes, anemia, or blood disorders requiring immediate intervention.',
+    connection: 'Just as syrup viscosity changes with temperature, blood viscosity varies with hematocrit, plasma proteins, and temperature. Clinicians measure these to diagnose and monitor serious conditions.',
+    howItWorks: 'Blood is a non-Newtonian fluid — its viscosity decreases under shear stress (in arteries) and increases at rest (in veins). Viscometers measure whole blood viscosity at high and low shear rates to assess red blood cell deformability and plasma viscosity.',
+    stats: [
+      { value: '3-4 cP', label: 'Normal viscosity', icon: '💉' },
+      { value: '45%', label: 'Optimal hematocrit', icon: '🔬' },
+      { value: '37°C', label: 'Body temperature', icon: '🌡️' }
+    ],
+    examples: [
+      'Polycythemia: high viscosity from excess red blood cells',
+      'Anemia screening: low viscosity indicates low hematocrit',
+      'Diabetes monitoring: elevated plasma viscosity marker',
+      'Stroke risk assessment: hyperviscosity syndrome detection'
+    ],
+    companies: ['Siemens Healthineers', 'Roche Diagnostics', 'Abbott Laboratories', 'Beckman Coulter'],
+    futureImpact: 'Point-of-care viscosity testing could enable rapid cardiovascular risk assessment, potentially reducing stroke and heart attack deaths by early detection of hyperviscosity conditions.',
+    color: colors.error
   }
 ];
 

@@ -292,6 +292,101 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     },
   ];
 
+  const realWorldApps = [
+    {
+      icon: '🫀',
+      title: 'Medical Device Compliance',
+      short: 'Pacemakers & Implants',
+      tagline: 'Where EMI protection saves lives',
+      description: 'Implantable medical devices like pacemakers and defibrillators operate in an environment surrounded by EMI sources - from MRI machines to cellular phones. Strict EMI shielding ensures these life-critical devices function reliably without interference from external electromagnetic fields.',
+      connection: 'The same shielding principles that protect data cables apply to medical implants, but with much higher stakes - interference could cause a pacemaker to malfunction or deliver incorrect therapy.',
+      howItWorks: 'Medical devices use hermetically sealed titanium enclosures that act as Faraday cages, specialized feed-through filters on all electrical connections, and sophisticated signal processing algorithms to reject noise. Internal circuits use differential signaling and heavy filtering to maintain signal integrity.',
+      stats: [
+        { label: 'EMI Test Standard', value: 'IEC 60601-1-2' },
+        { label: 'Immunity Required', value: '3-10 V/m' },
+        { label: 'Failure Rate Target', value: '<1 per million' }
+      ],
+      examples: [
+        'Cardiac pacemakers with titanium Faraday cage enclosures',
+        'Cochlear implants with RF-shielded processor modules',
+        'Insulin pumps with EMI-hardened microcontrollers',
+        'Deep brain stimulators with filtered lead connections'
+      ],
+      companies: ['Medtronic', 'Abbott', 'Boston Scientific', 'Biotronik', 'LivaNova'],
+      futureImpact: 'As wireless charging and communication become standard in implants, EMI design grows more complex. Future devices will need to receive power and data wirelessly while remaining immune to interference - requiring advanced metamaterial shields and adaptive filtering.',
+      color: '#ef4444'
+    },
+    {
+      icon: '✈️',
+      title: 'Aerospace Electronics',
+      short: 'Avionics Systems',
+      tagline: 'Mission-critical EMI protection at 40,000 feet',
+      description: 'Aircraft avionics operate in one of the harshest EMI environments imaginable - surrounded by high-power radar, radio transmitters, lightning strikes, and cosmic radiation. Every system from navigation to flight controls must function flawlessly despite these challenges.',
+      connection: 'Twisted pair wiring and shielded cables used in data centers evolved from aerospace applications. Aircraft wire bundles use the same differential signaling and shielding principles, but with additional requirements for weight, temperature, and vibration resistance.',
+      howItWorks: 'Avionics use a layered defense: aircraft-level shielding from the aluminum fuselage, zone-level shielding for equipment bays, equipment-level enclosures, and circuit-level filtering. Cables use aerospace-grade shielded twisted pairs with drain wires bonded to the airframe at multiple points.',
+      stats: [
+        { label: 'Lightning Strike Rating', value: '200,000 A' },
+        { label: 'HIRF Immunity', value: '7200 V/m' },
+        { label: 'Certification Standard', value: 'DO-160G' }
+      ],
+      examples: [
+        'Flight control computers in triple-redundant shielded enclosures',
+        'Fly-by-wire systems using fiber optic data links',
+        'Weather radar with isolated high-power transmitter sections',
+        'Glass cockpit displays with EMI gaskets and filtered connectors'
+      ],
+      companies: ['Collins Aerospace', 'Honeywell', 'Thales', 'BAE Systems', 'L3Harris'],
+      futureImpact: 'More electric aircraft with high-power motor drives create new EMI challenges. Future avionics will use silicon carbide power electronics generating significant high-frequency noise, requiring new shielding approaches and possibly superconducting magnetic shields.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🚗',
+      title: 'Electric Vehicle EMC',
+      short: 'Automotive Electronics',
+      tagline: 'Keeping EVs quiet in the electromagnetic spectrum',
+      description: 'Electric vehicles combine high-power motor drives switching hundreds of amps at high frequencies with sensitive electronics for battery management, infotainment, and autonomous driving. Managing EMI is critical for vehicle safety, regulatory compliance, and preventing interference with other road users.',
+      connection: 'The CAN bus network in vehicles uses twisted pair differential signaling - exactly like Ethernet. EV power cables use shielding and careful routing to prevent the inverter switching noise from disrupting sensitive control systems.',
+      howItWorks: 'EVs use shielded high-voltage cables with 360-degree termination, EMI filters on motor drives and chargers, and careful grounding architecture separating high-power and signal grounds. The battery pack enclosure serves as both structural element and EMI shield.',
+      stats: [
+        { label: 'Inverter Switching', value: '10-20 kHz' },
+        { label: 'EMC Standard', value: 'CISPR 25' },
+        { label: 'Immunity Testing', value: '200 V/m' }
+      ],
+      examples: [
+        'Traction inverters with integrated EMI filters and shielded busbars',
+        'Battery management systems using isolated CAN transceivers',
+        'DC-DC converters with spread spectrum frequency modulation',
+        'Charging systems with conducted EMI filters meeting CISPR 11'
+      ],
+      companies: ['Tesla', 'BYD', 'Bosch', 'Continental', 'Denso'],
+      futureImpact: 'Vehicle-to-everything (V2X) communication, autonomous driving sensors, and wireless charging will increase EMI complexity dramatically. Future EVs may use gallium nitride switches at MHz frequencies, requiring new shielding paradigms and possibly active EMI cancellation.',
+      color: '#22c55e'
+    },
+    {
+      icon: '🖥️',
+      title: 'Data Center Infrastructure',
+      short: 'IT Systems',
+      tagline: 'Ensuring signal integrity at hyperscale',
+      description: 'Modern data centers pack thousands of servers, switches, and power systems into dense configurations. High-speed serial links running at 100+ Gbps are extremely sensitive to EMI, while switch-mode power supplies and cooling fans generate significant noise. Proper EMI management is essential for reliability.',
+      connection: 'Data centers are the ultimate application of the EMI principles explored in this simulation. Every cable type, shielding technique, and grounding practice comes together to enable reliable high-speed data transmission at massive scale.',
+      howItWorks: 'Data centers use structured cabling with appropriate category ratings (Cat6a/Cat8 for copper, fiber for long runs), proper cable management with separation between power and data, shielded racks and cabinets for sensitive equipment, and careful grounding systems to prevent ground loops.',
+      stats: [
+        { label: 'Link Speed', value: '400 Gbps' },
+        { label: 'Bit Error Rate', value: '<10^-12' },
+        { label: 'Uptime Target', value: '99.999%' }
+      ],
+      examples: [
+        'Top-of-rack switches using direct-attach copper with EMI shielding',
+        'Fiber optic interconnects immune to electromagnetic interference',
+        'PDUs with filtered outputs preventing noise propagation',
+        'Shielded server chassis meeting FCC Class A requirements'
+      ],
+      companies: ['Google', 'Microsoft', 'Amazon', 'Equinix', 'Digital Realty'],
+      futureImpact: 'As data rates push toward terabit speeds and AI accelerators demand more power, EMI challenges will intensify. Future data centers may use optical interconnects extensively, co-packaged optics to minimize electrical paths, and liquid cooling that doubles as EMI shielding.',
+      color: '#8b5cf6'
+    }
+  ];
+
   const handleTestAnswer = useCallback((questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;

@@ -1365,6 +1365,104 @@ export default function TotalInternalReflectionRenderer(_props: TotalInternalRef
   );
 
   // =============================================================================
+  // REAL-WORLD APPLICATIONS DATA
+  // =============================================================================
+  const realWorldApps = [
+    {
+      icon: '🌐',
+      title: 'Internet Backbone',
+      short: 'Telecommunications',
+      tagline: 'The invisible highways of global data',
+      description: 'Fiber optic cables form the backbone of the global internet, carrying 99% of intercontinental data traffic. Using total internal reflection, light signals travel through thin glass fibers at nearly the speed of light, connecting continents through underwater cables that span thousands of kilometers. Each fiber can carry terabits of data per second, making modern cloud computing, streaming, and global communication possible.',
+      connection: 'Total internal reflection keeps light trapped inside the fiber core as it bounces along, even around gentle bends. The high refractive index glass core surrounded by lower-index cladding creates the conditions for TIR at shallow angles, allowing signals to travel vast distances with minimal loss.',
+      howItWorks: 'Light from laser diodes enters the fiber core at a shallow angle. The core (n≈1.5) is surrounded by cladding (n≈1.45). When light hits the core-cladding boundary above the critical angle (~8°), TIR occurs and 100% of light reflects back into the core. This bouncing continues millions of times per kilometer. Signals travel at about 200,000 km/s (2/3 the speed of light in vacuum) because light slows in glass.',
+      stats: [
+        { value: '99%', label: 'Of intercontinental data via fiber' },
+        { value: '1.2M km', label: 'Undersea cables deployed' },
+        { value: '100+ Tbps', label: 'Single cable capacity' }
+      ],
+      examples: [
+        'Transatlantic cables connect North America to Europe in just 60ms',
+        'MAREA cable between Virginia and Spain carries 160 Tbps',
+        'Submarine cables support $10 trillion in daily financial transactions',
+        'Single-mode fibers carry signals 100+ km without amplification'
+      ],
+      companies: ['Corning', 'Prysmian Group', 'SubCom', 'NEC', 'Alcatel Submarine Networks'],
+      futureImpact: 'Next-generation hollow-core fibers will transmit light through air instead of glass, achieving 99.7% of vacuum light speed. Multi-core fibers with 19+ cores will multiply capacity. Space-division multiplexing and advanced modulation could push single-fiber capacity beyond 1 petabit per second.',
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      icon: '🏥',
+      title: 'Medical Endoscopy',
+      short: 'Healthcare',
+      tagline: 'Seeing inside the body without surgery',
+      description: 'Medical endoscopes use fiber optic bundles to carry light into and images out of the human body, enabling minimally invasive diagnosis and surgery. Thousands of individual fibers work together - some transmitting illumination light in, others carrying the reflected image back to cameras or the physician\'s eye. This technology has revolutionized medicine by allowing doctors to see inside organs without major surgery.',
+      connection: 'Each fiber in the bundle uses TIR to keep light trapped as the flexible scope bends through body passages. The fibers can turn corners while maintaining clear light transmission, something impossible with mirrors or lenses. Even at sharp bends, light continues reflecting internally as long as the critical angle is maintained.',
+      howItWorks: 'Coherent fiber bundles contain 10,000-50,000 individual fibers arranged identically at both ends. Light enters one end and each fiber transmits its portion of the image via TIR. LED or halogen light travels down illumination fibers to light the tissue. Reflected light returns through imaging fibers, reconstructing a complete image. Modern systems add cameras with digital processing for enhanced visualization.',
+      stats: [
+        { value: '50M+', label: 'Endoscopies performed yearly in US' },
+        { value: '3mm', label: 'Diameter of smallest scopes' },
+        { value: '75%', label: 'Reduction in recovery time vs open surgery' }
+      ],
+      examples: [
+        'Colonoscopy uses 1.5m flexible scopes to examine the entire colon',
+        'Arthroscopy enables knee surgery through 5mm incisions',
+        'Bronchoscopes navigate lung airways to diagnose cancer',
+        'Capsule endoscopy uses swallowable cameras with fiber optic lighting'
+      ],
+      companies: ['Olympus', 'Karl Storz', 'Fujifilm', 'Stryker', 'Boston Scientific'],
+      futureImpact: 'AI-enhanced endoscopes will automatically detect polyps and cancer with superhuman accuracy. Robotic surgical systems will use thinner fiber bundles for even less invasive procedures. New fiber materials will enable UV and infrared imaging for detecting invisible tissue abnormalities.',
+      color: 'from-emerald-500 to-teal-500'
+    },
+    {
+      icon: '📡',
+      title: 'Fiber Optic Sensors',
+      short: 'Industrial',
+      tagline: 'Measuring the unmeasurable with light',
+      description: 'Fiber optic sensors use changes in light transmission through fibers to measure temperature, strain, pressure, and chemical composition in environments too harsh or inaccessible for electronic sensors. The same TIR principle that carries data can detect the tiniest changes in the fiber itself, making measurements with extraordinary precision over distances of many kilometers.',
+      connection: 'When external forces slightly bend the fiber or change its refractive index, the conditions for TIR change subtly. This alters how light propagates through the fiber - its intensity, phase, or wavelength shifts. These changes can be measured with extreme precision, converting physical parameters into optical signals that travel long distances without electrical interference.',
+      howItWorks: 'Distributed sensing uses Brillouin or Raman scattering along the entire fiber length. Light pulses travel down the fiber, and backscattered light reveals temperature or strain at every point. Fiber Bragg gratings are periodic refractive index variations that reflect specific wavelengths - when strain or temperature shifts, the reflected wavelength changes measurably. Evanescent wave sensors detect chemicals by measuring how much light escapes where the fiber contacts the sample.',
+      stats: [
+        { value: '0.1°C', label: 'Temperature resolution achievable' },
+        { value: '100 km', label: 'Single fiber sensing range' },
+        { value: '1 million', label: 'Sensing points per fiber possible' }
+      ],
+      examples: [
+        'Pipeline monitoring detects leaks by sensing temperature changes along buried pipes',
+        'Structural health monitoring embeds fibers in bridges and buildings to detect strain',
+        'Oil well sensors operate at 300°C where electronics would fail',
+        'Perimeter security systems detect footsteps through ground vibration sensing'
+      ],
+      companies: ['Luna Innovations', 'OFS Fitel', 'FBGS Technologies', 'Omnisens', 'Sensornet'],
+      futureImpact: 'Smart infrastructure will embed millions of fiber sensors in roads, buildings, and pipelines for real-time structural monitoring. Wearable fiber sensors will continuously monitor vital signs. Quantum-enhanced fiber sensors will achieve measurement precision approaching fundamental physical limits.',
+      color: 'from-amber-500 to-orange-500'
+    },
+    {
+      icon: '🖥️',
+      title: 'Data Center Interconnects',
+      short: 'Computing',
+      tagline: 'Where light replaces electricity for speed',
+      description: 'Inside massive data centers powering cloud services, fiber optic cables connect thousands of servers at speeds impossible with copper wires. These short-reach optical links, from meters to kilometers, carry the explosive data traffic between compute nodes, storage arrays, and network switches. As AI workloads demand ever more bandwidth, fiber optics enables the dense, high-speed interconnections that make modern computing possible.',
+      connection: 'TIR enables dense wavelength-division multiplexing (WDM) where dozens of different light colors travel through the same fiber simultaneously, each carrying independent data. The fiber\'s ability to trap light perfectly means these channels don\'t interfere with each other, multiplying capacity without adding cables.',
+      howItWorks: 'Vertical-cavity surface-emitting lasers (VCSELs) or distributed feedback lasers send modulated light into multimode or single-mode fibers. Multimode fibers (50μm core) use multiple light paths for short distances (<500m). Single-mode fibers (9μm core) support one path for longer reaches. Silicon photonics integrates optical components onto chips, enabling 800 Gbps transceivers. Co-packaged optics place fiber connections directly on switch ASICs.',
+      stats: [
+        { value: '800 Gbps', label: 'Per-port speeds now common' },
+        { value: '51.2 Tbps', label: 'Single switch capacity' },
+        { value: '10M km', label: 'Fiber in large hyperscale DC' }
+      ],
+      examples: [
+        'GPU clusters for AI training need 400-800G links between every pair',
+        'Storage area networks use fiber to achieve microsecond latency',
+        'Spine-leaf architectures require thousands of parallel fiber links',
+        'Active optical cables integrate transceivers directly into cable assemblies'
+      ],
+      companies: ['Broadcom', 'Intel', 'Cisco', 'Nvidia', 'Coherent'],
+      futureImpact: 'Co-packaged optics will eliminate the transceiver bottleneck by integrating fiber directly with processors. Silicon photonics will enable 1.6 Tbps and 3.2 Tbps links. Optical switching will eventually replace electrical packet switching for lower latency and power consumption in next-generation AI supercomputers.',
+      color: 'from-purple-500 to-pink-500'
+    }
+  ];
+
+  // =============================================================================
   // PHASE RENDERERS
   // =============================================================================
 

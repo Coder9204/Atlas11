@@ -385,6 +385,104 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, o
     onGameEvent?.({ type: 'test_answered', data: { questionIndex: testIndex, answer: answerIndex, correct } });
   }, [testAnswers, testIndex, playSound, onGameEvent]);
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // REAL-WORLD APPLICATIONS DATA (Comprehensive)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const realWorldApps = [
+    {
+      icon: '🎢',
+      title: 'Roller Coasters',
+      short: 'Thrill Rides',
+      tagline: 'Where gravity becomes your engine',
+      description: 'Roller coasters are masterpieces of energy conservation engineering. The initial climb to the highest point stores gravitational potential energy, which then converts to kinetic energy as the train descends. Every subsequent hill, loop, and turn is carefully designed to work within the energy budget established by that first drop.',
+      connection: 'The first hill must always be the tallest because all subsequent motion relies entirely on the potential energy stored at that initial height. Without motors pushing the train after the first climb, the coaster can never rise higher than where it started.',
+      howItWorks: 'A chain lift or launch system does work on the train to raise it to the maximum height, storing gravitational potential energy (PE = mgh). As the train descends, PE converts to kinetic energy (KE = 1/2mv^2). At the bottom of each drop, KE is maximum. Going up the next hill converts KE back to PE. Friction and air resistance gradually dissipate energy as heat, which is why each successive hill must be slightly lower.',
+      stats: [
+        { value: '456 ft', label: 'Tallest drop (Kingda Ka)' },
+        { value: '149 mph', label: 'Fastest speed achieved' },
+        { value: '90%', label: 'Energy efficiency possible' }
+      ],
+      examples: [
+        'Steel Vengeance uses terrain to maximize potential energy storage',
+        'Loop designs require precise energy calculations to maintain safe speeds',
+        'Magnetic brakes convert kinetic energy to electrical energy',
+        'Launch coasters use electromagnetic energy conversion for acceleration'
+      ],
+      companies: ['Six Flags', 'Cedar Fair', 'Intamin', 'Bolliger & Mabillard', 'Rocky Mountain Construction'],
+      futureImpact: 'Next-generation coasters will feature regenerative braking systems that capture kinetic energy during deceleration and store it to power the next launch, making thrill rides more sustainable while enabling even more exciting designs.',
+      color: 'from-red-500 to-orange-500'
+    },
+    {
+      icon: '💧',
+      title: 'Hydroelectric Dams',
+      short: 'Power Generation',
+      tagline: 'Harnessing gravity to light the world',
+      description: 'Hydroelectric dams represent one of humanity\'s most efficient applications of energy conservation. Water stored at height contains enormous gravitational potential energy. As it flows downward through penstocks, this potential energy converts to kinetic energy, which turbines then transform into electrical energy with remarkable efficiency.',
+      connection: 'The dam creates an artificial height difference (head) that determines the potential energy available. The higher the dam and the more water stored, the greater the energy that can be extracted - directly applying PE = mgh on a massive scale.',
+      howItWorks: 'Water is stored in a reservoir behind the dam at elevation h. When released, the water accelerates through penstocks (large pipes), converting potential energy to kinetic energy. The fast-moving water spins turbine blades, converting kinetic energy to rotational mechanical energy. Generators then convert this rotational energy to electrical energy through electromagnetic induction.',
+      stats: [
+        { value: '22,500 MW', label: 'Three Gorges Dam capacity' },
+        { value: '90%+', label: 'Conversion efficiency' },
+        { value: '16%', label: 'World electricity from hydro' }
+      ],
+      examples: [
+        'Pumped storage facilities store energy by pumping water uphill during low demand',
+        'Run-of-river systems use natural water flow without large reservoirs',
+        'Tidal barrages capture energy from ocean tides using the same principles',
+        'Micro-hydro systems power remote communities using small streams'
+      ],
+      companies: ['General Electric', 'Siemens', 'Voith', 'Andritz'],
+      futureImpact: 'Advanced turbine designs and pumped-storage systems will make hydroelectric power a crucial component of renewable energy grids, storing excess solar and wind energy as gravitational potential energy for release during peak demand.',
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      icon: '🕰️',
+      title: 'Pendulum Clocks',
+      short: 'Timekeeping',
+      tagline: 'Energy conservation keeps perfect time',
+      description: 'Pendulum clocks exploit the conservation of mechanical energy in an oscillating system. As the pendulum swings, energy continuously converts between potential and kinetic forms while the total remains nearly constant. This predictable energy exchange creates the regular rhythm that makes accurate timekeeping possible.',
+      connection: 'The period of a pendulum depends only on its length and gravity, not on its energy. This means as long as the pendulum keeps swinging (energy is conserved), it maintains the same timing regardless of how wide the swing is - a principle called isochronism.',
+      howItWorks: 'At the highest points of its swing, the pendulum bob has maximum potential energy and zero kinetic energy (momentarily at rest). As it falls toward the center, PE converts to KE, reaching maximum speed at the lowest point. The bob then rises on the other side, converting KE back to PE. Small energy losses to friction are compensated by the escapement mechanism, which adds tiny impulses from a wound spring or falling weight.',
+      stats: [
+        { value: '1 sec', label: 'Period of 1-meter pendulum' },
+        { value: '±0.5 sec/day', label: 'Precision achievable' },
+        { value: '1656', label: 'Year Huygens invented it' }
+      ],
+      examples: [
+        'Grandfather clocks use long pendulums for slow, stately swings',
+        'Foucault pendulums demonstrate Earth\'s rotation while conserving energy',
+        'Metronomes help musicians by providing consistent energy-conserving beats',
+        'Seismometers use pendulum principles to detect ground motion'
+      ],
+      companies: ['Howard Miller', 'Hermle', 'Kieninger', 'Urgos', 'Seiko'],
+      futureImpact: 'While digital clocks have largely replaced pendulums for timekeeping, the principles continue in precision instruments. Atomic clocks use quantum energy level transitions, and gravitational wave detectors employ pendulum isolation systems to achieve incredible sensitivity.',
+      color: 'from-amber-500 to-yellow-500'
+    },
+    {
+      icon: '🏃',
+      title: 'Pole Vaulting',
+      short: 'Athletics',
+      tagline: 'Converting speed into flight',
+      description: 'Pole vaulting is a spectacular demonstration of energy transformation in athletics. The vaulter converts kinetic energy from their sprint into elastic potential energy stored in the bent pole, which then releases as kinetic energy to launch them upward, where it finally becomes gravitational potential energy at the peak of their vault.',
+      connection: 'The maximum height a vaulter can achieve is limited by their initial kinetic energy plus the work they can add during the vault. Energy conservation explains why faster approach speeds enable higher vaults - more kinetic energy means more potential energy available at the top.',
+      howItWorks: 'The athlete sprints down the runway, building kinetic energy (KE = 1/2mv^2). At takeoff, they plant the pole and begin converting KE into elastic potential energy as the pole bends. The pole then straightens, releasing stored energy to accelerate the vaulter upward. At the peak, nearly all energy has converted to gravitational potential energy (PE = mgh). The vaulter also adds energy through muscular work during the vault.',
+      stats: [
+        { value: '6.24 m', label: 'World record (Duplantis)' },
+        { value: '10 m/s', label: 'Typical approach speed' },
+        { value: '4,000 J', label: 'Energy stored in pole' }
+      ],
+      examples: [
+        'Carbon fiber poles store and release energy more efficiently than older materials',
+        'High jump uses similar KE to PE conversion but without the pole',
+        'Long jump converts horizontal KE to maximize projectile range',
+        'Gymnastics vaulting uses springboards for elastic energy storage'
+      ],
+      companies: ['Nike', 'Gill Athletics', 'UCS Spirit', 'Pacer', 'Nordic Sport'],
+      futureImpact: 'Advanced pole materials and biomechanical analysis will push records higher. Understanding energy conservation helps athletes optimize their technique, converting more of their kinetic energy into height rather than losing it to inefficient movements.',
+      color: 'from-emerald-500 to-teal-500'
+    }
+  ];
+
   // Track visualization component
   const TrackVisualization = ({ type }: { type: string }) => {
     const energy = calculateEnergy();
