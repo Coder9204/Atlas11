@@ -402,6 +402,101 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     },
   ];
 
+  const realWorldApps = [
+    {
+      icon: 'Cpu',
+      title: 'Transistor Doping',
+      short: 'Creating billions of transistors with atomic precision',
+      tagline: 'The foundation of modern computing',
+      description: 'Ion implantation is the primary method for introducing dopant atoms into silicon to create the p-type and n-type regions that form transistors. Every microprocessor contains billions of transistors, each requiring precisely controlled doping profiles achieved through ion implantation.',
+      connection: 'The energy-depth relationship you explored determines exactly where dopants end up in each transistor. Too shallow and the transistor leaks; too deep and it switches slowly.',
+      howItWorks: 'Phosphorus or arsenic ions create n-type regions (extra electrons), while boron ions create p-type regions (electron holes). Multiple implants at different energies build up complex doping profiles for source, drain, and channel regions.',
+      stats: [
+        { value: '100B+', label: 'Transistors per chip' },
+        { value: '<5nm', label: 'Junction depth' },
+        { value: '0.1%', label: 'Dose uniformity' },
+      ],
+      examples: [
+        'Source/drain extension implants for short-channel control',
+        'Halo implants to prevent punch-through',
+        'Well implants for CMOS isolation',
+        'Threshold voltage adjustment implants',
+      ],
+      companies: ['Intel', 'TSMC', 'Samsung', 'GlobalFoundries', 'Applied Materials'],
+      futureImpact: 'As transistors shrink below 3nm, ion implantation faces challenges from statistical dopant fluctuation. Advanced techniques like plasma doping and molecular beam implants are extending the technology to atomic-scale precision.',
+      color: '#3b82f6',
+    },
+    {
+      icon: 'Heart',
+      title: 'Medical Device Coatings',
+      short: 'Making implants that the body accepts',
+      tagline: 'Biocompatibility through surface engineering',
+      description: 'Ion implantation modifies the surface properties of medical implants like artificial joints, stents, and dental implants. By implanting nitrogen, oxygen, or carbon ions, manufacturers create surfaces that are harder, more wear-resistant, and better accepted by human tissue.',
+      connection: 'The same physics that controls dopant depth in silicon controls how deep surface modifications penetrate in titanium and other biomedical materials.',
+      howItWorks: 'High-energy ions penetrate the implant surface, creating a modified layer that transitions gradually to the bulk material. This graded interface prevents coating delamination while providing improved surface properties.',
+      stats: [
+        { value: '500%', label: 'Wear resistance increase' },
+        { value: '20+', label: 'Year implant lifetime' },
+        { value: '95%', label: 'Reduced bacterial adhesion' },
+      ],
+      examples: [
+        'Hip and knee replacement bearing surfaces',
+        'Coronary stents with anti-thrombogenic coatings',
+        'Dental implants with improved osseointegration',
+        'Surgical instruments with antimicrobial surfaces',
+      ],
+      companies: ['Zimmer Biomet', 'Stryker', 'Medtronic', 'Boston Scientific'],
+      futureImpact: 'Next-generation implants will use ion implantation to create smart surfaces that release drugs on demand, prevent infection, and actively promote tissue integration through engineered surface chemistry.',
+      color: '#ef4444',
+    },
+    {
+      icon: 'Wrench',
+      title: 'Tool Hardening',
+      short: 'Making cutting tools last 10x longer',
+      tagline: 'Industrial surface engineering',
+      description: 'Ion implantation transforms the surfaces of cutting tools, dies, and molds by implanting nitrogen, carbon, or metal ions. The modified surface layer becomes extremely hard and wear-resistant while the bulk material retains its toughness.',
+      connection: 'The projected range and straggle concepts apply to metals just as they do to silicon. Controlling implant depth creates optimal hardness profiles for different applications.',
+      howItWorks: 'Nitrogen ions implanted into steel form hard nitride precipitates in the surface layer. The gradual concentration profile prevents the sharp interface that would cause coating failure under stress.',
+      stats: [
+        { value: '10x', label: 'Tool life extension' },
+        { value: '80%', label: 'Friction reduction' },
+        { value: '3x', label: 'Surface hardness increase' },
+      ],
+      examples: [
+        'Precision injection mold surfaces',
+        'High-speed steel cutting tools',
+        'Stamping dies for automotive parts',
+        'Extrusion dies for aluminum processing',
+      ],
+      companies: ['Bodycote', 'Ionbond', 'Oerlikon Balzers', 'Praxair Surface Technologies', 'Kennametal'],
+      futureImpact: 'Hybrid treatments combining ion implantation with coating technologies are enabling tools that operate at higher speeds and temperatures, reducing manufacturing energy consumption and enabling new material processing capabilities.',
+      color: '#f59e0b',
+    },
+    {
+      icon: 'Sun',
+      title: 'Solar Cell Manufacturing',
+      short: 'Capturing more sunlight with precision doping',
+      tagline: 'Powering the renewable energy revolution',
+      description: 'Ion implantation creates the p-n junctions in solar cells that convert sunlight to electricity. Precise control over doping profiles maximizes the number of photogenerated carriers that reach the contacts, directly increasing cell efficiency.',
+      connection: 'The junction depth and doping profile concepts you learned determine how effectively a solar cell captures photons at different wavelengths and collects the resulting charge carriers.',
+      howItWorks: 'Phosphorus implantation creates the n-type emitter layer on p-type silicon wafers. The implant energy sets the junction depth, optimizing the trade-off between blue response (shallow junction) and carrier collection (deeper junction).',
+      stats: [
+        { value: '26%+', label: 'Record cell efficiency' },
+        { value: '1TW', label: 'Annual production capacity' },
+        { value: '$0.02', label: 'Per watt processing cost' },
+      ],
+      examples: [
+        'Emitter formation in crystalline silicon cells',
+        'Back surface field implants for passivation',
+        'Selective emitter patterns for reduced recombination',
+        'Interdigitated back contact cell fabrication',
+      ],
+      companies: ['LONGi', 'JinkoSolar', 'Canadian Solar', 'First Solar', 'Meyer Burger'],
+      futureImpact: 'Advanced cell architectures like heterojunction and TOPCon designs use ion implantation to create ultra-thin, highly doped contact layers that are pushing commercial cell efficiencies above 25% while reducing material usage.',
+      color: '#10b981',
+    },
+  ];
+
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;

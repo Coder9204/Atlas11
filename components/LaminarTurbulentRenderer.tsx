@@ -303,6 +303,102 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
     }
   ];
 
+  // Real-world applications (comprehensive)
+  const realWorldApps = [
+    {
+      icon: '✈️',
+      title: 'Aircraft Aerodynamics',
+      short: 'Aviation flight',
+      tagline: 'Mastering Flow for Fuel Efficiency',
+      description: 'Aircraft designers obsess over maintaining laminar flow across wing surfaces. The boundary layer transition from laminar to turbulent dramatically increases skin friction drag, directly impacting fuel consumption. Modern aircraft like the Boeing 787 and Airbus A350 use natural laminar flow airfoils, smooth composite surfaces, and careful pressure gradient management to delay transition and reduce drag by up to 15%.',
+      connection: 'The Reynolds number governs when boundary layer transition occurs on aircraft surfaces. At flight speeds and altitudes, engineers must carefully design wing profiles that maintain favorable pressure gradients to keep flow laminar as long as possible, minimizing the energy penalty of turbulent boundary layers.',
+      howItWorks: 'Wings are designed with specific airfoil shapes that create favorable pressure gradients (pressure decreasing in flow direction) which stabilize the laminar boundary layer. Surface roughness must be minimized—even bug splatter or ice crystals can trigger premature transition. Advanced hybrid laminar flow control (HLFC) uses boundary layer suction through micro-perforated surfaces to actively remove turbulent disturbances and extend laminar regions.',
+      stats: [
+        { value: '15%', label: 'Potential fuel savings', icon: '⛽' },
+        { value: '5-10×', label: 'Drag increase (laminar to turbulent)', icon: '📈' },
+        { value: '10+ million', label: 'Flight Reynolds number', icon: '🔢' }
+      ],
+      examples: [
+        'Boeing 787 Dreamliner uses natural laminar flow nacelles reducing drag by 10%',
+        'Gliders achieve 60:1 lift-to-drag ratios with extensive laminar flow',
+        'NASA X-66 demonstrator tests hybrid laminar flow control technology',
+        'F-22 Raptor uses stealth coatings that also promote laminar flow'
+      ],
+      companies: ['Boeing', 'Airbus', 'NASA', 'Lockheed Martin', 'Rolls-Royce'],
+      futureImpact: 'Active laminar flow control with smart surfaces that detect and respond to turbulence onset could enable 25-30% fuel efficiency gains. Combined with sustainable aviation fuels and electric propulsion, this could dramatically reduce aviation\'s carbon footprint.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🩺',
+      title: 'Blood Flow in Arteries',
+      short: 'Cardiovascular dynamics',
+      tagline: 'When Turbulence Signals Trouble',
+      description: 'Blood normally flows through arteries in a smooth, laminar pattern. When vessels become narrowed by atherosclerotic plaques (stenosis), blood velocity increases through the constriction, raising the local Reynolds number and triggering turbulent flow. This turbulence creates audible sounds called bruits that doctors can detect with a stethoscope, serving as an early warning of cardiovascular disease.',
+      connection: 'The transition from laminar to turbulent blood flow directly correlates with vessel health. Normal arterial flow has Reynolds numbers around 1000-2000 (well within laminar regime). Stenosis increases local velocity, pushing Re above 4000 and triggering turbulence. The chaotic eddies damage the vessel endothelium and accelerate plaque growth—a dangerous positive feedback loop.',
+      howItWorks: 'Blood viscosity (3-4 centipoise) and vessel geometry determine the critical Reynolds number for transition. At a 70% stenosis, blood velocity can increase 10-fold through the narrowing. Doppler ultrasound measures these velocity changes to quantify stenosis severity. Turbulent flow also increases shear stress on vessel walls, activating platelets and promoting clot formation at the stenosis site.',
+      stats: [
+        { value: '30 cm/s', label: 'Normal aortic velocity', icon: '🌊' },
+        { value: '~2300', label: 'Critical Re in vessels', icon: '⚠️' },
+        { value: '70%', label: 'Stenosis for turbulent onset', icon: '❤️' }
+      ],
+      examples: [
+        'Carotid artery screening detects stroke risk via turbulent flow sounds',
+        'Aortic valve stenosis increases velocity from 1 m/s to over 5 m/s',
+        'Heart murmurs result from turbulent flow through abnormal valves',
+        'Artificial heart valves are designed to minimize turbulence and hemolysis'
+      ],
+      companies: ['Medtronic', 'Edwards Lifesciences', 'Boston Scientific', 'Abbott', 'Siemens Healthineers'],
+      futureImpact: 'AI-powered acoustic sensors could enable continuous at-home cardiovascular monitoring, detecting subtle changes in flow patterns years before symptoms appear. Computational fluid dynamics now guides personalized stent placement to restore laminar flow and prevent restenosis.',
+      color: '#ef4444'
+    },
+    {
+      icon: '🛢️',
+      title: 'Pipeline Design',
+      short: 'Oil and gas transport',
+      tagline: 'Billions in Pumping Costs at Stake',
+      description: 'The oil and gas industry transports fluids through thousands of miles of pipelines, where the difference between laminar and turbulent flow determines pumping energy requirements and operational costs. Pipeline engineers carefully balance diameter, flow rate, and fluid properties to optimize the Reynolds number and minimize pressure losses, potentially saving billions of dollars annually across the global pipeline network.',
+      connection: 'Pipeline flow regime directly determines friction factor and pressure drop. Laminar flow (Re < 2300) has friction factor f = 64/Re, while turbulent flow follows the Moody diagram with much higher values. A pipeline operating in turbulent regime may require 10× more pumping power than one designed to maintain laminar conditions.',
+      howItWorks: 'Engineers select pipe diameter based on expected flow rates and fluid viscosity to achieve target Reynolds numbers. For crude oil (viscosity 10-1000 cP), larger diameters maintain laminar flow. Drag-reducing agents (DRAs)—long-chain polymers—can reduce turbulent friction by up to 80% by suppressing eddy formation near the pipe wall. Pipeline operators continuously monitor flow conditions and inject DRAs at optimal locations.',
+      stats: [
+        { value: '80%', label: 'Friction reduction with DRAs', icon: '📉' },
+        { value: '$2B+', label: 'Annual DRA market value', icon: '💰' },
+        { value: '2.5 million km', label: 'Global pipeline network', icon: '🌍' }
+      ],
+      examples: [
+        'Trans-Alaska Pipeline uses heated oil and DRAs to maintain flow',
+        'Natural gas pipelines operate at high Reynolds numbers (10⁷) with smooth pipe walls',
+        'Subsea pipelines require careful thermal management to prevent wax formation',
+        'Slurry pipelines transport coal-water mixtures with controlled turbulence'
+      ],
+      companies: ['Kinder Morgan', 'Enterprise Products', 'TransCanada', 'Baker Hughes', 'Schlumberger'],
+      futureImpact: 'Smart pipeline networks with distributed sensors and AI-controlled DRA injection will optimize flow conditions in real-time. Hydrogen transport pipelines will require new flow regime considerations due to hydrogen\'s unique properties (low viscosity, high diffusivity).',
+      color: '#f59e0b'
+    },
+    {
+      icon: '🔬',
+      title: 'Microfluidics',
+      short: 'Lab-on-chip devices',
+      tagline: 'Where Laminar Flow is Guaranteed',
+      description: 'Microfluidic devices operate at length scales where turbulence is essentially impossible. With channel dimensions of 10-500 micrometers and typical velocities of mm/s to cm/s, Reynolds numbers rarely exceed 100—firmly in the laminar regime. This predictable flow behavior enables precise control of chemical reactions, cell sorting, and diagnostic assays on "lab-on-chip" devices that fit in your palm.',
+      connection: 'The Reynolds number scaling (Re = ρvL/μ) means that microscale channels inherently operate in laminar conditions. At L = 100 μm and v = 1 cm/s in water, Re ≈ 1—thousands of times below the turbulent transition. This creates perfectly parallel streamlines where fluids flow side-by-side without mixing, enabling new analytical techniques impossible at macro scales.',
+      howItWorks: 'In microfluidic channels, two fluid streams can flow parallel to each other and only mix by molecular diffusion at their interface. This enables precise control of concentration gradients, reaction timing, and particle sorting. Inertial focusing uses the subtle effects of fluid inertia at moderate Re (1-100) to position cells or particles at specific equilibrium positions without active forces—enabling high-throughput sorting at millions of particles per second.',
+      stats: [
+        { value: '<100', label: 'Typical channel Re', icon: '📊' },
+        { value: '10-500 μm', label: 'Channel dimensions', icon: '📏' },
+        { value: '10⁶/sec', label: 'Cell sorting throughput', icon: '🧫' }
+      ],
+      examples: [
+        'COVID-19 rapid antigen tests use microfluidic sample transport',
+        'Cell-sorting chips isolate circulating tumor cells from blood',
+        'Organ-on-chip devices replicate tissue microenvironments for drug testing',
+        'Point-of-care diagnostics detect biomarkers in minutes from a finger prick'
+      ],
+      companies: ['Illumina', 'Fluidigm', 'Dolomite Microfluidics', 'Standard BioTools', '10x Genomics'],
+      futureImpact: 'Lab-on-chip technology will democratize medical diagnostics, enabling comprehensive blood panels from a single drop of blood. Microfluidic organs-on-chips will reduce animal testing while providing more accurate drug response predictions through personalized patient-derived cell cultures.',
+      color: '#8b5cf6'
+    }
+  ];
+
   // Handle test answer
   const handleTestAnswer = (answerIndex: number) => {
     playSound('click');

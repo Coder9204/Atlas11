@@ -349,6 +349,101 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     return colors.cool;
   };
 
+  const realWorldApps = [
+    {
+      icon: 'Sun',
+      title: 'Solar Panel Inspection',
+      short: 'Photovoltaics',
+      tagline: 'Detecting hidden defects before they cause failures',
+      description: 'Thermal imaging revolutionizes solar farm maintenance by revealing cell-level defects invisible to the naked eye. Hotspots caused by shading, cracked cells, or degraded connections show up as bright spots on infrared cameras, enabling proactive maintenance before catastrophic failures occur.',
+      connection: 'The same hotspot physics you learned applies directly here - shaded or damaged cells go into reverse bias, dissipating power as heat that thermal cameras can detect from the ground or drones.',
+      howItWorks: 'Infrared cameras detect the 8-14 micrometer wavelength radiation emitted by objects based on their temperature. Solar panels typically operate at 40-60C, but hotspots can exceed 150C, creating stark thermal contrast that identifies problem cells instantly.',
+      stats: [
+        { value: '85%', label: 'Defects found via thermal imaging' },
+        { value: '10x', label: 'Faster than visual inspection' },
+        { value: '$50K+', label: 'Typical savings per MW annually' }
+      ],
+      examples: [
+        'Drone-based thermal inspection of utility-scale solar farms',
+        'Handheld IR cameras for residential system troubleshooting',
+        'Automated monitoring systems with fixed thermal sensors',
+        'Quality control during manufacturing to catch defects early'
+      ],
+      companies: ['FLIR Systems', 'DJI Enterprise', 'Raptor Maps', 'SunPower', 'First Solar'],
+      futureImpact: 'AI-powered thermal analysis will enable real-time hotspot detection across millions of panels, predicting failures weeks in advance and automatically dispatching maintenance crews before damage occurs.',
+      color: '#f59e0b'
+    },
+    {
+      icon: 'Cpu',
+      title: 'Chip Thermal Analysis',
+      short: 'Semiconductors',
+      tagline: 'Managing heat in microscopic circuits',
+      description: 'Modern processors pack billions of transistors into chips smaller than a fingernail, creating intense localized heating. Thermal imaging at the chip level identifies hotspots that limit performance, cause reliability issues, and drive cooling system design.',
+      connection: 'Just like a shaded solar cell dissipates power as heat due to current mismatch, transistors in high-activity regions dissipate more power, creating thermal gradients that affect performance and longevity.',
+      howItWorks: 'Specialized infrared microscopes with sub-micrometer resolution map temperature distributions across active chips. Lock-in thermography synchronizes with clock signals to isolate heat from specific circuit blocks, while transient thermal imaging captures nanosecond-scale heating events.',
+      stats: [
+        { value: '100W/cm2', label: 'Power density in modern CPUs' },
+        { value: '0.1C', label: 'Temperature resolution achieved' },
+        { value: '1um', label: 'Spatial resolution possible' }
+      ],
+      examples: [
+        'CPU and GPU hotspot mapping for cooler design optimization',
+        'Failure analysis of defective integrated circuits',
+        'Power integrity verification during chip development',
+        'Thermal validation of 3D stacked chip packages'
+      ],
+      companies: ['Intel', 'AMD', 'NVIDIA', 'Quantum Focus Instruments', 'Microsanj'],
+      futureImpact: 'As chips move to 3D stacking and chiplet architectures, thermal management becomes even more critical. Advanced thermal imaging will guide the design of integrated cooling solutions and adaptive power management.',
+      color: '#8b5cf6'
+    },
+    {
+      icon: 'Building',
+      title: 'Building Thermography',
+      short: 'Energy Auditing',
+      tagline: 'Making invisible heat loss visible',
+      description: 'Buildings account for 40% of global energy consumption, with much wasted through poor insulation, air leaks, and thermal bridges. Infrared thermography reveals these invisible energy losses, guiding cost-effective retrofits that dramatically reduce heating and cooling costs.',
+      connection: 'The thermal imaging principles used to detect solar panel hotspots apply directly to buildings - temperature differences indicate where energy is being wasted through conduction, convection, or radiation.',
+      howItWorks: 'During cold weather, heated buildings lose warmth through defects that show up as warm spots on exterior thermal scans. Conversely, in summer, AC losses appear as cool spots. Interior scans reveal missing insulation, air infiltration paths, and moisture problems before they cause visible damage.',
+      stats: [
+        { value: '30%', label: 'Typical energy savings identified' },
+        { value: '3-5yr', label: 'Payback on recommended upgrades' },
+        { value: '40%', label: 'Buildings share of energy use' }
+      ],
+      examples: [
+        'Home energy audits identifying insulation gaps and air leaks',
+        'Commercial building commissioning and retro-commissioning',
+        'Detecting moisture intrusion and mold risk in walls',
+        'Verifying quality of new construction insulation installation'
+      ],
+      companies: ['FLIR Systems', 'Testo', 'Building Diagnostics', 'Snell Group', 'Owens Corning'],
+      futureImpact: 'Building codes increasingly require thermal verification of insulation. Drone-based neighborhood-scale thermal surveys will help cities prioritize weatherization programs and track progress toward carbon neutrality goals.',
+      color: '#10b981'
+    },
+    {
+      icon: 'Heart',
+      title: 'Medical Thermal Imaging',
+      short: 'Healthcare',
+      tagline: 'Non-invasive detection of inflammation and circulation',
+      description: 'The human body emits infrared radiation proportional to skin temperature, which varies with blood flow, metabolism, and inflammation. Medical thermography provides a completely non-invasive, radiation-free way to detect abnormalities ranging from breast tumors to diabetic foot complications.',
+      connection: 'Like solar cell hotspots indicating localized power dissipation, elevated skin temperatures indicate increased metabolic activity or blood flow - often early signs of disease before other symptoms appear.',
+      howItWorks: 'High-resolution thermal cameras detect temperature variations as small as 0.02C across the skin surface. Abnormal thermal patterns - asymmetric heat, unexpected hot or cold zones - can indicate tumors, vascular problems, inflammation, or nerve damage before they become clinically apparent.',
+      stats: [
+        { value: '97%', label: 'Sensitivity for breast abnormalities' },
+        { value: '0.02C', label: 'Temperature sensitivity achieved' },
+        { value: '0', label: 'Radiation exposure (completely safe)' }
+      ],
+      examples: [
+        'Breast cancer screening as adjunct to mammography',
+        'Diabetic foot assessment to prevent amputations',
+        'Sports medicine for injury detection and recovery monitoring',
+        'Fever screening at airports and public venues'
+      ],
+      companies: ['Meditherm', 'FLIR Systems', 'Infrared Cameras Inc', 'Seek Thermal', 'Therma-Scan'],
+      futureImpact: 'AI-analyzed thermal imaging will become a routine part of preventive healthcare, detecting early signs of cardiovascular disease, cancer, and metabolic disorders during regular checkups with zero radiation risk.',
+      color: '#ef4444'
+    }
+  ];
+
   const renderVisualization = (interactive: boolean, showBypass: boolean = false) => {
     const width = 520;
     const height = 400;

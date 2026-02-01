@@ -910,6 +910,124 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
     },
   ];
 
+  // ==================== REAL-WORLD APPLICATIONS ====================
+  const realWorldApps = [
+    {
+      icon: '🏗️',
+      title: 'Dam Spillway Design',
+      short: 'Stilling basins protect infrastructure',
+      tagline: 'Engineering controlled chaos to protect billion-dollar infrastructure',
+      description: 'Dam spillways release massive volumes of water during floods. Without energy dissipation, this high-velocity flow would erode the riverbed and undermine the dam foundation. Engineers design stilling basins that force hydraulic jumps, converting destructive kinetic energy into harmless turbulence.',
+      connection: 'The hydraulic jump in your sink demonstrates the same supercritical-to-subcritical transition. Dam engineers scale this up, designing basins where the jump occurs at a predictable location to maximize energy dissipation.',
+      howItWorks: 'Water exits the spillway at supercritical speeds (Fr > 1), enters the stilling basin, and undergoes a hydraulic jump. The turbulent roller dissipates up to 85% of the water\'s energy. Baffles and end sills control jump position and enhance energy loss.',
+      stats: [
+        { value: '85%', label: 'Energy dissipation possible' },
+        { value: '50m/s', label: 'Spillway exit velocities' },
+        { value: '$2B+', label: 'Cost of major dam projects' },
+      ],
+      examples: [
+        'Hoover Dam stilling basin handles 11,000 m³/s during floods',
+        'Three Gorges Dam uses stepped spillways for staged energy dissipation',
+        'Glen Canyon Dam flip bucket launches water to dissipate energy in air',
+        'Itaipu Dam stilling basin is 162m wide with 15m depth variation',
+      ],
+      companies: [
+        'U.S. Bureau of Reclamation',
+        'U.S. Army Corps of Engineers',
+        'Bechtel',
+        'Stantec',
+        'AECOM',
+      ],
+      futureImpact: 'Climate change is increasing flood frequency and intensity, requiring dam spillway upgrades worldwide. Advanced CFD modeling allows engineers to optimize stilling basin designs for extreme events while minimizing construction costs.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🌊',
+      title: 'River Engineering',
+      short: 'Flood control through flow management',
+      tagline: 'Taming rivers to protect communities and ecosystems',
+      description: 'River engineers use hydraulic jumps to control flood waters, reduce bank erosion, and maintain navigable channels. Strategic placement of weirs, drop structures, and grade control structures creates predictable hydraulic jumps that dissipate energy and stabilize river systems.',
+      connection: 'Just as your sink jump occurs where fast flow meets resistance, river engineers create obstacles that force jumps at specific locations. The Froude number relationship you observed applies directly to designing these structures.',
+      howItWorks: 'Grade control structures (low dams or weirs) create elevation drops that accelerate water to supercritical flow. Downstream, the flow depth increases and a hydraulic jump forms. Engineers calculate the conjugate depth ratio to ensure the jump stays in the desired location.',
+      stats: [
+        { value: '70%', label: 'Flood damage reduction possible' },
+        { value: '10,000+', label: 'Grade control structures in US rivers' },
+        { value: '$1.1T', label: 'US flood damage since 1980' },
+      ],
+      examples: [
+        'Mississippi River levee systems use controlled overflows with jump dissipation',
+        'Los Angeles River concrete channels create stable supercritical flow',
+        'Netherlands Delta Works use hydraulic jumps in storm surge barriers',
+        'Yellow River sedimentation control uses jump turbulence for mixing',
+      ],
+      companies: [
+        'Jacobs Engineering',
+        'HDR Inc.',
+        'Tetra Tech',
+        'Black & Veatch',
+      ],
+      futureImpact: 'Nature-based solutions are replacing hard infrastructure. Engineers now design "living" grade control structures using boulders and vegetation that create hydraulic jumps while providing fish habitat and maintaining natural aesthetics.',
+      color: '#06b6d4',
+    },
+    {
+      icon: '🏄',
+      title: 'Whitewater Rapids',
+      short: 'Recreation through natural hydraulics',
+      tagline: 'Where physics meets adventure sports',
+      description: 'Whitewater rapids form where river gradient, rocks, and constrictions create hydraulic jumps. These standing waves and hydraulic features power a multi-billion dollar recreation industry. Engineers now design artificial whitewater courses using hydraulic jump principles.',
+      connection: 'The standing wave at your sink jump is identical in physics to river waves that kayakers surf. Both are stationary hydraulic jumps where supercritical flow transitions to subcritical, creating a persistent wave feature.',
+      howItWorks: 'River flow accelerates over shallow rocks (supercritical), then meets deeper, slower water downstream. The hydraulic jump creates features like "holes" (recirculating water), "waves" (standing waves), and "pillows" (water piling against obstacles). Feature intensity depends on Froude number.',
+      stats: [
+        { value: '$12B', label: 'US paddle sports industry annually' },
+        { value: '50+', label: 'Artificial whitewater parks worldwide' },
+        { value: '3.2M', label: 'Kayakers in the US alone' },
+      ],
+      examples: [
+        'U.S. National Whitewater Center uses adjustable weirs for tunable hydraulic jumps',
+        'Eiskanal in Germany (1972 Olympics) pioneered artificial whitewater design',
+        'River surfing waves in Munich\'s Eisbach are engineered standing jumps',
+        'Lee Valley White Water Centre uses movable obstacles for varied jump patterns',
+      ],
+      companies: [
+        'S2o Design',
+        'Whitewater Parks International',
+        'McLaughlin Whitewater Design',
+        'Recreation Engineering and Planning',
+      ],
+      futureImpact: 'Adjustable whitewater venues can now modify hydraulic features in real-time using pneumatic systems. This allows the same course to host beginner training and Olympic competition, maximizing facility utility.',
+      color: '#10b981',
+    },
+    {
+      icon: '🏭',
+      title: 'Industrial Mixing',
+      short: 'Chemical processing efficiency',
+      tagline: 'Harnessing turbulence for better chemical reactions',
+      description: 'Chemical processing plants use hydraulic jumps for rapid mixing of reactants, gas absorption, and heat transfer. The intense turbulence at the jump provides mixing rates impossible to achieve with mechanical stirrers, while the predictable location allows precise process control.',
+      connection: 'The turbulent energy dissipation at your sink jump creates intense mixing. Industrial processes scale this up, using the jump\'s chaotic flow to blend chemicals, dissolve gases, or transfer heat thousands of times faster than diffusion alone.',
+      howItWorks: 'Reactants enter as supercritical flow in a channel or pipe. A hydraulic jump is induced by expansion, obstruction, or depth change. The turbulent roller zone provides 10-100x the mixing of laminar flow. Residence time in the jump zone is controlled by jump strength (Froude number).',
+      stats: [
+        { value: '100x', label: 'Mixing improvement vs laminar flow' },
+        { value: '40%', label: 'Energy savings vs mechanical mixers' },
+        { value: '99.9%', label: 'Gas absorption efficiency achievable' },
+      ],
+      examples: [
+        'Water treatment plants use jump aerators for chlorine mixing',
+        'Pulp and paper mills use hydraulic jumps for chemical bleaching',
+        'Wastewater treatment uses jump aeration for biological oxygen demand',
+        'Food processing uses hydraulic jumps for rapid pasteurization mixing',
+      ],
+      companies: [
+        'Veolia',
+        'Xylem Inc.',
+        'Evoqua Water Technologies',
+        'SUEZ Water Technologies',
+        'Alfa Laval',
+      ],
+      futureImpact: 'Microfluidic devices are bringing hydraulic jump mixing to lab-on-chip applications. Microscale jumps enable rapid reaction screening for drug discovery, requiring only nanoliters of expensive reagents.',
+      color: '#f59e0b',
+    },
+  ];
+
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{

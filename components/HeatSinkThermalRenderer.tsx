@@ -379,6 +379,101 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({
     { title: "Power Electronics", icon: "⚡", description: "IGBTs and MOSFETs in inverters need careful thermal management. Poor cooling causes thermal runaway.", details: "Thermal resistance from junction to case is a key datasheet spec." }
   ];
 
+  const realWorldApps = [
+    {
+      icon: "💻",
+      title: "CPU/GPU Cooling",
+      short: "Computing",
+      tagline: "Keeping silicon cool at 5 billion transistors",
+      description: "Modern processors pack billions of transistors into a chip smaller than your fingernail, generating 65-350W of heat. Heat sinks with optimized fin arrays and thermal interface materials create a low-resistance thermal path from the silicon die to ambient air, preventing thermal throttling and extending component lifespan.",
+      connection: "The thermal resistance chain you explored - from die through TIM to heatsink fins - is exactly how every computer keeps its processor from melting. Each layer's thermal resistance adds up, making every interface critical.",
+      howItWorks: "Heat conducts from the CPU die through the integrated heat spreader (IHS), across thermal paste, into the heatsink base, then spreads through fins where forced airflow carries it away. Tower coolers use heat pipes to move heat vertically, while AIO liquid coolers transport heat to a remote radiator.",
+      stats: [
+        { value: "350W", label: "Max TDP of high-end desktop CPUs" },
+        { value: "0.2 K/W", label: "Premium thermal paste resistance" },
+        { value: "90°C", label: "Typical CPU thermal throttle point" }
+      ],
+      examples: [
+        "Tower coolers with 6+ heat pipes for enthusiast builds",
+        "All-in-one liquid coolers with 360mm radiators",
+        "Vapor chamber designs in gaming laptops",
+        "Server-grade copper heatsinks for data centers"
+      ],
+      companies: ["Noctua", "Corsair", "NZXT", "be quiet!", "Cooler Master"],
+      futureImpact: "As chiplet architectures and 3D stacking increase power density, advanced cooling solutions like microfluidic cold plates and integrated thermoelectric coolers will become essential for next-generation processors.",
+      color: "#f97316"
+    },
+    {
+      icon: "💡",
+      title: "LED Lighting",
+      short: "Thermal Management",
+      tagline: "Extending LED life through smart heat dissipation",
+      description: "High-power LEDs convert only 30-50% of electrical energy to light - the rest becomes heat concentrated in a tiny junction. Without proper thermal management, junction temperatures soar, dramatically reducing light output and cutting LED lifespan from 50,000 hours to just a few thousand.",
+      connection: "LED thermal design uses the same series resistance concept: junction to substrate, substrate to heat sink, heat sink to air. The thermal resistance chain directly determines junction temperature and LED longevity.",
+      howItWorks: "Heat flows from the LED die through a thermally conductive substrate (often metal-core PCB), across thermal interface material, into an aluminum heat sink. Passive convection or active cooling dissipates heat to the environment. Lower thermal resistance means cooler junctions and brighter, longer-lasting LEDs.",
+      stats: [
+        { value: "50,000 hrs", label: "LED lifespan with proper cooling" },
+        { value: "10°C", label: "Every 10°C rise halves LED life" },
+        { value: "150 lm/W", label: "Efficacy of well-cooled LEDs" }
+      ],
+      examples: [
+        "Stadium and arena lighting with massive heat sinks",
+        "Automotive headlights with integrated cooling fins",
+        "Horticultural grow lights requiring sustained output",
+        "Stage and entertainment lighting at high power"
+      ],
+      companies: ["Cree", "Lumileds", "OSRAM", "Seoul Semiconductor", "Nichia"],
+      futureImpact: "Micro-LED displays and laser-based lighting will push thermal management further, requiring innovative solutions like graphene heat spreaders and phase-change materials integrated directly into LED packages.",
+      color: "#eab308"
+    },
+    {
+      icon: "⚡",
+      title: "Power Electronics",
+      short: "Industrial",
+      tagline: "Managing megawatts in industrial power systems",
+      description: "Power semiconductors like IGBTs and MOSFETs in industrial drives, welders, and power supplies switch thousands of amps at high frequencies. Switching and conduction losses generate intense heat that must be managed to prevent thermal runaway and ensure reliable operation.",
+      connection: "Industrial power modules specify junction-to-case thermal resistance as a critical parameter. Your understanding of series thermal resistance helps engineers calculate heat sink requirements to keep devices within safe operating temperatures.",
+      howItWorks: "Power modules mount to large extruded aluminum heat sinks using thermal grease or pads. For high-power applications, liquid cold plates circulate coolant directly under the modules. The total thermal resistance from junction to ambient determines maximum continuous power handling.",
+      stats: [
+        { value: "175°C", label: "Max junction temp for SiC devices" },
+        { value: "500 kW", label: "Power handled by industrial drives" },
+        { value: "0.05 K/W", label: "Liquid cold plate resistance" }
+      ],
+      examples: [
+        "Variable frequency drives for industrial motors",
+        "Welding inverters delivering hundreds of amps",
+        "Uninterruptible power supplies for data centers",
+        "Solar inverters converting DC to grid AC"
+      ],
+      companies: ["Infineon", "Semikron", "Danfoss", "ABB", "Mitsubishi Electric"],
+      futureImpact: "Wide-bandgap semiconductors like SiC and GaN operate at higher temperatures and frequencies, enabling more compact power electronics but requiring advanced thermal solutions including double-sided cooling and embedded heat pipes.",
+      color: "#8b5cf6"
+    },
+    {
+      icon: "🚗",
+      title: "Electric Vehicle Inverters",
+      short: "Automotive",
+      tagline: "Powering the electric revolution with thermal precision",
+      description: "EV traction inverters convert battery DC to AC for the drive motors, handling 100-300kW while fitting in compact spaces. The power modules inside experience extreme thermal cycling as drivers accelerate and brake, making thermal management critical for reliability and range.",
+      connection: "EV inverters are the ultimate test of thermal design. The thermal resistance from power module junction through TIM, cold plate, and coolant determines how much power the vehicle can sustain without derating - directly affecting acceleration and hill-climbing ability.",
+      howItWorks: "Power modules bond to liquid-cooled cold plates with optimized fin structures. Coolant (often water-glycol) circulates through the cold plate, absorbing heat and carrying it to a front radiator. Advanced designs use pin-fin cold plates and direct substrate cooling to minimize thermal resistance.",
+      stats: [
+        { value: "300 kW", label: "Peak power in performance EVs" },
+        { value: "65°C", label: "Typical coolant temperature limit" },
+        { value: "1M cycles", label: "Thermal cycling requirement" }
+      ],
+      examples: [
+        "Tesla's integrated drive unit with advanced cooling",
+        "Porsche Taycan's 800V silicon carbide inverter",
+        "Commercial EV bus inverters handling sustained loads",
+        "Formula E race car power electronics"
+      ],
+      companies: ["Tesla", "BorgWarner", "Vitesco", "Bosch", "ZF"],
+      futureImpact: "Next-generation EVs will use 800V+ architectures and silicon carbide devices, enabling faster charging and higher efficiency. Immersion cooling and integrated motor-inverter designs will push thermal management boundaries to achieve greater power density.",
+      color: "#10b981"
+    }
+  ];
+
   const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
 
   const getTempColor = (temp: number) => {

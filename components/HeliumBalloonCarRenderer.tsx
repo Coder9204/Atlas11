@@ -708,6 +708,126 @@ export default function HeliumBalloonCarRenderer({
     </defs>
   );
 
+  // ─────────────────────────────────────────────────────────────
+  // Real-World Applications Data
+  // ─────────────────────────────────────────────────────────────
+  const realWorldApps = [
+    {
+      icon: '🎈',
+      title: 'Weather Balloons',
+      short: 'Meteorology',
+      tagline: 'Probing the atmosphere through buoyancy-driven ascent',
+      description: 'Weather balloons (radiosondes) exploit the same buoyancy physics demonstrated by helium balloons in cars. Filled with helium or hydrogen, these balloons rise through the atmosphere at controlled rates, carrying instrument packages that measure temperature, humidity, pressure, and wind speed at various altitudes. Over 900 weather balloons are launched globally twice daily, providing critical data for weather forecasting, climate research, and aviation safety.',
+      connection: 'Weather balloons demonstrate buoyancy in a compressible fluid (air). As the balloon ascends, atmospheric pressure decreases, causing the balloon to expand according to the ideal gas law. The same pressure gradient physics that pushes a helium balloon forward in an accelerating car causes weather balloons to rise - less dense gas "floats" toward lower pressure regions.',
+      howItWorks: 'A latex or synthetic balloon is filled with lifting gas (helium/hydrogen) until it achieves positive buoyancy of approximately 300-500 grams free lift. The attached radiosonde transmits data via radio to ground stations. As altitude increases, the balloon expands from ~1 meter diameter at launch to ~6-8 meters at burst altitude (typically 30-35 km). Parachutes ensure safe instrument recovery.',
+      stats: [
+        { value: '35 km', label: 'Maximum Altitude' },
+        { value: '900+', label: 'Daily Global Launches' },
+        { value: '2 hrs', label: 'Typical Flight Duration' }
+      ],
+      examples: [
+        'National Weather Service launches radiosondes from 92 stations across the US twice daily',
+        'Hurricane hunter aircraft deploy dropsondes that fall through storm systems measuring wind shear',
+        'Ozonesonde balloons measure ozone layer depletion at stratospheric altitudes',
+        'Research balloons carry cosmic ray detectors and astronomical instruments above 99% of atmosphere'
+      ],
+      companies: [
+        'Vaisala',
+        'GRAW Radiosondes',
+        'Lockheed Martin',
+        'InterMet Systems',
+        'Meisei Electric'
+      ],
+      futureImpact: 'Next-generation smart radiosondes will feature improved sensors, longer battery life, and GPS-enabled tracking. Biodegradable balloon materials are being developed to reduce environmental impact. Unmanned stratospheric platforms may eventually supplement traditional balloon networks for continuous upper-atmosphere monitoring.',
+      color: '#06B6D4'
+    },
+    {
+      icon: '🚁',
+      title: 'Airships and Blimps',
+      short: 'Advertising & Surveillance',
+      tagline: 'Sustained flight through lighter-than-air engineering',
+      description: 'Modern airships and blimps leverage helium buoyancy for extended loiter times that fixed-wing aircraft cannot match. These lighter-than-air vehicles maintain altitude by balancing buoyant lift against weight, using propulsion only for directional control. Applications range from advertising and broadcast coverage to military surveillance, cargo transport, and telecommunications relay platforms.',
+      connection: 'Airships demonstrate neutral and controlled buoyancy in air. The same physics that makes a helium balloon lean forward in an accelerating car - pressure gradients in fluid media - allows airships to achieve stable hovering. Ballonets (internal air bladders) adjust buoyancy by changing the helium-to-air ratio, enabling altitude control without propulsive thrust.',
+      howItWorks: 'The envelope contains helium lifting gas plus internal ballonets filled with air. To descend, air is pumped into ballonets, compressing helium and reducing buoyancy. To ascend, air is vented, allowing helium to expand. Vectoring propellers provide thrust and directional control. Semi-rigid designs use internal frameworks for shape, while blimps rely solely on gas pressure.',
+      stats: [
+        { value: '24+ hrs', label: 'Endurance Time' },
+        { value: '3,000 m', label: 'Operating Altitude' },
+        { value: '75 mph', label: 'Cruise Speed' }
+      ],
+      examples: [
+        'Goodyear blimps provide aerial coverage for major sporting events with stabilized cameras',
+        'JLENS aerostat systems provided radar surveillance for critical infrastructure protection',
+        'Hybrid Air Vehicles developing cargo airships for remote region logistics',
+        'Stratospheric airships proposed as persistent telecommunications platforms for rural coverage'
+      ],
+      companies: [
+        'Lockheed Martin',
+        'Hybrid Air Vehicles',
+        'Aeros Corporation',
+        'Flying Whales'
+      ],
+      futureImpact: 'Electric-powered airships promise zero-emission cargo transport for remote regions without runway infrastructure. High-altitude pseudo-satellites (HAPS) using buoyancy will provide persistent surveillance and 5G coverage. Solar-powered stratospheric airships could remain aloft for months, serving as alternatives to traditional satellites.',
+      color: '#8B5CF6'
+    },
+    {
+      icon: '📱',
+      title: 'Accelerometer Physics',
+      short: 'Inertial Sensors',
+      tagline: 'Detecting motion through effective gravity fields',
+      description: 'Accelerometers in smartphones, vehicles, and aerospace systems detect acceleration using the same physics demonstrated by the helium balloon. Instead of a buoyant balloon, MEMS accelerometers use tiny proof masses suspended by microscopic springs. When acceleration occurs, inertial effects create relative displacement between the proof mass and the housing - exactly like a pendulum swinging backward in an accelerating car.',
+      connection: 'The helium balloon experiment demonstrates Einstein\'s equivalence principle: acceleration is indistinguishable from gravity. Accelerometers exploit this by measuring how proof masses respond to effective gravity fields. Just as the balloon responds opposite to a pendulum (due to buoyancy), some accelerometers use fluid-damped designs where the sensing element behaves similarly to a bubble level.',
+      howItWorks: 'MEMS accelerometers use microfabricated silicon proof masses suspended by spring structures. Acceleration causes relative displacement between the mass and housing, measured capacitively or piezoelectrically. Differential capacitor plates detect sub-nanometer movements. Signal processing converts displacement to acceleration. Multiple axes are combined for 3D motion sensing.',
+      stats: [
+        { value: '0.001 g', label: 'Resolution' },
+        { value: '10,000 g', label: 'Survivable Shock' },
+        { value: '< $1', label: 'Consumer Sensor Cost' }
+      ],
+      examples: [
+        'Smartphone accelerometers detect orientation for screen rotation and step counting',
+        'Automotive sensors trigger airbag deployment within 15-30 milliseconds of impact',
+        'Inertial navigation systems guide aircraft and missiles using accelerometer integration',
+        'Seismometers use precision accelerometers to detect sub-micron ground motion'
+      ],
+      companies: [
+        'STMicroelectronics',
+        'Bosch Sensortec',
+        'Analog Devices',
+        'TDK InvenSense',
+        'Honeywell Aerospace'
+      ],
+      futureImpact: 'Quantum accelerometers using cold atom interferometry promise navigation without GPS. Neuromorphic sensors will enable always-on motion detection with microwatt power consumption. Integration with AI will allow predictive motion analysis for health monitoring, autonomous vehicles, and augmented reality applications.',
+      color: '#F59E0B'
+    },
+    {
+      icon: '🔬',
+      title: 'Buoyancy Research',
+      short: 'Fluid Dynamics',
+      tagline: 'Understanding convection and stratification in fluid systems',
+      description: 'The helium balloon in a car demonstrates fundamental buoyancy physics that researchers study across scales from microfluidics to oceanography. Buoyancy-driven flows govern everything from magma convection in Earth\'s mantle to mixing in industrial reactors. Understanding how density differences create pressure gradients and drive fluid motion is essential for climate modeling, chemical engineering, and materials science.',
+      connection: 'The pressure gradient that pushes a helium balloon forward in an accelerating car is mathematically identical to the hydrostatic pressure gradient in any gravitational field. Researchers use this equivalence principle to study buoyancy effects: accelerating reference frames simulate different gravity conditions, while density stratification experiments reveal how buoyancy drives natural convection.',
+      howItWorks: 'Researchers create density gradients using temperature, salinity, or suspended particles. Optical techniques (schlieren, shadowgraph, PIV) visualize buoyancy-driven flows. Rotating platforms create artificial gravity fields for centrifugal buoyancy studies. Microgravity experiments on ISS isolate surface tension effects by eliminating buoyancy. Numerical simulations model turbulent buoyancy flows.',
+      stats: [
+        { value: '10^-6', label: 'Grashof Number Range Start' },
+        { value: '10^12', label: 'Grashof Number Range End' },
+        { value: '40%', label: 'Heat Transfer via Convection' }
+      ],
+      examples: [
+        'Ocean thermal energy conversion exploits temperature-driven buoyancy differences',
+        'Crystal growth furnaces control buoyancy convection for semiconductor purity',
+        'Building HVAC systems design natural ventilation using thermal buoyancy',
+        'Volcanologists study magma chamber dynamics through buoyancy-driven plume models'
+      ],
+      companies: [
+        'Schlumberger',
+        'ANSYS Fluent',
+        'National Center for Atmospheric Research',
+        'Woods Hole Oceanographic Institution'
+      ],
+      futureImpact: 'Advanced CFD simulations will enable precise prediction of buoyancy-driven mixing in industrial processes. Microgravity manufacturing on space stations will produce materials impossible under Earth\'s buoyancy-dominated conditions. Climate models incorporating improved ocean buoyancy dynamics will better predict sea level rise and thermohaline circulation changes.',
+      color: '#10B981'
+    }
+  ];
+
   const renderPhase = () => {
     switch (phase) {
       // ───────────────────────────────────────────────────

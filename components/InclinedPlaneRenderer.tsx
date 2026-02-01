@@ -1166,6 +1166,104 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   };
 
   // ============================================================================
+  // REAL-WORLD APPLICATIONS DATA
+  // ============================================================================
+  const realWorldApps = [
+    {
+      icon: "♿",
+      title: "Wheelchair Ramps",
+      short: "Accessibility Infrastructure",
+      tagline: "Engineering inclusion through physics",
+      description: "Wheelchair ramps are inclined planes designed to make buildings accessible to people with mobility challenges. The ADA mandates a maximum slope of 1:12, meaning for every inch of vertical rise, the ramp must extend at least 12 inches horizontally. This creates an angle of approximately 4.76 degrees.",
+      connection: "Just like our simulation shows how a gentler angle reduces the force needed to move an object up a slope, wheelchair ramps apply the same principle. By extending the distance traveled, the ramp reduces the force a wheelchair user must exert to overcome gravity, making independent mobility possible.",
+      howItWorks: "The mechanical advantage of a ramp equals its length divided by its height. A 1:12 slope provides a mechanical advantage of 12, meaning pushing a wheelchair up requires only 1/12 the force of lifting it straight up. Handrails provide additional support, and non-slip surfaces ensure safety by maintaining adequate friction.",
+      stats: [
+        { val: "1:12", label: "Maximum ADA slope ratio" },
+        { val: "4.76°", label: "Maximum angle in degrees" },
+        { val: "30 ft", label: "Max run before landing required" }
+      ],
+      examples: [
+        "Building entrances with gradual ramps replacing stairs",
+        "Curb cuts at intersections for street crossing",
+        "Vehicle ramps for wheelchair-accessible vans",
+        "Stadium seating access ramps for spectators"
+      ],
+      companies: ["EZ-ACCESS", "Prairie View Industries", "Roll-A-Ramp", "Handi-Ramp", "National Ramp"],
+      futureImpact: "Smart ramps with embedded sensors will detect approaching wheelchairs and adjust surface texture for optimal traction. Modular ramp systems with quick-connect technology will enable rapid deployment at temporary venues. Integration with building management systems will provide real-time accessibility mapping for navigation apps.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "📦",
+      title: "Loading Docks",
+      short: "Logistics & Warehousing",
+      tagline: "Moving tons with minimal effort",
+      description: "Loading dock ramps bridge the gap between warehouse floors and truck beds, enabling efficient transfer of heavy cargo. These industrial inclined planes typically operate at 5-10 degree angles, allowing forklifts and pallet jacks to safely transport loads weighing thousands of pounds.",
+      connection: "Our simulation demonstrates how angle affects the force needed to move objects up a slope. Loading dock engineers apply this exact principle—keeping angles gentle enough that forklifts can safely transport heavy pallets without the cargo sliding or the vehicle tipping, while making the ramp short enough to be practical.",
+      howItWorks: "Dock levelers use hydraulic or mechanical systems to create adjustable ramps between the fixed dock height and varying truck bed heights. The inclined plane reduces the effective weight the forklift must push against gravity. Steel plate construction handles heavy loads while textured surfaces provide traction for rubber tires.",
+      stats: [
+        { val: "5-10°", label: "Typical dock ramp angle" },
+        { val: "50,000 lbs", label: "Heavy-duty load capacity" },
+        { val: "15%", label: "Energy saved vs vertical lifting" }
+      ],
+      examples: [
+        "Hydraulic dock levelers at distribution centers",
+        "Portable yard ramps for ground-level loading",
+        "Edge-of-dock levelers for light-duty applications",
+        "Container loading ramps at shipping ports"
+      ],
+      companies: ["Rite-Hite", "Pentalift", "Blue Giant", "McGuire", "Serco"],
+      futureImpact: "AI-powered loading docks will automatically adjust ramp angles based on cargo weight and forklift specifications. Predictive maintenance sensors will detect wear before failures occur. Integration with autonomous forklifts and trucks will enable fully automated loading sequences, increasing throughput while reducing workplace injuries.",
+      color: "#f97316"
+    },
+    {
+      icon: "⛷️",
+      title: "Ski Slopes",
+      short: "Recreation & Sports",
+      tagline: "Gravity-powered adventure",
+      description: "Ski slopes are carefully engineered inclined planes that provide controlled descents for winter sports. Slope difficulty is rated by angle: green circles (6-25%), blue squares (25-40%), and black diamonds (40%+ grade). The physics of inclined planes determines speed, control, and safety.",
+      connection: "Our simulation shows how steeper angles increase the parallel component of gravity, accelerating objects faster. Ski slope designers use this principle to create progressively challenging terrain—the steeper the slope, the greater the gravitational acceleration, requiring more skill to control speed through turns and friction management.",
+      howItWorks: "Skiers control their descent by adjusting the angle of their skis relative to the fall line, effectively changing their personal 'ramp angle.' Carving turns increases friction and reduces speed, while pointing straight downhill maximizes the gravitational component. Snow grooming creates consistent friction conditions across the slope surface.",
+      stats: [
+        { val: "6-25%", label: "Beginner slope grade range" },
+        { val: "87°", label: "Steepest skiable slope angle" },
+        { val: "60+ mph", label: "Speed on expert slopes" }
+      ],
+      examples: [
+        "Olympic downhill courses with precise grade specifications",
+        "Terrain parks with calculated jump and landing angles",
+        "Cross-country trails with varied elevation changes",
+        "Snow tubing hills with controlled descent paths"
+      ],
+      companies: ["Vail Resorts", "Alterra Mountain Company", "Boyne Resorts", "POWDR"],
+      futureImpact: "Climate-adaptive snowmaking using AI weather prediction will optimize snow coverage. Smart slope monitoring with embedded sensors will track conditions in real-time, adjusting grooming patterns automatically. Augmented reality goggles will overlay optimal line choices and hazard warnings, enhancing safety for all skill levels.",
+      color: "#06b6d4"
+    },
+    {
+      icon: "🏭",
+      title: "Conveyor Systems",
+      short: "Manufacturing & Production",
+      tagline: "Continuous motion through smart angles",
+      description: "Industrial conveyor systems use inclined planes to move materials between different elevations in factories, warehouses, and distribution centers. Belt conveyors, roller conveyors, and gravity chutes all apply inclined plane physics to transport goods efficiently.",
+      connection: "Our simulation reveals how the balance between gravity's parallel component and friction determines motion on a slope. Conveyor engineers use this same physics—designing belt angles that allow gravity-assisted movement while maintaining control, or calculating motor power needed to push materials uphill against gravitational resistance.",
+      howItWorks: "Gravity conveyors use slope angles between 2-5 degrees to move packages with minimal energy. Powered incline conveyors use motors to overcome gravity when moving upward. The angle must account for product weight, surface friction, and desired speed. Too steep causes sliding; too shallow stops movement.",
+      stats: [
+        { val: "2-5°", label: "Typical gravity conveyor angle" },
+        { val: "18°", label: "Maximum practical incline angle" },
+        { val: "500 ft/min", label: "High-speed conveyor rate" }
+      ],
+      examples: [
+        "Amazon fulfillment center sorting systems",
+        "Airport baggage handling conveyor networks",
+        "Mining ore transport on inclined belts",
+        "Food processing lines with sanitary conveyors"
+      ],
+      companies: ["Dematic", "Honeywell Intelligrated", "Siemens Logistics", "Bastian Solutions", "Hytrol"],
+      futureImpact: "Self-adjusting conveyors will modify angle and speed based on real-time load sensing. Modular conveyor systems with hot-swappable components will minimize downtime. Integration with robotic picking systems and digital twins will optimize entire facility logistics, reducing energy consumption while increasing throughput by 40%.",
+      color: "#10b981"
+    }
+  ];
+
+  // ============================================================================
   // PHASE RENDERERS
   // ============================================================================
   const renderHook = () => (

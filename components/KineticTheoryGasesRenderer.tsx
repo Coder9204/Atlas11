@@ -641,6 +641,122 @@ export default function KineticTheoryGasesRenderer({
     }
   ];
 
+  // Real-world applications for transfer phase
+  const realWorldApps: TransferApp[] = [
+    {
+      icon: "🔧",
+      title: "Vacuum Technology",
+      short: "Industrial vacuum systems",
+      tagline: "Mastering the absence of molecules for precision manufacturing",
+      description: "Industrial vacuum technology is essential for countless manufacturing processes, from food packaging to metallurgy. By removing gas molecules from enclosed spaces, vacuum systems enable processes that would be impossible at atmospheric pressure, including freeze-drying, degassing of molten metals, and thin-film deposition for optical coatings.",
+      connection: "Kinetic theory explains why vacuum pumping is progressively harder at lower pressures - as molecular density decreases, molecules collide less frequently, transitioning from viscous flow (molecule-molecule collisions dominate) to molecular flow (wall collisions dominate). Mean free path increases from nanometers at atmosphere to kilometers at ultra-high vacuum.",
+      howItWorks: [
+        "Rotary vane pumps trap and compress gas volumes mechanically, effective down to 10^-3 torr",
+        "Turbomolecular pumps impart momentum to molecules via high-speed rotating blades (up to 90,000 RPM)",
+        "Diffusion pumps use high-velocity oil vapor jets to entrain and direct gas molecules",
+        "Cryopumps freeze molecules onto cold surfaces, achieving ultra-high vacuum below 10^-10 torr"
+      ],
+      stats: [
+        "Global vacuum equipment market: $8.5 billion annually",
+        "Semiconductor fabs require 10^-9 torr for EUV lithography",
+        "Food vacuum packaging extends shelf life 3-5x"
+      ],
+      examples: [
+        "Vacuum metallurgy produces aerospace-grade titanium and superalloys",
+        "Pharmaceutical freeze-drying preserves vaccines and biologics",
+        "Vacuum insulation panels achieve R-values 5-10x better than foam",
+        "Vacuum arc remelting purifies specialty steels for critical applications"
+      ],
+      companies: ["Edwards Vacuum", "Pfeiffer Vacuum", "Leybold", "Busch Vacuum", "Atlas Copco"],
+      futureImpact: "Advanced vacuum systems will enable molecular beam epitaxy for quantum dot displays, large-scale quantum computer manufacturing, and industrial-scale graphene production - transforming materials science and electronics.",
+      color: "#0891b2"
+    },
+    {
+      icon: "⚗️",
+      title: "Mass Spectrometry",
+      short: "Analytical chemistry instrumentation",
+      tagline: "Sorting molecules by mass at molecular speeds",
+      description: "Mass spectrometry is the gold standard for molecular identification in chemistry, biology, and medicine. By ionizing molecules and measuring their mass-to-charge ratios, this technique can identify thousands of compounds in a single sample, from drug metabolites in blood to pollutants in water to proteins in cells.",
+      connection: "Kinetic theory directly governs ion behavior in mass spectrometers. The kinetic energy of ions (½mv²) is fixed by the acceleration voltage, so velocity varies inversely with the square root of mass - exactly as predicted by v_rms = sqrt(3kT/m). Lighter ions move faster and can be separated from heavier ones.",
+      howItWorks: [
+        "Ionization sources convert neutral molecules to charged ions using electron impact, electrospray, or MALDI",
+        "Accelerating fields give all ions the same kinetic energy, creating mass-dependent velocities",
+        "Quadrupole analyzers use oscillating electric fields to filter ions by mass-to-charge ratio",
+        "Time-of-flight analyzers measure how long ions take to traverse a fixed distance"
+      ],
+      stats: [
+        "Mass accuracy: parts per million (0.0001% error)",
+        "Detection sensitivity: attomoles (10^-18 moles)",
+        "Global mass spectrometry market: $7.2 billion"
+      ],
+      examples: [
+        "Clinical drug testing identifies hundreds of substances simultaneously",
+        "Proteomics studies analyze thousands of proteins in single experiments",
+        "Environmental monitoring detects trace contaminants at parts-per-trillion",
+        "Forensic toxicology provides definitive identification in legal cases"
+      ],
+      companies: ["Thermo Fisher Scientific", "Agilent Technologies", "Waters Corporation", "SCIEX", "Bruker"],
+      futureImpact: "Portable mass spectrometers will enable point-of-care disease diagnosis, real-time environmental monitoring, and instant food safety testing - bringing laboratory-grade molecular analysis to everyday applications.",
+      color: "#7c3aed"
+    },
+    {
+      icon: "💾",
+      title: "Semiconductor Processing",
+      short: "Chip manufacturing technology",
+      tagline: "Building atom by atom at the nanoscale",
+      description: "Modern semiconductor fabrication depends critically on understanding gas behavior at the molecular level. Every transistor in your phone or computer was built using processes that precisely control how gas molecules interact with silicon surfaces - from depositing atomic layers to etching nanometer-scale features.",
+      connection: "Kinetic theory explains the physics of chemical vapor deposition (CVD) and plasma etching. Deposition rates depend on molecular flux to the surface (proportional to pressure and inversely proportional to sqrt(mass*T)), while etch profiles depend on mean free path, which determines whether ions travel straight (anisotropic) or scatter (isotropic).",
+      howItWorks: [
+        "CVD processes flow precursor gases that decompose on heated wafer surfaces, depositing thin films",
+        "Plasma etching ionizes reactive gases, accelerating ions to bombard and remove material directionally",
+        "Atomic layer deposition (ALD) uses self-limiting reactions for angstrom-level thickness control",
+        "Ion implantation accelerates dopant atoms to precise energies for controlled penetration depth"
+      ],
+      stats: [
+        "Modern chips have 100+ billion transistors at 3nm nodes",
+        "Gate oxide thickness: 1-2 nanometers (5-10 atoms)",
+        "Semiconductor equipment market: $100+ billion annually"
+      ],
+      examples: [
+        "EUV lithography requires ultra-high vacuum for photon transmission",
+        "High-k dielectric deposition uses ALD for atomic precision",
+        "Plasma etch creates vertical sidewalls for FinFET transistors",
+        "Epitaxial growth builds crystalline silicon layers atom by atom"
+      ],
+      companies: ["ASML", "Applied Materials", "Lam Research", "Tokyo Electron", "KLA Corporation"],
+      futureImpact: "Continued scaling to sub-nanometer dimensions will require unprecedented control of molecular processes, enabling chips with trillions of transistors for artificial general intelligence and quantum-classical hybrid computing.",
+      color: "#2563eb"
+    },
+    {
+      icon: "🔥",
+      title: "Gas Turbine Design",
+      short: "Power generation systems",
+      tagline: "Converting molecular chaos into megawatts",
+      description: "Gas turbines are the workhorses of modern power generation, converting the thermal energy of combustion gases into rotational power. From jet engines to power plants, these machines depend on precise understanding of how hot, high-pressure gases behave as they expand through turbine stages.",
+      connection: "The Brayton cycle that governs gas turbines is a direct application of kinetic theory. Compressor work depends on raising gas temperature (increasing molecular kinetic energy), while turbine output depends on extracting that energy as molecules expand and cool. Efficiency improves with higher turbine inlet temperatures, pushing materials to their limits.",
+      howItWorks: [
+        "Axial compressors accelerate air molecules through rotating blade stages, increasing pressure 30-40x",
+        "Combustors add fuel, raising gas temperature to 1500-1700°C (molecular speeds exceed 1000 m/s)",
+        "Turbine blades extract energy as hot molecules expand, spinning the shaft at 3000-15000 RPM",
+        "Blade cooling channels use compressed air to keep metal below melting despite extreme gas temperatures"
+      ],
+      stats: [
+        "Combined-cycle efficiency exceeds 64% (world record)",
+        "Large turbines produce 500+ MW (enough for 500,000 homes)",
+        "Turbine inlet temperatures approach 1700°C"
+      ],
+      examples: [
+        "GE 9HA turbine achieves record-breaking 64.5% combined-cycle efficiency",
+        "Aircraft engines operate at pressure ratios above 50:1",
+        "Peaker plants provide rapid grid response for renewable integration",
+        "Industrial cogeneration captures waste heat for process steam"
+      ],
+      companies: ["GE Vernova", "Siemens Energy", "Mitsubishi Power", "Rolls-Royce", "Pratt & Whitney"],
+      futureImpact: "Hydrogen-fueled turbines will enable zero-carbon dispatchable power, while advanced ceramic matrix composites allow even higher temperatures, pushing thermal efficiency toward theoretical limits and supporting the clean energy transition.",
+      color: "#dc2626"
+    }
+  ];
+
   // Render phase content
   const renderPhase = () => {
     switch(phase) {

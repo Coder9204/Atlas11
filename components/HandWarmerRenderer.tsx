@@ -2374,6 +2374,102 @@ export default function HandWarmerRenderer({
     </div>
   );
 
+  // Real-world applications of hand warmer technology
+  const realWorldApps = [
+    {
+      icon: '🏕️',
+      title: 'Outdoor Recreation Products',
+      short: 'Camping & Hiking',
+      tagline: 'Portable Heat for Wilderness Adventures',
+      description: 'Hand warmer technology powers a vast array of outdoor recreation products designed to keep adventurers warm in extreme conditions. From pocket warmers for hunters waiting in cold blinds to heated insoles for mountaineers, exothermic reactions provide reliable, portable heat without batteries or electricity.',
+      connection: 'The iron oxidation and sodium acetate crystallization reactions you explored are the exact mechanisms used in camping and hiking gear. Understanding reaction kinetics helps manufacturers design products that activate quickly and maintain optimal temperature for extended periods.',
+      howItWorks: 'Disposable warmers use iron powder, salt, activated carbon, and vermiculite in breathable pouches. Air exposure triggers oxidation that generates steady heat for 8-12 hours. Reusable crystallization warmers provide intense heat bursts perfect for emergency warmth during backcountry adventures.',
+      stats: [
+        { value: '$450M', label: 'US outdoor warming market', icon: '📊' },
+        { value: '12 hrs', label: 'Typical heat duration', icon: '⏱️' },
+        { value: '-40°F', label: 'Effective in extreme cold', icon: '❄️' }
+      ],
+      examples: [
+        'Hand and toe warmers tucked into gloves and boots during winter hikes',
+        'Body warmers adhered to base layers for all-day warmth while skiing',
+        'Heated seat cushions for ice fishing and hunting in sub-zero conditions',
+        'Emergency warmers in survival kits for hypothermia prevention'
+      ],
+      companies: ['HotHands', 'Grabber', 'Zippo Outdoors', 'ThermaCELL', 'Heat Factory'],
+      futureImpact: 'Next-generation outdoor warmers are incorporating phase-change materials with higher energy density and rechargeable catalytic systems, enabling lighter, more sustainable heating solutions for extreme expeditions.',
+      color: '#22c55e'
+    },
+    {
+      icon: '🏥',
+      title: 'Medical Heat Therapy',
+      short: 'Healthcare',
+      tagline: 'Therapeutic Warmth for Pain Relief and Healing',
+      description: 'Medical heat therapy harnesses exothermic reactions to deliver controlled, therapeutic warmth for pain management, muscle relaxation, and improved circulation. From treating chronic back pain to warming IV fluids, hand warmer chemistry has transformed healthcare delivery.',
+      connection: 'The precise temperature control you observed in phase-change warmers is critical for medical applications. Sodium acetate crystallization provides consistent 54°C heat that is therapeutic without causing burns, while iron oxidation warmers offer longer-duration treatment options.',
+      howItWorks: 'Medical warming products use the same exothermic reactions as recreational warmers but with enhanced safety features and medical-grade materials. Air-activated wraps provide sustained low-level heat for 8+ hours, while instant heat packs deliver rapid warming for acute treatment.',
+      stats: [
+        { value: '$3.2B', label: 'Global heat therapy market', icon: '💰' },
+        { value: '40°C', label: 'Optimal therapeutic temp', icon: '🌡️' },
+        { value: '25%', label: 'Pain reduction reported', icon: '📉' }
+      ],
+      examples: [
+        'ThermaCare wraps for lower back pain use iron oxidation for 8-hour relief',
+        'Instant warmers in ambulances prevent hypothermia during patient transport',
+        'Post-surgical warming blankets accelerate recovery and reduce complications',
+        'Menstrual heat patches provide targeted abdominal pain relief'
+      ],
+      companies: ['ThermaCare', 'Sunbeam', 'Carex Health', 'Medela', 'Stryker'],
+      futureImpact: 'Smart medical warmers with embedded sensors are emerging, providing precise temperature feedback and automatic adjustment for optimal therapeutic effect while preventing tissue damage.',
+      color: '#3b82f6'
+    },
+    {
+      icon: '🍱',
+      title: 'Food Warming Technology',
+      short: 'Food Packaging',
+      tagline: 'Hot Meals Anywhere, Anytime',
+      description: 'Self-heating food packaging revolutionizes how we consume hot meals on-the-go. Using exothermic chemical reactions, these systems can heat beverages and prepared foods without any external power source, making them ideal for military rations, emergency supplies, and convenient consumer products.',
+      connection: 'The heat generation principles from iron oxidation and crystallization directly power self-heating food containers. The reaction rates and total energy output you studied determine how quickly food heats and how long it stays warm.',
+      howItWorks: 'Self-heating containers typically use calcium oxide (quickite) reacting with water or iron oxidation chambers separated from the food compartment. Activating the heater triggers an exothermic reaction that transfers heat through the container wall, warming the contents to serving temperature.',
+      stats: [
+        { value: '$890M', label: 'Self-heating food market', icon: '📈' },
+        { value: '15 min', label: 'Average heating time', icon: '⏰' },
+        { value: '70°C', label: 'Target serving temperature', icon: '🔥' }
+      ],
+      examples: [
+        'MRE (Meals Ready-to-Eat) flameless ration heaters for military field use',
+        'Self-heating coffee cans that warm with a button press for commuters',
+        'Emergency food kits with integrated heating for disaster preparedness',
+        'Self-warming baby bottles for convenient feeding on-the-go'
+      ],
+      companies: ['Heatgen', 'HotCan', 'Luxfer Magtech', 'Crown Holdings', 'Tempra Technology'],
+      futureImpact: 'Biodegradable exothermic heating elements and improved insulation materials are making self-heating packaging more sustainable, opening markets for everyday consumer food products.',
+      color: '#f97316'
+    },
+    {
+      icon: '🔋',
+      title: 'Battery Thermal Management',
+      short: 'Electronics',
+      tagline: 'Optimal Temperature for Peak Battery Performance',
+      description: 'Lithium-ion batteries in electric vehicles and electronics require precise temperature management for optimal performance and longevity. Hand warmer technology provides critical cold-weather heating solutions that keep batteries in their ideal operating range, preventing capacity loss and extending lifespan.',
+      connection: 'The exothermic reactions you explored address the same fundamental challenge in battery systems: generating controlled heat on demand. Phase-change materials store and release thermal energy to buffer temperature swings, while chemical warmers provide active heating in extreme cold.',
+      howItWorks: 'Battery thermal management systems use phase-change materials to absorb excess heat during charging/discharging and release it when temperatures drop. In extreme cold, resistive heating or exothermic chemical packs pre-warm battery cells to ensure reliable starting and optimal range.',
+      stats: [
+        { value: '40%', label: 'EV range loss in cold', icon: '📉' },
+        { value: '20-40°C', label: 'Optimal Li-ion temp range', icon: '🌡️' },
+        { value: '$8.5B', label: 'Battery thermal market 2028', icon: '💵' }
+      ],
+      examples: [
+        'Tesla battery packs use liquid cooling and heating for temperature regulation',
+        'Smartphone manufacturers integrate phase-change materials to manage thermal spikes',
+        'Drone batteries use chemical warmers for cold-weather operation reliability',
+        'Grid-scale battery storage facilities employ thermal management for efficiency'
+      ],
+      companies: ['Tesla', 'LG Energy Solution', 'CATL', 'Panasonic', 'BorgWarner'],
+      futureImpact: 'Solid-state batteries with wider temperature tolerances combined with advanced phase-change composites will reduce the energy penalty of thermal management, extending EV range and enabling operation in more extreme environments.',
+      color: '#8b5cf6'
+    }
+  ];
+
   // Main render
   switch (phase) {
     case 'hook':

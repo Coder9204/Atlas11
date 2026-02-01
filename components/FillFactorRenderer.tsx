@@ -332,6 +332,102 @@ const FillFactorRenderer: React.FC<FillFactorRendererProps> = ({
     },
   ];
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: 'Sun',
+      title: 'Solar Panel Quality Testing',
+      short: 'Photovoltaics QC',
+      tagline: 'Ensuring every panel meets performance standards',
+      description: 'Fill factor is the primary quality metric in solar manufacturing. By measuring how closely the I-V curve approaches the ideal rectangle, engineers can detect microscopic defects, poor solder joints, and material impurities that would otherwise go unnoticed until field failure.',
+      connection: 'Fill factor directly measures the electrical losses in a cell. A manufacturing defect that increases series resistance or creates shunt paths will immediately show up as reduced FF, even if Voc and Isc appear normal.',
+      howItWorks: 'Every solar cell undergoes flash testing where a brief intense light pulse illuminates the cell while the I-V curve is rapidly traced. Automated systems calculate FF in milliseconds and reject cells below threshold, typically 0.72-0.78 depending on cell technology.',
+      stats: [
+        { value: '< 0.5s', label: 'Test time per cell' },
+        { value: '99.9%', label: 'Detection accuracy' },
+        { value: '$0.02', label: 'Cost per test' },
+      ],
+      examples: [
+        'Production line cell sorting by efficiency bins',
+        'Incoming quality inspection for module assembly',
+        'Warranty claim verification and failure analysis',
+        'Process optimization feedback for manufacturing',
+      ],
+      companies: ['First Solar', 'LONGi', 'JinkoSolar', 'Canadian Solar', 'Trina Solar'],
+      futureImpact: 'AI-powered vision systems are being integrated with FF testing to correlate visual defects with electrical performance, enabling predictive quality control that catches issues before they affect fill factor.',
+      color: '#f59e0b',
+    },
+    {
+      icon: 'Lightbulb',
+      title: 'LED Performance Optimization',
+      short: 'Lighting Efficiency',
+      tagline: 'Maximizing lumens per watt through I-V analysis',
+      description: 'LEDs share the same p-n junction physics as solar cells, but in reverse. The fill factor concept applies to LED efficiency - a well-designed LED has a sharp I-V knee that minimizes resistive losses and maximizes light output at the operating current.',
+      connection: 'Just as solar cell FF measures how much power is extracted, LED "wall-plug efficiency" depends on minimizing voltage drop across series resistance. Poor thermal design or degraded contacts reduce the effective fill factor of the LED I-V characteristic.',
+      howItWorks: 'LED binning uses I-V curve analysis to sort devices by forward voltage and efficiency. High-performance LEDs have steep I-V curves with minimal droop, analogous to high fill factor in solar cells. This ensures consistent brightness in multi-LED fixtures.',
+      stats: [
+        { value: '200+', label: 'Lumens per watt achieved' },
+        { value: '85%', label: 'Typical wall-plug efficiency' },
+        { value: '50,000h', label: 'Lifetime at rated FF' },
+      ],
+      examples: [
+        'Automotive headlight LED selection and matching',
+        'Display backlight uniformity optimization',
+        'High-bay industrial lighting efficiency',
+        'Horticultural grow light spectrum tuning',
+      ],
+      companies: ['Cree', 'Lumileds', 'Osram', 'Samsung LED', 'Nichia'],
+      futureImpact: 'Micro-LED displays require millions of LEDs with matched I-V characteristics. Fill factor analysis at the microscale enables the color uniformity needed for next-generation AR/VR displays.',
+      color: '#3b82f6',
+    },
+    {
+      icon: 'Flask',
+      title: 'Perovskite Solar Cell Research',
+      short: 'Emerging Tech',
+      tagline: 'Pushing efficiency boundaries in next-gen photovoltaics',
+      description: 'Perovskite solar cells have achieved remarkable efficiency gains but struggle with fill factor stability. Researchers use FF as a key metric to understand ion migration, interface recombination, and hysteresis effects that limit commercial viability.',
+      connection: 'Perovskite cells exhibit unusual I-V behavior where FF depends on scan direction and speed due to mobile ions. Understanding this hysteresis through FF analysis is critical to developing stable, high-performance devices.',
+      howItWorks: 'Researchers measure I-V curves at multiple scan rates and directions, then analyze how FF changes. Stable perovskites show consistent FF regardless of measurement conditions. Interface engineering and passivation strategies are evaluated by their impact on FF stability.',
+      stats: [
+        { value: '26.1%', label: 'Record perovskite efficiency' },
+        { value: '0.84', label: 'Best achieved fill factor' },
+        { value: '10,000h', label: 'Stability target for commercialization' },
+      ],
+      examples: [
+        'Tandem cell integration with silicon bottom cells',
+        'Flexible perovskite for building-integrated PV',
+        'Lead-free perovskite material development',
+        'Scalable deposition process optimization',
+      ],
+      companies: ['Oxford PV', 'Swift Solar', 'Tandem PV', 'Saule Technologies'],
+      futureImpact: 'Perovskite-silicon tandems could exceed 30% efficiency with optimized fill factors. Solving the FF stability challenge would enable the biggest leap in solar efficiency since multi-junction cells.',
+      color: '#a855f7',
+    },
+    {
+      icon: 'Rocket',
+      title: 'Space Solar Arrays',
+      short: 'Aerospace',
+      tagline: 'Powering satellites with ultra-high efficiency cells',
+      description: 'Space solar arrays use multi-junction cells with fill factors exceeding 0.85. In the harsh space environment, radiation damage gradually degrades FF, making it a critical parameter for mission lifetime predictions and power budget planning.',
+      connection: 'Radiation in space creates defects that act as recombination centers, progressively degrading fill factor. Mission planners use FF degradation models to size arrays with enough margin for end-of-life power requirements.',
+      howItWorks: 'Space-qualified cells undergo proton and electron irradiation testing to characterize FF degradation curves. Flight arrays include calibration cells that are periodically measured to track actual degradation versus predictions, enabling adaptive power management.',
+      stats: [
+        { value: '32%', label: 'Triple-junction efficiency' },
+        { value: '0.87', label: 'Beginning-of-life FF' },
+        { value: '15 years', label: 'GEO satellite design life' },
+      ],
+      examples: [
+        'International Space Station solar array upgrades',
+        'Mars rover power system design',
+        'Starlink satellite mass-optimized arrays',
+        'James Webb Space Telescope power budget',
+      ],
+      companies: ['Boeing Spectrolab', 'SolAero', 'Azur Space', 'Sharp', 'Airbus'],
+      futureImpact: 'Space-based solar power stations would beam energy to Earth using massive arrays. Maintaining high fill factor over decades in GEO radiation environment is essential for economic viability of this transformative technology.',
+      color: '#10b981',
+    },
+  ];
+
   const handleTestAnswer = (questionIndex: number, optionIndex: number) => {
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = optionIndex;

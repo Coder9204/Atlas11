@@ -932,6 +932,124 @@ const KarmanVortexRenderer: React.FC<KarmanVortexRendererProps> = ({
     },
   ];
 
+  // ==================== REAL WORLD APPLICATIONS ====================
+  const realWorldApps = [
+    {
+      icon: '🔬',
+      title: 'Vortex Flow Meters',
+      short: 'Precision fluid measurement using vortex shedding frequency',
+      tagline: 'Turning turbulence into precise measurement',
+      description: 'Vortex flow meters exploit the Karman vortex street phenomenon to measure fluid flow rates with exceptional accuracy. A bluff body (shedder bar) placed in the pipe creates vortices at a frequency directly proportional to flow velocity, allowing precise calculation of volumetric flow without moving parts.',
+      connection: 'The same vortex shedding that can destroy bridges becomes an incredibly useful measurement tool when properly harnessed. The Strouhal number relationship (St = fD/V) ensures a linear relationship between shedding frequency and flow velocity.',
+      howItWorks: 'A piezoelectric or ultrasonic sensor detects pressure oscillations caused by alternating vortices. The frequency of these oscillations is directly proportional to flow velocity via the Strouhal number. Digital signal processing extracts the vortex frequency even in noisy industrial environments.',
+      stats: [
+        { value: '0.5-1%', label: 'Accuracy achievable' },
+        { value: '10:1 to 40:1', label: 'Turndown ratio range' },
+        { value: '20+ years', label: 'Typical service life' },
+      ],
+      examples: [
+        'Steam flow measurement in power plants',
+        'Natural gas distribution monitoring',
+        'Chemical process flow control',
+        'HVAC system airflow measurement',
+      ],
+      companies: [
+        'Emerson (Rosemount)',
+        'Endress+Hauser',
+        'Yokogawa',
+        'ABB',
+        'Honeywell',
+      ],
+      futureImpact: 'Next-generation vortex meters incorporate AI-driven diagnostics, self-calibration, and multi-variable sensing (flow, temperature, pressure) in single units. Miniaturized versions enable precise measurement in microfluidic and biomedical applications.',
+      color: '#3b82f6',
+    },
+    {
+      icon: '🌉',
+      title: 'Bridge Design',
+      short: 'Preventing vortex-induced vibration in long-span structures',
+      tagline: 'Engineering resilience against invisible forces',
+      description: 'The Tacoma Narrows Bridge collapse in 1940 became the defining lesson in structural aerodynamics. Modern bridge design incorporates extensive wind tunnel testing, aerodynamic deck shaping, and active/passive damping systems to prevent resonance between vortex shedding frequency and structural natural frequencies.',
+      connection: 'When vortex shedding frequency matches a structure\'s natural frequency, resonance amplifies oscillations until catastrophic failure. The Strouhal number determines shedding frequency, while structural dynamics determine natural frequency - engineers must ensure these never coincide.',
+      howItWorks: 'Aerodynamic deck profiles disrupt coherent vortex formation. Tuned mass dampers absorb oscillation energy. Fairings and wind screens modify the effective bluff body shape. Computational fluid dynamics simulates vortex behavior before construction.',
+      stats: [
+        { value: '40 mph', label: 'Wind speed at Tacoma collapse' },
+        { value: '0.2 Hz', label: 'Tacoma\'s fatal resonant frequency' },
+        { value: '2000+ m', label: 'Modern span lengths achieved' },
+      ],
+      examples: [
+        'Akashi Kaikyo Bridge - world\'s longest suspension span',
+        'Great Belt East Bridge - aerodynamic box girder design',
+        'Millau Viaduct - split deck reduces vortex coherence',
+        'Stonecutters Bridge - fairings on tower legs',
+      ],
+      companies: [
+        'COWI',
+        'Arup',
+        'WSP',
+        'AECOM',
+      ],
+      futureImpact: 'Smart bridges with embedded sensors will continuously monitor vortex-induced vibrations, using AI to predict and prevent dangerous resonance conditions. Active aerodynamic control surfaces may dynamically adjust to wind conditions.',
+      color: '#f59e0b',
+    },
+    {
+      icon: '💨',
+      title: 'Vortex Energy Harvesting',
+      short: 'Generating renewable power from flow-induced oscillations',
+      tagline: 'Harvesting energy from the wind\'s dance',
+      description: 'Vortex-induced vibration energy harvesting transforms the oscillating forces from Karman vortex streets into usable electrical power. Unlike traditional wind turbines, these bladeless devices use piezoelectric or electromagnetic transducers to convert structural vibration directly into electricity.',
+      connection: 'The same phenomenon that endangered bridges becomes a power source when oscillations are captured rather than suppressed. Resonance, normally avoided in structural design, is deliberately engineered to maximize energy extraction from vortex shedding.',
+      howItWorks: 'A flexible cylinder or mast is mounted vertically in wind or water flow. Vortex shedding causes the structure to oscillate perpendicular to the flow. Piezoelectric materials or electromagnetic coils at the base convert this mechanical motion into electrical current.',
+      stats: [
+        { value: '30-40%', label: 'Theoretical efficiency limit' },
+        { value: '80%', label: 'Fewer moving parts vs. turbines' },
+        { value: '<3 m/s', label: 'Cut-in wind speed possible' },
+      ],
+      examples: [
+        'Vortex Bladeless wind energy systems',
+        'Ocean current energy harvesters',
+        'Remote sensor power systems',
+        'Low-power IoT device charging',
+      ],
+      companies: [
+        'Vortex Bladeless',
+        'Oscilla Power',
+        'VIVACE (University of Michigan)',
+        'Resen Waves',
+      ],
+      futureImpact: 'Arrays of vortex harvesters could provide distributed renewable energy in urban environments where turbines are impractical. Underwater versions may power ocean monitoring networks indefinitely using tidal and current flows.',
+      color: '#10b981',
+    },
+    {
+      icon: '🚢',
+      title: 'Submarine Detection',
+      short: 'Acoustic signature analysis from hull vortex shedding',
+      tagline: 'Listening for vortex whispers in the deep',
+      description: 'Submarines generate characteristic acoustic signatures from vortex shedding off hull appendages, propeller blades, and control surfaces. Naval sonar systems analyze these "flow noise" patterns to detect, classify, and track submarines. Conversely, submarine designers work to minimize vortex-generated noise.',
+      connection: 'The frequency of vortex shedding depends on flow velocity and obstacle size (Strouhal relationship). This creates predictable acoustic signatures that reveal submarine speed, size, and even design features to sophisticated sonar arrays.',
+      howItWorks: 'Passive sonar arrays detect low-frequency pressure fluctuations from vortex shedding. Signal processing algorithms isolate vortex frequencies from ambient ocean noise. The Strouhal relationship allows estimation of target velocity and characteristic dimensions from frequency analysis.',
+      stats: [
+        { value: '10-200 Hz', label: 'Typical vortex frequency range' },
+        { value: '100+ km', label: 'Detection range in ideal conditions' },
+        { value: '-20 dB', label: 'Noise reduction goal per generation' },
+      ],
+      examples: [
+        'SOSUS fixed ocean surveillance system',
+        'Towed array sonar submarine detection',
+        'Virginia-class submarine stealth design',
+        'Anechoic tile flow noise reduction',
+      ],
+      companies: [
+        'Lockheed Martin',
+        'General Dynamics Electric Boat',
+        'BAE Systems',
+        'Naval Group',
+        'Thales',
+      ],
+      futureImpact: 'Machine learning algorithms increasingly distinguish submarine vortex signatures from marine life and oceanographic phenomena. Quantum sensors may detect the minute magnetic anomalies created by vortex-induced water motion.',
+      color: '#6366f1',
+    },
+  ];
+
   // ==================== BOTTOM BAR RENDERER ====================
   const renderBottomBar = (showButton: boolean, buttonEnabled: boolean, buttonText: string) => (
     <div style={{

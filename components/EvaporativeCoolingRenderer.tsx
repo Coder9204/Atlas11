@@ -259,6 +259,124 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     }
   ];
 
+  const realWorldApps = [
+    {
+      icon: "🏠",
+      title: "Swamp Coolers",
+      short: "Residential Cooling",
+      tagline: "Desert-friendly cooling using nature's oldest trick",
+      description: "Swamp coolers, also known as evaporative coolers, pass hot dry air through water-saturated pads. As water evaporates from the pads, it absorbs heat from the air, dropping temperatures by 15-40 degrees Fahrenheit. This ancient cooling technique uses up to 75% less electricity than traditional air conditioning and adds beneficial humidity to dry desert air.",
+      connection: "The same physics that cools your wet skin after swimming powers these efficient home cooling systems. Water molecules absorbing latent heat from the air is identical to sweat absorbing heat from your body.",
+      howItWorks: "A pump circulates water over absorbent pads while a fan pulls hot outside air through the wet media. The water evaporates, absorbing 2,260 joules per gram from the air. The cooled, humidified air is then distributed throughout the home. Continuous airflow through open windows expels warm air and maintains the cooling cycle.",
+      stats: [
+        { value: "75%", label: "Less energy vs AC" },
+        { value: "15-40°F", label: "Temperature drop" },
+        { value: "$150-400", label: "Annual operating cost" }
+      ],
+      examples: [
+        "Portable swamp coolers for single rooms",
+        "Whole-house ducted evaporative systems",
+        "Rooftop down-draft coolers",
+        "Two-stage indirect/direct hybrid coolers"
+      ],
+      companies: [
+        "Mastercool",
+        "Hessaire",
+        "Portacool",
+        "Breezair",
+        "Honeywell"
+      ],
+      futureImpact: "As climate change intensifies and water becomes precious, next-generation evaporative coolers use recycled water and advanced materials. Hybrid systems combining evaporative pre-cooling with minimal refrigeration could reduce residential cooling energy by 50-70% in suitable climates, potentially saving billions in electricity costs globally.",
+      color: "cyan"
+    },
+    {
+      icon: "🏭",
+      title: "Cooling Towers",
+      short: "Industrial Cooling",
+      tagline: "The giants that keep power plants and factories running",
+      description: "Cooling towers are massive heat rejection devices that use evaporative cooling to remove waste heat from industrial processes. Power plants, refineries, and manufacturing facilities rely on these structures to cool water by 10-30 degrees Celsius. A single large cooling tower can evaporate millions of gallons daily, transferring enormous amounts of heat to the atmosphere.",
+      connection: "Just like sweat evaporating from skin, water droplets in cooling towers absorb latent heat as they evaporate. The principle is identical - phase change from liquid to vapor requires energy, which comes from the water itself, cooling what remains.",
+      howItWorks: "Hot water from industrial processes is sprayed or distributed over fill media inside the tower. Ambient air flows through (naturally or via fans), causing partial evaporation. Each gram of water that evaporates removes 2,260 joules of heat. The cooled water collects in a basin and recirculates. Only 1-3% of water evaporates; the rest returns significantly cooler.",
+      stats: [
+        { value: "1-3%", label: "Water loss to evaporation" },
+        { value: "10-30°C", label: "Water temperature reduction" },
+        { value: "500+ MW", label: "Heat rejection capacity" }
+      ],
+      examples: [
+        "Natural draft hyperboloid towers at power plants",
+        "Mechanical draft towers with large fans",
+        "Crossflow towers for HVAC systems",
+        "Hybrid wet-dry cooling towers"
+      ],
+      companies: [
+        "SPX Cooling Technologies",
+        "Evapco",
+        "Baltimore Aircoil",
+        "Hamon",
+        "Paharpur"
+      ],
+      futureImpact: "Water scarcity is driving innovation in cooling tower technology. Advanced designs use treated wastewater, capture and recycle drift, and employ hybrid systems that switch between wet and dry operation based on conditions. AI-optimized operation and new fill materials could reduce water consumption by 30-50% while maintaining cooling efficiency.",
+      color: "amber"
+    },
+    {
+      icon: "🧬",
+      title: "Sweating and Body Thermoregulation",
+      short: "Biological Cooling",
+      tagline: "Your body's built-in air conditioning system",
+      description: "Human sweating is evolution's masterpiece of thermal regulation. Our 2-4 million sweat glands can produce up to 2-4 liters of sweat per hour during intense activity. As sweat evaporates from skin, it removes approximately 580 calories (2,426 joules) per gram - an incredibly efficient cooling mechanism that allows humans to thrive in diverse climates and outperform most animals in endurance.",
+      connection: "This IS the original evaporative cooling. Every other application mimics what your body does naturally. The latent heat of vaporization that cools industrial processes is the same physics cooling your forehead on a hot day.",
+      howItWorks: "When core temperature rises, the hypothalamus signals eccrine sweat glands to secrete a dilute salt solution onto the skin surface. Heat energy from blood vessels near the skin surface transfers to the sweat. As water molecules gain enough energy to escape into vapor, they carry that thermal energy away. Blood returning from cooled skin lowers core temperature.",
+      stats: [
+        { value: "2-4 L/hr", label: "Maximum sweat rate" },
+        { value: "580 cal/g", label: "Heat removed per gram" },
+        { value: "2-4 million", label: "Sweat glands in humans" }
+      ],
+      examples: [
+        "Exercise-induced sweating during sports",
+        "Thermal sweating in hot environments",
+        "Emotional sweating on palms and soles",
+        "Fever-breaking sweats during illness recovery"
+      ],
+      companies: [
+        "Under Armour (moisture-wicking fabrics)",
+        "Nike (Dri-FIT technology)",
+        "Columbia (Omni-Freeze cooling)",
+        "Gatorade (electrolyte replacement)",
+        "CamelBak (hydration systems)"
+      ],
+      futureImpact: "Understanding sweat mechanics is revolutionizing wearable technology and sports science. Sweat sensors can now monitor glucose, lactate, and electrolytes in real-time. Biomimetic cooling fabrics enhance natural evaporation, while personalized hydration algorithms optimize athletic performance and prevent heat-related illness.",
+      color: "emerald"
+    },
+    {
+      icon: "🖥️",
+      title: "Data Center Cooling",
+      short: "IT Infrastructure",
+      tagline: "Keeping the internet cool, one droplet at a time",
+      description: "Data centers consume 1-2% of global electricity, with up to 40% used just for cooling. Evaporative cooling systems can reduce this dramatically by using water evaporation instead of energy-intensive compressors. Tech giants are deploying massive evaporative systems that can cool thousands of servers while cutting cooling energy use by 50-90%.",
+      connection: "Server racks generate intense heat just like your body during exercise. Evaporative cooling removes this heat the same way sweat cools you - water absorbing latent heat and carrying it away as vapor. The physics is identical, just scaled up to megawatt levels.",
+      howItWorks: "Hot air from server racks passes through wet media or misting systems where water evaporates, dropping air temperature by 10-20 degrees. In direct evaporative systems, cooled air enters the server room directly. Indirect systems use heat exchangers to cool a separate air loop, preventing humidity from reaching sensitive electronics. Advanced systems use outside air when conditions permit.",
+      stats: [
+        { value: "50-90%", label: "Cooling energy reduction" },
+        { value: "1.1-1.2", label: "Achievable PUE rating" },
+        { value: "40%", label: "Typical cooling load in data centers" }
+      ],
+      examples: [
+        "Direct evaporative cooling with wet pads",
+        "Indirect evaporative cooling with heat exchangers",
+        "Adiabatic pre-cooling for chillers",
+        "Free cooling with economizer modes"
+      ],
+      companies: [
+        "Google (data center efficiency)",
+        "Microsoft (Project Natick underwater)",
+        "Meta (evaporative-cooled facilities)",
+        "Munters (industrial evaporative systems)"
+      ],
+      futureImpact: "As AI and cloud computing explode, data center cooling is becoming critical. Liquid cooling, waste heat recovery, and locating facilities in cold climates or underwater are emerging solutions. Evaporative cooling in arid regions, combined with renewable energy and water recycling, could make data centers nearly carbon-neutral while meeting exponentially growing compute demands.",
+      color: "purple"
+    }
+  ];
+
   // Render skin visualization with premium SVG graphics
   const renderSkinVisualization = (wet: boolean, temp: number, wind: number = 0) => {
     const evapRate = calculateEvaporationRate(humidity, wind);

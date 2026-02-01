@@ -383,6 +383,102 @@ export default function InertiaRenderer({ onGameEvent, gamePhase }: InertiaRende
     },
   ];
 
+  // Real-world applications of inertia
+  const realWorldApps = [
+    {
+      icon: "🚗",
+      title: "Vehicle Crash Safety",
+      short: "Automotive",
+      tagline: "Engineering survival through Newton's First Law",
+      description: "Modern vehicle safety systems are fundamentally designed around inertia. During a collision, a car stops abruptly, but passengers continue moving at the original speed due to their inertia. Engineers design crumple zones, airbags, and restraint systems specifically to manage this kinetic energy transfer and extend the deceleration time, reducing the forces experienced by occupants.",
+      connection: "Just as we observed objects resisting changes to their motion in our experiment, vehicle occupants experience the same resistance during sudden stops. The heavier the passenger, the more inertia they have, and the greater the force needed to stop them safely—exactly what we learned about mass and inertia.",
+      howItWorks: "When a vehicle collides with an obstacle, the front crumple zones absorb energy by deforming progressively, extending the stopping time from milliseconds to hundreds of milliseconds. Simultaneously, pretensioners fire to remove seatbelt slack, and airbags deploy to distribute deceleration forces across a larger body area. The rigid passenger cell maintains survival space while energy-absorbing materials in the steering column, dashboard, and door panels further cushion occupants as their inertia carries them forward.",
+      stats: [
+        { val: "45%", label: "Reduction in fatal injuries with seatbelts" },
+        { val: "30%", label: "Additional protection from front airbags" },
+        { val: "300ms", label: "Extended deceleration time with crumple zones" }
+      ],
+      examples: [
+        "Multi-stage frontal airbags that adjust inflation based on crash severity",
+        "Side curtain airbags protecting heads during rollover accidents",
+        "Active hood systems that raise to cushion pedestrian impacts",
+        "Pretensioning seatbelts that retract microseconds before impact"
+      ],
+      companies: ["Volvo", "Mercedes-Benz", "Tesla", "Autoliv", "ZF Friedrichshafen"],
+      futureImpact: "Next-generation vehicles will feature predictive safety systems using AI and sensor fusion to detect imminent collisions and pre-position occupants optimally. External airbags on vehicle exteriors will protect pedestrians and cyclists. Autonomous vehicles may redesign cabin layouts entirely since occupants won't need to face forward, requiring new approaches to managing inertial forces during emergency maneuvers.",
+      color: "#ef4444"
+    },
+    {
+      icon: "🚀",
+      title: "Spacecraft Maneuvers",
+      short: "Aerospace",
+      tagline: "Harnessing eternal motion in the cosmic void",
+      description: "In the vacuum of space, Newton's First Law manifests in its purest form. With no air resistance or friction, spacecraft continue at constant velocity indefinitely without propulsion. Mission planners exploit this by calculating precise trajectory burns, then allowing inertia to carry probes across billions of kilometers. The challenge becomes not maintaining motion, but changing it—every maneuver requires fuel.",
+      connection: "Our experiment showed objects in motion tend to stay in motion unless acted upon by an external force. In space, this principle becomes absolute—Voyager 1 has been coasting on its 1977 launch momentum for nearly 50 years, demonstrating the ultimate example of inertia at work.",
+      howItWorks: "Spacecraft maneuvers rely on carefully calculated thruster burns. A Hohmann transfer orbit uses two engine burns—one to raise the orbit and another to circularize it—with inertia carrying the craft between burns. Gravity assists use planetary flybys to 'steal' momentum from planets, effectively getting free velocity changes. Attitude control uses reaction wheels that spin up to rotate the spacecraft in the opposite direction, all based on conservation of angular momentum and Newton's Laws.",
+      stats: [
+        { val: "17 km/s", label: "Voyager 1 speed from 1977 launch inertia" },
+        { val: "99.9%", label: "Of mission time spent coasting on inertia" },
+        { val: "10+ years", label: "Some missions coast to outer planets" }
+      ],
+      examples: [
+        "Voyager probes traveling beyond the solar system on launch inertia",
+        "Mars mission trajectory burns followed by months of coasting",
+        "Gravity slingshot maneuvers around Jupiter for outer planet missions",
+        "International Space Station orbital adjustments and reboosts"
+      ],
+      companies: ["NASA", "SpaceX", "ESA", "Blue Origin", "Rocket Lab"],
+      futureImpact: "Ion propulsion systems will enable continuous low-thrust acceleration, allowing spacecraft to reach higher velocities than chemical rockets by running for months or years. Solar sails will harness photon pressure for propellantless propulsion. Future interstellar missions may use laser-pushed light sails to achieve a fraction of light speed, then coast to nearby stars over decades—the ultimate expression of inertia-based travel.",
+      color: "#6366f1"
+    },
+    {
+      icon: "🏃",
+      title: "Sports Equipment Design",
+      short: "Athletics",
+      tagline: "Optimizing performance through mass distribution",
+      description: "Athletic equipment designers meticulously engineer inertia to enhance performance. Baseball bats balance swing speed against hitting mass, golf clubs optimize moment of inertia for forgiveness on off-center hits, and running shoes minimize foot inertia for faster leg turnover. Understanding how mass affects motion initiation and stopping is fundamental to every piece of sports equipment.",
+      connection: "Just as we discovered that heavy objects are harder to accelerate, athletes experience this directly—a heavier bat is harder to swing but transfers more momentum on contact. The sweet spot exists where mass and acceleration balance for maximum power.",
+      howItWorks: "Sports equipment designers manipulate mass distribution to control rotational and linear inertia. A tennis racquet's moment of inertia (MOI) determines how it resists twisting on off-center hits—higher MOI means more stability but slower maneuverability. Golf club heads place mass around the perimeter to increase forgiveness, making the club more resistant to rotation on mishits. Running shoe designers minimize heel and toe mass to reduce the energy required to accelerate and decelerate the foot through each stride cycle.",
+      stats: [
+        { val: "30%", label: "Energy reduction from lighter running shoes" },
+        { val: "5000+", label: "MOI (g·cm²) in game-improvement golf drivers" },
+        { val: "2x", label: "Ball speed increase from optimal bat mass" }
+      ],
+      examples: [
+        "Carbon fiber tennis racquets with optimized swing weight",
+        "Perimeter-weighted golf clubheads for maximum forgiveness",
+        "Carbon-plated running shoes minimizing foot inertia",
+        "Weighted baseball training bats for strength development"
+      ],
+      companies: ["Wilson", "Callaway", "Nike", "Titleist", "Babolat"],
+      futureImpact: "3D-printed equipment with precisely customized mass distribution will match individual athlete biomechanics. Smart materials that can dynamically shift mass during a swing or stride will optimize inertia in real-time. AI-designed geometries will find non-intuitive mass distributions that maximize performance while minimizing injury risk, revolutionizing equipment for every sport.",
+      color: "#22c55e"
+    },
+    {
+      icon: "🤖",
+      title: "Industrial Robotics",
+      short: "Manufacturing",
+      tagline: "Precision motion through inertia management",
+      description: "Industrial robots must precisely control inertia to achieve accuracy and speed. Each joint must accelerate and decelerate arm segments, and the inertia at the end effector changes dramatically based on payload and arm configuration. Advanced control systems continuously calculate inertial loads and compensate motor torques accordingly, enabling robots to paint cars, weld steel, and assemble electronics with submillimeter precision.",
+      connection: "Our experiment demonstrated how mass affects acceleration—robots face this challenge constantly. A robot arm carrying a heavy payload has more inertia and requires more torque to stop precisely. If not compensated, the arm would overshoot its target position.",
+      howItWorks: "Robot motion controllers use dynamic models that calculate the instantaneous inertia tensor of the arm based on joint positions and payload. This information feeds forward into the motor control loop, adjusting torque commands to compensate for inertial effects. Harmonic drives and cycloidal gearboxes provide high gear ratios to amplify motor torque against arm inertia. Force-torque sensors at the wrist detect unexpected loads, while vibration damping algorithms prevent resonance when the arm's natural frequency matches commanded motions.",
+      stats: [
+        { val: "0.02mm", label: "Repeatability of modern industrial robots" },
+        { val: "500kg", label: "Payload capacity of heavy-duty robots" },
+        { val: "2m/s²", label: "Typical joint acceleration with full load" }
+      ],
+      examples: [
+        "Automotive welding robots compensating for gun weight variations",
+        "Pick-and-place systems adjusting for varying product masses",
+        "Painting robots maintaining constant speed despite arm extension",
+        "Collaborative robots sensing and adapting to human interactions"
+      ],
+      companies: ["FANUC", "ABB", "KUKA", "Yaskawa", "Universal Robots"],
+      futureImpact: "Soft robotics with variable-stiffness actuators will dynamically change arm inertia for safer human collaboration. AI-based motion planning will learn optimal trajectories that minimize energy while accounting for complex inertial interactions. Swarm robotics will coordinate multiple lightweight arms to handle heavy payloads collectively, distributing inertial loads across the system and enabling unprecedented flexibility in manufacturing.",
+      color: "#f59e0b"
+    }
+  ];
+
   // ==================== PHASE RENDERERS ====================
 
   const renderHook = () => {

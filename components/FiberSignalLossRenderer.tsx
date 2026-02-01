@@ -309,6 +309,102 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, testQuestions, onCorrectAnswer, onIncorrectAnswer]);
 
+  // Real-world applications data
+  const realWorldApps = [
+    {
+      icon: '🌊',
+      title: 'Undersea Cables',
+      short: 'Global Internet Backbone',
+      tagline: 'Connecting continents through the ocean depths',
+      description: 'Submarine fiber optic cables carry over 99% of intercontinental data traffic, spanning thousands of kilometers across ocean floors. These engineering marvels must maintain signal integrity through extreme pressures, temperatures, and distances that would render most communication systems useless.',
+      connection: 'Understanding fiber signal loss is critical for submarine cable design. At 0.2 dB/km attenuation over 6,000+ km transatlantic routes, signals would be completely lost without optical amplifiers placed every 50-100 km along the cable.',
+      howItWorks: 'Submarine cables use single-mode fiber at 1550nm wavelength for minimum attenuation. Erbium-Doped Fiber Amplifiers (EDFAs) are housed in repeater units on the ocean floor, boosting all wavelengths simultaneously. Multiple fiber pairs provide redundancy, and Dense Wavelength Division Multiplexing (DWDM) allows 100+ channels per fiber, achieving total capacities exceeding 200 Tbps per cable system.',
+      stats: [
+        { value: '99%', label: 'Of intercontinental data via submarine cables' },
+        { value: '1.3M km', label: 'Total submarine cable deployed globally' },
+        { value: '200+ Tbps', label: 'Capacity of modern transatlantic cables' },
+      ],
+      examples: [
+        'MAREA cable: 6,600 km from Virginia to Spain, 200 Tbps capacity',
+        'PEACE cable: 15,000 km connecting Asia, Africa, and Europe',
+        'Dunant cable: Google-owned transatlantic with 250 Tbps capacity',
+        'SEA-ME-WE 6: 19,200 km serving Southeast Asia, Middle East, Western Europe',
+      ],
+      companies: ['SubCom', 'NEC Corporation', 'Alcatel Submarine Networks', 'Google', 'Meta'],
+      futureImpact: 'Next-generation submarine cables will use hollow-core fiber and space-division multiplexing to push capacities beyond 1 Pbps per cable. Quantum key distribution over submarine fiber will enable unhackable intercontinental communications by 2030.',
+      color: '#0ea5e9',
+    },
+    {
+      icon: '🏠',
+      title: 'FTTH Networks',
+      short: 'Home Broadband',
+      tagline: 'Bringing gigabit speeds to every doorstep',
+      description: 'Fiber to the Home (FTTH) networks deliver high-speed internet directly to residential subscribers using Passive Optical Networks (PON). This architecture efficiently serves entire neighborhoods from a single fiber connection at the central office.',
+      connection: 'PON technology relies on optical splitters that divide the signal to serve multiple homes, with each split adding approximately 3.5 dB of loss. A 1:32 splitter loses about 17 dB, limiting total reach to around 20 km from the central office - making signal loss calculations essential for network design.',
+      howItWorks: 'A single fiber from the Optical Line Terminal (OLT) at the central office reaches a passive splitter in the neighborhood, which divides the signal to 32-128 Optical Network Terminals (ONTs) at individual homes. Downstream data broadcasts to all users (each ONT filters its data), while upstream uses Time Division Multiple Access (TDMA) to prevent collisions. GPON provides 2.5 Gbps down/1.25 Gbps up, while XGS-PON offers symmetric 10 Gbps.',
+      stats: [
+        { value: '1.2B', label: 'Global FTTH/B subscribers (2024)' },
+        { value: '20 km', label: 'Maximum PON reach from central office' },
+        { value: '10 Gbps', label: 'XGS-PON symmetric speed per port' },
+      ],
+      examples: [
+        'Verizon Fios: 7+ million FTTH subscribers across northeastern US',
+        'China Telecom: World\'s largest FTTH network with 180+ million homes',
+        'Orange France: 34 million homes passed with fiber infrastructure',
+        'Google Fiber: Pioneered residential gigabit service in the US',
+      ],
+      companies: ['Verizon', 'AT&T', 'China Telecom', 'Orange', 'NTT'],
+      futureImpact: '50G-PON and beyond will deliver 50 Gbps to homes by 2028, enabling 8K streaming, holographic communications, and real-time cloud gaming. Bend-insensitive fiber will simplify installations, reducing deployment costs by 40%.',
+      color: '#10b981',
+    },
+    {
+      icon: '🏢',
+      title: 'Data Center Interconnects',
+      short: 'Enterprise Infrastructure',
+      tagline: 'The high-speed nervous system of cloud computing',
+      description: 'Data Center Interconnects (DCI) are the high-capacity fiber links connecting data centers within a campus, across a metro area, or between regions. These links carry massive amounts of traffic between compute, storage, and networking resources.',
+      connection: 'DCI links must maintain extremely low loss budgets to support high-speed transceivers (400G and beyond). Every connector, splice, and patch panel adds loss that must be carefully calculated. Multimode fiber dominates short reaches (<500m) where its lower cost offsets higher attenuation, while single-mode handles longer distances.',
+      howItWorks: 'Within data centers, multimode fiber with 850nm VCSELs connects servers to Top-of-Rack switches over short distances. Between buildings, single-mode fiber with coherent optics enables 400G+ transmission over campus distances. For metro and long-haul DCI, DWDM systems multiplex 96+ wavelengths onto a single fiber pair, with each wavelength carrying 400G-800G using advanced modulation formats like 64-QAM.',
+      stats: [
+        { value: '800 Gbps', label: 'Per wavelength with coherent optics' },
+        { value: '144 fibers', label: 'Typical high-density trunk cable' },
+        { value: '<0.35 dB', label: 'Loss budget per connection in DCI' },
+      ],
+      examples: [
+        'AWS Direct Connect: Dedicated fiber links to AWS regions worldwide',
+        'Microsoft Azure ExpressRoute: Private connectivity to Azure data centers',
+        'Equinix Fabric: Interconnection platform linking 250+ data centers',
+        'Google Cloud Interconnect: 10-200 Gbps dedicated connections',
+      ],
+      companies: ['Equinix', 'Digital Realty', 'AWS', 'Microsoft Azure', 'Google Cloud'],
+      futureImpact: 'Co-packaged optics will integrate photonics directly into switch ASICs, enabling 51.2 Tbps switches by 2026. Silicon photonics will reduce transceiver costs by 60%, while 1.6T optics become standard for spine-leaf architectures.',
+      color: '#8b5cf6',
+    },
+    {
+      icon: '🔬',
+      title: 'Fiber Optic Sensors',
+      short: 'Industrial Monitoring',
+      tagline: 'Turning fiber into distributed sensing networks',
+      description: 'Fiber optic sensors use the fiber itself as the sensing element, detecting changes in temperature, strain, pressure, and vibration along the entire length of the fiber. This enables monitoring of pipelines, bridges, tunnels, and industrial equipment over distances impossible with traditional sensors.',
+      connection: 'Sensor performance directly depends on understanding signal loss. Distributed sensing techniques like OTDR, Brillouin scattering, and Rayleigh backscatter analyze how the signal degrades along the fiber to detect and locate environmental changes. Every 0.1 dB of unexpected loss could indicate a structural issue.',
+      howItWorks: 'Distributed Temperature Sensing (DTS) uses Raman scattering - the ratio of Stokes to anti-Stokes backscattered light indicates temperature at each point along the fiber. Distributed Acoustic Sensing (DAS) uses Rayleigh backscatter to detect vibrations with meter-level resolution over 50+ km. Fiber Bragg Gratings (FBGs) are point sensors written into the fiber that reflect specific wavelengths, with wavelength shift indicating strain or temperature.',
+      stats: [
+        { value: '50+ km', label: 'Sensing range for distributed systems' },
+        { value: '1 meter', label: 'Spatial resolution for acoustic sensing' },
+        { value: '0.1°C', label: 'Temperature resolution for DTS systems' },
+      ],
+      examples: [
+        'Pipeline leak detection: 1,000+ km of oil/gas pipelines monitored continuously',
+        'Structural health monitoring: Golden Gate Bridge uses fiber sensors for seismic detection',
+        'Perimeter security: Fiber buried along borders detects footsteps and vehicles',
+        'Downhole monitoring: Oil wells use fiber to measure temperature/pressure at depth',
+      ],
+      companies: ['Luna Innovations', 'Silixa', 'AP Sensing', 'Omnisens', 'Halliburton'],
+      futureImpact: 'AI-powered analysis of distributed sensing data will predict equipment failures weeks in advance. Fiber sensors embedded in 3D-printed structures will enable smart infrastructure that self-reports damage. Quantum-enhanced sensors will achieve sensitivity improvements of 1000x for gravitational wave detection.',
+      color: '#f59e0b',
+    },
+  ];
+
   const renderVisualization = (interactive: boolean) => {
     const width = 500;
     const height = 320;

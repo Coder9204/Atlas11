@@ -1013,6 +1013,102 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
     </div>
   );
 
+  // Real-world applications for the transfer phase
+  const realWorldApps = [
+    {
+      icon: "☁️",
+      title: "Data Center Storage",
+      short: "Cloud Infrastructure",
+      tagline: "Massive scale storage for the digital world",
+      description: "Hyperscale data centers operated by cloud providers store exabytes of data on millions of hard drives. While SSDs handle hot data requiring fast random access, HDDs remain the backbone for storing cold data, backups, and archives at a fraction of the cost. A single data center may contain over 100,000 HDDs spinning 24/7, each subject to the same physics we explored—seek time, rotational latency, and head crash risks.",
+      connection: "Just like our simulation showed seek time and rotational latency limiting IOPS, data center architects must carefully choose between HDDs and SSDs based on workload characteristics. Hot data with random access patterns goes on SSDs, while sequential workloads like video streaming and backup archival leverage HDD's cost advantage where the mechanical delays matter less.",
+      howItWorks: "Data centers use tiered storage architectures. The hot tier uses NVMe SSDs for databases and real-time analytics (millions of IOPS). The warm tier uses SATA SSDs for frequently accessed files. The cold tier uses high-capacity HDDs (20+ TB each) for archival, backups, and media libraries. Intelligent data migration policies automatically move data between tiers based on access patterns, optimizing the cost-performance tradeoff.",
+      stats: [
+        { val: "20+ TB", label: "Per enterprise HDD capacity" },
+        { val: "$15/TB", label: "HDD cost vs $80/TB SSD" },
+        { val: "100,000+", label: "HDDs per data center" }
+      ],
+      examples: [
+        "AWS S3 Glacier deep archive storage",
+        "Google Cloud Coldline for infrequent access",
+        "Facebook/Meta photo and video archives",
+        "Backblaze B2 cloud backup infrastructure"
+      ],
+      companies: ["Amazon AWS", "Google Cloud", "Microsoft Azure", "Backblaze", "Wasabi"],
+      futureImpact: "Data center storage will increasingly adopt SMR (Shingled Magnetic Recording) drives that sacrifice random write performance for 20% higher density—perfect for archival workloads. Multi-actuator HDDs with two independent head assemblies will double sequential throughput. Meanwhile, DNA storage and holographic storage research aims to eventually replace magnetic media for ultra-cold archival with century-long retention.",
+      color: "#3b82f6"
+    },
+    {
+      icon: "🎥",
+      title: "Video Surveillance Systems",
+      short: "Security",
+      tagline: "Always recording, always reliable",
+      description: "Security camera systems worldwide rely on specialized surveillance HDDs to continuously record video 24/7/365. A single commercial building might have 32 cameras each streaming 4K video, requiring drives optimized for constant sequential writes rather than the random access patterns of consumer drives. These systems must balance storage capacity, write endurance, and the ability to simultaneously record new footage while playing back archived video.",
+      connection: "Our simulation demonstrated how sequential access bypasses the seek time penalty. Surveillance HDDs exploit this—cameras write video frames in order to sequential sectors, achieving near-maximum throughput. The challenge comes during playback, when random seeks interrupt the write stream. Purpose-built surveillance drives use optimized firmware to handle this mixed workload.",
+      howItWorks: "Surveillance-class HDDs like Western Digital Purple and Seagate SkyHawk are engineered differently from desktop drives. They use AllFrame technology to reduce frame drops during simultaneous read/write, support 64+ camera streams, and are rated for 24/7 operation with enhanced error recovery that prioritizes continuous recording over perfect data integrity. RAID configurations provide redundancy, and most systems overwrite oldest footage in a circular buffer.",
+      stats: [
+        { val: "180 TB/yr", label: "Write workload rating" },
+        { val: "64+", label: "Simultaneous camera streams" },
+        { val: "24/7/365", label: "Continuous operation design" }
+      ],
+      examples: [
+        "City-wide traffic camera networks",
+        "Casino surveillance with 1000+ cameras",
+        "Airport security recording systems",
+        "Retail loss prevention DVR systems"
+      ],
+      companies: ["Western Digital", "Seagate", "Hikvision", "Dahua", "Axis Communications"],
+      futureImpact: "AI-powered video analytics will transform surveillance storage requirements. Instead of storing continuous footage, edge AI will process video locally and only store flagged events, dramatically reducing storage needs. However, higher resolution cameras (8K) and longer retention requirements will continue driving demand for high-capacity surveillance drives. Solid-state surveillance storage will gain share for critical installations where reliability trumps cost.",
+      color: "#ef4444"
+    },
+    {
+      icon: "🏢",
+      title: "Enterprise NAS Systems",
+      short: "Business",
+      tagline: "Shared storage for the modern workplace",
+      description: "Network Attached Storage (NAS) systems serve as the shared file servers for businesses of all sizes, from small offices to enterprise departments. These systems combine multiple HDDs in RAID arrays to provide both large capacity and data protection. Users access files over the network, with the NAS handling the complex task of striping data across drives, rebuilding failed drives, and optimizing access patterns for multiple simultaneous users.",
+      connection: "Our HDD physics directly impacts NAS performance. When multiple users access different files simultaneously, the heads must seek between tracks constantly—the worst case for mechanical drives. Enterprise NAS systems use intelligent caching, SSD acceleration tiers, and RAID striping to mitigate these limitations. Understanding seek time and IOPS helps IT administrators properly size NAS systems for their workloads.",
+      howItWorks: "Enterprise NAS systems use RAID (Redundant Array of Independent Disks) to combine multiple HDDs. RAID 5 stripes data with parity for single-drive fault tolerance. RAID 6 handles two simultaneous failures. Modern NAS systems add SSD caching—frequently accessed files are automatically promoted to fast flash storage while bulk data remains on HDDs. ZFS and Btrfs filesystems add checksumming to detect and repair bit rot.",
+      stats: [
+        { val: "100+ TB", label: "Typical enterprise NAS capacity" },
+        { val: "10 GbE", label: "Network connection speed" },
+        { val: "99.99%", label: "Uptime SLA requirement" }
+      ],
+      examples: [
+        "Law firm document management systems",
+        "Healthcare PACS medical imaging storage",
+        "Media production shared project drives",
+        "Engineering CAD file collaboration storage"
+      ],
+      companies: ["Synology", "QNAP", "NetApp", "Dell EMC", "HPE"],
+      futureImpact: "NAS systems will increasingly adopt all-flash arrays for performance-critical workloads while HDDs remain for capacity-focused tiers. Hybrid cloud NAS will automatically tier cold data to public cloud storage. AI-powered predictive analytics will anticipate drive failures before they occur, scheduling proactive replacements during maintenance windows. NVMe-oF (NVMe over Fabrics) will enable SSD-like latency across network storage.",
+      color: "#10b981"
+    },
+    {
+      icon: "🔬",
+      title: "HAMR Technology",
+      short: "Next-Gen Storage",
+      tagline: "Pushing magnetic storage to its limits",
+      description: "Heat-Assisted Magnetic Recording (HAMR) represents the cutting edge of HDD technology, using lasers to momentarily heat the recording surface to 450°C during writes. This allows data to be written to ultra-stable magnetic media that would otherwise be impossible to magnetize at room temperature. HAMR drives are beginning to ship with 30+ TB capacities, with a roadmap to 100+ TB per drive—densities that seemed impossible just years ago.",
+      connection: "Our simulation showed the fundamental physics of HDDs: spinning platters, seeking heads, and nanometer-scale fly heights. HAMR pushes these same physics to extremes. The head now includes a laser that fires during writes, the magnetic media uses new materials with higher coercivity, and the fly height has shrunk even further. The same mechanical limitations exist, but storage density has increased by orders of magnitude.",
+      howItWorks: "HAMR uses a tiny laser integrated into the read/write head that heats a nanometer-scale spot on the disk surface to approximately 450°C for a few nanoseconds during writes. This temporarily reduces the coercivity (resistance to magnetization) of the FePt (iron-platinum) recording media, allowing the write head to flip the magnetic orientation. The spot instantly cools, locking in the data with exceptional stability. This enables bit densities exceeding 2 terabits per square inch.",
+      stats: [
+        { val: "30+ TB", label: "Current HAMR drive capacity" },
+        { val: "100+ TB", label: "Roadmap target capacity" },
+        { val: "450°C", label: "Laser heating temperature" }
+      ],
+      examples: [
+        "Seagate Mozaic 3+ platform drives",
+        "Hyperscale data center deployments",
+        "Cold storage archive systems",
+        "Exascale scientific data repositories"
+      ],
+      companies: ["Seagate", "Western Digital", "Toshiba", "HGST", "IBM Research"],
+      futureImpact: "HAMR is just the beginning of next-generation magnetic recording. MAMR (Microwave-Assisted Magnetic Recording) uses microwaves instead of heat for similar density gains. Multi-actuator technology will combine with HAMR to improve throughput. Beyond 100TB drives, the industry is researching bit-patterned media and three-dimensional magnetic recording. HDDs will remain cost-competitive with flash for bulk storage well into the 2030s, with individual drives potentially reaching 200+ TB.",
+      color: "#f59e0b"
+    }
+  ];
+
   // Main render with wrapper
   const renderContent = () => {
     // HOOK PHASE

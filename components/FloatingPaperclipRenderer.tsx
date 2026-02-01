@@ -547,6 +547,127 @@ export default function FloatingPaperclipRenderer({
   ];
 
   // ─────────────────────────────────────────────────────────────
+  // Real-World Applications Data
+  // ─────────────────────────────────────────────────────────────
+  const realWorldApps = [
+    {
+      icon: "🤖",
+      title: "Water Strider Biomimicry",
+      short: "Robotic insects that walk on water",
+      tagline: "Engineering robots that mimic nature's water-walking masters",
+      description: "Water striders exploit surface tension to walk on water using superhydrophobic legs covered in microscopic hairs. Engineers have developed bio-inspired robots that replicate this ability, creating aquatic microrobots capable of traversing water surfaces for environmental monitoring, search and rescue operations, and scientific research in hard-to-reach aquatic environments.",
+      connection: "Just like our floating paperclip, water strider robots distribute their weight across the water surface using specialized leg structures that maximize contact perimeter while minimizing surface penetration. The key is maintaining the contact angle below the critical threshold where surface tension force equals weight.",
+      howItWorks: "These robots use superhydrophobic coatings (often mimicking the waxy, hairy structure of real water strider legs) to prevent water from wetting their leg surfaces. The legs create dimples in the water surface without breaking through, generating upward surface tension forces. Precise weight distribution and leg geometry ensure the robot stays afloat while actuators enable controlled locomotion.",
+      stats: [
+        { value: "1,200", label: "microhairs per leg on real water striders" },
+        { value: "15x", label: "body weight supported by surface tension" },
+        { value: "1.5 m/s", label: "maximum speed of robotic water striders" }
+      ],
+      examples: [
+        "Surveillance microrobots for water quality monitoring",
+        "Search and rescue robots for flood disaster response",
+        "Scientific sampling robots for remote lake research",
+        "Military reconnaissance drones for coastal operations"
+      ],
+      companies: [
+        "Harvard Microrobotics Lab",
+        "Seoul National University Robotics",
+        "MIT CSAIL",
+        "Carnegie Mellon Robotics Institute"
+      ],
+      futureImpact: "As materials science advances, we'll see swarms of water-walking robots deployed for large-scale environmental monitoring, oil spill detection, and even payload delivery across water bodies without the need for boats or submersibles.",
+      color: "#22c55e"
+    },
+    {
+      icon: "🛢️",
+      title: "Oil Spill Detection",
+      short: "Monitoring ocean contamination via surface tension",
+      tagline: "Using surface tension changes to detect environmental disasters",
+      description: "Oil spills dramatically alter water's surface tension properties. Clean seawater has a surface tension around 0.073 N/m, while oil-contaminated water drops to as low as 0.020 N/m. Environmental monitoring systems exploit this difference using specialized sensors and satellite imagery to detect oil slicks, track their spread, and coordinate cleanup efforts in real-time.",
+      connection: "Remember how soap caused our paperclip to sink by reducing surface tension? Oil contamination works similarly—the presence of hydrocarbons disrupts the hydrogen bonding network at the water surface, weakening the 'skin' that supported our floating paperclip and changing how light reflects off the water.",
+      howItWorks: "Detection systems use multiple approaches: tensiometers measure surface tension directly from water samples; synthetic aperture radar (SAR) satellites detect the smoothing effect oil has on wave patterns; and fluorescence sensors identify oil's characteristic light emission. The dramatic surface tension change creates a measurable signature that automated systems can identify and track.",
+      stats: [
+        { value: "65%", label: "reduction in surface tension from oil contamination" },
+        { value: "< 0.1 mm", label: "minimum detectable oil film thickness" },
+        { value: "24/7", label: "satellite monitoring of major shipping lanes" }
+      ],
+      examples: [
+        "Real-time monitoring of offshore drilling platforms",
+        "Early warning systems for pipeline leak detection",
+        "Tracking illegal bilge dumping from ships",
+        "Coordinating oil spill cleanup vessel deployment"
+      ],
+      companies: [
+        "NOAA Ocean Service",
+        "European Maritime Safety Agency",
+        "SpaceX Starlink (proposed monitoring)",
+        "Oil Spill Response Limited",
+        "Airbus Defence and Space"
+      ],
+      futureImpact: "AI-powered satellite networks will provide real-time global ocean surface monitoring, detecting spills within minutes of occurrence and automatically dispatching cleanup resources, potentially preventing billions of dollars in environmental damage annually.",
+      color: "#eab308"
+    },
+    {
+      icon: "🔬",
+      title: "Microfluidics and Lab-on-Chip",
+      short: "Miniaturized medical diagnostics",
+      tagline: "Surface tension powers the future of point-of-care medicine",
+      description: "Microfluidic devices manipulate tiny fluid volumes (nanoliters to microliters) in channels smaller than a human hair. At these scales, surface tension dominates over gravity and inertia, enabling precise fluid control without pumps. Lab-on-chip technology leverages this to perform complex medical diagnostics—blood tests, genetic sequencing, drug screening—on devices the size of a credit card.",
+      connection: "In our paperclip experiment, surface tension created forces strong enough to support solid objects. In microfluidics, these same forces drive fluid movement, control droplet formation, and enable mixing of reagents—all without external pumps or moving parts. The physics of the water's 'skin' becomes the engine of miniaturized laboratories.",
+      howItWorks: "Microfluidic channels are designed with specific surface properties (hydrophobic or hydrophilic) to guide fluid flow. Capillary action—driven by surface tension—pulls fluids through channels automatically. Surface tension gradients (created by temperature, surfactant concentration, or electric fields) can be used to move droplets precisely, merge samples with reagents, and separate components for analysis.",
+      stats: [
+        { value: "10 μL", label: "blood sample needed for complete blood count" },
+        { value: "< 15 min", label: "time for full diagnostic panel results" },
+        { value: "$0.50", label: "cost per disposable chip vs $50+ lab tests" }
+      ],
+      examples: [
+        "COVID-19 rapid antigen and PCR testing devices",
+        "Glucose monitoring for diabetes management",
+        "Pregnancy and fertility testing kits",
+        "Cancer biomarker screening panels"
+      ],
+      companies: [
+        "Abbott Laboratories",
+        "Roche Diagnostics",
+        "Danaher Corporation",
+        "Illumina",
+        "Bio-Rad Laboratories"
+      ],
+      futureImpact: "Smartphone-integrated microfluidic devices will democratize medical diagnostics, enabling comprehensive health monitoring at home. Surface tension-driven chips will perform hundreds of tests simultaneously from a single drop of blood, revolutionizing preventive medicine and early disease detection globally.",
+      color: "#8b5cf6"
+    },
+    {
+      icon: "🖨️",
+      title: "Inkjet Printing",
+      short: "Precision droplet formation for manufacturing",
+      tagline: "Surface tension shapes every printed dot with nanometer precision",
+      description: "Inkjet printing relies fundamentally on surface tension to form and control microscopic droplets. Whether printing documents, circuit boards, solar cells, or even human tissue, the process depends on precise manipulation of surface tension forces to create uniform droplets, control their trajectory, and ensure proper adhesion to surfaces. Modern inkjet technology prints droplets as small as 1 picoliter with placement accuracy of a few micrometers.",
+      connection: "Our floating paperclip demonstrated how surface tension creates a 'skin' on water. In inkjet printing, this same force shapes ink into perfect spherical droplets as they exit the nozzle. The ink's surface tension must be carefully formulated—too high and droplets won't form properly; too low and they'll splatter on impact rather than forming crisp dots.",
+      howItWorks: "Thermal or piezoelectric actuators create pressure pulses that eject ink through microscopic nozzles. As ink exits the nozzle, surface tension immediately pulls it into a spherical droplet (minimizing surface area). The droplet's surface tension, combined with its velocity and the substrate's surface energy, determines how it spreads and adheres upon impact. Ink formulations precisely balance surface tension, viscosity, and drying properties for optimal print quality.",
+      stats: [
+        { value: "1 pL", label: "droplet volume (one trillionth of a liter)" },
+        { value: "50,000", label: "droplets per second per nozzle" },
+        { value: "2,400 dpi", label: "resolution in high-end printers" }
+      ],
+      examples: [
+        "3D printing of electronic circuits and sensors",
+        "Bioprinting of tissues and organs for transplant",
+        "Manufacturing of OLED display panels",
+        "Printing of photovoltaic solar cells"
+      ],
+      companies: [
+        "HP Inc.",
+        "Canon Inc.",
+        "Epson",
+        "Fujifilm Dimatix",
+        "Konica Minolta"
+      ],
+      futureImpact: "Inkjet technology will expand beyond printing to become a primary manufacturing method. Surface tension-controlled deposition will enable printing of complex 3D structures, electronic devices, pharmaceutical pills with customized dosages, and even replacement organs from a patient's own cells.",
+      color: "#0ea5e9"
+    }
+  ];
+
+  // ─────────────────────────────────────────────────────────────
   // Premium Paperclip SVG Component
   // ─────────────────────────────────────────────────────────────
   const renderPremiumPaperclip = (x: number, y: number, scale: number = 1) => (
