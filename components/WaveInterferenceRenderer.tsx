@@ -419,7 +419,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       <svg
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
         className="w-full h-full cursor-crosshair"
-        onMouseMove={interactive ? (e) => {
+        style={{ touchAction: 'none' }}
+        onPointerMove={interactive ? (e) => {
           const rect = e.currentTarget.getBoundingClientRect();
           const scaleX = canvasWidth / rect.width;
           const scaleY = canvasHeight / rect.height;

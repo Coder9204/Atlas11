@@ -259,11 +259,11 @@ const ProgressIndicator: React.FC<{ current: number; total: number; phase: Phase
 
 const PrimaryButton: React.FC<{
   children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
+  onPointerDown: (e: React.PointerEvent) => void;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'success';
   fullWidth?: boolean;
-}> = ({ children, onMouseDown, disabled, variant = 'primary', fullWidth = true }) => {
+}> = ({ children, onPointerDown, disabled, variant = 'primary', fullWidth = true }) => {
   const baseClasses = `py-4 px-8 rounded-2xl font-semibold text-lg transition-all duration-200 transform ${
     fullWidth ? 'w-full' : ''
   }`;
@@ -281,18 +281,18 @@ const PrimaryButton: React.FC<{
   };
 
   const handleClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       e.preventDefault();
       if (!disabled) {
-        onMouseDown(e);
+        onPointerDown(e);
       }
     },
-    [disabled, onMouseDown]
+    [disabled, onPointerDown]
   );
 
   return (
     <button
-      onMouseDown={handleClick}
+      onPointerDown={handleClick}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]}`}
     >
@@ -1168,7 +1168,7 @@ export default function InductiveKickbackRenderer({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('click'); goToPhase('predict'); }}
+        onPointerDown={(e) => { e.preventDefault(); playSound('click'); goToPhase('predict'); }}
         className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1221,7 +1221,7 @@ export default function InductiveKickbackRenderer({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               prediction === option.id
@@ -1252,7 +1252,7 @@ export default function InductiveKickbackRenderer({
       )}
 
       {showPredictionFeedback && (
-        <PrimaryButton onMouseDown={nextPhase}>
+        <PrimaryButton onPointerDown={nextPhase}>
           See It Happen →
         </PrimaryButton>
       )}
@@ -1275,7 +1275,7 @@ export default function InductiveKickbackRenderer({
 
       <div className="grid grid-cols-2 gap-3 mb-4">
         <button
-          onMouseDown={(e) => { e.preventDefault(); handleSwitchToggle(); }}
+          onPointerDown={(e) => { e.preventDefault(); handleSwitchToggle(); }}
           className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             switchOn
               ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
@@ -1285,7 +1285,7 @@ export default function InductiveKickbackRenderer({
           {switchOn ? '🔌 Switch ON' : '🔌 Switch OFF'}
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); handleToggleDiode(); }}
+          onPointerDown={(e) => { e.preventDefault(); handleToggleDiode(); }}
           className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             hasFlybackDiode
               ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
@@ -1304,7 +1304,7 @@ export default function InductiveKickbackRenderer({
       </div>
 
       <PrimaryButton
-        onMouseDown={nextPhase}
+        onPointerDown={nextPhase}
         disabled={!hasExperimented}
       >
         {hasExperimented ? 'Continue to Review →' : `Toggle switch ${Math.max(0, 3 - experimentCount)} more times...`}
@@ -1359,7 +1359,7 @@ export default function InductiveKickbackRenderer({
         ))}
       </div>
 
-      <PrimaryButton onMouseDown={nextPhase}>
+      <PrimaryButton onPointerDown={nextPhase}>
         Now for a Twist... →
       </PrimaryButton>
     </div>
@@ -1389,7 +1389,7 @@ export default function InductiveKickbackRenderer({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               twistPrediction === option.id
@@ -1420,7 +1420,7 @@ export default function InductiveKickbackRenderer({
       )}
 
       {showTwistFeedback && (
-        <PrimaryButton onMouseDown={nextPhase}>
+        <PrimaryButton onPointerDown={nextPhase}>
           Explore Boost Converters →
         </PrimaryButton>
       )}
@@ -1442,7 +1442,7 @@ export default function InductiveKickbackRenderer({
       {renderBoostConverter()}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); handleBoostToggle(); }}
+        onPointerDown={(e) => { e.preventDefault(); handleBoostToggle(); }}
         className={`w-full py-4 rounded-2xl font-semibold mb-4 transition-all duration-200 ${
           boostActive
             ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30'
@@ -1461,7 +1461,7 @@ export default function InductiveKickbackRenderer({
       </div>
 
       <PrimaryButton
-        onMouseDown={nextPhase}
+        onPointerDown={nextPhase}
         disabled={!hasExploredTwist}
       >
         {hasExploredTwist ? 'Continue →' : 'Try the boost converter...'}
@@ -1511,7 +1511,7 @@ export default function InductiveKickbackRenderer({
         </div>
       </div>
 
-      <PrimaryButton onMouseDown={nextPhase}>
+      <PrimaryButton onPointerDown={nextPhase}>
         Apply This Knowledge →
       </PrimaryButton>
     </div>
@@ -1562,7 +1562,7 @@ export default function InductiveKickbackRenderer({
           {applications.map((app, index) => (
             <button
               key={index}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setActiveAppTab(index);
               }}
@@ -1592,7 +1592,7 @@ export default function InductiveKickbackRenderer({
             </p>
             {!completedApps.has(activeAppTab) ? (
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   handleCompleteApp(activeAppTab);
                 }}
@@ -1623,7 +1623,7 @@ export default function InductiveKickbackRenderer({
         </div>
 
         <PrimaryButton
-          onMouseDown={nextPhase}
+          onPointerDown={nextPhase}
           disabled={!allAppsCompleted}
         >
           {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more application${4 - completedApps.size !== 1 ? 's' : ''}`}
@@ -1680,7 +1680,7 @@ export default function InductiveKickbackRenderer({
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => {
+                        onPointerDown={(e) => {
                           e.preventDefault();
                           handleTestAnswer(qIndex, oIndex);
                         }}
@@ -1699,7 +1699,7 @@ export default function InductiveKickbackRenderer({
             </div>
 
             <PrimaryButton
-              onMouseDown={handleSubmitTest}
+              onPointerDown={handleSubmitTest}
               disabled={!allAnswered}
               variant="success"
             >
@@ -1744,18 +1744,18 @@ export default function InductiveKickbackRenderer({
             </div>
 
             {testScore >= 7 ? (
-              <PrimaryButton onMouseDown={nextPhase} variant="success">
+              <PrimaryButton onPointerDown={nextPhase} variant="success">
                 Complete Lesson →
               </PrimaryButton>
             ) : (
               <div className="space-y-3">
-                <PrimaryButton onMouseDown={() => {
+                <PrimaryButton onPointerDown={() => {
                   setTestSubmitted(false);
                   setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null));
                 }} variant="secondary">
                   Try Again
                 </PrimaryButton>
-                <PrimaryButton onMouseDown={nextPhase}>
+                <PrimaryButton onPointerDown={nextPhase}>
                   Continue Anyway →
                 </PrimaryButton>
               </div>
@@ -1808,7 +1808,7 @@ export default function InductiveKickbackRenderer({
         </div>
       )}
 
-      <PrimaryButton onMouseDown={() => goToPhase('hook')} variant="secondary">
+      <PrimaryButton onPointerDown={() => goToPhase('hook')} variant="secondary">
         Review Again
       </PrimaryButton>
     </div>
@@ -1850,7 +1850,7 @@ export default function InductiveKickbackRenderer({
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'

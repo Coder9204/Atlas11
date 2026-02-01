@@ -482,7 +482,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
       borderTop: `1px solid ${colors.card}`
     }}>
       <button
-        onMouseDown={!disabled ? onNext : undefined}
+        onPointerDown={!disabled ? onNext : undefined}
         disabled={disabled}
         style={{
           padding: '14px 32px',
@@ -497,10 +497,10 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
           transition: 'all 0.2s ease',
           transform: disabled ? 'none' : 'translateY(0)',
         }}
-        onMouseEnter={(e) => {
+        onPointerEnter={(e) => {
           if (!disabled) e.currentTarget.style.transform = 'translateY(-2px)';
         }}
-        onMouseLeave={(e) => {
+        onPointerLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
@@ -787,7 +787,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
 
             {faucetFlow > 0 && (
               <button
-                onMouseDown={() => setHookStep(1)}
+                onPointerDown={() => setHookStep(1)}
                 style={{
                   marginTop: '20px',
                   padding: '12px 24px',
@@ -897,7 +897,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setPrediction(option.value);
                 playSound('click');
               }}
@@ -920,7 +920,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
 
         {prediction && !showPredictResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowPredictResult(true);
               playSound(prediction === 'water' ? 'success' : 'failure');
             }}
@@ -1429,7 +1429,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
 
             {/* Dye toggle */}
             <button
-              onMouseDown={() => setShowDyeInjection(!showDyeInjection)}
+              onPointerDown={() => setShowDyeInjection(!showDyeInjection)}
               style={{
                 padding: '10px 16px',
                 background: showDyeInjection ? colors.secondary : colors.background,
@@ -1748,7 +1748,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setTwistPrediction(option.value);
                 playSound('click');
               }}
@@ -1770,7 +1770,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
 
         {twistPrediction && !showTwistResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowTwistResult(true);
               playSound(twistPrediction === 'dimpled' ? 'success' : 'failure');
             }}
@@ -1833,7 +1833,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
           {(['sphere', 'streamlined', 'flat'] as const).map(shape => (
             <button
               key={shape}
-              onMouseDown={() => setObjectShape(shape)}
+              onPointerDown={() => setObjectShape(shape)}
               style={{
                 padding: '10px 20px',
                 background: objectShape === shape ? colors.primary : colors.background,
@@ -2324,7 +2324,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
           {applications.map((app, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
                   playSound('click');
@@ -2429,7 +2429,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
         {/* Next app button */}
         {activeApp < applications.length - 1 && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
@@ -2488,7 +2488,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
                 {testQuestions[currentQuestion].options.map((option, i) => (
                   <button
                     key={i}
-                    onMouseDown={() => handleTestAnswer(i)}
+                    onPointerDown={() => handleTestAnswer(i)}
                     style={{
                       padding: '14px 18px',
                       fontSize: '14px',
@@ -2500,11 +2500,11 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
                       textAlign: 'left',
                       transition: 'all 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
+                    onPointerEnter={(e) => {
                       e.currentTarget.style.borderColor = colors.primary;
                       e.currentTarget.style.background = `${colors.primary}10`;
                     }}
-                    onMouseLeave={(e) => {
+                    onPointerLeave={(e) => {
                       e.currentTarget.style.borderColor = '#333';
                       e.currentTarget.style.background = colors.background;
                     }}
@@ -2539,7 +2539,7 @@ const LaminarTurbulentRenderer: React.FC<LaminarTurbulentRendererProps> = ({ pha
                 Test complete! Ready to see your results?
               </p>
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowTestResults(true);
                   playSound('success');
                 }}

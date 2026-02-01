@@ -389,12 +389,12 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   }, [probeDistance, phase]);
 
   // Handle compass probe dragging
-  const handleProbeMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleProbePointerDown = useCallback((e: React.PointerEvent) => {
     e.preventDefault();
     setCompassProbe(prev => ({ ...prev, isDragging: true }));
   }, []);
 
-  const handleProbeMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const handleProbePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!compassProbe.isDragging || !svgRef.current) return;
     const svg = svgRef.current;
     const rect = svg.getBoundingClientRect();
@@ -412,7 +412,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     }
   }, [compassProbe.isDragging, magnets]);
 
-  const handleProbeMouseUp = useCallback(() => {
+  const handleProbePointerUp = useCallback(() => {
     setCompassProbe(prev => ({ ...prev, isDragging: false }));
   }, []);
 
@@ -550,9 +550,10 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         ref={svgRef}
         viewBox="0 0 400 280"
         className="w-full h-56"
-        onMouseMove={interactive ? handleProbeMouseMove : undefined}
-        onMouseUp={interactive ? handleProbeMouseUp : undefined}
-        onMouseLeave={interactive ? handleProbeMouseUp : undefined}
+        style={{ touchAction: interactive ? 'none' : undefined }}
+        onPointerMove={interactive ? handleProbePointerMove : undefined}
+        onPointerUp={interactive ? handleProbePointerUp : undefined}
+        onPointerLeave={interactive ? handleProbePointerUp : undefined}
       >
         {/* ============================================================= */}
         {/* PREMIUM SVG DEFINITIONS - Gradients, Filters, Patterns        */}
@@ -804,7 +805,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         {mags.map((m, i) => {
           const isNorthLeft = m.polarity !== 'reversed';
           return (
-            <g key={i} transform={`translate(${m.x}, ${m.y}) rotate(${m.angle})`} style={{ cursor: 'pointer' }} onMouseDown={() => setSelectedMagnet(i)}>
+            <g key={i} transform={`translate(${m.x}, ${m.y}) rotate(${m.angle})`} style={{ cursor: 'pointer' }} onPointerDown={() => setSelectedMagnet(i)}>
               {/* Magnetic field glow around magnet */}
               <ellipse cx="0" cy="0" rx="45" ry="20" fill="url(#magmNorthGlow)" opacity="0.3" />
 
@@ -882,7 +883,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
           <g
             transform={`translate(${compassProbe.x}, ${compassProbe.y})`}
             style={{ cursor: compassProbe.isDragging ? 'grabbing' : 'grab' }}
-            onMouseDown={handleProbeMouseDown}
+            onPointerDown={handleProbePointerDown}
             filter={compassProbe.isDragging ? "url(#magmProbeActive)" : undefined}
           >
             {/* Probe outer ring */}
@@ -1785,7 +1786,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                   disabled={showPredictionFeedback}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showPredictionFeedback && selectedPrediction === option.id
@@ -2022,7 +2023,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
                   disabled={showTwistFeedback}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showTwistFeedback && twistPrediction === option.id
@@ -2291,7 +2292,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               {TRANSFER_APPS.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index ? 'bg-blue-600 text-white'
                     : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -2309,7 +2310,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
               </div>
               <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
               {!completedApps.has(activeAppTab) && (
-                <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+                <button onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
                   Mark as Understood
                 </button>
               )}
@@ -2370,7 +2371,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                         className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                       >
                         {option.text}
@@ -2380,7 +2381,7 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
                 </div>
               ))}
               <button
-                onMouseDown={(e) => { e.preventDefault(); submitTest(); }}
+                onPointerDown={(e) => { e.preventDefault(); submitTest(); }}
                 disabled={testAnswers.includes(null)}
                 className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-600 to-blue-600 text-white'}`}
               >

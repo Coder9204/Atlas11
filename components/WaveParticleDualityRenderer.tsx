@@ -347,7 +347,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
       return (
          <button
             style={{ ...baseStyles, ...sizeStyles[size], ...variantStyles[variant] }}
-            onMouseDown={handleClick}
+            onPointerDown={handleClick}
             disabled={disabled}
          >
             {icon && <span>{icon}</span>}
@@ -394,7 +394,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   {phaseOrder.map((p, i) => (
                      <div
                         key={p}
-                        onMouseDown={() => i < currentIdx && goToPhase(p)}
+                        onPointerDown={() => i < currentIdx && goToPhase(p)}
                         onTouchEnd={(e) => { if (i < currentIdx) { e.preventDefault(); goToPhase(p); } }}
                         style={{
                            height: isMobile ? '10px' : '8px',
@@ -477,7 +477,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   opacity: canBack ? 1 : 0.3,
                   minHeight: '44px'
                }}
-               onMouseDown={handleBack}
+               onPointerDown={handleBack}
                onTouchEnd={(e) => { e.preventDefault(); handleBack(); }}
             >
                ← Back
@@ -507,7 +507,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   boxShadow: canGoNext ? `0 2px 12px ${buttonColor}30` : 'none',
                   minHeight: '44px'
                }}
-               onMouseDown={handleNext}
+               onPointerDown={handleNext}
                onTouchEnd={(e) => { e.preventDefault(); handleNext(); }}
             >
                {nextLabel} →
@@ -581,7 +581,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                {/* Back button - goes to previous phase */}
                <button
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                      if (currentIdx > 0) {
                         goToPhase(phaseOrder[currentIdx - 1]);
                      }
@@ -612,7 +612,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                </button>
                {/* Home button */}
                <button
-                  onMouseDown={requestGoHome}
+                  onPointerDown={requestGoHome}
                   onTouchEnd={(e) => { e.preventDefault(); requestGoHome(); }}
                   style={{
                      display: 'flex',
@@ -644,7 +644,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                {phaseOrder.map((p, i) => (
                   <button
                      key={p}
-                     onMouseDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
+                     onPointerDown={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
                      onTouchEnd={(e) => { e.preventDefault(); if (i <= currentIdx) goToPhase(p); }}
                      style={{
                         width: i === currentIdx ? '20px' : '10px',
@@ -1573,7 +1573,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                      transition: 'all 0.3s ease',
                      animation: 'gradientShift 3s ease infinite'
                   }}
-                  onMouseDown={() => goToPhase('predict')}
+                  onPointerDown={() => goToPhase('predict')}
                   onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
                >
                   <span>Begin Experiment</span>
@@ -1698,7 +1698,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                ].map(opt => (
                   <button
                      key={opt.id}
-                     onMouseDown={() => {
+                     onPointerDown={() => {
                         setPrediction(opt.id);
                         emitGameEvent('prediction_made', {
                            phase: 'predict',
@@ -1853,7 +1853,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                   {/* Reset button */}
                   <button
-                     onMouseDown={() => { setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
+                     onPointerDown={() => { setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                      style={{
                         width: '100%', padding: '10px', borderRadius: '10px', fontWeight: 700, fontSize: typo.body,
                         background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer', minHeight: '44px'
@@ -2001,7 +2001,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                ].map(opt => (
                   <button
                      key={opt.id}
-                     onMouseDown={() => {
+                     onPointerDown={() => {
                         setTwistPrediction(opt.id);
                         emitGameEvent('prediction_made', {
                            phase: 'twist_predict',
@@ -2142,7 +2142,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                      </p>
                      <div style={{ display: 'flex', gap: '6px' }}>
                         <button
-                           onMouseDown={() => { setDetectorOn(true); setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
+                           onPointerDown={() => { setDetectorOn(true); setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                            style={{
                               flex: 1, padding: '10px 8px', borderRadius: '8px', fontWeight: 700, fontSize: typo.small, border: 'none', cursor: 'pointer',
                               background: detectorOn ? colors.danger : 'transparent',
@@ -2153,7 +2153,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                            👁️ WATCHING
                         </button>
                         <button
-                           onMouseDown={() => { setDetectorOn(false); setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
+                           onPointerDown={() => { setDetectorOn(false); setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                            style={{
                               flex: 1, padding: '10px 8px', borderRadius: '8px', fontWeight: 700, fontSize: typo.small, border: 'none', cursor: 'pointer',
                               background: !detectorOn ? colors.primary : 'transparent',
@@ -2168,7 +2168,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                   {/* Reset button */}
                   <button
-                     onMouseDown={() => { setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
+                     onPointerDown={() => { setParticleHits([]); setParticleCount(0); setTeachingMilestone('none'); }}
                      style={{
                         width: '100%', padding: '10px', borderRadius: '10px', fontWeight: 700, fontSize: typo.body,
                         background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer', minHeight: '44px'
@@ -2419,14 +2419,14 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   cursor: 'pointer',
                   flexShrink: 0
                }}
-               onMouseDown={() => goToPhase('twist_review')}
+               onPointerDown={() => goToPhase('twist_review')}
             >
                ← Back
             </button>
 
             {!isCurrentCompleted ? (
                <button
-                  onMouseDown={handleCompleteApp}
+                  onPointerDown={handleCompleteApp}
                   style={{
                      flex: 1,
                      maxWidth: '28rem',
@@ -2463,7 +2463,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   boxShadow: allCompleted ? `0 4px 20px ${colors.warning}40` : 'none',
                   flexShrink: 0
                }}
-               onMouseDown={() => allCompleted && goToPhase('test')}
+               onPointerDown={() => allCompleted && goToPhase('test')}
             >
                {allCompleted ? 'Take Test →' : `${completedCount}/4`}
             </button>
@@ -2499,7 +2499,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                   return (
                      <button
                         key={i}
-                        onMouseDown={() => {
+                        onPointerDown={() => {
                            if (!isLocked && i !== selectedApp) {
                               setSelectedApp(i);
                               emitGameEvent('app_changed', {
@@ -2989,13 +2989,13 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
 
                   <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
                      <button
-                        onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
+                        onPointerDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
                         style={{ padding: '10px 20px', borderRadius: '12px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', background: colors.bgCard, color: colors.textSecondary, border: `1px solid ${colors.border}`, cursor: 'pointer' }}
                      >
                         <span>🔄</span> Retake Test
                      </button>
                      <button
-                        onMouseDown={() => goToPhase('mastery')}
+                        onPointerDown={() => goToPhase('mastery')}
                         style={{ padding: '10px 20px', borderRadius: '12px', fontWeight: 700, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', background: passed ? colors.success : colors.warning, color: 'white', border: 'none', cursor: 'pointer' }}
                      >
                         <span>{passed ? '🎓' : '📖'}</span> {passed ? 'Claim Mastery' : 'Review Lesson'}
@@ -3069,7 +3069,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
                      {passed ? 'Want to improve your score?' : 'Review the explanations above and try again!'}
                   </p>
                   <button
-                     onMouseDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
+                     onPointerDown={() => { setTestQuestion(0); setTestAnswers(Array(10).fill(null)); setTestSubmitted(false); }}
                      style={{ padding: '12px 24px', borderRadius: '12px', fontWeight: 700, fontSize: '14px', background: colors.primary, color: 'white', border: 'none', cursor: 'pointer' }}
                   >
                      🔄 Retake Test
@@ -3127,7 +3127,7 @@ const WaveParticleDualityRenderer: React.FC<WaveParticleDualityRendererProps> = 
             <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>{currentQ.question}</p>
             <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
                {currentQ.options.map((opt, i) => (
-                  <button key={opt.id} onMouseDown={() => {
+                  <button key={opt.id} onPointerDown={() => {
                      const newAnswers = [...testAnswers];
                      newAnswers[testQuestion] = opt.id;
                      setTestAnswers(newAnswers);

@@ -1124,12 +1124,11 @@ const NonNewtonianArmorRenderer: React.FC<NonNewtonianArmorRendererProps> = ({
               {/* Poke buttons */}
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <button
-                  onMouseDown={() => setIsPoking(true)}
-                  onMouseUp={() => setIsPoking(false)}
-                  onMouseLeave={() => setIsPoking(false)}
-                  onTouchStart={() => setIsPoking(true)}
-                  onTouchEnd={() => setIsPoking(false)}
+                  onPointerDown={() => setIsPoking(true)}
+                  onPointerUp={() => setIsPoking(false)}
+                  onPointerLeave={() => setIsPoking(false)}
                   style={{
+                    touchAction: 'none',
                     padding: '14px 28px',
                     borderRadius: '12px',
                     border: 'none',

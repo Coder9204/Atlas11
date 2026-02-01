@@ -429,7 +429,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
       borderTop: `1px solid ${colors.card}`
     }}>
       <button
-        onMouseDown={!disabled ? onNext : undefined}
+        onPointerDown={!disabled ? onNext : undefined}
         disabled={disabled}
         style={{
           padding: '14px 32px',
@@ -444,10 +444,10 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
           transition: 'all 0.2s ease',
           transform: disabled ? 'none' : 'translateY(0)',
         }}
-        onMouseEnter={(e) => {
+        onPointerEnter={(e) => {
           if (!disabled) e.currentTarget.style.transform = 'translateY(-2px)';
         }}
-        onMouseLeave={(e) => {
+        onPointerLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
@@ -666,7 +666,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
             )}
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setShowerOn(true);
                 playSound('transition');
               }}
@@ -688,7 +688,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
 
             {showerOn && curtainBulge > 20 && (
               <button
-                onMouseDown={() => setHookStep(1)}
+                onPointerDown={() => setHookStep(1)}
                 style={{
                   marginTop: '16px',
                   marginLeft: '12px',
@@ -836,7 +836,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setPrediction(option.value);
                 playSound('click');
                 console.debug('Game event:', { type: 'prediction_made', data: { predicted: option.value, question: 'cause' } });
@@ -860,7 +860,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
 
         {prediction && !showPredictResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowPredictResult(true);
               playSound(prediction === 'entrainment' ? 'success' : 'failure');
             }}
@@ -1230,7 +1230,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
             {/* Toggle buttons */}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onMouseDown={() => setShowPressureField(!showPressureField)}
+                onPointerDown={() => setShowPressureField(!showPressureField)}
                 style={{
                   flex: 1,
                   padding: '10px',
@@ -1245,7 +1245,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                 {showPressureField ? '✓' : '○'} Pressure Field
               </button>
               <button
-                onMouseDown={() => setShowAirflow(!showAirflow)}
+                onPointerDown={() => setShowAirflow(!showAirflow)}
                 style={{
                   flex: 1,
                   padding: '10px',
@@ -1462,7 +1462,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setTwistPrediction(option.value);
                 playSound('click');
               }}
@@ -1484,7 +1484,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
 
         {twistPrediction && !showTwistResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowTwistResult(true);
               playSound(twistPrediction === 'hot' ? 'success' : 'failure');
             }}
@@ -1547,7 +1547,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
           {(['cold', 'hot'] as const).map(mode => (
             <button
               key={mode}
-              onMouseDown={() => setTempMode(mode)}
+              onPointerDown={() => setTempMode(mode)}
               style={{
                 flex: 1,
                 padding: '12px',
@@ -1889,7 +1889,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
           {applications.map((app, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
                   playSound('click');
@@ -1994,7 +1994,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
         {/* Next app button */}
         {activeApp < applications.length - 1 && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
@@ -2053,7 +2053,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                 {testQuestions[currentQuestion].options.map((option, i) => (
                   <button
                     key={i}
-                    onMouseDown={() => handleTestAnswer(i)}
+                    onPointerDown={() => handleTestAnswer(i)}
                     style={{
                       padding: '14px 18px',
                       fontSize: '14px',
@@ -2065,11 +2065,11 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                       textAlign: 'left',
                       transition: 'all 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
+                    onPointerEnter={(e) => {
                       e.currentTarget.style.borderColor = colors.primary;
                       e.currentTarget.style.background = `${colors.primary}10`;
                     }}
-                    onMouseLeave={(e) => {
+                    onPointerLeave={(e) => {
                       e.currentTarget.style.borderColor = '#333';
                       e.currentTarget.style.background = colors.background;
                     }}
@@ -2104,7 +2104,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                 Test complete! Ready to see your results?
               </p>
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowTestResults(true);
                   playSound('success');
                 }}
@@ -2316,7 +2316,7 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
               return (
                 <button
                   key={p}
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     phase === p
                       ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'

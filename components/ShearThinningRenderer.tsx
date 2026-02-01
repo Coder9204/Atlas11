@@ -1439,9 +1439,9 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
               {/* Shake button */}
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                 <button
-                  onMouseDown={() => setIsShaking(true)}
-                  onMouseUp={() => setIsShaking(false)}
-                  onMouseLeave={() => setIsShaking(false)}
+                  onPointerDown={() => setIsShaking(true)}
+                  onPointerUp={() => setIsShaking(false)}
+                  onPointerLeave={() => setIsShaking(false)}
                   onTouchStart={() => setIsShaking(true)}
                   onTouchEnd={() => setIsShaking(false)}
                   style={{
@@ -1457,7 +1457,8 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
                     cursor: 'pointer',
                     minWidth: '150px',
                     transform: isShaking ? 'scale(0.95)' : 'scale(1)',
-                    transition: 'transform 0.1s'
+                    transition: 'transform 0.1s',
+                    touchAction: 'none'
                   }}
                 >
                   {isShaking ? '🫨 Shaking...' : '🍅 Hold to Shake'}

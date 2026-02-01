@@ -478,7 +478,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
       borderTop: `1px solid ${colors.card}`
     }}>
       <button
-        onMouseDown={!disabled ? onNext : undefined}
+        onPointerDown={!disabled ? onNext : undefined}
         disabled={disabled}
         style={{
           padding: '14px 32px',
@@ -493,10 +493,10 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           transition: 'all 0.2s ease',
           transform: disabled ? 'none' : 'translateY(0)',
         }}
-        onMouseEnter={(e) => {
+        onPointerEnter={(e) => {
           if (!disabled) e.currentTarget.style.transform = 'translateY(-2px)';
         }}
-        onMouseLeave={(e) => {
+        onPointerLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
@@ -726,7 +726,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             </div>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setShowSiphonFlow(true);
                 playSound('transition');
               }}
@@ -746,7 +746,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
             {showSiphonFlow && (
               <button
-                onMouseDown={() => setHookStep(1)}
+                onPointerDown={() => setHookStep(1)}
                 style={{
                   marginTop: '16px',
                   marginLeft: '12px',
@@ -891,7 +891,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setPrediction(option.value);
                 playSound('click');
               }}
@@ -914,7 +914,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
         {prediction && !showPredictResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowPredictResult(true);
               playSound(prediction === 'stops' ? 'success' : 'failure');
             }}
@@ -1195,7 +1195,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onMouseDown={primeSiphon}
+                onPointerDown={primeSiphon}
                 disabled={siphonPrimed || waterLevel <= 0 || heightDiff <= 0}
                 style={{
                   flex: 1,
@@ -1214,7 +1214,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
               </button>
 
               <button
-                onMouseDown={resetSiphon}
+                onPointerDown={resetSiphon}
                 style={{
                   padding: '12px 20px',
                   background: 'transparent',
@@ -1544,7 +1544,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setTwistPrediction(option.value);
                 playSound('click');
               }}
@@ -1566,7 +1566,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
         {twistPrediction && !showTwistResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowTwistResult(true);
               playSound(twistPrediction === '10m' ? 'success' : 'failure');
             }}
@@ -1831,7 +1831,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
             {/* Vacuum mode toggle */}
             <button
-              onMouseDown={() => setVacuumMode(!vacuumMode)}
+              onPointerDown={() => setVacuumMode(!vacuumMode)}
               style={{
                 padding: '12px 16px',
                 background: vacuumMode ? colors.secondary : colors.background,
@@ -1962,7 +1962,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           {applications.map((app, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
                   playSound('click');
@@ -2067,7 +2067,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         {/* Next app button */}
         {activeApp < applications.length - 1 && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
@@ -2126,7 +2126,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 {testQuestions[currentQuestion].options.map((option, i) => (
                   <button
                     key={i}
-                    onMouseDown={() => handleTestAnswer(i)}
+                    onPointerDown={() => handleTestAnswer(i)}
                     style={{
                       padding: '14px 18px',
                       fontSize: '14px',
@@ -2138,11 +2138,11 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                       textAlign: 'left',
                       transition: 'all 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
+                    onPointerEnter={(e) => {
                       e.currentTarget.style.borderColor = colors.primary;
                       e.currentTarget.style.background = `${colors.primary}10`;
                     }}
-                    onMouseLeave={(e) => {
+                    onPointerLeave={(e) => {
                       e.currentTarget.style.borderColor = '#333';
                       e.currentTarget.style.background = colors.background;
                     }}
@@ -2177,7 +2177,7 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                 Test complete! Ready to see your results?
               </p>
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowTestResults(true);
                   playSound('success');
                 }}

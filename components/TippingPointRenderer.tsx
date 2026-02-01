@@ -984,9 +984,9 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
             border: '1px solid rgba(71, 85, 105, 0.5)'
           }}>
             <button
-              onMouseDown={() => setIsPushing(true)}
-              onMouseUp={() => setIsPushing(false)}
-              onMouseLeave={() => setIsPushing(false)}
+              onPointerDown={() => setIsPushing(true)}
+              onPointerUp={() => setIsPushing(false)}
+              onPointerLeave={() => setIsPushing(false)}
               onTouchStart={() => setIsPushing(true)}
               onTouchEnd={() => setIsPushing(false)}
               style={{
@@ -1000,6 +1000,7 @@ const TippingPointRenderer: React.FC<TippingPointRendererProps> = ({
                 fontSize: '15px',
                 boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)',
                 transition: 'all 0.2s ease',
+                touchAction: 'none',
               }}
             >
               Hold to Push

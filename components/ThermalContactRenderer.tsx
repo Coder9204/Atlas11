@@ -1109,7 +1109,7 @@ export default function ThermalContactRenderer({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1162,7 +1162,7 @@ export default function ThermalContactRenderer({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setPrediction(option.id);
               playSound("click");
               emitEvent("prediction_made", { prediction: option.id });
@@ -1186,7 +1186,7 @@ export default function ThermalContactRenderer({
               : "Not quite - the gaps are actually filled with air, a poor thermal conductor."}
           </p>
           <button
-            onMouseDown={() => goToNextPhase()}
+            onPointerDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             Test Your Prediction
@@ -1415,7 +1415,7 @@ export default function ThermalContactRenderer({
       </div>
 
       <button
-        onMouseDown={() => goToNextPhase()}
+        onPointerDown={() => goToNextPhase()}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl"
       >
         Learn the Science
@@ -1474,7 +1474,7 @@ export default function ThermalContactRenderer({
       )}
 
       <button
-        onMouseDown={() => goToNextPhase()}
+        onPointerDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         Ready for a Twist?
@@ -1506,7 +1506,7 @@ export default function ThermalContactRenderer({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTwistPrediction(option.id);
               playSound("click");
               emitEvent("twist_prediction_made", { prediction: option.id });
@@ -1530,7 +1530,7 @@ export default function ThermalContactRenderer({
               : "Not quite - air gaps act as insulation, causing much higher temperatures!"}
           </p>
           <button
-            onMouseDown={() => goToNextPhase()}
+            onPointerDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             Test CPU Cooling
@@ -1549,7 +1549,7 @@ export default function ThermalContactRenderer({
       {/* Cooler type selector */}
       <div className="flex gap-2 mb-6">
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setCoolerType("no_paste");
             setCpuTemp(90);
             setCpuSimRunning(false);
@@ -1563,7 +1563,7 @@ export default function ThermalContactRenderer({
           No Paste
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setCoolerType("with_paste");
             setCpuTemp(90);
             setCpuSimRunning(false);
@@ -1582,7 +1582,7 @@ export default function ThermalContactRenderer({
         {renderCPUCooling()}
 
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setCpuTemp(90);
             setCpuSimRunning(true);
           }}
@@ -1618,7 +1618,7 @@ export default function ThermalContactRenderer({
       </div>
 
       <button
-        onMouseDown={() => goToNextPhase()}
+        onPointerDown={() => goToNextPhase()}
         className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         See Explanation
@@ -1676,7 +1676,7 @@ export default function ThermalContactRenderer({
       )}
 
       <button
-        onMouseDown={() => goToNextPhase()}
+        onPointerDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
       >
         See Real-World Applications
@@ -1700,7 +1700,7 @@ export default function ThermalContactRenderer({
                 ? "bg-blue-900/30 border-blue-600"
                 : "bg-slate-800/50 border-slate-700 hover:border-slate-600"
             }`}
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (!completedApps.has(index)) {
                 setCurrentApp(index);
                 playSound("click");
@@ -1729,7 +1729,7 @@ export default function ThermalContactRenderer({
 
             {currentApp === index && !completedApps.has(index) && (
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.stopPropagation();
                   const newCompleted = new Set(completedApps);
                   newCompleted.add(index);
@@ -1764,7 +1764,7 @@ export default function ThermalContactRenderer({
 
       {completedApps.size === applications.length && (
         <button
-          onMouseDown={() => goToNextPhase()}
+          onPointerDown={() => goToNextPhase()}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
         >
           Take the Quiz
@@ -1789,7 +1789,7 @@ export default function ThermalContactRenderer({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setTestAnswers((prev) => ({ ...prev, [qIndex]: oIndex }));
                       playSound("click");
                     }}
@@ -1808,7 +1808,7 @@ export default function ThermalContactRenderer({
 
           {Object.keys(testAnswers).length === testQuestions.length && (
             <button
-              onMouseDown={handleTestSubmit}
+              onPointerDown={handleTestSubmit}
               className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-semibold text-lg"
             >
               Submit Answers
@@ -1829,14 +1829,14 @@ export default function ThermalContactRenderer({
 
           {testScore >= 7 ? (
             <button
-              onMouseDown={() => goToNextPhase()}
+              onPointerDown={() => goToNextPhase()}
               className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold rounded-xl"
             >
               Claim Your Mastery!
             </button>
           ) : (
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setTestSubmitted(false);
                 setTestAnswers({});
                 goToPhase('review');
@@ -1915,7 +1915,7 @@ export default function ThermalContactRenderer({
 
           {onBack && (
             <button
-              onMouseDown={onBack}
+              onPointerDown={onBack}
               className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
             >
               Back to Games
@@ -1961,7 +1961,7 @@ export default function ThermalContactRenderer({
               return (
                 <button
                   key={p}
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     phase === p
                       ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'

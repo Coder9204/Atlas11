@@ -1410,9 +1410,9 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
       <div className="flex gap-3 justify-center my-6">
         <button
-          onMouseDown={handleSqueezeStart}
-          onMouseUp={handleSqueezeEnd}
-          onMouseLeave={handleSqueezeEnd}
+          onPointerDown={handleSqueezeStart}
+          onPointerUp={handleSqueezeEnd}
+          onPointerLeave={handleSqueezeEnd}
           onTouchStart={handleSqueezeStart}
           onTouchEnd={handleSqueezeEnd}
           style={{ zIndex: 10 }}
@@ -1554,9 +1554,9 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
       <div className="flex gap-3 justify-center my-6">
         <button
-          onMouseDown={handleTwistSqueezeStart}
-          onMouseUp={handleTwistSqueezeEnd}
-          onMouseLeave={handleTwistSqueezeEnd}
+          onPointerDown={handleTwistSqueezeStart}
+          onPointerUp={handleTwistSqueezeEnd}
+          onPointerLeave={handleTwistSqueezeEnd}
           onTouchStart={handleTwistSqueezeStart}
           onTouchEnd={handleTwistSqueezeEnd}
           style={{ zIndex: 10 }}

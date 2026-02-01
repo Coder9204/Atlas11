@@ -626,7 +626,7 @@ export default function WaterHammerRenderer({
 
             {/* Premium CTA button */}
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+              onPointerDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
               className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="relative z-10 flex items-center gap-3">
@@ -797,7 +797,7 @@ export default function WaterHammerRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handlePrediction(opt.id)}
+                  onPointerDown={() => handlePrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: prediction === opt.id ? 'linear-gradient(135deg, #3b82f6, #1d4ed8)' : '#1e293b',
@@ -817,7 +817,7 @@ export default function WaterHammerRenderer({
 
             {prediction && (
               <button
-                onMouseDown={() => goToPhase('play')}
+                onPointerDown={() => goToPhase('play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1314,7 +1314,7 @@ export default function WaterHammerRenderer({
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               {valveOpen ? (
                 <button
-                  onMouseDown={closeValve}
+                  onPointerDown={closeValve}
                   disabled={animating}
                   style={{
                     padding: '0.75rem 1.5rem',
@@ -1330,7 +1330,7 @@ export default function WaterHammerRenderer({
                 </button>
               ) : (
                 <button
-                  onMouseDown={resetSimulation}
+                  onPointerDown={resetSimulation}
                   style={{
                     padding: '0.75rem 1.5rem',
                     background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
@@ -1367,7 +1367,7 @@ export default function WaterHammerRenderer({
 
             {hasClosedValve && !animating && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowResult(true);
                   if (prediction === 'c') {
                     onCorrectAnswer?.();
@@ -1407,7 +1407,7 @@ export default function WaterHammerRenderer({
                   The water's momentum converts instantly to pressure!
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('review')}
+                  onPointerDown={() => goToPhase('review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1493,7 +1493,7 @@ export default function WaterHammerRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('twist_predict')}
+              onPointerDown={() => goToPhase('twist_predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -1563,7 +1563,7 @@ export default function WaterHammerRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handleTwistPrediction(opt.id)}
+                  onPointerDown={() => handleTwistPrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: twistPrediction === opt.id ? '#f59e0b' : 'white',
@@ -1581,7 +1581,7 @@ export default function WaterHammerRenderer({
 
             {twistPrediction && (
               <button
-                onMouseDown={() => goToPhase('twist_play')}
+                onPointerDown={() => goToPhase('twist_play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1719,7 +1719,7 @@ export default function WaterHammerRenderer({
             </div>
 
             <button
-              onMouseDown={simulateSlowClosure}
+              onPointerDown={simulateSlowClosure}
               disabled={twistAnimating}
               style={{
                 padding: '0.75rem 2rem',
@@ -1737,7 +1737,7 @@ export default function WaterHammerRenderer({
 
             {twistPressureHistory.length > 0 && !twistAnimating && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowTwistResult(true);
                   if (twistPrediction === 'c') {
                     onCorrectAnswer?.();
@@ -1777,7 +1777,7 @@ export default function WaterHammerRenderer({
                   more pressure builds up.
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('twist_review')}
+                  onPointerDown={() => goToPhase('twist_review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1865,7 +1865,7 @@ export default function WaterHammerRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('transfer')}
+              onPointerDown={() => goToPhase('transfer')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -1906,7 +1906,7 @@ export default function WaterHammerRenderer({
               {applications.map((app, index) => (
                 <div
                   key={index}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
                     playSound('click');
                   }}
@@ -1944,7 +1944,7 @@ export default function WaterHammerRenderer({
 
             {completedApps.size >= applications.length && (
               <button
-                onMouseDown={() => goToPhase('test')}
+                onPointerDown={() => goToPhase('test')}
                 style={{
                   padding: '1rem 2.5rem',
                   fontSize: '1.1rem',
@@ -2007,7 +2007,7 @@ export default function WaterHammerRenderer({
                     {tq.options.map((opt, oi) => (
                       <button
                         key={oi}
-                        onMouseDown={() => handleTestAnswer(qi, oi)}
+                        onPointerDown={() => handleTestAnswer(qi, oi)}
                         disabled={testSubmitted}
                         style={{
                           padding: '0.6rem 1rem',
@@ -2048,7 +2048,7 @@ export default function WaterHammerRenderer({
 
             {!testSubmitted ? (
               <button
-                onMouseDown={submitTest}
+                onPointerDown={submitTest}
                 disabled={Object.keys(testAnswers).length < testQuestions.length}
                 style={{
                   padding: '1rem 2.5rem',
@@ -2077,7 +2077,7 @@ export default function WaterHammerRenderer({
                 </p>
 
                 <button
-                  onMouseDown={() => goToPhase('mastery')}
+                  onPointerDown={() => goToPhase('mastery')}
                   style={{
                     padding: '1rem 2.5rem',
                     fontSize: '1.1rem',
@@ -2184,7 +2184,7 @@ export default function WaterHammerRenderer({
             </svg>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 onPhaseComplete?.();
                 setTestAnswers({});
                 setTestSubmitted(false);
@@ -2231,7 +2231,7 @@ export default function WaterHammerRenderer({
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'

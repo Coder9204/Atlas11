@@ -401,7 +401,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
       padding: `${typo.cardPadding} 0`
     }}>
       <button
-        onMouseDown={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
+        onPointerDown={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
         onTouchEnd={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
         disabled={!canProceed}
         style={{
@@ -936,7 +936,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -993,7 +993,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {predictionOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setPrediction(option.id);
                 playSound('click');
                 emitEvent('prediction', { prediction: option.id });
@@ -1378,7 +1378,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           {twistOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
                 playSound('click');
@@ -1421,7 +1421,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           ].map(m => (
             <button
               key={m.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 if (!isAnimating) {
                   setMassRatio(m.id);
@@ -1446,7 +1446,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
       <div className="flex justify-center mb-4">
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             if (!isAnimating) {
               runCollision('elastic', massRatio);
@@ -1686,7 +1686,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
           <div className="px-5 pb-5">
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 playSound('click');
                 setCompletedApps(prev => prev + 1);
@@ -1923,7 +1923,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                       e.preventDefault();
                       handleTestAnswer(qIndex, oIndex);
                     }}
@@ -2020,7 +2020,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             playSound('complete');
             if (onComplete) onComplete(testScore * 10);
@@ -2072,7 +2072,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
@@ -2096,7 +2096,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               <span className="text-2xl">🧑‍🏫</span>
               <p className="flex-1 text-slate-300">{coachMessages[phase]}</p>
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   setShowCoachMessage(false);
                 }}

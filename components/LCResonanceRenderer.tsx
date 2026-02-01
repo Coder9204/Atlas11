@@ -380,10 +380,8 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
             step={1}
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
-            onTouchStart={() => setIsDragging(true)}
-            onTouchEnd={() => setIsDragging(false)}
+            onPointerDown={() => setIsDragging(true)}
+            onPointerUp={() => setIsDragging(false)}
             style={{
               width: '100%',
               height: '48px',

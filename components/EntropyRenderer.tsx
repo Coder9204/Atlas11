@@ -994,7 +994,7 @@ const EntropyRenderer: React.FC<Props> = ({
 
         <div className="flex gap-4 mt-4 justify-center flex-wrap">
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               removeBarrier();
               setIsSimulating(true);
@@ -1005,7 +1005,7 @@ const EntropyRenderer: React.FC<Props> = ({
             {barrierRemoved ? 'Barrier Removed!' : 'Remove Barrier'}
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); resetSimulation(); }}
+            onPointerDown={(e) => { e.preventDefault(); resetSimulation(); }}
             className="px-6 py-3 bg-slate-600 hover:bg-slate-500 text-white font-semibold rounded-xl transition-colors"
           >
             Reset
@@ -1015,7 +1015,7 @@ const EntropyRenderer: React.FC<Props> = ({
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(1); }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-semibold rounded-2xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] flex items-center gap-2"
       >
         Discover the Secret
@@ -1061,7 +1061,7 @@ const EntropyRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -1084,7 +1084,7 @@ const EntropyRenderer: React.FC<Props> = ({
             Correct! It's <span className="text-cyan-400">statistically forbidden</span>—not physically impossible, just incredibly improbable!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(2); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
           >
             Explore Entropy →
@@ -1140,7 +1140,7 @@ const EntropyRenderer: React.FC<Props> = ({
         </div>
         <div className="flex gap-2">
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               if (!barrierRemoved) {
                 removeBarrier();
@@ -1154,7 +1154,7 @@ const EntropyRenderer: React.FC<Props> = ({
             {isSimulating ? '⏹️ Pause' : '▶️ Run'}
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); resetSimulation(); }}
+            onPointerDown={(e) => { e.preventDefault(); resetSimulation(); }}
             className="flex-1 p-4 rounded-xl bg-slate-600 hover:bg-slate-500 text-white font-semibold transition-colors"
           >
             ↺ Reset
@@ -1174,7 +1174,7 @@ const EntropyRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(3); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
       >
         Review the Concepts →
@@ -1233,7 +1233,7 @@ const EntropyRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(4); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-teal-500 transition-all duration-300"
       >
         Discover a Surprising Twist →
@@ -1262,7 +1262,7 @@ const EntropyRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1289,7 +1289,7 @@ const EntropyRenderer: React.FC<Props> = ({
             Total entropy still increases. You can create local order by paying an entropy "tax" elsewhere!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(5); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-teal-500 transition-all duration-300"
           >
             Explore Local Order →
@@ -1444,7 +1444,7 @@ const EntropyRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(6); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-teal-500 transition-all duration-300"
       >
         Review the Discovery →
@@ -1498,7 +1498,7 @@ const EntropyRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(7); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300"
       >
         Explore Real-World Applications →
@@ -1514,7 +1514,7 @@ const EntropyRenderer: React.FC<Props> = ({
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
                 ? `bg-gradient-to-r ${app.color} text-white`
@@ -1584,7 +1584,7 @@ const EntropyRenderer: React.FC<Props> = ({
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
             className="mt-4 w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
           >
             ✓ Mark as Explored
@@ -1607,7 +1607,7 @@ const EntropyRenderer: React.FC<Props> = ({
 
       {completedApps.size >= transferApps.length && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onPointerDown={(e) => { e.preventDefault(); goToPhase(8); }}
           className="mt-6 px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-lg font-semibold rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all duration-300 shadow-lg"
         >
           Take the Knowledge Test →
@@ -1634,7 +1634,7 @@ const EntropyRenderer: React.FC<Props> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-purple-600 text-white'
@@ -1649,7 +1649,7 @@ const EntropyRenderer: React.FC<Props> = ({
           ))}
 
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setShowTestResults(true);
               playSound('complete');
@@ -1701,7 +1701,7 @@ const EntropyRenderer: React.FC<Props> = ({
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 goToPhase(9);
                 onGameEvent?.({ type: 'mastery_achieved' });
@@ -1712,7 +1712,7 @@ const EntropyRenderer: React.FC<Props> = ({
             </button>
           ) : (
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(-1));
@@ -1763,7 +1763,7 @@ const EntropyRenderer: React.FC<Props> = ({
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(0); }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
             ↺ Explore Again
@@ -1823,7 +1823,7 @@ const EntropyRenderer: React.FC<Props> = ({
             {phases.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p ? 'bg-purple-500 w-6' : phases.indexOf(phase) > i ? 'bg-purple-500 w-2' : 'bg-slate-600 w-2'
                 }`}

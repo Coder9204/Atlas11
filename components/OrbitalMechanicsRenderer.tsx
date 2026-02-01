@@ -1278,7 +1278,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={() => { playSound('click'); nextPhase(); }}
+        onPointerDown={() => { playSound('click'); nextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1323,7 +1323,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setPrediction(option.id);
             }}
@@ -1342,7 +1342,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
       {prediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-purple-500 transition-all"
           >
             Test It! →
@@ -1380,7 +1380,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
 
         <div className="flex justify-center gap-4">
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               if (isLaunched) {
                 resetLaunch();
@@ -1408,7 +1408,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-purple-500 transition-all"
         >
           Continue →
@@ -1458,7 +1458,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-blue-400 font-semibold">{prediction === 'fast' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-purple-500 transition-all"
         >
           But wait... →
@@ -1485,7 +1485,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
             }}
@@ -1504,7 +1504,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
       {twistPrediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-semibold hover:from-purple-500 hover:to-pink-500 transition-all"
           >
             Test It! →
@@ -1530,7 +1530,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-semibold hover:from-purple-500 hover:to-pink-500 transition-all"
         >
           Continue →
@@ -1567,7 +1567,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-purple-400 font-semibold">{twistPrediction === 'freefall' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-semibold hover:from-purple-500 hover:to-pink-500 transition-all"
         >
           See Applications →
@@ -1585,7 +1585,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
             }}
@@ -1605,7 +1605,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
       {completedApps.size >= 4 && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-purple-500 transition-all"
           >
             Take the Quiz →
@@ -1628,7 +1628,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
           <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
           <p className="text-gray-300">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound(score >= 3 ? 'complete' : 'click');
               nextPhase();
             }}
@@ -1649,7 +1649,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound(option.correct ? 'success' : 'failure');
                 setTestAnswers([...testAnswers, i]);
               }}
@@ -1680,7 +1680,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
         You now understand what Newton imagined 350 years ago! 🍎🛰️
       </p>
       <button
-        onMouseDown={() => {
+        onPointerDown={() => {
           playSound('complete');
           if (onPhaseComplete) onPhaseComplete();
         }}
@@ -1838,7 +1838,7 @@ export default function OrbitalMechanicsRenderer({ phase: initialPhase, onPhaseC
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   PHASES.indexOf(phase) === i
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'

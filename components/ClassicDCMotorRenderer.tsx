@@ -1196,7 +1196,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     }}>
       {showBack ? (
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             const idx = validPhases.indexOf(phase);
             if (idx > 0) goToPhase(validPhases[idx - 1]);
           }}
@@ -1218,7 +1218,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
       {showNext ? (
         <button
-          onMouseDown={nextAction || (() => {
+          onPointerDown={nextAction || (() => {
             const idx = validPhases.indexOf(phase);
             if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
           })}
@@ -1296,7 +1296,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('predict')}
+              onPointerDown={() => goToPhase('predict')}
               style={{
                 padding: '18px 48px',
                 fontSize: '18px',
@@ -1388,7 +1388,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               {predictions.map(p => (
                 <button
                   key={p.id}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setPrediction(p.id);
                     playSound('click');
                   }}
@@ -1493,7 +1493,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setIsRunning(!isRunning);
                     playSound(isRunning ? 'click' : 'success');
                     emitGameEvent(isRunning ? 'motor_stopped' : 'motor_started', { voltage, magnetCount });
@@ -1514,7 +1514,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 </button>
 
                 <button
-                  onMouseDown={() => setShowCommutator(!showCommutator)}
+                  onPointerDown={() => setShowCommutator(!showCommutator)}
                   style={{
                     padding: '16px',
                     borderRadius: '12px',
@@ -1661,7 +1661,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               {twistPredictions.map(p => (
                 <button
                   key={p.id}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setTwistPrediction(p.id);
                     playSound('click');
                   }}
@@ -1725,7 +1725,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 </p>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setMagnetCount(1);
                       playSound('click');
                       emitGameEvent('magnet_changed', { count: 1 });
@@ -1744,7 +1744,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                     1 Magnet
                   </button>
                   <button
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setMagnetCount(2);
                       playSound('click');
                       emitGameEvent('magnet_changed', { count: 2 });
@@ -1766,7 +1766,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               </div>
 
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setIsRunning(!isRunning);
                   playSound(isRunning ? 'click' : 'success');
                 }}
@@ -1925,7 +1925,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     if (!isLocked) setSelectedApp(i);
                   }}
                   disabled={isLocked}
@@ -2052,7 +2052,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           gap: '12px'
         }}>
           <button
-            onMouseDown={() => goToPhase('twist_review')}
+            onPointerDown={() => goToPhase('twist_review')}
             style={{
               padding: '12px 20px',
               borderRadius: '10px',
@@ -2069,7 +2069,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
           {!isCurrentCompleted ? (
             <button
-              onMouseDown={handleCompleteApp}
+              onPointerDown={handleCompleteApp}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -2089,7 +2089,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             </button>
           ) : allCompleted ? (
             <button
-              onMouseDown={() => goToPhase('test')}
+              onPointerDown={() => goToPhase('test')}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -2160,7 +2160,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             <div style={{ display: 'flex', gap: '16px' }}>
               {!passed && (
                 <button
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setPhase('hook');
                     setTestQuestion(0);
                     setTestAnswers(Array(10).fill(null));
@@ -2181,7 +2181,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
                 </button>
               )}
               <button
-                onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
+                onPointerDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
                 style={{
                   padding: '16px 32px',
                   borderRadius: '12px',
@@ -2267,7 +2267,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
               return (
                 <button
                   key={opt.id}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     if (!isAnswered) {
                       const newAnswers = [...testAnswers];
                       newAnswers[testQuestion] = opt.id;
@@ -2365,7 +2365,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
           boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
-            onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+            onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
             disabled={testQuestion === 0}
             style={{
               padding: '12px 20px',
@@ -2383,7 +2383,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
           {testAnswers[testQuestion] !== null && (
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (testQuestion < 9) {
                   setTestQuestion(testQuestion + 1);
                 } else {
@@ -2442,7 +2442,7 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
 
           <div style={{ display: 'flex', gap: '16px' }}>
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 onComplete?.();
                 window.dispatchEvent(new CustomEvent('returnToDashboard'));
               }}

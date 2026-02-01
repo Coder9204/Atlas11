@@ -788,7 +788,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
         </div>
       </div>
       <button
-        onMouseDown={() => goToPhase('predict')}
+        onPointerDown={() => goToPhase('predict')}
         onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
         style={{ minHeight: '48px' }}
@@ -825,7 +825,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={() => handlePrediction(option.id)}
+            onPointerDown={() => handlePrediction(option.id)}
             onTouchEnd={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             style={{ minHeight: '48px' }}
@@ -847,7 +847,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
             ✓ Correct! Angular momentum L = Iω is conserved. When I decreases, ω must increase!
           </p>
           <button
-            onMouseDown={() => goToPhase('play')}
+            onPointerDown={() => goToPhase('play')}
             onTouchEnd={(e) => { e.preventDefault(); goToPhase('play'); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
             style={{ minHeight: '48px' }}
@@ -890,7 +890,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
         </button>
       </div>
       <button
-        onMouseDown={() => goToPhase('review')}
+        onPointerDown={() => goToPhase('review')}
         onTouchEnd={(e) => { e.preventDefault(); goToPhase('review'); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
         style={{ minHeight: '48px' }}

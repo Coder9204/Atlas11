@@ -1114,7 +1114,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
       {/* CTA */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         style={{ padding: '16px 32px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', color: 'white', fontSize: '18px', fontWeight: 600, borderRadius: '16px', border: 'none', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}
       >
         Make a Cloud
@@ -1144,7 +1144,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             style={{
               padding: '16px',
@@ -1178,7 +1178,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             When you release, air expands rapidly and cools. This drops temperature below the dew point, causing water to condense on smoke particles - forming a cloud!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             style={{ marginTop: '16px', padding: '12px 24px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
           >
             Try It Yourself
@@ -1202,7 +1202,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         {/* Squeeze/Release buttons */}
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleSqueeze(); }}
+            onPointerDown={(e) => { e.preventDefault(); handleSqueeze(); }}
             disabled={isSqueezing}
             style={{
               flex: 1,
@@ -1219,7 +1219,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             ✊ Squeeze
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleRelease(); }}
+            onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
             disabled={!isSqueezing}
             style={{
               flex: 1,
@@ -1239,7 +1239,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
         {/* Add smoke button */}
         <button
-          onMouseDown={(e) => { e.preventDefault(); addSmoke(); }}
+          onPointerDown={(e) => { e.preventDefault(); addSmoke(); }}
           style={{
             padding: '12px',
             borderRadius: '12px',
@@ -1258,7 +1258,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: 'rgba(51, 65, 85, 0.5)', borderRadius: '12px' }}>
           <span style={{ color: '#cbd5e1', fontSize: '14px' }}>Condensation Nuclei</span>
           <button
-            onMouseDown={(e) => { e.preventDefault(); setHasNuclei(!hasNuclei); }}
+            onPointerDown={(e) => { e.preventDefault(); setHasNuclei(!hasNuclei); }}
             style={{
               width: '48px',
               height: '24px',
@@ -1312,7 +1312,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
       >
         Understand the Physics
@@ -1377,7 +1377,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #8b5cf6, #7c3aed)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
       >
         Discover the Twist
@@ -1424,7 +1424,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             style={{
               padding: '16px',
@@ -1458,7 +1458,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             Without condensation nuclei, water vapor needs extreme "supersaturation" to condense. The air must get much colder before homogeneous nucleation occurs. Nuclei are essential!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             style={{ marginTop: '16px', padding: '12px 24px', background: 'linear-gradient(to right, #8b5cf6, #7c3aed)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
           >
             Compare Both
@@ -1482,7 +1482,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         {/* Nuclei toggle */}
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onMouseDown={(e) => { e.preventDefault(); setHasNuclei(true); addSmoke(); }}
+            onPointerDown={(e) => { e.preventDefault(); setHasNuclei(true); addSmoke(); }}
             style={{
               flex: 1,
               padding: '16px',
@@ -1498,7 +1498,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             💨 With Nuclei
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); setHasNuclei(false); }}
+            onPointerDown={(e) => { e.preventDefault(); setHasNuclei(false); }}
             style={{
               flex: 1,
               padding: '16px',
@@ -1518,7 +1518,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         {/* Squeeze/Release */}
         <div style={{ display: 'flex', gap: '12px' }}>
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleSqueeze(); }}
+            onPointerDown={(e) => { e.preventDefault(); handleSqueeze(); }}
             disabled={isSqueezing}
             style={{
               flex: 1,
@@ -1534,7 +1534,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
             ✊ Squeeze
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleRelease(); }}
+            onPointerDown={(e) => { e.preventDefault(); handleRelease(); }}
             disabled={!isSqueezing}
             style={{
               flex: 1,
@@ -1565,7 +1565,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #8b5cf6, #7c3aed)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
       >
         Review the Discovery
@@ -1615,7 +1615,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #f59e0b, #d97706)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
       >
         Explore Applications
@@ -1632,7 +1632,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setActiveAppTab(index);
             }}
@@ -1683,7 +1683,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
             style={{ width: '100%', padding: '12px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', color: 'white', fontWeight: 600, borderRadius: '8px', border: 'none', cursor: 'pointer' }}
           >
             Mark as Understood
@@ -1706,7 +1706,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
       {completedApps.size >= transferApps.length && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #3b82f6, #2563eb)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
         >
           Take the Test
@@ -1731,7 +1731,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={opt.id}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     style={{
                       padding: '12px',
                       borderRadius: '8px',
@@ -1752,7 +1752,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
           ))}
 
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setShowTestResults(true);
             }}
@@ -1786,7 +1786,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
 
             {calculateScore() >= 7 ? (
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   goToNextPhase();
                   onCorrectAnswer?.();
@@ -1797,7 +1797,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
               </button>
             ) : (
               <button
-                onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToNextPhase(); }}
+                onPointerDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToNextPhase(); }}
                 style={{ marginTop: '24px', padding: '16px 32px', background: 'linear-gradient(to right, #f59e0b, #d97706)', color: 'white', fontWeight: 600, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
               >
                 Review & Try Again
@@ -1859,7 +1859,7 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); setCurrentPhase('hook'); }}
+          onPointerDown={(e) => { e.preventDefault(); setCurrentPhase('hook'); }}
           style={{ padding: '12px 24px', background: 'rgba(71, 85, 105, 0.5)', color: 'white', fontWeight: 500, borderRadius: '12px', border: 'none', cursor: 'pointer' }}
         >
           Explore Again

@@ -715,7 +715,7 @@ export default function SoapBoatRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('predict')}
+              onPointerDown={() => goToPhase('predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -851,7 +851,7 @@ export default function SoapBoatRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handlePrediction(opt.id)}
+                  onPointerDown={() => handlePrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: prediction === opt.id ? '#3b82f6' : 'white',
@@ -870,7 +870,7 @@ export default function SoapBoatRenderer({
 
             {prediction && (
               <button
-                onMouseDown={() => goToPhase('play')}
+                onPointerDown={() => goToPhase('play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1243,7 +1243,7 @@ export default function SoapBoatRenderer({
                 <g
                   transform="translate(20, 8)"
                   style={{ cursor: soapAdded ? 'default' : 'pointer' }}
-                  onMouseDown={addSoap}
+                  onPointerDown={addSoap}
                 >
                   {/* Bottle shadow */}
                   <rect x="12" y="22" width="30" height="50" fill="#1e1b4b" opacity="0.3" rx="6" />
@@ -1318,7 +1318,7 @@ export default function SoapBoatRenderer({
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               {waterContaminated && (
                 <button
-                  onMouseDown={resetSimulation}
+                  onPointerDown={resetSimulation}
                   style={{
                     padding: '0.75rem 1.5rem',
                     background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
@@ -1336,7 +1336,7 @@ export default function SoapBoatRenderer({
 
             {waterContaminated && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowResult(true);
                   if (prediction === 'b') {
                     onCorrectAnswer?.();
@@ -1375,7 +1375,7 @@ export default function SoapBoatRenderer({
                   creating an imbalance. The higher surface tension at the front pulls the boat forward!
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('review')}
+                  onPointerDown={() => goToPhase('review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1554,7 +1554,7 @@ export default function SoapBoatRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('twist_predict')}
+              onPointerDown={() => goToPhase('twist_predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -1666,7 +1666,7 @@ export default function SoapBoatRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handleTwistPrediction(opt.id)}
+                  onPointerDown={() => handleTwistPrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: twistPrediction === opt.id ? '#f59e0b' : 'white',
@@ -1684,7 +1684,7 @@ export default function SoapBoatRenderer({
 
             {twistPrediction && (
               <button
-                onMouseDown={() => goToPhase('twist_play')}
+                onPointerDown={() => goToPhase('twist_play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1732,7 +1732,7 @@ export default function SoapBoatRenderer({
               {(['water', 'soapyWater', 'oil'] as const).map(liquid => (
                 <button
                   key={liquid}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setLiquidType(liquid);
                     resetTwistSimulation();
                   }}
@@ -1886,7 +1886,7 @@ export default function SoapBoatRenderer({
             {/* Controls */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               <button
-                onMouseDown={addTwistSoap}
+                onPointerDown={addTwistSoap}
                 disabled={twistAnimating || twistSoapAdded}
                 style={{
                   padding: '0.75rem 1.5rem',
@@ -1904,7 +1904,7 @@ export default function SoapBoatRenderer({
               </button>
 
               <button
-                onMouseDown={resetTwistSimulation}
+                onPointerDown={resetTwistSimulation}
                 style={{
                   padding: '0.75rem 1.5rem',
                   background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
@@ -1921,7 +1921,7 @@ export default function SoapBoatRenderer({
 
             {twistSoapAdded && !twistAnimating && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowTwistResult(true);
                   if (twistPrediction === 'c') {
                     onCorrectAnswer?.();
@@ -1961,7 +1961,7 @@ export default function SoapBoatRenderer({
                   that soap doesn't affect the same way.
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('twist_review')}
+                  onPointerDown={() => goToPhase('twist_review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -2065,7 +2065,7 @@ export default function SoapBoatRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('transfer')}
+              onPointerDown={() => goToPhase('transfer')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -2106,7 +2106,7 @@ export default function SoapBoatRenderer({
               {applications.map((app, index) => (
                 <div
                   key={index}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
                     playSound('click');
                   }}
@@ -2144,7 +2144,7 @@ export default function SoapBoatRenderer({
 
             {completedApps.size >= applications.length && (
               <button
-                onMouseDown={() => goToPhase('test')}
+                onPointerDown={() => goToPhase('test')}
                 style={{
                   padding: '1rem 2.5rem',
                   fontSize: '1.1rem',
@@ -2207,7 +2207,7 @@ export default function SoapBoatRenderer({
                     {tq.options.map((opt, oi) => (
                       <button
                         key={oi}
-                        onMouseDown={() => handleTestAnswer(qi, oi)}
+                        onPointerDown={() => handleTestAnswer(qi, oi)}
                         disabled={testSubmitted}
                         style={{
                           padding: '0.6rem 1rem',
@@ -2248,7 +2248,7 @@ export default function SoapBoatRenderer({
 
             {!testSubmitted ? (
               <button
-                onMouseDown={submitTest}
+                onPointerDown={submitTest}
                 disabled={Object.keys(testAnswers).length < testQuestions.length}
                 style={{
                   padding: '1rem 2.5rem',
@@ -2277,7 +2277,7 @@ export default function SoapBoatRenderer({
                 </p>
 
                 <button
-                  onMouseDown={() => goToPhase('mastery')}
+                  onPointerDown={() => goToPhase('mastery')}
                   style={{
                     padding: '1rem 2.5rem',
                     fontSize: '1.1rem',
@@ -2385,7 +2385,7 @@ export default function SoapBoatRenderer({
             </svg>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 onPhaseComplete?.();
                 setTestAnswers({});
                 setTestSubmitted(false);
@@ -2433,7 +2433,7 @@ export default function SoapBoatRenderer({
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'

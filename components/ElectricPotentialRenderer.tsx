@@ -415,7 +415,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     }
   }, [onGameEvent, playSound]);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const handleMouseMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!isDragging || !svgRef.current) return;
 
     const rect = svgRef.current.getBoundingClientRect();
@@ -1061,9 +1061,9 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           ref={svgRef}
           viewBox="0 0 400 400"
           className={`${isMobile ? 'w-[320px] h-[320px]' : 'w-[400px] h-[400px]'} cursor-crosshair`}
-          onMouseMove={handleMouseMove}
-          onMouseUp={() => setIsDragging(false)}
-          onMouseLeave={() => setIsDragging(false)}
+          onPointerMove={handleMouseMove}
+          onPointerUp={() => setIsDragging(false)}
+          onPointerLeave={() => setIsDragging(false)}
           onTouchMove={handleTouchMove}
           onTouchEnd={() => setIsDragging(false)}
         >
@@ -1369,7 +1369,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           {/* Test charge with premium styling */}
           <g
             style={{ cursor: 'grab' }}
-            onMouseDown={(e) => { e.preventDefault(); setIsDragging(true); }}
+            onPointerDown={(e) => { e.preventDefault(); setIsDragging(true); }}
             onTouchStart={(e) => { e.preventDefault(); setIsDragging(true); }}
             filter="url(#epotTestGlow)"
           >

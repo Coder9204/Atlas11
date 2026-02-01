@@ -322,7 +322,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     } catch { /* Audio not available */ }
   }, []);
 
-  const handleSvgTouch = (e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) => {
+  const handleSvgTouch = (e: React.PointerEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) => {
     if (!svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
     const points: TouchPoint[] = [];
@@ -423,10 +423,10 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
           ref={svgRef}
           viewBox="0 0 400 280"
           className="w-full h-56 cursor-pointer touch-none"
-          onMouseDown={handleSvgTouch}
-          onMouseMove={(e) => e.buttons && handleSvgTouch(e)}
-          onMouseUp={handleTouchEnd}
-          onMouseLeave={handleTouchEnd}
+          onPointerDown={handleSvgTouch}
+          onPointerMove={(e) => e.buttons && handleSvgTouch(e)}
+          onPointerUp={handleTouchEnd}
+          onPointerLeave={handleTouchEnd}
           onTouchStart={handleSvgTouch}
           onTouchMove={handleSvgTouch}
           onTouchEnd={handleTouchEnd}
@@ -1154,7 +1154,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                   disabled={showPredictionFeedback}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showPredictionFeedback && selectedPrediction === option.id
@@ -1700,7 +1700,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   }
 
   // Handle adding/removing multi-touch points in grid
-  const handleGridClick = (e: React.MouseEvent<SVGSVGElement>) => {
+  const handleGridClick = (e: React.PointerEvent<SVGSVGElement>) => {
     if (gestureMode !== 'single') return;
     const svg = e.currentTarget;
     const rect = svg.getBoundingClientRect();
@@ -2138,7 +2138,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
                   disabled={showTwistFeedback}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showTwistFeedback && twistPrediction === option.id
@@ -2383,7 +2383,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
               {TRANSFER_APPS.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index ? 'bg-blue-600 text-white'
                     : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -2401,7 +2401,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
               </div>
               <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
               {!completedApps.has(activeAppTab) && (
-                <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+                <button onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
                   Mark as Understood
                 </button>
               )}
@@ -2462,7 +2462,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                         className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                       >
                         {option.text}
@@ -2472,7 +2472,7 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
                 </div>
               ))}
               <button
-                onMouseDown={(e) => { e.preventDefault(); submitTest(); }}
+                onPointerDown={(e) => { e.preventDefault(); submitTest(); }}
                 disabled={testAnswers.includes(null)}
                 className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
               >

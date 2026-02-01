@@ -583,7 +583,7 @@ export default function DispersionRenderer() {
 
       return (
         <button
-          onMouseDown={handleClick}
+          onPointerDown={handleClick}
           disabled={disabled}
           style={{ ...baseStyles, ...variantStyles[variant] }}
         >
@@ -1838,7 +1838,7 @@ export default function DispersionRenderer() {
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('transition'); handleNavigation('predict'); }}
+        onPointerDown={(e) => { e.preventDefault(); playSound('transition'); handleNavigation('predict'); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -3050,7 +3050,7 @@ export default function DispersionRenderer() {
             {PHASES.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); handleNavigation(p); }}
+                onPointerDown={(e) => { e.preventDefault(); handleNavigation(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-violet-400 w-6 shadow-lg shadow-violet-400/30'

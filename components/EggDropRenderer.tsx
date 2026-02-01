@@ -348,7 +348,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   const renderBottomBar = (onNext: () => void, canProceed: boolean, buttonText: string = 'Continue') => (
     <div className="mt-6 flex justify-center">
       <button
-        onMouseDown={(e) => {
+        onPointerDown={(e) => {
           e.preventDefault();
           if (canProceed) onNext();
         }}
@@ -932,7 +932,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           {predictionOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
                 playSound('click');
@@ -986,7 +986,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           ].map(pad => (
             <button
               key={pad.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 if (!isDropping) {
                   setSelectedPadding(pad.id);
@@ -1010,7 +1010,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
 
       <div className="flex gap-3 justify-center mb-4">
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             if (!isDropping && !dropComplete) startDrop();
           }}
@@ -1024,7 +1024,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           🥚 Drop Egg
         </button>
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             resetDrop();
           }}
@@ -1243,7 +1243,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           {twistOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
                 playSound('click');
@@ -1286,7 +1286,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           ].map(h => (
             <button
               key={h.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 if (!isDropping) {
                   setTwistHeight(h.id);
@@ -1309,7 +1309,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
 
       <div className="flex gap-3 justify-center mb-4">
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             if (!isDropping && !twistDropComplete) startTwistDrop();
           }}
@@ -1323,7 +1323,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
           🥚 Drop from {twistHeight === 'low' ? '1m' : twistHeight === 'medium' ? '3m' : '5m'}
         </button>
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             resetTwistDrop();
           }}
@@ -1653,7 +1653,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
 
           <div className="px-5 pb-5">
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 playSound('click');
                 setCompletedApps(prev => prev + 1);
@@ -1890,7 +1890,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                       e.preventDefault();
                       handleTestAnswer(qIndex, oIndex);
                     }}
@@ -1992,7 +1992,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             playSound('complete');
             if (onComplete) onComplete(testScore * 10);
@@ -2030,7 +2030,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
               <span className="text-2xl">🧑‍🏫</span>
               <p className="flex-1">{coachMessages[phase]}</p>
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   setShowCoachMessage(false);
                 }}

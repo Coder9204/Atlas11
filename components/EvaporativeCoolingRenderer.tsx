@@ -807,7 +807,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -852,7 +852,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -872,7 +872,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
             Correct! The water pulls heat energy from your skin to evaporate. That's why wet skin feels cold - it's literally losing heat!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+            onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
           >
             Explore the Physics
@@ -891,7 +891,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         {renderSkinVisualization(skinWet, skinTemp)}
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); wetTheSkin(); }}
+          onPointerDown={(e) => { e.preventDefault(); wetTheSkin(); }}
           disabled={skinWet && waterDroplets.length > 0}
           className={`w-full mt-4 py-3 rounded-lg font-bold text-lg ${
             skinWet && waterDroplets.length > 0
@@ -938,7 +938,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
       >
         Learn the Science
@@ -977,7 +977,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
       >
         Discover a Surprising Twist
@@ -1005,7 +1005,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1025,7 +1025,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
             Correct! Wind removes the saturated boundary layer, allowing fresh dry air to contact the wet surface and accelerate evaporation.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+            onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             See Wind Effect in Action
@@ -1044,7 +1044,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         {renderSkinVisualization(twistSkinWet, twistSkinTemp, windSpeed)}
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); setTwistSkinWet(true); }}
+          onPointerDown={(e) => { e.preventDefault(); setTwistSkinWet(true); }}
           disabled={twistSkinWet}
           className={`w-full mt-4 py-3 rounded-lg font-bold ${
             twistSkinWet ? "bg-slate-600 text-slate-400 cursor-not-allowed" : "bg-blue-500 text-white hover:bg-blue-400"
@@ -1086,7 +1086,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
       >
         See Explanation
@@ -1119,7 +1119,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
       >
         Explore Real-World Applications
@@ -1134,7 +1134,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index ? 'bg-blue-600 text-white'
               : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -1154,7 +1154,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
         <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
             className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
           >
             Mark as Understood
@@ -1168,7 +1168,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
       </div>
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
         >
           Take the Knowledge Test
@@ -1189,7 +1189,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
                     {option.text}
@@ -1199,7 +1199,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
             </div>
           ))}
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+            onPointerDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
           >
@@ -1213,14 +1213,14 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered evaporative cooling!' : 'Keep studying! Review and try again.'}</p>
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); onCorrectAnswer?.(); onPhaseComplete?.(); }}
+              onPointerDown={(e) => { e.preventDefault(); onCorrectAnswer?.(); onPhaseComplete?.(); }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
             >
               Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
+              onPointerDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
             >
               Review & Try Again
@@ -1244,7 +1244,7 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">❄️</div><p className="text-sm text-slate-300">Swamp Coolers</p></div>
         </div>
         <button
-          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
         >
           Complete

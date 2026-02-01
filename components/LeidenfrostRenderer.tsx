@@ -1326,7 +1326,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             ].map(option => (
               <button
                 key={option.id}
-                onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                 disabled={showPredictionFeedback}
                 style={{
                   padding: '16px',
@@ -1399,7 +1399,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
               <button
-                onMouseDown={(e) => { e.preventDefault(); dropWater(); }}
+                onPointerDown={(e) => { e.preventDefault(); dropWater(); }}
                 disabled={isDropped && dropletRadius > 0}
                 style={{
                   flex: 1,
@@ -1415,7 +1415,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
                 💧 Drop Water
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); resetExperiment(); }}
+                onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
                 style={{
                   padding: '12px 16px',
                   borderRadius: '8px',
@@ -1514,7 +1514,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             ].map(option => (
               <button
                 key={option.id}
-                onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
                 disabled={showTwistFeedback}
                 style={{
                   padding: '16px',
@@ -1578,7 +1578,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); startTwistExperiment(); }}
+              onPointerDown={(e) => { e.preventDefault(); startTwistExperiment(); }}
               disabled={isEvaporating}
               style={{
                 width: '100%',
@@ -1661,7 +1661,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
             {applications.map((app, index) => (
               <button
                 key={index}
-                onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '8px',
@@ -1688,7 +1688,7 @@ const LeidenfrostRenderer: React.FC<LeidenfrostRendererProps> = ({
 
             {!completedApps.has(activeAppTab) && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+                onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
                 style={{
                   marginTop: '16px',
                   padding: '8px 16px',

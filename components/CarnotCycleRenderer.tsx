@@ -1107,7 +1107,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="group relative px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-2">
@@ -1171,7 +1171,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -1198,7 +1198,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
             This is Carnot's revolutionary insight — no matter how well you engineer it, the temperatures alone set the limit.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
           >
             Explore the Carnot Cycle →
@@ -1285,7 +1285,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
 
       <div className="flex gap-4 mb-6 flex-wrap justify-center">
         <button
-          onMouseDown={(e) => { e.preventDefault(); toggleAnimation(); }}
+          onPointerDown={(e) => { e.preventDefault(); toggleAnimation(); }}
           className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
             isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
           } text-white`}
@@ -1293,7 +1293,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
           {isAnimating ? '⏹ Stop Cycle' : '▶ Run Cycle'}
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setShowHeatFlow(!showHeatFlow); }}
+          onPointerDown={(e) => { e.preventDefault(); setShowHeatFlow(!showHeatFlow); }}
           className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
             showHeatFlow ? 'bg-amber-600 hover:bg-amber-500' : 'bg-slate-600 hover:bg-slate-500'
           } text-white`}
@@ -1316,7 +1316,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
         Review the Concepts →
@@ -1369,7 +1369,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Discover a Surprising Twist →
@@ -1426,7 +1426,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1453,7 +1453,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
             By doing work, we can move heat from cold to hot — that's how your fridge works!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
             Explore Heat Pumps →
@@ -1545,7 +1545,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Review the Discovery →
@@ -1588,7 +1588,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
         Explore Real-World Applications →
@@ -1604,7 +1604,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setActiveAppTab(index);
               // Event logging
@@ -1678,7 +1678,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
             className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
           >
             ✓ Mark as Understood
@@ -1701,7 +1701,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
 
       {completedApps.size >= transferApps.length && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
         >
           Take the Knowledge Test →
@@ -1728,7 +1728,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-red-600 text-white'
@@ -1743,7 +1743,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
           ))}
 
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setShowTestResults(true);
               // Event logging
@@ -1774,7 +1774,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
 
             {calculateScore() >= 7 ? (
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   goToNextPhase();
                   // Event logging
@@ -1786,7 +1786,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
               </button>
             ) : (
               <button
-                onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+                onPointerDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
                 className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
               >
                 Review & Try Again
@@ -1854,7 +1854,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase('hook'); }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
             ↺ Explore Again
@@ -1898,7 +1898,7 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
               return (
                 <button
                   key={p}
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     phase === p
                       ? 'bg-gradient-to-r from-red-400 to-orange-400 w-6 shadow-lg shadow-red-500/50'

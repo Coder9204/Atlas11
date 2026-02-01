@@ -1155,13 +1155,13 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
 
         <div className="flex gap-3 justify-center flex-wrap">
           <button
-            onMouseDown={(e) => { e.preventDefault(); startCrash(); }}
+            onPointerDown={(e) => { e.preventDefault(); startCrash(); }}
             className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-all"
           >
             Crash Test!
           </button>
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setHasCrumpleZone(!hasCrumpleZone);
               emitEvent('car_type_changed', { hasCrumpleZone: !hasCrumpleZone });
@@ -1175,7 +1175,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(1); }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white text-lg font-semibold rounded-2xl hover:from-red-500 hover:to-orange-500 transition-all duration-300 shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] flex items-center gap-2"
       >
         Discover the Physics
@@ -1213,7 +1213,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -1240,7 +1240,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
             The impulse-momentum theorem explains why extending collision time saves lives.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(2); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all"
           >
             Explore the Physics →
@@ -1286,7 +1286,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
           <label className="text-slate-300 text-sm block mb-2">Car Type</label>
           <div className="flex gap-2">
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setHasCrumpleZone(true);
                 emitEvent('car_type_changed', { hasCrumpleZone: true });
@@ -1296,7 +1296,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
               🛡️ Crumple
             </button>
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setHasCrumpleZone(false);
                 emitEvent('car_type_changed', { hasCrumpleZone: false });
@@ -1311,13 +1311,13 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
 
       <div className="flex gap-4 mb-6">
         <button
-          onMouseDown={(e) => { e.preventDefault(); startCrash(); }}
+          onPointerDown={(e) => { e.preventDefault(); startCrash(); }}
           className="px-5 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg font-medium transition-all"
         >
           💥 Crash Test!
         </button>
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             setShowForces(!showForces);
             emitEvent('display_toggled', { display: 'forces', value: !showForces });
@@ -1351,7 +1351,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(3); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all"
       >
         Review the Concepts →
@@ -1421,7 +1421,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(4); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all"
       >
         Discover a Surprising Twist →
@@ -1457,7 +1457,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1482,7 +1482,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
             Double the mass means half the velocity to conserve momentum—but what about the kinetic energy?
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(5); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all"
           >
             See the Energy Loss →
@@ -1518,7 +1518,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(6); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all"
       >
         Review the Discovery →
@@ -1570,7 +1570,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(7); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all"
       >
         Explore Real-World Applications →
@@ -1591,7 +1591,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
           {transferApps.map((a, index) => (
             <button
               key={index}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setActiveAppIndex(index);
                 emitEvent('app_explored', { appIndex: index, appTitle: a.title });
@@ -1673,7 +1673,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
 
           {!completedApps.has(activeAppIndex) && (
             <button
-              onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppIndex); }}
+              onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppIndex); }}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-all"
             >
               ✓ Mark as Understood
@@ -1698,7 +1698,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
 
         {completedApps.size >= 4 && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(8); }}
             className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all"
           >
             Take the Knowledge Test →
@@ -1729,7 +1729,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-red-600 text-white'
@@ -1744,7 +1744,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
           ))}
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleTestSubmit(); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTestSubmit(); }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
@@ -1804,14 +1804,14 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); emitEvent('mastery_achieved', { score: calculateScore() }); }}
+              onPointerDown={(e) => { e.preventDefault(); goToPhase(9); emitEvent('mastery_achieved', { score: calculateScore() }); }}
               className="w-full px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all"
             >
               Claim Your Mastery Badge →
             </button>
           ) : (
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(-1));
@@ -1874,7 +1874,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+          onPointerDown={(e) => { e.preventDefault(); goToPhase(0); }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all"
         >
           ↺ Explore Again
@@ -1922,7 +1922,7 @@ const InelasticCollisionsRenderer: React.FC<Props> = ({ onGameEvent, currentPhas
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p ? 'bg-red-500 w-6' : phase > i ? 'bg-red-500 w-2' : 'bg-slate-600 w-2'
                 }`}

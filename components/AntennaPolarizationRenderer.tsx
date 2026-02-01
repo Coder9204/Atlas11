@@ -371,8 +371,8 @@ const AntennaPolarizationRenderer: React.FC<AntennaPolarizationRendererProps> = 
             value={value}
             onChange={(e) => onChange(parseInt(e.target.value))}
             onInput={(e) => onChange(parseInt((e.target as HTMLInputElement).value))}
-            onMouseDown={() => setIsDragging(true)}
-            onMouseUp={() => setIsDragging(false)}
+            onPointerDown={() => setIsDragging(true)}
+            onPointerUp={() => setIsDragging(false)}
             onTouchStart={() => setIsDragging(true)}
             onTouchEnd={() => setIsDragging(false)}
             style={{

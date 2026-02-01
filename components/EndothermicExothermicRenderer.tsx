@@ -1159,7 +1159,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ].map(option => (
               <button
                 key={option.id}
-                onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                 disabled={showPredictionFeedback}
                 style={{
                   padding: '16px',
@@ -1212,7 +1212,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                 {solutes.map((s, i) => (
                   <button
                     key={i}
-                    onMouseDown={(e) => { e.preventDefault(); setSelectedSolute(i); resetExperiment(); }}
+                    onPointerDown={(e) => { e.preventDefault(); setSelectedSolute(i); resetExperiment(); }}
                     style={{
                       padding: '8px 12px',
                       borderRadius: '8px',
@@ -1257,7 +1257,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
               {renderBeakerVisualization()}
               <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); startMixing(); }}
+                  onPointerDown={(e) => { e.preventDefault(); startMixing(); }}
                   disabled={isMixing || mixProgress >= 100}
                   style={{
                     flex: 1,
@@ -1273,7 +1273,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
                   {isMixing ? 'Mixing...' : mixProgress >= 100 ? 'Done!' : 'Add & Mix'}
                 </button>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); resetExperiment(); }}
+                  onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
                   style={{
                     padding: '12px 16px',
                     borderRadius: '8px',
@@ -1406,7 +1406,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             ].map(option => (
               <button
                 key={option.id}
-                onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
                 disabled={showTwistFeedback}
                 style={{
                   padding: '16px',
@@ -1556,7 +1556,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
             {applications.map((app, index) => (
               <button
                 key={index}
-                onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '8px',
@@ -1583,7 +1583,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
 
             {!completedApps.has(activeAppTab) && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+                onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
                 style={{
                   marginTop: '16px',
                   padding: '8px 16px',

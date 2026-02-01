@@ -447,7 +447,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
       borderTop: `1px solid ${colors.card}`
     }}>
       <button
-        onMouseDown={!disabled ? onNext : undefined}
+        onPointerDown={!disabled ? onNext : undefined}
         disabled={disabled}
         style={{
           padding: '14px 32px',
@@ -462,10 +462,10 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           transition: 'all 0.2s ease',
           transform: disabled ? 'none' : 'translateY(0)',
         }}
-        onMouseEnter={(e) => {
+        onPointerEnter={(e) => {
           if (!disabled) e.currentTarget.style.transform = 'translateY(-2px)';
         }}
-        onMouseLeave={(e) => {
+        onPointerLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
@@ -769,7 +769,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
             )}
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setShowCollapse(true);
               }}
               disabled={showCollapse}
@@ -790,7 +790,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
 
             {bubbleSize === 0 && (
               <button
-                onMouseDown={() => setHookStep(1)}
+                onPointerDown={() => setHookStep(1)}
                 style={{
                   marginTop: '16px',
                   marginLeft: '12px',
@@ -927,7 +927,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setPrediction(option.value);
                 playSound('click');
                 emitEvent('prediction', { predicted: option.value, question: 'collapse_result' });
@@ -951,7 +951,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
 
         {prediction && !showPredictResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowPredictResult(true);
               playSound(prediction === 'hot' ? 'success' : 'failure');
             }}
@@ -1288,7 +1288,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
 
         {/* Reset button */}
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setDamageLevel(0);
             setBubbles([]);
           }}
@@ -1536,7 +1536,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           ].map(option => (
             <button
               key={option.value}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setTwistPrediction(option.value);
                 playSound('click');
               }}
@@ -1558,7 +1558,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
 
         {twistPrediction && !showTwistResult && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setShowTwistResult(true);
               playSound(twistPrediction === 'second' ? 'success' : 'failure');
             }}
@@ -1819,7 +1819,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         </div>
 
         <button
-          onMouseDown={triggerShrimpStrike}
+          onPointerDown={triggerShrimpStrike}
           disabled={shrimpStrike}
           style={{
             width: '100%',
@@ -1946,7 +1946,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
           {applications.map((app, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (completedApps.has(i)) {
                   setActiveApp(i);
                   playSound('click');
@@ -2051,7 +2051,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         {/* Next app button */}
         {activeApp < applications.length - 1 && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               const next = activeApp + 1;
               setCompletedApps(prev => new Set([...prev, next]));
               setActiveApp(next);
@@ -2110,7 +2110,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                 {testQuestions[currentQuestion].options.map((option, i) => (
                   <button
                     key={i}
-                    onMouseDown={() => handleTestAnswer(i)}
+                    onPointerDown={() => handleTestAnswer(i)}
                     style={{
                       padding: '14px 18px',
                       fontSize: '14px',
@@ -2122,11 +2122,11 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                       textAlign: 'left',
                       transition: 'all 0.2s ease'
                     }}
-                    onMouseEnter={(e) => {
+                    onPointerEnter={(e) => {
                       e.currentTarget.style.borderColor = colors.primary;
                       e.currentTarget.style.background = `${colors.primary}10`;
                     }}
-                    onMouseLeave={(e) => {
+                    onPointerLeave={(e) => {
                       e.currentTarget.style.borderColor = '#333';
                       e.currentTarget.style.background = colors.background;
                     }}
@@ -2161,7 +2161,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
                 Test complete! Ready to see your results?
               </p>
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowTestResults(true);
                   playSound('success');
                 }}
@@ -2373,7 +2373,7 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
               return (
                 <button
                   key={p}
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     phase === p
                       ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'

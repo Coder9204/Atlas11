@@ -616,8 +616,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
                   stroke="#86efac"
                   strokeWidth="1"
                   style={{ cursor: 'pointer' }}
-                  onMouseEnter={() => setHighlightedChiplet(i)}
-                  onMouseLeave={() => setHighlightedChiplet(null)}
+                  onPointerEnter={() => setHighlightedChiplet(i)}
+                  onPointerLeave={() => setHighlightedChiplet(null)}
                 />
                 {/* Random defect (less likely on smaller die) */}
                 {Math.random() > metrics.singleChipletYield / 100 && (

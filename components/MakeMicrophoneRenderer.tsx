@@ -295,11 +295,11 @@ const ProgressIndicator: React.FC<{ current: number; total: number; phase: Phase
 
 const PrimaryButton: React.FC<{
   children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
+  onPointerDown: (e: React.PointerEvent) => void;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'success';
   fullWidth?: boolean;
-}> = ({ children, onMouseDown, disabled, variant = 'primary', fullWidth = true }) => {
+}> = ({ children, onPointerDown, disabled, variant = 'primary', fullWidth = true }) => {
   const baseClasses = `py-4 px-8 rounded-2xl font-semibold text-lg transition-all duration-200 transform ${
     fullWidth ? 'w-full' : ''
   }`;
@@ -317,18 +317,18 @@ const PrimaryButton: React.FC<{
   };
 
   const handleClick = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.PointerEvent) => {
       e.preventDefault();
       if (!disabled) {
-        onMouseDown(e);
+        onPointerDown(e);
       }
     },
-    [disabled, onMouseDown]
+    [disabled, onPointerDown]
   );
 
   return (
     <button
-      onMouseDown={handleClick}
+      onPointerDown={handleClick}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]}`}
     >
@@ -1130,7 +1130,7 @@ export default function MakeMicrophoneRenderer({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('click'); goToPhase('predict'); }}
+        onPointerDown={(e) => { e.preventDefault(); playSound('click'); goToPhase('predict'); }}
         className="group relative px-10 py-5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1183,7 +1183,7 @@ export default function MakeMicrophoneRenderer({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               prediction === option.id
@@ -1214,7 +1214,7 @@ export default function MakeMicrophoneRenderer({
       )}
 
       {showPredictionFeedback && (
-        <PrimaryButton onMouseDown={nextPhase}>
+        <PrimaryButton onPointerDown={nextPhase}>
           See How It Works →
         </PrimaryButton>
       )}
@@ -1270,7 +1270,7 @@ export default function MakeMicrophoneRenderer({
           <label className="block text-sm font-medium text-slate-700 mb-2">Microphone Type:</label>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onMouseDown={(e) => { e.preventDefault(); setMicType('dynamic'); handleExperiment(); }}
+              onPointerDown={(e) => { e.preventDefault(); setMicType('dynamic'); handleExperiment(); }}
               className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                 micType === 'dynamic'
                   ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
@@ -1280,7 +1280,7 @@ export default function MakeMicrophoneRenderer({
               Dynamic (Coil)
             </button>
             <button
-              onMouseDown={(e) => { e.preventDefault(); setMicType('condenser'); handleExperiment(); }}
+              onPointerDown={(e) => { e.preventDefault(); setMicType('condenser'); handleExperiment(); }}
               className={`py-3 px-4 rounded-xl font-medium transition-all duration-200 ${
                 micType === 'condenser'
                   ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30'
@@ -1301,7 +1301,7 @@ export default function MakeMicrophoneRenderer({
       </div>
 
       <PrimaryButton
-        onMouseDown={nextPhase}
+        onPointerDown={nextPhase}
         disabled={!hasExperimented}
       >
         {hasExperimented ? 'Continue to Review →' : `Experiment ${Math.max(0, 3 - experimentCount)} more times...`}
@@ -1356,7 +1356,7 @@ export default function MakeMicrophoneRenderer({
         ))}
       </div>
 
-      <PrimaryButton onMouseDown={nextPhase}>
+      <PrimaryButton onPointerDown={nextPhase}>
         Now for a Twist... →
       </PrimaryButton>
     </div>
@@ -1386,7 +1386,7 @@ export default function MakeMicrophoneRenderer({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`w-full p-4 rounded-2xl border-2 text-left transition-all duration-200 flex items-center gap-4 ${
               twistPrediction === option.id
@@ -1417,7 +1417,7 @@ export default function MakeMicrophoneRenderer({
       )}
 
       {showTwistFeedback && (
-        <PrimaryButton onMouseDown={nextPhase}>
+        <PrimaryButton onPointerDown={nextPhase}>
           See It In Action →
         </PrimaryButton>
       )}
@@ -1440,7 +1440,7 @@ export default function MakeMicrophoneRenderer({
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <button
-          onMouseDown={(e) => { e.preventDefault(); setSpeakerMode('speaker'); setHasExploredTwist(true); }}
+          onPointerDown={(e) => { e.preventDefault(); setSpeakerMode('speaker'); setHasExploredTwist(true); }}
           className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             speakerMode === 'speaker'
               ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30'
@@ -1450,7 +1450,7 @@ export default function MakeMicrophoneRenderer({
           🔊 As Speaker
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setSpeakerMode('microphone'); setHasExploredTwist(true); }}
+          onPointerDown={(e) => { e.preventDefault(); setSpeakerMode('microphone'); setHasExploredTwist(true); }}
           className={`py-4 px-4 rounded-2xl font-semibold transition-all duration-200 ${
             speakerMode === 'microphone'
               ? 'bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-lg shadow-purple-500/30'
@@ -1469,7 +1469,7 @@ export default function MakeMicrophoneRenderer({
       </div>
 
       <PrimaryButton
-        onMouseDown={nextPhase}
+        onPointerDown={nextPhase}
         disabled={!hasExploredTwist}
       >
         {hasExploredTwist ? 'Continue →' : 'Try both modes...'}
@@ -1519,7 +1519,7 @@ export default function MakeMicrophoneRenderer({
         </div>
       </div>
 
-      <PrimaryButton onMouseDown={nextPhase}>
+      <PrimaryButton onPointerDown={nextPhase}>
         Apply This Knowledge →
       </PrimaryButton>
     </div>
@@ -1570,7 +1570,7 @@ export default function MakeMicrophoneRenderer({
           {applications.map((app, index) => (
             <button
               key={index}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setActiveAppTab(index);
               }}
@@ -1600,7 +1600,7 @@ export default function MakeMicrophoneRenderer({
             </p>
             {!completedApps.has(activeAppTab) ? (
               <button
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   handleCompleteApp(activeAppTab);
                 }}
@@ -1631,7 +1631,7 @@ export default function MakeMicrophoneRenderer({
         </div>
 
         <PrimaryButton
-          onMouseDown={nextPhase}
+          onPointerDown={nextPhase}
           disabled={!allAppsCompleted}
         >
           {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more application${4 - completedApps.size !== 1 ? 's' : ''}`}
@@ -1688,7 +1688,7 @@ export default function MakeMicrophoneRenderer({
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => {
+                        onPointerDown={(e) => {
                           e.preventDefault();
                           handleTestAnswer(qIndex, oIndex);
                         }}
@@ -1707,7 +1707,7 @@ export default function MakeMicrophoneRenderer({
             </div>
 
             <PrimaryButton
-              onMouseDown={handleSubmitTest}
+              onPointerDown={handleSubmitTest}
               disabled={!allAnswered}
               variant="success"
             >
@@ -1734,19 +1734,19 @@ export default function MakeMicrophoneRenderer({
             </p>
 
             {testScore !== null && testScore >= 7 ? (
-              <PrimaryButton onMouseDown={nextPhase} variant="success">
+              <PrimaryButton onPointerDown={nextPhase} variant="success">
                 Complete Lesson →
               </PrimaryButton>
             ) : (
               <div className="space-y-3">
-                <PrimaryButton onMouseDown={() => {
+                <PrimaryButton onPointerDown={() => {
                   setTestScore(null);
                   setTestSubmitted(false);
                   setTestAnswers(Array(10).fill(null));
                 }} variant="secondary">
                   Try Again
                 </PrimaryButton>
-                <PrimaryButton onMouseDown={nextPhase}>
+                <PrimaryButton onPointerDown={nextPhase}>
                   Continue Anyway →
                 </PrimaryButton>
               </div>
@@ -1799,7 +1799,7 @@ export default function MakeMicrophoneRenderer({
         </div>
       )}
 
-      <PrimaryButton onMouseDown={() => goToPhase('hook')} variant="secondary">
+      <PrimaryButton onPointerDown={() => goToPhase('hook')} variant="secondary">
         Review Again
       </PrimaryButton>
     </div>
@@ -1841,7 +1841,7 @@ export default function MakeMicrophoneRenderer({
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   currentPhase === p
                     ? 'bg-teal-400 w-6 shadow-lg shadow-teal-400/30'

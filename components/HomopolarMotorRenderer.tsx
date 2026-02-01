@@ -1011,7 +1011,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
     }}>
       {showBack ? (
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             const idx = validPhases.indexOf(phase);
             if (idx > 0) goToPhase(validPhases[idx - 1]);
           }}
@@ -1033,7 +1033,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
       {showNext ? (
         <button
-          onMouseDown={nextAction || (() => {
+          onPointerDown={nextAction || (() => {
             const idx = validPhases.indexOf(phase);
             if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
           })}
@@ -1098,7 +1098,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           </div>
 
           <button
-            onMouseDown={() => goToPhase('predict')}
+            onPointerDown={() => goToPhase('predict')}
             style={{
               padding: '18px 48px',
               fontSize: '18px',
@@ -1198,7 +1198,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 {predictions.map(p => (
                   <button
                     key={p.id}
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setPrediction(p.id);
                       playSound('click');
                     }}
@@ -1315,7 +1315,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             </div>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setIsRunning(!isRunning);
                 playSound(isRunning ? 'click' : 'success');
                 emitGameEvent(isRunning ? 'motor_stopped' : 'motor_started', { magnetStrength });
@@ -1500,7 +1500,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 {twistPredictions.map(p => (
                   <button
                     key={p.id}
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setTwistPrediction(p.id);
                       playSound('click');
                     }}
@@ -1607,7 +1607,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 </p>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setMagnetPolarity('north');
                       playSound('click');
                     }}
@@ -1625,7 +1625,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                     North (N)
                   </button>
                   <button
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setMagnetPolarity('south');
                       playSound('click');
                     }}
@@ -1646,7 +1646,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               </div>
 
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setIsRunning(!isRunning);
                   playSound(isRunning ? 'click' : 'success');
                 }}
@@ -1809,7 +1809,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     if (!isLocked) setSelectedApp(i);
                     playSound('click');
                   }}
@@ -1943,7 +1943,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           gap: '12px'
         }}>
           <button
-            onMouseDown={() => goToPhase('twist_review')}
+            onPointerDown={() => goToPhase('twist_review')}
             style={{
               padding: '12px 20px',
               borderRadius: '10px',
@@ -1960,7 +1960,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
           {!isCurrentCompleted ? (
             <button
-              onMouseDown={handleCompleteApp}
+              onPointerDown={handleCompleteApp}
               style={{
                 flex: 1,
                 maxWidth: '400px',
@@ -1980,7 +1980,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
             </button>
           ) : allCompleted ? (
             <button
-              onMouseDown={() => goToPhase('test')}
+              onPointerDown={() => goToPhase('test')}
               style={{
                 flex: 1,
                 maxWidth: '400px',
@@ -2052,7 +2052,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
                 {!passed && (
                   <button
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       setPhase('hook');
                       setTestQuestion(0);
                       setTestAnswers(Array(10).fill(null));
@@ -2073,7 +2073,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                   </button>
                 )}
                 <button
-                  onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
+                  onPointerDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
                   style={{
                     padding: '16px 32px',
                     borderRadius: '12px',
@@ -2161,7 +2161,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 return (
                   <button
                     key={opt.id}
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       if (!isAnswered) {
                         const newAnswers = [...testAnswers];
                         newAnswers[testQuestion] = opt.id;
@@ -2255,7 +2255,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
-            onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+            onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
             disabled={testQuestion === 0}
             style={{
               padding: '12px 20px',
@@ -2273,7 +2273,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
           {testAnswers[testQuestion] !== null && (
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (testQuestion < 9) {
                   setTestQuestion(testQuestion + 1);
                 } else {
@@ -2332,7 +2332,7 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   onComplete?.();
                   window.dispatchEvent(new CustomEvent('returnToDashboard'));
                 }}

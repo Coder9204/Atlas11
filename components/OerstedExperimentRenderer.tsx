@@ -850,7 +850,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
     }}>
       {showBack ? (
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             const idx = validPhases.indexOf(phase);
             if (idx > 0) goToPhase(validPhases[idx - 1]);
           }}
@@ -872,7 +872,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
       {showNext ? (
         <button
-          onMouseDown={nextAction || (() => {
+          onPointerDown={nextAction || (() => {
             const idx = validPhases.indexOf(phase);
             if (idx < validPhases.length - 1) goToPhase(validPhases[idx + 1]);
           })}
@@ -968,7 +968,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
         }}>
           <button
-            onMouseDown={() => goToPhase('predict')}
+            onPointerDown={() => goToPhase('predict')}
             style={{
               padding: '18px 48px',
               fontSize: '18px',
@@ -1149,7 +1149,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               {predictions.map(p => (
                 <button
                   key={p.id}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setPrediction(p.id);
                     playSound('click');
                   }}
@@ -1277,7 +1277,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </p>
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setCurrentDirection('up');
                     playSound('click');
                     emitGameEvent('direction_changed', { direction: 'up' });
@@ -1296,7 +1296,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                   ↑ Upward
                 </button>
                 <button
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setCurrentDirection('down');
                     playSound('click');
                     emitGameEvent('direction_changed', { direction: 'down' });
@@ -1318,7 +1318,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             </div>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setCurrentOn(!currentOn);
                 playSound(currentOn ? 'click' : 'success');
                 emitGameEvent(currentOn ? 'current_off' : 'current_on', { strength: currentStrength, direction: currentDirection });
@@ -1467,7 +1467,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               {twistPredictions.map(p => (
                 <button
                   key={p.id}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setTwistPrediction(p.id);
                     playSound('click');
                   }}
@@ -1545,7 +1545,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setWireMode(wireMode === 'straight' ? 'coil' : 'straight');
                   playSound('click');
                 }}
@@ -1564,7 +1564,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </button>
 
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setCurrentOn(!currentOn);
                   playSound(currentOn ? 'click' : 'success');
                 }}
@@ -1721,7 +1721,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     if (!isLocked) setSelectedApp(i);
                   }}
                   disabled={isLocked}
@@ -1848,7 +1848,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -4px 20px rgba(0,0,0,0.3)'
         }}>
           <button
-            onMouseDown={() => goToPhase('twist_review')}
+            onPointerDown={() => goToPhase('twist_review')}
             style={{
               padding: '12px 20px',
               borderRadius: '10px',
@@ -1865,7 +1865,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
           {!isCurrentCompleted ? (
             <button
-              onMouseDown={handleCompleteApp}
+              onPointerDown={handleCompleteApp}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -1885,7 +1885,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
             </button>
           ) : allCompleted ? (
             <button
-              onMouseDown={() => goToPhase('test')}
+              onPointerDown={() => goToPhase('test')}
               style={{
                 flex: 1,
                 maxWidth: '300px',
@@ -1973,7 +1973,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           }}>
             {!passed && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setPhase('hook');
                   setTestQuestion(0);
                   setTestAnswers(Array(10).fill(null));
@@ -1995,7 +1995,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
               </button>
             )}
             <button
-              onMouseDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
+              onPointerDown={() => passed ? goToPhase('mastery') : setTestSubmitted(false)}
               style={{
                 padding: '16px 32px',
                 borderRadius: '12px',
@@ -2084,7 +2084,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
                 return (
                   <button
                     key={opt.id}
-                    onMouseDown={() => {
+                    onPointerDown={() => {
                       if (!isAnswered) {
                         const newAnswers = [...testAnswers];
                         newAnswers[testQuestion] = opt.id;
@@ -2189,7 +2189,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
         }}>
           <button
-            onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+            onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
             disabled={testQuestion === 0}
             style={{
               padding: '12px 20px',
@@ -2207,7 +2207,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
 
           {testAnswers[testQuestion] !== null && (
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 if (testQuestion < 9) {
                   setTestQuestion(testQuestion + 1);
                 } else {
@@ -2282,7 +2282,7 @@ const OerstedExperimentRenderer: React.FC<OerstedExperimentRendererProps> = ({
           boxShadow: '0 -8px 30px rgba(0,0,0,0.5)'
         }}>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               onComplete?.();
               window.dispatchEvent(new CustomEvent('returnToDashboard'));
             }}

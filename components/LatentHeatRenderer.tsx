@@ -1123,7 +1123,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
       {/* CTA Button */}
       <button
-        onMouseDown={() => handleNavigation('predict')}
+        onPointerDown={() => handleNavigation('predict')}
         className="group px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 flex items-center gap-2 text-white"
       >
         Discover the Hidden Heat
@@ -1159,7 +1159,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setPrediction(option.id);
               playSound('click');
               onEvent?.('prediction_made', { prediction: option.id });
@@ -1187,7 +1187,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
       {prediction && (
         <button
-          onMouseDown={() => handleNavigation('play')}
+          onPointerDown={() => handleNavigation('play')}
           className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold text-lg hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
         >
           Test Your Prediction
@@ -1245,7 +1245,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
       <div className="flex gap-3">
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             if (!isSimulating) {
               setIsSimulating(true);
               playSound('click');
@@ -1264,7 +1264,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
         </button>
 
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             resetSimulation();
             playSound('click');
           }}
@@ -1276,7 +1276,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
       {phaseState === 'gas' && (
         <button
-          onMouseDown={() => handleNavigation('review')}
+          onPointerDown={() => handleNavigation('review')}
           className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg"
         >
           See What Happened
@@ -1347,7 +1347,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation('twist_predict')}
+        onPointerDown={() => handleNavigation('twist_predict')}
         className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold text-lg shadow-lg"
       >
         Ready for a Twist?
@@ -1383,7 +1383,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTwistPrediction(option.id);
               playSound('click');
               onEvent?.('prediction_made', { twist: true, prediction: option.id });
@@ -1411,7 +1411,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
       {twistPrediction && (
         <button
-          onMouseDown={() => handleNavigation('twist_play')}
+          onPointerDown={() => handleNavigation('twist_play')}
           className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold text-lg shadow-lg"
         >
           See the Energy Comparison
@@ -1445,7 +1445,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => {
+        onPointerDown={() => {
           if (!twistSimulating) {
             setTwistSimulating(true);
             setSteamEnergy(0);
@@ -1465,7 +1465,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
       {steamEnergy >= 100 && (
         <button
-          onMouseDown={() => handleNavigation('twist_review')}
+          onPointerDown={() => handleNavigation('twist_review')}
           className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold text-lg shadow-lg"
         >
           Understand the Danger
@@ -1519,7 +1519,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation('transfer')}
+        onPointerDown={() => handleNavigation('transfer')}
         className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-semibold text-lg shadow-lg"
       >
         See Real-World Applications
@@ -1543,7 +1543,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
           {transferApps.map((a, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setSelectedApp(i);
                 playSound('click');
                 onEvent?.('transfer_app_viewed', { app: a.title });
@@ -1606,7 +1606,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={() => handleNavigation('test')}
+          onPointerDown={() => handleNavigation('test')}
           className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-semibold text-lg shadow-lg"
         >
           Test Your Knowledge
@@ -1672,7 +1672,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => !answered && handleTestAnswer(i)}
+                  onPointerDown={() => !answered && handleTestAnswer(i)}
                   disabled={answered}
                   className={`w-full p-3 rounded-lg border-2 text-left transition-all ${bgColor} ${borderColor}`}
                 >
@@ -1703,7 +1703,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
         {/* Navigation */}
         {answered && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (testIndex < testQuestions.length - 1) {
                 setTestIndex(prev => prev + 1);
                 setShowExplanation(false);
@@ -1788,7 +1788,7 @@ const LatentHeatRenderer: React.FC<LatentHeatRendererProps> = ({
 
         {!passed && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTestIndex(0);
               setTestScore(0);
               setTestAnswers(new Array(10).fill(null));

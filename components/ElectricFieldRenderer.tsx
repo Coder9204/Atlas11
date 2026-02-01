@@ -447,7 +447,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
   }, [emitGameEvent]);
 
   // Handle test charge dragging
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const handleMouseMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!isDraggingTestCharge || !svgRef.current) return;
 
     const rect = svgRef.current.getBoundingClientRect();
@@ -1111,9 +1111,9 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             ref={svgRef}
             viewBox="0 0 500 400"
             className="w-full bg-slate-900 rounded-xl cursor-crosshair"
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
+            onPointerMove={handleMouseMove}
+            onPointerUp={handleMouseUp}
+            onPointerLeave={handleMouseUp}
           >
             <defs>
               {/* Premium positive charge gradient - 3D sphere effect */}
@@ -1268,7 +1268,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
 
             {/* Test charge (draggable) with premium styling */}
             <g
-              onMouseDown={() => setIsDraggingTestCharge(true)}
+              onPointerDown={() => setIsDraggingTestCharge(true)}
               style={{ cursor: 'grab' }}
             >
               <circle

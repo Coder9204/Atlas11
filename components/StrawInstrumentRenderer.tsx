@@ -719,7 +719,7 @@ export default function StrawInstrumentRenderer({
             </p>
 
             <button
-              onMouseDown={() => goToPhase('predict')}
+              onPointerDown={() => goToPhase('predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -849,7 +849,7 @@ export default function StrawInstrumentRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handlePrediction(opt.id)}
+                  onPointerDown={() => handlePrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: prediction === opt.id
@@ -871,7 +871,7 @@ export default function StrawInstrumentRenderer({
 
             {prediction && (
               <button
-                onMouseDown={() => goToPhase('play')}
+                onPointerDown={() => goToPhase('play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1089,7 +1089,7 @@ export default function StrawInstrumentRenderer({
 
             {/* Play button */}
             <button
-              onMouseDown={playStraw}
+              onPointerDown={playStraw}
               disabled={playing}
               style={{
                 padding: '1rem 2rem',
@@ -1111,7 +1111,7 @@ export default function StrawInstrumentRenderer({
 
             {hasPlayed && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowResult(true);
                   if (prediction === 'b') {
                     onCorrectAnswer?.();
@@ -1153,7 +1153,7 @@ export default function StrawInstrumentRenderer({
                   wavelength must fit in the tube, so shorter tubes = shorter waves = higher frequency.
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('review')}
+                  onPointerDown={() => goToPhase('review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1291,7 +1291,7 @@ export default function StrawInstrumentRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('twist_predict')}
+              onPointerDown={() => goToPhase('twist_predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -1387,7 +1387,7 @@ export default function StrawInstrumentRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handleTwistPrediction(opt.id)}
+                  onPointerDown={() => handleTwistPrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: twistPrediction === opt.id
@@ -1408,7 +1408,7 @@ export default function StrawInstrumentRenderer({
 
             {twistPrediction && (
               <button
-                onMouseDown={() => goToPhase('twist_play')}
+                onPointerDown={() => goToPhase('twist_play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1473,7 +1473,7 @@ export default function StrawInstrumentRenderer({
                   <g
                     key={i}
                     style={{ cursor: 'pointer' }}
-                    onMouseDown={() => playScaleStraw(i)}
+                    onPointerDown={() => playScaleStraw(i)}
                   >
                     {/* Straw body */}
                     <rect
@@ -1598,7 +1598,7 @@ export default function StrawInstrumentRenderer({
             </div>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setShowTwistResult(true);
                 if (twistPrediction === 'b') {
                   onCorrectAnswer?.();
@@ -1640,7 +1640,7 @@ export default function StrawInstrumentRenderer({
                   A whole octave (double frequency) requires half the length.
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('twist_review')}
+                  onPointerDown={() => goToPhase('twist_review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1727,7 +1727,7 @@ export default function StrawInstrumentRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('transfer')}
+              onPointerDown={() => goToPhase('transfer')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: '1.1rem',
@@ -1769,7 +1769,7 @@ export default function StrawInstrumentRenderer({
               {applications.map((app, index) => (
                 <div
                   key={index}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
                     playGameSound('click');
                   }}
@@ -1807,7 +1807,7 @@ export default function StrawInstrumentRenderer({
 
             {completedApps.size >= applications.length && (
               <button
-                onMouseDown={() => goToPhase('test')}
+                onPointerDown={() => goToPhase('test')}
                 style={{
                   padding: '1rem 2.5rem',
                   fontSize: '1.1rem',
@@ -1873,7 +1873,7 @@ export default function StrawInstrumentRenderer({
                     {tq.options.map((opt, oi) => (
                       <button
                         key={oi}
-                        onMouseDown={() => handleTestAnswer(qi, oi)}
+                        onPointerDown={() => handleTestAnswer(qi, oi)}
                         disabled={testSubmitted}
                         style={{
                           padding: '0.6rem 1rem',
@@ -1914,7 +1914,7 @@ export default function StrawInstrumentRenderer({
 
             {!testSubmitted ? (
               <button
-                onMouseDown={submitTest}
+                onPointerDown={submitTest}
                 disabled={Object.keys(testAnswers).length < testQuestions.length}
                 style={{
                   padding: '1rem 2.5rem',
@@ -1943,7 +1943,7 @@ export default function StrawInstrumentRenderer({
                 </p>
 
                 <button
-                  onMouseDown={() => goToPhase('mastery')}
+                  onPointerDown={() => goToPhase('mastery')}
                   style={{
                     padding: '1rem 2.5rem',
                     fontSize: '1.1rem',
@@ -2055,7 +2055,7 @@ export default function StrawInstrumentRenderer({
             </svg>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 onPhaseComplete?.();
                 playGameSound('complete');
               }}

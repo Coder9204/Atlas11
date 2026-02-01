@@ -304,11 +304,11 @@ const ProgressIndicator: React.FC<{ phases: Phase[]; currentPhase: Phase }> = ({
 
 const PrimaryButton: React.FC<{
   children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
+  onPointerDown: (e: React.PointerEvent) => void;
   variant?: 'indigo' | 'purple' | 'pink';
   disabled?: boolean;
   className?: string;
-}> = ({ children, onMouseDown, variant = 'indigo', disabled = false, className = '' }) => {
+}> = ({ children, onPointerDown, variant = 'indigo', disabled = false, className = '' }) => {
   const gradients = {
     indigo: 'from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-indigo-500/25',
     purple: 'from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-purple-500/25',
@@ -317,9 +317,9 @@ const PrimaryButton: React.FC<{
 
   return (
     <button
-      onMouseDown={(e) => {
+      onPointerDown={(e) => {
         e.preventDefault();
-        if (!disabled) onMouseDown(e);
+        if (!disabled) onPointerDown(e);
       }}
       disabled={disabled}
       className={`px-8 py-3.5 bg-gradient-to-r ${gradients[variant]} rounded-2xl text-white font-semibold
@@ -1127,7 +1127,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={() => { playSound('click'); nextPhase(); }}
+        onPointerDown={() => { playSound('click'); nextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1174,7 +1174,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             className={`p-5 rounded-2xl border-2 transition-all text-left ${
               prediction === option.id
                 ? 'border-indigo-500 bg-indigo-900/30 shadow-lg shadow-indigo-500/20'
@@ -1189,7 +1189,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
       {prediction && (
         <div className="text-center">
-          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
+          <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }}>
             Test It! →
           </PrimaryButton>
         </div>
@@ -1214,7 +1214,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
             ].map((mat) => (
               <button
                 key={mat.id}
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault();
                   playSound('click');
                   setMaterial(mat.id as typeof material);
@@ -1253,7 +1253,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
       </div>
 
       <div className="text-center">
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
+        <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }}>
           Continue →
         </PrimaryButton>
       </div>
@@ -1303,7 +1303,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
             {prediction === 'thinner' ? '✓ Correct!' : '✗ Not quite'}
           </span>
         </p>
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="purple">
+        <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }} variant="purple">
           But wait... →
         </PrimaryButton>
       </div>
@@ -1330,7 +1330,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             className={`p-5 rounded-2xl border-2 transition-all text-left ${
               twistPrediction === option.id
                 ? 'border-purple-500 bg-purple-900/30 shadow-lg shadow-purple-500/20'
@@ -1345,7 +1345,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
       {twistPrediction && (
         <div className="text-center">
-          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="purple">
+          <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }} variant="purple">
             Test It! →
           </PrimaryButton>
         </div>
@@ -1380,7 +1380,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
       </div>
 
       <div className="text-center">
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="purple">
+        <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }} variant="purple">
           Continue →
         </PrimaryButton>
       </div>
@@ -1418,7 +1418,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
             {twistPrediction === 'yes' ? '✓ Correct!' : '✗ Not quite'}
           </span>
         </p>
-        <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }} variant="pink">
+        <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }} variant="pink">
           See Applications →
         </PrimaryButton>
       </div>
@@ -1437,7 +1437,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
             className={`flex-1 min-w-[120px] px-4 py-3 rounded-xl font-medium transition-all text-sm ${
               activeAppTab === index
                 ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
@@ -1472,7 +1472,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
           Applications explored: {completedApps.size}/4
         </p>
         {completedApps.size >= 4 && (
-          <PrimaryButton onMouseDown={() => { playSound('click'); nextPhase(); }}>
+          <PrimaryButton onPointerDown={() => { playSound('click'); nextPhase(); }}>
             Take the Quiz →
           </PrimaryButton>
         )}
@@ -1519,7 +1519,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
           </div>
 
           <PrimaryButton
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound(passed ? 'complete' : 'click');
               if (passed) nextPhase();
               else {
@@ -1571,7 +1571,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
                 {q.options.map((option, oIndex) => (
                   <button
                     key={option.id}
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                       e.preventDefault();
                       handleTestAnswer(qIndex, oIndex);
                     }}
@@ -1592,7 +1592,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
 
         <div className="text-center">
           <button
-            onMouseDown={submitTest}
+            onPointerDown={submitTest}
             disabled={testAnswers.includes(null)}
             className={`px-8 py-3 rounded-xl font-semibold transition-all ${
               testAnswers.includes(null)
@@ -1639,7 +1639,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
         Now you know why rubber bands get skinny when stretched! 🔗
       </p>
       <PrimaryButton
-        onMouseDown={() => {
+        onPointerDown={() => {
           playSound('complete');
           emitEvent('completion', { mastered: true });
         }}
@@ -1682,7 +1682,7 @@ export default function PoissonRatioRenderer({ phase, onPhaseComplete, onCorrect
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   PHASES.indexOf(phase) === i
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'

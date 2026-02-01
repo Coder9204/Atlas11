@@ -1106,7 +1106,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('click'); nextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); playSound('click'); nextPhase(); }}
         className="group relative px-10 py-5 bg-gradient-to-r from-red-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1152,7 +1152,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setPrediction(option.id);
             }}
@@ -1171,7 +1171,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
       {prediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
           >
             Test It! →
@@ -1199,7 +1199,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
             ].map((opt) => (
               <button
                 key={opt.id}
-                onMouseDown={() => {
+                onPointerDown={() => {
                   playSound('click');
                   setNotchType(opt.id as typeof notchType);
                   setAppliedStress(0);
@@ -1237,7 +1237,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
         {isFractured && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setIsFractured(false);
               setAppliedStress(0);
@@ -1258,7 +1258,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
         >
           Continue →
@@ -1308,7 +1308,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-red-400 font-semibold">{prediction === 'vnotch' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
         >
           But wait... →
@@ -1335,7 +1335,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
             }}
@@ -1354,7 +1354,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
       {twistPrediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-yellow-500 transition-all"
           >
             Test It! →
@@ -1372,7 +1372,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
       <div className="flex flex-wrap justify-center gap-3">
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             playSound('click');
             setHasCrackStopHole(!hasCrackStopHole);
             setCrackLength(20);
@@ -1386,7 +1386,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
           {hasCrackStopHole ? '✓ Stop Hole Added' : '+ Add Stop Hole'}
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             playSound('click');
             setCrackLength(20);
             setTwistStress(0);
@@ -1418,7 +1418,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-yellow-500 transition-all"
         >
           Continue →
@@ -1455,7 +1455,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-orange-400 font-semibold">{twistPrediction === 'blunt' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-orange-600 to-yellow-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-yellow-500 transition-all"
         >
           See Applications →
@@ -1473,7 +1473,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
             }}
@@ -1493,7 +1493,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
       {completedApps.size >= 4 && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-orange-500 transition-all"
           >
             Take the Quiz →
@@ -1530,7 +1530,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
           </div>
 
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound(testScore >= 7 ? 'complete' : 'click');
               nextPhase();
             }}
@@ -1555,7 +1555,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
                 {question.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={() => handleTestAnswer(qIndex, oIndex)}
+                    onPointerDown={() => handleTestAnswer(qIndex, oIndex)}
                     className={`w-full p-3 rounded-lg border-2 text-left transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'border-red-500 bg-red-900/30 text-white'
@@ -1572,7 +1572,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
 
         <div className="text-center">
           <button
-            onMouseDown={submitTest}
+            onPointerDown={submitTest}
             disabled={testAnswers.includes(null)}
             className={`px-8 py-3 rounded-xl font-semibold transition-all ${
               testAnswers.includes(null)
@@ -1604,7 +1604,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
         You now know why engineers obsess over corner radii! 📐✈️
       </p>
       <button
-        onMouseDown={() => {
+        onPointerDown={() => {
           playSound('complete');
           if (onPhaseComplete) onPhaseComplete();
         }}
@@ -1648,7 +1648,7 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'

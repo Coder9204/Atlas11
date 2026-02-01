@@ -1152,7 +1152,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1199,7 +1199,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && prediction === option.id
@@ -1219,7 +1219,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
             Correct! Eddy currents induced by the changing field flow through resistance and generate heat!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
           >
             Explore the Physics
@@ -1242,7 +1242,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
             {(['steel', 'aluminum', 'glass', 'copper'] as const).map(mat => (
               <button
                 key={mat}
-                onMouseDown={(e) => { e.preventDefault(); playSound('click'); setPanMaterial(mat); setTemperature(25); }}
+                onPointerDown={(e) => { e.preventDefault(); playSound('click'); setPanMaterial(mat); setTemperature(25); }}
                 className={`px-3 py-2 rounded-lg font-bold text-sm capitalize ${panMaterial === mat ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300'}`}
               >
                 {mat}
@@ -1275,7 +1275,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         </div>
       </div>
       <div className="flex gap-4 mb-6">
-        <button onMouseDown={(e) => { e.preventDefault(); playSound('click'); setIsHeating(!isHeating); }} className={`px-4 py-2 rounded-lg font-medium ${isHeating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white`}>
+        <button onPointerDown={(e) => { e.preventDefault(); playSound('click'); setIsHeating(!isHeating); }} className={`px-4 py-2 rounded-lg font-medium ${isHeating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white`}>
           {isHeating ? 'Turn Off' : 'Turn On'}
         </button>
       </div>
@@ -1287,7 +1287,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
            'Steel heats efficiently - magnetic + conductive!'}
         </p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); setIsHeating(false); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
+      <button onPointerDown={(e) => { e.preventDefault(); setIsHeating(false); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
         Review the Concepts
       </button>
     </div>
@@ -1330,7 +1330,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
           </p>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         Discover the Material Twist
       </button>
     </div>
@@ -1356,7 +1356,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1375,7 +1375,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
           <p className="text-emerald-400 font-semibold">
             Correct! Only magnetic, conductive materials heat effectively on induction!
           </p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+          <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
             Compare Materials
           </button>
         </div>
@@ -1398,7 +1398,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
           {(['steel', 'aluminum', 'glass'] as const).map(mat => (
             <button
               key={mat}
-              onMouseDown={(e) => { e.preventDefault(); playSound('click'); setTwistMaterial(mat); }}
+              onPointerDown={(e) => { e.preventDefault(); playSound('click'); setTwistMaterial(mat); }}
               className={`px-5 py-2 rounded-lg font-bold capitalize transition-all ${twistMaterial === mat ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}
             >
               {mat}
@@ -1426,7 +1426,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
             </div>
           ))}
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
           Understand Why
         </button>
       </div>
@@ -1465,7 +1465,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
           <strong>Pro Tip:</strong> Induction-ready aluminum pans have a steel plate bonded to the bottom!
         </p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         See Real Applications
       </button>
     </div>
@@ -1479,7 +1479,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         {TRANSFER_APPS.map((app, i) => (
           <button
             key={i}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(i); handleAppComplete(i); }}
+            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(i); handleAppComplete(i); }}
             className={`flex-1 py-3 text-center transition-all ${activeAppTab === i ? 'text-orange-400 border-b-2 border-orange-400' : 'text-slate-400 hover:text-slate-200'}`}
           >
             <span className="text-xl">{app.icon}</span>
@@ -1502,7 +1502,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         ))}
       </div>
       {completedApps.size >= 4 ? (
-        <button onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+        <button onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
           Take the Test
         </button>
       ) : (
@@ -1527,7 +1527,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
             {passed ? 'You have a solid understanding of induction heating!' : 'Review the concepts and try again.'}
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); if (passed) { goToNextPhase(); } else { setTestAnswers(Array(4).fill(-1)); setShowTestResults(false); } }}
+            onPointerDown={(e) => { e.preventDefault(); if (passed) { goToNextPhase(); } else { setTestAnswers(Array(4).fill(-1)); setShowTestResults(false); } }}
             className={`px-6 py-3 font-semibold rounded-xl ${passed ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white' : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'}`}
           >
             {passed ? 'Complete Mastery' : 'Try Again'}
@@ -1552,7 +1552,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     disabled={testAnswers[qIndex] !== -1}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
@@ -1570,7 +1570,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         </div>
         {allAnswered && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound(score >= 3 ? 'complete' : 'failure'); }}
+            onPointerDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound(score >= 3 ? 'complete' : 'failure'); }}
             className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
           >
             See Results
@@ -1614,7 +1614,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
         </p>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('complete'); }}
+        onPointerDown={(e) => { e.preventDefault(); playSound('complete'); }}
         className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1660,7 +1660,7 @@ const InductionHeatingRenderer: React.FC<InductionHeatingRendererProps> = ({ cur
             {PHASE_ORDER.map((p, index) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'

@@ -618,7 +618,7 @@ export default function SpeedOfSoundRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('predict')}
+              onPointerDown={() => goToPhase('predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: typo.bodyLarge,
@@ -775,7 +775,7 @@ export default function SpeedOfSoundRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handlePrediction(opt.id)}
+                  onPointerDown={() => handlePrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: prediction === opt.id
@@ -797,7 +797,7 @@ export default function SpeedOfSoundRenderer({
 
             {prediction && (
               <button
-                onMouseDown={() => goToPhase('play')}
+                onPointerDown={() => goToPhase('play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1074,7 +1074,7 @@ export default function SpeedOfSoundRenderer({
             {/* Controls */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               <button
-                onMouseDown={makeSound}
+                onPointerDown={makeSound}
                 disabled={measuring}
                 style={{
                   padding: '0.75rem 1.5rem',
@@ -1095,7 +1095,7 @@ export default function SpeedOfSoundRenderer({
 
               {hasMeasured && !measuring && (
                 <button
-                  onMouseDown={resetMeasurement}
+                  onPointerDown={resetMeasurement}
                   style={{
                     padding: '0.75rem 1.5rem',
                     background: 'linear-gradient(135deg, #64748b, #475569)',
@@ -1114,7 +1114,7 @@ export default function SpeedOfSoundRenderer({
 
             {calculatedSpeed > 0 && (
               <button
-                onMouseDown={() => {
+                onPointerDown={() => {
                   setShowResult(true);
                   if (prediction === 'b') {
                     onCorrectAnswer?.();
@@ -1158,7 +1158,7 @@ export default function SpeedOfSoundRenderer({
                   That is faster than most jet airplanes but much slower than light!
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('review')}
+                  onPointerDown={() => goToPhase('review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1279,7 +1279,7 @@ export default function SpeedOfSoundRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('twist_predict')}
+              onPointerDown={() => goToPhase('twist_predict')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: typo.bodyLarge,
@@ -1450,7 +1450,7 @@ export default function SpeedOfSoundRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handleTwistPrediction(opt.id)}
+                  onPointerDown={() => handleTwistPrediction(opt.id)}
                   style={{
                     padding: '1rem',
                     background: twistPrediction === opt.id
@@ -1471,7 +1471,7 @@ export default function SpeedOfSoundRenderer({
 
             {twistPrediction && (
               <button
-                onMouseDown={() => goToPhase('twist_play')}
+                onPointerDown={() => goToPhase('twist_play')}
                 style={{
                   marginTop: '1.5rem',
                   padding: '1rem 2.5rem',
@@ -1682,7 +1682,7 @@ export default function SpeedOfSoundRenderer({
             </div>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setShowTwistResult(true);
                 if (twistPrediction === 'b') {
                   onCorrectAnswer?.();
@@ -1726,7 +1726,7 @@ export default function SpeedOfSoundRenderer({
                   about 0.6 m/s to the speed of sound.
                 </p>
                 <button
-                  onMouseDown={() => goToPhase('twist_review')}
+                  onPointerDown={() => goToPhase('twist_review')}
                   style={{
                     marginTop: '1rem',
                     padding: '0.75rem 2rem',
@@ -1812,7 +1812,7 @@ export default function SpeedOfSoundRenderer({
             </div>
 
             <button
-              onMouseDown={() => goToPhase('transfer')}
+              onPointerDown={() => goToPhase('transfer')}
               style={{
                 padding: '1rem 2.5rem',
                 fontSize: typo.bodyLarge,
@@ -1854,7 +1854,7 @@ export default function SpeedOfSoundRenderer({
               {applications.map((app, index) => (
                 <div
                   key={index}
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
                     playSound('click');
                   }}
@@ -1892,7 +1892,7 @@ export default function SpeedOfSoundRenderer({
 
             {completedApps.size >= applications.length && (
               <button
-                onMouseDown={() => goToPhase('test')}
+                onPointerDown={() => goToPhase('test')}
                 style={{
                   padding: '1rem 2.5rem',
                   fontSize: typo.bodyLarge,
@@ -1958,7 +1958,7 @@ export default function SpeedOfSoundRenderer({
                     {tq.options.map((opt, oi) => (
                       <button
                         key={oi}
-                        onMouseDown={() => handleTestAnswer(qi, oi)}
+                        onPointerDown={() => handleTestAnswer(qi, oi)}
                         disabled={testSubmitted}
                         style={{
                           padding: '0.6rem 1rem',
@@ -2007,7 +2007,7 @@ export default function SpeedOfSoundRenderer({
 
             {!testSubmitted ? (
               <button
-                onMouseDown={submitTest}
+                onPointerDown={submitTest}
                 disabled={Object.keys(testAnswers).length < testQuestions.length}
                 style={{
                   padding: '1rem 2.5rem',
@@ -2038,7 +2038,7 @@ export default function SpeedOfSoundRenderer({
                 </p>
 
                 <button
-                  onMouseDown={() => goToPhase('mastery')}
+                  onPointerDown={() => goToPhase('mastery')}
                   style={{
                     padding: '1rem 2.5rem',
                     fontSize: typo.bodyLarge,
@@ -2235,7 +2235,7 @@ export default function SpeedOfSoundRenderer({
             </svg>
 
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 onPhaseComplete?.();
                 playSound('complete');
               }}
@@ -2285,7 +2285,7 @@ export default function SpeedOfSoundRenderer({
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={() => goToPhase(p)}
+                onPointerDown={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'

@@ -1386,7 +1386,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); playSound('click'); nextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); playSound('click'); nextPhase(); }}
         className="group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1431,7 +1431,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setPrediction(option.id);
             }}
@@ -1450,7 +1450,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
       {prediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-blue-500 transition-all"
           >
             Test It! →
@@ -1468,7 +1468,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
 
       <div className="flex flex-wrap justify-center gap-3">
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             playSound('click');
             setShowVectors(!showVectors);
             if (!showVectors) setShowDifferential(false);
@@ -1482,7 +1482,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
           {showVectors ? '✓' : '○'} Gravity Vectors
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             playSound('click');
             setShowDifferential(!showDifferential);
             if (!showDifferential) setShowVectors(false);
@@ -1496,7 +1496,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
           {showDifferential ? '✓' : '○'} Net Tidal Force
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             playSound('click');
             setIsAnimating(!isAnimating);
           }}
@@ -1532,7 +1532,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-blue-500 transition-all"
         >
           Continue →
@@ -1582,7 +1582,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-cyan-400 font-semibold">{prediction === 'differential' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-blue-500 transition-all"
         >
           But wait... →
@@ -1608,7 +1608,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
             }}
@@ -1627,7 +1627,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
       {twistPrediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-indigo-500 transition-all"
           >
             Test It! →
@@ -1645,7 +1645,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
 
       <div className="flex justify-center gap-4">
         <button
-          onMouseDown={() => { playSound('click'); setIsTidallyLocked(true); }}
+          onPointerDown={() => { playSound('click'); setIsTidallyLocked(true); }}
           className={`px-6 py-2 rounded-lg font-medium transition-all ${
             isTidallyLocked
               ? 'bg-green-600 text-white'
@@ -1655,7 +1655,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
           🔒 Tidally Locked
         </button>
         <button
-          onMouseDown={() => { playSound('click'); setIsTidallyLocked(false); }}
+          onPointerDown={() => { playSound('click'); setIsTidallyLocked(false); }}
           className={`px-6 py-2 rounded-lg font-medium transition-all ${
             !isTidallyLocked
               ? 'bg-red-600 text-white'
@@ -1675,7 +1675,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-indigo-500 transition-all"
         >
           Continue →
@@ -1712,7 +1712,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-blue-400 font-semibold">{twistPrediction === 'locked' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white font-semibold hover:from-blue-500 hover:to-indigo-500 transition-all"
         >
           See Applications →
@@ -1730,7 +1730,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
             }}
@@ -1750,7 +1750,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
       {completedApps.size >= 4 && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold hover:from-cyan-500 hover:to-blue-500 transition-all"
           >
             Take the Quiz →
@@ -1773,7 +1773,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
           <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
           <p className="text-gray-300">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound(score >= 3 ? 'complete' : 'click');
               nextPhase();
             }}
@@ -1794,7 +1794,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound(option.correct ? 'success' : 'failure');
                 setTestAnswers([...testAnswers, i]);
               }}
@@ -1825,7 +1825,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
         Next time you see the tide come in, you&apos;ll know the physics! 🌊🌙
       </p>
       <button
-        onMouseDown={() => {
+        onPointerDown={() => {
           playSound('complete');
           if (onPhaseComplete) onPhaseComplete();
         }}
@@ -1869,7 +1869,7 @@ export default function TidalForcesRenderer({ phase: initialPhase, onPhaseComple
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'

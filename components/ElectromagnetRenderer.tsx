@@ -1192,7 +1192,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         </p>
       </div>
       <button
-        onMouseDown={() => { playSound('click'); nextPhase(); }}
+        onPointerDown={() => { playSound('click'); nextPhase(); }}
         className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
       >
         Discover the Secret
@@ -1216,7 +1216,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           ].map((option, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound('click');
                 setPrediction(option);
               }}
@@ -1233,7 +1233,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
       </div>
       {prediction && (
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
           Test Your Prediction
@@ -1290,7 +1290,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
           <div className="flex justify-center mt-4">
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound('click');
                 setHasCore(!hasCore);
               }}
@@ -1314,7 +1314,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
           >
             Understand the Physics
@@ -1374,7 +1374,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
           What If We Reverse Current?
@@ -1400,7 +1400,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           ].map((option, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound('click');
                 setTwistPrediction(option);
               }}
@@ -1417,7 +1417,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
       </div>
       {twistPrediction && (
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
           See What Happens
@@ -1435,7 +1435,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
         <div className="flex justify-center gap-4 mt-6">
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setIsAC(false);
             }}
@@ -1446,7 +1446,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
             DC (Static)
           </button>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setIsAC(true);
             }}
@@ -1479,7 +1479,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); setIsAC(false); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); setIsAC(false); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
           Understand Motor Physics
@@ -1534,7 +1534,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
           See Real Applications
@@ -1552,7 +1552,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         {TRANSFER_APPS.map((app, i) => (
           <button
             key={i}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, i]));
             }}
@@ -1575,7 +1575,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
       {completedApps.size >= 4 && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('complete'); nextPhase(); }}
+            onPointerDown={() => { playSound('complete'); nextPhase(); }}
             className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
           >
             Take the Test
@@ -1614,7 +1614,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
             {passed ? 'Excellent understanding of electromagnets!' : 'Review the concepts and try again.'}
           </p>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (passed) {
                 playSound('complete');
                 nextPhase();
@@ -1663,7 +1663,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
             {question.options.map((option, i) => (
               <button
                 key={i}
-                onMouseDown={() => {
+                onPointerDown={() => {
                   playSound(option.correct ? 'success' : 'failure');
                   setTestAnswers([...testAnswers, i]);
                 }}
@@ -1705,7 +1705,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         </p>
       </div>
       <button
-        onMouseDown={() => {
+        onPointerDown={() => {
           playSound('complete');
           if (onPhaseComplete) onPhaseComplete();
         }}
@@ -1751,7 +1751,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         {phase !== 'hook' && phase !== 'mastery' && (
           <div className="mt-8 flex justify-between">
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 const currentIndex = PHASES.indexOf(phase);
                 if (currentIndex > 0) {
                   goToPhase(PHASES[currentIndex - 1]);

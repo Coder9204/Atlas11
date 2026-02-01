@@ -1328,7 +1328,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
           <g
             filter={twistState === 'solution' ? 'url(#scoolDiscGlow)' : undefined}
             style={{ cursor: twistState === 'solution' ? 'pointer' : 'default' }}
-            onMouseDown={twistState === 'solution' ? triggerTwist : undefined}
+            onPointerDown={twistState === 'solution' ? triggerTwist : undefined}
           >
             {/* Outer ring */}
             <circle
@@ -1614,7 +1614,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             ].map(option => (
               <button
                 key={option.id}
-                onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
                 disabled={showPredictionFeedback}
                 style={{
                   padding: '16px',
@@ -1687,7 +1687,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
               <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); addSeed(); }}
+                  onPointerDown={(e) => { e.preventDefault(); addSeed(); }}
                   disabled={waterState !== 'supercooled'}
                   style={{
                     flex: 1,
@@ -1703,7 +1703,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
                   ❄️ Add Seed Crystal
                 </button>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); resetExperiment(); }}
+                  onPointerDown={(e) => { e.preventDefault(); resetExperiment(); }}
                   style={{
                     padding: '12px 16px',
                     borderRadius: '8px',
@@ -1825,7 +1825,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             ].map(option => (
               <button
                 key={option.id}
-                onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
                 disabled={showTwistFeedback}
                 style={{
                   padding: '16px',
@@ -1874,7 +1874,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             {renderSodiumAcetateWarmer()}
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); resetTwist(); }}
+              onPointerDown={(e) => { e.preventDefault(); resetTwist(); }}
               style={{
                 width: '100%',
                 marginTop: '12px',
@@ -1967,7 +1967,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
             {applications.map((app, index) => (
               <button
                 key={index}
-                onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
                 style={{
                   padding: '8px 16px',
                   borderRadius: '8px',
@@ -1994,7 +1994,7 @@ const SupercoolingRenderer: React.FC<SupercoolingRendererProps> = ({
 
             {!completedApps.has(activeAppTab) && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+                onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
                 style={{
                   marginTop: '16px',
                   padding: '8px 16px',

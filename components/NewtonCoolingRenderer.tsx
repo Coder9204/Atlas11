@@ -884,7 +884,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
 
       {/* CTA */}
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ padding: '16px 32px', background: 'linear-gradient(to right, #f59e0b, #ea580c)', color: 'white', fontSize: '18px', fontWeight: '600', borderRadius: '12px', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px rgba(245, 158, 11, 0.3)' }}
       >
         Predict the Cooling Rate
@@ -930,7 +930,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setPrediction(option.id);
               playSound('click');
                           }}
@@ -969,7 +969,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
 
       {prediction && (
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '20px', padding: '16px', background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test Your Prediction
@@ -1016,7 +1016,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       {/* Controls */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             if (!isSimulating) {
               resetSimulation();
               setIsSimulating(true);
@@ -1039,7 +1039,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
           {isSimulating ? 'Pause' : 'Start Cooling'}
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             resetSimulation();
             playSound('click');
           }}
@@ -1061,7 +1061,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', marginTop: '16px', padding: '16px', background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Review the Concepts
@@ -1112,7 +1112,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Ready for a Twist?
@@ -1145,7 +1145,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTwistPrediction(option.id);
               playSound('click');
                           }}
@@ -1183,7 +1183,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
 
       {twistPrediction && (
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '20px', padding: '16px', background: 'linear-gradient(to right, #ec4899, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test the Twist
@@ -1208,7 +1208,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       {/* Toggle controls */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setHasLid(!hasLid);
             playSound('click');
                       }}
@@ -1226,7 +1226,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
           <p style={{ fontSize: '12px', color: '#64748b' }}>k × 0.5</p>
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setIsStirring(!isStirring);
             playSound('click');
                       }}
@@ -1255,7 +1255,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       {/* Controls */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             if (!isSimulating) {
               resetSimulation();
               setIsSimulating(true);
@@ -1278,7 +1278,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
           {isSimulating ? 'Pause' : 'Start Cooling'}
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             resetSimulation();
             playSound('click');
           }}
@@ -1289,7 +1289,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Understand the Effects
@@ -1336,7 +1336,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #6366f1, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         See Real-World Applications
@@ -1360,7 +1360,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
           {transferApps.map((a, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setSelectedApp(i);
                 playSound('click');
                               }}
@@ -1422,7 +1422,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '16px', padding: '16px', background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test Your Knowledge
@@ -1492,7 +1492,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => !answered && handleTestAnswer(i)}
+                  onPointerDown={() => !answered && handleTestAnswer(i)}
                   disabled={answered}
                   style={{
                     width: '100%',
@@ -1539,7 +1539,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
         {/* Navigation */}
         {answered && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (testIndex < testQuestions.length - 1) {
                 setTestIndex(prev => prev + 1);
                 setShowExplanation(false);
@@ -1623,7 +1623,7 @@ const NewtonCoolingRenderer: React.FC<NewtonCoolingRendererProps> = ({
 
         {!passed && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTestIndex(0);
               setTestScore(0);
               setTestAnswers(new Array(10).fill(null));

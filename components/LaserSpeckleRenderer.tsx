@@ -1189,7 +1189,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             style={{
               padding: '16px',
@@ -1408,7 +1408,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             style={{
               padding: '16px',
@@ -1458,7 +1458,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
       {/* Light source toggle */}
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setUseLaser(true); playSound('laser'); }}
+          onPointerDown={(e) => { e.preventDefault(); setUseLaser(true); playSound('laser'); }}
           style={{
             padding: '16px 32px',
             borderRadius: '12px',
@@ -1473,7 +1473,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
           💚 Laser (Coherent)
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setUseLaser(false); }}
+          onPointerDown={(e) => { e.preventDefault(); setUseLaser(false); }}
           style={{
             padding: '16px 32px',
             borderRadius: '12px',
@@ -1606,7 +1606,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
             style={{ width: '100%', padding: '12px', background: 'linear-gradient(to right, #22c55e, #16a34a)', color: 'white', fontWeight: 600, borderRadius: '8px', border: 'none', cursor: 'pointer' }}
           >
             Mark as Understood
@@ -1646,7 +1646,7 @@ const LaserSpeckleRenderer: React.FC<LaserSpeckleRendererProps> = ({
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={opt.id}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     style={{
                       padding: '12px',
                       borderRadius: '8px',

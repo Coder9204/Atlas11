@@ -442,8 +442,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: `1px solid ${colors.border}`, backgroundColor: `${colors.bgCard}cc`, backdropFilter: 'blur(12px)', zIndex: 20 }}>
           {/* Back button */}
           <button
-            onMouseDown={(e) => { e.preventDefault(); if (idx > 0) goBack(); }}
-            onTouchEnd={(e) => { e.preventDefault(); if (idx > 0) goBack(); }}
+            onPointerDown={(e) => { e.preventDefault(); if (idx > 0) goBack(); }}
             style={{ width: '36px', height: '36px', borderRadius: '10px', border: 'none', background: idx > 0 ? colors.bgCardLight : 'transparent', color: idx > 0 ? colors.textSecondary : 'transparent', cursor: idx > 0 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}
           >
             ←
@@ -454,8 +453,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); if (i <= idx) goToPhase(p); }}
-                onTouchEnd={(e) => { e.preventDefault(); if (i <= idx) goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); if (i <= idx) goToPhase(p); }}
                 style={{
                   width: phase === p ? '24px' : '8px',
                   height: '8px',
@@ -933,8 +931,7 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
-          onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
+          onPointerDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
           style={{ padding: '16px 40px', borderRadius: '16px', border: 'none', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: 'white', fontSize: typo.bodyLarge, fontWeight: 700, cursor: 'pointer', boxShadow: `0 8px 32px ${colors.primary}40`, display: 'flex', alignItems: 'center', gap: '12px' }}
         >
           Begin Experiment <span>→</span>

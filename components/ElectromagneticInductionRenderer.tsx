@@ -1366,7 +1366,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(1); }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white text-lg font-semibold rounded-2xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300 shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] flex items-center gap-2"
       >
         Discover the Secret
@@ -1404,7 +1404,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -1431,7 +1431,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
             A changing magnetic field creates an electric field - this is one of the most important discoveries in physics!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(2); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300"
           >
             Explore the Physics →
@@ -1451,7 +1451,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl mb-4">
         <button
-          onMouseDown={(e) => { e.preventDefault(); isAnimating ? stopAnimation() : startMagnetDemo(); }}
+          onPointerDown={(e) => { e.preventDefault(); isAnimating ? stopAnimation() : startMagnetDemo(); }}
           className={`p-3 rounded-xl font-semibold transition-colors ${
             isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
           } text-white`}
@@ -1460,7 +1460,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
         </button>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); setShowFieldLines(!showFieldLines); }}
+          onPointerDown={(e) => { e.preventDefault(); setShowFieldLines(!showFieldLines); }}
           className={`p-3 rounded-xl font-medium transition-colors ${
             showFieldLines ? 'bg-cyan-600' : 'bg-slate-600'
           } text-white`}
@@ -1517,7 +1517,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); stopAnimation(); goToPhase(3); }}
+        onPointerDown={(e) => { e.preventDefault(); stopAnimation(); goToPhase(3); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300"
       >
         Review the Concepts →
@@ -1576,7 +1576,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(4); }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Discover a Surprising Twist →
@@ -1606,7 +1606,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1633,7 +1633,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
             This is called "flux trapping" - a superconductor perfectly opposes any flux change, maintaining the field indefinitely.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(5); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
             See How →
@@ -1838,7 +1838,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(6); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Review the Discovery →
@@ -1872,7 +1872,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onPointerDown={(e) => { e.preventDefault(); goToPhase(7); }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300"
       >
         Explore Real-World Applications →
@@ -1888,7 +1888,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onPointerDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
                 ? 'bg-blue-600 text-white'
@@ -1938,7 +1938,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
             className="w-full mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
           >
             ✓ Mark as Understood
@@ -1961,7 +1961,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onPointerDown={(e) => { e.preventDefault(); goToPhase(8); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300"
         >
           Take the Knowledge Test →
@@ -1988,7 +1988,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-blue-600 text-white'
@@ -2003,7 +2003,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
           ))}
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound('complete'); }}
+            onPointerDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound('complete'); }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
@@ -2048,14 +2048,14 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onPointerDown={(e) => { e.preventDefault(); goToPhase(9); }}
               className="w-full px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
               Claim Your Mastery Badge →
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
+              onPointerDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
               className="w-full px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl hover:from-blue-500 hover:to-cyan-500 transition-all duration-300"
             >
               Review & Try Again
@@ -2096,7 +2096,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onPointerDown={(e) => { e.preventDefault(); goToPhase(0); }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
             ↺ Explore Again
@@ -2141,7 +2141,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
             {phaseNames.map((_, i) => (
               <button
                 key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(i); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === i ? 'bg-blue-500 w-6' : phase > i ? 'bg-blue-500 w-2' : 'bg-slate-600 w-2'
                 }`}

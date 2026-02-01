@@ -779,7 +779,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
 
       {/* CTA */}
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ padding: '16px 32px', background: 'linear-gradient(to right, #06b6d4, #0891b2)', color: 'white', fontSize: '18px', fontWeight: '600', borderRadius: '12px', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px rgba(6, 182, 212, 0.3)' }}
       >
         Explore Differential Expansion
@@ -813,7 +813,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setPrediction(option.id);
               playSound('click');
                           }}
@@ -851,7 +851,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
 
       {prediction && (
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '20px', padding: '16px', background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test Your Prediction
@@ -909,7 +909,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
           {materials.slice(0, 3).map((mat, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setSelectedLidMaterial(i);
                 playSound('click');
                               }}
@@ -958,7 +958,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', marginTop: '16px', padding: '16px', background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Review the Concepts
@@ -1009,7 +1009,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Ready for a Twist?
@@ -1042,7 +1042,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTwistPrediction(option.id);
               playSound('click');
                           }}
@@ -1080,7 +1080,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
 
       {twistPrediction && (
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '20px', padding: '16px', background: 'linear-gradient(to right, #ec4899, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           See the Effect
@@ -1100,7 +1100,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
       {/* Toggle for chill first mode */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setShowChillFirst(false);
             setTemperature(20);
             playSound('click');
@@ -1121,7 +1121,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
           <p style={{ fontSize: '14px', color: '#fbbf24', marginTop: '4px' }}>ΔT = 60°C</p>
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setShowChillFirst(true);
             setTemperature(0);
             playSound('click');
@@ -1187,7 +1187,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Understand the Effect
@@ -1233,7 +1233,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #6366f1, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         See Real-World Applications
@@ -1257,7 +1257,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
           {transferApps.map((a, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setSelectedApp(i);
                 playSound('click');
                               }}
@@ -1318,7 +1318,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '16px', padding: '16px', background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test Your Knowledge
@@ -1388,7 +1388,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => !answered && handleTestAnswer(i)}
+                  onPointerDown={() => !answered && handleTestAnswer(i)}
                   disabled={answered}
                   style={{
                     width: '100%',
@@ -1435,7 +1435,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
         {/* Navigation */}
         {answered && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (testIndex < testQuestions.length - 1) {
                 setTestIndex(prev => prev + 1);
                 setShowExplanation(false);
@@ -1519,7 +1519,7 @@ const JarLidExpansionRenderer: React.FC<JarLidExpansionRendererProps> = ({
 
         {!passed && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTestIndex(0);
               setTestScore(0);
               setTestAnswers(new Array(10).fill(null));

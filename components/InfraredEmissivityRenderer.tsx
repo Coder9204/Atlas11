@@ -1187,7 +1187,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1233,7 +1233,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={prediction !== null}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               prediction === option.id
@@ -1255,7 +1255,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             {prediction === 'temp' ? 'Correct!' : 'Not quite.'} Your body temperature creates infrared radiation!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+            onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl"
           >
             Test It!
@@ -1291,7 +1291,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         <div className="space-y-2">
           <label className="text-gray-400 text-sm">View Mode:</label>
           <button
-            onMouseDown={(e) => { e.preventDefault(); playSound('click'); setViewMode(viewMode === 'visible' ? 'infrared' : 'visible'); }}
+            onPointerDown={(e) => { e.preventDefault(); playSound('click'); setViewMode(viewMode === 'visible' ? 'infrared' : 'visible'); }}
             className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
               viewMode === 'infrared'
                 ? 'bg-orange-600 text-white'
@@ -1328,7 +1328,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
       >
         Continue
@@ -1377,7 +1377,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-orange-400 font-semibold">{prediction === 'temp' ? 'Correct!' : 'Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
         >
           But wait...
@@ -1405,7 +1405,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onPointerDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
             disabled={twistPrediction !== null}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               twistPrediction === option.id
@@ -1427,7 +1427,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
             {twistPrediction === 'shiny_cold' ? 'Correct!' : 'Not quite.'} Low emissivity surfaces reflect surroundings!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+            onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             Test It!
@@ -1447,7 +1447,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
       <div className="flex justify-center gap-4 mb-4">
         <button
-          onMouseDown={(e) => { e.preventDefault(); playSound('click'); setTwistViewMode('visible'); }}
+          onPointerDown={(e) => { e.preventDefault(); playSound('click'); setTwistViewMode('visible'); }}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             twistViewMode === 'visible'
               ? 'bg-gray-600 text-white'
@@ -1457,7 +1457,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           👁️ Normal View
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); playSound('click'); setTwistViewMode('infrared'); }}
+          onPointerDown={(e) => { e.preventDefault(); playSound('click'); setTwistViewMode('infrared'); }}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             twistViewMode === 'infrared'
               ? 'bg-orange-600 text-white'
@@ -1478,7 +1478,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+        onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
         className="px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-pink-500 transition-all"
       >
         Continue
@@ -1516,7 +1516,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-red-400 font-semibold">{twistPrediction === 'shiny_cold' ? 'Correct!' : 'Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-8 py-3 bg-gradient-to-r from-red-600 to-pink-600 rounded-xl text-white font-semibold hover:from-red-500 hover:to-pink-500 transition-all"
         >
           See Applications
@@ -1534,7 +1534,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
+            onPointerDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
                 ? 'border-orange-500 bg-orange-900/30'
@@ -1556,7 +1556,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 rounded-xl text-white font-semibold hover:from-orange-500 hover:to-red-500 transition-all"
         >
           Take the Quiz
@@ -1577,7 +1577,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           <h2 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h2>
           <p className="text-gray-300 mb-6">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               if (score >= 3) {
                 playSound('complete');
@@ -1606,7 +1606,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i); }}
+              onPointerDown={(e) => { e.preventDefault(); handleTestAnswer(i); }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-orange-500 transition-all text-left text-gray-200"
             >
               {option.text}
@@ -1636,7 +1636,7 @@ const InfraredEmissivityRenderer: React.FC<InfraredEmissivityRendererProps> = ({
           Next time you see thermal footage, you&apos;ll know the physics behind it!
         </p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
+          onPointerDown={(e) => { e.preventDefault(); onPhaseComplete?.(); }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
         >
           Complete

@@ -878,7 +878,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
 
       {/* CTA */}
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ padding: '16px 32px', background: 'linear-gradient(to right, #8b5cf6, #7c3aed)', color: 'white', fontSize: '18px', fontWeight: '600', borderRadius: '12px', border: 'none', cursor: 'pointer', boxShadow: '0 10px 25px rgba(139, 92, 246, 0.3)' }}
       >
         Discover Bimetallic Magic
@@ -912,7 +912,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setPrediction(option.id);
               playSound('click');
                           }}
@@ -950,7 +950,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
 
       {prediction && (
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '20px', padding: '16px', background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test Your Prediction
@@ -1004,7 +1004,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
           {metalPairs.map((pair, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setSelectedPair(i);
                 playSound('click');
                               }}
@@ -1053,7 +1053,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', marginTop: '16px', padding: '16px', background: 'linear-gradient(to right, #3b82f6, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Review the Concepts
@@ -1106,7 +1106,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Ready for a Twist?
@@ -1139,7 +1139,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTwistPrediction(option.id);
               playSound('click');
                           }}
@@ -1177,7 +1177,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
 
       {twistPrediction && (
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '20px', padding: '16px', background: 'linear-gradient(to right, #ec4899, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Explore Hysteresis
@@ -1197,7 +1197,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
       {/* Toggle hysteresis */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setShowHysteresis(false);
             playSound('click');
           }}
@@ -1215,7 +1215,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
           <p style={{ fontSize: '12px', color: '#64748b' }}>Same ON/OFF point</p>
         </button>
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             setShowHysteresis(true);
             playSound('click');
           }}
@@ -1302,7 +1302,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #8b5cf6, #ec4899)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         Understand Hysteresis
@@ -1348,7 +1348,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={() => handleNavigation()}
+        onPointerDown={() => handleNavigation()}
         style={{ width: '100%', padding: '16px', background: 'linear-gradient(to right, #6366f1, #8b5cf6)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
       >
         See Real-World Applications
@@ -1372,7 +1372,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
           {transferApps.map((a, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 setSelectedApp(i);
                 playSound('click');
                               }}
@@ -1433,7 +1433,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={() => handleNavigation()}
+          onPointerDown={() => handleNavigation()}
           style={{ width: '100%', marginTop: '16px', padding: '16px', background: 'linear-gradient(to right, #22c55e, #10b981)', color: 'white', borderRadius: '12px', fontSize: '18px', fontWeight: '600', border: 'none', cursor: 'pointer' }}
         >
           Test Your Knowledge
@@ -1503,7 +1503,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
               return (
                 <button
                   key={i}
-                  onMouseDown={() => !answered && handleTestAnswer(i)}
+                  onPointerDown={() => !answered && handleTestAnswer(i)}
                   disabled={answered}
                   style={{
                     width: '100%',
@@ -1550,7 +1550,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
         {/* Navigation */}
         {answered && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (testIndex < testQuestions.length - 1) {
                 setTestIndex(prev => prev + 1);
                 setShowExplanation(false);
@@ -1634,7 +1634,7 @@ const BimetalThermostatRenderer: React.FC<BimetalThermostatRendererProps> = ({
 
         {!passed && (
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               setTestIndex(0);
               setTestScore(0);
               setTestAnswers(new Array(10).fill(null));

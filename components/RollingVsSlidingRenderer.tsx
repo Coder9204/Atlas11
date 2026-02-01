@@ -372,7 +372,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         {phases.map((p, i) => (
           <button
             key={p}
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               if (i < currentIndex) goToPhase(p);
             }}
@@ -393,7 +393,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
   const renderBottomBar = (onNext: () => void, canProceed: boolean, buttonText: string = 'Continue') => (
     <div className="mt-6 flex justify-center">
       <button
-        onMouseDown={(e) => {
+        onPointerDown={(e) => {
           e.preventDefault();
           if (canProceed) onNext();
         }}
@@ -1072,7 +1072,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
           {predictionOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
                 playSound('click');
@@ -1112,7 +1112,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         <h4 className="font-semibold text-gray-700 mb-2">Select Motion Type:</h4>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setMotionType('sliding');
               resetMotion();
@@ -1128,7 +1128,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
             <p className="text-xs text-gray-500">μ = 0.4</p>
           </button>
           <button
-            onMouseDown={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               setMotionType('rolling');
               resetMotion();
@@ -1166,7 +1166,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
       <div className="flex justify-center gap-3 mb-4">
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             if (!isMoving && !hasStarted) {
               startMotion();
@@ -1183,7 +1183,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
           Push!
         </button>
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             resetMotion();
           }}
@@ -1403,7 +1403,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
           {twistOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setTwistPrediction(option.id);
                 playSound('click');
@@ -1637,7 +1637,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
           <h4 className="font-semibold text-gray-700 mb-2">Surface Type:</h4>
           <div className="grid grid-cols-2 gap-3">
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setSurfaceType('smooth');
                 resetTwistMotion();
@@ -1652,7 +1652,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
               <p className="text-xs text-gray-500">Static: {getStaticFriction('smooth').toFixed(1)}μ</p>
             </button>
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 setSurfaceType('rough');
                 resetTwistMotion();
@@ -1695,7 +1695,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             resetTwistMotion();
           }}
@@ -2018,7 +2018,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
 
           <div className="px-5 pb-5">
             <button
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault();
                 playSound('click');
                 setCompletedApps(prev => prev + 1);
@@ -2255,7 +2255,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                       e.preventDefault();
                       handleTestAnswer(qIndex, oIndex);
                     }}
@@ -2352,7 +2352,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             playSound('complete');
             if (onComplete) onComplete(testScore * 10);
@@ -2395,7 +2395,7 @@ const RollingVsSlidingRenderer: React.FC<RollingVsSlidingRendererProps> = ({
                 <span className="text-2xl">🧑‍🏫</span>
                 <p className="flex-1">{coachMessages[phase]}</p>
                 <button
-                  onMouseDown={(e) => {
+                  onPointerDown={(e) => {
                     e.preventDefault();
                     setShowCoachMessage(false);
                   }}

@@ -1021,7 +1021,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onPointerDown={(e) => { e.preventDefault(); goToNextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1069,7 +1069,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
         ].map((option, i) => (
           <button
             key={i}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setPrediction(option);
               emitEvent('prediction_made', { prediction: option });
@@ -1093,7 +1093,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               : "Not quite - lower pressure actually decreases the boiling point!"}
           </p>
           <button
-            onMouseDown={() => goToNextPhase()}
+            onPointerDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
           >
             Test Your Prediction
@@ -1151,7 +1151,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
           <div className="flex justify-center gap-4 mt-6">
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound('click');
                 setHeating(!heating);
               }}
@@ -1164,7 +1164,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               {heating ? '&#128293; Stop Heating' : '&#128293; Heat Water'}
             </button>
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound('click');
                 setTemperature(25);
                 setHeating(false);
@@ -1177,7 +1177,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
         </div>
 
         <button
-          onMouseDown={() => { setHeating(false); goToNextPhase(); }}
+          onPointerDown={() => { setHeating(false); goToNextPhase(); }}
           className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
         >
           Understand the Physics
@@ -1235,7 +1235,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
       </div>
 
       <button
-        onMouseDown={() => goToNextPhase()}
+        onPointerDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
       >
         Ready for a Twist?
@@ -1264,7 +1264,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
         ].map((option, i) => (
           <button
             key={i}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setTwistPrediction(option);
               emitEvent('twist_prediction_made', { prediction: option });
@@ -1288,7 +1288,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               : "Not quite - the cooler water temperature means longer cooking time!"}
           </p>
           <button
-            onMouseDown={() => goToNextPhase()}
+            onPointerDown={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             See the Difference
@@ -1312,7 +1312,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
             {(['sea', 'denver', 'everest'] as const).map(loc => (
               <button
                 key={loc}
-                onMouseDown={() => {
+                onPointerDown={() => {
                   playSound('click');
                   setTwistLocation(loc);
                   setTwistTemp(25);
@@ -1362,7 +1362,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
           <div className="flex justify-center gap-4">
             <button
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound('click');
                 setTwistHeating(!twistHeating);
               }}
@@ -1400,7 +1400,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
         </div>
 
         <button
-          onMouseDown={() => { setTwistHeating(false); goToNextPhase(); }}
+          onPointerDown={() => { setTwistHeating(false); goToNextPhase(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
         >
           Understand the Impact
@@ -1453,7 +1453,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
       </div>
 
       <button
-        onMouseDown={() => goToNextPhase()}
+        onPointerDown={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-teal-600 to-blue-600 text-white font-semibold rounded-xl"
       >
         See Real Applications
@@ -1471,7 +1471,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
         {TRANSFER_APPS.map((app, i) => (
           <button
             key={i}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, i]));
               emitEvent('explore_app', { app: app.title });
@@ -1499,7 +1499,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={() => { playSound('complete'); goToNextPhase(); }}
+          onPointerDown={() => { playSound('complete'); goToNextPhase(); }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
         >
           Take the Test
@@ -1536,7 +1536,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
             {passed ? 'Excellent understanding of pressure and phase changes!' : 'Review the concepts and try again.'}
           </p>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               if (passed) {
                 playSound('complete');
                 goToNextPhase();
@@ -1585,7 +1585,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
             {question.options.map((option, i) => (
               <button
                 key={i}
-                onMouseDown={() => {
+                onPointerDown={() => {
                   playSound(option.correct ? 'success' : 'failure');
                   setTestAnswers([...testAnswers, i]);
                   emitEvent('test_answer', {
@@ -1667,7 +1667,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
 
           {onBack && (
             <button
-              onMouseDown={onBack}
+              onPointerDown={onBack}
               className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
             >
               Back to Games
@@ -1713,7 +1713,7 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
               return (
                 <button
                   key={p}
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                  onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     phase === p
                       ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'

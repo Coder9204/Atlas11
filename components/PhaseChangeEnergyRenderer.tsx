@@ -386,7 +386,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                {phaseOrder.map((p, i) => (
                   <button
                      key={p}
-                     onMouseDown={() => goToPhase(p)}
+                     onPointerDown={() => goToPhase(p)}
                      style={{
                         height: 8,
                         width: i === currentIdx ? 24 : 8,
@@ -437,7 +437,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   cursor: canGoBack && currentIdx > 0 ? 'pointer' : 'not-allowed',
                   opacity: canGoBack && currentIdx > 0 ? 1 : 0.3
                }}
-               onMouseDown={() => canGoBack && currentIdx > 0 && goToPhase(phaseOrder[currentIdx - 1])}
+               onPointerDown={() => canGoBack && currentIdx > 0 && goToPhase(phaseOrder[currentIdx - 1])}
             >
                ← Back
             </button>
@@ -455,7 +455,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                   opacity: canGoNext ? 1 : 0.3,
                   boxShadow: canGoNext ? `0 4px 20px ${buttonColor}40` : 'none'
                }}
-               onMouseDown={() => {
+               onPointerDown={() => {
                   if (!canGoNext || clickedRef.current) return;
                   clickedRef.current = true;
                   if (onNext) onNext();
@@ -1574,7 +1574,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      boxShadow: '0 8px 32px rgba(59, 130, 246, 0.4)',
                      minHeight: '48px'
                   }}
-                  onMouseDown={() => goToPhase('predict')}
+                  onPointerDown={() => goToPhase('predict')}
                >
                   Explore Phase Changes →
                </button>
@@ -1637,7 +1637,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      ].map(opt => (
                         <button
                            key={opt.id}
-                           onMouseDown={() => {
+                           onPointerDown={() => {
                               setPrediction(opt.id);
                               emitGameEvent('prediction_made', {
                                  phase: 'predict',
@@ -1743,7 +1743,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {/* Heat button */}
                   <button
-                     onMouseDown={() => setIsHeating(!isHeating)}
+                     onPointerDown={() => setIsHeating(!isHeating)}
                      style={{
                         padding: '14px',
                         borderRadius: '12px',
@@ -1761,7 +1761,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {/* Reset */}
                   <button
-                     onMouseDown={() => {
+                     onPointerDown={() => {
                         setTemperature(-20);
                         setEnergyAdded(0);
                         setMatterPhase('solid');
@@ -1909,7 +1909,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      ].map(opt => (
                         <button
                            key={opt.id}
-                           onMouseDown={() => {
+                           onPointerDown={() => {
                               setTwistPrediction(opt.id);
                               emitGameEvent('prediction_made', {
                                  phase: 'twist_predict',
@@ -2046,7 +2046,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {/* Cool button */}
                   <button
-                     onMouseDown={() => setIsCooling(!isCooling)}
+                     onPointerDown={() => setIsCooling(!isCooling)}
                      style={{
                         padding: '14px',
                         borderRadius: '12px',
@@ -2064,7 +2064,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {/* Reset */}
                   <button
-                     onMouseDown={() => {
+                     onPointerDown={() => {
                         setCoolingTemp(120);
                         setCoolingPhase('gas');
                         setIsCooling(false);
@@ -2300,7 +2300,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      return (
                         <button
                            key={i}
-                           onMouseDown={() => !isLocked && setSelectedApp(i)}
+                           onPointerDown={() => !isLocked && setSelectedApp(i)}
                            style={{
                               flex: 1,
                               display: 'flex',
@@ -2359,7 +2359,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   {!isCurrentCompleted && (
                      <button
-                        onMouseDown={handleCompleteApp}
+                        onPointerDown={handleCompleteApp}
                         style={{
                            width: '100%',
                            padding: '16px',
@@ -2424,7 +2424,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      </p>
 
                      <button
-                        onMouseDown={() => percentage >= 70 ? goToPhase('mastery') : setTestSubmitted(false)}
+                        onPointerDown={() => percentage >= 70 ? goToPhase('mastery') : setTestSubmitted(false)}
                         style={{
                            padding: '16px 32px',
                            borderRadius: '12px',
@@ -2473,7 +2473,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      {currentQ.options.map((opt, i) => (
                         <button
                            key={opt.id}
-                           onMouseDown={() => {
+                           onPointerDown={() => {
                               const newAnswers = [...testAnswers];
                               newAnswers[testQuestion] = opt.id;
                               setTestAnswers(newAnswers);
@@ -2506,7 +2506,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
 
                   <div style={{ display: 'flex', gap: '12px' }}>
                      <button
-                        onMouseDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
+                        onPointerDown={() => testQuestion > 0 && setTestQuestion(testQuestion - 1)}
                         style={{
                            flex: 1, padding: '14px', borderRadius: '12px', fontWeight: 600,
                            background: colors.bgCardLight, color: colors.textSecondary, border: `1px solid ${colors.border}`,
@@ -2517,7 +2517,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                      </button>
                      {testQuestion < testQuestions.length - 1 ? (
                         <button
-                           onMouseDown={() => selectedAnswer && setTestQuestion(testQuestion + 1)}
+                           onPointerDown={() => selectedAnswer && setTestQuestion(testQuestion + 1)}
                            style={{
                               flex: 1, padding: '14px', borderRadius: '12px', fontWeight: 700,
                               background: selectedAnswer ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
@@ -2529,7 +2529,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                         </button>
                      ) : (
                         <button
-                           onMouseDown={() => testAnswers.every(a => a !== null) && setTestSubmitted(true)}
+                           onPointerDown={() => testAnswers.every(a => a !== null) && setTestSubmitted(true)}
                            style={{
                               flex: 1, padding: '14px', borderRadius: '12px', fontWeight: 700,
                               background: testAnswers.every(a => a !== null) ? `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)` : colors.bgCardLight,
@@ -2634,7 +2634,7 @@ const PhaseChangeEnergyRenderer: React.FC<PhaseChangeEnergyRendererProps> = ({ o
                </div>
 
                <button
-                  onMouseDown={() => {
+                  onPointerDown={() => {
                      emitGameEvent('game_completed', {
                         phase: 'mastery',
                         score: calculateTestScore(),

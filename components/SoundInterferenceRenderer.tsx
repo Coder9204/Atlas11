@@ -327,15 +327,15 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
-  const handleVisualizationMouseDown = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const handleVisualizationPointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     setIsDragging(true);
   }, []);
 
-  const handleVisualizationMouseUp = useCallback(() => {
+  const handleVisualizationPointerUp = useCallback(() => {
     setIsDragging(false);
   }, []);
 
-  const handleVisualizationMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+  const handleVisualizationPointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
     if (!isDragging) return;
     const svg = e.currentTarget;
     const rect = svg.getBoundingClientRect();
@@ -441,11 +441,11 @@ const SoundInterferenceRenderer: React.FC<SoundInterferenceRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '16px', maxWidth: '550px', cursor: interactive ? 'crosshair' : 'default', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)' }}
-          onMouseDown={interactive ? handleVisualizationMouseDown : undefined}
-          onMouseUp={interactive ? handleVisualizationMouseUp : undefined}
-          onMouseMove={interactive ? handleVisualizationMouseMove : undefined}
-          onMouseLeave={interactive ? handleVisualizationMouseUp : undefined}
+          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '16px', maxWidth: '550px', cursor: interactive ? 'crosshair' : 'default', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)', touchAction: 'none' }}
+          onPointerDown={interactive ? handleVisualizationPointerDown : undefined}
+          onPointerUp={interactive ? handleVisualizationPointerUp : undefined}
+          onPointerMove={interactive ? handleVisualizationPointerMove : undefined}
+          onPointerLeave={interactive ? handleVisualizationPointerUp : undefined}
         >
           {/* === PREMIUM DEFS SECTION === */}
           <defs>

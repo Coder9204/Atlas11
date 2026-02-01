@@ -1386,7 +1386,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={() => { playSound('click'); nextPhase(); }}
+        onPointerDown={() => { playSound('click'); nextPhase(); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -1431,7 +1431,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setPrediction(option.id);
             }}
@@ -1450,7 +1450,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
       {prediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white font-semibold hover:from-emerald-500 hover:to-teal-500 transition-all"
           >
             Test It! →
@@ -1468,7 +1468,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
 
       <div className="flex flex-wrap justify-center gap-3">
         <button
-          onMouseDown={() => { playSound('click'); setVibrationSource('none'); }}
+          onPointerDown={() => { playSound('click'); setVibrationSource('none'); }}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             vibrationSource === 'none'
               ? 'bg-gray-600 text-white'
@@ -1478,7 +1478,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
           📴 None
         </button>
         <button
-          onMouseDown={() => { playSound('click'); setVibrationSource('footstep'); }}
+          onPointerDown={() => { playSound('click'); setVibrationSource('footstep'); }}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             vibrationSource === 'footstep'
               ? 'bg-emerald-600 text-white'
@@ -1488,7 +1488,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
           👟 Footsteps
         </button>
         <button
-          onMouseDown={() => { playSound('click'); setVibrationSource('door'); }}
+          onPointerDown={() => { playSound('click'); setVibrationSource('door'); }}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             vibrationSource === 'door'
               ? 'bg-yellow-600 text-white'
@@ -1498,7 +1498,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
           🚪 Door Slam
         </button>
         <button
-          onMouseDown={() => { playSound('click'); setVibrationSource('earthquake'); }}
+          onPointerDown={() => { playSound('click'); setVibrationSource('earthquake'); }}
           className={`px-4 py-2 rounded-lg font-medium transition-all ${
             vibrationSource === 'earthquake'
               ? 'bg-red-600 text-white'
@@ -1518,7 +1518,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white font-semibold hover:from-emerald-500 hover:to-teal-500 transition-all"
         >
           Continue →
@@ -1568,7 +1568,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-emerald-400 font-semibold">{prediction === 'mass' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white font-semibold hover:from-emerald-500 hover:to-teal-500 transition-all"
         >
           But wait... →
@@ -1594,7 +1594,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setTwistPrediction(option.id);
             }}
@@ -1613,7 +1613,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
       {twistPrediction && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl text-white font-semibold hover:from-teal-500 hover:to-cyan-500 transition-all"
           >
             Test It! →
@@ -1646,7 +1646,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
         </div>
 
         <button
-          onMouseDown={() => {
+          onPointerDown={() => {
             playSound('click');
             setEarthquakeStrength(4 + Math.random() * 3);
           }}
@@ -1666,7 +1666,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
 
       <div className="text-center">
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl text-white font-semibold hover:from-teal-500 hover:to-cyan-500 transition-all"
         >
           Continue →
@@ -1703,7 +1703,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
       <div className="text-center">
         <p className="text-gray-400 mb-2">Your prediction: <span className="text-teal-400 font-semibold">{twistPrediction === 'triangulate' ? '✓ Correct!' : '✗ Not quite'}</span></p>
         <button
-          onMouseDown={() => { playSound('click'); nextPhase(); }}
+          onPointerDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-3 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-xl text-white font-semibold hover:from-teal-500 hover:to-cyan-500 transition-all"
         >
           See Applications →
@@ -1721,7 +1721,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound('click');
               setCompletedApps(prev => new Set([...prev, index]));
             }}
@@ -1741,7 +1741,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
       {completedApps.size >= 4 && (
         <div className="text-center">
           <button
-            onMouseDown={() => { playSound('click'); nextPhase(); }}
+            onPointerDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl text-white font-semibold hover:from-emerald-500 hover:to-teal-500 transition-all"
           >
             Take the Quiz →
@@ -1764,7 +1764,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
           <h2 className="text-2xl font-bold text-white">Quiz Complete!</h2>
           <p className="text-gray-300">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
           <button
-            onMouseDown={() => {
+            onPointerDown={() => {
               playSound(score >= 3 ? 'complete' : 'click');
               nextPhase();
             }}
@@ -1785,7 +1785,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={() => {
+              onPointerDown={() => {
                 playSound(option.correct ? 'success' : 'failure');
                 setTestAnswers([...testAnswers, i]);
               }}
@@ -1816,7 +1816,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
         Your pocket holds a science instrument! 📱⚗️
       </p>
       <button
-        onMouseDown={() => {
+        onPointerDown={() => {
           playSound('complete');
           if (onPhaseComplete) onPhaseComplete();
         }}
@@ -1860,7 +1860,7 @@ export default function PhoneSeismometerRenderer({ phase: initialPhase, onPhaseC
             {PHASES.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onPointerDown={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   PHASES.indexOf(phase) === i
                     ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
