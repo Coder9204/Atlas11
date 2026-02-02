@@ -950,8 +950,8 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
               Each GPU has 700MB of gradient data. They all need to end up with the average of everyone's gradients.
             </p>
             <div style={{ marginTop: '16px', fontSize: '14px', color: colors.accent, fontFamily: 'monospace' }}>
-              GPU0: [grad_0] ---> ??? ---> [avg_all]<br/>
-              GPU1: [grad_1] ---> ??? ---> [avg_all]<br/>
+              GPU0: [grad_0] {"--->"} ??? {"--->"} [avg_all]<br/>
+              GPU1: [grad_1] {"--->"} ??? {"--->"} [avg_all]<br/>
               ...all GPUs need the same result...
             </div>
           </div>
